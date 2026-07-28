@@ -118,7 +118,7 @@
         </button>
     </div>
 
-    <!-- 2. SALLE D'ATTENTE 1v1 (MATCHMAKING) -->
+    <!-- 2. SALLE D'ATTENTE 1v1 -->
     <div id="screen-1v1-lobby" style="display:none;">
         <div class="matchmaking-loader">
             <div class="radar-box">
@@ -150,7 +150,7 @@
         <div id="countdown-number" class="countdown-num">3</div>
     </div>
 
-    <!-- 5. ECRAN DE JEU (SOLO ET 1v1) -->
+    <!-- 5. ECRAN DE JEU -->
     <div id="screen-game" style="display:none;">
         <div id="hud-1v1" class="hud" style="display:none;">
             <div class="player-box me">
@@ -208,11 +208,12 @@
     </div>
 
     <script>
-        /* --- MOTEUR SONORE SYNTHÉTISÉ (WEB AUDIO API) --- */
+        /* --- MOTEUR SONORE OPTIMISÉ & CORRIGÉ --- */
         const SoundEngine = {
             ctx: null,
             isMuted: false,
             musicInterval: null,
+            currentMode: null, // Conserve le mode de musique en cours
 
             init() {
                 if (!this.ctx) {
@@ -225,11 +226,16 @@
 
             toggleMute() {
                 this.isMuted = !this.isMuted;
-                if (this.isMuted) this.stopMusic();
+                if (this.isMuted) {
+                    this.stopMusic(false); // Coupe la musique sans oublier le mode
+                } else {
+                    if (this.currentMode) {
+                        this.startMusic(this.currentMode); // Relance la musique du mode en cours
+                    }
+                }
                 return this.isMuted;
             },
 
-            // Sound Effect: Clic Valide (Bip rétro dynamique doux)
             playClick(targetLevel = 1) {
                 if (this.isMuted) return;
                 this.init();
@@ -238,12 +244,11 @@
                 const gain = this.ctx.createGain();
 
                 osc.type = 'sine';
-                // La tonalité augmente avec la progression sans agresser l'oreille
                 const baseFreq = 400 + ((targetLevel % 15) * 25);
                 osc.frequency.setValueAtTime(baseFreq, this.ctx.currentTime);
                 osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.4, this.ctx.currentTime + 0.06);
 
-                gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+                gain.gain.setValueAtTime(0.20, this.ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.06);
 
                 osc.connect(gain);
@@ -253,7 +258,6 @@
                 osc.stop(this.ctx.currentTime + 0.06);
             },
 
-            // Sound Effect: Erreur (Bourdonnement rétro discret)
             playError() {
                 if (this.isMuted) return;
                 this.init();
@@ -265,7 +269,7 @@
                 osc.frequency.setValueAtTime(140, this.ctx.currentTime);
                 osc.frequency.linearRampToValueAtTime(70, this.ctx.currentTime + 0.12);
 
-                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
 
                 osc.connect(gain);
@@ -275,7 +279,6 @@
                 osc.stop(this.ctx.currentTime + 0.12);
             },
 
-            // Sound Effect: Victoire
             playVictory() {
                 if (this.isMuted) return;
                 this.init();
@@ -288,7 +291,7 @@
                         const gain = this.ctx.createGain();
                         osc.type = 'triangle';
                         osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
                         gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
                         osc.connect(gain);
                         gain.connect(this.ctx.destination);
@@ -298,22 +301,24 @@
                 });
             },
 
-            stopMusic() {
+            stopMusic(clearMode = true) {
                 if (this.musicInterval) {
                     clearInterval(this.musicInterval);
                     this.musicInterval = null;
                 }
+                if (clearMode) {
+                    this.currentMode = null;
+                }
             },
 
             startMusic(mode) {
+                if (mode) this.currentMode = mode;
                 if (this.isMuted) return;
                 this.init();
-                this.stopMusic();
+                this.stopMusic(false);
 
                 let step = 0;
-                // Mode Solo : Chill Lo-Fi Synth
                 const chillNotes = [261.63, 329.63, 392.00, 329.63, 293.66, 349.23, 440.00, 349.23];
-                // Mode 1v1 : Try-Hard Synthwave Rythmé
                 const tryhardNotes = [130.81, 130.81, 261.63, 130.81, 155.56, 155.56, 311.13, 155.56, 174.61, 174.61, 349.23, 174.61];
 
                 const speed = (mode === 'solo') ? 380 : 160;
@@ -329,7 +334,8 @@
                     osc.type = (mode === 'solo') ? 'sine' : 'sawtooth';
                     osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
 
-                    const vol = (mode === 'solo') ? 0.03 : 0.04; // Volume de fond très léger
+                    // VOLUME AUGMENTÉ : Nettement plus fort et présent
+                    const vol = (mode === 'solo') ? 0.14 : 0.16;
                     gain.gain.setValueAtTime(vol, this.ctx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + (speed/1000) * 0.85);
 
@@ -349,7 +355,7 @@
             document.getElementById('mute-btn').innerText = muted ? '🔇' : '🔊';
         }
 
-        /* --- LOGIQUE DU JEU --- */
+        /* --- LOGIQUE DE JEU & GESTION DU TEMPS --- */
         const SERVER_URL = "https://chiffre-blitz-server.onrender.com";
         const socket = io(SERVER_URL);
 
@@ -360,6 +366,7 @@
         let soloScore = 0;
         let soloTimeLeft = 30;
         let soloTimerInterval = null;
+        let current1v1Time = 30;
 
         document.addEventListener("DOMContentLoaded", () => {
             showMainMenu();
@@ -376,7 +383,7 @@
             document.getElementById('countdown-overlay').style.display = 'none';
             if (radarInterval) clearInterval(radarInterval);
             if (soloTimerInterval) clearInterval(soloTimerInterval);
-            SoundEngine.stopMusic();
+            SoundEngine.stopMusic(true);
         }
 
         function showMainMenu() {
@@ -427,19 +434,22 @@
                     document.getElementById('hud-1v1').style.display = 'grid';
                     document.getElementById('hud-solo').style.display = 'none';
                     
-                    SoundEngine.startMusic('1v1'); // Musique Try-Hard 1v1
+                    current1v1Time = 30;
+                    SoundEngine.startMusic('1v1');
                 }
             }, 1000);
         });
 
         socket.on('game_started', (data) => {
-            document.getElementById('game-timer').innerText = data.timeLeft;
+            current1v1Time = data.timeLeft;
+            document.getElementById('game-timer').innerText = Math.max(0, current1v1Time);
             document.getElementById('my-target').innerText = data.myTarget || 1;
             renderGrid(data.myPool, handle1v1TileClick);
         });
 
         socket.on('timer_update', (time) => {
-            document.getElementById('game-timer').innerText = time;
+            current1v1Time = time;
+            document.getElementById('game-timer').innerText = Math.max(0, time);
         });
 
         socket.on('my_grid_updated', (data) => {
@@ -489,6 +499,8 @@
         });
 
         function handle1v1TileClick(num) {
+            // Bloque les clics si le temps est écoulé
+            if (current1v1Time <= 0) return;
             socket.emit('player_click_1v1', num);
         }
 
@@ -508,11 +520,11 @@
             document.getElementById('game-timer').innerText = soloTimeLeft;
 
             generateSoloGrid();
-            SoundEngine.startMusic('solo'); // Musique Chill Solo
+            SoundEngine.startMusic('solo');
 
             soloTimerInterval = setInterval(() => {
                 soloTimeLeft--;
-                document.getElementById('game-timer').innerText = soloTimeLeft;
+                document.getElementById('game-timer').innerText = Math.max(0, soloTimeLeft);
 
                 if (soloTimeLeft <= 0) {
                     endSoloGame();
@@ -534,6 +546,9 @@
         }
 
         function handleSoloTileClick(num) {
+            // Bloque tout clic si le temps est écoulé
+            if (soloTimeLeft <= 0) return;
+
             if (num === soloTarget) {
                 SoundEngine.playClick(soloTarget);
                 soloTarget++;
@@ -544,8 +559,13 @@
             } else {
                 SoundEngine.playError();
                 soloTimeLeft = Math.max(0, soloTimeLeft - 1);
-                document.getElementById('game-timer').innerText = soloTimeLeft;
+                document.getElementById('game-timer').innerText = Math.max(0, soloTimeLeft);
                 flashError();
+
+                // Si la pénalité fait tomber le temps à 0, arrête la partie immédiatement
+                if (soloTimeLeft <= 0) {
+                    endSoloGame();
+                }
             }
         }
 
