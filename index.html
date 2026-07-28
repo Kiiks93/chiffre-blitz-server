@@ -8,7 +8,7 @@
     <style>
         * { box-sizing: border-box; touch-action: manipulation; user-select: none; }
         body { font-family: system-ui, sans-serif; background: #0f051d; color: #fff; margin: 0; padding: 15px; text-align: center; }
-        h1 { color: #00d2ff; }
+        h1 { color: #00d2ff; margin-bottom: 5px; }
         
         .hud-1v1 {
             display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
@@ -22,7 +22,9 @@
         .tile {
             background: #2a1845; border: 2px solid #522d80; border-radius: 12px; height: 65px;
             display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; cursor: pointer;
+            transition: transform 0.05s ease;
         }
+        .tile:active { transform: scale(0.92); }
         .tile.flash { background: #e52e71; }
         
         button {
@@ -30,6 +32,33 @@
             padding: 16px 28px; font-size: 18px; font-weight: bold; border-radius: 14px; cursor: pointer; width: 100%; max-width: 400px;
         }
         .status { margin: 15px 0; font-weight: bold; color: #ff8a00; }
+
+        /* Écran Compte à rebour */
+        #countdown-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 5, 29, 0.95); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 100;
+        }
+        .countdown-num { font-size: 90px; font-weight: 900; color: #00d2ff; animation: pulse 0.8s infinite; }
+        
+        /* Modal Récapitulatif Fin de Partie */
+        #recap-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 200; padding: 20px;
+        }
+        .recap-card {
+            background: #1e1035; border: 2px solid #00d2ff; border-radius: 20px;
+            padding: 25px; max-width: 380px; width: 100%; box-shadow: 0 0 30px rgba(0,210,255,0.3);
+        }
+        .recap-title { font-size: 28px; font-weight: 900; margin-bottom: 10px; }
+        .recap-row { display: flex; justify-content: space-between; margin: 12px 0; font-size: 18px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
+
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
     </style>
 </head>
 <body>
@@ -41,6 +70,13 @@
         <button id="find-btn" onclick="startMatchmaking()">TROUVER UN DUEL 1v1</button>
     </div>
 
+    <!-- Compte à rebours 3s -->
+    <div id="countdown-overlay" style="display:none;">
+        <div style="font-size:24px; color:#aaa; margin-bottom:10px;">PRÉPAREZ-VOUS !</div>
+        <div id="countdown-number" class="countdown-num">3</div>
+    </div>
+
+    <!-- Interface de Jeu -->
     <div id="game-ui" style="display:none;">
         <div class="hud-1v1">
             <div class="player-box me">
@@ -58,6 +94,29 @@
         </div>
 
         <div id="grid" class="grid"></div>
+    </div>
+
+    <!-- Modal Récapitulatif Fin de Partie -->
+    <div id="recap-modal" style="display:none;">
+        <div class="recap-card">
+            <div id="recap-banner" class="recap-title">RÉSULTAT</div>
+            <div id="recap-reason" style="color:#aaa; margin-bottom:20px;"></div>
+            
+            <div class="recap-row">
+                <span>🎯 Ma Cible :</span>
+                <span id="recap-my-target" style="color:#00d2ff; font-weight:bold;">-</span>
+            </div>
+            <div class="recap-row">
+                <span>🎯 Cible Adversaire :</span>
+                <span id="recap-opp-target" style="color:#ff007f; font-weight:bold;">-</span>
+            </div>
+            <div class="recap-row">
+                <span>⭐ Mon Score :</span>
+                <span id="recap-my-score" style="font-weight:bold;">-</span>
+            </div>
+
+            <button onclick="location.reload()" style="margin-top:20px;">REJOUER</button>
+        </div>
     </div>
 
     <script>
@@ -80,15 +139,26 @@
             document.getElementById('status').innerText = msg;
         });
 
-        socket.on('match_found', (data) => {
-            document.getElementById('status').innerText = "⚔️ Adversaire trouvé ! Début du duel...";
+        socket.on('match_found', () => {
+            document.getElementById('status').innerText = "⚔️ Adversaire trouvé !";
             document.getElementById('lobby-ui').style.display = "none";
+            document.getElementById('countdown-overlay').style.display = "flex";
+        });
+
+        // Compte à rebours 3s
+        socket.on('countdown_tick', (count) => {
+            document.getElementById('countdown-number').innerText = count;
+        });
+
+        socket.on('countdown_finished', () => {
+            document.getElementById('countdown-overlay').style.display = "none";
             document.getElementById('game-ui').style.display = "block";
         });
 
+        // Début de partie avec ma propre grille
         socket.on('game_started', (data) => {
             document.getElementById('timer').innerText = data.timeLeft;
-            renderGrid(data.activePool);
+            renderGrid(data.myPool);
         });
 
         socket.on('timer_update', (time) => {
@@ -99,24 +169,44 @@
             renderGrid(pool, true);
         });
 
-        socket.on('player_progress', (data) => {
-            if (data.playerId === myId) {
-                document.getElementById('my-target').innerText = data.target;
-                renderGrid(data.newPool);
-            } else {
-                document.getElementById('opp-target').innerText = data.target;
-            }
+        // Ma progression
+        socket.on('my_grid_updated', (data) => {
+            document.getElementById('my-target').innerText = data.target;
+            renderGrid(data.newPool);
         });
 
+        // Progression de l'adversaire
+        socket.on('opponent_progress', (data) => {
+            document.getElementById('opp-target').innerText = data.target;
+        });
+
+        // Récapitulatif de Fin de Partie
         socket.on('game_over_1v1', (data) => {
+            document.getElementById('game-ui').style.display = "none";
+            const modal = document.getElementById('recap-modal');
+            const banner = document.getElementById('recap-banner');
+            
+            const myData = data.players[myId];
+            const oppId = Object.keys(data.players).find(id => id !== myId);
+            const oppData = oppId ? data.players[oppId] : { target: '-', score: 0 };
+
             if (data.winnerId === myId) {
-                alert("🏆 VICTOIRE ! Tu as battu ton adversaire !");
+                banner.innerText = "🏆 VICTOIRE !";
+                banner.style.color = "#00d2ff";
             } else if (data.winnerId) {
-                alert("❌ DÉFAITE ! Ton adversaire a gagné !");
+                banner.innerText = "❌ DÉFAITE !";
+                banner.style.color = "#ff007f";
             } else {
-                alert("⏱️ TEMPS ÉCOULÉ ! Partie terminée.");
+                banner.innerText = "⏱️ ÉGALITÉ !";
+                banner.style.color = "#ff8a00";
             }
-            location.reload();
+
+            document.getElementById('recap-reason').innerText = data.reason;
+            document.getElementById('recap-my-target').innerText = myData ? myData.target : '-';
+            document.getElementById('recap-opp-target').innerText = oppData ? oppData.target : '-';
+            document.getElementById('recap-my-score').innerText = myData ? myData.score : 0;
+
+            modal.style.display = "flex";
         });
 
         socket.on('opponent_left', () => {
