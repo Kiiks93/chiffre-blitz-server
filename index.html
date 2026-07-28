@@ -3,14 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chiffre Blitz 1v1 ⚡</title>
+    <title>Chiffre Blitz ⚡</title>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
         * { box-sizing: border-box; touch-action: manipulation; user-select: none; }
-        body { font-family: system-ui, sans-serif; background: #0f051d; color: #fff; margin: 0; padding: 15px; text-align: center; transition: background-color 0.2s; }
-        h1 { color: #00d2ff; margin-bottom: 10px; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #0f051d; color: #fff; margin: 0; padding: 15px; text-align: center; }
+        h1 { color: #00d2ff; margin-top: 5px; margin-bottom: 20px; font-size: 28px; text-shadow: 0 0 15px rgba(0,210,255,0.4); }
         
-        .hud-1v1 {
+        .menu-container { display: flex; flex-direction: column; gap: 15px; max-width: 350px; margin: 30px auto; }
+        
+        .btn-main {
+            background: linear-gradient(45deg, #ff416c, #ff4b2b); color: white; border: none;
+            padding: 18px 20px; font-size: 18px; font-weight: 800; border-radius: 16px; cursor: pointer;
+            box-shadow: 0 5px 20px rgba(255, 65, 108, 0.4); transition: transform 0.1s, filter 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .btn-main:active { transform: scale(0.96); }
+        .btn-blue { background: linear-gradient(45deg, #00c6ff, #0072ff); box-shadow: 0 5px 20px rgba(0, 198, 255, 0.4); }
+        .btn-purple { background: linear-gradient(45deg, #7b4397, #dc2430); box-shadow: 0 5px 20px rgba(123, 67, 151, 0.4); }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #ccc;
+            padding: 10px 18px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 15px;
+        }
+
+        /* HUD & Grille de Jeu */
+        .hud {
             display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
             background: rgba(255,255,255,0.08); padding: 12px; border-radius: 14px; margin-bottom: 15px;
         }
@@ -25,30 +43,28 @@
             transition: transform 0.05s ease, background-color 0.1s;
         }
         .tile:active { transform: scale(0.92); background: #3c1e69; }
-        
-        button {
-            background: linear-gradient(45deg, #ff416c, #ff4b2b); color: white; border: none;
-            padding: 16px 28px; font-size: 18px; font-weight: bold; border-radius: 14px; cursor: pointer; width: 100%; max-width: 400px;
-        }
-        .status { margin: 15px 0; font-weight: bold; color: #ff8a00; line-height: 1.4; }
 
-        /* Animation de la Roue de Chiffres */
-        .number-spinner-container {
-            display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 30px;
+        /* Animation d'Attente Néon Matchmaking */
+        .matchmaking-loader {
+            display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 40px;
         }
-        .number-spinner {
-            position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center;
+        .radar-box {
+            position: relative; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center;
         }
-        .spinner-ring {
-            position: absolute; width: 100%; height: 100%;
-            border: 5px solid rgba(0, 210, 255, 0.15); border-top: 5px solid #00d2ff; border-bottom: 5px solid #ff007f;
-            border-radius: 50%; animation: spin 1s linear infinite;
+        .radar-ring {
+            position: absolute; width: 100%; height: 100%; border-radius: 50%;
+            border: 4px solid transparent; border-top-color: #00d2ff; border-right-color: #ff007f;
+            animation: radarSpin 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
         }
-        .spinner-num {
-            font-size: 32px; font-weight: 900; color: #00d2ff; text-shadow: 0 0 10px rgba(0,210,255,0.5);
-            animation: pulseNum 0.3s ease-in-out infinite alternate;
+        .radar-pulse {
+            position: absolute; width: 80%; height: 80%; border-radius: 50%;
+            background: rgba(0, 210, 255, 0.1); animation: radarPulse 1.5s ease-out infinite;
+        }
+        .radar-num {
+            font-size: 38px; font-weight: 900; color: #00d2ff; text-shadow: 0 0 15px #00d2ff; z-index: 2;
         }
 
+        /* Overlay Décompte */
         #countdown-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 5, 29, 0.95); display: flex; flex-direction: column;
@@ -56,6 +72,7 @@
         }
         .countdown-num { font-size: 90px; font-weight: 900; color: #00d2ff; animation: pulse 0.8s infinite; }
         
+        /* Modal Récapitulatif */
         #recap-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.9); display: flex; flex-direction: column;
@@ -68,13 +85,13 @@
         .recap-title { font-size: 28px; font-weight: 900; margin-bottom: 10px; }
         .recap-row { display: flex; justify-content: space-between; margin: 12px 0; font-size: 18px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
 
-        @keyframes spin {
+        @keyframes radarSpin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        @keyframes pulseNum {
-            0% { transform: scale(0.85); opacity: 0.7; }
-            100% { transform: scale(1.15); opacity: 1; }
+        @keyframes radarPulse {
+            0% { transform: scale(0.6); opacity: 0.8; }
+            100% { transform: scale(1.4); opacity: 0; }
         }
         @keyframes pulse {
             0% { transform: scale(0.8); opacity: 0.5; }
@@ -85,66 +102,109 @@
 </head>
 <body>
 
-    <h1>Duel 1v1 Blitz ⚔️</h1>
-    <div id="status" class="status">Connexion au serveur...</div>
+    <h1>Chiffre Blitz ⚡</h1>
 
-    <div id="lobby-ui">
-        <button id="find-btn" onclick="startMatchmaking()">TROUVER UN DUEL 1v1</button>
-        
-        <div id="loader-ui" class="number-spinner-container" style="display:none;">
-            <div class="number-spinner">
-                <div class="spinner-ring"></div>
-                <div id="spinner-num" class="spinner-num">1</div>
-            </div>
-            <div style="margin-top:20px; font-size:18px; font-weight:bold; color:#00d2ff;">
-                Recherche d'un adversaire...
-            </div>
-        </div>
+    <!-- 1. MENU PRINCIPAL -->
+    <div id="screen-menu" class="menu-container">
+        <button class="btn-main btn-blue" onclick="startSoloTraining()">
+            🏋️ ENTRAÎNEMENT SOLO
+        </button>
+        <button class="btn-main" onclick="open1v1Lobby()">
+            ⚔️ DUEL 1v1 ONLINE
+        </button>
+        <button class="btn-main btn-purple" onclick="openTournamentScreen()">
+            🏆 MODE TOURNOI
+        </button>
     </div>
 
+    <!-- 2. SALLE D'ATTENTE 1v1 (MATCHMAKING) -->
+    <div id="screen-1v1-lobby" style="display:none;">
+        <div class="matchmaking-loader">
+            <div class="radar-box">
+                <div class="radar-pulse"></div>
+                <div class="radar-ring"></div>
+                <div id="radar-digit" class="radar-num">1</div>
+            </div>
+            <div style="margin-top:25px; font-size:20px; font-weight:bold; color:#00d2ff;">
+                Recherche d'un adversaire...
+            </div>
+            <div style="color:#aaa; font-size:14px; margin-top:5px;">Connexion au serveur Blitz</div>
+        </div>
+        <button class="btn-secondary" onclick="cancel1v1Search()">❌ Annuler</button>
+    </div>
+
+    <!-- 3. MODE TOURNOI -->
+    <div id="screen-tournament" style="display:none; max-width:400px; margin:0 auto;">
+        <h2>🏆 Tournoi Blitz</h2>
+        <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:16px; margin:20px 0;">
+            <p>Affronte l'arbre de compétition !</p>
+            <div style="color:#ff8a00; font-weight:bold;">Saison 1 : Prochainement disponible</div>
+        </div>
+        <button class="btn-secondary" onclick="showMainMenu()">⬅️ Retour Menu</button>
+    </div>
+
+    <!-- 4. OVERLAY DECOMPTE -->
     <div id="countdown-overlay" style="display:none;">
         <div style="font-size:24px; color:#aaa; margin-bottom:10px;">PRÉPAREZ-VOUS !</div>
         <div id="countdown-number" class="countdown-num">3</div>
     </div>
 
-    <div id="game-ui" style="display:none;">
-        <div class="hud-1v1">
+    <!-- 5. ECRAN DE JEU (SOLO ET 1v1) -->
+    <div id="screen-game" style="display:none;">
+        <!-- HUD 1v1 -->
+        <div id="hud-1v1" class="hud" style="display:none;">
             <div class="player-box me">
                 <div>MA CIBLE</div>
-                <div style="font-size:28px; color:#00d2ff; font-weight:bold;" id="my-target">1</div>
+                <div style="font-size:26px; color:#00d2ff; font-weight:bold;" id="my-target">1</div>
             </div>
             <div class="player-box opponent">
                 <div>ADVERSAIRE</div>
-                <div style="font-size:28px; color:#ff007f; font-weight:bold;" id="opp-target">1</div>
+                <div style="font-size:26px; color:#ff007f; font-weight:bold;" id="opp-target">1</div>
+            </div>
+        </div>
+
+        <!-- HUD SOLO -->
+        <div id="hud-solo" class="hud" style="display:none;">
+            <div class="player-box me">
+                <div>CIBLE ACTUELLE</div>
+                <div style="font-size:26px; color:#00d2ff; font-weight:bold;" id="solo-target">1</div>
+            </div>
+            <div class="player-box me">
+                <div>SCORE</div>
+                <div style="font-size:26px; color:#00ff88; font-weight:bold;" id="solo-score">0</div>
             </div>
         </div>
         
-        <div style="font-size:20px; margin-bottom:10px; font-weight:bold;">
-            Temps : <span id="timer" style="color:#ff007f;">30</span>s
+        <div style="font-size:20px; margin-bottom:12px; font-weight:bold;">
+            Temps : <span id="game-timer" style="color:#ff007f;">30</span>s
         </div>
 
         <div id="grid" class="grid"></div>
     </div>
 
+    <!-- 6. MODAL RESULTAT / RECAP -->
     <div id="recap-modal" style="display:none;">
         <div class="recap-card">
             <div id="recap-banner" class="recap-title">RÉSULTAT</div>
             <div id="recap-reason" style="color:#aaa; margin-bottom:20px;"></div>
             
-            <div class="recap-row">
-                <span>🎯 Ma Cible :</span>
-                <span id="recap-my-target" style="color:#00d2ff; font-weight:bold;">-</span>
+            <div id="recap-1v1-rows">
+                <div class="recap-row">
+                    <span>🎯 Ma Cible :</span>
+                    <span id="recap-my-target" style="color:#00d2ff; font-weight:bold;">-</span>
+                </div>
+                <div class="recap-row">
+                    <span>🎯 Cible Adversaire :</span>
+                    <span id="recap-opp-target" style="color:#ff007f; font-weight:bold;">-</span>
+                </div>
             </div>
-            <div class="recap-row">
-                <span>🎯 Cible Adversaire :</span>
-                <span id="recap-opp-target" style="color:#ff007f; font-weight:bold;">-</span>
-            </div>
+
             <div class="recap-row">
                 <span>⭐ Mon Score :</span>
                 <span id="recap-my-score" style="font-weight:bold;">-</span>
             </div>
 
-            <button onclick="location.reload()" style="margin-top:20px;">REJOUER</button>
+            <button class="btn-main" onclick="showMainMenu()" style="margin-top:20px;">MENU PRINCIPAL</button>
         </div>
     </div>
 
@@ -153,34 +213,64 @@
         const socket = io(SERVER_URL);
 
         let myId = null;
-        let spinnerInterval = null;
+        let currentGameMode = null; // 'solo' ou '1v1'
+        let radarInterval = null;
+        
+        // Variables Solo
+        let soloTarget = 1;
+        let soloScore = 0;
+        let soloTimeLeft = 30;
+        let soloTimerInterval = null;
 
-        socket.on('connect', () => {
-            myId = socket.id;
-            document.getElementById('status').innerText = "⚡ Connecté au serveur Cloud !";
-        });
+        socket.on('connect', () => { myId = socket.id; });
 
-        function startMatchmaking() {
-            document.getElementById('find-btn').style.display = "none";
-            document.getElementById('status').innerText = "";
-            document.getElementById('loader-ui').style.display = "flex";
-            
-            // Animation des chiffres qui défilent dans la roue
-            let currentDigit = 1;
-            const spinnerNumEl = document.getElementById('spinner-num');
-            spinnerInterval = setInterval(() => {
-                currentDigit = (currentDigit % 50) + 1;
-                spinnerNumEl.innerText = currentDigit;
-            }, 80);
+        /* --- NAVIGATION --- */
+        function hideAllScreens() {
+            document.getElementById('screen-menu').style.display = 'none';
+            document.getElementById('screen-1v1-lobby').style.display = 'none';
+            document.getElementById('screen-tournament').style.display = 'none';
+            document.getElementById('screen-game').style.display = 'none';
+            document.getElementById('recap-modal').style.display = 'none';
+            document.getElementById('countdown-overlay').style.display = 'none';
+            if (radarInterval) clearInterval(radarInterval);
+            if (soloTimerInterval) clearInterval(soloTimerInterval);
+        }
+
+        function showMainMenu() {
+            hideAllScreens();
+            document.getElementById('screen-menu').style.display = 'flex';
+        }
+
+        function openTournamentScreen() {
+            hideAllScreens();
+            document.getElementById('screen-tournament').style.display = 'block';
+        }
+
+        /* --- MODE 1v1 --- */
+        function open1v1Lobby() {
+            hideAllScreens();
+            currentGameMode = '1v1';
+            document.getElementById('screen-1v1-lobby').style.display = 'flex';
+
+            // Animation du chiffre dans le radar néon
+            let digit = 1;
+            const digitEl = document.getElementById('radar-digit');
+            radarInterval = setInterval(() => {
+                digit = (digit % 50) + 1;
+                digitEl.innerText = digit;
+            }, 70);
 
             socket.emit('find_1v1_match');
         }
 
+        function cancel1v1Search() {
+            location.reload();
+        }
+
         socket.on('start_countdown', () => {
-            if (spinnerInterval) clearInterval(spinnerInterval);
-            document.getElementById('status').innerText = "⚔️ Adversaire trouvé !";
-            document.getElementById('lobby-ui').style.display = "none";
-            document.getElementById('countdown-overlay').style.display = "flex";
+            if (radarInterval) clearInterval(radarInterval);
+            document.getElementById('screen-1v1-lobby').style.display = 'none';
+            document.getElementById('countdown-overlay').style.display = 'flex';
 
             let count = 3;
             document.getElementById('countdown-number').innerText = count;
@@ -191,30 +281,28 @@
                     document.getElementById('countdown-number').innerText = count;
                 } else {
                     clearInterval(timer);
-                    document.getElementById('countdown-overlay').style.display = "none";
-                    document.getElementById('game-ui').style.display = "block";
+                    document.getElementById('countdown-overlay').style.display = 'none';
+                    document.getElementById('screen-game').style.display = 'block';
+                    document.getElementById('hud-1v1').style.display = 'grid';
+                    document.getElementById('hud-solo').style.display = 'none';
                 }
             }, 1000);
         });
 
         socket.on('game_started', (data) => {
-            document.getElementById('timer').innerText = data.timeLeft;
+            document.getElementById('game-timer').innerText = data.timeLeft;
             document.getElementById('my-target').innerText = data.myTarget || 1;
-            renderGrid(data.myPool);
+            renderGrid(data.myPool, handle1v1TileClick);
         });
 
         socket.on('timer_update', (time) => {
-            document.getElementById('timer').innerText = time;
+            document.getElementById('game-timer').innerText = time;
         });
 
         socket.on('my_grid_updated', (data) => {
             document.getElementById('my-target').innerText = data.target;
-            renderGrid(data.newPool);
-            
-            if (!data.success) {
-                document.body.style.backgroundColor = "#4a0d21";
-                setTimeout(() => document.body.style.backgroundColor = "#0f051d", 200);
-            }
+            renderGrid(data.newPool, handle1v1TileClick);
+            if (!data.success) flashError();
         });
 
         socket.on('opponent_progress', (data) => {
@@ -222,9 +310,10 @@
         });
 
         socket.on('game_over_1v1', (data) => {
-            document.getElementById('game-ui').style.display = "none";
+            hideAllScreens();
             const modal = document.getElementById('recap-modal');
             const banner = document.getElementById('recap-banner');
+            document.getElementById('recap-1v1-rows').style.display = 'block';
             
             const myData = data.players[myId];
             const oppId = Object.keys(data.players).find(id => id !== myId);
@@ -246,15 +335,84 @@
             document.getElementById('recap-opp-target').innerText = oppData ? oppData.target : '-';
             document.getElementById('recap-my-score').innerText = myData ? myData.score : 0;
 
-            modal.style.display = "flex";
+            modal.style.display = 'flex';
         });
 
-        socket.on('opponent_left', () => {
-            alert("⚠️ Ton adversaire a abandonné la partie !");
-            location.reload();
-        });
+        function handle1v1TileClick(num) {
+            socket.emit('player_click_1v1', num);
+        }
 
-        function renderGrid(pool) {
+        /* --- MODE ENTRAINEMENT SOLO --- */
+        function startSoloTraining() {
+            hideAllScreens();
+            currentGameMode = 'solo';
+            soloTarget = 1;
+            soloScore = 0;
+            soloTimeLeft = 30;
+
+            document.getElementById('screen-game').style.display = 'block';
+            document.getElementById('hud-solo').style.display = 'grid';
+            document.getElementById('hud-1v1').style.display = 'none';
+
+            document.getElementById('solo-target').innerText = soloTarget;
+            document.getElementById('solo-score').innerText = soloScore;
+            document.getElementById('game-timer').innerText = soloTimeLeft;
+
+            generateSoloGrid();
+
+            soloTimerInterval = setInterval(() => {
+                soloTimeLeft--;
+                document.getElementById('game-timer').innerText = soloTimeLeft;
+
+                if (soloTimeLeft <= 0) {
+                    endSoloGame();
+                }
+            }, 1000);
+        }
+
+        function generateSoloGrid() {
+            let pool = [soloTarget];
+            let candidates = [];
+            for (let i = 1; i <= 50; i++) {
+                if (i !== soloTarget) candidates.push(i);
+            }
+            candidates.sort(() => Math.random() - 0.5);
+            pool = pool.concat(candidates.slice(0, 11));
+            pool.sort(() => Math.random() - 0.5);
+
+            renderGrid(pool, handleSoloTileClick);
+        }
+
+        function handleSoloTileClick(num) {
+            if (num === soloTarget) {
+                soloTarget++;
+                soloScore += 10;
+                document.getElementById('solo-target').innerText = soloTarget;
+                document.getElementById('solo-score').innerText = soloScore;
+                generateSoloGrid();
+            } else {
+                soloTimeLeft = Math.max(0, soloTimeLeft - 1);
+                document.getElementById('game-timer').innerText = soloTimeLeft;
+                flashError();
+            }
+        }
+
+        function endSoloGame() {
+            hideAllScreens();
+            const modal = document.getElementById('recap-modal');
+            const banner = document.getElementById('recap-banner');
+            document.getElementById('recap-1v1-rows').style.display = 'none';
+
+            banner.innerText = "🏋️ ENTRAÎNEMENT TERMINÉ";
+            banner.style.color = "#00d2ff";
+            document.getElementById('recap-reason').innerText = `Prochaine cible visée : ${soloTarget}`;
+            document.getElementById('recap-my-score').innerText = soloScore;
+
+            modal.style.display = 'flex';
+        }
+
+        /* --- FONCTIONS COMMUNES --- */
+        function renderGrid(pool, clickHandler) {
             const grid = document.getElementById('grid');
             if (!grid) return;
             grid.innerHTML = '';
@@ -264,9 +422,14 @@
                 const tile = document.createElement('div');
                 tile.className = 'tile';
                 tile.innerText = num;
-                tile.onclick = () => socket.emit('player_click_1v1', num);
+                tile.onclick = () => clickHandler(num);
                 grid.appendChild(tile);
             });
+        }
+
+        function flashError() {
+            document.body.style.backgroundColor = "#4a0d21";
+            setTimeout(() => document.body.style.backgroundColor = "#0f051d", 200);
         }
     </script>
 </body>
