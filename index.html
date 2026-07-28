@@ -213,14 +213,18 @@
         const socket = io(SERVER_URL);
 
         let myId = null;
-        let currentGameMode = null; // 'solo' ou '1v1'
+        let currentGameMode = null; 
         let radarInterval = null;
         
-        // Variables Solo
         let soloTarget = 1;
         let soloScore = 0;
         let soloTimeLeft = 30;
         let soloTimerInterval = null;
+
+        // Force l'affichage du menu dès que la page est chargée
+        document.addEventListener("DOMContentLoaded", () => {
+            showMainMenu();
+        });
 
         socket.on('connect', () => { myId = socket.id; });
 
@@ -252,7 +256,6 @@
             currentGameMode = '1v1';
             document.getElementById('screen-1v1-lobby').style.display = 'flex';
 
-            // Animation du chiffre dans le radar néon
             let digit = 1;
             const digitEl = document.getElementById('radar-digit');
             radarInterval = setInterval(() => {
