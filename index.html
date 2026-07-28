@@ -7,7 +7,7 @@
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
         * { box-sizing: border-box; touch-action: manipulation; user-select: none; }
-        body { font-family: system-ui, sans-serif; background: #0f051d; color: #fff; margin: 0; padding: 15px; text-align: center; }
+        body { font-family: system-ui, sans-serif; background: #0f051d; color: #fff; margin: 0; padding: 15px; text-align: center; transition: background-color 0.2s; }
         h1 { color: #00d2ff; margin-bottom: 5px; }
         
         .hud-1v1 {
@@ -33,7 +33,6 @@
         }
         .status { margin: 15px 0; font-weight: bold; color: #ff8a00; }
 
-        /* Écran Compte à rebour */
         #countdown-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 5, 29, 0.95); display: flex; flex-direction: column;
@@ -41,7 +40,6 @@
         }
         .countdown-num { font-size: 90px; font-weight: 900; color: #00d2ff; animation: pulse 0.8s infinite; }
         
-        /* Modal Récapitulatif Fin de Partie */
         #recap-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.9); display: flex; flex-direction: column;
@@ -70,13 +68,11 @@
         <button id="find-btn" onclick="startMatchmaking()">TROUVER UN DUEL 1v1</button>
     </div>
 
-    <!-- Compte à rebours 3s -->
     <div id="countdown-overlay" style="display:none;">
         <div style="font-size:24px; color:#aaa; margin-bottom:10px;">PRÉPAREZ-VOUS !</div>
         <div id="countdown-number" class="countdown-num">3</div>
     </div>
 
-    <!-- Interface de Jeu -->
     <div id="game-ui" style="display:none;">
         <div class="hud-1v1">
             <div class="player-box me">
@@ -96,7 +92,6 @@
         <div id="grid" class="grid"></div>
     </div>
 
-    <!-- Modal Récapitulatif Fin de Partie -->
     <div id="recap-modal" style="display:none;">
         <div class="recap-card">
             <div id="recap-banner" class="recap-title">RÉSULTAT</div>
@@ -145,7 +140,6 @@
             document.getElementById('countdown-overlay').style.display = "flex";
         });
 
-        // Compte à rebours 3s
         socket.on('countdown_tick', (count) => {
             document.getElementById('countdown-number').innerText = count;
         });
@@ -155,7 +149,6 @@
             document.getElementById('game-ui').style.display = "block";
         });
 
-        // Début de partie avec ma propre grille
         socket.on('game_started', (data) => {
             document.getElementById('timer').innerText = data.timeLeft;
             renderGrid(data.myPool);
@@ -165,22 +158,28 @@
             document.getElementById('timer').innerText = time;
         });
 
-        socket.on('grid_shuffled', (pool) => {
+        socket.on('grid_shuffled', (data) => {
+            const pool = data.pool || data;
+            if (data.target) document.getElementById('my-target').innerText = data.target;
             renderGrid(pool, true);
         });
 
-        // Ma progression
+        // Mise à jour & Resynchronisation automatique du joueur
         socket.on('my_grid_updated', (data) => {
             document.getElementById('my-target').innerText = data.target;
             renderGrid(data.newPool);
+            
+            // Petit flash rouge si clic sur mauvais chiffre
+            if (!data.success) {
+                document.body.style.backgroundColor = "#35051d";
+                setTimeout(() => document.body.style.backgroundColor = "#0f051d", 150);
+            }
         });
 
-        // Progression de l'adversaire
         socket.on('opponent_progress', (data) => {
             document.getElementById('opp-target').innerText = data.target;
         });
 
-        // Récapitulatif de Fin de Partie
         socket.on('game_over_1v1', (data) => {
             document.getElementById('game-ui').style.display = "none";
             const modal = document.getElementById('recap-modal');
