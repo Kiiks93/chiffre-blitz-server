@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chiffre Blitz 1v1 ⚡</title>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+        * { box-sizing: border-box; touch-action: manipulation; user-select: none; }
+        body { font-family: system-ui, sans-serif; background: #0f051d; color: #fff; margin: 0; padding: 15px; text-align: center; }
+        h1 { color: #00d2ff; }
+        
+        .hud-1v1 {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+            background: rgba(255,255,255,0.08); padding: 12px; border-radius: 14px; margin-bottom: 15px;
+        }
+        .player-box { padding: 8px; border-radius: 10px; background: rgba(0,0,0,0.3); }
+        .player-box.me { border: 2px solid #00d2ff; }
+        .player-box.opponent { border: 2px solid #ff007f; }
+
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 400px; margin: 0 auto; }
+        .tile {
+            background: #2a1845; border: 2px solid #522d80; border-radius: 12px; height: 65px;
+            display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; cursor: pointer;
+        }
+        .tile.flash { background: #e52e71; }
+        
+        button {
+            background: linear-gradient(45deg, #ff416c, #ff4b2b); color: white; border: none;
+            padding: 16px 28px; font-size: 18px; font-weight: bold; border-radius: 14px; cursor: pointer; width: 100%; max-width: 400px;
+        }
+        .status { margin: 15px 0; font-weight: bold; color: #ff8a00; }
+    </style>
+</head>
+<body>
+
+    <h1>Duel 1v1 Blitz ⚔️</h1>
+    <div id="status" class="status">Connexion au serveur...</div>
+
+    <div id="lobby-ui">
+        <button id="find-btn" onclick="startMatchmaking()">TROUVER UN DUEL 1v1</button>
+    </div>
+
+    <div id="game-ui" style="display:none;">
+        <div class="hud-1v1">
+            <div class="player-box me">
+                <div>MOI</div>
+                <div style="font-size:24px; color:#00d2ff;" id="my-target">1</div>
+            </div>
+            <div class="player-box opponent">
+                <div>ADVERSAIRE</div>
+                <div style="font-size:24px; color:#ff007f;" id="opp-target">1</div>
+            </div>
+        </div>
+        
+        <div style="font-size:20px; margin-bottom:10px; font-weight:bold;">
+            Temps : <span id="timer" style="color:#ff007f;">30</span>s
+        </div>
+
+        <div id="grid" class="grid"></div>
+    </div>
+
+    <script>
+        const SERVER_URL = "https://chiffre-blitz-server.onrender.com";
+        const socket = io(SERVER_URL);
+
+        let myId = null;
+
+        socket.on('connect', () => {
+            myId = socket.id;
+            document.getElementById('status').innerText = "⚡ Connecté au serveur Cloud !";
+        });
+
+        function startMatchmaking() {
+            document.getElementById('find-btn').style.display = "none";
+            socket.emit('find_1v1_match');
+        }
+
+        socket.on('matchmaking_status', (msg) => {
+            document.getElementById('status').innerText = msg;
+        });
+
+        socket.on('match_found', (data) => {
+            document.getElementById('status').innerText = "⚔️ Adversaire trouvé ! Début du duel...";
+            document.getElementById('lobby-ui').style.display = "none";
+            document.getElementById('game-ui').style.display = "block";
+        });
+
+        socket.on('game_started', (data) => {
+            document.getElementById('timer').innerText = data.timeLeft;
+            renderGrid(data.activePool);
+        });
+
+        socket.on('timer_update', (time) => {
+            document.getElementById('timer').innerText = time;
+        });
+
+        socket.on('grid_shuffled', (pool) => {
+            renderGrid(pool, true);
+        });
+
+        socket.on('player_progress', (data) => {
+            if (data.playerId === myId) {
+                document.getElementById('my-target').innerText = data.target;
+                renderGrid(data.newPool);
+            } else {
+                document.getElementById('opp-target').innerText = data.target;
+            }
+        });
+
+        socket.on('game_over_1v1', (data) => {
+            if (data.winnerId === myId) {
+                alert("🏆 VICTOIRE ! Tu as battu ton adversaire !");
+            } else if (data.winnerId) {
+                alert("❌ DÉFAITE ! Ton adversaire a gagné !");
+            } else {
+                alert("⏱️ TEMPS ÉCOULÉ ! Partie terminée.");
+            }
+            location.reload();
+        });
+
+        socket.on('opponent_left', () => {
+            alert("⚠️ Ton adversaire a abandonné la partie !");
+            location.reload();
+        });
+
+        function renderGrid(pool, isShuffle = false) {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            pool.forEach(num => {
+                const tile = document.createElement('div');
+                tile.className = 'tile' + (isShuffle ? ' flash' : '');
+                tile.innerText = num;
+                tile.onclick = () => socket.emit('player_click_1v1', num);
+                grid.appendChild(tile);
+            });
+        }
+    </script>
+</body>
+</html>
