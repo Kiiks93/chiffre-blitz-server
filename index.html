@@ -134,19 +134,24 @@
             document.getElementById('status').innerText = msg;
         });
 
-        socket.on('match_found', () => {
+        socket.on('start_countdown', () => {
             document.getElementById('status').innerText = "⚔️ Adversaire trouvé !";
             document.getElementById('lobby-ui').style.display = "none";
             document.getElementById('countdown-overlay').style.display = "flex";
-        });
 
-        socket.on('countdown_tick', (count) => {
+            let count = 3;
             document.getElementById('countdown-number').innerText = count;
-        });
 
-        socket.on('countdown_finished', () => {
-            document.getElementById('countdown-overlay').style.display = "none";
-            document.getElementById('game-ui').style.display = "block";
+            const timer = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    document.getElementById('countdown-number').innerText = count;
+                } else {
+                    clearInterval(timer);
+                    document.getElementById('countdown-overlay').style.display = "none";
+                    document.getElementById('game-ui').style.display = "block";
+                }
+            }, 1000);
         });
 
         socket.on('game_started', (data) => {
@@ -164,12 +169,10 @@
             renderGrid(pool, true);
         });
 
-        // Mise à jour & Resynchronisation automatique du joueur
         socket.on('my_grid_updated', (data) => {
             document.getElementById('my-target').innerText = data.target;
             renderGrid(data.newPool);
             
-            // Petit flash rouge si clic sur mauvais chiffre
             if (!data.success) {
                 document.body.style.backgroundColor = "#35051d";
                 setTimeout(() => document.body.style.backgroundColor = "#0f051d", 150);
@@ -215,7 +218,10 @@
 
         function renderGrid(pool, isShuffle = false) {
             const grid = document.getElementById('grid');
+            if (!grid) return;
             grid.innerHTML = '';
+            if (!pool || !Array.isArray(pool)) return;
+            
             pool.forEach(num => {
                 const tile = document.createElement('div');
                 tile.className = 'tile' + (isShuffle ? ' flash' : '');
