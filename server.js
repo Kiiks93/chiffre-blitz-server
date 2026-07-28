@@ -9,15 +9,26 @@ const io = new Server(server, { cors: { origin: "*" } });
 const rooms = new Map();
 let matchmakingQueue = [];
 
+// Génération de grille 100 % garantie à 12 cases
 function generateGrid(currentTarget, maxTarget = 50) {
-    let pool = [currentTarget];
-    let rest = [];
-    for (let i = currentTarget + 1; i <= Math.min(currentTarget + 18, maxTarget); i++) {
-        rest.push(i);
+    const target = Number(currentTarget);
+    const pool = [target];
+    
+    // Créer la liste de tous les autres nombres possibles (de 1 à 50 sauf la cible)
+    const candidates = [];
+    for (let i = 1; i <= maxTarget; i++) {
+        if (i !== target) {
+            candidates.push(i);
+        }
     }
-    rest.sort(() => Math.random() - 0.5);
-    pool = pool.concat(rest.slice(0, 11));
-    return pool.sort(() => Math.random() - 0.5);
+    
+    // Mélanger les candidats et en garder 11
+    candidates.sort(() => Math.random() - 0.5);
+    const decoys = candidates.slice(0, 11);
+    
+    // Assembler la cible + les 11 pièges (total = 12) et mélanger
+    const fullGrid = pool.concat(decoys);
+    return fullGrid.sort(() => Math.random() - 0.5);
 }
 
 function createRoomState(p1Id, p2Id) {
@@ -59,27 +70,14 @@ io.on('connection', (socket) => {
                 const roomData = createRoomState(p1, p2);
                 rooms.set(roomId, roomData);
 
-                io.to(roomId).emit('match_found', { roomId, players: [p1, p2] });
-                startCountdown(roomId);
+                io.to(roomId).emit('start_countdown');
+
+                setTimeout(() => {
+                    start1v1Game(roomId);
+                }, 3500);
             }
         }
     });
-
-    function startCountdown(roomId) {
-        let count = 3;
-        io.to(roomId).emit('countdown_tick', count);
-
-        const countdownTimer = setInterval(() => {
-            count--;
-            if (count > 0) {
-                io.to(roomId).emit('countdown_tick', count);
-            } else {
-                clearInterval(countdownTimer);
-                io.to(roomId).emit('countdown_finished');
-                start1v1Game(roomId);
-            }
-        }, 1000);
-    }
 
     function start1v1Game(roomId) {
         const room = rooms.get(roomId);
@@ -103,7 +101,7 @@ io.on('connection', (socket) => {
             }
         }, 1000);
 
-        // Mélange doux toutes les 3s pour ne pas surcharger la connexion
+        // Mélange des cases toutes les 4 secondes
         room.shuffleInterval = setInterval(() => {
             if (!room.gameActive) return;
 
@@ -115,7 +113,7 @@ io.on('connection', (socket) => {
                     target: player.target
                 });
             }
-        }, 3000);
+        }, 4000);
     }
 
     socket.on('player_click_1v1', (num) => {
@@ -141,7 +139,6 @@ io.on('connection', (socket) => {
 
             playerState.pool = generateGrid(playerState.target);
 
-            // Renvoie la nouvelle grille et valide le coup
             socket.emit('my_grid_updated', {
                 target: playerState.target,
                 score: playerState.score,
@@ -154,7 +151,6 @@ io.on('connection', (socket) => {
                 score: playerState.score
             });
         } else {
-            // En cas d'erreur ou désynchronisation : pénalité ET resynchronisation forcée
             room.timeLeft = Math.max(0, room.timeLeft - 1);
             
             socket.emit('my_grid_updated', {
@@ -196,5 +192,5 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`🚀 Serveur 1v1 fluide actif sur le port ${PORT}`);
+    console.log(`🚀 Serveur 1v1 fluide et fixe sur le port ${PORT}`);
 });
