@@ -8,14 +8,22 @@
     <style>
         * { box-sizing: border-box; touch-action: manipulation; user-select: none; }
         body { font-family: system-ui, -apple-system, sans-serif; background: #0f051d; color: #fff; margin: 0; padding: 15px; text-align: center; }
-        h1 { color: #00d2ff; margin-top: 5px; margin-bottom: 20px; font-size: 28px; text-shadow: 0 0 15px rgba(0,210,255,0.4); }
         
+        .header-bar { display: flex; justify-content: space-between; align-items: center; max-width: 400px; margin: 0 auto 15px auto; }
+        h1 { color: #00d2ff; margin: 0; font-size: 26px; text-shadow: 0 0 15px rgba(0,210,255,0.4); }
+        
+        .mute-btn {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            color: #fff; border-radius: 50%; width: 40px; height: 40px; font-size: 18px;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+        }
+
         .menu-container { display: flex; flex-direction: column; gap: 15px; max-width: 350px; margin: 30px auto; }
         
         .btn-main {
             background: linear-gradient(45deg, #ff416c, #ff4b2b); color: white; border: none;
             padding: 18px 20px; font-size: 18px; font-weight: 800; border-radius: 16px; cursor: pointer;
-            box-shadow: 0 5px 20px rgba(255, 65, 108, 0.4); transition: transform 0.1s, filter 0.2s;
+            box-shadow: 0 5px 20px rgba(255, 65, 108, 0.4); transition: transform 0.1s;
             display: flex; align-items: center; justify-content: center; gap: 10px;
         }
         .btn-main:active { transform: scale(0.96); }
@@ -85,24 +93,17 @@
         .recap-title { font-size: 28px; font-weight: 900; margin-bottom: 10px; }
         .recap-row { display: flex; justify-content: space-between; margin: 12px 0; font-size: 18px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
 
-        @keyframes radarSpin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        @keyframes radarPulse {
-            0% { transform: scale(0.6); opacity: 0.8; }
-            100% { transform: scale(1.4); opacity: 0; }
-        }
-        @keyframes pulse {
-            0% { transform: scale(0.8); opacity: 0.5; }
-            50% { transform: scale(1.2); opacity: 1; }
-            100% { transform: scale(1); opacity: 0.8; }
-        }
+        @keyframes radarSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes radarPulse { 0% { transform: scale(0.6); opacity: 0.8; } 100% { transform: scale(1.4); opacity: 0; } }
+        @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 0.8; } }
     </style>
 </head>
 <body>
 
-    <h1>Chiffre Blitz ⚡</h1>
+    <div class="header-bar">
+        <h1>Chiffre Blitz ⚡</h1>
+        <button id="mute-btn" class="mute-btn" onclick="toggleMute()">🔊</button>
+    </div>
 
     <!-- 1. MENU PRINCIPAL -->
     <div id="screen-menu" class="menu-container">
@@ -151,7 +152,6 @@
 
     <!-- 5. ECRAN DE JEU (SOLO ET 1v1) -->
     <div id="screen-game" style="display:none;">
-        <!-- HUD 1v1 -->
         <div id="hud-1v1" class="hud" style="display:none;">
             <div class="player-box me">
                 <div>MA CIBLE</div>
@@ -163,7 +163,6 @@
             </div>
         </div>
 
-        <!-- HUD SOLO -->
         <div id="hud-solo" class="hud" style="display:none;">
             <div class="player-box me">
                 <div>CIBLE ACTUELLE</div>
@@ -182,7 +181,7 @@
         <div id="grid" class="grid"></div>
     </div>
 
-    <!-- 6. MODAL RESULTAT / RECAP -->
+    <!-- 6. MODAL RESULTAT -->
     <div id="recap-modal" style="display:none;">
         <div class="recap-card">
             <div id="recap-banner" class="recap-title">RÉSULTAT</div>
@@ -209,11 +208,152 @@
     </div>
 
     <script>
+        /* --- MOTEUR SONORE SYNTHÉTISÉ (WEB AUDIO API) --- */
+        const SoundEngine = {
+            ctx: null,
+            isMuted: false,
+            musicInterval: null,
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            },
+
+            toggleMute() {
+                this.isMuted = !this.isMuted;
+                if (this.isMuted) this.stopMusic();
+                return this.isMuted;
+            },
+
+            // Sound Effect: Clic Valide (Bip rétro dynamique doux)
+            playClick(targetLevel = 1) {
+                if (this.isMuted) return;
+                this.init();
+                
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                // La tonalité augmente avec la progression sans agresser l'oreille
+                const baseFreq = 400 + ((targetLevel % 15) * 25);
+                osc.frequency.setValueAtTime(baseFreq, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.4, this.ctx.currentTime + 0.06);
+
+                gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.06);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.06);
+            },
+
+            // Sound Effect: Erreur (Bourdonnement rétro discret)
+            playError() {
+                if (this.isMuted) return;
+                this.init();
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(140, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(70, this.ctx.currentTime + 0.12);
+
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.12);
+            },
+
+            // Sound Effect: Victoire
+            playVictory() {
+                if (this.isMuted) return;
+                this.init();
+
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, i) => {
+                    setTimeout(() => {
+                        if (this.isMuted) return;
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start();
+                        osc.stop(this.ctx.currentTime + 0.2);
+                    }, i * 90);
+                });
+            },
+
+            stopMusic() {
+                if (this.musicInterval) {
+                    clearInterval(this.musicInterval);
+                    this.musicInterval = null;
+                }
+            },
+
+            startMusic(mode) {
+                if (this.isMuted) return;
+                this.init();
+                this.stopMusic();
+
+                let step = 0;
+                // Mode Solo : Chill Lo-Fi Synth
+                const chillNotes = [261.63, 329.63, 392.00, 329.63, 293.66, 349.23, 440.00, 349.23];
+                // Mode 1v1 : Try-Hard Synthwave Rythmé
+                const tryhardNotes = [130.81, 130.81, 261.63, 130.81, 155.56, 155.56, 311.13, 155.56, 174.61, 174.61, 349.23, 174.61];
+
+                const speed = (mode === 'solo') ? 380 : 160;
+
+                this.musicInterval = setInterval(() => {
+                    if (this.isMuted || !this.ctx) return;
+                    const notes = (mode === 'solo') ? chillNotes : tryhardNotes;
+                    const freq = notes[step % notes.length];
+
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+
+                    osc.type = (mode === 'solo') ? 'sine' : 'sawtooth';
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+
+                    const vol = (mode === 'solo') ? 0.03 : 0.04; // Volume de fond très léger
+                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + (speed/1000) * 0.85);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + (speed/1000) * 0.85);
+
+                    step++;
+                }, speed);
+            }
+        };
+
+        function toggleMute() {
+            const muted = SoundEngine.toggleMute();
+            document.getElementById('mute-btn').innerText = muted ? '🔇' : '🔊';
+        }
+
+        /* --- LOGIQUE DU JEU --- */
         const SERVER_URL = "https://chiffre-blitz-server.onrender.com";
         const socket = io(SERVER_URL);
 
         let myId = null;
-        let currentGameMode = null; 
         let radarInterval = null;
         
         let soloTarget = 1;
@@ -221,14 +361,12 @@
         let soloTimeLeft = 30;
         let soloTimerInterval = null;
 
-        // Force l'affichage du menu dès que la page est chargée
         document.addEventListener("DOMContentLoaded", () => {
             showMainMenu();
         });
 
         socket.on('connect', () => { myId = socket.id; });
 
-        /* --- NAVIGATION --- */
         function hideAllScreens() {
             document.getElementById('screen-menu').style.display = 'none';
             document.getElementById('screen-1v1-lobby').style.display = 'none';
@@ -238,6 +376,7 @@
             document.getElementById('countdown-overlay').style.display = 'none';
             if (radarInterval) clearInterval(radarInterval);
             if (soloTimerInterval) clearInterval(soloTimerInterval);
+            SoundEngine.stopMusic();
         }
 
         function showMainMenu() {
@@ -250,10 +389,9 @@
             document.getElementById('screen-tournament').style.display = 'block';
         }
 
-        /* --- MODE 1v1 --- */
+        /* MODE 1v1 */
         function open1v1Lobby() {
             hideAllScreens();
-            currentGameMode = '1v1';
             document.getElementById('screen-1v1-lobby').style.display = 'flex';
 
             let digit = 1;
@@ -288,6 +426,8 @@
                     document.getElementById('screen-game').style.display = 'block';
                     document.getElementById('hud-1v1').style.display = 'grid';
                     document.getElementById('hud-solo').style.display = 'none';
+                    
+                    SoundEngine.startMusic('1v1'); // Musique Try-Hard 1v1
                 }
             }, 1000);
         });
@@ -305,7 +445,13 @@
         socket.on('my_grid_updated', (data) => {
             document.getElementById('my-target').innerText = data.target;
             renderGrid(data.newPool, handle1v1TileClick);
-            if (!data.success) flashError();
+            
+            if (data.success) {
+                SoundEngine.playClick(data.target);
+            } else {
+                SoundEngine.playError();
+                flashError();
+            }
         });
 
         socket.on('opponent_progress', (data) => {
@@ -325,6 +471,7 @@
             if (data.winnerId === myId) {
                 banner.innerText = "🏆 VICTOIRE !";
                 banner.style.color = "#00d2ff";
+                SoundEngine.playVictory();
             } else if (data.winnerId) {
                 banner.innerText = "❌ DÉFAITE !";
                 banner.style.color = "#ff007f";
@@ -345,10 +492,9 @@
             socket.emit('player_click_1v1', num);
         }
 
-        /* --- MODE ENTRAINEMENT SOLO --- */
+        /* MODE ENTRAINEMENT SOLO */
         function startSoloTraining() {
             hideAllScreens();
-            currentGameMode = 'solo';
             soloTarget = 1;
             soloScore = 0;
             soloTimeLeft = 30;
@@ -362,6 +508,7 @@
             document.getElementById('game-timer').innerText = soloTimeLeft;
 
             generateSoloGrid();
+            SoundEngine.startMusic('solo'); // Musique Chill Solo
 
             soloTimerInterval = setInterval(() => {
                 soloTimeLeft--;
@@ -388,12 +535,14 @@
 
         function handleSoloTileClick(num) {
             if (num === soloTarget) {
+                SoundEngine.playClick(soloTarget);
                 soloTarget++;
                 soloScore += 10;
                 document.getElementById('solo-target').innerText = soloTarget;
                 document.getElementById('solo-score').innerText = soloScore;
                 generateSoloGrid();
             } else {
+                SoundEngine.playError();
                 soloTimeLeft = Math.max(0, soloTimeLeft - 1);
                 document.getElementById('game-timer').innerText = soloTimeLeft;
                 flashError();
@@ -411,10 +560,11 @@
             document.getElementById('recap-reason').innerText = `Prochaine cible visée : ${soloTarget}`;
             document.getElementById('recap-my-score').innerText = soloScore;
 
+            SoundEngine.playVictory();
             modal.style.display = 'flex';
         }
 
-        /* --- FONCTIONS COMMUNES --- */
+        /* FONCTIONS COMMUNES */
         function renderGrid(pool, clickHandler) {
             const grid = document.getElementById('grid');
             if (!grid) return;
