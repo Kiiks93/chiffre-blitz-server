@@ -9,7 +9,7 @@
         * { box-sizing: border-box; touch-action: manipulation; user-select: none; }
         body { font-family: system-ui, -apple-system, sans-serif; background: #0f051d; color: #fff; margin: 0; padding: 15px; text-align: center; }
         
-        .header-bar { display: flex; justify-content: space-between; align-items: center; max-width: 400px; margin: 0 auto 15px auto; }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; max-width: 400px; margin: 0 auto 10px auto; }
         h1 { color: #00d2ff; margin: 0; font-size: 26px; text-shadow: 0 0 15px rgba(0,210,255,0.4); }
         
         .mute-btn {
@@ -18,7 +18,15 @@
             display: flex; align-items: center; justify-content: center; cursor: pointer;
         }
 
-        .menu-container { display: flex; flex-direction: column; gap: 15px; max-width: 350px; margin: 30px auto; }
+        /* Bandeau d'activation audio */
+        .audio-notice {
+            background: rgba(0, 210, 255, 0.15); border: 1px solid #00d2ff;
+            color: #00d2ff; padding: 8px 12px; border-radius: 20px; font-size: 13px;
+            font-weight: bold; max-width: 350px; margin: 0 auto 15px auto;
+            animation: pulseAudio 1.5s infinite; cursor: pointer;
+        }
+
+        .menu-container { display: flex; flex-direction: column; gap: 15px; max-width: 350px; margin: 20px auto; }
         
         .btn-main {
             background: linear-gradient(45deg, #ff416c, #ff4b2b); color: white; border: none;
@@ -52,13 +60,9 @@
         }
         .tile:active { transform: scale(0.92); background: #3c1e69; }
 
-        /* Animation d'Attente Néon Matchmaking */
-        .matchmaking-loader {
-            display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 40px;
-        }
-        .radar-box {
-            position: relative; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center;
-        }
+        /* Animation Matchmaking */
+        .matchmaking-loader { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 40px; }
+        .radar-box { position: relative; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; }
         .radar-ring {
             position: absolute; width: 100%; height: 100%; border-radius: 50%;
             border: 4px solid transparent; border-top-color: #00d2ff; border-right-color: #ff007f;
@@ -68,9 +72,7 @@
             position: absolute; width: 80%; height: 80%; border-radius: 50%;
             background: rgba(0, 210, 255, 0.1); animation: radarPulse 1.5s ease-out infinite;
         }
-        .radar-num {
-            font-size: 38px; font-weight: 900; color: #00d2ff; text-shadow: 0 0 15px #00d2ff; z-index: 2;
-        }
+        .radar-num { font-size: 38px; font-weight: 900; color: #00d2ff; text-shadow: 0 0 15px #00d2ff; z-index: 2; }
 
         /* Overlay Décompte */
         #countdown-overlay {
@@ -96,6 +98,7 @@
         @keyframes radarSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes radarPulse { 0% { transform: scale(0.6); opacity: 0.8; } 100% { transform: scale(1.4); opacity: 0; } }
         @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 0.8; } }
+        @keyframes pulseAudio { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
     </style>
 </head>
 <body>
@@ -103,6 +106,11 @@
     <div class="header-bar">
         <h1>Chiffre Blitz ⚡</h1>
         <button id="mute-btn" class="mute-btn" onclick="toggleMute()">🔊</button>
+    </div>
+
+    <!-- Indicatif audio si bloqué par le navigateur -->
+    <div id="audio-prompt" class="audio-notice" onclick="unlockAudio()">
+        🔊 Touche l'écran pour activer le son
     </div>
 
     <!-- 1. MENU PRINCIPAL -->
@@ -208,7 +216,7 @@
     </div>
 
     <script>
-        /* --- MOTEUR SONORE MULTI-MODES --- */
+        /* --- MOTEUR SONORE MULTI-MODES & DÉBLOCAGE NAVIGATEUR --- */
         const SoundEngine = {
             ctx: null,
             isMuted: false,
@@ -218,9 +226,6 @@
             init() {
                 if (!this.ctx) {
                     this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                if (this.ctx.state === 'suspended') {
-                    this.ctx.resume();
                 }
             },
 
@@ -239,7 +244,8 @@
             playClick(targetLevel = 1) {
                 if (this.isMuted) return;
                 this.init();
-                
+                if (this.ctx.state === 'suspended') return;
+
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
 
@@ -261,6 +267,7 @@
             playError() {
                 if (this.isMuted) return;
                 this.init();
+                if (this.ctx.state === 'suspended') return;
 
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
@@ -282,6 +289,7 @@
             playVictory() {
                 if (this.isMuted) return;
                 this.init();
+                if (this.ctx.state === 'suspended') return;
 
                 const notes = [523.25, 659.25, 783.99, 1046.50];
                 notes.forEach((freq, i) => {
@@ -315,15 +323,19 @@
                 if (mode) this.currentMode = mode;
                 if (this.isMuted) return;
                 this.init();
+
+                // Si le contexte audio est suspendu par le navigateur, on attend la premiere interaction
+                if (this.ctx.state === 'suspended') return;
+
                 this.stopMusic(false);
 
                 let step = 0;
                 
-                // 1. Menu : Arcade Festif & Motivant (Arpèges majeurs dynamique)
+                // 1. Menu : Arcade Festif & Motivant
                 const menuNotes = [261.63, 329.63, 392.00, 523.25, 349.23, 440.00, 523.25, 698.46, 392.00, 493.88, 587.33, 783.99, 440.00, 523.25, 659.25, 523.25];
                 // 2. Solo : Chill Lo-Fi Synth
                 const chillNotes = [261.63, 329.63, 392.00, 329.63, 293.66, 349.23, 440.00, 349.23];
-                // 3. 1v1 : Try-Hard Synthwave Rythmé
+                // 3. 1v1 : Try-Hard Synthwave
                 const tryhardNotes = [130.81, 130.81, 261.63, 130.81, 155.56, 155.56, 311.13, 155.56, 174.61, 174.61, 349.23, 174.61];
 
                 let notes = menuNotes;
@@ -344,7 +356,7 @@
                 }
 
                 this.musicInterval = setInterval(() => {
-                    if (this.isMuted || !this.ctx) return;
+                    if (this.isMuted || !this.ctx || this.ctx.state !== 'running') return;
                     const freq = notes[step % notes.length];
 
                     const osc = this.ctx.createOscillator();
@@ -367,17 +379,32 @@
             }
         };
 
+        // Déblocage automatique de l'audio au tout premier tap/clic sur la page
+        function unlockAudio() {
+            SoundEngine.init();
+            if (SoundEngine.ctx && SoundEngine.ctx.state === 'suspended') {
+                SoundEngine.ctx.resume().then(() => {
+                    const prompt = document.getElementById('audio-prompt');
+                    if (prompt) prompt.style.display = 'none';
+                    if (SoundEngine.currentMode && !SoundEngine.isMuted) {
+                        SoundEngine.startMusic(SoundEngine.currentMode);
+                    }
+                });
+            } else {
+                const prompt = document.getElementById('audio-prompt');
+                if (prompt) prompt.style.display = 'none';
+            }
+        }
+
+        ['click', 'touchstart', 'pointerdown'].forEach(evt => {
+            window.addEventListener(evt, unlockAudio, { once: true });
+        });
+
         function toggleMute() {
+            unlockAudio();
             const muted = SoundEngine.toggleMute();
             document.getElementById('mute-btn').innerText = muted ? '🔇' : '🔊';
         }
-
-        // Débloque l'AudioContext dès le premier clic/toucher (exigence navigateurs mobiles)
-        window.addEventListener('pointerdown', () => {
-            if (SoundEngine.ctx && SoundEngine.ctx.state === 'suspended') {
-                SoundEngine.ctx.resume();
-            }
-        }, { once: true });
 
         /* --- LOGIQUE DU JEU --- */
         const SERVER_URL = "https://chiffre-blitz-server.onrender.com";
@@ -413,7 +440,7 @@
         function showMainMenu() {
             hideAllScreens();
             document.getElementById('screen-menu').style.display = 'flex';
-            SoundEngine.startMusic('menu'); // Musique Festive au Menu
+            SoundEngine.startMusic('menu');
         }
 
         function openTournamentScreen() {
@@ -460,7 +487,7 @@
                     document.getElementById('hud-solo').style.display = 'none';
                     
                     current1v1Time = 30;
-                    SoundEngine.startMusic('1v1'); // Musique 1v1 Try-Hard
+                    SoundEngine.startMusic('1v1');
                 }
             }, 1000);
         });
@@ -544,7 +571,7 @@
             document.getElementById('game-timer').innerText = soloTimeLeft;
 
             generateSoloGrid();
-            SoundEngine.startMusic('solo'); // Musique Solo Chill
+            SoundEngine.startMusic('solo');
 
             soloTimerInterval = setInterval(() => {
                 soloTimeLeft--;
