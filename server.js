@@ -16,7 +16,7 @@ function generateGrid(currentTarget, maxTarget = 50) {
         rest.push(i);
     }
     rest.sort(() => Math.random() - 0.5);
-    pool = pool.concat(rest.slice(0, 11)); // 12 cases
+    pool = pool.concat(rest.slice(0, 11));
     return pool.sort(() => Math.random() - 0.5);
 }
 
@@ -60,8 +60,6 @@ io.on('connection', (socket) => {
                 rooms.set(roomId, roomData);
 
                 io.to(roomId).emit('match_found', { roomId, players: [p1, p2] });
-                
-                // Lancer le compte à rebours de 3s avant la partie
                 startCountdown(roomId);
             }
         }
@@ -89,18 +87,13 @@ io.on('connection', (socket) => {
 
         room.gameActive = true;
 
-        // Envoyer à chaque joueur sa propre grille initiale
         for (const pId in room.players) {
-            const pSocket = io.sockets.sockets.get(pId);
-            if (pSocket) {
-                pSocket.emit('game_started', {
-                    myPool: room.players[pId].pool,
-                    timeLeft: room.timeLeft
-                });
-            }
+            io.to(pId).emit('game_started', {
+                myPool: room.players[pId].pool,
+                timeLeft: room.timeLeft
+            });
         }
 
-        // Chronomètre global du serveur
         room.timerInterval = setInterval(() => {
             room.timeLeft--;
             io.to(roomId).emit('timer_update', room.timeLeft);
@@ -110,19 +103,19 @@ io.on('connection', (socket) => {
             }
         }, 1000);
 
-        // Mélange automatique personnalisé pour la cible de chaque joueur
+        // Mélange doux toutes les 3s pour ne pas surcharger la connexion
         room.shuffleInterval = setInterval(() => {
             if (!room.gameActive) return;
 
             for (const pId in room.players) {
                 const player = room.players[pId];
                 player.pool = generateGrid(player.target);
-                const pSocket = io.sockets.sockets.get(pId);
-                if (pSocket) {
-                    pSocket.emit('grid_shuffled', player.pool);
-                }
+                io.to(pId).emit('grid_shuffled', {
+                    pool: player.pool,
+                    target: player.target
+                });
             }
-        }, 2500);
+        }, 3000);
     }
 
     socket.on('player_click_1v1', (num) => {
@@ -135,34 +128,42 @@ io.on('connection', (socket) => {
         const playerState = room.players[socket.id];
         if (!playerState) return;
 
-        if (num === playerState.target) {
+        const clickedNum = Number(num);
+
+        if (clickedNum === playerState.target) {
             playerState.target++;
             playerState.score += 10;
 
-            // Condition de victoire : Atteindre 50
             if (playerState.target > 50) {
                 end1v1Game(roomId, socket.id, "Cible 50 atteinte !");
                 return;
             }
 
-            // Générer la nouvelle grille personnelle pour ce joueur
             playerState.pool = generateGrid(playerState.target);
 
-            // Informer le joueur de sa nouvelle grille
+            // Renvoie la nouvelle grille et valide le coup
             socket.emit('my_grid_updated', {
                 target: playerState.target,
                 score: playerState.score,
-                newPool: playerState.pool
+                newPool: playerState.pool,
+                success: true
             });
 
-            // Informer l'adversaire de la progression de ce joueur
             socket.to(roomId).emit('opponent_progress', {
                 target: playerState.target,
                 score: playerState.score
             });
         } else {
-            // Pénalité d'erreur : -1 seconde
+            // En cas d'erreur ou désynchronisation : pénalité ET resynchronisation forcée
             room.timeLeft = Math.max(0, room.timeLeft - 1);
+            
+            socket.emit('my_grid_updated', {
+                target: playerState.target,
+                score: playerState.score,
+                newPool: playerState.pool,
+                success: false
+            });
+
             io.to(roomId).emit('timer_update', room.timeLeft);
         }
     });
@@ -175,7 +176,6 @@ io.on('connection', (socket) => {
         clearInterval(room.timerInterval);
         clearInterval(room.shuffleInterval);
 
-        // Envoyer le récapitulatif complet aux deux joueurs
         io.to(roomId).emit('game_over_1v1', {
             winnerId,
             reason,
@@ -196,5 +196,5 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`🚀 Serveur 1v1 corrigé actif sur le port ${PORT}`);
+    console.log(`🚀 Serveur 1v1 fluide actif sur le port ${PORT}`);
 });
