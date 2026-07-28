@@ -22,16 +22,15 @@
         .tile {
             background: #2a1845; border: 2px solid #522d80; border-radius: 12px; height: 65px;
             display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; cursor: pointer;
-            transition: transform 0.05s ease;
+            transition: transform 0.05s ease, background-color 0.1s;
         }
-        .tile:active { transform: scale(0.92); }
-        .tile.flash { background: #e52e71; }
+        .tile:active { transform: scale(0.92); background: #3c1e69; }
         
         button {
             background: linear-gradient(45deg, #ff416c, #ff4b2b); color: white; border: none;
             padding: 16px 28px; font-size: 18px; font-weight: bold; border-radius: 14px; cursor: pointer; width: 100%; max-width: 400px;
         }
-        .status { margin: 15px 0; font-weight: bold; color: #ff8a00; }
+        .status { margin: 15px 0; font-weight: bold; color: #ff8a00; line-height: 1.4; }
 
         #countdown-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -76,12 +75,12 @@
     <div id="game-ui" style="display:none;">
         <div class="hud-1v1">
             <div class="player-box me">
-                <div>MOI</div>
-                <div style="font-size:24px; color:#00d2ff;" id="my-target">1</div>
+                <div>MA CIBLE</div>
+                <div style="font-size:28px; color:#00d2ff; font-weight:bold;" id="my-target">1</div>
             </div>
             <div class="player-box opponent">
                 <div>ADVERSAIRE</div>
-                <div style="font-size:24px; color:#ff007f;" id="opp-target">1</div>
+                <div style="font-size:28px; color:#ff007f; font-weight:bold;" id="opp-target">1</div>
             </div>
         </div>
         
@@ -156,6 +155,7 @@
 
         socket.on('game_started', (data) => {
             document.getElementById('timer').innerText = data.timeLeft;
+            document.getElementById('my-target').innerText = data.myTarget || 1;
             renderGrid(data.myPool);
         });
 
@@ -163,19 +163,13 @@
             document.getElementById('timer').innerText = time;
         });
 
-        socket.on('grid_shuffled', (data) => {
-            const pool = data.pool || data;
-            if (data.target) document.getElementById('my-target').innerText = data.target;
-            renderGrid(pool, true);
-        });
-
         socket.on('my_grid_updated', (data) => {
             document.getElementById('my-target').innerText = data.target;
             renderGrid(data.newPool);
             
             if (!data.success) {
-                document.body.style.backgroundColor = "#35051d";
-                setTimeout(() => document.body.style.backgroundColor = "#0f051d", 150);
+                document.body.style.backgroundColor = "#4a0d21";
+                setTimeout(() => document.body.style.backgroundColor = "#0f051d", 200);
             }
         });
 
@@ -216,7 +210,7 @@
             location.reload();
         });
 
-        function renderGrid(pool, isShuffle = false) {
+        function renderGrid(pool) {
             const grid = document.getElementById('grid');
             if (!grid) return;
             grid.innerHTML = '';
@@ -224,7 +218,7 @@
             
             pool.forEach(num => {
                 const tile = document.createElement('div');
-                tile.className = 'tile' + (isShuffle ? ' flash' : '');
+                tile.className = 'tile';
                 tile.innerText = num;
                 tile.onclick = () => socket.emit('player_click_1v1', num);
                 grid.appendChild(tile);
@@ -233,3 +227,4 @@
     </script>
 </body>
 </html>
+
