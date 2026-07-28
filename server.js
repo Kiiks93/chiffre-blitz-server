@@ -17,28 +17,21 @@ function shuffleArray(array) {
     return array;
 }
 
-// Génération aveugle et blindée à 100%
 function generateGrid(currentTarget, maxTarget = 50) {
     const target = Number(currentTarget);
-    
-    // 1. On part avec la cible
     let pool = [target];
     
-    // 2. On prépare tous les autres chiffres de 1 à 50
     const candidates = [];
     for (let i = 1; i <= maxTarget; i++) {
         if (i !== target) candidates.push(i);
     }
     
-    // 3. On tire 11 pièges au hasard
     shuffleArray(candidates);
     const decoys = candidates.slice(0, 11);
     
-    // 4. On fusionne et on mélange
     let fullGrid = pool.concat(decoys);
     fullGrid = shuffleArray(fullGrid);
     
-    // SÉCURITÉ ULTIME : Si par un miracle impossible la cible n'est pas dedans, on la force !
     if (!fullGrid.includes(target)) {
         fullGrid[0] = target;
         fullGrid = shuffleArray(fullGrid);
@@ -66,7 +59,7 @@ io.on('connection', (socket) => {
         if (matchmakingQueue.includes(socket.id)) return;
 
         matchmakingQueue.push(socket.id);
-        socket.emit('matchmaking_status', '⏳ En attente du 2ème joueur... (Lance le jeu sur le 2ème appareil !)');
+        socket.emit('matchmaking_status', 'searching');
 
         if (matchmakingQueue.length >= 2) {
             const p1 = matchmakingQueue.shift();
@@ -113,7 +106,25 @@ io.on('connection', (socket) => {
             io.to(roomId).emit('timer_update', room.timeLeft);
 
             if (room.timeLeft <= 0) {
-                end1v1Game(roomId, null, "Temps écoulé !");
+                // Détermination du gagnant au coup de sifflet final !
+                const playerIds = Object.keys(room.players);
+                const p1Id = playerIds[0];
+                const p2Id = playerIds[1];
+                const p1 = room.players[p1Id];
+                const p2 = room.players[p2Id];
+
+                let winnerId = null;
+                if (p1.target > p2.target) {
+                    winnerId = p1Id;
+                } else if (p2.target > p1.target) {
+                    winnerId = p2Id;
+                } else if (p1.score > p2.score) {
+                    winnerId = p1Id;
+                } else if (p2.score > p1.score) {
+                    winnerId = p2Id;
+                }
+
+                end1v1Game(roomId, winnerId, "Temps écoulé !");
             }
         }, 1000);
     }
@@ -139,7 +150,6 @@ io.on('connection', (socket) => {
                 return;
             }
 
-            // Génère la nouvelle grille avec le nouveau chiffre obligatoire
             playerState.pool = generateGrid(playerState.target);
 
             socket.emit('my_grid_updated', {
@@ -154,7 +164,6 @@ io.on('connection', (socket) => {
                 score: playerState.score
             });
         } else {
-            // Mauvais clic : pénalité de temps mais la grille NE BOUGE PAS
             room.timeLeft = Math.max(0, room.timeLeft - 1);
             
             socket.emit('my_grid_updated', {
@@ -195,5 +204,5 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`🚀 Serveur 1v1 sans mélange auto actif sur le port ${PORT}`);
+    console.log(`🚀 Serveur 1v1 prêt sur le port ${PORT}`);
 });
