@@ -123,10 +123,12 @@
 
         /* Effets Pouvoirs */
         .tile.highlight-target { border-color: #00ff88 !important; background: #00ff88 !important; color: #000 !important; box-shadow: 0 0 20px #00ff88; }
-        .tile.focus-dimmed { opacity: 0.15; pointer-events: none; }
         .grid.effect-quake { animation: quake 0.15s infinite; }
         .grid.effect-micro .tile { transform: scale(0.65); }
         .grid.effect-eclipse { filter: brightness(0) blur(8px); pointer-events: none; }
+        
+        /* Effet Gèle du chrono */
+        #game-timer.frozen { color: #00d2ff !important; text-shadow: 0 0 10px #00d2ff; animation: pulseAudio 0.5s infinite; }
 
         /* Matchmaking & Décompte */
         .matchmaking-loader { display: flex; flex-direction: column; align-items: center; margin-top: 40px; }
@@ -421,9 +423,9 @@
 
         const POWERS_CATALOG = [
             // BONUS (POUR SOI)
-            { id: 'spotlight', name: '💡 Projecteur', price: 100, desc: 'Cible en vert pendant 2s', type: 'bonus' },
+            { id: 'spotlight', name: '💡 Projecteur', price: 100, desc: 'Illumine la bonne tuile (2s)', type: 'bonus' },
             { id: 'joker', name: '⚡ Joker Éclair', price: 150, desc: 'Valide la cible actuelle', type: 'bonus' },
-            { id: 'focus', name: '🔍 Focus', price: 150, desc: 'Masque les fausses tuiles', type: 'bonus' },
+            { id: 'freeze', name: '⏳ Blocage du Temps', price: 130, desc: 'Gèle le chrono pendant 3s', type: 'bonus' },
             { id: 'nova', name: '🌟 Nova Temporelle', price: 300, desc: 'GIGA : Valide 3 cibles', type: 'bonus' },
             // MALUS (ADVERSAIRE)
             { id: 'quake', name: '📳 Séisme', price: 150, desc: 'Fait trembler l\'adversaire (2s)', type: 'malus' },
@@ -436,6 +438,7 @@
         let soloTarget = 1, soloScore = 0, soloTimeLeft = 30, soloTimerInterval = null;
         let powerUsedInMatch = false;
         let currentShopTab = 'bonus';
+        let isTimeFrozen = false; // Indicateur pour le gel du chrono
 
         document.addEventListener("DOMContentLoaded", () => {
             loadLocalEconomy();
@@ -530,6 +533,7 @@
             });
             if (radarInterval) clearInterval(radarInterval);
             if (soloTimerInterval) clearInterval(soloTimerInterval);
+            isTimeFrozen = false;
             SoundEngine.stopMusic(true);
         }
 
@@ -584,7 +588,6 @@
                 myProfile.coins -= power.price;
                 myProfile.inventory[id] = (myProfile.inventory[id] || 0) + 1;
                 
-                // Si aucun pouvoir n'est équipé, on équipe celui qu'on vient d'acheter
                 if (!myProfile.equippedPower) {
                     myProfile.equippedPower = id;
                 }
@@ -644,6 +647,7 @@
                 (parseInt(document.getElementById('my-target').innerText) || 1) : soloTarget;
 
             if (powerId === 'spotlight') {
+                // Traque dynamique de la valeur numérique de la cible partout dans la grille
                 document.querySelectorAll('.tile').forEach(t => {
                     if (parseInt(t.innerText) === currentTarget) {
                         t.classList.add('highlight-target');
@@ -652,11 +656,15 @@
                 });
             } else if (powerId === 'joker') {
                 autoValidateTarget();
-            } else if (powerId === 'focus') {
-                document.querySelectorAll('.tile').forEach(t => {
-                    if (parseInt(t.innerText) !== currentTarget) t.classList.add('focus-dimmed');
-                });
-                setTimeout(() => document.querySelectorAll('.tile').forEach(t => t.classList.remove('focus-dimmed')), 2500);
+            } else if (powerId === 'freeze') {
+                // Gel du chrono pendant 3 secondes
+                isTimeFrozen = true;
+                const timerEl = document.getElementById('game-timer');
+                timerEl.classList.add('frozen');
+                setTimeout(() => {
+                    isTimeFrozen = false;
+                    timerEl.classList.remove('frozen');
+                }, 3000);
             } else if (powerId === 'nova') {
                 autoValidateTarget();
                 setTimeout(() => autoValidateTarget(), 250);
@@ -777,6 +785,7 @@
                     document.getElementById('hud-solo').style.display = 'none';
                     preparePowerHUD();
                     current1v1Time = 30;
+                    isTimeFrozen = false;
                     SoundEngine.startMusic('1v1');
                 }
             }, 1000);
@@ -790,8 +799,10 @@
         });
 
         socket.on('timer_update', (time) => {
-            current1v1Time = time;
-            document.getElementById('game-timer').innerText = Math.max(0, time);
+            if (!isTimeFrozen) {
+                current1v1Time = time;
+                document.getElementById('game-timer').innerText = Math.max(0, time);
+            }
         });
 
         socket.on('my_grid_updated', (data) => {
@@ -849,7 +860,7 @@
         function startSoloTraining() {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
             hideAllScreens();
-            soloTarget = 1; soloScore = 0; soloTimeLeft = 30;
+            soloTarget = 1; soloScore = 0; soloTimeLeft = 30; isTimeFrozen = false;
 
             document.getElementById('screen-game').style.display = 'block';
             document.getElementById('hud-solo').style.display = 'grid';
@@ -864,9 +875,11 @@
             SoundEngine.startMusic('solo');
 
             soloTimerInterval = setInterval(() => {
-                soloTimeLeft--;
-                document.getElementById('game-timer').innerText = Math.max(0, soloTimeLeft);
-                if (soloTimeLeft <= 0) endSoloGame();
+                if (!isTimeFrozen) {
+                    soloTimeLeft--;
+                    document.getElementById('game-timer').innerText = Math.max(0, soloTimeLeft);
+                    if (soloTimeLeft <= 0) endSoloGame();
+                }
             }, 1000);
         }
 
@@ -889,9 +902,11 @@
                 generateSoloGrid();
             } else {
                 SoundEngine.playError();
-                soloTimeLeft = Math.max(0, soloTimeLeft - 1);
-                document.getElementById('game-timer').innerText = Math.max(0, soloTimeLeft);
-                if (soloTimeLeft <= 0) endSoloGame();
+                if (!isTimeFrozen) {
+                    soloTimeLeft = Math.max(0, soloTimeLeft - 1);
+                    document.getElementById('game-timer').innerText = Math.max(0, soloTimeLeft);
+                    if (soloTimeLeft <= 0) endSoloGame();
+                }
             }
         }
 
