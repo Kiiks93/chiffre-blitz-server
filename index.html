@@ -12,13 +12,18 @@
         .header-bar { display: flex; justify-content: space-between; align-items: center; max-width: 400px; margin: 0 auto 10px auto; }
         h1 { color: #00d2ff; margin: 0; font-size: 26px; text-shadow: 0 0 15px rgba(0,210,255,0.4); }
         
+        .user-pill {
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(0,210,255,0.3);
+            border-radius: 20px; padding: 6px 14px; font-size: 13px; color: #00d2ff; font-weight: bold;
+            display: flex; align-items: center; gap: 6px; cursor: pointer;
+        }
+
         .mute-btn {
             background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-            color: #fff; border-radius: 50%; width: 40px; height: 40px; font-size: 18px;
+            color: #fff; border-radius: 50%; width: 38px; height: 38px; font-size: 16px;
             display: flex; align-items: center; justify-content: center; cursor: pointer;
         }
 
-        /* Bandeau d'activation audio */
         .audio-notice {
             background: rgba(0, 210, 255, 0.15); border: 1px solid #00d2ff;
             color: #00d2ff; padding: 8px 12px; border-radius: 20px; font-size: 13px;
@@ -26,16 +31,17 @@
             animation: pulseAudio 1.5s infinite; cursor: pointer;
         }
 
-        .menu-container { display: flex; flex-direction: column; gap: 15px; max-width: 350px; margin: 20px auto; }
+        .menu-container { display: flex; flex-direction: column; gap: 12px; max-width: 350px; margin: 20px auto; }
         
         .btn-main {
             background: linear-gradient(45deg, #ff416c, #ff4b2b); color: white; border: none;
-            padding: 18px 20px; font-size: 18px; font-weight: 800; border-radius: 16px; cursor: pointer;
+            padding: 16px 20px; font-size: 17px; font-weight: 800; border-radius: 16px; cursor: pointer;
             box-shadow: 0 5px 20px rgba(255, 65, 108, 0.4); transition: transform 0.1s;
             display: flex; align-items: center; justify-content: center; gap: 10px;
         }
         .btn-main:active { transform: scale(0.96); }
         .btn-blue { background: linear-gradient(45deg, #00c6ff, #0072ff); box-shadow: 0 5px 20px rgba(0, 198, 255, 0.4); }
+        .btn-gold { background: linear-gradient(45deg, #f8b500, #fceabb); color: #222; box-shadow: 0 5px 20px rgba(248, 181, 0, 0.4); }
         .btn-purple { background: linear-gradient(45deg, #7b4397, #dc2430); box-shadow: 0 5px 20px rgba(123, 67, 151, 0.4); }
 
         .btn-secondary {
@@ -43,11 +49,33 @@
             padding: 10px 18px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 15px;
         }
 
-        /* HUD & Grille de Jeu */
-        .hud {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-            background: rgba(255,255,255,0.08); padding: 12px; border-radius: 14px; margin-bottom: 15px;
+        /* MODAL CLASSEMENT */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 200; padding: 15px;
         }
+        .modal-card {
+            background: #1e1035; border: 2px solid #00d2ff; border-radius: 20px;
+            padding: 20px; max-width: 400px; width: 100%; max-height: 80vh; display: flex; flex-direction: column;
+        }
+        .tabs { display: flex; gap: 5px; margin-bottom: 15px; }
+        .tab-btn {
+            flex: 1; padding: 10px 5px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
+            color: #aaa; border-radius: 10px; font-weight: bold; font-size: 13px; cursor: pointer;
+        }
+        .tab-btn.active { background: #00d2ff; color: #000; border-color: #00d2ff; }
+        .leaderboard-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+        .lb-row {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 10px; font-size: 14px;
+        }
+        .lb-rank { font-weight: 900; width: 25px; color: #00d2ff; }
+        .lb-name { flex: 1; font-weight: bold; margin-left: 10px; }
+        .lb-pts { font-weight: 900; color: #00ff88; }
+
+        /* HUD & Grille */
+        .hud { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(255,255,255,0.08); padding: 12px; border-radius: 14px; margin-bottom: 15px; }
         .player-box { padding: 8px; border-radius: 10px; background: rgba(0,0,0,0.3); }
         .player-box.me { border: 2px solid #00d2ff; }
         .player-box.opponent { border: 2px solid #ff007f; }
@@ -56,48 +84,19 @@
         .tile {
             background: #2a1845; border: 2px solid #522d80; border-radius: 12px; height: 65px;
             display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; cursor: pointer;
-            transition: transform 0.05s ease, background-color 0.1s;
         }
         .tile:active { transform: scale(0.92); background: #3c1e69; }
 
-        /* Animation Matchmaking */
-        .matchmaking-loader { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 40px; }
-        .radar-box { position: relative; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; }
-        .radar-ring {
-            position: absolute; width: 100%; height: 100%; border-radius: 50%;
-            border: 4px solid transparent; border-top-color: #00d2ff; border-right-color: #ff007f;
-            animation: radarSpin 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
-        }
-        .radar-pulse {
-            position: absolute; width: 80%; height: 80%; border-radius: 50%;
-            background: rgba(0, 210, 255, 0.1); animation: radarPulse 1.5s ease-out infinite;
-        }
-        .radar-num { font-size: 38px; font-weight: 900; color: #00d2ff; text-shadow: 0 0 15px #00d2ff; z-index: 2; }
+        /* Matchmaking & Décompte */
+        .matchmaking-loader { display: flex; flex-direction: column; align-items: center; margin-top: 40px; }
+        .radar-box { position: relative; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; }
+        .radar-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 4px solid transparent; border-top-color: #00d2ff; border-right-color: #ff007f; animation: radarSpin 1.2s linear infinite; }
+        .radar-num { font-size: 32px; font-weight: 900; color: #00d2ff; }
 
-        /* Overlay Décompte */
-        #countdown-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 5, 29, 0.95); display: flex; flex-direction: column;
-            align-items: center; justify-content: center; z-index: 100;
-        }
-        .countdown-num { font-size: 90px; font-weight: 900; color: #00d2ff; animation: pulse 0.8s infinite; }
-        
-        /* Modal Récapitulatif */
-        #recap-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.9); display: flex; flex-direction: column;
-            align-items: center; justify-content: center; z-index: 200; padding: 20px;
-        }
-        .recap-card {
-            background: #1e1035; border: 2px solid #00d2ff; border-radius: 20px;
-            padding: 25px; max-width: 380px; width: 100%; box-shadow: 0 0 30px rgba(0,210,255,0.3);
-        }
-        .recap-title { font-size: 28px; font-weight: 900; margin-bottom: 10px; }
-        .recap-row { display: flex; justify-content: space-between; margin: 12px 0; font-size: 18px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
+        #countdown-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 5, 29, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
+        .countdown-num { font-size: 90px; font-weight: 900; color: #00d2ff; }
 
         @keyframes radarSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes radarPulse { 0% { transform: scale(0.6); opacity: 0.8; } 100% { transform: scale(1.4); opacity: 0; } }
-        @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 0.8; } }
         @keyframes pulseAudio { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
     </style>
 </head>
@@ -105,15 +104,17 @@
 
     <div class="header-bar">
         <h1>Chiffre Blitz ⚡</h1>
+        <div id="user-pill" class="user-pill" onclick="promptProfileChange()">
+            👤 <span id="user-name-display">Joueur</span> (<span id="user-pts-display">1000</span> pts)
+        </div>
         <button id="mute-btn" class="mute-btn" onclick="toggleMute()">🔊</button>
     </div>
 
-    <!-- Indicatif audio si bloqué par le navigateur -->
     <div id="audio-prompt" class="audio-notice" onclick="unlockAudio()">
         🔊 Touche l'écran pour activer le son
     </div>
 
-    <!-- 1. MENU PRINCIPAL -->
+    <!-- MENU PRINCIPAL -->
     <div id="screen-menu" class="menu-container">
         <button class="btn-main btn-blue" onclick="startSoloTraining()">
             🏋️ ENTRAÎNEMENT SOLO
@@ -121,44 +122,59 @@
         <button class="btn-main" onclick="open1v1Lobby()">
             ⚔️ DUEL 1v1 ONLINE
         </button>
+        <button class="btn-main btn-gold" onclick="openLeaderboard()">
+            🏆 CLASSEMENT
+        </button>
         <button class="btn-main btn-purple" onclick="openTournamentScreen()">
-            🏆 MODE TOURNOI
+            🎯 MODE TOURNOI
         </button>
     </div>
 
-    <!-- 2. SALLE D'ATTENTE 1v1 -->
+    <!-- SALLE D'ATTENTE 1v1 -->
     <div id="screen-1v1-lobby" style="display:none;">
         <div class="matchmaking-loader">
             <div class="radar-box">
-                <div class="radar-pulse"></div>
                 <div class="radar-ring"></div>
                 <div id="radar-digit" class="radar-num">1</div>
             </div>
-            <div style="margin-top:25px; font-size:20px; font-weight:bold; color:#00d2ff;">
-                Recherche d'un adversaire...
-            </div>
-            <div style="color:#aaa; font-size:14px; margin-top:5px;">Connexion au serveur Blitz</div>
+            <div style="margin-top:20px; font-size:18px; font-weight:bold; color:#00d2ff;">Recherche d'adversaire...</div>
         </div>
         <button class="btn-secondary" onclick="cancel1v1Search()">❌ Annuler</button>
     </div>
 
-    <!-- 3. MODE TOURNOI -->
+    <!-- MODE TOURNOI -->
     <div id="screen-tournament" style="display:none; max-width:400px; margin:0 auto;">
-        <h2>🏆 Tournoi Blitz</h2>
+        <h2>🎯 Tournoi Blitz</h2>
         <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:16px; margin:20px 0;">
-            <p>Affronte l'arbre de compétition !</p>
-            <div style="color:#ff8a00; font-weight:bold;">Saison 1 : Prochainement disponible</div>
+            <p>Arbre à élimination directe.</p>
+            <div style="color:#ff8a00; font-weight:bold;">Prochaine étape de la feuille de route !</div>
         </div>
         <button class="btn-secondary" onclick="showMainMenu()">⬅️ Retour Menu</button>
     </div>
 
-    <!-- 4. OVERLAY DECOMPTE -->
+    <!-- OVERLAY CLASSEMENT -->
+    <div id="modal-leaderboard" class="modal-overlay" style="display:none;">
+        <div class="modal-card">
+            <h2 style="margin:0 0 15px 0; color:#00d2ff;">🏆 CLASSEMENT</h2>
+            <div class="tabs">
+                <button id="tab-regional" class="tab-btn active" onclick="fetchLeaderboard('regional')">📍 Région</button>
+                <button id="tab-national" class="tab-btn" onclick="fetchLeaderboard('national')">🇫🇷 France</button>
+                <button id="tab-global" class="tab-btn" onclick="fetchLeaderboard('global')">🌍 Monde</button>
+            </div>
+            <div id="lb-list" class="leaderboard-list">
+                <div style="text-align:center; color:#aaa; margin-top:20px;">Chargement...</div>
+            </div>
+            <button class="btn-secondary" onclick="closeLeaderboard()" style="margin-top:15px;">Fermer</button>
+        </div>
+    </div>
+
+    <!-- OVERLAY DECOMPTE -->
     <div id="countdown-overlay" style="display:none;">
         <div style="font-size:24px; color:#aaa; margin-bottom:10px;">PRÉPAREZ-VOUS !</div>
         <div id="countdown-number" class="countdown-num">3</div>
     </div>
 
-    <!-- 5. ECRAN DE JEU -->
+    <!-- ECRAN DE JEU -->
     <div id="screen-game" style="display:none;">
         <div id="hud-1v1" class="hud" style="display:none;">
             <div class="player-box me">
@@ -189,24 +205,24 @@
         <div id="grid" class="grid"></div>
     </div>
 
-    <!-- 6. MODAL RESULTAT -->
-    <div id="recap-modal" style="display:none;">
-        <div class="recap-card">
-            <div id="recap-banner" class="recap-title">RÉSULTAT</div>
+    <!-- MODAL RESULTAT -->
+    <div id="recap-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-card" style="text-align:center;">
+            <div id="recap-banner" style="font-size:26px; font-weight:900; margin-bottom:10px;">RÉSULTAT</div>
             <div id="recap-reason" style="color:#aaa; margin-bottom:20px;"></div>
             
             <div id="recap-1v1-rows">
-                <div class="recap-row">
+                <div style="display:flex; justify-content:space-between; margin:10px 0; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px;">
                     <span>🎯 Ma Cible :</span>
                     <span id="recap-my-target" style="color:#00d2ff; font-weight:bold;">-</span>
                 </div>
-                <div class="recap-row">
+                <div style="display:flex; justify-content:space-between; margin:10px 0; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px;">
                     <span>🎯 Cible Adversaire :</span>
                     <span id="recap-opp-target" style="color:#ff007f; font-weight:bold;">-</span>
                 </div>
             </div>
 
-            <div class="recap-row">
+            <div style="display:flex; justify-content:space-between; margin:10px 0;">
                 <span>⭐ Mon Score :</span>
                 <span id="recap-my-score" style="font-weight:bold;">-</span>
             </div>
@@ -216,189 +232,79 @@
     </div>
 
     <script>
-        /* --- MOTEUR SONORE MULTI-MODES & DÉBLOCAGE NAVIGATEUR --- */
+        /* MOTEUR SONORE */
         const SoundEngine = {
-            ctx: null,
-            isMuted: false,
-            musicInterval: null,
-            currentMode: null,
-
-            init() {
-                if (!this.ctx) {
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-            },
-
+            ctx: null, isMuted: false, musicInterval: null, currentMode: null,
+            init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
             toggleMute() {
                 this.isMuted = !this.isMuted;
-                if (this.isMuted) {
-                    this.stopMusic(false);
-                } else {
-                    if (this.currentMode) {
-                        this.startMusic(this.currentMode);
-                    }
-                }
+                if (this.isMuted) this.stopMusic(false);
+                else if (this.currentMode) this.startMusic(this.currentMode);
                 return this.isMuted;
             },
-
-            playClick(targetLevel = 1) {
-                if (this.isMuted) return;
-                this.init();
-                if (this.ctx.state === 'suspended') return;
-
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-
-                osc.type = 'sine';
-                const baseFreq = 400 + ((targetLevel % 15) * 25);
-                osc.frequency.setValueAtTime(baseFreq, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.4, this.ctx.currentTime + 0.06);
-
-                gain.gain.setValueAtTime(0.20, this.ctx.currentTime);
+            playClick(target = 1) {
+                if (this.isMuted) return; this.init(); if (this.ctx.state === 'suspended') return;
+                const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+                osc.type = 'sine'; const freq = 400 + ((target % 15) * 25);
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.06);
-
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.06);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.06);
             },
-
             playError() {
-                if (this.isMuted) return;
-                this.init();
-                if (this.ctx.state === 'suspended') return;
-
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(140, this.ctx.currentTime);
-                osc.frequency.linearRampToValueAtTime(70, this.ctx.currentTime + 0.12);
-
-                gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                if (this.isMuted) return; this.init(); if (this.ctx.state === 'suspended') return;
+                const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(140, this.ctx.currentTime);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
-
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.12);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.12);
             },
-
             playVictory() {
-                if (this.isMuted) return;
-                this.init();
-                if (this.ctx.state === 'suspended') return;
-
-                const notes = [523.25, 659.25, 783.99, 1046.50];
-                notes.forEach((freq, i) => {
+                if (this.isMuted) return; this.init(); if (this.ctx.state === 'suspended') return;
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
                     setTimeout(() => {
                         if (this.isMuted) return;
-                        const osc = this.ctx.createOscillator();
-                        const gain = this.ctx.createGain();
-                        osc.type = 'triangle';
-                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                        const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+                        osc.type = 'triangle'; osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
                         gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
-                        osc.connect(gain);
-                        gain.connect(this.ctx.destination);
-                        osc.start();
-                        osc.stop(this.ctx.currentTime + 0.2);
+                        osc.connect(gain); gain.connect(this.ctx.destination);
+                        osc.start(); osc.stop(this.ctx.currentTime + 0.2);
                     }, i * 90);
                 });
             },
-
-            stopMusic(clearMode = true) {
-                if (this.musicInterval) {
-                    clearInterval(this.musicInterval);
-                    this.musicInterval = null;
-                }
-                if (clearMode) {
-                    this.currentMode = null;
-                }
-            },
-
+            stopMusic(clear = true) { if (this.musicInterval) clearInterval(this.musicInterval); if (clear) this.currentMode = null; },
             startMusic(mode) {
-                if (mode) this.currentMode = mode;
-                if (this.isMuted) return;
-                this.init();
-
-                // Si le contexte audio est suspendu par le navigateur, on attend la premiere interaction
-                if (this.ctx.state === 'suspended') return;
-
-                this.stopMusic(false);
-
-                let step = 0;
-                
-                // 1. Menu : Arcade Festif & Motivant
-                const menuNotes = [261.63, 329.63, 392.00, 523.25, 349.23, 440.00, 523.25, 698.46, 392.00, 493.88, 587.33, 783.99, 440.00, 523.25, 659.25, 523.25];
-                // 2. Solo : Chill Lo-Fi Synth
-                const chillNotes = [261.63, 329.63, 392.00, 329.63, 293.66, 349.23, 440.00, 349.23];
-                // 3. 1v1 : Try-Hard Synthwave
-                const tryhardNotes = [130.81, 130.81, 261.63, 130.81, 155.56, 155.56, 311.13, 155.56, 174.61, 174.61, 349.23, 174.61];
-
-                let notes = menuNotes;
-                let speed = 200;
-                let waveType = 'triangle';
-                let vol = 0.12;
-
-                if (mode === 'solo') {
-                    notes = chillNotes;
-                    speed = 380;
-                    waveType = 'sine';
-                    vol = 0.14;
-                } else if (mode === '1v1') {
-                    notes = tryhardNotes;
-                    speed = 160;
-                    waveType = 'sawtooth';
-                    vol = 0.16;
-                }
-
+                if (mode) this.currentMode = mode; if (this.isMuted) return; this.init();
+                if (this.ctx.state === 'suspended') return; this.stopMusic(false);
+                let step = 0; const notes = [261.63, 329.63, 392.00, 523.25];
                 this.musicInterval = setInterval(() => {
                     if (this.isMuted || !this.ctx || this.ctx.state !== 'running') return;
-                    const freq = notes[step % notes.length];
-
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-
-                    osc.type = waveType;
-                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-
-                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + (speed/1000) * 0.85);
-
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-
-                    osc.start();
-                    osc.stop(this.ctx.currentTime + (speed/1000) * 0.85);
-
+                    const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+                    osc.type = 'triangle'; osc.frequency.setValueAtTime(notes[step % notes.length], this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.18);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + 0.18);
                     step++;
-                }, speed);
+                }, 220);
             }
         };
 
-        // Déblocage automatique de l'audio au tout premier tap/clic sur la page
         function unlockAudio() {
             SoundEngine.init();
             if (SoundEngine.ctx && SoundEngine.ctx.state === 'suspended') {
                 SoundEngine.ctx.resume().then(() => {
-                    const prompt = document.getElementById('audio-prompt');
-                    if (prompt) prompt.style.display = 'none';
-                    if (SoundEngine.currentMode && !SoundEngine.isMuted) {
-                        SoundEngine.startMusic(SoundEngine.currentMode);
-                    }
+                    document.getElementById('audio-prompt').style.display = 'none';
+                    if (SoundEngine.currentMode && !SoundEngine.isMuted) SoundEngine.startMusic(SoundEngine.currentMode);
                 });
             } else {
-                const prompt = document.getElementById('audio-prompt');
-                if (prompt) prompt.style.display = 'none';
+                document.getElementById('audio-prompt').style.display = 'none';
             }
         }
-
-        ['click', 'touchstart', 'pointerdown'].forEach(evt => {
-            window.addEventListener(evt, unlockAudio, { once: true });
-        });
+        ['click', 'touchstart', 'pointerdown'].forEach(e => window.addEventListener(e, unlockAudio, { once: true }));
 
         function toggleMute() {
             unlockAudio();
@@ -406,32 +312,55 @@
             document.getElementById('mute-btn').innerText = muted ? '🔇' : '🔊';
         }
 
-        /* --- LOGIQUE DU JEU --- */
+        /* LOGIQUE DE PROFIL & JEU */
         const SERVER_URL = "https://chiffre-blitz-server.onrender.com";
         const socket = io(SERVER_URL);
 
-        let myId = null;
-        let radarInterval = null;
-        
-        let soloTarget = 1;
-        let soloScore = 0;
-        let soloTimeLeft = 30;
-        let soloTimerInterval = null;
-        let current1v1Time = 30;
+        let myProfile = { username: "", region: "Hauts-de-France", country: "FR", points: 1000 };
+        let current1v1Time = 30, radarInterval = null;
+        let soloTarget = 1, soloScore = 0, soloTimeLeft = 30, soloTimerInterval = null;
 
         document.addEventListener("DOMContentLoaded", () => {
+            initProfile();
             showMainMenu();
         });
 
-        socket.on('connect', () => { myId = socket.id; });
+        function initProfile() {
+            let savedName = localStorage.getItem('cb_username');
+            if (!savedName) {
+                savedName = 'Joueur_' + Math.floor(1000 + Math.random() * 9000);
+                localStorage.setItem('cb_username', savedName);
+            }
+            myProfile.username = savedName;
+            document.getElementById('user-name-display').innerText = savedName;
+        }
+
+        function promptProfileChange() {
+            const newName = prompt("Choisis ton pseudo :", myProfile.username);
+            if (newName && newName.trim().length >= 3) {
+                myProfile.username = newName.trim();
+                localStorage.setItem('cb_username', myProfile.username);
+                document.getElementById('user-name-display').innerText = myProfile.username;
+                socket.emit('register_player', myProfile);
+            }
+        }
+
+        socket.on('connect', () => {
+            socket.emit('register_player', myProfile);
+        });
+
+        socket.on('player_registered', (player) => {
+            if (player) {
+                myProfile = player;
+                document.getElementById('user-name-display').innerText = player.username;
+                document.getElementById('user-pts-display').innerText = player.points;
+            }
+        });
 
         function hideAllScreens() {
-            document.getElementById('screen-menu').style.display = 'none';
-            document.getElementById('screen-1v1-lobby').style.display = 'none';
-            document.getElementById('screen-tournament').style.display = 'none';
-            document.getElementById('screen-game').style.display = 'none';
-            document.getElementById('recap-modal').style.display = 'none';
-            document.getElementById('countdown-overlay').style.display = 'none';
+            ['screen-menu', 'screen-1v1-lobby', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'countdown-overlay'].forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
             if (radarInterval) clearInterval(radarInterval);
             if (soloTimerInterval) clearInterval(soloTimerInterval);
             SoundEngine.stopMusic(true);
@@ -448,24 +377,60 @@
             document.getElementById('screen-tournament').style.display = 'block';
         }
 
-        /* MODE 1v1 */
+        /* CLASSEMENT */
+        function openLeaderboard() {
+            document.getElementById('modal-leaderboard').style.display = 'flex';
+            fetchLeaderboard('regional');
+        }
+
+        function closeLeaderboard() {
+            document.getElementById('modal-leaderboard').style.display = 'none';
+        }
+
+        function fetchLeaderboard(type) {
+            ['regional', 'national', 'global'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.toggle('active', t === type);
+            });
+            document.getElementById('lb-list').innerHTML = '<div style="text-align:center; color:#aaa; margin-top:20px;">Chargement...</div>';
+            socket.emit('get_leaderboard', type);
+        }
+
+        socket.on('leaderboard_data', (res) => {
+            const container = document.getElementById('lb-list');
+            container.innerHTML = '';
+
+            if (!res.data || res.data.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#aaa; margin-top:20px;">Aucun joueur dans ce classement.</div>';
+                return;
+            }
+
+            res.data.forEach((p, index) => {
+                const row = document.createElement('div');
+                row.className = 'lb-row';
+                row.innerHTML = `
+                    <span class="lb-rank">#${index + 1}</span>
+                    <span class="lb-name">${p.username}</span>
+                    <span class="lb-pts">${p.points} pts</span>
+                `;
+                container.appendChild(row);
+            });
+        });
+
+        /* DUEL 1v1 */
         function open1v1Lobby() {
             hideAllScreens();
             document.getElementById('screen-1v1-lobby').style.display = 'flex';
 
             let digit = 1;
-            const digitEl = document.getElementById('radar-digit');
             radarInterval = setInterval(() => {
                 digit = (digit % 50) + 1;
-                digitEl.innerText = digit;
+                document.getElementById('radar-digit').innerText = digit;
             }, 70);
 
             socket.emit('find_1v1_match');
         }
 
-        function cancel1v1Search() {
-            location.reload();
-        }
+        function cancel1v1Search() { showMainMenu(); }
 
         socket.on('start_countdown', () => {
             if (radarInterval) clearInterval(radarInterval);
@@ -485,7 +450,6 @@
                     document.getElementById('screen-game').style.display = 'block';
                     document.getElementById('hud-1v1').style.display = 'grid';
                     document.getElementById('hud-solo').style.display = 'none';
-                    
                     current1v1Time = 30;
                     SoundEngine.startMusic('1v1');
                 }
@@ -507,13 +471,8 @@
         socket.on('my_grid_updated', (data) => {
             document.getElementById('my-target').innerText = data.target;
             renderGrid(data.newPool, handle1v1TileClick);
-            
-            if (data.success) {
-                SoundEngine.playClick(data.target);
-            } else {
-                SoundEngine.playError();
-                flashError();
-            }
+            if (data.success) SoundEngine.playClick(data.target);
+            else SoundEngine.playError();
         });
 
         socket.on('opponent_progress', (data) => {
@@ -525,21 +484,19 @@
             const modal = document.getElementById('recap-modal');
             const banner = document.getElementById('recap-banner');
             document.getElementById('recap-1v1-rows').style.display = 'block';
-            
+
+            const myId = socket.id;
             const myData = data.players[myId];
             const oppId = Object.keys(data.players).find(id => id !== myId);
             const oppData = oppId ? data.players[oppId] : { target: '-', score: 0 };
 
             if (data.winnerId === myId) {
-                banner.innerText = "🏆 VICTOIRE !";
-                banner.style.color = "#00d2ff";
+                banner.innerText = "🏆 VICTOIRE !"; banner.style.color = "#00d2ff";
                 SoundEngine.playVictory();
             } else if (data.winnerId) {
-                banner.innerText = "❌ DÉFAITE !";
-                banner.style.color = "#ff007f";
+                banner.innerText = "❌ DÉFAITE !"; banner.style.color = "#ff007f";
             } else {
-                banner.innerText = "⏱️ ÉGALITÉ !";
-                banner.style.color = "#ff8a00";
+                banner.innerText = "⏱️ ÉGALITÉ !"; banner.style.color = "#ff8a00";
             }
 
             document.getElementById('recap-reason').innerText = data.reason;
@@ -548,6 +505,8 @@
             document.getElementById('recap-my-score').innerText = myData ? myData.score : 0;
 
             modal.style.display = 'flex';
+            // Rafraîchir le profil
+            socket.emit('register_player', myProfile);
         });
 
         function handle1v1TileClick(num) {
@@ -555,12 +514,10 @@
             socket.emit('player_click_1v1', num);
         }
 
-        /* MODE ENTRAINEMENT SOLO */
+        /* SOLO */
         function startSoloTraining() {
             hideAllScreens();
-            soloTarget = 1;
-            soloScore = 0;
-            soloTimeLeft = 30;
+            soloTarget = 1; soloScore = 0; soloTimeLeft = 30;
 
             document.getElementById('screen-game').style.display = 'block';
             document.getElementById('hud-solo').style.display = 'grid';
@@ -576,33 +533,24 @@
             soloTimerInterval = setInterval(() => {
                 soloTimeLeft--;
                 document.getElementById('game-timer').innerText = Math.max(0, soloTimeLeft);
-
-                if (soloTimeLeft <= 0) {
-                    endSoloGame();
-                }
+                if (soloTimeLeft <= 0) endSoloGame();
             }, 1000);
         }
 
         function generateSoloGrid() {
             let pool = [soloTarget];
             let candidates = [];
-            for (let i = 1; i <= 50; i++) {
-                if (i !== soloTarget) candidates.push(i);
-            }
+            for (let i = 1; i <= 50; i++) if (i !== soloTarget) candidates.push(i);
             candidates.sort(() => Math.random() - 0.5);
-            pool = pool.concat(candidates.slice(0, 11));
-            pool.sort(() => Math.random() - 0.5);
-
+            pool = pool.concat(candidates.slice(0, 11)).sort(() => Math.random() - 0.5);
             renderGrid(pool, handleSoloTileClick);
         }
 
         function handleSoloTileClick(num) {
             if (soloTimeLeft <= 0) return;
-
             if (num === soloTarget) {
                 SoundEngine.playClick(soloTarget);
-                soloTarget++;
-                soloScore += 10;
+                soloTarget++; soloScore += 10;
                 document.getElementById('solo-target').innerText = soloTarget;
                 document.getElementById('solo-score').innerText = soloScore;
                 generateSoloGrid();
@@ -610,48 +558,34 @@
                 SoundEngine.playError();
                 soloTimeLeft = Math.max(0, soloTimeLeft - 1);
                 document.getElementById('game-timer').innerText = Math.max(0, soloTimeLeft);
-                flashError();
-
-                if (soloTimeLeft <= 0) {
-                    endSoloGame();
-                }
+                if (soloTimeLeft <= 0) endSoloGame();
             }
         }
 
         function endSoloGame() {
             hideAllScreens();
             const modal = document.getElementById('recap-modal');
-            const banner = document.getElementById('recap-banner');
+            document.getElementById('recap-banner').innerText = "🏋️ ENTRAÎNEMENT TERMINÉ";
+            document.getElementById('recap-banner').style.color = "#00d2ff";
             document.getElementById('recap-1v1-rows').style.display = 'none';
-
-            banner.innerText = "🏋️ ENTRAÎNEMENT TERMINÉ";
-            banner.style.color = "#00d2ff";
-            document.getElementById('recap-reason').innerText = `Prochaine cible visée : ${soloTarget}`;
+            document.getElementById('recap-reason').innerText = `Prochaine cible : ${soloTarget}`;
             document.getElementById('recap-my-score').innerText = soloScore;
-
             SoundEngine.playVictory();
             modal.style.display = 'flex';
         }
 
-        /* FONCTIONS COMMUNES */
-        function renderGrid(pool, clickHandler) {
+        function renderGrid(pool, handler) {
             const grid = document.getElementById('grid');
             if (!grid) return;
             grid.innerHTML = '';
-            if (!pool || !Array.isArray(pool)) return;
-            
+            if (!pool) return;
             pool.forEach(num => {
                 const tile = document.createElement('div');
                 tile.className = 'tile';
                 tile.innerText = num;
-                tile.onclick = () => clickHandler(num);
+                tile.onclick = () => handler(num);
                 grid.appendChild(tile);
             });
-        }
-
-        function flashError() {
-            document.body.style.backgroundColor = "#4a0d21";
-            setTimeout(() => document.body.style.backgroundColor = "#0f051d", 200);
         }
     </script>
 </body>
