@@ -1,208 +1,183 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+const io = new Server(server, {
+    cors: { origin: "*" }
+});
 
-const rooms = new Map();
-let matchmakingQueue = [];
+// Connexion Supabase via les variables d'environnement Render
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-}
-
-function generateGrid(currentTarget, maxTarget = 50) {
-    const target = Number(currentTarget);
-    let pool = [target];
-    
-    const candidates = [];
-    for (let i = 1; i <= maxTarget; i++) {
-        if (i !== target) candidates.push(i);
-    }
-    
-    shuffleArray(candidates);
-    const decoys = candidates.slice(0, 11);
-    
-    let fullGrid = pool.concat(decoys);
-    fullGrid = shuffleArray(fullGrid);
-    
-    if (!fullGrid.includes(target)) {
-        fullGrid[0] = target;
-        fullGrid = shuffleArray(fullGrid);
-    }
-    
-    return fullGrid;
-}
-
-function createRoomState(p1Id, p2Id) {
-    return {
-        players: {
-            [p1Id]: { score: 0, target: 1, pool: generateGrid(1) },
-            [p2Id]: { score: 0, target: 1, pool: generateGrid(1) }
-        },
-        timeLeft: 30,
-        gameActive: false,
-        timerInterval: null
-    };
-}
+let waitingPlayer = null;
+const activeGames = new Map();
 
 io.on('connection', (socket) => {
-    console.log(`⚡ Joueur connecté : ${socket.id}`);
+    console.log(`Joueur connecté : ${socket.id}`);
+
+    // Inscription / Connexion automatique du joueur
+    socket.on('register_player', async (data) => {
+        const username = data.username || `Joueur_${socket.id.substring(0, 4)}`;
+        const region = data.region || 'Hauts-de-France';
+        const country = data.country || 'FR';
+
+        // Vérifier si le joueur existe déjà, sinon le créer
+        let { data: player, error } = await supabase
+            .from('players')
+            .select('*')
+            .eq('username', username)
+            .single();
+
+        if (!player) {
+            const { data: newPlayer } = await supabase
+                .from('players')
+                .insert([{ username, region, country, points: 1000 }])
+                .select()
+                .single();
+            player = newPlayer;
+        }
+
+        socket.playerData = player;
+        socket.emit('player_registered', player);
+    });
 
     socket.on('find_1v1_match', () => {
-        if (matchmakingQueue.includes(socket.id)) return;
+        if (waitingPlayer && waitingPlayer.id !== socket.id) {
+            const player1 = waitingPlayer;
+            const player2 = socket;
+            waitingPlayer = null;
 
-        matchmakingQueue.push(socket.id);
-        socket.emit('matchmaking_status', 'searching');
+            const roomId = `room_${player1.id}_${player2.id}`;
+            player1.join(roomId);
+            player2.join(roomId);
 
-        if (matchmakingQueue.length >= 2) {
-            const p1 = matchmakingQueue.shift();
-            const p2 = matchmakingQueue.shift();
-            const roomId = `room_1v1_${Date.now()}`;
+            const gameData = {
+                roomId,
+                player1Socket: player1,
+                player2Socket: player2,
+                players: {
+                    [player1.id]: { target: 1, score: 0, pool: generatePool(1), dbId: player1.playerData?.id },
+                    [player2.id]: { target: 1, score: 0, pool: generatePool(1), dbId: player2.playerData?.id }
+                },
+                timeLeft: 30,
+                timer: null
+            };
 
-            const s1 = io.sockets.sockets.get(p1);
-            const s2 = io.sockets.sockets.get(p2);
+            activeGames.set(roomId, gameData);
+            io.to(roomId).emit('start_countdown');
 
-            if (s1 && s2) {
-                s1.join(roomId);
-                s2.join(roomId);
-                s1.roomId = roomId;
-                s2.roomId = roomId;
+            setTimeout(() => {
+                io.to(player1.id).emit('game_started', { myTarget: 1, myPool: gameData.players[player1.id].pool, timeLeft: 30 });
+                io.to(player2.id).emit('game_started', { myTarget: 1, myPool: gameData.players[player2.id].pool, timeLeft: 30 });
 
-                const roomData = createRoomState(p1, p2);
-                rooms.set(roomId, roomData);
+                gameData.timer = setInterval(() => {
+                    gameData.timeLeft--;
+                    io.to(roomId).emit('timer_update', gameData.timeLeft);
 
-                io.to(roomId).emit('start_countdown');
+                    if (gameData.timeLeft <= 0) {
+                        clearInterval(gameData.timer);
+                        concludeGame(roomId, io, activeGames);
+                    }
+                }, 1000);
 
-                setTimeout(() => {
-                    start1v1Game(roomId);
-                }, 3500);
-            }
+            }, 3000);
+
+        } else {
+            waitingPlayer = socket;
         }
     });
-
-    function start1v1Game(roomId) {
-        const room = rooms.get(roomId);
-        if (!room) return;
-
-        room.gameActive = true;
-
-        for (const pId in room.players) {
-            io.to(pId).emit('game_started', {
-                myPool: room.players[pId].pool,
-                myTarget: room.players[pId].target,
-                timeLeft: room.timeLeft
-            });
-        }
-
-        room.timerInterval = setInterval(() => {
-            room.timeLeft--;
-            io.to(roomId).emit('timer_update', room.timeLeft);
-
-            if (room.timeLeft <= 0) {
-                // Détermination du gagnant au coup de sifflet final !
-                const playerIds = Object.keys(room.players);
-                const p1Id = playerIds[0];
-                const p2Id = playerIds[1];
-                const p1 = room.players[p1Id];
-                const p2 = room.players[p2Id];
-
-                let winnerId = null;
-                if (p1.target > p2.target) {
-                    winnerId = p1Id;
-                } else if (p2.target > p1.target) {
-                    winnerId = p2Id;
-                } else if (p1.score > p2.score) {
-                    winnerId = p1Id;
-                } else if (p2.score > p1.score) {
-                    winnerId = p2Id;
-                }
-
-                end1v1Game(roomId, winnerId, "Temps écoulé !");
-            }
-        }, 1000);
-    }
 
     socket.on('player_click_1v1', (num) => {
-        const roomId = socket.roomId;
-        if (!roomId || !rooms.has(roomId)) return;
+        for (let [roomId, game] of activeGames.entries()) {
+            if (game.players[socket.id]) {
+                const playerData = game.players[socket.id];
+                if (game.timeLeft <= 0) return;
 
-        const room = rooms.get(roomId);
-        if (!room.gameActive) return;
+                if (num === playerData.target) {
+                    playerData.target++;
+                    playerData.score += 10;
+                    playerData.pool = generatePool(playerData.target);
 
-        const playerState = room.players[socket.id];
-        if (!playerState) return;
-
-        const clickedNum = Number(num);
-
-        if (clickedNum === playerState.target) {
-            playerState.target++;
-            playerState.score += 10;
-
-            if (playerState.target > 50) {
-                end1v1Game(roomId, socket.id, "Cible 50 atteinte !");
-                return;
+                    socket.emit('my_grid_updated', { target: playerData.target, newPool: playerData.pool, success: true });
+                    socket.to(roomId).emit('opponent_progress', { target: playerData.target });
+                } else {
+                    socket.emit('my_grid_updated', { target: playerData.target, newPool: playerData.pool, success: false });
+                }
+                break;
             }
-
-            playerState.pool = generateGrid(playerState.target);
-
-            socket.emit('my_grid_updated', {
-                target: playerState.target,
-                score: playerState.score,
-                newPool: playerState.pool,
-                success: true
-            });
-
-            socket.to(roomId).emit('opponent_progress', {
-                target: playerState.target,
-                score: playerState.score
-            });
-        } else {
-            room.timeLeft = Math.max(0, room.timeLeft - 1);
-            
-            socket.emit('my_grid_updated', {
-                target: playerState.target,
-                score: playerState.score,
-                newPool: playerState.pool,
-                success: false
-            });
-
-            io.to(roomId).emit('timer_update', room.timeLeft);
         }
     });
-
-    function end1v1Game(roomId, winnerId, reason) {
-        const room = rooms.get(roomId);
-        if (!room) return;
-
-        room.gameActive = false;
-        clearInterval(room.timerInterval);
-
-        io.to(roomId).emit('game_over_1v1', {
-            winnerId,
-            reason,
-            players: room.players
-        });
-
-        rooms.delete(roomId);
-    }
 
     socket.on('disconnect', () => {
-        matchmakingQueue = matchmakingQueue.filter(id => id !== socket.id);
-        if (socket.roomId && rooms.has(socket.roomId)) {
-            io.to(socket.roomId).emit('opponent_left');
-            rooms.delete(socket.roomId);
+        if (waitingPlayer && waitingPlayer.id === socket.id) waitingPlayer = null;
+        for (let [roomId, game] of activeGames.entries()) {
+            if (game.players[socket.id]) {
+                clearInterval(game.timer);
+                concludeGame(roomId, io, activeGames, socket.id);
+                break;
+            }
         }
     });
 });
 
+function generatePool(target) {
+    let pool = [target];
+    let candidates = [];
+    for (let i = 1; i <= 50; i++) {
+        if (i !== target) candidates.push(i);
+    }
+    candidates.sort(() => Math.random() - 0.5);
+    return pool.concat(candidates.slice(0, 11)).sort(() => Math.random() - 0.5);
+}
+
+async function concludeGame(roomId, io, activeGames, leaverId = null) {
+    const game = activeGames.get(roomId);
+    if (!game) return;
+
+    const pIds = Object.keys(game.players);
+    const p1 = pIds[0];
+    const p2 = pIds[1];
+    let winnerId = null;
+    let reason = "Temps écoulé !";
+
+    if (leaverId) {
+        winnerId = pIds.find(id => id !== leaverId);
+        reason = "L'adversaire a quitté la partie.";
+    } else {
+        const s1 = game.players[p1].score;
+        const s2 = game.players[p2].score;
+        if (s1 > s2) winnerId = p1;
+        else if (s2 > s1) winnerId = p2;
+        else reason = "Égalité parfaite !";
+    }
+
+    // Mise à jour de la base de données Supabase
+    for (let id of pIds) {
+        const dbId = game.players[id].dbId;
+        if (dbId) {
+            const isWinner = (id === winnerId);
+            const pointChange = isWinner ? 15 : (winnerId ? -10 : 0);
+
+            // Récupérer les données actuelles puis mettre à jour
+            const { data: p } = await supabase.from('players').select('points, wins, losses').eq('id', dbId).single();
+            if (p) {
+                await supabase.from('players').update({
+                    points: Math.max(0, p.points + pointChange),
+                    wins: isWinner ? p.wins + 1 : p.wins,
+                    losses: (!isWinner && winnerId) ? p.losses + 1 : p.losses
+                }).eq('id', dbId);
+            }
+        }
+    }
+
+    io.to(roomId).emit('game_over_1v1', { winnerId, reason, players: game.players });
+    activeGames.delete(roomId);
+}
+
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`🚀 Serveur 1v1 prêt sur le port ${PORT}`);
-});
+server.listen(PORT, () => console.log(`Serveur prêt sur le port ${PORT}`));
