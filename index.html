@@ -422,15 +422,16 @@
         };
 
         const POWERS_CATALOG = [
-            // BONUS (POUR SOI)
-            { id: 'spotlight', name: '💡 Projecteur', price: 100, desc: 'Illumine la bonne tuile (2s)', type: 'bonus' },
-            { id: 'joker', name: '⚡ Joker Éclair', price: 150, desc: 'Valide la cible actuelle', type: 'bonus' },
-            { id: 'freeze', name: '⏳ Blocage du Temps', price: 130, desc: 'Gèle le chrono pendant 3s', type: 'bonus' },
+            // BONUS (POUR SOI) - Prix réajustés de façon logique
+            { id: 'spotlight', name: '💡 Projecteur', price: 80, desc: 'Illumine la bonne tuile (2s)', type: 'bonus' },
+            { id: 'freeze', name: '⏳ Blocage du Temps', price: 120, desc: 'Gèle le chrono pendant 3s', type: 'bonus' },
+            { id: 'joker', name: '⚡ Joker Éclair', price: 180, desc: 'Valide la cible actuelle', type: 'bonus' },
             { id: 'nova', name: '🌟 Nova Temporelle', price: 300, desc: 'GIGA : Valide 3 cibles', type: 'bonus' },
+            
             // MALUS (ADVERSAIRE)
-            { id: 'quake', name: '📳 Séisme', price: 150, desc: 'Fait trembler l\'adversaire (2s)', type: 'malus' },
-            { id: 'micro', name: '🐜 Micro-Tuiles', price: 180, desc: 'Rétrécit la grille adverse (2s)', type: 'malus' },
-            { id: 'eclipse', name: '🌑 Éclipse', price: 200, desc: 'Floute la grille adverse (1.5s)', type: 'malus' },
+            { id: 'quake', name: '📳 Séisme', price: 100, desc: 'Fait trembler l\'adversaire (2s)', type: 'malus' },
+            { id: 'micro', name: '🐜 Micro-Tuiles', price: 150, desc: 'Rétrécit la grille adverse (2s)', type: 'malus' },
+            { id: 'eclipse', name: '🌑 Éclipse', price: 220, desc: 'Floute la grille adverse (1.5s)', type: 'malus' },
             { id: 'chaos', name: '🌪️ Chaos Absolu', price: 350, desc: 'GIGA : Combo de malus (2.5s)', type: 'malus' }
         ];
 
@@ -438,7 +439,7 @@
         let soloTarget = 1, soloScore = 0, soloTimeLeft = 30, soloTimerInterval = null;
         let powerUsedInMatch = false;
         let currentShopTab = 'bonus';
-        let isTimeFrozen = false; // Indicateur pour le gel du chrono
+        let isTimeFrozen = false;
 
         document.addEventListener("DOMContentLoaded", () => {
             loadLocalEconomy();
@@ -637,7 +638,6 @@
             const stock = myProfile.inventory[powerId] || 0;
             if (stock <= 0) return;
 
-            // Décrémentation à usage unique !
             myProfile.inventory[powerId]--;
             powerUsedInMatch = true;
             document.getElementById('btn-use-power').disabled = true;
@@ -647,7 +647,6 @@
                 (parseInt(document.getElementById('my-target').innerText) || 1) : soloTarget;
 
             if (powerId === 'spotlight') {
-                // Traque dynamique de la valeur numérique de la cible partout dans la grille
                 document.querySelectorAll('.tile').forEach(t => {
                     if (parseInt(t.innerText) === currentTarget) {
                         t.classList.add('highlight-target');
@@ -657,7 +656,6 @@
             } else if (powerId === 'joker') {
                 autoValidateTarget();
             } else if (powerId === 'freeze') {
-                // Gel du chrono pendant 3 secondes
                 isTimeFrozen = true;
                 const timerEl = document.getElementById('game-timer');
                 timerEl.classList.add('frozen');
@@ -673,7 +671,6 @@
                 socket.emit('send_malus', { type: powerId });
             }
 
-            // Déséquiper si c'était le dernier exemplaire
             if (myProfile.inventory[powerId] <= 0) {
                 myProfile.equippedPower = null;
             }
