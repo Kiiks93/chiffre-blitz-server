@@ -9,9 +9,14 @@ const io = new Server(server, {
     cors: { origin: "*" }
 });
 
-// Connexion Supabase via les variables d'environnement Render
+// Initialisation de Supabase via les variables d'environnement Render
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+    console.error("❌ ERREUR : Variables SUPABASE_URL ou SUPABASE_KEY manquantes dans l'environnement !");
+}
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 let waitingPlayer = null;
@@ -20,32 +25,59 @@ const activeGames = new Map();
 io.on('connection', (socket) => {
     console.log(`Joueur connecté : ${socket.id}`);
 
-    // Inscription / Connexion automatique du joueur
+    // 1. Inscription / Connexion automatique du joueur
     socket.on('register_player', async (data) => {
-        const username = data.username || `Joueur_${socket.id.substring(0, 4)}`;
-        const region = data.region || 'Hauts-de-France';
-        const country = data.country || 'FR';
+        const username = (data && data.username) ? data.username : `Joueur_${socket.id.substring(0, 4)}`;
+        const region = (data && data.region) ? data.region : 'Hauts-de-France';
+        const country = (data && data.country) ? data.country : 'FR';
 
-        // Vérifier si le joueur existe déjà, sinon le créer
-        let { data: player, error } = await supabase
-            .from('players')
-            .select('*')
-            .eq('username', username)
-            .single();
-
-        if (!player) {
-            const { data: newPlayer } = await supabase
+        try {
+            let { data: player } = await supabase
                 .from('players')
-                .insert([{ username, region, country, points: 1000 }])
-                .select()
+                .select('*')
+                .eq('username', username)
                 .single();
-            player = newPlayer;
-        }
 
-        socket.playerData = player;
-        socket.emit('player_registered', player);
+            if (!player) {
+                const { data: newPlayer } = await supabase
+                    .from('players')
+                    .insert([{ username, region, country, points: 1000 }])
+                    .select()
+                    .single();
+                player = newPlayer;
+            }
+
+            socket.playerData = player;
+            socket.emit('player_registered', player);
+        } catch (err) {
+            console.error("Erreur lors de l'enregistrement du joueur :", err);
+        }
     });
 
+    // 2. Envoi des classements (Régional, National, Mondial)
+    socket.on('get_leaderboard', async (type) => {
+        try {
+            let query = supabase
+                .from('players')
+                .select('username, points, wins, losses, region, country')
+                .order('points', { ascending: false })
+                .limit(20);
+
+            if (type === 'national' && socket.playerData) {
+                query = query.eq('country', socket.playerData.country || 'FR');
+            } else if (type === 'regional' && socket.playerData) {
+                query = query.eq('region', socket.playerData.region || 'Hauts-de-France');
+            }
+
+            const { data, error } = await query;
+            socket.emit('leaderboard_data', { type, data: data || [] });
+        } catch (err) {
+            console.error("Erreur lors de la récupération du classement :", err);
+            socket.emit('leaderboard_data', { type, data: [] });
+        }
+    });
+
+    // 3. Matchmaking 1v1
     socket.on('find_1v1_match', () => {
         if (waitingPlayer && waitingPlayer.id !== socket.id) {
             const player1 = waitingPlayer;
@@ -71,7 +103,10 @@ io.on('connection', (socket) => {
             activeGames.set(roomId, gameData);
             io.to(roomId).emit('start_countdown');
 
+            // Décompte de 3s avant le lancement
             setTimeout(() => {
+                if (!activeGames.has(roomId)) return; // Si la partie a été annulée entre-temps
+
                 io.to(player1.id).emit('game_started', { myTarget: 1, myPool: gameData.players[player1.id].pool, timeLeft: 30 });
                 io.to(player2.id).emit('game_started', { myTarget: 1, myPool: gameData.players[player2.id].pool, timeLeft: 30 });
 
@@ -92,6 +127,7 @@ io.on('connection', (socket) => {
         }
     });
 
+    // 4. Gestion des clics pendant le duel
     socket.on('player_click_1v1', (num) => {
         for (let [roomId, game] of activeGames.entries()) {
             if (game.players[socket.id]) {
@@ -113,18 +149,23 @@ io.on('connection', (socket) => {
         }
     });
 
+    // 5. Gestion des déconnexions
     socket.on('disconnect', () => {
-        if (waitingPlayer && waitingPlayer.id === socket.id) waitingPlayer = null;
+        if (waitingPlayer && waitingPlayer.id === socket.id) {
+            waitingPlayer = null;
+        }
         for (let [roomId, game] of activeGames.entries()) {
             if (game.players[socket.id]) {
-                clearInterval(game.timer);
+                if (game.timer) clearInterval(game.timer);
                 concludeGame(roomId, io, activeGames, socket.id);
                 break;
             }
         }
+        console.log(`Joueur déconnecté : ${socket.id}`);
     });
 });
 
+// Génération de la grille (1 cible + 11 nombres aléatoires entre 1 et 50)
 function generatePool(target) {
     let pool = [target];
     let candidates = [];
@@ -135,9 +176,12 @@ function generatePool(target) {
     return pool.concat(candidates.slice(0, 11)).sort(() => Math.random() - 0.5);
 }
 
+// Fin de partie et calcul des résultats en base de données
 async function concludeGame(roomId, io, activeGames, leaverId = null) {
     const game = activeGames.get(roomId);
     if (!game) return;
+
+    if (game.timer) clearInterval(game.timer);
 
     const pIds = Object.keys(game.players);
     const p1 = pIds[0];
@@ -156,21 +200,32 @@ async function concludeGame(roomId, io, activeGames, leaverId = null) {
         else reason = "Égalité parfaite !";
     }
 
-    // Mise à jour de la base de données Supabase
+    // Mise à jour permanente dans Supabase (+15 points si victoire, -10 si défaite)
     for (let id of pIds) {
         const dbId = game.players[id].dbId;
         if (dbId) {
             const isWinner = (id === winnerId);
             const pointChange = isWinner ? 15 : (winnerId ? -10 : 0);
 
-            // Récupérer les données actuelles puis mettre à jour
-            const { data: p } = await supabase.from('players').select('points, wins, losses').eq('id', dbId).single();
-            if (p) {
-                await supabase.from('players').update({
-                    points: Math.max(0, p.points + pointChange),
-                    wins: isWinner ? p.wins + 1 : p.wins,
-                    losses: (!isWinner && winnerId) ? p.losses + 1 : p.losses
-                }).eq('id', dbId);
+            try {
+                const { data: p } = await supabase
+                    .from('players')
+                    .select('points, wins, losses')
+                    .eq('id', dbId)
+                    .single();
+
+                if (p) {
+                    await supabase
+                        .from('players')
+                        .update({
+                            points: Math.max(0, p.points + pointChange),
+                            wins: isWinner ? p.wins + 1 : p.wins,
+                            losses: (!isWinner && winnerId) ? p.losses + 1 : p.losses
+                        })
+                        .eq('id', dbId);
+                }
+            } catch (err) {
+                console.error("Erreur mise à jour score Supabase :", err);
             }
         }
     }
@@ -180,4 +235,4 @@ async function concludeGame(roomId, io, activeGames, leaverId = null) {
 }
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Serveur prêt sur le port ${PORT}`));
+server.listen(PORT, () => console.log(`🚀 Serveur Chiffre Blitz prêt sur le port ${PORT}`));
