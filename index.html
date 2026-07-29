@@ -46,10 +46,10 @@
 
         .btn-secondary {
             background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #ccc;
-            padding: 10px 18px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 15px;
+            padding: 10px 18px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%;
         }
 
-        /* MODAL CLASSEMENT */
+        /* MODALES ET POPUPS */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.85); display: flex; flex-direction: column;
@@ -105,7 +105,7 @@
     <div class="header-bar">
         <h1>Chiffre Blitz ⚡</h1>
         <div id="user-pill" class="user-pill" onclick="promptProfileChange()">
-            👤 <span id="user-name-display">Joueur</span> (<span id="user-pts-display">1000</span> pts)
+            👤 <span id="user-name-display">Définir un pseudo</span> (<span id="user-pts-display">1000</span> pts)
         </div>
         <button id="mute-btn" class="mute-btn" onclick="toggleMute()">🔊</button>
     </div>
@@ -139,7 +139,7 @@
             </div>
             <div style="margin-top:20px; font-size:18px; font-weight:bold; color:#00d2ff;">Recherche d'adversaire...</div>
         </div>
-        <button class="btn-secondary" onclick="cancel1v1Search()">❌ Annuler</button>
+        <button class="btn-secondary" onclick="cancel1v1Search()" style="max-width:200px; margin-top:30px;">❌ Annuler</button>
     </div>
 
     <!-- MODE TOURNOI -->
@@ -150,6 +150,19 @@
             <div style="color:#ff8a00; font-weight:bold;">Prochaine étape de la feuille de route !</div>
         </div>
         <button class="btn-secondary" onclick="showMainMenu()">⬅️ Retour Menu</button>
+    </div>
+
+    <!-- MODAL POPUP DU PSEUDO -->
+    <div id="modal-username" class="modal-overlay" style="display:none;">
+        <div class="modal-card" style="text-align:center;">
+            <h2 style="margin:0 0 10px 0; color:#00d2ff;">⚡ BIENVENUE ⚡</h2>
+            <p style="color:#aaa; font-size:14px; margin-bottom:20px;">Choisis ton pseudo pour apparaître dans le classement :</p>
+            
+            <input type="text" id="username-input" placeholder="Ex: Kiiks" maxlength="15" 
+                   style="width:100%; padding:14px; border-radius:12px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:20px; outline:none;">
+            
+            <button class="btn-main" onclick="saveUsernameFromModal()">VALIDER</button>
+        </div>
     </div>
 
     <!-- OVERLAY CLASSEMENT -->
@@ -164,7 +177,7 @@
             <div id="lb-list" class="leaderboard-list">
                 <div style="text-align:center; color:#aaa; margin-top:20px;">Chargement...</div>
             </div>
-            <button class="btn-secondary" onclick="closeLeaderboard()" style="margin-top:15px;">Fermer</button>
+            <button class="btn-secondary" onclick="closeLeaderboard()">Fermer</button>
         </div>
     </div>
 
@@ -328,25 +341,42 @@
         function initProfile() {
             let savedName = localStorage.getItem('cb_username');
             if (!savedName) {
-                savedName = 'Joueur_' + Math.floor(1000 + Math.random() * 9000);
-                localStorage.setItem('cb_username', savedName);
+                document.getElementById('modal-username').style.display = 'flex';
+            } else {
+                myProfile.username = savedName;
+                document.getElementById('user-name-display').innerText = savedName;
+                registerIfPossible();
             }
-            myProfile.username = savedName;
-            document.getElementById('user-name-display').innerText = savedName;
+        }
+
+        function saveUsernameFromModal() {
+            const input = document.getElementById('username-input');
+            const name = input.value.trim();
+            
+            if (name.length >= 3) {
+                myProfile.username = name;
+                localStorage.setItem('cb_username', name);
+                document.getElementById('user-name-display').innerText = name;
+                document.getElementById('modal-username').style.display = 'none';
+                registerIfPossible();
+            } else {
+                alert("Ton pseudo doit contenir au moins 3 caractères !");
+            }
         }
 
         function promptProfileChange() {
-            const newName = prompt("Choisis ton pseudo :", myProfile.username);
-            if (newName && newName.trim().length >= 3) {
-                myProfile.username = newName.trim();
-                localStorage.setItem('cb_username', myProfile.username);
-                document.getElementById('user-name-display').innerText = myProfile.username;
+            document.getElementById('username-input').value = myProfile.username || '';
+            document.getElementById('modal-username').style.display = 'flex';
+        }
+
+        function registerIfPossible() {
+            if (myProfile.username && socket.connected) {
                 socket.emit('register_player', myProfile);
             }
         }
 
         socket.on('connect', () => {
-            socket.emit('register_player', myProfile);
+            registerIfPossible();
         });
 
         socket.on('player_registered', (player) => {
@@ -358,8 +388,9 @@
         });
 
         function hideAllScreens() {
-            ['screen-menu', 'screen-1v1-lobby', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'countdown-overlay'].forEach(id => {
-                document.getElementById(id).style.display = 'none';
+            ['screen-menu', 'screen-1v1-lobby', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-username', 'countdown-overlay'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
             });
             if (radarInterval) clearInterval(radarInterval);
             if (soloTimerInterval) clearInterval(soloTimerInterval);
@@ -389,7 +420,8 @@
 
         function fetchLeaderboard(type) {
             ['regional', 'national', 'global'].forEach(t => {
-                document.getElementById(`tab-${t}`).classList.toggle('active', t === type);
+                const btn = document.getElementById(`tab-${t}`);
+                if (btn) btn.classList.toggle('active', t === type);
             });
             document.getElementById('lb-list').innerHTML = '<div style="text-align:center; color:#aaa; margin-top:20px;">Chargement...</div>';
             socket.emit('get_leaderboard', type);
@@ -418,6 +450,11 @@
 
         /* DUEL 1v1 */
         function open1v1Lobby() {
+            if (!myProfile.username) {
+                document.getElementById('modal-username').style.display = 'flex';
+                return;
+            }
+
             hideAllScreens();
             document.getElementById('screen-1v1-lobby').style.display = 'flex';
 
@@ -505,8 +542,7 @@
             document.getElementById('recap-my-score').innerText = myData ? myData.score : 0;
 
             modal.style.display = 'flex';
-            // Rafraîchir le profil
-            socket.emit('register_player', myProfile);
+            registerIfPossible();
         });
 
         function handle1v1TileClick(num) {
