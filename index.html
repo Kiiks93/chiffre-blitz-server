@@ -160,7 +160,7 @@
     </div>
 
     <div id="audio-prompt" class="audio-notice" onclick="unlockAudio()">
-        🔊 Touche l'écran pour activer le son
+        🔊 Touche l'écran pour activer le son lofi chill
     </div>
 
     <!-- MENU PRINCIPAL -->
@@ -332,10 +332,14 @@
     </div>
 
     <script>
-        /* MOTEUR SONORE */
+        /* NOUVEAU MOTEUR SONORE LOFI CHILL (Douceur, ondes filtrées, notes feutrées) */
         const SoundEngine = {
             ctx: null, isMuted: false, musicInterval: null, currentMode: null,
-            init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+            init() { 
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)(); 
+                }
+            },
             toggleMute() {
                 this.isMuted = !this.isMuted;
                 if (this.isMuted) this.stopMusic(false);
@@ -344,52 +348,98 @@
             },
             playClick(target = 1) {
                 if (this.isMuted) return; this.init(); if (this.ctx.state === 'suspended') return;
-                const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-                osc.type = 'sine'; const freq = 400 + ((target % 15) * 25);
+                // Pop feutrée lofi pour les clics valides
+                const osc = this.ctx.createOscillator(), gain = this.ctx.createGain(), filter = this.ctx.createBiquadFilter();
+                osc.type = 'sine'; 
+                filter.type = 'lowpass'; filter.frequency.setValueAtTime(600, this.ctx.currentTime);
+                const freq = 220 + ((target % 12) * 15);
                 osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.06);
-                osc.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(); osc.stop(this.ctx.currentTime + 0.06);
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
+                
+                osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.12);
             },
             playError() {
                 if (this.isMuted) return; this.init(); if (this.ctx.state === 'suspended') return;
-                const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(140, this.ctx.currentTime);
-                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
-                osc.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(); osc.stop(this.ctx.currentTime + 0.12);
+                // Son étouffé bas pour les erreurs
+                const osc = this.ctx.createOscillator(), gain = this.ctx.createGain(), filter = this.ctx.createBiquadFilter();
+                osc.type = 'triangle'; filter.type = 'lowpass'; filter.frequency.setValueAtTime(300, this.ctx.currentTime);
+                osc.frequency.setValueAtTime(110, this.ctx.currentTime);
+                gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
+                
+                osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.15);
             },
             playVictory() {
                 if (this.isMuted) return; this.init(); if (this.ctx.state === 'suspended') return;
-                [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                // Accord final lofi chaleureux (Jazz chords pentatoniques)
+                [261.63, 329.63, 392.00, 493.88, 587.33].forEach((freq, i) => {
                     setTimeout(() => {
                         if (this.isMuted) return;
-                        const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-                        osc.type = 'triangle'; osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-                        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
-                        osc.connect(gain); gain.connect(this.ctx.destination);
-                        osc.start(); osc.stop(this.ctx.currentTime + 0.2);
-                    }, i * 90);
+                        const osc = this.ctx.createOscillator(), gain = this.ctx.createGain(), filter = this.ctx.createBiquadFilter();
+                        osc.type = 'sine'; filter.type = 'lowpass'; filter.frequency.setValueAtTime(800, this.ctx.currentTime);
+                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.5);
+                        osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                        osc.start(); osc.stop(this.ctx.currentTime + 0.5);
+                    }, i * 120);
                 });
             },
-            stopMusic(clear = true) { if (this.musicInterval) clearInterval(this.musicInterval); if (clear) this.currentMode = null; },
+            stopMusic(clear = true) { 
+                if (this.musicInterval) clearInterval(this.musicInterval); 
+                if (clear) this.currentMode = null; 
+            },
             startMusic(mode) {
-                if (mode) this.currentMode = mode; if (this.isMuted) return; this.init();
-                if (this.ctx.state === 'suspended') return; this.stopMusic(false);
-                let step = 0; const notes = [261.63, 329.63, 392.00, 523.25];
+                if (mode) this.currentMode = mode; 
+                if (this.isMuted) return; 
+                this.init();
+                if (this.ctx.state === 'suspended') return; 
+                this.stopMusic(false);
+
+                // Séquenceur d'accords Lofi Chill (Ambiance nocturne / néon feutrée)
+                // Fréquences d'accords mineurs 7 / add9 pour une vraie vibe lofi relaxante
+                let chordSets = {
+                    'menu': [130.81, 164.81, 196.00, 246.94], // Cmaj7 cosy
+                    'solo': [110.00, 146.83, 174.61, 220.00], // Am7 planant
+                    '1v1':  [146.83, 185.00, 220.00, 261.63]  // Dm7 nocturne
+                };
+                let notes = chordSets[mode] || chordSets['menu'];
+                let step = 0;
+
                 this.musicInterval = setInterval(() => {
                     if (this.isMuted || !this.ctx || this.ctx.state !== 'running') return;
-                    const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-                    osc.type = 'triangle'; osc.frequency.setValueAtTime(notes[step % notes.length], this.ctx.currentTime);
-                    gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.18);
-                    osc.connect(gain); gain.connect(this.ctx.destination);
-                    osc.start(); osc.stop(this.ctx.currentTime + 0.18);
+                    
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    const filter = this.ctx.createBiquadFilter();
+
+                    // Forme d'onde douce (triangle/sine) + filtre passe-bas pour l'effet vinyle étouffé lofi
+                    osc.type = 'triangle';
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(450, this.ctx.currentTime);
+
+                    let freq = notes[step % notes.length];
+                    // Petite variation mélodique subtile toutes les 4 notes
+                    if (step % 4 === 3) freq *= 1.25;
+
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    
+                    // Enveloppe douce (attaque et décroissance progressives sans agresser l'oreille)
+                    gain.gain.setValueAtTime(0.0001, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.08, this.ctx.currentTime + 0.3);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 1.2);
+
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 1.2);
                     step++;
-                }, 220);
+                }, 900); // Tempo lent et relaxant typique du lofi
             }
         };
 
@@ -422,7 +472,7 @@
         };
 
         const POWERS_CATALOG = [
-            // BONUS (POUR SOI) - Prix réajustés de façon logique
+            // BONUS (POUR SOI) - Prix logiques et hiérarchisés
             { id: 'spotlight', name: '💡 Projecteur', price: 80, desc: 'Illumine la bonne tuile (2s)', type: 'bonus' },
             { id: 'freeze', name: '⏳ Blocage du Temps', price: 120, desc: 'Gèle le chrono pendant 3s', type: 'bonus' },
             { id: 'joker', name: '⚡ Joker Éclair', price: 180, desc: 'Valide la cible actuelle', type: 'bonus' },
@@ -544,7 +594,7 @@
             SoundEngine.startMusic('menu');
         }
 
-        /* BOUTIQUE AVEC CONSUMABLES (USAGE UNIQUE) */
+        /* BOUTIQUE */
         function openShop() {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
             document.getElementById('modal-shop').style.display = 'flex';
