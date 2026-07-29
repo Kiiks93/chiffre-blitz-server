@@ -160,7 +160,7 @@
     </div>
 
     <div id="audio-prompt" class="audio-notice" onclick="unlockAudio()">
-        🔊 Touche l'écran pour activer le son lofi chill
+        🔊 Touche l'écran pour activer l'ambiance lofi chill
     </div>
 
     <!-- MENU PRINCIPAL -->
@@ -332,7 +332,7 @@
     </div>
 
     <script>
-        /* NOUVEAU MOTEUR SONORE LOFI CHILL (Douceur, ondes filtrées, notes feutrées) */
+        /* MOTEUR SONORE AMBIANT LOFI CHILL (Tapis sonore feutré, sans bips ni arpèges 8bit) */
         const SoundEngine = {
             ctx: null, isMuted: false, musicInterval: null, currentMode: null,
             init() { 
@@ -348,44 +348,43 @@
             },
             playClick(target = 1) {
                 if (this.isMuted) return; this.init(); if (this.ctx.state === 'suspended') return;
-                // Pop feutrée lofi pour les clics valides
+                // Tout petit "pop" de validation très discret et étouffé
                 const osc = this.ctx.createOscillator(), gain = this.ctx.createGain(), filter = this.ctx.createBiquadFilter();
                 osc.type = 'sine'; 
-                filter.type = 'lowpass'; filter.frequency.setValueAtTime(600, this.ctx.currentTime);
-                const freq = 220 + ((target % 12) * 15);
-                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
+                filter.type = 'lowpass'; filter.frequency.setValueAtTime(300, this.ctx.currentTime);
+                osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+                gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.08);
+                
+                osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.08);
+            },
+            playError() {
+                if (this.isMuted) return; this.init(); if (this.ctx.state === 'suspended') return;
+                // Son grave et ultra étouffé pour les erreurs
+                const osc = this.ctx.createOscillator(), gain = this.ctx.createGain(), filter = this.ctx.createBiquadFilter();
+                osc.type = 'sine'; filter.type = 'lowpass'; filter.frequency.setValueAtTime(180, this.ctx.currentTime);
+                osc.frequency.setValueAtTime(80, this.ctx.currentTime);
+                gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.12);
                 
                 osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
                 osc.start(); osc.stop(this.ctx.currentTime + 0.12);
             },
-            playError() {
-                if (this.isMuted) return; this.init(); if (this.ctx.state === 'suspended') return;
-                // Son étouffé bas pour les erreurs
-                const osc = this.ctx.createOscillator(), gain = this.ctx.createGain(), filter = this.ctx.createBiquadFilter();
-                osc.type = 'triangle'; filter.type = 'lowpass'; filter.frequency.setValueAtTime(300, this.ctx.currentTime);
-                osc.frequency.setValueAtTime(110, this.ctx.currentTime);
-                gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
-                
-                osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(); osc.stop(this.ctx.currentTime + 0.15);
-            },
             playVictory() {
                 if (this.isMuted) return; this.init(); if (this.ctx.state === 'suspended') return;
-                // Accord final lofi chaleureux (Jazz chords pentatoniques)
-                [261.63, 329.63, 392.00, 493.88, 587.33].forEach((freq, i) => {
+                // Nappe finale douce
+                [220, 261.63, 329.63].forEach((freq, i) => {
                     setTimeout(() => {
                         if (this.isMuted) return;
                         const osc = this.ctx.createOscillator(), gain = this.ctx.createGain(), filter = this.ctx.createBiquadFilter();
-                        osc.type = 'sine'; filter.type = 'lowpass'; filter.frequency.setValueAtTime(800, this.ctx.currentTime);
+                        osc.type = 'sine'; filter.type = 'lowpass'; filter.frequency.setValueAtTime(400, this.ctx.currentTime);
                         osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
-                        gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.5);
+                        gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.00001, this.ctx.currentTime + 0.8);
                         osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-                        osc.start(); osc.stop(this.ctx.currentTime + 0.5);
-                    }, i * 120);
+                        osc.start(); osc.stop(this.ctx.currentTime + 0.8);
+                    }, i * 200);
                 });
             },
             stopMusic(clear = true) { 
@@ -399,47 +398,46 @@
                 if (this.ctx.state === 'suspended') return; 
                 this.stopMusic(false);
 
-                // Séquenceur d'accords Lofi Chill (Ambiance nocturne / néon feutrée)
-                // Fréquences d'accords mineurs 7 / add9 pour une vraie vibe lofi relaxante
-                let chordSets = {
-                    'menu': [130.81, 164.81, 196.00, 246.94], // Cmaj7 cosy
-                    'solo': [110.00, 146.83, 174.61, 220.00], // Am7 planant
-                    '1v1':  [146.83, 185.00, 220.00, 261.63]  // Dm7 nocturne
+                // Accords d'ambiance lofi profonds (Tapis de synthé très doux / pad ambient)
+                let ambientChords = {
+                    'menu': [130.81, 196.00, 261.63], // Cmaj9 feutré
+                    'solo': [110.00, 164.81, 220.00], // Am9 planant
+                    '1v1':  [146.83, 220.00, 293.66]  // Dm9 nocturne
                 };
-                let notes = chordSets[mode] || chordSets['menu'];
-                let step = 0;
+                let chord = ambientChords[mode] || ambientChords['menu'];
 
-                this.musicInterval = setInterval(() => {
+                // Jouer un accord lointain et enveloppant toutes les 4 secondes
+                const playPad = () => {
                     if (this.isMuted || !this.ctx || this.ctx.state !== 'running') return;
                     
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    const filter = this.ctx.createBiquadFilter();
+                    chord.forEach((baseFreq) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        const filter = this.ctx.createBiquadFilter();
 
-                    // Forme d'onde douce (triangle/sine) + filtre passe-bas pour l'effet vinyle étouffé lofi
-                    osc.type = 'triangle';
-                    filter.type = 'lowpass';
-                    filter.frequency.setValueAtTime(450, this.ctx.currentTime);
+                        // Onde sinusoïdale pure + filtre passe-bas très strict (aucun son strident)
+                        osc.type = 'sine';
+                        filter.type = 'lowpass';
+                        filter.frequency.setValueAtTime(220, this.ctx.currentTime);
 
-                    let freq = notes[step % notes.length];
-                    // Petite variation mélodique subtile toutes les 4 notes
-                    if (step % 4 === 3) freq *= 1.25;
+                        osc.frequency.setValueAtTime(baseFreq, this.ctx.currentTime);
+                        
+                        // Enveloppe ultra longue (fondu enchaîné de 4 secondes, volume extrêmement bas)
+                        gain.gain.setValueAtTime(0.00001, this.ctx.currentTime);
+                        gain.gain.linearRampToValueAtTime(0.025, this.ctx.currentTime + 1.5);
+                        gain.gain.exponentialRampToValueAtTime(0.00001, this.ctx.currentTime + 4.0);
 
-                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                    
-                    // Enveloppe douce (attaque et décroissance progressives sans agresser l'oreille)
-                    gain.gain.setValueAtTime(0.0001, this.ctx.currentTime);
-                    gain.gain.linearRampToValueAtTime(0.08, this.ctx.currentTime + 0.3);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 1.2);
+                        osc.connect(filter);
+                        filter.connect(gain);
+                        gain.connect(this.ctx.destination);
 
-                    osc.connect(filter);
-                    filter.connect(gain);
-                    gain.connect(this.ctx.destination);
+                        osc.start();
+                        osc.stop(this.ctx.currentTime + 4.0);
+                    });
+                };
 
-                    osc.start();
-                    osc.stop(this.ctx.currentTime + 1.2);
-                    step++;
-                }, 900); // Tempo lent et relaxant typique du lofi
+                playPad();
+                this.musicInterval = setInterval(playPad, 4000);
             }
         };
 
@@ -472,7 +470,7 @@
         };
 
         const POWERS_CATALOG = [
-            // BONUS (POUR SOI) - Prix logiques et hiérarchisés
+            // BONUS (POUR SOI)
             { id: 'spotlight', name: '💡 Projecteur', price: 80, desc: 'Illumine la bonne tuile (2s)', type: 'bonus' },
             { id: 'freeze', name: '⏳ Blocage du Temps', price: 120, desc: 'Gèle le chrono pendant 3s', type: 'bonus' },
             { id: 'joker', name: '⚡ Joker Éclair', price: 180, desc: 'Valide la cible actuelle', type: 'bonus' },
