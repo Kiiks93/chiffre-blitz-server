@@ -10,13 +10,15 @@
         body { font-family: system-ui, -apple-system, sans-serif; background: #0f051d; color: #fff; margin: 0; padding: 15px; text-align: center; }
         
         .header-bar { display: flex; justify-content: space-between; align-items: center; max-width: 400px; margin: 0 auto 10px auto; gap: 8px; }
-        h1 { color: #00d2ff; margin: 0; font-size: 22px; text-shadow: 0 0 15px rgba(0,210,255,0.4); white-space: nowrap; }
+        h1 { color: #00d2ff; margin: 0; font-size: 20px; text-shadow: 0 0 15px rgba(0,210,255,0.4); white-space: nowrap; }
         
         .user-pill {
             background: rgba(255,255,255,0.08); border: 1px solid rgba(0,210,255,0.3);
-            border-radius: 20px; padding: 6px 12px; font-size: 12px; color: #00d2ff; font-weight: bold;
+            border-radius: 20px; padding: 6px 10px; font-size: 12px; color: #00d2ff; font-weight: bold;
             display: flex; align-items: center; gap: 4px; cursor: pointer; white-space: nowrap;
+            max-width: 170px; overflow: hidden; text-overflow: ellipsis;
         }
+        #user-name-display { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90px; }
 
         .mute-btn {
             background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
@@ -52,8 +54,8 @@
         /* MODALES ET POPUPS */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.88); display: flex; flex-direction: column;
-            align-items: center; justify-content: center; z-index: 200; padding: 15px;
+            background: rgba(0, 0, 0, 0.92); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 9999; padding: 15px;
         }
         .modal-card {
             background: #1e1035; border: 2px solid #00d2ff; border-radius: 20px;
@@ -105,7 +107,7 @@
     <div class="header-bar">
         <h1>Chiffre Blitz ⚡</h1>
         <div id="user-pill" class="user-pill" onclick="promptProfileChange()">
-            👤 <span id="user-name-display">Profil</span> (<span id="user-pts-display">1000</span> pts)
+            👤 <span id="user-name-display">Définir pseudo</span> (<span id="user-pts-display">1000</span> pts)
         </div>
         <button id="mute-btn" class="mute-btn" onclick="toggleMute()">🔊</button>
     </div>
@@ -259,7 +261,7 @@
                 <span id="recap-my-score" style="font-weight:bold;">-</span>
             </div>
 
-            <button class="btn-main" onclick="showMainMenu()" style="margin-top:20px;">MENU PRINCIPAL</button>
+            <button class="btn-main" onclick="showMainMenu()">MENU PRINCIPAL</button>
         </div>
     </div>
 
@@ -354,19 +356,23 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             showMainMenu();
-            initProfile();
+            checkAndShowProfileModal();
         });
 
-        function initProfile() {
-            let savedName = localStorage.getItem('cb_username');
-            let savedRegion = localStorage.getItem('cb_region');
-            
-            if (!savedName || !savedRegion) {
+        function isProfileValid() {
+            const savedName = localStorage.getItem('cb_username');
+            const savedRegion = localStorage.getItem('cb_region');
+            return savedName && savedName.trim().length >= 3 && savedName !== "Profil" && savedName !== "Définir un pseudo" && savedRegion;
+        }
+
+        function checkAndShowProfileModal() {
+            if (!isProfileValid()) {
+                document.getElementById('user-name-display').innerText = "Définir pseudo";
                 document.getElementById('modal-username').style.display = 'flex';
             } else {
-                myProfile.username = savedName;
-                myProfile.region = savedRegion;
-                document.getElementById('user-name-display').innerText = savedName;
+                myProfile.username = localStorage.getItem('cb_username');
+                myProfile.region = localStorage.getItem('cb_region');
+                document.getElementById('user-name-display').innerText = myProfile.username;
                 document.getElementById('modal-username').style.display = 'none';
                 registerIfPossible();
             }
@@ -394,7 +400,7 @@
         }
 
         function promptProfileChange() {
-            document.getElementById('username-input').value = myProfile.username || '';
+            document.getElementById('username-input').value = isProfileValid() ? myProfile.username : '';
             if (myProfile.region) {
                 document.getElementById('region-input').value = myProfile.region;
             }
@@ -402,7 +408,7 @@
         }
 
         function registerIfPossible() {
-            if (myProfile.username && socket.connected) {
+            if (isProfileValid() && socket.connected) {
                 socket.emit('register_player', myProfile);
             }
         }
@@ -436,12 +442,14 @@
         }
 
         function openTournamentScreen() {
+            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
             hideAllScreens();
             document.getElementById('screen-tournament').style.display = 'block';
         }
 
         /* CLASSEMENT */
         function openLeaderboard() {
+            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
             document.getElementById('modal-leaderboard').style.display = 'flex';
             fetchLeaderboard('regional');
         }
@@ -482,8 +490,8 @@
 
         /* DUEL 1v1 */
         function open1v1Lobby() {
-            if (!myProfile.username || !localStorage.getItem('cb_region')) {
-                document.getElementById('modal-username').style.display = 'flex';
+            if (!isProfileValid()) {
+                checkAndShowProfileModal();
                 return;
             }
 
@@ -584,6 +592,7 @@
 
         /* SOLO */
         function startSoloTraining() {
+            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
             hideAllScreens();
             soloTarget = 1; soloScore = 0; soloTimeLeft = 30;
 
