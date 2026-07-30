@@ -3,437 +3,466 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chiffre Blitz ⚡</title>
-    <script src="/socket.io/socket.io.js"></script>
+    <title>Chiffre Blitz - Arcade Edition</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rajdhani:wght@600;700&display=swap');
+
         :root {
-            --bg-color: #0f1020;
-            --panel-bg: #1a1c35;
-            --primary: #ff3366;
-            --primary-hover: #ff194d;
-            --accent: #00f0ff;
+            --bg-color: #090a0f;
+            --panel-bg: #121520;
+            --neon-pink: #ff2a85;
+            --neon-cyan: #00f0ff;
+            --neon-yellow: #f3e600;
+            --neon-green: #00ff66;
             --text-color: #ffffff;
-            --text-muted: #a0a5cb;
+            --text-dim: #8b9bb4;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
+            font-family: 'Rajdhani', sans-serif;
             min-height: 100vh;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
             overflow-x: hidden;
+            background-image: 
+                linear-gradient(rgba(18, 21, 32, 0.8) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(18, 21, 32, 0.8) 1px, transparent 1px);
+            background-size: 40px 40px;
         }
 
-        .container {
+        /* Scanline overlay effect */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 999;
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
+
+        .arcade-container {
             width: 100%;
-            max-width: 480px;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .screen {
-            display: none;
+            max-width: 650px;
             background: var(--panel-bg);
-            border-radius: 16px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 3px solid var(--neon-cyan);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.3), inset 0 0 15px rgba(0, 240, 255, 0.2);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px;
+            position: relative;
         }
 
-        .screen.active {
-            display: block;
+        header {
+            text-align: center;
+            margin-bottom: 25px;
         }
 
-        h1, h2, h3 {
-            color: var(--accent);
-            margin-bottom: 20px;
-            text-transform: uppercase;
+        h1 {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 1.8rem;
+            color: var(--neon-pink);
+            text-shadow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-pink);
             letter-spacing: 2px;
-        }
-
-        p, label {
-            color: var(--text-muted);
             margin-bottom: 10px;
-            font-size: 0.95rem;
-            display: block;
-            text-align: left;
         }
 
-        input {
-            width: 100%;
-            padding: 12px 16px;
-            margin-bottom: 15px;
-            background: #111328;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            color: var(--text-color);
-            font-size: 1rem;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-
-        input:focus {
-            border-color: var(--accent);
-        }
-
-        button {
-            width: 100%;
-            padding: 14px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--neon-cyan);
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-            transition: background 0.3s, transform 0.1s;
+            letter-spacing: 3px;
         }
 
-        button:hover {
-            background: var(--primary-hover);
-        }
-
-        button:active {
-            transform: scale(0.98);
-        }
-
-        button.secondary {
-            background: transparent;
-            border: 2px solid var(--text-muted);
-            color: var(--text-muted);
-        }
-
-        button.secondary:hover {
-            border-color: var(--text-color);
-            color: var(--text-color);
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        /* Jeu & Grille */
-        .game-header {
+        .hud {
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--neon-pink);
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin-bottom: 25px;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .hud-item span {
+            color: var(--neon-yellow);
+        }
+
+        .audio-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
             margin-bottom: 20px;
-            font-size: 1.1rem;
-            font-weight: bold;
+        }
+
+        .arcade-btn {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.75rem;
+            background: transparent;
+            color: var(--neon-cyan);
+            border: 2px solid var(--neon-cyan);
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+            text-transform: uppercase;
+        }
+
+        .arcade-btn:hover {
+            background: var(--neon-cyan);
+            color: var(--bg-color);
+            box-shadow: 0 0 20px var(--neon-cyan);
+            transform: translateY(-2px);
+        }
+
+        .arcade-btn.active {
+            background: var(--neon-pink);
+            border-color: var(--neon-pink);
+            color: var(--text-color);
+            box-shadow: 0 0 20px var(--neon-pink);
+        }
+
+        .game-screen {
+            text-align: center;
+            display: none;
+        }
+
+        .game-screen.active {
+            display: block;
         }
 
         .target-box {
             font-size: 2.5rem;
-            color: var(--primary);
-            background: #111328;
-            border-radius: 12px;
+            font-weight: 700;
+            color: var(--neon-yellow);
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px dashed var(--neon-yellow);
             padding: 15px;
-            margin-bottom: 20px;
-            border: 2px dashed var(--primary);
+            border-radius: 8px;
+            margin-bottom: 25px;
+            text-shadow: 0 0 10px var(--neon-yellow);
         }
 
         .grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .tile {
+            background: rgba(255, 42, 133, 0.1);
+            border: 2px solid var(--neon-pink);
+            color: var(--text-color);
+            font-family: 'Press Start 2P', monospace;
+            font-size: 1.5rem;
+            padding: 30px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            box-shadow: 0 0 10px rgba(255, 42, 133, 0.2);
+        }
+
+        .tile:hover {
+            background: var(--neon-pink);
+            color: var(--bg-color);
+            box-shadow: 0 0 20px var(--neon-pink);
+            transform: scale(1.03);
+        }
+
+        .timer-bar-container {
+            width: 100%;
+            height: 12px;
+            background: #000;
+            border: 2px solid var(--neon-cyan);
+            border-radius: 6px;
+            overflow: hidden;
             margin-bottom: 20px;
         }
 
-        .grid-btn {
-            background: #25284a;
-            color: white;
-            font-size: 1.5rem;
-            font-weight: bold;
-            height: 70px;
-            border-radius: 10px;
-            border: none;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
+        .timer-bar {
+            width: 100%;
+            height: 100%;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 10px var(--neon-cyan);
+            transition: width 0.1s linear;
         }
 
-        .grid-btn:hover {
-            background: var(--accent);
-            color: #0f1020;
-        }
-
-        /* Radar / Chargement */
-        .radar-spinner {
-            width: 80px;
-            height: 80px;
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-top: 4px solid var(--accent);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 30px auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .error-msg {
-            color: #ff3366;
-            margin-top: 10px;
-            font-size: 0.9rem;
+        .instructions {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
             text-align: center;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <!-- ÉCRAN 1 : CONNEXION / PROFIL -->
-    <div id="screen-login" class="screen active">
-        <h1>Chiffre Blitz</h1>
-        <p style="text-align: center;">Entre ton pseudo pour commencer</p>
-        <input type="text" id="usernameInput" placeholder="Ton pseudo...">
-        <button onclick="registerPlayer()">Jouer</button>
-    </div>
+    <div class="arcade-container">
+        <header>
+            <h1>CHIFFRE BLITZ</h1>
+            <div class="subtitle">Arcade Synthwave Edition</div>
+        </header>
 
-    <!-- ÉCRAN 2 : MENU PRINCIPAL -->
-    <div id="screen-menu" class="screen">
-        <h1>Menu Principal</h1>
-        <p style="text-align: center;">Bienvenue, <span id="displayName">Joueur</span> !</p>
-        <button onclick="startMatchmaking()">Matchmaking Aléatoire (1v1)</button>
-        <button onclick="showScreen('screen-rooms')" class="secondary">Salons Privés</button>
-    </div>
-
-    <!-- ÉCRAN 3 : MATCHMAKING EN COURS -->
-    <div id="screen-matchmaking" class="screen">
-        <h1>Recherche...</h1>
-        <div class="radar-spinner"></div>
-        <p style="text-align: center;">Recherche d'un adversaire 1v1 en cours...</p>
-        <button onclick="cancelMatchmaking()" class="secondary">Annuler</button>
-    </div>
-
-    <!-- ÉCRAN 4 : SALONS PRIVÉS -->
-    <div id="screen-rooms" class="screen">
-        <h1>Salons Privés</h1>
-        
-        <div style="margin-bottom: 25px; text-align: left;">
-            <h3>Créer un salon</h3>
-            <label for="roomNameInput">NOM / CODE DU SALON</label>
-            <input type="text" id="roomNameInput" placeholder="Entre ton nom de salon...">
-            
-            <label for="roomPassword">MOT DE PASSE (Optionnel)</label>
-            <input type="text" id="roomPassword" placeholder="Mot de passe en clair...">
-            <button onclick="createPrivateRoom()">Créer le salon</button>
+        <div class="audio-controls">
+            <button class="arcade-btn" id="music-toggle-btn" onclick="toggleMusic()">Musique : OFF</button>
         </div>
 
-        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;">
-
-        <div style="text-align: left;">
-            <h3>Rejoindre un salon</h3>
-            <label for="joinRoomCode">CODE DU SALON</label>
-            <input type="text" id="joinRoomCode" placeholder="Code du salon...">
-            
-            <label for="joinRoomPassword">MOT DE PASSE (Si requis)</label>
-            <input type="text" id="joinRoomPassword" placeholder="Mot de passe...">
-            <button onclick="joinPrivateRoom()">Rejoindre</button>
+        <!-- MAIN MENU -->
+        <div id="menu-screen" class="game-screen active">
+            <p class="instructions">Associez rapidement les chiffres cibles au rythme de la synthwave rétro avant la fin du temps imparti !</p>
+            <div style="text-align: center;">
+                <button class="arcade-btn active" onclick="startGame()">INSERT COIN / START</button>
+            </div>
         </div>
 
-        <div id="roomErrorMsg" class="error-msg"></div>
-        <button onclick="showScreen('screen-menu')" class="secondary" style="margin-top: 20px;">Retour</button>
-    </div>
+        <!-- GAMEPLAY SCREEN -->
+        <div id="play-screen" class="game-screen">
+            <div class="hud">
+                <div class="hud-item">SCORE: <span id="score-val">0</span></div>
+                <div class="hud-item">MANCHE: <span id="round-val">1</span></div>
+            </div>
 
-    <!-- ÉCRAN 5 : SALON D'ATTENTE PRIVÉ -->
-    <div id="screen-waiting-room" class="screen">
-        <h1>Salon : <span id="currentRoomCodeDisplay">----</span></h1>
-        <p style="text-align: center;">Joueurs dans le salon :</p>
-        <ul id="roomPlayersList" style="list-style: none; margin-bottom: 20px; color: var(--accent); font-weight: bold;"></ul>
-        <div class="radar-spinner" style="width: 50px; height: 50px;"></div>
-        <p style="text-align: center;">En attente du second joueur...</p>
-        <button onclick="leaveRoom()" class="secondary">Quitter le salon</button>
-    </div>
+            <div class="timer-bar-container">
+                <div id="timer-bar" class="timer-bar"></div>
+            </div>
 
-    <!-- ÉCRAN 6 : COMPTE À REBOURS -->
-    <div id="screen-countdown" class="screen">
-        <h1>La partie va commencer !</h1>
-        <div id="countdownNumber" style="font-size: 5rem; color: var(--primary); margin: 30px 0; font-weight: bold;">3</div>
-    </div>
+            <div class="target-box" id="target-display">CIBLE: --</div>
 
-    <!-- ÉCRAN 7 : JEU 1V1 -->
-    <div id="screen-game" class="screen">
-        <div class="game-header">
-            <div>Temps : <span id="gameTimer">30</span>s</div>
-            <div>Score : <span id="gameScore">0</span></div>
+            <div class="grid" id="tiles-grid">
+                <!-- Dynamically generated tiles -->
+            </div>
         </div>
-        <p style="text-align: center;">Cible à trouver :</p>
-        <div class="target-box" id="targetNumber">1</div>
-        <div class="grid" id="numberGrid">
-            <!-- Les boutons de chiffres seront injectés ici -->
+
+        <!-- GAMEOVER SCREEN -->
+        <div id="gameover-screen" class="game-screen">
+            <h2 style="font-family: 'Press Start 2P'; color: var(--neon-pink); text-align: center; margin-bottom: 20px; font-size: 1.4rem;">GAME OVER</h2>
+            <p class="instructions" id="final-score-text" style="font-size: 1.3rem; color: var(--neon-yellow);">Score final : 0</p>
+            <div style="text-align: center;">
+                <button class="arcade-btn active" onclick="returnToMenu()">REJOUER</button>
+            </div>
         </div>
     </div>
 
-    <!-- ÉCRAN 8 : FIN DE PARTIE -->
-    <div id="screen-gameover" class="screen">
-        <h1>Fin de partie</h1>
-        <p id="gameOverReason" style="text-align: center;">Temps écoulé !</p>
-        <div id="gameOverResult" style="font-size: 1.3rem; margin: 20px 0; font-weight: bold;"></div>
-        <button onclick="showScreen('screen-menu')">Retour au menu</button>
-    </div>
-</div>
+    <script>
+        // --- SYNTHWAVE AUDIO ENGINE (Web Audio API) ---
+        let audioCtx = null;
+        let musicInterval = null;
+        let isMusicPlaying = false;
 
-<script>
-    const socket = io();
-    let myUsername = '';
-    let currentRoomCode = '';
-
-    function showScreen(screenId) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(screenId).classList.add('active');
-    }
-
-    function registerPlayer() {
-        const input = document.getElementById('usernameInput');
-        myUsername = input.value.trim() || 'Joueur';
-        socket.emit('register_player', { username: myUsername });
-    }
-
-    socket.on('player_registered', (profile) => {
-        document.getElementById('displayName').textContent = profile.username;
-        showScreen('screen-menu');
-    });
-
-    // Matchmaking aléatoire
-    function startMatchmaking() {
-        showScreen('screen-matchmaking');
-        socket.emit('find_1v1_match');
-    }
-
-    function cancelMatchmaking() {
-        window.location.reload();
-    }
-
-    // Salons privés
-    function createPrivateRoom() {
-        const roomName = document.getElementById('roomNameInput').value.trim();
-        const password = document.getElementById('roomPassword').value.trim();
-        document.getElementById('roomErrorMsg').textContent = '';
-
-        socket.emit('create_room', {
-            roomName: roomName,
-            password: password,
-            username: myUsername
-        });
-    }
-
-    function joinPrivateRoom() {
-        const code = document.getElementById('joinRoomCode').value.trim();
-        const password = document.getElementById('joinRoomPassword').value.trim();
-        document.getElementById('roomErrorMsg').textContent = '';
-
-        socket.emit('join_room', {
-            code: code,
-            password: password
-        });
-    }
-
-    function leaveRoom() {
-        socket.emit('leave_room');
-        showScreen('screen-rooms');
-    }
-
-    socket.on('room_joined_success', (data) => {
-        currentRoomCode = data.code;
-        document.getElementById('currentRoomCodeDisplay').textContent = data.code;
-        updateRoomPlayers(data.players);
-        showScreen('screen-waiting-room');
-    });
-
-    socket.on('room_players_update', (data) => {
-        updateRoomPlayers(data.players);
-    });
-
-    function updateRoomPlayers(players) {
-        const list = document.getElementById('roomPlayersList');
-        list.innerHTML = '';
-        players.forEach(p => {
-            const li = document.createElement('li');
-            li.textContent = `👤 ${p.username}`;
-            li.style.margin = "8px 0";
-            li.style.fontSize = "1.1rem";
-            list.appendChild(li);
-        });
-    }
-
-    socket.on('room_error', (msg) => {
-        document.getElementById('roomErrorMsg').textContent = msg;
-    });
-
-    // Événements de jeu 1v1
-    socket.on('start_countdown', () => {
-        showScreen('screen-countdown');
-        let count = 3;
-        const countDisplay = document.getElementById('countdownNumber');
-        countDisplay.textContent = count;
-        
-        const timer = setInterval(() => {
-            count--;
-            if (count > 0) {
-                countDisplay.textContent = count;
-            } else {
-                clearInterval(timer);
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
-        }, 1000);
-    });
-
-    socket.on('game_started', (data) => {
-        showScreen('screen-game');
-        document.getElementById('gameTimer').textContent = data.timeLeft;
-        document.getElementById('gameScore').textContent = '0';
-        updateGameGrid(data.myTarget, data.myPool);
-    });
-
-    socket.on('timer_update', (timeLeft) => {
-        document.getElementById('gameTimer').textContent = timeLeft;
-    });
-
-    socket.on('my_grid_updated', (data) => {
-        if (data.success) {
-            let scoreEl = document.getElementById('gameScore');
-            scoreEl.textContent = parseInt(scoreEl.textContent) + 10;
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
         }
-        updateGameGrid(data.target, data.newPool);
-    });
 
-    function updateGameGrid(target, pool) {
-        document.getElementById('targetNumber').textContent = target;
-        const grid = document.getElementById('numberGrid');
-        grid.innerHTML = '';
-        pool.forEach(num => {
-            const btn = document.createElement('button');
-            btn.className = 'grid-btn';
-            btn.textContent = num;
-            btn.onclick = () => {
-                socket.emit('player_click_1v1', num);
-            };
-            grid.appendChild(btn);
-        });
-    }
+        // Sound Effects
+        function playSound(type) {
+            initAudio();
+            if (!audioCtx) return;
 
-    socket.on('game_over_1v1', (data) => {
-        showScreen('screen-gameover');
-        document.getElementById('gameOverReason').textContent = data.reason;
-        
-        let resultText = "Match nul !";
-        if (data.winnerId === socket.id) {
-            resultText = "🎉 Victoire !";
-        } else if (data.winnerId) {
-            resultText = "😢 Défaite...";
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } else if (type === 'success') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.linearRampToValueAtTime(80, now + 0.2);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            }
         }
-        document.getElementById('gameOverResult').textContent = resultText;
-    });
-</script>
 
+        // Procedural Synthwave Arpeggio Loop
+        function toggleMusic() {
+            initAudio();
+            isMusicPlaying = !isMusicPlaying;
+            const btn = document.getElementById('music-toggle-btn');
+
+            if (isMusicPlaying) {
+                btn.textContent = "Musique : ON";
+                btn.classList.add('active');
+                startSynthwaveMusic();
+            } else {
+                btn.textContent = "Musique : OFF";
+                btn.classList.remove('active');
+                stopSynthwaveMusic();
+            }
+        }
+
+        function startSynthwaveMusic() {
+            if (musicInterval) return;
+            const bassNotes = [110, 110, 123.47, 130.81, 98.00, 110]; // A2, B2, C3, G2...
+            let step = 0;
+
+            musicInterval = setInterval(() => {
+                if (!audioCtx || !isMusicPlaying) return;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(bassNotes[step % bassNotes.length], audioCtx.currentTime);
+                
+                // Low pass filter for warm synth bass
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(600, audioCtx.currentTime);
+
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.005, audioCtx.currentTime + 0.25);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.25);
+                step++;
+            }, 250); // 120 BPM 16th notes
+        }
+
+        function stopSynthwaveMusic() {
+            if (musicInterval) {
+                clearInterval(musicInterval);
+                musicInterval = null;
+            }
+        }
+
+        // --- GAME LOGIC ---
+        let score = 0;
+        let round = 1;
+        let targetNumber = 0;
+        let timeLeft = 100;
+        let timerInterval = null;
+        let gameActive = false;
+
+        function startGame() {
+            playSound('click');
+            score = 0;
+            round = 1;
+            document.getElementById('menu-screen').classList.remove('active');
+            document.getElementById('gameover-screen').classList.remove('active');
+            document.getElementById('play-screen').classList.add('active');
+            gameActive = true;
+            nextRound();
+        }
+
+        function nextRound() {
+            if (!gameActive) return;
+            document.getElementById('score-val').textContent = score;
+            document.getElementById('round-val').textContent = round;
+
+            // Generate target between 10 and 99
+            targetNumber = Math.floor(Math.random() * 90) + 10;
+            document.getElementById('target-display').textContent = `CIBLE : ${targetNumber}`;
+
+            // Generate 6 options including the correct target
+            const options = [targetNumber];
+            while (options.length < 6) {
+                const rand = Math.floor(Math.random() * 90) + 10;
+                if (!options.includes(rand)) {
+                    options.push(rand);
+                }
+            }
+
+            // Shuffle options
+            options.sort(() => Math.random() - 0.5);
+
+            // Render tiles
+            const grid = document.getElementById('tiles-grid');
+            grid.innerHTML = '';
+            options.forEach(num => {
+                const tile = document.createElement('button');
+                tile.className = 'tile';
+                tile.textContent = num;
+                tile.onclick = () => selectTile(num);
+                grid.appendChild(tile);
+            });
+
+            // Reset Timer (decreases with rounds)
+            clearInterval(timerInterval);
+            timeLeft = 100;
+            const speed = Math.max(30, 70 - round * 5); // Faster each round
+            
+            timerInterval = setInterval(() => {
+                timeLeft -= 1;
+                document.getElementById('timer-bar').style.width = timeLeft + '%';
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    gameOver();
+                }
+            }, speed);
+        }
+
+        function selectTile(num) {
+            if (!gameActive) return;
+            if (num === targetNumber) {
+                playSound('success');
+                score += 100 + round * 10;
+                round++;
+                nextRound();
+            } else {
+                playSound('error');
+                score = Math.app(0, score - 50);
+                document.getElementById('score-val').textContent = score;
+            }
+        }
+
+        function gameOver() {
+            gameActive = false;
+            playSound('error');
+            document.getElementById('play-screen').classList.remove('active');
+            document.getElementById('gameover-screen').classList.add('active');
+            document.getElementById('final-score-text').textContent = `Score final : ${score}`;
+        }
+
+        function returnToMenu() {
+            playSound('click');
+            document.getElementById('gameover-screen').classList.remove('active');
+            document.getElementById('menu-screen').classList.add('active');
+        }
+    </script>
 </body>
 </html>
