@@ -106,10 +106,10 @@
         </div>
     </div>
 
-    <!-- Script Socket.io (Si hébergé sur Render, remplacer par l'URL complète de ton backend, ex: io('https://ton-app.onrender.com')) -->
-    <script src="/socket.io/socket.io.js"></script>
+    <!-- Script Socket.io -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
     <script>
-        const socket = io();
+        const socket = io('https://chiffre-blitz-server.onrender.com');
 
         function createRoom() {
             const roomName = document.getElementById('room-name-input').value;
@@ -127,7 +127,7 @@
             let password = '';
             if (hasPassword) {
                 password = prompt(`Le salon "${roomName}" est sécurisé. Entrez le mot de passe :`);
-                if (password === null) return; // Si l'utilisateur clique sur Annuler
+                if (password === null) return;
             }
             socket.emit('join-room', { roomName, password });
         }
@@ -135,7 +135,7 @@
         function leaveRoom() {
             document.getElementById('game-screen').style.display = 'none';
             document.getElementById('lobby-screen').style.display = 'block';
-            window.location.reload(); // Recharge pour réinitialiser proprement la socket/les états si besoin
+            window.location.reload();
         }
 
         // Mise à jour de la liste des salons reçue du serveur
@@ -168,7 +168,7 @@
             document.getElementById('error-message').innerText = '';
         });
 
-        // Gestion des erreurs (mot de passe incorrect, etc.)
+        // Gestion des erreurs
         socket.on('error-msg', (msg) => {
             document.getElementById('error-message').innerText = msg;
         });
