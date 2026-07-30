@@ -38,12 +38,13 @@ io.on('connection', (socket) => {
         socket.emit('player_registered', players[socket.id]);
     });
 
-    // --- GESTION DES SALONS PRIVÉS (avec nom personnalisé et mot de passe) ---
+    // --- GESTION DES SALONS PRIVÉS ---
     socket.on('create_room', (data) => {
-        let roomCode = data?.roomName ? data.roomName.trim().toUpperCase() : Math.random().toString(36).substring(2, 6).toUpperCase();
+        // Utilisation stricte du nom saisi par l'utilisateur sans génération aléatoire forcée
+        let roomCode = data?.roomName ? data.roomName.trim().toUpperCase() : '';
         
-        if (rooms[roomCode]) {
-            roomCode = roomCode + '_' + Math.random().toString(36).substring(2, 4).toUpperCase();
+        if (!roomCode) {
+            roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
         }
 
         rooms[roomCode] = {
