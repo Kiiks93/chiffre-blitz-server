@@ -1,12 +1,16 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: { origin: "*" }
 });
+
+// Indispensable pour que Render serve ton index.html et le script socket.io
+app.use(express.static(path.join(__dirname)));
 
 let players = {};
 let waitingPlayer = null;
@@ -40,9 +44,15 @@ io.on('connection', (socket) => {
 
     // --- GESTION DES SALONS PRIVÉS ---
     socket.on('create_room', (data) => {
-        const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+        let roomCode = data?.code ? data.code.trim().toUpperCase() : '';
+        
+        if (!roomCode) {
+            roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+        }
+
         rooms[roomCode] = {
             code: roomCode,
+            password: data?.password || '',
             host: socket.id,
             players: [{ id: socket.id, username: data?.username || players[socket.id]?.username || 'Hôte' }],
             gameStarted: false,
@@ -60,9 +70,15 @@ io.on('connection', (socket) => {
 
     socket.on('join_room', (data) => {
         const roomCode = data?.code ? data.code.toUpperCase() : '';
+        const passwordInput = data?.password || '';
         const room = rooms[roomCode];
 
-        if (room && room.players.length < 2 && !room.gameStarted) {
+        if (room && !room.gameStarted && room.players.length < 2) {
+            if (room.password && room.password !== passwordInput) {
+                socket.emit('room_error', "Mot de passe incorrect !");
+                return;
+            }
+
             const username = players[socket.id]?.username || 'Adversaire';
             room.players.push({ id: socket.id, username: username });
             socket.join(roomCode);
@@ -85,7 +101,7 @@ io.on('connection', (socket) => {
                 }, 3000);
             }
         } else {
-            socket.emit('room_error', "Salon introuvable, complet ou partie déjà commencée !");
+            socket.emit('room_error', "Salon introuvable, complet, mot de passe incorrect ou partie déjà commencée !");
         }
     });
 
@@ -103,9 +119,8 @@ io.on('connection', (socket) => {
         socket.emit('rooms_list_data', openRooms);
     });
 
-    // --- MATCHMAKING ALÉATOIRE ---
+    // --- MATCHMAKING ALÉATOIRE (CORRIGÉ) ---
     socket.on('find_1v1_match', () => {
-        // Empêcher un joueur de se matcher lui-même s'il clique en double
         if (waitingPlayer === socket.id) return;
 
         if (waitingPlayer) {
@@ -113,7 +128,6 @@ io.on('connection', (socket) => {
             const p2 = socket.id;
             waitingPlayer = null;
 
-            // Vérifier que les deux sockets sont toujours valides
             const s1 = io.sockets.sockets.get(p1);
             const s2 = io.sockets.sockets.get(p2);
 
@@ -128,6 +142,7 @@ io.on('connection', (socket) => {
 
             rooms[roomName] = {
                 code: roomName,
+                password: '',
                 players: [
                     { id: p1, username: players[p1]?.username || 'Joueur 1' },
                     { id: p2, username: players[p2]?.username || 'Joueur 2' }
@@ -194,6 +209,17 @@ io.on('connection', (socket) => {
             }
         } catch (err) {
             console.error("Erreur dans player_click_1v1:", err);
+        }
+    });
+
+    // --- TRANSMISSION DES MALUS ---
+    socket.on('send_malus', (data) => {
+        for (const code in rooms) {
+            const room = rooms[code];
+            if (room.matchPlayers && room.matchPlayers[socket.id]) {
+                socket.to(code).emit('receive_malus', data);
+                break;
+            }
         }
     });
 
