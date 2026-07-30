@@ -14,6 +14,7 @@ const rooms = new Map();
 io.on('connection', (socket) => {
     console.log(`Joueur connecté : ${socket.id}`);
 
+    // Matchmaking public
     socket.on('find_match', () => {
         if (waitingPlayer && waitingPlayer.id !== socket.id) {
             const roomId = `room_${Date.now()}`;
@@ -30,6 +31,27 @@ io.on('connection', (socket) => {
         } else {
             waitingPlayer = socket;
             socket.emit('waiting', { message: 'Recherche d\'un adversaire en cours...' });
+        }
+    });
+
+    // Création de partie privée
+    socket.on('create_private_room', () => {
+        const roomId = `private_${Math.random().toString(36.substring(2, 8))}`;
+        socket.join(roomId);
+        rooms.set(roomId, { players: [socket.id], state: 'waiting' });
+        socket.emit('private_room_created', { roomId });
+    });
+
+    // Rejoindre une partie privée
+    socket.on('join_private_room', ({ roomId }) => {
+        const room = rooms.get(roomId);
+        if (room && room.players.length === 1) {
+            socket.join(roomId);
+            room.players.push(socket.id);
+            room.state = 'playing';
+            io.to(roomId).emit('match_found', { roomId });
+        } else {
+            socket.emit('error_message', { message: 'Salon introuvable ou complet.' });
         }
     });
 
