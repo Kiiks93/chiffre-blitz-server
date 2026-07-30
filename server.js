@@ -43,14 +43,11 @@ function startMatch(roomCode, playerIds) {
         if (!match) return;
 
         playerIds.forEach(id => {
-            const socket = io.sockets.sockets.get(id);
-            if (socket) {
-                socket.emit('game_started', {
-                    timeLeft: match.timeLeft,
-                    myTarget: match.targets[id],
-                    myPool: match.pools[id]
-                });
-            }
+            io.to(id).emit('game_started', {
+                timeLeft: match.timeLeft,
+                myTarget: match.targets[id],
+                myPool: match.pools[id]
+            });
         });
 
         match.timer = setInterval(() => {
@@ -121,9 +118,11 @@ io.on('connection', (socket) => {
             return;
         }
 
+        const roomPass = data?.password ? data.password.trim() : '';
+
         rooms[roomCode] = {
             code: roomCode,
-            password: data?.password || '',
+            password: roomPass,
             host: socket.id,
             players: [{ id: socket.id, username: data?.username || players[socket.id]?.username || 'Hôte' }]
         };
@@ -145,7 +144,8 @@ io.on('connection', (socket) => {
             return;
         }
 
-        if (room.password && room.password !== data?.password) {
+        const userPass = data?.password ? data.password.trim() : '';
+        if (room.password && room.password !== userPass) {
             socket.emit('room_error', "Mot de passe incorrect !");
             return;
         }
@@ -163,7 +163,7 @@ io.on('connection', (socket) => {
                 console.log(`Salon ${roomCode} complet. Lancement de la partie...`);
                 const p1 = room.players[0].id;
                 const p2 = room.players[1].id;
-                delete rooms[roomCode]; // Nettoyer le lobby une fois la partie lancée
+                delete rooms[roomCode];
                 startMatch(roomCode, [p1, p2]);
             }
         } else {
@@ -190,7 +190,7 @@ io.on('connection', (socket) => {
 
     socket.on('get_rooms_list', () => {
         const openRooms = Object.values(rooms)
-            .filter(r => r.players.length < 2 && !r.password)
+            .filter(r => r.players.length < 2 && (!r.password || r.password === ''))
             .map(r => ({
                 code: r.code,
                 playersCount: r.players.length
