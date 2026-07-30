@@ -31,9 +31,9 @@ io.on('connection', (socket) => {
     socket.on('register_player', (profile) => {
         players[socket.id] = {
             id: socket.id,
-            username: profile.username,
-            region: profile.region,
-            points: profile.points || 1000
+            username: profile?.username || 'Joueur',
+            region: profile?.region || 'France',
+            points: profile?.points || 1000
         };
         socket.emit('player_registered', players[socket.id]);
     });
@@ -45,7 +45,9 @@ io.on('connection', (socket) => {
             code: roomCode,
             host: socket.id,
             players: [{ id: socket.id, username: data?.username || players[socket.id]?.username || 'Hôte' }],
-            gameStarted: false
+            gameStarted: false,
+            ended: false,
+            timerInterval: null
         };
 
         socket.join(roomCode);
@@ -65,12 +67,10 @@ io.on('connection', (socket) => {
             room.players.push({ id: socket.id, username: username });
             socket.join(roomCode);
 
-            // Informer tout le monde dans le salon
             io.to(roomCode).emit('room_players_update', { players: room.players });
             socket.emit('room_joined_success', { code: roomCode, players: room.players });
             console.log(`Joueur ${socket.id} a rejoint le salon ${roomCode}`);
 
-            // Si le salon privé est plein (2 joueurs), on lance la partie automatiquement !
             if (room.players.length === 2) {
                 room.gameStarted = true;
                 room.timeLeft = 30;
@@ -90,21 +90,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('leave_room', () => {
-        for (const code in rooms) {
-            const room = rooms[code];
-            const index = room.players.findIndex(p => p.id === socket.id);
-            if (index !== -1) {
-                socket.leave(code);
-                room.players.splice(index, 1);
-                if (room.players.length === 0) {
-                    if (room.timerInterval) clearInterval(room.timerInterval);
-                    delete rooms[code];
-                } else {
-                    io.to(code).emit('room_players_update', { players: room.players });
-                }
-                break;
-            }
-        }
+        cleanupPlayerFromRooms(socket.id);
     });
 
     socket.on('get_rooms_list', () => {
@@ -119,16 +105,27 @@ io.on('connection', (socket) => {
 
     // --- MATCHMAKING ALÉATOIRE ---
     socket.on('find_1v1_match', () => {
-        if (waitingPlayer && waitingPlayer !== socket.id) {
+        // Empêcher un joueur de se matcher lui-même s'il clique en double
+        if (waitingPlayer === socket.id) return;
+
+        if (waitingPlayer) {
             const p1 = waitingPlayer;
             const p2 = socket.id;
             waitingPlayer = null;
 
-            const roomName = `match_${p1}_${p2}`;
-            io.sockets.sockets.get(p1)?.join(roomName);
-            io.sockets.sockets.get(p2)?.join(roomName);
+            // Vérifier que les deux sockets sont toujours valides
+            const s1 = io.sockets.sockets.get(p1);
+            const s2 = io.sockets.sockets.get(p2);
 
-            // On stocke le match dans l'objet rooms pour gérer la partie
+            if (!s1 || !s2) {
+                if (s1) waitingPlayer = p1;
+                return;
+            }
+
+            const roomName = `match_${p1}_${p2}`;
+            s1.join(roomName);
+            s2.join(roomName);
+
             rooms[roomName] = {
                 code: roomName,
                 players: [
@@ -136,7 +133,9 @@ io.on('connection', (socket) => {
                     { id: p2, username: players[p2]?.username || 'Joueur 2' }
                 ],
                 gameStarted: true,
+                ended: false,
                 timeLeft: 30,
+                timerInterval: null,
                 matchPlayers: {
                     [p1]: { target: 1, score: 0, pool: generateRandomPool(1) },
                     [p2]: { target: 1, score: 0, pool: generateRandomPool(1) }
@@ -154,71 +153,93 @@ io.on('connection', (socket) => {
 
     // --- GESTION DES CLICS PENDANT LE DUEL ---
     socket.on('player_click_1v1', (num) => {
-        let roomCode = null;
-        for (const code in rooms) {
-            const room = rooms[code];
-            if (room.matchPlayers && room.matchPlayers[socket.id]) {
-                roomCode = code;
-                break;
+        try {
+            let roomCode = null;
+            for (const code in rooms) {
+                const room = rooms[code];
+                if (room.matchPlayers && room.matchPlayers[socket.id]) {
+                    roomCode = code;
+                    break;
+                }
             }
-        }
-        if (!roomCode) return;
+            if (!roomCode) return;
 
-        let room = rooms[roomCode];
-        let pData = room.matchPlayers[socket.id];
-        if (!pData || room.timeLeft <= 0) return;
+            let room = rooms[roomCode];
+            if (!room || room.ended || room.timeLeft <= 0) return;
 
-        if (num === pData.target) {
-            pData.score += 10;
-            pData.target++;
-            pData.pool = generateRandomPool(pData.target);
+            let pData = room.matchPlayers[socket.id];
+            if (!pData) return;
 
-            socket.emit('my_grid_updated', {
-                target: pData.target,
-                newPool: pData.pool,
-                success: true
-            });
+            if (num === pData.target) {
+                pData.score += 10;
+                pData.target++;
+                pData.pool = generateRandomPool(pData.target);
 
-            socket.to(roomCode).emit('opponent_progress', {
-                target: pData.target
-            });
-        } else {
-            socket.emit('my_grid_updated', {
-                target: pData.target,
-                newPool: pData.pool,
-                success: false
-            });
+                socket.emit('my_grid_updated', {
+                    target: pData.target,
+                    newPool: pData.pool,
+                    success: true
+                });
+
+                socket.to(roomCode).emit('opponent_progress', {
+                    target: pData.target,
+                    score: pData.score
+                });
+            } else {
+                socket.emit('my_grid_updated', {
+                    target: pData.target,
+                    newPool: pData.pool,
+                    success: false
+                });
+            }
+        } catch (err) {
+            console.error("Erreur dans player_click_1v1:", err);
         }
     });
 
     // Déconnexion générale
     socket.on('disconnect', () => {
         if (waitingPlayer === socket.id) waitingPlayer = null;
-        for (const code in rooms) {
-            const room = rooms[code];
-            const wasInMatch = room.matchPlayers && room.matchPlayers[socket.id];
-            room.players = room.players.filter(p => p.id !== socket.id);
-            
-            if (wasInMatch) {
-                io.to(code).emit('room_error', "L'adversaire s'est déconnecté.");
-                if (room.timerInterval) clearInterval(room.timerInterval);
-                delete rooms[code];
-            } else if (room.players.length === 0) {
-                if (room.timerInterval) clearInterval(room.timerInterval);
-                delete rooms[code];
-            } else {
-                io.to(code).emit('room_players_update', { players: room.players });
-            }
-        }
+        cleanupPlayerFromRooms(socket.id);
         delete players[socket.id];
         console.log(`Déconnexion : ${socket.id}`);
     });
 });
 
+// Nettoyage sécurisé des salons et des timers en cas de départ/déconnexion
+function cleanupPlayerFromRooms(socketId) {
+    for (const code in rooms) {
+        const room = rooms[code];
+        const wasInMatch = room.matchPlayers && room.matchPlayers[socketId];
+        
+        room.players = room.players.filter(p => p.id !== socketId);
+        
+        if (wasInMatch) {
+            if (!room.ended) {
+                room.ended = true;
+                if (room.timerInterval) {
+                    clearInterval(room.timerInterval);
+                    room.timerInterval = null;
+                }
+                io.to(code).emit('room_error', "L'adversaire s'est déconnecté.");
+            }
+            delete rooms[code];
+        } else if (room.players.length === 0) {
+            if (room.timerInterval) {
+                clearInterval(room.timerInterval);
+                room.timerInterval = null;
+            }
+            delete rooms[code];
+        } else {
+            io.to(code).emit('room_players_update', { players: room.players });
+        }
+    }
+}
+
 // Lancement de la boucle de jeu et du chronomètre
 function start1v1GameLoop(roomCode) {
     let room = rooms[roomCode];
-    if (!room) return;
+    if (!room || room.ended) return;
 
     for (let pId in room.matchPlayers) {
         io.to(pId).emit('game_started', {
@@ -229,46 +250,54 @@ function start1v1GameLoop(roomCode) {
     }
 
     room.timerInterval = setInterval(() => {
+        if (!rooms[roomCode] || room.ended) {
+            clearInterval(room.timerInterval);
+            return;
+        }
+
         room.timeLeft--;
         io.to(roomCode).emit('timer_update', room.timeLeft);
 
         if (room.timeLeft <= 0) {
             clearInterval(room.timerInterval);
+            room.timerInterval = null;
             end1v1Game(roomCode, "Temps écoulé !");
         }
     }, 1000);
 }
 
-// Fin de partie et calcul du gagnant
+// Fin de partie et calcul du gagnant sécurisé
 function end1v1Game(roomCode, reason) {
     let room = rooms[roomCode];
-    if (!room) return;
-    if (room.timerInterval) clearInterval(room.timerInterval);
+    if (!room || room.ended) return;
 
-    let pIds = Object.keys(room.matchPlayers);
-    if (pIds.length < 2) {
-        delete rooms[roomCode];
-        return;
+    room.ended = true;
+    if (room.timerInterval) {
+        clearInterval(room.timerInterval);
+        room.timerInterval = null;
     }
 
-    let p1Id = pIds[0];
-    let p2Id = pIds[1];
-    let p1 = room.matchPlayers[p1Id];
-    let p2 = room.matchPlayers[p2Id];
+    let pIds = Object.keys(room.matchPlayers || {});
+    if (pIds.length >= 2) {
+        let p1Id = pIds[0];
+        let p2Id = pIds[1];
+        let p1 = room.matchPlayers[p1Id];
+        let p2 = room.matchPlayers[p2Id];
 
-    let winnerId = null;
-    if (p1.score > p2.score) winnerId = p1Id;
-    else if (p2.score > p1.score) winnerId = p2Id;
+        let winnerId = null;
+        if (p1.score > p2.score) winnerId = p1Id;
+        else if (p2.score > p1.score) winnerId = p2Id;
 
-    let formattedPlayers = {};
-    formattedPlayers[p1Id] = { target: p1.target, score: p1.score };
-    formattedPlayers[p2Id] = { target: p2.target, score: p2.score };
+        let formattedPlayers = {};
+        formattedPlayers[p1Id] = { target: p1.target, score: p1.score };
+        formattedPlayers[p2Id] = { target: p2.target, score: p2.score };
 
-    io.to(roomCode).emit('game_over_1v1', {
-        reason: reason,
-        winnerId: winnerId,
-        players: formattedPlayers
-    });
+        io.to(roomCode).emit('game_over_1v1', {
+            reason: reason,
+            winnerId: winnerId,
+            players: formattedPlayers
+        });
+    }
 
     delete rooms[roomCode];
 }
