@@ -7,7 +7,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: { origin: "*" },
-    pingTimeout: 60000, // Augmente le délai avant de considérer une co perdue
+    pingTimeout: 60000,
     pingInterval: 25000
 });
 
@@ -256,6 +256,12 @@ function start1v1GameLoop(roomCode) {
     let room = rooms[roomCode];
     if (!room || room.ended) return;
 
+    // Nettoyage de sécurité pour éviter les doubles intervalles
+    if (room.timerInterval) {
+        clearInterval(room.timerInterval);
+        room.timerInterval = null;
+    }
+
     for (let pId in room.matchPlayers) {
         io.to(pId).emit('game_started', {
             timeLeft: room.timeLeft,
@@ -268,7 +274,10 @@ function start1v1GameLoop(roomCode) {
         try {
             let currentRoom = rooms[roomCode];
             if (!currentRoom || currentRoom.ended) {
-                if (room.timerInterval) clearInterval(room.timerInterval);
+                if (room.timerInterval) {
+                    clearInterval(room.timerInterval);
+                    room.timerInterval = null;
+                }
                 return;
             }
 
@@ -284,7 +293,10 @@ function start1v1GameLoop(roomCode) {
             }
         } catch (e) {
             console.error("Erreur dans le timer interval:", e);
-            if (room.timerInterval) clearInterval(room.timerInterval);
+            if (room.timerInterval) {
+                clearInterval(room.timerInterval);
+                room.timerInterval = null;
+            }
         }
     }, 1000);
 }
@@ -314,7 +326,7 @@ function end1v1Game(roomCode, reason) {
         formattedPlayers[p1Id] = { target: p1.target, score: p1.score };
         formattedPlayers[p2Id] = { target: p2.target, score: p2.score };
 
-        io.to(roomCode).emit('game_over_1v1', {
+    io.to(roomCode).emit('game_over_1v1', {
             reason: reason,
             winnerId: winnerId,
             players: formattedPlayers
