@@ -3,449 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1v1 Number Duel</title>
-    <script src="/socket.io/socket.io.js"></script>
+    <title>Chiffre Blitz - 1v1 Arena</title>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --panel-bg: #1e293b;
-            --accent: #38bdf8;
-            --accent-hover: #0ea5e9;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --danger: #ef4444;
-            --success: #22c55e;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --bg-dark: #0f051d;
+            --primary-cyan: #00d2ff;
+            --accent-pink: #ff007f;
+            --tile-violet: #2a1845;
+            --text-light: #ffffff;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            overflow-x: hidden;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
         }
 
-        .screen {
-            display: none;
-            width: 100%;
-            max-width: 600px;
-            padding: 2rem;
-            background: var(--panel-bg);
-            border-radius: 1rem;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        .container {
+            background: linear-gradient(135deg, rgba(42, 24, 69, 0.8), rgba(15, 5, 29, 0.9));
+            border: 2px solid var(--primary-cyan);
+            border-radius: 20px;
+            box-shadow: 0 0 25px rgba(0, 210, 255, 0.4), inset 0 0 15px rgba(255, 0, 127, 0.2);
+            padding: 40px;
+            width: 450px;
             text-align: center;
-            animation: fadeIn 0.3s ease-in-out;
         }
 
-        .screen.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        h1, h2 {
-            margin-bottom: 1.5rem;
-            color: var(--accent);
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            color: var(--primary-cyan);
+            text-shadow: 0 0 10px rgba(0, 210, 255, 0.7);
+            letter-spacing: 2px;
         }
 
         p {
-            color: var(--text-muted);
-            margin-bottom: 1.5rem;
+            color: #b8b8f3;
+            margin-bottom: 30px;
         }
 
-        input, button {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            margin-bottom: 1rem;
-            border-radius: 0.5rem;
-            border: 1px solid #334155;
-            font-size: 1rem;
-        }
-
-        input {
-            background: #0f172a;
-            color: var(--text-main);
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
-        button {
-            background: var(--accent);
-            color: var(--bg-color);
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-            border: none;
-        }
-
-        button:hover {
-            background: var(--accent-hover);
-        }
-
-        button.secondary {
-            background: transparent;
-            color: var(--text-main);
-            border: 1px solid #334155;
-        }
-
-        button.secondary:hover {
-            background: #334155;
-        }
-
-        /* Grille de jeu */
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin: 1.5rem 0;
-        }
-
-        .grid-btn {
-            aspect-ratio: 1;
-            font-size: 1.5rem;
-            font-weight: bold;
-            background: #334155;
-            color: var(--text-main);
-            border: none;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: transform 0.1s, background 0.2s;
-            margin-bottom: 0;
-        }
-
-        .grid-btn:active {
-            transform: scale(0.95);
-        }
-
-        .grid-btn.correct {
-            background: var(--success);
+        .btn {
+            background: linear-gradient(90deg, var(--primary-cyan), var(--accent-pink));
             color: white;
-        }
-
-        .grid-btn.wrong {
-            background: var(--danger);
-            color: white;
-        }
-
-        /* Infos de jeu HUD */
-        .hud {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 1rem;
-            font-weight: bold;
+            border: none;
+            padding: 14px 28px;
             font-size: 1.1rem;
-        }
-
-        .timer {
-            color: var(--danger);
-        }
-
-        .audio-toggle {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background: var(--panel-bg);
-            border: 1px solid #334155;
-            color: var(--text-main);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+            font-weight: bold;
+            border-radius: 20px;
             cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.5);
+            transition: all 0.3s ease;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 25px var(--primary-cyan), 0 0 25px var(--accent-pink);
+        }
+
+        #status {
+            margin-top: 20px;
+            font-weight: bold;
+            color: var(--accent-pink);
+            text-shadow: 0 0 8px rgba(255, 0, 127, 0.6);
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .tile {
+            background-color: var(--tile-violet);
+            border: 2px solid var(--primary-cyan);
+            border-radius: 15px;
+            height: 70px;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: inset 0 0 10px rgba(0, 210, 255, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .tile:hover {
+            background-color: var(--primary-cyan);
+            color: var(--bg-dark);
+            box-shadow: 0 0 15px var(--primary-cyan);
+        }
+
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
 
-    <button class="audio-toggle" id="audioToggleBtn" onclick="toggleAudio()">🔊</button>
-
-    <!-- Écran Principal / Menu -->
-    <div id="screen-menu" class="screen active">
-        <h1>1v1 Number Duel</h1>
-        <p>Affrontez des joueurs en temps réel et trouvez les nombres le plus vite possible !</p>
-        <input type="text" id="usernameInput" placeholder="Votre pseudo" maxlength="15">
-        <button onclick="connectPlayer()">Jouer en Ligne</button>
-        <button class="secondary" onclick="showScreen('screen-rooms')">Salons Privés</button>
-    </div>
-
-    <!-- Écran Salon / Menu Secondaire -->
-    <div id="screen-rooms" class="screen">
-        <h2>Salons Privés</h2>
-        <button onclick="createPrivateRoom()">Créer un salon</button>
-        <input type="text" id="roomCodeInput" placeholder="Code du salon (ex: AB12)">
-        <input type="password" id="roomPasswordInput" placeholder="Mot de passe (optionnel)">
-        <button onclick="joinPrivateRoom()">Rejoindre avec le code</button>
-        <button class="secondary" onclick="showScreen('screen-menu')">Retour</button>
-    </div>
-
-    <!-- Écran d'attente matchmaking / salon -->
-    <div id="screen-waiting" class="screen">
-        <h2 id="waitingTitle">Recherche d'adversaire...</h2>
-        <p id="waitingSub">Veuillez patienter pendant que nous trouvons un joueur.</p>
-        <div id="roomDetailsContainer" style="display:none; margin-bottom: 1rem;">
-            <p>Code du salon : <strong id="displayRoomCode" style="color:var(--accent);"></strong></p>
-            <ul id="roomPlayersList" style="list-style:none; margin-bottom:1rem;"></ul>
-        </div>
-        <button class="secondary" onclick="leaveRoom()">Annuler / Quitter</button>
-    </div>
-
-    <!-- Écran de Jeu 1v1 -->
-    <div id="screen-game" class="screen">
-        <div class="hud">
-            <div>Cible : <span id="targetDisplay" style="color:var(--accent);">1</span></div>
-            <div>Score : <span id="scoreDisplay">0</span></div>
-            <div class="timer">⏱ <span id="timerDisplay">30</span>s</div>
-        </div>
-        <p>Prochaine cible à trouver le plus vite possible ! Adversaire : <span id="opponentName">Adversaire</span> (<span id="opponentScore">0</span> pts)</p>
+    <div class="container">
+        <h1>CHIFFRE BLITZ</h1>
+        <p>Arène Multijoueur 1v1 - Temps Réel</p>
         
-        <div class="grid-container" id="gameGrid">
-            <!-- Boutons de grille générés dynamiquement -->
+        <div id="menu-section">
+            <button class="btn" id="matchmaking-btn">Trouver un adversaire</button>
+            <div id="status"></div>
+        </div>
+
+        <div id="game-section" class="hidden">
+            <div id="game-info">Partie en cours contre un adversaire</div>
+            <div class="game-grid" id="grid"></div>
         </div>
     </div>
 
-    <!-- Écran de Fin de Partie -->
-    <div id="screen-gameover" class="screen">
-        <h2 id="gameOverTitle">Fin de partie</h2>
-        <p id="gameOverReason"></p>
-        <p style="font-size: 1.2rem; font-weight: bold;" id="gameOverResult"></p>
-        <button onclick="showScreen('screen-menu')">Retour au menu</button>
-    </div>
-
+    <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
-        let myUsername = "Joueur";
-        let currentRoomCode = null;
 
-        // Gestionnaire Audio sécurisé (anti-freeze mémoire corrigé)
-        const SoundEngine = {
-            ctx: null,
-            isMuted: false,
-            musicInterval: null,
-            init() {
-                if (!this.ctx) {
-                    const AudioContext = window.AudioContext || window.webkitAudioContext;
-                    this.ctx = new AudioContext();
-                }
-                if (this.ctx.state === 'suspended') {
-                    this.ctx.resume();
-                }
-            },
-            playClick(success = true) {
-                if (this.isMuted) return;
-                this.init();
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = success ? 'triangle' : 'sawtooth';
-                osc.frequency.setValueAtTime(success ? 587.33 : 150, this.ctx.currentTime);
-                gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.2);
-            },
-            startMusic(mode) {
-                if (this.isMuted) return; 
-                this.init();
-                this.stopMusic(false);
+        const matchmakingBtn = document.getElementById('matchmaking-btn');
+        const statusDiv = document.getElementById('status');
+        const menuSection = document.getElementById('menu-section');
+        const gameSection = document.getElementById('game-section');
+        const gridElement = document.getElementById('grid');
 
-                let chord = [146.83, 220.00, 293.66];
-                const playPad = () => {
-                    if (this.isMuted || !this.ctx || this.ctx.state !== 'running') return;
-                    chord.forEach((baseFreq) => {
-                        const osc = this.ctx.createOscillator(), gain = this.ctx.createGain(), filter = this.ctx.createBiquadFilter();
-                        osc.type = 'sine'; filter.type = 'lowpass'; filter.frequency.setValueAtTime(220, this.ctx.currentTime);
-                        osc.frequency.setValueAtTime(baseFreq, this.ctx.currentTime);
-                        gain.gain.setValueAtTime(0.00001, this.ctx.currentTime);
-                        gain.gain.linearRampToValueAtTime(0.025, this.ctx.currentTime + 1.5);
-                        gain.gain.exponentialRampToValueAtTime(0.00001, this.ctx.currentTime + 4.0);
-                        
-                        osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-                        
-                        // Nettoyage automatique des nœuds pour éliminer la fuite mémoire
-                        osc.onended = () => {
-                            osc.disconnect();
-                            filter.disconnect();
-                            gain.disconnect();
-                        };
-                        
-                        osc.start(); 
-                        osc.stop(this.ctx.currentTime + 4.0);
-                    });
-                };
-                playPad();
-                this.musicInterval = setInterval(playPad, 4000);
-            },
-            stopMusic() {
-                if (this.musicInterval) {
-                    clearInterval(this.musicInterval);
-                    this.musicInterval = null;
-                }
+        matchmakingBtn.addEventListener('click', () => {
+            matchmakingBtn.disabled = true;
+            statusDiv.textContent = "Recherche d'un adversaire en cours...";
+            socket.emit('find_match');
+        });
+
+        socket.on('waiting', (data) => {
+            statusDiv.textContent = data.message;
+        });
+
+        socket.on('match_found', (data) => {
+            statusDiv.textContent = "Adversaire trouvé ! Lancement...";
+            setTimeout(() => {
+                menuSection.classList.add('hidden');
+                gameSection.classList.remove('hidden');
+                initGameGrid();
+            }, 1000);
+        });
+
+        function initGameGrid() {
+            gridElement.innerHTML = '';
+            for (let i = 1; i <= 9; i++) {
+                const tile = document.createElement('div');
+                tile.classList.add('tile');
+                tile.textContent = i;
+                tile.addEventListener('click', () => {
+                    tile.style.backgroundColor = 'var(--accent-pink)';
+                    socket.emit('game_action', { roomId: socket.id, action: i });
+                });
+                gridElement.appendChild(tile);
             }
-        };
-
-        function toggleAudio() {
-            SoundEngine.isMuted = !SoundEngine.isMuted;
-            document.getElementById('audioToggleBtn').textContent = SoundEngine.isMuted ? '🔇' : '🔊';
-            if (SoundEngine.isMuted) SoundEngine.stopMusic();
-            else SoundEngine.startMusic();
-        }
-
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-        }
-
-        function connectPlayer() {
-            const input = document.getElementById('usernameInput').value.trim();
-            if (input) myUsername = input;
-            socket.emit('register_player', { username: myUsername });
-            
-            // Lancer le matchmaking automatique
-            showScreen('screen-waiting');
-            document.getElementById('waitingTitle').textContent = "Recherche d'adversaire...";
-            document.getElementById('roomDetailsContainer').style.display = 'none';
-            socket.emit('find_1v1_match');
-            SoundEngine.startMusic();
-        }
-
-        function createPrivateRoom() {
-            const pass = document.getElementById('roomPasswordInput').value;
-            socket.emit('register_player', { username: myUsername });
-            socket.emit('create_room', { password: pass, username: myUsername });
-            SoundEngine.startMusic();
-        }
-
-        function joinPrivateRoom() {
-            const code = document.getElementById('roomCodeInput').value.trim();
-            const pass = document.getElementById('roomPasswordInput').value;
-            if (!code) return alert("Veuillez entrer un code de salon.");
-            socket.emit('register_player', { username: myUsername });
-            socket.emit('join_room', { code: code, password: pass });
-            SoundEngine.startMusic();
-        }
-
-        function leaveRoom() {
-            socket.emit('leave_room');
-            showScreen('screen-menu');
-            SoundEngine.stopMusic();
-        }
-
-        // --- SOCKET EVENT LISTENERS ---
-
-        socket.on('player_registered', (data) => {
-            myUsername = data.username;
-        });
-
-        socket.on('room_joined_success', (data) => {
-            currentRoomCode = data.code;
-            showScreen('screen-waiting');
-            document.getElementById('waitingTitle').textContent = "Salon Privé";
-            document.getElementById('displayRoomCode').textContent = data.code;
-            document.getElementById('roomDetailsContainer').style.display = 'block';
-            updatePlayersList(data.players);
-        });
-
-        socket.on('room_players_update', (data) => {
-            updatePlayersList(data.players);
-        });
-
-        function updatePlayersList(players) {
-            const list = document.getElementById('roomPlayersList');
-            list.innerHTML = "";
-            players.forEach(p => {
-                const li = document.createElement('li');
-                li.textContent = `- ${p.username}`;
-                list.appendChild(li);
-            });
-            if (players.length < 2) {
-                document.getElementById('waitingSub').textContent = "En attente d'un second joueur...";
-            } else {
-                document.getElementById('waitingSub').textContent = "La partie va commencer !";
-            }
-        }
-
-        socket.on('room_error', (msg) => {
-            alert(msg);
-            showScreen('screen-rooms');
-        });
-
-        socket.on('start_countdown', () => {
-            document.getElementById('waitingTitle').textContent = "C'est parti ! Préparation...";
-        });
-
-        socket.on('game_started', (data) => {
-            showScreen('screen-game');
-            document.getElementById('timerDisplay').textContent = data.timeLeft;
-            document.getElementById('scoreDisplay').textContent = "0";
-            buildGrid(data.myPool, data.myTarget);
-        });
-
-        socket.on('timer_update', (timeLeft) => {
-            document.getElementById('timerDisplay').textContent = timeLeft;
-        });
-
-        socket.on('my_grid_updated', (data) => {
-            SoundEngine.playClick(data.success);
-            document.getElementById('targetDisplay').textContent = data.target;
-            const currentScore = parseInt(document.getElementById('scoreDisplay').textContent) + (data.success ? 10 : 0);
-            document.getElementById('scoreDisplay').textContent = currentScore;
-            buildGrid(data.newPool, data.target);
-        });
-
-        socket.on('opponent_progress', (data) => {
-            document.getElementById('opponentScore').textContent = data.score;
-        });
-
-        socket.on('game_over_1v1', (data) => {
-            showScreen('screen-gameover');
-            document.getElementById('gameOverReason').textContent = data.reason;
-            
-            let myId = socket.id;
-            let winnerId = data.winnerId;
-            let resultText = "Égalité !";
-            
-            if (winnerId) {
-                if (winnerId === myId) {
-                    resultText = "Victoire ! Bien joué !";
-                } else {
-                    resultText = "Défaite... Dommage !";
-                }
-            }
-            document.getElementById('gameOverResult').textContent = resultText;
-            SoundEngine.stopMusic();
-        });
-
-        function buildGrid(pool, target) {
-            const container = document.getElementById('gameGrid');
-            container.innerHTML = "";
-            pool.forEach(num => {
-                const btn = document.createElement('button');
-                btn.className = 'grid-btn';
-                btn.textContent = num;
-                btn.onclick = () => {
-                    socket.emit('player_click_1v1', num);
-                };
-                container.appendChild(btn);
-            });
         }
     </script>
 </body>
