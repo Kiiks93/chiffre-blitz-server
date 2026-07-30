@@ -57,6 +57,7 @@
             padding: 10px 18px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%;
         }
 
+        /* MODALES ET POPUPS */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.92); display: flex; flex-direction: column;
@@ -73,8 +74,6 @@
             color: #aaa; border-radius: 10px; font-weight: bold; font-size: 12px; cursor: pointer; transition: all 0.2s;
         }
         .tab-btn.active { background: #00d2ff; color: #000; border-color: #00d2ff; }
-        #shop-tab-bonus.active { background: #38ef7d; color: #000; border-color: #38ef7d; }
-        #shop-tab-malus.active { background: #ff4b2b; color: #fff; border-color: #ff4b2b; }
 
         .leaderboard-list, .rooms-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px; text-align: left; }
         .lb-row, .room-row {
@@ -189,17 +188,11 @@
     <!-- ÉCRAN DES SALONS PRIVÉS -->
     <div id="screen-rooms" style="display:none; max-width:400px; margin:0 auto;">
         <h2>🏠 Salons Privés</h2>
-        <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:16px; margin:15px 0;">
-            <button class="btn-main btn-blue" onclick="openCreateRoomModal()" style="width:100%; margin-bottom:12px;">✨ Créer un salon personnalisé</button>
-            <div style="display:flex; flex-direction:column; gap:8px;">
-                <input type="text" id="room-code-input" placeholder="Code du salon (ex: MONCLUB)" 
-                       style="width:100%; padding:10px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-weight:bold; outline:none; text-transform:uppercase;">
-                <input type="text" id="room-pass-input" placeholder="Mot de passe (si salon privé)" 
-                       style="width:100%; padding:10px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-weight:bold; outline:none;">
-                <button class="btn-main btn-gold" onclick="joinCustomRoom()" style="width:100%; padding:10px; font-size:14px;">Rejoindre</button>
-            </div>
+        <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:16px; margin:15px 0; display: flex; flex-direction: column; gap: 10px;">
+            <button class="btn-main btn-blue" onclick="openCreateRoomModal()" style="width:100%;">✨ Créer un salon personnalisé</button>
+            <button class="btn-main btn-gold" onclick="openJoinRoomModal()" style="width:100%;">🚪 Rejoindre un salon</button>
         </div>
-        <h3 style="font-size:14px; text-align:left; color:#aaa; margin-top:15px;">Salons ouverts publics :</h3>
+        <h3 style="font-size:14px; text-align:left; color:#aaa; margin-top:15px;">Salons ouverts :</h3>
         <div id="rooms-list" class="rooms-list" style="max-height: 35vh; margin-bottom:15px;">
             <div style="text-align:center; color:#aaa; margin-top:10px;">Chargement des salons...</div>
         </div>
@@ -210,7 +203,6 @@
     <div id="screen-room-waiting" style="display:none; max-width:400px; margin:0 auto;">
         <h2>⚡ Salon : <span id="current-room-code" style="color:#00d2ff;">----</span></h2>
         <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:16px; margin:20px 0;">
-            
             <div style="margin-bottom: 15px; text-align: left;">
                 <label style="font-size: 12px; color: #aaa; font-weight: bold;">LIEN D'INVITATION :</label>
                 <div style="display: flex; gap: 6px; margin-top: 5px;">
@@ -242,13 +234,34 @@
             <input type="text" id="custom-room-name" placeholder="Ex: MONCLUB" maxlength="10" 
                    style="width:100%; padding:12px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:15px; outline:none; text-transform: uppercase;">
             
-            <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;">MOT DE PASSE (Entièrement visible)</label>
+            <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;">MOT DE PASSE (En clair)</label>
             <input type="text" id="custom-room-pass" placeholder="Laisser vide si public" maxlength="15" 
                    style="width:100%; padding:12px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:20px; outline:none;">
             
             <div style="display:flex; gap:10px;">
                 <button class="btn-secondary" onclick="closeCreateRoomModal()" style="margin-top:0;">Annuler</button>
                 <button class="btn-main" onclick="submitCreateRoom()" style="margin-top:0; flex:1;">Créer ⚡</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL POUR REJOINDRE UN SALON -->
+    <div id="modal-join-room" class="modal-overlay" style="display:none;">
+        <div class="modal-card" style="text-align:center;">
+            <h2 style="margin:0 0 10px 0; color:#f8b500;">🚪 REJOINDRE UN SALON</h2>
+            <p style="color:#aaa; font-size:14px; margin-bottom:15px;">Entre les identifiants du salon :</p>
+            
+            <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;">NOM DU SALON</label>
+            <input type="text" id="join-room-name-input" placeholder="Ex: MONCLUB" maxlength="10" 
+                   style="width:100%; padding:12px; border-radius:10px; border:2px solid #f8b500; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:15px; outline:none; text-transform: uppercase;">
+            
+            <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;">MOT DE PASSE (En clair)</label>
+            <input type="text" id="join-room-pass-input" placeholder="Laisser vide si public" maxlength="15" 
+                   style="width:100%; padding:12px; border-radius:10px; border:2px solid #f8b500; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:20px; outline:none;">
+            
+            <div style="display:flex; gap:10px;">
+                <button class="btn-secondary" onclick="closeJoinRoomModal()" style="margin-top:0;">Annuler</button>
+                <button class="btn-main btn-gold" onclick="submitJoinRoomModal()" style="margin-top:0; flex:1;">Rejoindre ⚡</button>
             </div>
         </div>
     </div>
@@ -602,7 +615,7 @@
         });
 
         function hideAllScreens() {
-            ['screen-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room'].forEach(id => {
+            ['screen-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room', 'modal-join-room'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
@@ -655,12 +668,40 @@
             closeCreateRoomModal();
         }
 
-        function joinCustomRoom(code = null, pass = null) {
-            const roomCode = code || document.getElementById('room-code-input').value.trim().toUpperCase();
-            const roomPass = pass !== null ? pass : (document.getElementById('room-pass-input').value.trim());
-            if (!roomCode) { alert("Veuillez entrer un code de salon valide."); return; }
-            if (!socket.connected) { alert("Erreur : Non connecté au serveur."); return; }
-            socket.emit('join_room', { code: roomCode, password: roomPass });
+        function openJoinRoomModal() {
+            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+            document.getElementById('join-room-name-input').value = '';
+            document.getElementById('join-room-pass-input').value = '';
+            document.getElementById('modal-join-room').style.display = 'flex';
+        }
+
+        function closeJoinRoomModal() {
+            document.getElementById('modal-join-room').style.display = 'none';
+        }
+
+        function submitJoinRoomModal() {
+            const roomCode = document.getElementById('join-room-name-input').value.trim().toUpperCase();
+            const password = document.getElementById('join-room-pass-input').value.trim();
+
+            if (!roomCode) {
+                alert("Veuillez entrer un nom de salon valide.");
+                return;
+            }
+            if (!socket.connected) {
+                alert("Erreur : Non connecté au serveur.");
+                return;
+            }
+
+            socket.emit('join_room', { code: roomCode, password: password });
+            closeJoinRoomModal();
+        }
+
+        function joinCustomRoom(code = null, pass = '') {
+            if (!socket.connected) {
+                alert("Erreur : Non connecté au serveur.");
+                return;
+            }
+            socket.emit('join_room', { code: code, password: pass });
         }
 
         function leaveCustomRoom() {
@@ -930,7 +971,7 @@
             const banner = document.getElementById('recap-banner');
             document.getElementById('recap-1v1-rows').style.display = 'block';
             const myId = socket.id;
-            const myData = data.players[myId] || { target: 1, score: 0 };
+            const myData = data.players[myId];
             const oppId = Object.keys(data.players).find(id => id !== myId);
             const oppData = oppId ? data.players[oppId] : { target: '-', score: 0 };
             let coinsGained = 10;
@@ -945,9 +986,9 @@
             myProfile.coins += coinsGained;
             saveLocalEconomy();
             document.getElementById('recap-reason').innerText = data.reason;
-            document.getElementById('recap-my-target').innerText = myData.target;
-            document.getElementById('recap-opp-target').innerText = oppData.target;
-            document.getElementById('recap-my-score').innerText = myData.score;
+            document.getElementById('recap-my-target').innerText = myData ? myData.target : '-';
+            document.getElementById('recap-opp-target').innerText = oppData ? oppData.target : '-';
+            document.getElementById('recap-my-score').innerText = myData ? myData.score : 0;
             document.getElementById('recap-coins-gained').innerText = `+${coinsGained}`;
             modal.style.display = 'flex';
             registerIfPossible();
