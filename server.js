@@ -1,74 +1,129 @@
 const express = require('express');
-const http = http = require('http');
+const http = require('http');
 const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+    cors: { origin: "*" }
+});
 
-app.use(express.static('.'));
-
+let players = {};
 let waitingPlayer = null;
-const rooms = new Map();
+let rooms = {}; // Stockage des salons privés
 
 io.on('connection', (socket) => {
-    console.log(`Joueur connecté : ${socket.id}`);
+    console.log(`Un joueur s'est connecté : ${socket.id}`);
 
-    // Matchmaking public
-    socket.on('find_match', () => {
-        if (waitingPlayer && waitingPlayer.id !== socket.id) {
-            const roomId = `room_${Date.now()}`;
-            socket.join(roomId);
-            waitingPlayer.join(roomId);
+    // Enregistrement du profil
+    socket.on('register_player', (profile) => {
+        players[socket.id] = {
+            id: socket.id,
+            username: profile.username,
+            region: profile.region,
+            points: profile.points || 1000
+        };
+        socket.emit('player_registered', players[socket.id]);
+    });
 
-            rooms.set(roomId, {
-                players: [waitingPlayer.id, socket.id],
-                state: 'playing'
-            });
+    // --- GESTION DES SALONS PRIVÉS ---
+    socket.on('create_room', (data) => {
+        const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+        rooms[roomCode] = {
+            code: roomCode,
+            host: socket.id,
+            players: [{ id: socket.id, username: data?.username || players[socket.id]?.username || 'Hôte' }]
+        };
 
-            io.to(roomId).emit('match_found', { roomId });
-            waitingPlayer = null;
-        } else {
-            waitingPlayer = socket;
-            socket.emit('waiting', { message: 'Recherche d\'un adversaire en cours...' });
-        }
-    });
+        socket.join(roomCode);
+        socket.emit('room_joined_success', {
+            code: roomCode,
+            players: rooms[roomCode].players
+        });
+        console.log(`Salon créé : ${roomCode} par ${socket.id}`);
+    });
 
-    // Création de partie privée (Correction ici)
-    socket.on('create_private_room', () => {
-        const roomId = `private_${Math.random().toString(36).substring(2, 8)}`;
-        socket.join(roomId);
-        rooms.set(roomId, { players: [socket.id], state: 'waiting' });
-        socket.emit('private_room_created', { roomId });
-    });
+    socket.on('join_room', (data) => {
+        const roomCode = data?.code ? data.code.toUpperCase() : '';
+        const room = rooms[roomCode];
 
-    // Rejoindre une partie privée
-    socket.on('join_private_room', ({ roomId }) => {
-        const room = rooms.get(roomId);
-        if (room && room.players.length === 1) {
-            socket.join(roomId);
-            room.players.push(socket.id);
-            room.state = 'playing';
-            io.to(roomId).emit('match_found', { roomId });
-        } else {
-            socket.emit('error_message', { message: 'Salon introuvable ou complet.' });
-        }
-    });
+        if (room && room.players.length < 2) {
+            const username = players[socket.id]?.username || 'Adversaire';
+            room.players.push({ id: socket.id, username: username });
+            socket.join(roomCode);
 
-    socket.on('game_action', (data) => {
-        const { roomId, action } = data;
-        socket.to(roomId).emit('opponent_action', action);
-    });
+            // Informer tout le monde dans le salon
+            io.to(roomCode).emit('room_players_update', { players: room.players });
+            socket.emit('room_joined_success', { code: roomCode, players: room.players });
+            console.log(`Joueur ${socket.id} a rejoint le salon ${roomCode}`);
+        } else {
+            socket.emit('room_error', "Salon introuvable ou déjà complet !");
+        }
+    });
 
-    socket.on('disconnect', () => {
-        if (waitingPlayer && waitingPlayer.id === socket.id) {
-            waitingPlayer = null;
-        }
-        console.log(`Joueur déconnecté : ${socket.id}`);
-    });
+    socket.on('leave_room', () => {
+        for (const code in rooms) {
+            const room = rooms[code];
+            const index = room.players.findIndex(p => p.id === socket.id);
+            if (index !== -1) {
+                socket.leave(code);
+                room.players.splice(index, 1);
+                if (room.players.length === 0) {
+                    delete rooms[code];
+                } else {
+                    io.to(code).emit('room_players_update', { players: room.players });
+                }
+                break;
+            }
+        }
+    });
+
+    socket.on('get_rooms_list', () => {
+        const openRooms = Object.values(rooms)
+            .filter(r => r.players.length < 2)
+            .map(r => ({
+                code: r.code,
+                playersCount: r.players.length
+            }));
+        socket.emit('rooms_list_data', openRooms);
+    });
+
+    // --- MATCHMAKING ALÉATOIRE ---
+    socket.on('find_1v1_match', () => {
+        if (waitingPlayer && waitingPlayer !== socket.id) {
+            const p1 = waitingPlayer;
+            const p2 = socket.id;
+            waitingPlayer = null;
+
+            const roomName = `match_${p1}_${p2}`;
+            io.sockets.sockets.get(p1)?.join(roomName);
+            io.sockets.sockets.get(p2)?.join(roomName);
+
+            io.to(roomName).emit('start_countdown');
+            // Logique de lancement de partie aléatoire ici...
+        } else {
+            waitingPlayer = socket.id;
+        }
+    });
+
+    // Déconnexion générale
+    socket.on('disconnect', () => {
+        if (waitingPlayer === socket.id) waitingPlayer = null;
+        for (const code in rooms) {
+            const room = rooms[code];
+            room.players = room.players.filter(p => p.id !== socket.id);
+            if (room.players.length === 0) {
+                delete rooms[code];
+            } else {
+                io.to(code).emit('room_players_update', { players: room.players });
+            }
+        }
+        delete players[socket.id];
+        console.log(`Déconnexion : ${socket.id}`);
+    });
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Serveur Chiffre Blitz démarré sur le port ${PORT}`);
+    console.log(`Serveur actif sur le port ${PORT}`);
 });
