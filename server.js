@@ -1,12 +1,16 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: { origin: "*" }
 });
+
+// Permet de servir ton fichier index.html et tes fichiers statiques automatiquement
+app.use(express.static(path.join(__dirname)));
 
 let players = {};
 let waitingPlayer = null;
@@ -40,7 +44,6 @@ io.on('connection', (socket) => {
 
     // --- GESTION DES SALONS PRIVÉS ---
     socket.on('create_room', (data) => {
-        // Utilisation stricte du nom saisi par l'utilisateur sans génération aléatoire forcée
         let roomCode = data?.roomName ? data.roomName.trim().toUpperCase() : '';
         
         if (!roomCode) {
