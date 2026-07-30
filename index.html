@@ -31,14 +31,14 @@
             border: 2px solid var(--primary-cyan);
             border-radius: 20px;
             box-shadow: 0 0 25px rgba(0, 210, 255, 0.4), inset 0 0 15px rgba(255, 0, 127, 0.2);
-            padding: 40px;
-            width: 450px;
+            padding: 30px;
+            width: 480px;
             text-align: center;
         }
 
         h1 {
-            font-size: 2.2rem;
-            margin-bottom: 10px;
+            font-size: 2rem;
+            margin-bottom: 5px;
             color: var(--primary-cyan);
             text-shadow: 0 0 10px rgba(0, 210, 255, 0.7);
             letter-spacing: 2px;
@@ -46,15 +46,16 @@
 
         p {
             color: #b8b8f3;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
         }
 
         .btn {
             background: linear-gradient(90deg, var(--primary-cyan), var(--accent-pink));
             color: white;
             border: none;
-            padding: 14px 28px;
-            font-size: 1.1rem;
+            padding: 12px 20px;
+            font-size: 1rem;
             font-weight: bold;
             border-radius: 20px;
             cursor: pointer;
@@ -63,36 +64,64 @@
             width: 100%;
             text-transform: uppercase;
             letter-spacing: 1px;
+            margin-bottom: 12px;
         }
 
         .btn:hover {
-            transform: scale(1.03);
-            box-shadow: 0 0 25px var(--primary-cyan), 0 0 25px var(--accent-pink);
+            transform: scale(1.02);
+            box-shadow: 0 0 20px var(--primary-cyan), 0 0 20px var(--accent-pink);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--primary-cyan);
+            color: var(--primary-cyan);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary-cyan);
+            color: var(--bg-dark);
+            box-shadow: 0 0 15px var(--primary-cyan);
+        }
+
+        input[type="text"] {
+            width: calc(100% - 24px);
+            padding: 12px;
+            border-radius: 15px;
+            border: 2px solid var(--primary-cyan);
+            background: var(--bg-dark);
+            color: var(--text-light);
+            text-align: center;
+            font-size: 1rem;
+            margin-bottom: 12px;
+            outline: none;
         }
 
         #status {
-            margin-top: 20px;
+            margin-top: 15px;
             font-weight: bold;
             color: var(--accent-pink);
             text-shadow: 0 0 8px rgba(255, 0, 127, 0.6);
+            min-height: 24px;
         }
 
         .game-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 12px;
-            margin-top: 20px;
+            margin-top: 15px;
         }
 
         .tile {
             background-color: var(--tile-violet);
             border: 2px solid var(--primary-cyan);
             border-radius: 15px;
-            height: 70px;
+            height: 65px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: bold;
             cursor: pointer;
             box-shadow: inset 0 0 10px rgba(0, 210, 255, 0.2);
@@ -105,8 +134,24 @@
             box-shadow: 0 0 15px var(--primary-cyan);
         }
 
+        .shop-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .shop-item {
+            background: var(--tile-violet);
+            border: 1px solid var(--accent-pink);
+            border-radius: 15px;
+            padding: 10px;
+            flex: 1;
+            font-size: 0.85rem;
+        }
+
         .hidden {
-            display: none;
+            display: none !important;
         }
     </style>
 </head>
@@ -114,15 +159,38 @@
 
     <div class="container">
         <h1>CHIFFRE BLITZ</h1>
-        <p>Arène Multijoueur 1v1 - Temps Réel</p>
+        <p>Arène Multijoueur 1v1 & Modes Spéciaux</p>
         
-        <div id="menu-section">
-            <button class="btn" id="matchmaking-btn">Trouver un adversaire</button>
+        <!-- MENU PRINCIPAL -->
+        <div id="main-menu">
+            <button class="btn" id="btn-matchmaking">Trouver un Match</button>
+            <button class="btn btn-secondary" id="btn-create-private">Créer Salon Privé</button>
+            <button class="btn btn-secondary" id="btn-show-shop">Boutique Power-Ups</button>
+            <button class="btn btn-secondary" id="btn-toggle-audio">Audio : ON</button>
             <div id="status"></div>
         </div>
 
+        <!-- SECTION SALON PRIVÉ -->
+        <div id="private-menu" class="hidden">
+            <p>Partage ce code de salon à ton adversaire :</p>
+            <input type="text" id="private-room-code" readonly>
+            <button class="btn" id="btn-join-input-room">Rejoindre un salon existant</button>
+            <button class="btn btn-secondary" id="btn-back-main">Retour</button>
+        </div>
+
+        <!-- SECTION BOUTIQUE -->
+        <div id="shop-menu" class="hidden">
+            <p>Boutique d'Améliorations</p>
+            <div class="shop-container">
+                <div class="shop-item">⚡ <b>Boost Vitesse</b><br>50 Crédits</div>
+                <div class="shop-item">🛡️ <b>Bouclier</b><br>80 Crédits</div>
+            </div>
+            <button class="btn btn-secondary" id="btn-back-main-2" style="margin-top: 20px;">Retour</button>
+        </div>
+
+        <!-- SECTION JEU -->
         <div id="game-section" class="hidden">
-            <div id="game-info">Partie en cours contre un adversaire</div>
+            <div id="game-info" style="font-size: 0.9rem; color: var(--primary-cyan);">Partie en cours</div>
             <div class="game-grid" id="grid"></div>
         </div>
     </div>
@@ -131,31 +199,105 @@
     <script>
         const socket = io();
 
-        const matchmakingBtn = document.getElementById('matchmaking-btn');
-        const statusDiv = document.getElementById('status');
-        const menuSection = document.getElementById('menu-section');
+        // Éléments UI
+        const mainMenu = document.getElementById('main-menu');
+        const privateMenu = document.getElementById('private-menu');
+        const shopMenu = document.getElementById('shop-menu');
         const gameSection = document.getElementById('game-section');
+        
+        const statusDiv = document.getElementById('status');
         const gridElement = document.getElementById('grid');
+        const privateRoomCodeInput = document.getElementById('private-room-code');
 
-        matchmakingBtn.addEventListener('click', () => {
-            matchmakingBtn.disabled = true;
+        let audioEnabled = true;
+
+        // --- Web Audio API pour l'ambiance sonore ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTone(freq, type = 'sine', duration = 0.1) {
+            if (!audioEnabled) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        // --- Gestion des Menus ---
+        document.getElementById('btn-matchmaking').addEventListener('click', () => {
+            playTone(440);
             statusDiv.textContent = "Recherche d'un adversaire en cours...";
             socket.emit('find_match');
         });
 
+        document.getElementById('btn-create-private').addEventListener('click', () => {
+            playTone(523.25);
+            socket.emit('create_private_room');
+        });
+
+        document.getElementById('btn-show-shop').addEventListener('click', () => {
+            playTone(659.25);
+            mainMenu.classList.add('hidden');
+            shopMenu.classList.remove('hidden');
+        });
+
+        document.getElementById('btn-toggle-audio').addEventListener('click', () => {
+            audioEnabled = !audioEnabled;
+            document.getElementById('btn-toggle-audio').textContent = `Audio : ${audioEnabled ? 'ON' : 'OFF'}`;
+            playTone(880);
+        });
+
+        document.getElementById('btn-back-main').addEventListener('click', () => resetMenus());
+        document.getElementById('btn-back-main-2').addEventListener('click', () => resetMenus());
+
+        document.getElementById('btn-join-input-room').addEventListener('click', () => {
+            const code = prompt("Entrer le code du salon privé :");
+            if (code) {
+                socket.emit('join_private_room', { roomId: code });
+            }
+        });
+
+        function resetMenus() {
+            mainMenu.classList.remove('hidden');
+            privateMenu.classList.add('hidden');
+            shopMenu.classList.add('hidden');
+            gameSection.classList.add('hidden');
+            statusDiv.textContent = "";
+        }
+
+        // --- Événements Socket ---
         socket.on('waiting', (data) => {
             statusDiv.textContent = data.message;
         });
 
-        socket.on('match_found', (data) => {
-            statusDiv.textContent = "Adversaire trouvé ! Lancement...";
-            setTimeout(() => {
-                menuSection.classList.add('hidden');
-                gameSection.classList.remove('hidden');
-                initGameGrid();
-            }, 1000);
+        socket.on('private_room_created', (data) => {
+            mainMenu.classList.add('hidden');
+            privateMenu.classList.remove('hidden');
+            privateRoomCodeInput.value = data.roomId;
         });
 
+        socket.on('match_found', (data) => {
+            playTone(783.99, 'square', 0.3);
+            statusDiv.textContent = "Adversaire trouvé ! Lancement...";
+            setTimeout(() => {
+                mainMenu.classList.add('hidden');
+                privateMenu.classList.add('hidden');
+                shopMenu.classList.add('hidden');
+                gameSection.classList.remove('hidden');
+                initGameGrid();
+            }, 800);
+        });
+
+        socket.on('error_message', (data) => {
+            alert(data.message);
+        });
+
+        // --- Grille de Jeu ---
         function initGameGrid() {
             gridElement.innerHTML = '';
             for (let i = 1; i <= 9; i++) {
@@ -163,6 +305,7 @@
                 tile.classList.add('tile');
                 tile.textContent = i;
                 tile.addEventListener('click', () => {
+                    playTone(300 + i * 50, 'triangle');
                     tile.style.backgroundColor = 'var(--accent-pink)';
                     socket.emit('game_action', { roomId: socket.id, action: i });
                 });
