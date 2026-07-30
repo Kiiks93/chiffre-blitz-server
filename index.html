@@ -51,6 +51,12 @@
         button:hover {
             background: #4338ca;
         }
+        .btn-secondary {
+            background: #374151;
+        }
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
         ul {
             list-style: none;
             padding: 0;
@@ -77,6 +83,12 @@
             text-align: center;
             margin-top: 10px;
         }
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -84,8 +96,24 @@
     <div class="container">
         <h1>Chiffre Blitz</h1>
 
-        <!-- ÉCRAN DU LOBBY -->
-        <div id="lobby-screen">
+        <!-- 1. MENU PRINCIPAL -->
+        <div id="main-menu-screen" class="screen active">
+            <h2>Menu Principal</h2>
+            <button onclick="switchScreen('training-screen')">Mode Entraînement</button>
+            <button onclick="switchScreen('lobby-screen')">Salons Multijoueur</button>
+            <button onclick="switchScreen('leaderboard-screen')">Classement</button>
+            <button onclick="switchScreen('shop-screen')">Boutique de pouvoirs</button>
+        </div>
+
+        <!-- 2. MODE ENTRAÎNEMENT -->
+        <div id="training-screen" class="screen">
+            <h2>Mode Entraînement</h2>
+            <p>Entraînez-vous en solo pour progresser !</p>
+            <button class="btn-secondary" onclick="switchScreen('main-menu-screen')">Retour au menu</button>
+        </div>
+
+        <!-- 3. LOBBY MULTIJOUEUR & SALONS -->
+        <div id="lobby-screen" class="screen">
             <h2>Créer un salon</h2>
             <input type="text" id="room-name-input" placeholder="Nom du salon">
             <input type="text" id="room-password-input" placeholder="Mot de passe (optionnel)">
@@ -96,10 +124,25 @@
                 <li>Recherche des salons...</li>
             </ul>
             <div id="error-message" class="error"></div>
+            <button class="btn-secondary" onclick="switchScreen('main-menu-screen')">Retour au menu</button>
         </div>
 
-        <!-- ÉCRAN DU SALON DE JEU -->
-        <div id="game-screen" style="display: none;">
+        <!-- 4. CLASSEMENT -->
+        <div id="leaderboard-screen" class="screen">
+            <h2>Classement</h2>
+            <p>Découvrez les meilleurs joueurs de Chiffre Blitz.</p>
+            <button class="btn-secondary" onclick="switchScreen('main-menu-screen')">Retour au menu</button>
+        </div>
+
+        <!-- 5. BOUTIQUE -->
+        <div id="shop-screen" class="screen">
+            <h2>Boutique</h2>
+            <p>Améliorez vos pouvoirs et personnalisez votre expérience.</p>
+            <button class="btn-secondary" onclick="switchScreen('main-menu-screen')">Retour au menu</button>
+        </div>
+
+        <!-- 6. ÉCRAN DE JEU EN SALON -->
+        <div id="game-screen" class="screen">
             <h2 id="room-title">Salon</h2>
             <p>Vous êtes dans le salon de jeu !</p>
             <button onclick="leaveRoom()">Quitter le salon</button>
@@ -110,6 +153,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
     <script>
         const socket = io('https://chiffre-blitz-server.onrender.com');
+
+        // Gestion de la navigation entre les écrans
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
 
         function createRoom() {
             const roomName = document.getElementById('room-name-input').value;
@@ -133,8 +184,7 @@
         }
 
         function leaveRoom() {
-            document.getElementById('game-screen').style.display = 'none';
-            document.getElementById('lobby-screen').style.display = 'block';
+            switchScreen('main-menu-screen');
             window.location.reload();
         }
 
@@ -162,8 +212,8 @@
 
         // Succès de connexion à un salon
         socket.on('joined-success', ({ roomName }) => {
-            document.getElementById('lobby-screen').style.display = 'none';
-            document.getElementById('game-screen').style.display = 'block';
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('game-screen').classList.add('active');
             document.getElementById('room-title').innerText = `Salon : ${roomName}`;
             document.getElementById('error-message').innerText = '';
         });
