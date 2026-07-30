@@ -16,7 +16,7 @@ let activeRooms = {}; // Stocke les salons : { roomName: { name, password, hasPa
 io.on('connection', (socket) => {
     console.log('Un utilisateur s\'est connecté:', socket.id);
 
-    // Envoyer la liste des salons au nouvel arrivant (sans divulguer les mots de passe)
+    // Envoyer la liste des salons au nouvel arrivant
     socket.emit('room-list', Object.values(activeRooms).map(r => ({
         name: r.name,
         hasPassword: r.hasPassword
