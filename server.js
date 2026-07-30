@@ -1,5 +1,5 @@
 const express = require('express');
-const http = require('http');
+const http = http = require('http');
 const { Server } = require('socket.io');
 
 const app = express();
@@ -34,9 +34,9 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Création de partie privée
+    // Création de partie privée (Correction ici)
     socket.on('create_private_room', () => {
-        const roomId = `private_${Math.random().toString(36.substring(2, 8))}`;
+        const roomId = `private_${Math.random().toString(36).substring(2, 8)}`;
         socket.join(roomId);
         rooms.set(roomId, { players: [socket.id], state: 'waiting' });
         socket.emit('private_room_created', { roomId });
