@@ -18,7 +18,7 @@ app.get('/', (req, res) => {
 // Structures de données en mémoire
 let players = {};        // socket.id -> { username, region, points, coins, trophies }
 let waitingQueue = [];   // File d'attente pour le matchmaking aléatoire
-let activeRooms = {};    // code -> { code, password, players: [socket, ...], gameState }
+let activeRooms = {};    // code -> { code, password, players: {...}, gameState }
 
 io.on('connection', (socket) => {
     console.log(`🔌 Un joueur s'est connecté : ${socket.id}`);
@@ -41,22 +41,18 @@ io.on('connection', (socket) => {
     socket.on('find_1v1_match', () => {
         console.log(`🔍 Joueur en recherche de match : ${socket.id}`);
         
-        // Éviter les doublons dans la file d'attente
         if (!waitingQueue.includes(socket.id)) {
             waitingQueue.push(socket.id);
         }
 
-        // Si on a au moins 2 joueurs, on lance une partie !
         if (waitingQueue.length >= 2) {
             const p1Id = waitingQueue.shift();
             const p2Id = waitingQueue.shift();
 
-            // Vérifier que les sockets sont toujours connectés
             const s1 = io.sockets.sockets.get(p1Id);
             const s2 = io.sockets.sockets.get(p2Id);
 
             if (!s1 || !s2) {
-                // Si l'un s'est déconnecté, on remet celui qui reste dans la file
                 if (s1) waitingQueue.push(p1Id);
                 if (s2) waitingQueue.push(p2Id);
                 return;
@@ -69,7 +65,6 @@ io.on('connection', (socket) => {
 
             console.log(`⚔️ Match trouvé entre ${p1Id} et ${p2Id} dans le salon ${roomCode}`);
 
-            // Initialiser l'état de la partie 1v1
             activeRooms[roomCode] = {
                 code: roomCode,
                 isPrivate: false,
@@ -81,23 +76,63 @@ io.on('connection', (socket) => {
                 timerInterval: null
             };
 
-            // Lancer le compte à rebours pour les deux joueurs
             io.to(roomCode).emit('start_countdown');
 
-            // Démarrer la boucle de jeu après 3 secondes
             setTimeout(() => {
                 start1v1GameLoop(roomCode);
             }, 3000);
         }
     });
 
+    // ==========================================
+    // GESTION DES CLICS PENDANT LE DUEL 1v1
+    // ==========================================
+    socket.on('player_click_1v1', (num) => {
+        let roomCode = null;
+        for (let code in activeRooms) {
+            if (activeRooms[code].players && activeRooms[code].players[socket.id]) {
+                roomCode = code;
+                break;
+            }
+        }
+        if (!roomCode) return;
+
+        let room = activeRooms[roomCode];
+        let pData = room.players[socket.id];
+        if (!pData || room.timeLeft <= 0) return;
+
+        if (num === pData.target) {
+            // Bonne pioche !
+            pData.score += 10;
+            pData.target++;
+            pData.pool = generateRandomPool(pData.target);
+
+            // Confirmer au joueur et lui envoyer sa nouvelle grille
+            socket.emit('my_grid_updated', {
+                target: pData.target,
+                newPool: pData.pool,
+                success: true
+            });
+
+            // Informer l'adversaire de la progression de sa cible
+            socket.to(roomCode).emit('opponent_progress', {
+                target: pData.target
+            });
+        } else {
+            // Mauvaise pioche
+            socket.emit('my_grid_updated', {
+                target: pData.target,
+                newPool: pData.pool,
+                success: false
+            });
+        }
+    });
+
     socket.on('disconnect', () => {
         console.log(`❌ Déconnexion : ${socket.id}`);
-        // Retirer de la file d'attente si présent
         waitingQueue = waitingQueue.filter(id => id !== socket.id);
         delete players[socket.id];
 
-        // Gérer la sortie des salons
         for (let code in activeRooms) {
             let room = activeRooms[code];
             if (room.players && room.players[socket.id]) {
@@ -126,7 +161,6 @@ function start1v1GameLoop(roomCode) {
     let room = activeRooms[roomCode];
     if (!room) return;
 
-    // Envoyer l'état initial du jeu
     for (let pId in room.players) {
         io.to(pId).emit('game_started', {
             timeLeft: room.timeLeft,
