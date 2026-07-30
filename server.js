@@ -1,12 +1,16 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: { origin: "*" }
 });
+
+// Indispensable pour que Render serve ton index.html et le script socket.io
+app.use(express.static(path.join(__dirname)));
 
 let players = {};
 let waitingPlayer = null;
