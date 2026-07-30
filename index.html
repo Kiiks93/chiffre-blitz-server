@@ -2,1081 +2,176 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chiffre Blitz ⚡</title>
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chiffre Blitz</title>
     <style>
-        * { box-sizing: border-box; touch-action: manipulation; user-select: none; }
-        body { font-family: system-ui, -apple-system, sans-serif; background: #0f051d; color: #fff; margin: 0; padding: 15px; text-align: center; }
-        
-        .header-bar { display: flex; justify-content: space-between; align-items: center; max-width: 400px; margin: 0 auto 10px auto; gap: 8px; }
-        h1 { color: #00d2ff; margin: 0; font-size: 20px; text-shadow: 0 0 15px rgba(0,210,255,0.4); white-space: nowrap; }
-        
-        .user-pill {
-            background: rgba(255,255,255,0.08); border: 1px solid rgba(0,210,255,0.3);
-            border-radius: 20px; padding: 6px 10px; font-size: 12px; color: #00d2ff; font-weight: bold;
-            display: flex; align-items: center; gap: 4px; cursor: pointer; white-space: nowrap;
-            max-width: 170px; overflow: hidden; text-overflow: ellipsis;
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
-        #user-name-display { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80px; }
-
-        .user-stats {
-            display: flex; justify-content: center; gap: 15px; max-width: 400px; margin: 0 auto 10px auto;
-            font-size: 13px; font-weight: bold; background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 20px;
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
-
-        .mute-btn {
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-            color: #fff; border-radius: 50%; width: 38px; height: 38px; font-size: 16px;
-            display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+        h1, h2 {
+            text-align: center;
+            color: #4f46e5;
         }
-
-        .audio-notice {
-            background: rgba(0, 210, 255, 0.15); border: 1px solid #00d2ff;
-            color: #00d2ff; padding: 8px 12px; border-radius: 20px; font-size: 13px;
-            font-weight: bold; max-width: 350px; margin: 0 auto 15px auto;
-            animation: pulseAudio 1.5s infinite; cursor: pointer;
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            font-size: 16px;
+            border-radius: 4px;
+            border: none;
+            box-sizing: border-box;
         }
-
-        .menu-container { display: flex; flex-direction: column; gap: 10px; max-width: 350px; margin: 15px auto; }
-        
-        .btn-main {
-            background: linear-gradient(45deg, #ff416c, #ff4b2b); color: white; border: none;
-            padding: 14px 18px; font-size: 16px; font-weight: 800; border-radius: 16px; cursor: pointer;
-            box-shadow: 0 5px 20px rgba(255, 65, 108, 0.4); transition: transform 0.1s;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
+        input {
+            background: #2d2d2d;
+            color: #fff;
+            border: 1px solid #444;
         }
-        .btn-main:active { transform: scale(0.96); }
-        .btn-blue { background: linear-gradient(45deg, #00c6ff, #0072ff); box-shadow: 0 5px 20px rgba(0, 198, 255, 0.4); }
-        .btn-gold { background: linear-gradient(45deg, #f8b500, #fceabb); color: #222; box-shadow: 0 5px 20px rgba(248, 181, 0, 0.4); }
-        .btn-purple { background: linear-gradient(45deg, #7b4397, #dc2430); box-shadow: 0 5px 20px rgba(123, 67, 151, 0.4); }
-        .btn-shop { background: linear-gradient(45deg, #11998e, #38ef7d); color: #000; box-shadow: 0 5px 20px rgba(56, 239, 125, 0.4); }
-
-        .btn-secondary {
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #ccc;
-            padding: 10px 18px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%;
+        button {
+            background: #4f46e5;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
         }
-
-        /* MODALES ET POPUPS */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.92); display: flex; flex-direction: column;
-            align-items: center; justify-content: center; z-index: 9999; padding: 15px;
+        button:hover {
+            background: #4338ca;
         }
-        .modal-card {
-            background: #1e1035; border: 2px solid #00d2ff; border-radius: 20px;
-            padding: 20px; max-width: 400px; width: 100%; max-height: 85vh; display: flex; flex-direction: column;
+        ul {
+            list-style: none;
+            padding: 0;
+            max-height: 200px;
+            overflow-y: auto;
         }
-        
-        .tabs { display: flex; gap: 8px; margin-bottom: 15px; }
-        .tab-btn {
-            flex: 1; padding: 10px 5px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
-            color: #aaa; border-radius: 10px; font-weight: bold; font-size: 12px; cursor: pointer; transition: all 0.2s;
+        li {
+            background: #2d2d2d;
+            margin: 8px 0;
+            padding: 10px 15px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .tab-btn.active { background: #00d2ff; color: #000; border-color: #00d2ff; }
-
-        .leaderboard-list, .rooms-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px; text-align: left; }
-        .lb-row, .room-row {
-            display: flex; justify-content: space-between; align-items: center;
-            background: rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 10px; font-size: 14px;
+        li button {
+            width: auto;
+            padding: 6px 12px;
+            margin: 0;
+            font-size: 14px;
         }
-        .lb-rank { font-weight: 900; width: 25px; color: #00d2ff; }
-        .lb-name, .room-info { flex: 1; font-weight: bold; margin-left: 10px; }
-        .lb-pts { font-weight: 900; color: #00ff88; }
-
-        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; overflow-y: auto; max-height: 55vh; margin: 10px 0; padding-right: 5px; }
-        .power-card { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; }
-        .power-card.equipped { border-color: #00ff88; background: rgba(0, 255, 136, 0.1); }
-        .power-card h4 { margin: 0 0 5px 0; font-size: 13px; color: #00d2ff; }
-        .power-card p { font-size: 11px; color: #aaa; margin: 0 0 8px 0; }
-        .stock-badge { font-size: 11px; font-weight: bold; color: #38ef7d; margin-bottom: 6px; }
-        .power-btn { padding: 6px 10px; border-radius: 8px; border: none; font-weight: bold; font-size: 12px; cursor: pointer; margin-top: 4px; }
-        .power-btn.buy { background: #f8b500; color: #000; }
-        .power-btn.equip { background: #00d2ff; color: #000; }
-        .power-btn.active { background: #00ff88; color: #000; }
-
-        .hud { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(255,255,255,0.08); padding: 12px; border-radius: 14px; margin-bottom: 10px; }
-        .player-box { padding: 8px; border-radius: 10px; background: rgba(0,0,0,0.3); }
-        .player-box.me { border: 2px solid #00d2ff; }
-        .player-box.opponent { border: 2px solid #ff007f; }
-
-        .btn-power-hud {
-            background: linear-gradient(45deg, #ff8a00, #e52e71); color: #fff; border: none;
-            padding: 8px 16px; border-radius: 12px; font-weight: 900; font-size: 13px; cursor: pointer;
-            box-shadow: 0 0 15px rgba(255, 138, 0, 0.5); margin-bottom: 10px; transition: transform 0.1s;
+        .error {
+            color: #f87171;
+            text-align: center;
+            margin-top: 10px;
         }
-        .btn-power-hud:active { transform: scale(0.95); }
-        .btn-power-hud:disabled { filter: grayscale(1); opacity: 0.5; cursor: not-allowed; box-shadow: none; }
-
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 400px; margin: 0 auto; transition: transform 0.2s, filter 0.2s; }
-        .tile {
-            background: #2a1845; border: 2px solid #522d80; border-radius: 12px; height: 65px;
-            display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; cursor: pointer;
-            transition: transform 0.2s, border-color 0.2s, background-color 0.2s;
-        }
-        .tile:active { transform: scale(0.92); background: #3c1e69; }
-
-        .tile.highlight-target { border-color: #00ff88 !important; background: #00ff88 !important; color: #000 !important; box-shadow: 0 0 20px #00ff88; }
-        .grid.effect-quake { animation: quake 0.15s infinite; }
-        .grid.effect-micro .tile { transform: scale(0.65); }
-        .grid.effect-eclipse { filter: brightness(0) blur(8px); pointer-events: none; }
-        
-        #game-timer.frozen { color: #00d2ff !important; text-shadow: 0 0 10px #00d2ff; animation: pulseAudio 0.5s infinite; }
-
-        .matchmaking-loader { display: flex; flex-direction: column; align-items: center; margin-top: 40px; }
-        .radar-box { position: relative; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; }
-        .radar-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 4px solid transparent; border-top-color: #00d2ff; border-right-color: #ff007f; animation: radarSpin 1.2s linear infinite; }
-        .radar-num { font-size: 32px; font-weight: 900; color: #00d2ff; }
-
-        #countdown-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 5, 29, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
-        .countdown-num { font-size: 90px; font-weight: 900; color: #00d2ff; }
-
-        @keyframes radarSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes pulseAudio { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
-        @keyframes quake { 0% { transform: translate(2px, 2px); } 50% { transform: translate(-2px, -2px); } 100% { transform: translate(2px, -2px); } }
     </style>
 </head>
 <body>
 
-    <div class="header-bar">
-        <h1>Chiffre Blitz ⚡</h1>
-        <div id="user-pill" class="user-pill" onclick="promptProfileChange()">
-            👤 <span id="user-name-display">Définir pseudo</span> (<span id="user-pts-display">1000</span> pts)
+    <div class="container">
+        <h1>Chiffre Blitz</h1>
+
+        <!-- ÉCRAN DU LOBBY -->
+        <div id="lobby-screen">
+            <h2>Créer un salon</h2>
+            <input type="text" id="room-name-input" placeholder="Nom du salon">
+            <input type="text" id="room-password-input" placeholder="Mot de passe (optionnel)">
+            <button onclick="createRoom()">Créer et rejoindre</button>
+
+            <h2>Salons disponibles</h2>
+            <ul id="room-list-container">
+                <li>Recherche des salons...</li>
+            </ul>
+            <div id="error-message" class="error"></div>
         </div>
-        <button id="mute-btn" class="mute-btn" onclick="toggleMute()">🔊</button>
-    </div>
 
-    <div class="user-stats">
-        <span>🪙 <strong id="user-coins-display">100</strong> Pièces</span>
-        <span>🏆 <strong id="user-trophies-display">0</strong> Trophées</span>
-    </div>
-
-    <div id="audio-prompt" class="audio-notice" onclick="unlockAudio()">
-        🔊 Touche l'écran pour activer l'ambiance lofi chill
-    </div>
-
-    <!-- MENU PRINCIPAL -->
-    <div id="screen-menu" class="menu-container">
-        <button class="btn-main btn-blue" onclick="startSoloTraining()">🏋️ ENTRAÎNEMENT SOLO</button>
-        <button class="btn-main" onclick="open1v1Hub()">⚔️ DUEL 1v1 ONLINE</button>
-        <button class="btn-main btn-shop" onclick="openShop()">🛍️ BOUTIQUE POUVOIRS</button>
-        <button class="btn-main btn-gold" onclick="openLeaderboard()">🏆 CLASSEMENT</button>
-        <button class="btn-main btn-purple" onclick="openTournamentScreen()">🎯 MODE TOURNOI</button>
-    </div>
-
-    <!-- HUB DE CHOIX 1v1 ONLINE -->
-    <div id="screen-1v1-hub" style="display:none; max-width:350px; margin:15px auto;" class="menu-container">
-        <h2>⚔️ DUEL 1v1 ONLINE</h2>
-        <p style="color:#aaa; font-size:13px; margin-bottom:10px;">Choisis ton mode de jeu :</p>
-        <button class="btn-main btn-blue" onclick="startRandom1v1()">🎲 Matchmaking Aléatoire</button>
-        <button class="btn-main btn-purple" onclick="openRoomsScreen()">🏠 Salons Privés / Lobby</button>
-        <button class="btn-secondary" onclick="showMainMenu()">⬅️ Retour Menu</button>
-    </div>
-
-    <!-- SALLE D'ATTENTE 1v1 ALÉATOIRE -->
-    <div id="screen-1v1-lobby" style="display:none;">
-        <div class="matchmaking-loader">
-            <div class="radar-box">
-                <div class="radar-ring"></div>
-                <div id="radar-digit" class="radar-num">1</div>
-            </div>
-            <div style="margin-top:20px; font-size:18px; font-weight:bold; color:#00d2ff;">Recherche d'adversaire...</div>
-        </div>
-        <button class="btn-secondary" onclick="cancel1v1Search()" style="max-width:200px; margin-top:30px;">❌ Annuler</button>
-    </div>
-
-    <!-- ÉCRAN DES SALONS PRIVÉS -->
-    <div id="screen-rooms" style="display:none; max-width:400px; margin:0 auto;">
-        <h2>🏠 Salons Privés</h2>
-        <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:16px; margin:15px 0; display: flex; flex-direction: column; gap: 10px;">
-            <button class="btn-main btn-blue" onclick="openCreateRoomModal()" style="width:100%;">✨ Créer un salon personnalisé</button>
-            <button class="btn-main btn-gold" onclick="openJoinRoomModal()" style="width:100%;">🚪 Rejoindre un salon</button>
-        </div>
-        <h3 style="font-size:14px; text-align:left; color:#aaa; margin-top:15px;">Salons ouverts :</h3>
-        <div id="rooms-list" class="rooms-list" style="max-height: 35vh; margin-bottom:15px;">
-            <div style="text-align:center; color:#aaa; margin-top:10px;">Chargement des salons...</div>
-        </div>
-        <button class="btn-secondary" onclick="open1v1Hub()">⬅️ Retour</button>
-    </div>
-
-    <!-- SALLE D'ATTENTE DU SALON PRIVÉ -->
-    <div id="screen-room-waiting" style="display:none; max-width:400px; margin:0 auto;">
-        <h2>⚡ Salon : <span id="current-room-code" style="color:#00d2ff;">----</span></h2>
-        <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:16px; margin:20px 0;">
-            <div style="margin-bottom: 15px; text-align: left;">
-                <label style="font-size: 12px; color: #aaa; font-weight: bold;">LIEN D'INVITATION :</label>
-                <div style="display: flex; gap: 6px; margin-top: 5px;">
-                    <input type="text" id="room-share-link" readonly 
-                           style="flex:1; padding:8px; border-radius:8px; border:1px solid #00d2ff; background:#0f051d; color:#00d2ff; font-size:12px; outline:none;">
-                    <button class="power-btn equip" onclick="copyRoomLink()" style="padding: 8px 12px;">Copier 📋</button>
-                </div>
-            </div>
-
-            <p style="color:#aaa; font-size:14px; margin-bottom:10px;">Joueurs dans le salon :</p>
-            <div id="room-players-list" style="font-weight:bold; font-size:16px; color:#00ff88; margin-bottom:15px;">En attente...</div>
-            <div class="matchmaking-loader" style="margin-top:10px;">
-                <div class="radar-box" style="width:60px; height:60px;">
-                    <div class="radar-ring"></div>
-                </div>
-                <div style="margin-top:10px; font-size:14px; color:#aaa;">En attente d'un adversaire...</div>
-            </div>
-        </div>
-        <button class="btn-secondary" onclick="leaveCustomRoom()">❌ Quitter le salon</button>
-    </div>
-
-    <!-- MODAL DE CRÉATION DE SALON -->
-    <div id="modal-create-room" class="modal-overlay" style="display:none;">
-        <div class="modal-card" style="text-align:center;">
-            <h2 style="margin:0 0 10px 0; color:#00d2ff;">✨ CRÉER UN SALON</h2>
-            <p style="color:#aaa; font-size:14px; margin-bottom:15px;">Personnalise ton salon privé :</p>
-            
-            <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;">NOM / CODE DU SALON</label>
-            <input type="text" id="custom-room-name" placeholder="Ex: MONCLUB" maxlength="10" 
-                   style="width:100%; padding:12px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:15px; outline:none; text-transform: uppercase;">
-            
-            <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;">MOT DE PASSE (En clair)</label>
-            <input type="text" id="custom-room-pass" placeholder="Laisser vide si public" maxlength="15" 
-                   style="width:100%; padding:12px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:20px; outline:none;">
-            
-            <div style="display:flex; gap:10px;">
-                <button class="btn-secondary" onclick="closeCreateRoomModal()" style="margin-top:0;">Annuler</button>
-                <button class="btn-main" onclick="submitCreateRoom()" style="margin-top:0; flex:1;">Créer ⚡</button>
-            </div>
+        <!-- ÉCRAN DU SALON DE JEU -->
+        <div id="game-screen" style="display: none;">
+            <h2 id="room-title">Salon</h2>
+            <p>Vous êtes dans le salon de jeu !</p>
+            <button onclick="leaveRoom()">Quitter le salon</button>
         </div>
     </div>
 
-    <!-- MODAL POUR REJOINDRE UN SALON -->
-    <div id="modal-join-room" class="modal-overlay" style="display:none;">
-        <div class="modal-card" style="text-align:center;">
-            <h2 style="margin:0 0 10px 0; color:#f8b500;">🚪 REJOINDRE UN SALON</h2>
-            <p style="color:#aaa; font-size:14px; margin-bottom:15px;">Entre les identifiants du salon :</p>
-            
-            <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;">NOM DU SALON</label>
-            <input type="text" id="join-room-name-input" placeholder="Ex: MONCLUB" maxlength="10" 
-                   style="width:100%; padding:12px; border-radius:10px; border:2px solid #f8b500; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:15px; outline:none; text-transform: uppercase;">
-            
-            <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;">MOT DE PASSE (En clair)</label>
-            <input type="text" id="join-room-pass-input" placeholder="Laisser vide si public" maxlength="15" 
-                   style="width:100%; padding:12px; border-radius:10px; border:2px solid #f8b500; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:20px; outline:none;">
-            
-            <div style="display:flex; gap:10px;">
-                <button class="btn-secondary" onclick="closeJoinRoomModal()" style="margin-top:0;">Annuler</button>
-                <button class="btn-main btn-gold" onclick="submitJoinRoomModal()" style="margin-top:0; flex:1;">Rejoindre ⚡</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODE TOURNOI -->
-    <div id="screen-tournament" style="display:none; max-width:400px; margin:0 auto;">
-        <h2>🎯 Tournoi Blitz</h2>
-        <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:16px; margin:20px 0;">
-            <p>Arbre à élimination directe.</p>
-            <div style="color:#ff8a00; font-weight:bold;">Récompense : 150 🪙 + 1 🏆</div>
-        </div>
-        <button class="btn-secondary" onclick="showMainMenu()">⬅️ Retour Menu</button>
-    </div>
-
-    <!-- MODAL POPUP PSEUDO & RÉGION -->
-    <div id="modal-username" class="modal-overlay" style="display:none;">
-        <div class="modal-card" style="text-align:center;">
-            <h2 style="margin:0 0 10px 0; color:#00d2ff;">⚡ BIENVENUE ⚡</h2>
-            <p style="color:#aaa; font-size:14px; margin-bottom:15px;">Configure ton profil pour jouer :</p>
-            
-            <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;">PSEUDO</label>
-            <input type="text" id="username-input" placeholder="Ex: Kiiks" maxlength="15" 
-                   style="width:100%; padding:12px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:15px; outline:none;">
-            
-            <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;">RÉGION</label>
-            <select id="region-input" style="width:100%; padding:12px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:15px; font-weight:bold; margin-bottom:20px; outline:none;">
-                <option value="Hauts-de-France">Hauts-de-France</option>
-                <option value="Île-de-France">Île-de-France</option>
-                <option value="Auvergne-Rhône-Alpes">Auvergne-Rhône-Alpes</option>
-                <option value="Nouvelle-Aquitaine">Nouvelle-Aquitaine</option>
-                <option value="Occitanie">Occitanie</option>
-                <option value="Grand Est">Grand Est</option>
-                <option value="Provence-Alpes-Côte d'Azur">Provence-Alpes-Côte d'Azur</option>
-                <option value="Pays de la Loire">Pays de la Loire</option>
-                <option value="Normandie">Normandie</option>
-                <option value="Bretagne">Bretagne</option>
-                <option value="Bourgogne-Franche-Comté">Bourgogne-Franche-Comté</option>
-                <option value="Centre-Val de Loire">Centre-Val de Loire</option>
-                <option value="Corse">Corse</option>
-                <option value="DOM-TOM / Autre">DOM-TOM / Autre</option>
-            </select>
-            
-            <button class="btn-main" onclick="saveProfileFromModal()">JOUER ⚡</button>
-        </div>
-    </div>
-
-    <!-- MODAL BOUTIQUE -->
-    <div id="modal-shop" class="modal-overlay" style="display:none;">
-        <div class="modal-card">
-            <h2 style="margin:0 0 10px 0; color:#38ef7d;">🛍️ BOUTIQUE</h2>
-            <div class="tabs">
-                <button id="shop-tab-bonus" class="tab-btn active" onclick="switchShopTab('bonus')">🟢 Bonus (pour soi)</button>
-                <button id="shop-tab-malus" class="tab-btn" onclick="switchShopTab('malus')">🔴 Malus (adversaire)</button>
-            </div>
-            <div id="shop-container" class="shop-grid"></div>
-            <button class="btn-secondary" onclick="closeShop()">Fermer</button>
-        </div>
-    </div>
-
-    <!-- OVERLAY CLASSEMENT -->
-    <div id="modal-leaderboard" class="modal-overlay" style="display:none;">
-        <div class="modal-card">
-            <h2 style="margin:0 0 15px 0; color:#00d2ff;">🏆 CLASSEMENT</h2>
-            <div class="tabs">
-                <button id="tab-regional" class="tab-btn active" onclick="fetchLeaderboard('regional')">📍 Région</button>
-                <button id="tab-national" class="tab-btn" onclick="fetchLeaderboard('national')">🇫🇷 France</button>
-                <button id="tab-global" class="tab-btn" onclick="fetchLeaderboard('global')">🌍 Monde</button>
-            </div>
-            <div id="lb-list" class="leaderboard-list">
-                <div style="text-align:center; color:#aaa; margin-top:20px;">Chargement...</div>
-            </div>
-            <button class="btn-secondary" onclick="closeLeaderboard()">Fermer</button>
-        </div>
-    </div>
-
-    <!-- OVERLAY DECOMPTE -->
-    <div id="countdown-overlay" style="display:none;">
-        <div style="font-size:24px; color:#aaa; margin-bottom:10px;">PRÉPAREZ-VOUS !</div>
-        <div id="countdown-number" class="countdown-num">3</div>
-    </div>
-
-    <!-- ECRAN DE JEU -->
-    <div id="screen-game" style="display:none;">
-        <div id="hud-1v1" class="hud" style="display:none;">
-            <div class="player-box me">
-                <div>MA CIBLE</div>
-                <div style="font-size:26px; color:#00d2ff; font-weight:bold;" id="my-target">1</div>
-            </div>
-            <div class="player-box opponent">
-                <div>ADVERSAIRE</div>
-                <div style="font-size:26px; color:#ff007f; font-weight:bold;" id="opp-target">1</div>
-            </div>
-        </div>
-
-        <div id="hud-solo" class="hud" style="display:none;">
-            <div class="player-box me">
-                <div>CIBLE ACTUELLE</div>
-                <div style="font-size:26px; color:#00d2ff; font-weight:bold;" id="solo-target">1</div>
-            </div>
-            <div class="player-box me">
-                <div>SCORE</div>
-                <div style="font-size:26px; color:#00ff88; font-weight:bold;" id="solo-score">0</div>
-            </div>
-        </div>
-        
-        <div style="font-size:18px; margin-bottom:10px; font-weight:bold;">
-            Temps : <span id="game-timer" style="color:#ff007f;">30</span>s
-        </div>
-
-        <div id="power-zone" style="display:none;">
-            <button id="btn-use-power" class="btn-power-hud" onclick="triggerEquippedPower()">
-                ⚡ <span id="power-hud-name">Aucun</span>
-            </button>
-        </div>
-
-        <div id="grid" class="grid"></div>
-    </div>
-
-    <!-- MODAL RESULTAT -->
-    <div id="recap-modal" class="modal-overlay" style="display:none;">
-        <div class="modal-card" style="text-align:center;">
-            <div id="recap-banner" style="font-size:26px; font-weight:900; margin-bottom:10px;">RÉSULTAT</div>
-            <div id="recap-reason" style="color:#aaa; margin-bottom:15px;"></div>
-            
-            <div id="recap-1v1-rows">
-                <div style="display:flex; justify-content:space-between; margin:8px 0; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px;">
-                    <span>🎯 Ma Cible :</span>
-                    <span id="recap-my-target" style="color:#00d2ff; font-weight:bold;">-</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; margin:8px 0; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px;">
-                    <span>🎯 Cible Adversaire :</span>
-                    <span id="recap-opp-target" style="color:#ff007f; font-weight:bold;">-</span>
-                </div>
-            </div>
-
-            <div style="display:flex; justify-content:space-between; margin:8px 0;">
-                <span>⭐ Mon Score :</span>
-                <span id="recap-my-score" style="font-weight:bold;">-</span>
-            </div>
-
-            <div style="display:flex; justify-content:space-between; margin:8px 0; color:#f8b500;">
-                <span>🪙 Pièces Gagnées :</span>
-                <span id="recap-coins-gained" style="font-weight:bold;">+0</span>
-            </div>
-
-            <button class="btn-main" onclick="showMainMenu()">MENU PRINCIPAL</button>
-        </div>
-    </div>
-
+    <!-- Script Socket.io (Si hébergé sur Render, remplacer par l'URL complète de ton backend, ex: io('https://ton-app.onrender.com')) -->
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-        const SoundEngine = {
-            ctx: null, isMuted: false, musicInterval: null, currentMode: null,
-            init() { if (!this.ctx) { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } },
-            toggleMute() {
-                this.isMuted = !this.isMuted;
-                if (this.isMuted) this.stopMusic(false);
-                else if (this.currentMode) this.startMusic(this.currentMode);
-                return this.isMuted;
-            },
-            playClick() {
-                if (this.isMuted) return; this.init(); if (this.ctx.state === 'suspended') return;
-                const osc = this.ctx.createOscillator(), gain = this.ctx.createGain(), filter = this.ctx.createBiquadFilter();
-                osc.type = 'sine'; filter.type = 'lowpass'; filter.frequency.setValueAtTime(300, this.ctx.currentTime);
-                osc.frequency.setValueAtTime(150, this.ctx.currentTime);
-                gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.08);
-                osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(); osc.stop(this.ctx.currentTime + 0.08);
-            },
-            playError() {
-                if (this.isMuted) return; this.init(); if (this.ctx.state === 'suspended') return;
-                const osc = this.ctx.createOscillator(), gain = this.ctx.createGain(), filter = this.ctx.createBiquadFilter();
-                osc.type = 'sine'; filter.type = 'lowpass'; filter.frequency.setValueAtTime(180, this.ctx.currentTime);
-                osc.frequency.setValueAtTime(80, this.ctx.currentTime);
-                gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.12);
-                osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(); osc.stop(this.ctx.currentTime + 0.12);
-            },
-            playVictory() {
-                if (this.isMuted) return; this.init(); if (this.ctx.state === 'suspended') return;
-                [220, 261.63, 329.63].forEach((freq, i) => {
-                    setTimeout(() => {
-                        if (this.isMuted) return;
-                        const osc = this.ctx.createOscillator(), gain = this.ctx.createGain(), filter = this.ctx.createBiquadFilter();
-                        osc.type = 'sine'; filter.type = 'lowpass'; filter.frequency.setValueAtTime(400, this.ctx.currentTime);
-                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                        gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
-                        gain.gain.exponentialRampToValueAtTime(0.00001, this.ctx.currentTime + 0.8);
-                        osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-                        osc.start(); osc.stop(this.ctx.currentTime + 0.8);
-                    }, i * 200);
-                });
-            },
-            stopMusic(clear = true) { if (this.musicInterval) clearInterval(this.musicInterval); if (clear) this.currentMode = null; },
-            startMusic(mode) {
-                if (mode) this.currentMode = mode; 
-                if (this.isMuted) return; this.init();
-                if (this.ctx.state === 'suspended') return; 
-                this.stopMusic(false);
+        const socket = io();
 
-                let ambientChords = { 'menu': [130.81, 196.00, 261.63], 'solo': [110.00, 164.81, 220.00], '1v1': [146.83, 220.00, 293.66] };
-                let chord = ambientChords[mode] || ambientChords['menu'];
-
-                const playPad = () => {
-                    if (this.isMuted || !this.ctx || this.ctx.state !== 'running') return;
-                    chord.forEach((baseFreq) => {
-                        const osc = this.ctx.createOscillator(), gain = this.ctx.createGain(), filter = this.ctx.createBiquadFilter();
-                        osc.type = 'sine'; filter.type = 'lowpass'; filter.frequency.setValueAtTime(220, this.ctx.currentTime);
-                        osc.frequency.setValueAtTime(baseFreq, this.ctx.currentTime);
-                        gain.gain.setValueAtTime(0.00001, this.ctx.currentTime);
-                        gain.gain.linearRampToValueAtTime(0.025, this.ctx.currentTime + 1.5);
-                        gain.gain.exponentialRampToValueAtTime(0.00001, this.ctx.currentTime + 4.0);
-                        osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-                        osc.start(); osc.stop(this.ctx.currentTime + 4.0);
-                    });
-                };
-                playPad();
-                this.musicInterval = setInterval(playPad, 4000);
-            }
-        };
-
-        function unlockAudio() {
-            SoundEngine.init();
-            if (SoundEngine.ctx && SoundEngine.ctx.state === 'suspended') {
-                SoundEngine.ctx.resume().then(() => {
-                    document.getElementById('audio-prompt').style.display = 'none';
-                    if (SoundEngine.currentMode && !SoundEngine.isMuted) SoundEngine.startMusic(SoundEngine.currentMode);
-                });
-            } else {
-                document.getElementById('audio-prompt').style.display = 'none';
-            }
-        }
-        ['click', 'touchstart', 'pointerdown'].forEach(e => window.addEventListener(e, unlockAudio, { once: true }));
-
-        function toggleMute() {
-            unlockAudio();
-            const muted = SoundEngine.toggleMute();
-            document.getElementById('mute-btn').innerText = muted ? '🔇' : '🔊';
-        }
-
-        const SERVER_URL = "https://chiffre-blitz-server.onrender.com";
-        const socket = io(SERVER_URL);
-
-        let myProfile = { username: "", region: "Hauts-de-France", country: "FR", points: 1000, coins: 100, trophies: 0, inventory: {}, equippedPower: null };
-        const POWERS_CATALOG = [
-            { id: 'spotlight', name: '💡 Projecteur', price: 80, desc: 'Illumine la bonne tuile (2s)', type: 'bonus' },
-            { id: 'freeze', name: '⏳ Blocage du Temps', price: 120, desc: 'Gèle le chrono pendant 3s', type: 'bonus' },
-            { id: 'joker', name: '⚡ Joker Éclair', price: 180, desc: 'Valide la cible actuelle', type: 'bonus' },
-            { id: 'nova', name: '🌟 Nova Temporelle', price: 300, desc: 'GIGA : Valide 3 cibles', type: 'bonus' },
-            { id: 'quake', name: '📳 Séisme', price: 100, desc: 'Fait trembler l\'adversaire (2s)', type: 'malus' },
-            { id: 'micro', name: '🐜 Micro-Tuiles', price: 150, desc: 'Rétrécit la grille adverse (2s)', type: 'malus' },
-            { id: 'eclipse', name: '🌑 Éclipse', price: 220, desc: 'Floute la grille adverse (1.5s)', type: 'malus' },
-            { id: 'chaos', name: '🌪️ Chaos Absolu', price: 350, desc: 'GIGA : Combo de malus (2.5s)', type: 'malus' }
-        ];
-
-        let current1v1Time = 30, radarInterval = null;
-        let soloTarget = 1, soloScore = 0, soloTimeLeft = 30, soloTimerInterval = null;
-        let powerUsedInMatch = false, currentShopTab = 'bonus', isTimeFrozen = false;
-
-        document.addEventListener("DOMContentLoaded", () => {
-            loadLocalEconomy();
-            showMainMenu();
-            checkAndShowProfileModal();
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const targetRoom = urlParams.get('room');
-            if (targetRoom) {
-                setTimeout(() => {
-                    if (isProfileValid()) {
-                        joinCustomRoom(targetRoom.toUpperCase(), '');
-                    }
-                }, 1000);
-            }
-        });
-
-        function loadLocalEconomy() {
-            const coins = localStorage.getItem('cb_coins');
-            const trophies = localStorage.getItem('cb_trophies');
-            const inventory = localStorage.getItem('cb_inventory');
-            const equipped = localStorage.getItem('cb_equipped');
-
-            if (coins !== null) myProfile.coins = parseInt(coins);
-            if (trophies !== null) myProfile.trophies = parseInt(trophies);
-            if (inventory) { try { myProfile.inventory = JSON.parse(inventory); } catch(e) { myProfile.inventory = {}; } }
-            if (equipped) myProfile.equippedPower = equipped;
-            updateEconomyUI();
-        }
-
-        function saveLocalEconomy() {
-            localStorage.setItem('cb_coins', myProfile.coins);
-            localStorage.setItem('cb_trophies', myProfile.trophies);
-            localStorage.setItem('cb_inventory', JSON.stringify(myProfile.inventory));
-            localStorage.setItem('cb_equipped', myProfile.equippedPower || '');
-            updateEconomyUI();
-        }
-
-        function updateEconomyUI() {
-            document.getElementById('user-coins-display').innerText = myProfile.coins;
-            document.getElementById('user-trophies-display').innerText = myProfile.trophies;
-        }
-
-        function isProfileValid() {
-            const savedName = localStorage.getItem('cb_username');
-            const savedRegion = localStorage.getItem('cb_region');
-            return savedName && savedName.trim().length >= 3 && savedName !== "Profil" && savedName !== "Définir un pseudo" && savedRegion;
-        }
-
-        function checkAndShowProfileModal() {
-            if (!isProfileValid()) {
-                document.getElementById('user-name-display').innerText = "Définir pseudo";
-                document.getElementById('modal-username').style.display = 'flex';
-            } else {
-                myProfile.username = localStorage.getItem('cb_username');
-                myProfile.region = localStorage.getItem('cb_region');
-                document.getElementById('user-name-display').innerText = myProfile.username;
-                document.getElementById('modal-username').style.display = 'none';
-                registerIfPossible();
-            }
-        }
-
-        function saveProfileFromModal() {
-            const nameInput = document.getElementById('username-input').value.trim();
-            const regionInput = document.getElementById('region-input').value;
-            if (nameInput.length < 3) { alert("Ton pseudo doit contenir au moins 3 caractères !"); return; }
-            myProfile.username = nameInput; myProfile.region = regionInput;
-            localStorage.setItem('cb_username', nameInput);
-            localStorage.setItem('cb_region', regionInput);
-            document.getElementById('user-name-display').innerText = nameInput;
-            document.getElementById('modal-username').style.display = 'none';
-            registerIfPossible();
-        }
-
-        function promptProfileChange() {
-            document.getElementById('username-input').value = isProfileValid() ? myProfile.username : '';
-            if (myProfile.region) document.getElementById('region-input').value = myProfile.region;
-            document.getElementById('modal-username').style.display = 'flex';
-        }
-
-        function registerIfPossible() {
-            if (isProfileValid() && socket.connected) socket.emit('register_player', myProfile);
-        }
-
-        socket.on('connect', () => { registerIfPossible(); });
-        socket.on('player_registered', (player) => {
-            if (player) {
-                myProfile.points = player.points;
-                document.getElementById('user-name-display').innerText = player.username;
-                document.getElementById('user-pts-display').innerText = player.points;
-            }
-        });
-
-        function hideAllScreens() {
-            ['screen-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room', 'modal-join-room'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.style.display = 'none';
-            });
-            if (radarInterval) clearInterval(radarInterval);
-            if (soloTimerInterval) clearInterval(soloTimerInterval);
-            isTimeFrozen = false;
-            SoundEngine.stopMusic(true);
-        }
-
-        function showMainMenu() {
-            hideAllScreens();
-            document.getElementById('screen-menu').style.display = 'flex';
-            SoundEngine.startMusic('menu');
-        }
-
-        function open1v1Hub() {
-            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-            hideAllScreens();
-            document.getElementById('screen-1v1-hub').style.display = 'flex';
-            SoundEngine.startMusic('menu');
-        }
-
-        function openRoomsScreen() {
-            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-            hideAllScreens();
-            document.getElementById('screen-rooms').style.display = 'block';
-            fetchRoomsList();
-        }
-
-        function fetchRoomsList() { socket.emit('get_rooms_list'); }
-
-        function openCreateRoomModal() {
-            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-            document.getElementById('custom-room-name').value = Math.random().toString(36).substring(2, 6).toUpperCase();
-            document.getElementById('custom-room-pass').value = '';
-            document.getElementById('modal-create-room').style.display = 'flex';
-        }
-
-        function closeCreateRoomModal() {
-            document.getElementById('modal-create-room').style.display = 'none';
-        }
-
-        function submitCreateRoom() {
-            const code = document.getElementById('custom-room-name').value.trim().toUpperCase();
-            const password = document.getElementById('custom-room-pass').value.trim();
-            if (!code || code.length < 2) { alert("Le nom du salon doit contenir au moins 2 caractères."); return; }
-            if (!socket.connected) { alert("Erreur : Non connecté au serveur."); return; }
-
-            socket.emit('create_room', { code: code, password: password, username: myProfile.username });
-            closeCreateRoomModal();
-        }
-
-        function openJoinRoomModal() {
-            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-            document.getElementById('join-room-name-input').value = '';
-            document.getElementById('join-room-pass-input').value = '';
-            document.getElementById('modal-join-room').style.display = 'flex';
-        }
-
-        function closeJoinRoomModal() {
-            document.getElementById('modal-join-room').style.display = 'none';
-        }
-
-        function submitJoinRoomModal() {
-            const roomCode = document.getElementById('join-room-name-input').value.trim().toUpperCase();
-            const password = document.getElementById('join-room-pass-input').value.trim();
-
-            if (!roomCode) {
+        function createRoom() {
+            const roomName = document.getElementById('room-name-input').value;
+            const password = document.getElementById('room-password-input').value;
+            
+            if (!roomName.trim()) {
                 alert("Veuillez entrer un nom de salon valide.");
                 return;
             }
-            if (!socket.connected) {
-                alert("Erreur : Non connecté au serveur.");
-                return;
+
+            socket.emit('create-room', { roomName, password });
+        }
+
+        function tryJoinRoom(roomName, hasPassword) {
+            let password = '';
+            if (hasPassword) {
+                password = prompt(`Le salon "${roomName}" est sécurisé. Entrez le mot de passe :`);
+                if (password === null) return; // Si l'utilisateur clique sur Annuler
             }
-
-            socket.emit('join_room', { code: roomCode, password: password });
-            closeJoinRoomModal();
+            socket.emit('join-room', { roomName, password });
         }
 
-        function joinCustomRoom(code = null, pass = '') {
-            if (!socket.connected) {
-                alert("Erreur : Non connecté au serveur.");
-                return;
-            }
-            socket.emit('join_room', { code: code, password: pass });
+        function leaveRoom() {
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('lobby-screen').style.display = 'block';
+            window.location.reload(); // Recharge pour réinitialiser proprement la socket/les états si besoin
         }
 
-        function leaveCustomRoom() {
-            socket.emit('leave_room');
-            openRoomsScreen();
-        }
+        // Mise à jour de la liste des salons reçue du serveur
+        socket.on('room-list', (rooms) => {
+            const container = document.getElementById('room-list-container');
+            container.innerHTML = '';
 
-        function copyRoomLink() {
-            const input = document.getElementById('room-share-link');
-            input.select();
-            navigator.clipboard.writeText(input.value).then(() => {
-                alert("Lien du salon copié dans le presse-papier !");
-            });
-        }
-
-        socket.on('rooms_list_data', (rooms) => {
-            const listEl = document.getElementById('rooms-list');
-            listEl.innerHTML = '';
             if (!rooms || rooms.length === 0) {
-                listEl.innerHTML = '<div style="text-align:center; color:#aaa; margin-top:10px;">Aucun salon ouvert.</div>';
+                container.innerHTML = '<li>Aucun salon ouvert pour le moment.</li>';
                 return;
             }
-            rooms.forEach(r => {
-                const row = document.createElement('div');
-                row.className = 'room-row';
-                row.innerHTML = `
-                    <span class="room-info">Salon <b>${r.code}</b> (${r.playersCount}/2)</span>
-                    <button class="power-btn equip" onclick="joinCustomRoom('${r.code}', '')">Rejoindre</button>
+
+            rooms.forEach(room => {
+                const li = document.createElement('li');
+                const padlock = room.hasPassword ? ' 🔒' : '';
+                
+                li.innerHTML = `
+                    <span>${room.name}${padlock}</span>
+                    <button onclick="tryJoinRoom('${room.name}', ${room.hasPassword})">Rejoindre</button>
                 `;
-                listEl.appendChild(row);
+                container.appendChild(li);
             });
         });
 
-        socket.on('room_joined_success', (data) => {
-            hideAllScreens();
-            document.getElementById('screen-room-waiting').style.display = 'block';
-            document.getElementById('current-room-code').innerText = data.code;
-            const shareUrl = `${window.location.origin}${window.location.pathname}?room=${data.code}`;
-            document.getElementById('room-share-link').value = shareUrl;
-            updateRoomPlayers(data.players);
+        // Succès de connexion à un salon
+        socket.on('joined-success', ({ roomName }) => {
+            document.getElementById('lobby-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'block';
+            document.getElementById('room-title').innerText = `Salon : ${roomName}`;
+            document.getElementById('error-message').innerText = '';
         });
 
-        socket.on('room_players_update', (data) => {
-            updateRoomPlayers(data.players);
+        // Gestion des erreurs (mot de passe incorrect, etc.)
+        socket.on('error-msg', (msg) => {
+            document.getElementById('error-message').innerText = msg;
         });
-
-        function updateRoomPlayers(players) {
-            const playersListEl = document.getElementById('room-players-list');
-            if (!players || players.length === 0) { playersListEl.innerText = "En attente..."; return; }
-            playersListEl.innerText = players.map(p => p.username).join(' vs ');
-        }
-
-        socket.on('room_error', (msg) => { alert(msg); });
-
-        /* BOUTIQUE */
-        function openShop() {
-            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-            document.getElementById('modal-shop').style.display = 'flex';
-            switchShopTab(currentShopTab);
-        }
-        function closeShop() { document.getElementById('modal-shop').style.display = 'none'; }
-
-        function switchShopTab(type) {
-            currentShopTab = type;
-            document.getElementById('shop-tab-bonus').classList.toggle('active', type === 'bonus');
-            document.getElementById('shop-tab-malus').classList.toggle('active', type === 'malus');
-            const container = document.getElementById('shop-container');
-            container.innerHTML = '';
-            POWERS_CATALOG.filter(p => p.type === type).forEach(p => {
-                const qty = myProfile.inventory[p.id] || 0;
-                const isEquipped = myProfile.equippedPower === p.id;
-                const card = document.createElement('div');
-                card.className = `power-card ${isEquipped ? 'equipped' : ''}`;
-                card.innerHTML = `
-                    <h4>${p.name}</h4>
-                    <p>${p.desc}</p>
-                    <div class="stock-badge">Stock : ${qty}</div>
-                    <div style="font-weight:bold; margin-bottom:8px; color:#f8b500;">${p.price} 🪙</div>
-                    <button class="power-btn buy" onclick="buyPower('${p.id}')">Acheter (+1)</button>
-                    ${qty > 0 ? `<button class="power-btn ${isEquipped ? 'active' : 'equip'}" onclick="equipPower('${p.id}')">${isEquipped ? 'Équipé ✅' : 'Équiper'}</button>` : ''}
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function buyPower(id) {
-            const power = POWERS_CATALOG.find(p => p.id === id);
-            if (myProfile.coins >= power.price) {
-                myProfile.coins -= power.price;
-                myProfile.inventory[id] = (myProfile.inventory[id] || 0) + 1;
-                if (!myProfile.equippedPower) myProfile.equippedPower = id;
-                saveLocalEconomy();
-                switchShopTab(currentShopTab);
-            } else { alert("Pas assez de pièces !"); }
-        }
-
-        function equipPower(id) {
-            myProfile.equippedPower = (myProfile.equippedPower === id) ? null : id;
-            saveLocalEconomy();
-            switchShopTab(currentShopTab);
-        }
-
-        function preparePowerHUD() {
-            const zone = document.getElementById('power-zone');
-            const btn = document.getElementById('btn-use-power');
-            const nameLabel = document.getElementById('power-hud-name');
-            powerUsedInMatch = false;
-            const equippedId = myProfile.equippedPower;
-            const stock = equippedId ? (myProfile.inventory[equippedId] || 0) : 0;
-            if (equippedId && stock > 0) {
-                const power = POWERS_CATALOG.find(p => p.id === equippedId);
-                nameLabel.innerText = `${power ? power.name : 'Aucun'} (${stock})`;
-                btn.disabled = false;
-                zone.style.display = 'block';
-            } else { zone.style.display = 'none'; myProfile.equippedPower = null; saveLocalEconomy(); }
-        }
-
-        function triggerEquippedPower() {
-            const powerId = myProfile.equippedPower;
-            if (!powerId || powerUsedInMatch) return;
-            const stock = myProfile.inventory[powerId] || 0;
-            if (stock <= 0) return;
-            myProfile.inventory[powerId]--;
-            powerUsedInMatch = true;
-            document.getElementById('btn-use-power').disabled = true;
-
-            const is1v1 = document.getElementById('hud-1v1').style.display !== 'none';
-            const currentTarget = is1v1 ? (parseInt(document.getElementById('my-target').innerText) || 1) : soloTarget;
-
-            if (powerId === 'spotlight') {
-                document.querySelectorAll('.tile').forEach(t => {
-                    if (parseInt(t.innerText) === currentTarget) {
-                        t.classList.add('highlight-target');
-                        setTimeout(() => t.classList.remove('highlight-target'), 2000);
-                    }
-                });
-            } else if (powerId === 'joker') {
-                autoValidateTarget();
-            } else if (powerId === 'freeze') {
-                isTimeFrozen = true;
-                const timerEl = document.getElementById('game-timer');
-                timerEl.classList.add('frozen');
-                setTimeout(() => { isTimeFrozen = false; timerEl.classList.remove('frozen'); }, 3000);
-            } else if (powerId === 'nova') {
-                autoValidateTarget();
-                setTimeout(() => autoValidateTarget(), 250);
-                setTimeout(() => autoValidateTarget(), 500);
-            } else {
-                socket.emit('send_malus', { type: powerId });
-            }
-            if (myProfile.inventory[powerId] <= 0) myProfile.equippedPower = null;
-            saveLocalEconomy();
-        }
-
-        function autoValidateTarget() {
-            const is1v1 = document.getElementById('hud-1v1').style.display !== 'none';
-            if (is1v1) handle1v1TileClick(parseInt(document.getElementById('my-target').innerText) || 1);
-            else handleSoloTileClick(soloTarget);
-        }
-
-        socket.on('receive_malus', (data) => {
-            const grid = document.getElementById('grid');
-            SoundEngine.playError();
-            if (data.type === 'quake') { grid.classList.add('effect-quake'); setTimeout(() => grid.classList.remove('effect-quake'), 2000); }
-            else if (data.type === 'micro') { grid.classList.add('effect-micro'); setTimeout(() => grid.classList.remove('effect-micro'), 2000); }
-            else if (data.type === 'eclipse') { grid.classList.add('effect-eclipse'); setTimeout(() => grid.classList.remove('effect-eclipse'), 1500); }
-            else if (data.type === 'chaos') { grid.classList.add('effect-quake', 'effect-micro', 'effect-eclipse'); setTimeout(() => grid.classList.remove('effect-quake', 'effect-micro', 'effect-eclipse'), 2500); }
-        });
-
-        function openTournamentScreen() {
-            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-            hideAllScreens();
-            document.getElementById('screen-tournament').style.display = 'block';
-        }
-
-        function openLeaderboard() {
-            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-            document.getElementById('modal-leaderboard').style.display = 'flex';
-            fetchLeaderboard('regional');
-        }
-        function closeLeaderboard() { document.getElementById('modal-leaderboard').style.display = 'none'; }
-
-        function fetchLeaderboard(type) {
-            ['regional', 'national', 'global'].forEach(t => {
-                const btn = document.getElementById(`tab-${t}`);
-                if (btn) btn.classList.toggle('active', t === type);
-            });
-            document.getElementById('lb-list').innerHTML = '<div style="text-align:center; color:#aaa; margin-top:20px;">Chargement...</div>';
-            socket.emit('get_leaderboard', type);
-        }
-
-        socket.on('leaderboard_data', (res) => {
-            const container = document.getElementById('lb-list');
-            container.innerHTML = '';
-            if (!res.data || res.data.length === 0) { container.innerHTML = '<div style="text-align:center; color:#aaa; margin-top:20px;">Aucun joueur.</div>'; return; }
-            res.data.forEach((p, index) => {
-                const row = document.createElement('div');
-                row.className = 'lb-row';
-                row.innerHTML = `<span class="lb-rank">#${index + 1}</span><span class="lb-name">${p.username}</span><span class="lb-pts">${p.points} pts</span>`;
-                container.appendChild(row);
-            });
-        });
-
-        function startRandom1v1() {
-            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-            hideAllScreens();
-            document.getElementById('screen-1v1-lobby').style.display = 'flex';
-            let digit = 1;
-            radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById('radar-digit').innerText = digit; }, 70);
-            socket.emit('find_1v1_match');
-        }
-
-        function cancel1v1Search() { open1v1Hub(); }
-
-        socket.on('start_countdown', () => {
-            if (radarInterval) clearInterval(radarInterval);
-            ['screen-1v1-hub', 'screen-1v1-lobby', 'screen-room-waiting'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.style.display = 'none';
-            });
-            document.getElementById('countdown-overlay').style.display = 'flex';
-            let count = 3;
-            document.getElementById('countdown-number').innerText = count;
-            const timer = setInterval(() => {
-                count--;
-                if (count > 0) {
-                    document.getElementById('countdown-number').innerText = count;
-                } else {
-                    clearInterval(timer);
-                    document.getElementById('countdown-overlay').style.display = 'none';
-                    document.getElementById('screen-game').style.display = 'block';
-                    document.getElementById('hud-1v1').style.display = 'grid';
-                    document.getElementById('hud-solo').style.display = 'none';
-                    preparePowerHUD();
-                    current1v1Time = 30;
-                    isTimeFrozen = false;
-                    SoundEngine.startMusic('1v1');
-                }
-            }, 1000);
-        });
-
-        socket.on('game_started', (data) => {
-            current1v1Time = data.timeLeft;
-            document.getElementById('game-timer').innerText = Math.max(0, current1v1Time);
-            document.getElementById('my-target').innerText = data.myTarget || 1;
-            renderGrid(data.myPool, handle1v1TileClick);
-        });
-
-        socket.on('timer_update', (time) => {
-            if (!isTimeFrozen) { current1v1Time = time; document.getElementById('game-timer').innerText = Math.max(0, time); }
-        });
-
-        socket.on('my_grid_updated', (data) => {
-            document.getElementById('my-target').innerText = data.target;
-            renderGrid(data.newPool, handle1v1TileClick);
-            if (data.success) SoundEngine.playClick();
-            else SoundEngine.playError();
-        });
-
-        socket.on('opponent_progress', (data) => {
-            document.getElementById('opp-target').innerText = data.target;
-        });
-
-        socket.on('game_over_1v1', (data) => {
-            hideAllScreens();
-            const modal = document.getElementById('recap-modal');
-            const banner = document.getElementById('recap-banner');
-            document.getElementById('recap-1v1-rows').style.display = 'block';
-            const myId = socket.id;
-            const myData = data.players[myId];
-            const oppId = Object.keys(data.players).find(id => id !== myId);
-            const oppData = oppId ? data.players[oppId] : { target: '-', score: 0 };
-            let coinsGained = 10;
-            if (data.winnerId === myId) {
-                banner.innerText = "🏆 VICTOIRE !"; banner.style.color = "#00d2ff";
-                coinsGained = 30; SoundEngine.playVictory();
-            } else if (data.winnerId) {
-                banner.innerText = "❌ DÉFAITE !"; banner.style.color = "#ff007f";
-            } else {
-                banner.innerText = "⏱️ ÉGALITÉ !"; banner.style.color = "#ff8a00";
-            }
-            myProfile.coins += coinsGained;
-            saveLocalEconomy();
-            document.getElementById('recap-reason').innerText = data.reason;
-            document.getElementById('recap-my-target').innerText = myData ? myData.target : '-';
-            document.getElementById('recap-opp-target').innerText = oppData ? oppData.target : '-';
-            document.getElementById('recap-my-score').innerText = myData ? myData.score : 0;
-            document.getElementById('recap-coins-gained').innerText = `+${coinsGained}`;
-            modal.style.display = 'flex';
-            registerIfPossible();
-        });
-
-        function handle1v1TileClick(num) {
-            if (current1v1Time <= 0) return;
-            socket.emit('player_click_1v1', num);
-        }
-
-        function startSoloTraining() {
-            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-            hideAllScreens();
-            soloTarget = 1; soloScore = 0; soloTimeLeft = 30; isTimeFrozen = false;
-            document.getElementById('screen-game').style.display = 'block';
-            document.getElementById('hud-solo').style.display = 'grid';
-            document.getElementById('hud-1v1').style.display = 'none';
-            document.getElementById('solo-target').innerText = soloTarget;
-            document.getElementById('solo-score').innerText = soloScore;
-            document.getElementById('game-timer').innerText = soloTimeLeft;
-            preparePowerHUD();
-            generateSoloGrid();
-            SoundEngine.startMusic('solo');
-            soloTimerInterval = setInterval(() => {
-                if (!isTimeFrozen) {
-                    soloTimeLeft--;
-                    document.getElementById('game-timer').innerText = Math.max(0, soloTimeLeft);
-                    if (soloTimeLeft <= 0) endSoloGame();
-                }
-            }, 1000);
-        }
-
-        function generateSoloGrid() {
-            let pool = [soloTarget];
-            let candidates = [];
-            for (let i = 1; i <= 50; i++) if (i !== soloTarget) candidates.push(i);
-            candidates.sort(() => Math.random() - 0.5);
-            pool = pool.concat(candidates.slice(0, 11)).sort(() => Math.random() - 0.5);
-            renderGrid(pool, handleSoloTileClick);
-        }
-
-        function handleSoloTileClick(num) {
-            if (soloTimeLeft <= 0) return;
-            if (num === soloTarget) {
-                SoundEngine.playClick();
-                soloTarget++; soloScore += 10;
-                document.getElementById('solo-target').innerText = soloTarget;
-                document.getElementById('solo-score').innerText = soloScore;
-                generateSoloGrid();
-            } else {
-                SoundEngine.playError();
-                if (!isTimeFrozen) {
-                    soloTimeLeft = Math.max(0, soloTimeLeft - 1);
-                    document.getElementById('game-timer').innerText = Math.max(0, soloTimeLeft);
-                    if (soloTimeLeft <= 0) endSoloGame();
-                }
-            }
-        }
-
-        function endSoloGame() {
-            hideAllScreens();
-            const modal = document.getElementById('recap-modal');
-            const coinsGained = Math.floor(soloScore / 2);
-            myProfile.coins += coinsGained;
-            saveLocalEconomy();
-            document.getElementById('recap-banner').innerText = "🏋️ ENTRAÎNEMENT TERMINÉ";
-            document.getElementById('recap-banner').style.color = "#00d2ff";
-            document.getElementById('recap-1v1-rows').style.display = 'none';
-            document.getElementById('recap-reason').innerText = `Prochaine cible : ${soloTarget}`;
-            document.getElementById('recap-my-score').innerText = soloScore;
-            document.getElementById('recap-coins-gained').innerText = `+${coinsGained}`;
-            SoundEngine.playVictory();
-            modal.style.display = 'flex';
-        }
-
-        function renderGrid(pool, handler) {
-            const grid = document.getElementById('grid');
-            if (!grid) return;
-            grid.innerHTML = '';
-            if (!pool) return;
-            pool.forEach(num => {
-                const tile = document.createElement('div');
-                tile.className = 'tile';
-                tile.innerText = num;
-                tile.onclick = () => handler(num);
-                grid.appendChild(tile);
-            });
-        }
     </script>
 </body>
 </html>
