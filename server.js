@@ -6,17 +6,17 @@ const path = require('path');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: { origin: "*" }
+    cors: { origin: "*" },
+    pingTimeout: 60000, // Augmente le délai avant de considérer une co perdue
+    pingInterval: 25000
 });
 
-// Indispensable pour que Render serve ton index.html et le script socket.io
 app.use(express.static(path.join(__dirname)));
 
 let players = {};
 let waitingPlayer = null;
-let rooms = {}; // Stockage des salons privés et des matchs actifs
+let rooms = {};
 
-// Générateur de grille de nombres aléatoires
 function generateRandomPool(target) {
     let pool = [target];
     let candidates = [];
@@ -31,7 +31,6 @@ function generateRandomPool(target) {
 io.on('connection', (socket) => {
     console.log(`Un joueur s'est connecté : ${socket.id}`);
 
-    // Enregistrement du profil
     socket.on('register_player', (profile) => {
         players[socket.id] = {
             id: socket.id,
@@ -42,10 +41,8 @@ io.on('connection', (socket) => {
         socket.emit('player_registered', players[socket.id]);
     });
 
-    // --- GESTION DES SALONS PRIVÉS ---
     socket.on('create_room', (data) => {
         let roomCode = data?.code ? data.code.trim().toUpperCase() : '';
-        
         if (!roomCode) {
             roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
         }
@@ -65,7 +62,6 @@ io.on('connection', (socket) => {
             code: roomCode,
             players: rooms[roomCode].players
         });
-        console.log(`Salon créé : ${roomCode} par ${socket.id}`);
     });
 
     socket.on('join_room', (data) => {
@@ -85,7 +81,6 @@ io.on('connection', (socket) => {
 
             io.to(roomCode).emit('room_players_update', { players: room.players });
             socket.emit('room_joined_success', { code: roomCode, players: room.players });
-            console.log(`Joueur ${socket.id} a rejoint le salon ${roomCode}`);
 
             if (room.players.length === 2) {
                 room.gameStarted = true;
@@ -101,7 +96,7 @@ io.on('connection', (socket) => {
                 }, 3000);
             }
         } else {
-            socket.emit('room_error', "Salon introuvable, complet, mot de passe incorrect ou partie déjà commencée !");
+            socket.emit('room_error', "Salon introuvable, complet ou partie déjà commencée !");
         }
     });
 
@@ -119,7 +114,6 @@ io.on('connection', (socket) => {
         socket.emit('rooms_list_data', openRooms);
     });
 
-    // --- MATCHMAKING ALÉATOIRE (CORRIGÉ) ---
     socket.on('find_1v1_match', () => {
         if (waitingPlayer === socket.id) return;
 
@@ -166,7 +160,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // --- GESTION DES CLICS PENDANT LE DUEL ---
     socket.on('player_click_1v1', (num) => {
         try {
             let roomCode = null;
@@ -208,11 +201,10 @@ io.on('connection', (socket) => {
                 });
             }
         } catch (err) {
-            console.error("Erreur dans player_click_1v1:", err);
+            console.error("Erreur player_click_1v1:", err);
         }
     });
 
-    // --- TRANSMISSION DES MALUS ---
     socket.on('send_malus', (data) => {
         for (const code in rooms) {
             const room = rooms[code];
@@ -223,7 +215,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Déconnexion générale
     socket.on('disconnect', () => {
         if (waitingPlayer === socket.id) waitingPlayer = null;
         cleanupPlayerFromRooms(socket.id);
@@ -232,7 +223,6 @@ io.on('connection', (socket) => {
     });
 });
 
-// Nettoyage sécurisé des salons et des timers en cas de départ/déconnexion
 function cleanupPlayerFromRooms(socketId) {
     for (const code in rooms) {
         const room = rooms[code];
@@ -262,7 +252,6 @@ function cleanupPlayerFromRooms(socketId) {
     }
 }
 
-// Lancement de la boucle de jeu et du chronomètre
 function start1v1GameLoop(roomCode) {
     let room = rooms[roomCode];
     if (!room || room.ended) return;
@@ -276,23 +265,30 @@ function start1v1GameLoop(roomCode) {
     }
 
     room.timerInterval = setInterval(() => {
-        if (!rooms[roomCode] || room.ended) {
-            clearInterval(room.timerInterval);
-            return;
-        }
+        try {
+            let currentRoom = rooms[roomCode];
+            if (!currentRoom || currentRoom.ended) {
+                if (room.timerInterval) clearInterval(room.timerInterval);
+                return;
+            }
 
-        room.timeLeft--;
-        io.to(roomCode).emit('timer_update', room.timeLeft);
+            currentRoom.timeLeft--;
+            io.to(roomCode).emit('timer_update', currentRoom.timeLeft);
 
-        if (room.timeLeft <= 0) {
-            clearInterval(room.timerInterval);
-            room.timerInterval = null;
-            end1v1Game(roomCode, "Temps écoulé !");
+            if (currentRoom.timeLeft <= 0) {
+                if (currentRoom.timerInterval) {
+                    clearInterval(currentRoom.timerInterval);
+                    currentRoom.timerInterval = null;
+                }
+                end1v1Game(roomCode, "Temps écoulé !");
+            }
+        } catch (e) {
+            console.error("Erreur dans le timer interval:", e);
+            if (room.timerInterval) clearInterval(room.timerInterval);
         }
     }, 1000);
 }
 
-// Fin de partie et calcul du gagnant sécurisé
 function end1v1Game(roomCode, reason) {
     let room = rooms[roomCode];
     if (!room || room.ended) return;
