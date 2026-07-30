@@ -1,227 +1,475 @@
+Voici la version restaurée de **Chiffre Blitz** avec son **ancienne direction artistique (DA) rétro-arcade / synthwave** (néons vibrants, ambiance cyberpunk, effets lumineux) et son **moteur audio Web Audio API intégré** (musique de fond synthétique et effets sonores rétro sans dépendance externe).
+
+Vous pouvez remplacer directement le contenu de votre fichier `index.html` par le code ci-dessous :
+
+```html
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chiffre Blitz</title>
+    <title>Chiffre Blitz - Arcade Edition</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rajdhani:wght@600;700&display=swap');
+
+        :root {
+            --bg-color: #090a0f;
+            --panel-bg: #121520;
+            --neon-pink: #ff2a85;
+            --neon-cyan: #00f0ff;
+            --neon-yellow: #f3e600;
+            --neon-green: #00ff66;
+            --text-color: #ffffff;
+            --text-dim: #8b9bb4;
         }
-        .container {
-            width: 100%;
-            max-width: 500px;
-            background: #1e1e1e;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        h1, h2 {
-            text-align: center;
-            color: #4f46e5;
-        }
-        input, button {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            font-size: 16px;
-            border-radius: 4px;
-            border: none;
+
+        * {
             box-sizing: border-box;
-        }
-        input {
-            background: #2d2d2d;
-            color: #fff;
-            border: 1px solid #444;
-        }
-        button {
-            background: #4f46e5;
-            color: white;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        button:hover {
-            background: #4338ca;
-        }
-        .btn-secondary {
-            background: #374151;
-        }
-        .btn-secondary:hover {
-            background: #4b5563;
-        }
-        ul {
-            list-style: none;
+            margin: 0;
             padding: 0;
-            max-height: 200px;
-            overflow-y: auto;
+            user-select: none;
         }
-        li {
-            background: #2d2d2d;
-            margin: 8px 0;
-            padding: 10px 15px;
-            border-radius: 4px;
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Rajdhani', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            background-image: 
+                linear-gradient(rgba(18, 21, 32, 0.8) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(18, 21, 32, 0.8) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* Scanline overlay effect */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 999;
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
+
+        .arcade-container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--panel-bg);
+            border: 3px solid var(--neon-cyan);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.3), inset 0 0 15px rgba(0, 240, 255, 0.2);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px;
+            position: relative;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 1.8rem;
+            color: var(--neon-pink);
+            text-shadow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-pink);
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--neon-cyan);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .hud {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--neon-pink);
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin-bottom: 25px;
+            font-size: 1.2rem;
+            font-weight: 700;
         }
-        li button {
-            width: auto;
-            padding: 6px 12px;
-            margin: 0;
-            font-size: 14px;
+
+        .hud-item span {
+            color: var(--neon-yellow);
         }
-        .error {
-            color: #f87171;
+
+        .audio-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .arcade-btn {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.75rem;
+            background: transparent;
+            color: var(--neon-cyan);
+            border: 2px solid var(--neon-cyan);
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+            text-transform: uppercase;
+        }
+
+        .arcade-btn:hover {
+            background: var(--neon-cyan);
+            color: var(--bg-color);
+            box-shadow: 0 0 20px var(--neon-cyan);
+            transform: translateY(-2px);
+        }
+
+        .arcade-btn.active {
+            background: var(--neon-pink);
+            border-color: var(--neon-pink);
+            color: var(--text-color);
+            box-shadow: 0 0 20px var(--neon-pink);
+        }
+
+        .game-screen {
             text-align: center;
-            margin-top: 10px;
-        }
-        .screen {
             display: none;
         }
-        .screen.active {
+
+        .game-screen.active {
             display: block;
+        }
+
+        .target-box {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--neon-yellow);
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px dashed var(--neon-yellow);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            text-shadow: 0 0 10px var(--neon-yellow);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .tile {
+            background: rgba(255, 42, 133, 0.1);
+            border: 2px solid var(--neon-pink);
+            color: var(--text-color);
+            font-family: 'Press Start 2P', monospace;
+            font-size: 1.5rem;
+            padding: 30px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            box-shadow: 0 0 10px rgba(255, 42, 133, 0.2);
+        }
+
+        .tile:hover {
+            background: var(--neon-pink);
+            color: var(--bg-color);
+            box-shadow: 0 0 20px var(--neon-pink);
+            transform: scale(1.03);
+        }
+
+        .timer-bar-container {
+            width: 100%;
+            height: 12px;
+            background: #000;
+            border: 2px solid var(--neon-cyan);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .timer-bar {
+            width: 100%;
+            height: 100%;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 10px var(--neon-cyan);
+            transition: width 0.1s linear;
+        }
+
+        .instructions {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Chiffre Blitz</h1>
+    <div class="arcade-container">
+        <header>
+            <h1>CHIFFRE BLITZ</h1>
+            <div class="subtitle">Arcade Synthwave Edition</div>
+        </header>
 
-        <!-- 1. MENU PRINCIPAL -->
-        <div id="main-menu-screen" class="screen active">
-            <h2>Menu Principal</h2>
-            <button onclick="switchScreen('training-screen')">Mode Entraînement</button>
-            <button onclick="switchScreen('lobby-screen')">Salons Multijoueur</button>
-            <button onclick="switchScreen('leaderboard-screen')">Classement</button>
-            <button onclick="switchScreen('shop-screen')">Boutique de pouvoirs</button>
+        <div class="audio-controls">
+            <button class="arcade-btn" id="music-toggle-btn" onclick="toggleMusic()">Musique : OFF</button>
         </div>
 
-        <!-- 2. MODE ENTRAÎNEMENT -->
-        <div id="training-screen" class="screen">
-            <h2>Mode Entraînement</h2>
-            <p>Entraînez-vous en solo pour progresser !</p>
-            <button class="btn-secondary" onclick="switchScreen('main-menu-screen')">Retour au menu</button>
+        <!-- MAIN MENU -->
+        <div id="menu-screen" class="game-screen active">
+            <p class="instructions">Associez rapidement les chiffres cibles au rythme de la synthwave rétro avant la fin du temps imparti !</p>
+            <div style="text-align: center;">
+                <button class="arcade-btn active" onclick="startGame()">INSERT COIN / START</button>
+            </div>
         </div>
 
-        <!-- 3. LOBBY MULTIJOUEUR & SALONS -->
-        <div id="lobby-screen" class="screen">
-            <h2>Créer un salon</h2>
-            <input type="text" id="room-name-input" placeholder="Nom du salon">
-            <input type="text" id="room-password-input" placeholder="Mot de passe (optionnel)">
-            <button onclick="createRoom()">Créer et rejoindre</button>
+        <!-- GAMEPLAY SCREEN -->
+        <div id="play-screen" class="game-screen">
+            <div class="hud">
+                <div class="hud-item">SCORE: <span id="score-val">0</span></div>
+                <div class="hud-item">MANCHE: <span id="round-val">1</span></div>
+            </div>
 
-            <h2>Salons disponibles</h2>
-            <ul id="room-list-container">
-                <li>Recherche des salons...</li>
-            </ul>
-            <div id="error-message" class="error"></div>
-            <button class="btn-secondary" onclick="switchScreen('main-menu-screen')">Retour au menu</button>
+            <div class="timer-bar-container">
+                <div id="timer-bar" class="timer-bar"></div>
+            </div>
+
+            <div class="target-box" id="target-display">CIBLE: --</div>
+
+            <div class="grid" id="tiles-grid">
+                <!-- Dynamically generated tiles -->
+            </div>
         </div>
 
-        <!-- 4. CLASSEMENT -->
-        <div id="leaderboard-screen" class="screen">
-            <h2>Classement</h2>
-            <p>Découvrez les meilleurs joueurs de Chiffre Blitz.</p>
-            <button class="btn-secondary" onclick="switchScreen('main-menu-screen')">Retour au menu</button>
-        </div>
-
-        <!-- 5. BOUTIQUE -->
-        <div id="shop-screen" class="screen">
-            <h2>Boutique</h2>
-            <p>Améliorez vos pouvoirs et personnalisez votre expérience.</p>
-            <button class="btn-secondary" onclick="switchScreen('main-menu-screen')">Retour au menu</button>
-        </div>
-
-        <!-- 6. ÉCRAN DE JEU EN SALON -->
-        <div id="game-screen" class="screen">
-            <h2 id="room-title">Salon</h2>
-            <p>Vous êtes dans le salon de jeu !</p>
-            <button onclick="leaveRoom()">Quitter le salon</button>
+        <!-- GAMEOVER SCREEN -->
+        <div id="gameover-screen" class="game-screen">
+            <h2 style="font-family: 'Press Start 2P'; color: var(--neon-pink); text-align: center; margin-bottom: 20px; font-size: 1.4rem;">GAME OVER</h2>
+            <p class="instructions" id="final-score-text" style="font-size: 1.3rem; color: var(--neon-yellow);">Score final : 0</p>
+            <div style="text-align: center;">
+                <button class="arcade-btn active" onclick="returnToMenu()">REJOUER</button>
+            </div>
         </div>
     </div>
 
-    <!-- Script Socket.io -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
     <script>
-        const socket = io('https://chiffre-blitz-server.onrender.com');
+        // --- SYNTHWAVE AUDIO ENGINE (Web Audio API) ---
+        let audioCtx = null;
+        let musicInterval = null;
+        let isMusicPlaying = false;
 
-        // Gestion de la navigation entre les écrans
-        function switchScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(screen => {
-                screen.classList.remove('active');
-            });
-            document.getElementById(screenId).classList.add('active');
-        }
-
-        function createRoom() {
-            const roomName = document.getElementById('room-name-input').value;
-            const password = document.getElementById('room-password-input').value;
-            
-            if (!roomName.trim()) {
-                alert("Veuillez entrer un nom de salon valide.");
-                return;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
-
-            socket.emit('create-room', { roomName, password });
-        }
-
-        function tryJoinRoom(roomName, hasPassword) {
-            let password = '';
-            if (hasPassword) {
-                password = prompt(`Le salon "${roomName}" est sécurisé. Entrez le mot de passe :`);
-                if (password === null) return;
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
             }
-            socket.emit('join-room', { roomName, password });
         }
 
-        function leaveRoom() {
-            switchScreen('main-menu-screen');
-            window.location.reload();
-        }
+        // Sound Effects
+        function playSound(type) {
+            initAudio();
+            if (!audioCtx) return;
 
-        // Mise à jour de la liste des salons reçue du serveur
-        socket.on('room-list', (rooms) => {
-            const container = document.getElementById('room-list-container');
-            container.innerHTML = '';
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
 
-            if (!rooms || rooms.length === 0) {
-                container.innerHTML = '<li>Aucun salon ouvert pour le moment.</li>';
-                return;
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } else if (type === 'success') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.linearRampToValueAtTime(80, now + 0.2);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
             }
+        }
 
-            rooms.forEach(room => {
-                const li = document.createElement('li');
-                const padlock = room.hasPassword ? ' 🔒' : '';
+        // Procedural Synthwave Arpeggio Loop
+        function toggleMusic() {
+            initAudio();
+            isMusicPlaying = !isMusicPlaying;
+            const btn = document.getElementById('music-toggle-btn');
+
+            if (isMusicPlaying) {
+                btn.textContent = "Musique : ON";
+                btn.classList.add('active');
+                startSynthwaveMusic();
+            } else {
+                btn.textContent = "Musique : OFF";
+                btn.classList.remove('active');
+                stopSynthwaveMusic();
+            }
+        }
+
+        function startSynthwaveMusic() {
+            if (musicInterval) return;
+            const bassNotes = [110, 110, 123.47, 130.81, 98.00, 110]; // A2, B2, C3, G2...
+            let step = 0;
+
+            musicInterval = setInterval(() => {
+                if (!audioCtx || !isMusicPlaying) return;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(bassNotes[step % bassNotes.length], audioCtx.currentTime);
                 
-                li.innerHTML = `
-                    <span>${room.name}${padlock}</span>
-                    <button onclick="tryJoinRoom('${room.name}', ${room.hasPassword})">Rejoindre</button>
-                `;
-                container.appendChild(li);
+                // Low pass filter for warm synth bass
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(600, audioCtx.currentTime);
+
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.005, audioCtx.currentTime + 0.25);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.25);
+                step++;
+            }, 250); // 120 BPM 16th notes
+        }
+
+        function stopSynthwaveMusic() {
+            if (musicInterval) {
+                clearInterval(musicInterval);
+                musicInterval = null;
+            }
+        }
+
+        // --- GAME LOGIC ---
+        let score = 0;
+        let round = 1;
+        let targetNumber = 0;
+        let timeLeft = 100;
+        let timerInterval = null;
+        let gameActive = false;
+
+        function startGame() {
+            playSound('click');
+            score = 0;
+            round = 1;
+            document.getElementById('menu-screen').classList.remove('active');
+            document.getElementById('gameover-screen').classList.remove('active');
+            document.getElementById('play-screen').classList.add('active');
+            gameActive = true;
+            nextRound();
+        }
+
+        function nextRound() {
+            if (!gameActive) return;
+            document.getElementById('score-val').textContent = score;
+            document.getElementById('round-val').textContent = round;
+
+            // Generate target between 10 and 99
+            targetNumber = Math.floor(Math.random() * 90) + 10;
+            document.getElementById('target-display').textContent = `CIBLE : ${targetNumber}`;
+
+            // Generate 6 options including the correct target
+            const options = [targetNumber];
+            while (options.length < 6) {
+                const rand = Math.floor(Math.random() * 90) + 10;
+                if (!options.includes(rand)) {
+                    options.push(rand);
+                }
+            }
+
+            // Shuffle options
+            options.sort(() => Math.random() - 0.5);
+
+            // Render tiles
+            const grid = document.getElementById('tiles-grid');
+            grid.innerHTML = '';
+            options.forEach(num => {
+                const tile = document.createElement('button');
+                tile.className = 'tile';
+                tile.textContent = num;
+                tile.onclick = () => selectTile(num);
+                grid.appendChild(tile);
             });
-        });
 
-        // Succès de connexion à un salon
-        socket.on('joined-success', ({ roomName }) => {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById('game-screen').classList.add('active');
-            document.getElementById('room-title').innerText = `Salon : ${roomName}`;
-            document.getElementById('error-message').innerText = '';
-        });
+            // Reset Timer (decreases with rounds)
+            clearInterval(timerInterval);
+            timeLeft = 100;
+            const speed = Math.max(30, 70 - round * 5); // Faster each round
+            
+            timerInterval = setInterval(() => {
+                timeLeft -= 1;
+                document.getElementById('timer-bar').style.width = timeLeft + '%';
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    gameOver();
+                }
+            }, speed);
+        }
 
-        // Gestion des erreurs
-        socket.on('error-msg', (msg) => {
-            document.getElementById('error-message').innerText = msg;
-        });
+        function selectTile(num) {
+            if (!gameActive) return;
+            if (num === targetNumber) {
+                playSound('success');
+                score += 100 + round * 10;
+                round++;
+                nextRound();
+            } else {
+                playSound('error');
+                score = Math.app(0, score - 50);
+                document.getElementById('score-val').textContent = score;
+            }
+        }
+
+        function gameOver() {
+            gameActive = false;
+            playSound('error');
+            document.getElementById('play-screen').classList.remove('active');
+            document.getElementById('gameover-screen').classList.add('active');
+            document.getElementById('final-score-text').textContent = `Score final : ${score}`;
+        }
+
+        function returnToMenu() {
+            playSound('click');
+            document.getElementById('gameover-screen').classList.remove('active');
+            document.getElementById('menu-screen').classList.add('active');
+        }
     </script>
 </body>
 </html>
+
+```
