@@ -5,144 +5,12 @@ const { Server } = require('socket.io');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
+    cors: { origin: "*" }
 });
 
-app.get('/', (req, res) => {
-    res.send('Chiffre Blitz Server is running! ⚡');
-});
-
-// Structures de données en mémoire
-let players = {};        // socket.id -> { username, region, points, coins, trophies }
-let waitingQueue = [];   // File d'attente pour le matchmaking aléatoire
-let activeRooms = {};    // code -> { code, password, players: {...}, gameState }
-
-io.on('connection', (socket) => {
-    console.log(`🔌 Un joueur s'est connecté : ${socket.id}`);
-
-    // Enregistrement du profil
-    socket.on('register_player', (profile) => {
-        players[socket.id] = {
-            username: profile.username || 'Joueur',
-            region: profile.region || 'Hauts-de-France',
-            points: profile.points || 1000,
-            coins: profile.coins || 100,
-            trophies: profile.trophies || 0
-        };
-        socket.emit('player_registered', players[socket.id]);
-    });
-
-    // ==========================================
-    // MATCHMAKING ALÉATOIRE 1v1
-    // ==========================================
-    socket.on('find_1v1_match', () => {
-        console.log(`🔍 Joueur en recherche de match : ${socket.id}`);
-        
-        if (!waitingQueue.includes(socket.id)) {
-            waitingQueue.push(socket.id);
-        }
-
-        if (waitingQueue.length >= 2) {
-            const p1Id = waitingQueue.shift();
-            const p2Id = waitingQueue.shift();
-
-            const s1 = io.sockets.sockets.get(p1Id);
-            const s2 = io.sockets.sockets.get(p2Id);
-
-            if (!s1 || !s2) {
-                if (s1) waitingQueue.push(p1Id);
-                if (s2) waitingQueue.push(p2Id);
-                return;
-            }
-
-            const roomCode = 'MATCH_' + Math.random().toString(36).substring(2, 7).toUpperCase();
-            
-            s1.join(roomCode);
-            s2.join(roomCode);
-
-            console.log(`⚔️ Match trouvé entre ${p1Id} et ${p2Id} dans le salon ${roomCode}`);
-
-            activeRooms[roomCode] = {
-                code: roomCode,
-                isPrivate: false,
-                players: {
-                    [p1Id]: { username: players[p1Id]?.username || 'Joueur 1', target: 1, score: 0, pool: generateRandomPool(1) },
-                    [p2Id]: { username: players[p2Id]?.username || 'Joueur 2', target: 1, score: 0, pool: generateRandomPool(1) }
-                },
-                timeLeft: 30,
-                timerInterval: null
-            };
-
-            io.to(roomCode).emit('start_countdown');
-
-            setTimeout(() => {
-                start1v1GameLoop(roomCode);
-            }, 3000);
-        }
-    });
-
-    // ==========================================
-    // GESTION DES CLICS PENDANT LE DUEL 1v1
-    // ==========================================
-    socket.on('player_click_1v1', (num) => {
-        let roomCode = null;
-        for (let code in activeRooms) {
-            if (activeRooms[code].players && activeRooms[code].players[socket.id]) {
-                roomCode = code;
-                break;
-            }
-        }
-        if (!roomCode) return;
-
-        let room = activeRooms[roomCode];
-        let pData = room.players[socket.id];
-        if (!pData || room.timeLeft <= 0) return;
-
-        if (num === pData.target) {
-            // Bonne pioche !
-            pData.score += 10;
-            pData.target++;
-            pData.pool = generateRandomPool(pData.target);
-
-            // Confirmer au joueur et lui envoyer sa nouvelle grille
-            socket.emit('my_grid_updated', {
-                target: pData.target,
-                newPool: pData.pool,
-                success: true
-            });
-
-            // Informer l'adversaire de la progression de sa cible
-            socket.to(roomCode).emit('opponent_progress', {
-                target: pData.target
-            });
-        } else {
-            // Mauvaise pioche
-            socket.emit('my_grid_updated', {
-                target: pData.target,
-                newPool: pData.pool,
-                success: false
-            });
-        }
-    });
-
-    socket.on('disconnect', () => {
-        console.log(`❌ Déconnexion : ${socket.id}`);
-        waitingQueue = waitingQueue.filter(id => id !== socket.id);
-        delete players[socket.id];
-
-        for (let code in activeRooms) {
-            let room = activeRooms[code];
-            if (room.players && room.players[socket.id]) {
-                io.to(code).emit('room_error', "L'adversaire s'est déconnecté.");
-                if (room.timerInterval) clearInterval(room.timerInterval);
-                delete activeRooms[code];
-            }
-        }
-    });
-});
+let players = {};
+let waitingPlayer = null;
+let rooms = {}; // Stockage des salons privés et des matchs actifs
 
 // Générateur de grille de nombres aléatoires
 function generateRandomPool(target) {
@@ -156,16 +24,207 @@ function generateRandomPool(target) {
     return pool.sort(() => Math.random() - 0.5);
 }
 
-// Boucle principale d'une partie 1v1
+io.on('connection', (socket) => {
+    console.log(`Un joueur s'est connecté : ${socket.id}`);
+
+    // Enregistrement du profil
+    socket.on('register_player', (profile) => {
+        players[socket.id] = {
+            id: socket.id,
+            username: profile.username,
+            region: profile.region,
+            points: profile.points || 1000
+        };
+        socket.emit('player_registered', players[socket.id]);
+    });
+
+    // --- GESTION DES SALONS PRIVÉS ---
+    socket.on('create_room', (data) => {
+        const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+        rooms[roomCode] = {
+            code: roomCode,
+            host: socket.id,
+            players: [{ id: socket.id, username: data?.username || players[socket.id]?.username || 'Hôte' }],
+            gameStarted: false
+        };
+
+        socket.join(roomCode);
+        socket.emit('room_joined_success', {
+            code: roomCode,
+            players: rooms[roomCode].players
+        });
+        console.log(`Salon créé : ${roomCode} par ${socket.id}`);
+    });
+
+    socket.on('join_room', (data) => {
+        const roomCode = data?.code ? data.code.toUpperCase() : '';
+        const room = rooms[roomCode];
+
+        if (room && room.players.length < 2 && !room.gameStarted) {
+            const username = players[socket.id]?.username || 'Adversaire';
+            room.players.push({ id: socket.id, username: username });
+            socket.join(roomCode);
+
+            // Informer tout le monde dans le salon
+            io.to(roomCode).emit('room_players_update', { players: room.players });
+            socket.emit('room_joined_success', { code: roomCode, players: room.players });
+            console.log(`Joueur ${socket.id} a rejoint le salon ${roomCode}`);
+
+            // Si le salon privé est plein (2 joueurs), on lance la partie automatiquement !
+            if (room.players.length === 2) {
+                room.gameStarted = true;
+                room.timeLeft = 30;
+                room.matchPlayers = {
+                    [room.players[0].id]: { target: 1, score: 0, pool: generateRandomPool(1) },
+                    [room.players[1].id]: { target: 1, score: 0, pool: generateRandomPool(1) }
+                };
+
+                io.to(roomCode).emit('start_countdown');
+                setTimeout(() => {
+                    start1v1GameLoop(roomCode);
+                }, 3000);
+            }
+        } else {
+            socket.emit('room_error', "Salon introuvable, complet ou partie déjà commencée !");
+        }
+    });
+
+    socket.on('leave_room', () => {
+        for (const code in rooms) {
+            const room = rooms[code];
+            const index = room.players.findIndex(p => p.id === socket.id);
+            if (index !== -1) {
+                socket.leave(code);
+                room.players.splice(index, 1);
+                if (room.players.length === 0) {
+                    if (room.timerInterval) clearInterval(room.timerInterval);
+                    delete rooms[code];
+                } else {
+                    io.to(code).emit('room_players_update', { players: room.players });
+                }
+                break;
+            }
+        }
+    });
+
+    socket.on('get_rooms_list', () => {
+        const openRooms = Object.values(rooms)
+            .filter(r => r.players.length < 2 && !r.gameStarted)
+            .map(r => ({
+                code: r.code,
+                playersCount: r.players.length
+            }));
+        socket.emit('rooms_list_data', openRooms);
+    });
+
+    // --- MATCHMAKING ALÉATOIRE ---
+    socket.on('find_1v1_match', () => {
+        if (waitingPlayer && waitingPlayer !== socket.id) {
+            const p1 = waitingPlayer;
+            const p2 = socket.id;
+            waitingPlayer = null;
+
+            const roomName = `match_${p1}_${p2}`;
+            io.sockets.sockets.get(p1)?.join(roomName);
+            io.sockets.sockets.get(p2)?.join(roomName);
+
+            // On stocke le match dans l'objet rooms pour gérer la partie
+            rooms[roomName] = {
+                code: roomName,
+                players: [
+                    { id: p1, username: players[p1]?.username || 'Joueur 1' },
+                    { id: p2, username: players[p2]?.username || 'Joueur 2' }
+                ],
+                gameStarted: true,
+                timeLeft: 30,
+                matchPlayers: {
+                    [p1]: { target: 1, score: 0, pool: generateRandomPool(1) },
+                    [p2]: { target: 1, score: 0, pool: generateRandomPool(1) }
+                }
+            };
+
+            io.to(roomName).emit('start_countdown');
+            setTimeout(() => {
+                start1v1GameLoop(roomName);
+            }, 3000);
+        } else {
+            waitingPlayer = socket.id;
+        }
+    });
+
+    // --- GESTION DES CLICS PENDANT LE DUEL ---
+    socket.on('player_click_1v1', (num) => {
+        let roomCode = null;
+        for (const code in rooms) {
+            const room = rooms[code];
+            if (room.matchPlayers && room.matchPlayers[socket.id]) {
+                roomCode = code;
+                break;
+            }
+        }
+        if (!roomCode) return;
+
+        let room = rooms[roomCode];
+        let pData = room.matchPlayers[socket.id];
+        if (!pData || room.timeLeft <= 0) return;
+
+        if (num === pData.target) {
+            pData.score += 10;
+            pData.target++;
+            pData.pool = generateRandomPool(pData.target);
+
+            socket.emit('my_grid_updated', {
+                target: pData.target,
+                newPool: pData.pool,
+                success: true
+            });
+
+            socket.to(roomCode).emit('opponent_progress', {
+                target: pData.target
+            });
+        } else {
+            socket.emit('my_grid_updated', {
+                target: pData.target,
+                newPool: pData.pool,
+                success: false
+            });
+        }
+    });
+
+    // Déconnexion générale
+    socket.on('disconnect', () => {
+        if (waitingPlayer === socket.id) waitingPlayer = null;
+        for (const code in rooms) {
+            const room = rooms[code];
+            const wasInMatch = room.matchPlayers && room.matchPlayers[socket.id];
+            room.players = room.players.filter(p => p.id !== socket.id);
+            
+            if (wasInMatch) {
+                io.to(code).emit('room_error', "L'adversaire s'est déconnecté.");
+                if (room.timerInterval) clearInterval(room.timerInterval);
+                delete rooms[code];
+            } else if (room.players.length === 0) {
+                if (room.timerInterval) clearInterval(room.timerInterval);
+                delete rooms[code];
+            } else {
+                io.to(code).emit('room_players_update', { players: room.players });
+            }
+        }
+        delete players[socket.id];
+        console.log(`Déconnexion : ${socket.id}`);
+    });
+});
+
+// Lancement de la boucle de jeu et du chronomètre
 function start1v1GameLoop(roomCode) {
-    let room = activeRooms[roomCode];
+    let room = rooms[roomCode];
     if (!room) return;
 
-    for (let pId in room.players) {
+    for (let pId in room.matchPlayers) {
         io.to(pId).emit('game_started', {
             timeLeft: room.timeLeft,
-            myTarget: room.players[pId].target,
-            myPool: room.players[pId].pool
+            myTarget: room.matchPlayers[pId].target,
+            myPool: room.matchPlayers[pId].pool
         });
     }
 
@@ -180,36 +239,41 @@ function start1v1GameLoop(roomCode) {
     }, 1000);
 }
 
+// Fin de partie et calcul du gagnant
 function end1v1Game(roomCode, reason) {
-    let room = activeRooms[roomCode];
+    let room = rooms[roomCode];
     if (!room) return;
     if (room.timerInterval) clearInterval(room.timerInterval);
 
-    let pIds = Object.keys(room.players);
+    let pIds = Object.keys(room.matchPlayers);
     if (pIds.length < 2) {
-        delete activeRooms[roomCode];
+        delete rooms[roomCode];
         return;
     }
 
     let p1Id = pIds[0];
     let p2Id = pIds[1];
-    let p1 = room.players[p1Id];
-    let p2 = room.players[p2Id];
+    let p1 = room.matchPlayers[p1Id];
+    let p2 = room.matchPlayers[p2Id];
 
     let winnerId = null;
     if (p1.score > p2.score) winnerId = p1Id;
     else if (p2.score > p1.score) winnerId = p2Id;
 
+    let formattedPlayers = {};
+    formattedPlayers[p1Id] = { target: p1.target, score: p1.score };
+    formattedPlayers[p2Id] = { target: p2.target, score: p2.score };
+
     io.to(roomCode).emit('game_over_1v1', {
         reason: reason,
         winnerId: winnerId,
-        players: room.players
+        players: formattedPlayers
     });
 
-    delete activeRooms[roomCode];
+    delete rooms[roomCode];
 }
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`🚀 Serveur Chiffre Blitz démarré sur le port ${PORT}`);
+    console.log(`Serveur actif sur le port ${PORT}`);
 });
