@@ -16,7 +16,7 @@ app.use(express.static(__dirname));
 let players = {};
 let waitingPlayer = null;
 let rooms = {};
-let pendingRoomDeletions = {}; // Délai de grâce pour les déconnexions mobiles
+let pendingRoomDeletions = {};
 
 function generateRandomPool(target) {
     let pool = [target];
@@ -42,7 +42,6 @@ io.on('connection', (socket) => {
         socket.emit('player_registered', players[socket.id]);
     });
 
-    // --- GESTION DU CLASSEMENT ---
     socket.on('get_leaderboard', (type) => {
         let playersArray = Object.values(players);
         playersArray.sort((a, b) => b.points - a.points);
@@ -55,7 +54,6 @@ io.on('connection', (socket) => {
         socket.emit('leaderboard_data', { data: playersArray.slice(0, 20) });
     });
 
-    // --- MODE TOURNOI ---
     socket.on('win_tournament', () => {
         if (players[socket.id]) {
             players[socket.id].points += 50;
@@ -64,7 +62,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // --- GESTION DES SALONS PRIVÉS ---
     socket.on('create_room', (data) => {
         let roomCode = data?.code && data.code.trim() !== '' ? data.code.trim().toUpperCase() : '';
 
@@ -79,7 +76,6 @@ io.on('connection', (socket) => {
             } while (rooms[roomCode]);
         }
 
-        // Annuler une suppression en attente si le salon existait
         if (pendingRoomDeletions[roomCode]) {
             clearTimeout(pendingRoomDeletions[roomCode]);
             delete pendingRoomDeletions[roomCode];
@@ -146,7 +142,6 @@ io.on('connection', (socket) => {
         socket.emit('rooms_list_data', openRooms);
     });
 
-    // --- MATCHMAKING ALÉATOIRE ---
     socket.on('find_1v1_match', () => {
         if (waitingPlayer && waitingPlayer !== socket.id) {
             const p1 = waitingPlayer;
@@ -183,7 +178,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // --- GESTION DES CLICS DU JOUEUR ---
     socket.on('player_click_1v1', (num) => {
         let roomCode = null;
         for (const code in rooms) {
@@ -243,7 +237,6 @@ function cleanupPlayerFromRooms(socketId, explicitLeave = false) {
                 if (room.timerInterval) clearInterval(room.timerInterval);
                 delete rooms[code];
             } else {
-                // Délai de grâce de 15 secondes pour les coupures mobiles (changement d'appli SMS)
                 if (!pendingRoomDeletions[code]) {
                     pendingRoomDeletions[code] = setTimeout(() => {
                         if (rooms[code] && rooms[code].players.length === 0) {
