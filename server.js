@@ -51,7 +51,7 @@ io.on('connection', (socket) => {
                 username: profile.username || 'Joueur',
                 region: profile.region || 'Hauts-de-France',
                 points: 0,
-                coins: 100,
+                coins: 0,
                 trophies: 0,
                 inventory: {},
                 equippedPower: null
