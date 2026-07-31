@@ -147,7 +147,7 @@
     <div class="header-bar">
         <h1>Chiffre Blitz ⚡</h1>
         <div id="user-pill" class="user-pill" onclick="promptProfileChange()">
-            👤 <span id="user-name-display">Définir pseudo</span> (<span id="user-pts-display">1000</span> pts)
+            👤 <span id="user-name-display">Définir pseudo</span> (<span id="user-pts-display">0</span> pts)
         </div>
         <button id="mute-btn" class="mute-btn" onclick="toggleMute()">🔊</button>
     </div>
@@ -179,7 +179,7 @@
             </div>
             <div>
                 <strong style="color:#00c6ff; font-size:13px;">⚔️ Duel 1v1 Online</strong>
-                <p style="margin:4px 0 0 0;">Affronte un adversaire en temps réel (matchmaking aléatoire ou salons privés). Utilise tes pouvoirs tactiques !</p>
+                <p style="margin:4px 0 0 0;">Affronte un adversaire en temps réel (matchmaking aléatoire ou salons privés). Rejoins ou crée des salons avec code/mot de passe !</p>
             </div>
             <div>
                 <strong style="color:#f8b500; font-size:13px;">🎯 Mode Tournoi</strong>
@@ -187,9 +187,9 @@
             </div>
             <div>
                 <strong style="color:#00ff88; font-size:13px;">⭐ Système de Points & Classement</strong>
-                <p style="margin:4px 0 0 0;">Gagne des points en duels et tournois pour monter dans le classement (Régional, National, Mondial) :</p>
+                <p style="margin:4px 0 0 0;">Tout le monde commence à 0 point. Gagne des duels et tournois pour grimper dans le classement :</p>
                 <ul style="margin:4px 0 0 15px; padding:0;">
-                    <li>Victoire 1v1 : +25 pts | Égalité : +5 pts | Défaite : -15 pts</li>
+                    <li>Victoire 1v1 : +25 pts | Égalité : +5 pts | Défaite : -15 pts (min 0)</li>
                     <li>Victoire Tournoi : +50 pts + Trophée 🏆</li>
                 </ul>
             </div>
@@ -229,7 +229,7 @@
         <button class="btn-secondary" onclick="cancel1v1Search()" style="max-width:200px; margin-top:30px;">❌ Annuler</button>
     </div>
 
-    <!-- ÉCRAN DES SALONS PRIVÉS -->
+    <!-- ÉCRAN DES SALONS PRIVÉS (AVEC LISTE DES SALONS OUVERTS) -->
     <div id="screen-rooms" style="display:none; max-width:400px; margin:0 auto;">
         <h2>🏠 Salons Privés</h2>
         <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:16px; margin:15px 0; display:flex; flex-direction:column; gap:10px;">
@@ -307,7 +307,7 @@
         </div>
     </div>
 
-    <!-- MODE TOURNOI (Propre, sans bouton de test) -->
+    <!-- MODE TOURNOI -->
     <div id="screen-tournament" style="display:none; max-width:400px; margin:0 auto;">
         <h2>🎯 Tournoi Blitz</h2>
         <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:16px; margin:20px 0; text-align:left;">
@@ -554,7 +554,7 @@
             showTitleScreen();
         });
 
-        let myProfile = { username: "", region: "Hauts-de-France", country: "FR", points: 1000, coins: 100, trophies: 0, inventory: {}, equippedPower: null };
+        let myProfile = { username: "", region: "Hauts-de-France", country: "FR", points: 0, coins: 100, trophies: 0, inventory: {}, equippedPower: null };
         const POWERS_CATALOG = [
             { id: 'spotlight', name: '💡 Projecteur', price: 80, desc: 'Illumine la bonne tuile (2s)', type: 'bonus' },
             { id: 'freeze', name: '⏳ Blocage du Temps', price: 120, desc: 'Gèle le chrono pendant 3s', type: 'bonus' },
@@ -572,7 +572,7 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             loadLocalEconomy();
-            showTitleScreen(); // Affiche la page d'information/titre au chargement
+            showTitleScreen();
             checkAndShowProfileModal();
 
             const urlParams = new URLSearchParams(window.location.search);
