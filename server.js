@@ -46,7 +46,21 @@ io.on('connection', (socket) => {
 
     // --- GESTION DES SALONS PRIVÉS ---
     socket.on('create_room', (data) => {
-        const roomCode = data?.code && data.code.trim() !== '' ? data.code.trim().toUpperCase() : Math.random().toString(36).substring(2, 6).toUpperCase();
+        let roomCode = data?.code && data.code.trim() !== '' ? data.code.trim().toUpperCase() : '';
+
+        // SÉCURITÉ : Vérifier si le nom de salon choisi manuellement existe déjà
+        if (roomCode !== '' && rooms[roomCode]) {
+            socket.emit('room_error', "Ce nom de salon est déjà utilisé. Veuillez en choisir un autre.");
+            return;
+        }
+
+        // SÉCURITÉ : Générer un code aléatoire unique si le champ est vide
+        if (roomCode === '') {
+            do {
+                roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+            } while (rooms[roomCode]);
+        }
+
         rooms[roomCode] = {
             code: roomCode,
             password: data?.password || '',
@@ -106,7 +120,7 @@ io.on('connection', (socket) => {
         socket.emit('rooms_list_data', openRooms);
     });
 
-    // --- MATCHMAKING ALÉATOIRE (CORRIGÉ) ---
+    // --- MATCHMAKING ALÉATOIRE ---
     socket.on('find_1v1_match', () => {
         if (waitingPlayer && waitingPlayer !== socket.id) {
             const p1 = waitingPlayer;
@@ -120,7 +134,6 @@ io.on('connection', (socket) => {
             if (s1) s1.join(roomName);
             if (s2) s2.join(roomName);
 
-            // Initialisation de la partie
             rooms[roomName] = {
                 code: roomName,
                 players: [
@@ -138,7 +151,6 @@ io.on('connection', (socket) => {
             };
 
             io.to(roomName).emit('start_countdown');
-            // Lancement du timer et des grilles après le compte à rebours de 3s
             setTimeout(() => start1v1GameLoop(roomName), 3000);
         } else {
             waitingPlayer = socket.id;
@@ -219,7 +231,6 @@ function start1v1GameLoop(roomCode) {
 
     if (room.timerInterval) clearInterval(room.timerInterval);
 
-    // Envoi des données initiales aux deux joueurs
     for (let pId in room.matchPlayers) {
         io.to(pId).emit('game_started', {
             timeLeft: room.timeLeft,
@@ -228,7 +239,6 @@ function start1v1GameLoop(roomCode) {
         });
     }
 
-    // Lancement du décompte du temps chaque seconde
     room.timerInterval = setInterval(() => {
         if (!rooms[roomCode] || rooms[roomCode].ended) {
             clearInterval(room.timerInterval);
