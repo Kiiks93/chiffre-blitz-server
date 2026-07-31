@@ -242,11 +242,12 @@
             <p style="color:#aaa; font-size:14px; margin-bottom:15px;">Personnalise ton salon privé :</p>
             
             <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;">NOM / CODE DU SALON</label>
-            <input type="text" id="custom-room-name" placeholder="Ex: MONCLUB" maxlength="10" 
+            <input type="text" id="custom-room-name" placeholder="Laisser vide pour code aléatoire" maxlength="10" 
                    style="width:100%; padding:12px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:15px; outline:none; text-transform: uppercase;">
             
             <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;">MOT DE PASSE (Optionnel)</label>
-            <input type="password" id="custom-room-pass" placeholder="Laisser vide si public" maxlength="15" 
+            <!-- Changement de type="password" à type="text" pour affichage en clair -->
+            <input type="text" id="custom-room-pass" placeholder="Laisser vide si public" maxlength="15" 
                    style="width:100%; padding:12px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:20px; outline:none;">
             
             <div style="display:flex; gap:10px;">
@@ -638,9 +639,10 @@
 
         function fetchRoomsList() { socket.emit('get_rooms_list'); }
 
+        // --- MODIFICATION ICI : Ne plus pré-remplir le code du salon ---
         function openCreateRoomModal() {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-            document.getElementById('custom-room-name').value = Math.random().toString(36).substring(2, 6).toUpperCase();
+            document.getElementById('custom-room-name').value = ''; // Reste vide par défaut
             document.getElementById('custom-room-pass').value = '';
             document.getElementById('modal-create-room').style.display = 'flex';
         }
@@ -649,10 +651,16 @@
             document.getElementById('modal-create-room').style.display = 'none';
         }
 
+        // --- MODIFICATION ICI : Autoriser la création avec un champ vide ---
         function submitCreateRoom() {
             const code = document.getElementById('custom-room-name').value.trim().toUpperCase();
             const password = document.getElementById('custom-room-pass').value.trim();
-            if (!code || code.length < 2) { alert("Le nom du salon doit contenir au moins 2 caractères."); return; }
+            
+            // Si le joueur écrit quelque chose, il faut que ce soit valide. S'il laisse vide, ça passe au serveur.
+            if (code !== '' && code.length < 2) { 
+                alert("Le nom du salon personnalisé doit contenir au moins 2 caractères."); 
+                return; 
+            }
             if (!socket.connected) { alert("Erreur : Non connecté au serveur."); return; }
 
             socket.emit('create_room', { code: code, password: password, username: myProfile.username });
