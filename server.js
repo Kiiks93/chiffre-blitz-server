@@ -16,6 +16,7 @@ app.use(express.static(__dirname));
 let players = {};
 let waitingPlayer = null;
 let rooms = {};
+let pendingRoomDeletions = {}; // Délai de grâce pour les déconnexions mobiles
 
 function generateRandomPool(target) {
     let pool = [target];
@@ -78,6 +79,12 @@ io.on('connection', (socket) => {
             } while (rooms[roomCode]);
         }
 
+        // Annuler une suppression en attente si le salon existait
+        if (pendingRoomDeletions[roomCode]) {
+            clearTimeout(pendingRoomDeletions[roomCode]);
+            delete pendingRoomDeletions[roomCode];
+        }
+
         rooms[roomCode] = {
             code: roomCode,
             password: data?.password || '',
@@ -125,7 +132,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('leave_room', () => {
-        cleanupPlayerFromRooms(socket.id);
+        cleanupPlayerFromRooms(socket.id, true);
     });
 
     socket.on('get_rooms_list', () => {
@@ -213,12 +220,12 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         if (waitingPlayer === socket.id) waitingPlayer = null;
-        cleanupPlayerFromRooms(socket.id);
+        cleanupPlayerFromRooms(socket.id, false);
         delete players[socket.id];
     });
 });
 
-function cleanupPlayerFromRooms(socketId) {
+function cleanupPlayerFromRooms(socketId, explicitLeave = false) {
     for (const code in rooms) {
         const room = rooms[code];
         const wasInMatch = room.matchPlayers && room.matchPlayers[socketId];
@@ -232,8 +239,21 @@ function cleanupPlayerFromRooms(socketId) {
             }
             delete rooms[code];
         } else if (room.players.length === 0) {
-            if (room.timerInterval) clearInterval(room.timerInterval);
-            delete rooms[code];
+            if (explicitLeave) {
+                if (room.timerInterval) clearInterval(room.timerInterval);
+                delete rooms[code];
+            } else {
+                // Délai de grâce de 15 secondes pour les coupures mobiles (changement d'appli SMS)
+                if (!pendingRoomDeletions[code]) {
+                    pendingRoomDeletions[code] = setTimeout(() => {
+                        if (rooms[code] && rooms[code].players.length === 0) {
+                            if (rooms[code].timerInterval) clearInterval(rooms[code].timerInterval);
+                            delete rooms[code];
+                        }
+                        delete pendingRoomDeletions[code];
+                    }, 15000);
+                }
+            }
         } else {
             io.to(code).emit('room_players_update', { players: room.players });
         }
