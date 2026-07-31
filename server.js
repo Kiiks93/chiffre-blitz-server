@@ -18,15 +18,16 @@ let waitingPlayer = null;
 let rooms = {};
 let pendingRoomDeletions = {};
 
+// Grille de prix équilibrée par rapport au nouveau plafond solo (100 pièces max)
 const POWERS_PRICES = {
-    'spotlight': 80,
-    'freeze': 150,
-    'joker': 300,
-    'nova': 750,
-    'quake': 100,
-    'micro': 180,
-    'eclipse': 320,
-    'chaos': 900
+    'spotlight': 30,
+    'freeze': 60,
+    'joker': 150,
+    'nova': 400,
+    'quake': 40,
+    'micro': 80,
+    'eclipse': 200,
+    'chaos': 500
 };
 
 function generateRandomPool(target) {
@@ -43,7 +44,6 @@ function generateRandomPool(target) {
 io.on('connection', (socket) => {
     console.log(`Un joueur s'est connecté : ${socket.id}`);
 
-    // Gestion centralisée et sécurisée du profil et de l'économie
     socket.on('register_player', (profile) => {
         if (!players[socket.id]) {
             players[socket.id] = {
@@ -51,7 +51,7 @@ io.on('connection', (socket) => {
                 username: profile.username || 'Joueur',
                 region: profile.region || 'Hauts-de-France',
                 points: 0,
-                coins: 100, // 100 pièces de départ offertes
+                coins: 100,
                 trophies: 0,
                 inventory: {},
                 equippedPower: null
@@ -63,7 +63,6 @@ io.on('connection', (socket) => {
         socket.emit('player_registered', players[socket.id]);
     });
 
-    // Achat sécurisé d'un pouvoir (impossible de tricher via F12)
     socket.on('buy_power', (powerId) => {
         const player = players[socket.id];
         if (!player) return;
@@ -81,7 +80,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Équipement sécurisé d'un pouvoir
     socket.on('equip_power', (powerId) => {
         const player = players[socket.id];
         if (player) {
@@ -92,11 +90,11 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Récompense mode solo validée par le serveur
+    // Récompense solo : Plafonnée à 100 pièces max (30 cases en 30s = score de 300 = 100 pièces)
     socket.on('claim_solo_reward', (score) => {
         const player = players[socket.id];
         if (player && typeof score === 'number' && score > 0) {
-            const earnedCoins = Math.floor(score / 2);
+            const earnedCoins = Math.min(100, Math.floor(score / 3));
             player.coins += earnedCoins;
             socket.emit('player_registered', player);
         }
