@@ -116,7 +116,11 @@ io.on('connection', (socket) => {
     socket.on('get_rooms_list', () => {
         const openRooms = Object.values(rooms)
             .filter(r => r.players.length < 2 && !r.gameStarted)
-            .map(r => ({ code: r.code, playersCount: r.players.length }));
+            .map(r => ({ 
+                code: r.code, 
+                playersCount: r.players.length,
+                hasPassword: r.password !== '' // INDIQUE AU CLIENT SI LE SALON EST PROTÉGÉ
+            }));
         socket.emit('rooms_list_data', openRooms);
     });
 
