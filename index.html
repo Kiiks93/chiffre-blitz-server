@@ -161,13 +161,51 @@
         🔊 Touche l'écran pour activer l'ambiance lofi chill
     </div>
 
+    <!-- PAGE D'ACCUEIL / INFORMATION DU JEU (TITLE SCREEN) -->
+    <div id="screen-title" class="menu-container" style="max-width:380px; margin: 10px auto; text-align: left;">
+        <div style="text-align: center; margin-bottom: 10px;">
+            <h2 style="font-size: 26px; color: #00d2ff; margin: 0; text-shadow: 0 0 15px rgba(0,210,255,0.4);">CHIFFRE BLITZ ⚡</h2>
+            <p style="color: #aaa; font-size: 12px; margin: 5px 0 0 0;">Le duel de calcul et de réflexes ultime</p>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.05); padding: 14px; border-radius: 16px; font-size: 12px; color: #ccc; max-height: 48vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+            <div>
+                <strong style="color:#00d2ff; font-size:13px;">⚡ Principe du jeu</strong>
+                <p style="margin:4px 0 0 0;">Clique le plus vite possible sur les tuiles de la grille dans l'ordre croissant exact (1, puis 2, 3, etc.).</p>
+            </div>
+            <div>
+                <strong style="color:#ff4b2b; font-size:13px;">🏋️ Entraînement Solo</strong>
+                <p style="margin:4px 0 0 0;">30 secondes chrono pour enchaîner un max de chiffres et gagner des pièces (🪙).</p>
+            </div>
+            <div>
+                <strong style="color:#00c6ff; font-size:13px;">⚔️ Duel 1v1 Online</strong>
+                <p style="margin:4px 0 0 0;">Affronte un adversaire en temps réel (matchmaking aléatoire ou salons privés). Utilise tes pouvoirs tactiques !</p>
+            </div>
+            <div>
+                <strong style="color:#f8b500; font-size:13px;">🎯 Mode Tournoi</strong>
+                <p style="margin:4px 0 0 0;">Tournoi à élimination directe pour remporter des points, des pièces et des trophées (🏆).</p>
+            </div>
+            <div>
+                <strong style="color:#00ff88; font-size:13px;">⭐ Système de Points & Classement</strong>
+                <p style="margin:4px 0 0 0;">Gagne des points en duels et tournois pour monter dans le classement (Régional, National, Mondial) :</p>
+                <ul style="margin:4px 0 0 15px; padding:0;">
+                    <li>Victoire 1v1 : +25 pts | Égalité : +5 pts | Défaite : -15 pts</li>
+                    <li>Victoire Tournoi : +50 pts + Trophée 🏆</li>
+                </ul>
+            </div>
+        </div>
+
+        <button class="btn-main btn-blue" onclick="showMainMenu()" style="margin-top: 12px; width: 100%;">JOUER ⚡</button>
+    </div>
+
     <!-- MENU PRINCIPAL -->
-    <div id="screen-menu" class="menu-container">
+    <div id="screen-menu" class="menu-container" style="display:none;">
         <button class="btn-main btn-blue" onclick="startSoloTraining()">🏋️ ENTRAÎNEMENT SOLO</button>
         <button class="btn-main" onclick="open1v1Hub()">⚔️ DUEL 1v1 ONLINE</button>
         <button class="btn-main btn-shop" onclick="openShop()">🛍️ BOUTIQUE POUVOIRS</button>
         <button class="btn-main btn-gold" onclick="openLeaderboard()">🏆 CLASSEMENT</button>
         <button class="btn-main btn-purple" onclick="openTournamentScreen()">🎯 MODE TOURNOI</button>
+        <button class="btn-secondary" onclick="showTitleScreen()" style="margin-top:5px;">ℹ️ Informations & Règles</button>
     </div>
 
     <!-- HUB DE CHOIX 1v1 ONLINE -->
@@ -512,8 +550,8 @@
 
         socket.on('disconnect', (reason) => {
             SoundEngine.stopMusic(true);
-            alert("Connexion perdue avec le serveur. Retour au menu.");
-            showMainMenu();
+            alert("Connexion perdue avec le serveur. Retour à l'accueil.");
+            showTitleScreen();
         });
 
         let myProfile = { username: "", region: "Hauts-de-France", country: "FR", points: 1000, coins: 100, trophies: 0, inventory: {}, equippedPower: null };
@@ -534,7 +572,7 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             loadLocalEconomy();
-            showMainMenu();
+            showTitleScreen(); // Affiche la page d'information/titre au chargement
             checkAndShowProfileModal();
 
             const urlParams = new URLSearchParams(window.location.search);
@@ -625,7 +663,7 @@
         });
 
         function hideAllScreens() {
-            ['screen-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room'].forEach(id => {
+            ['screen-title', 'screen-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
@@ -633,6 +671,12 @@
             if (soloTimerInterval) clearInterval(soloTimerInterval);
             isTimeFrozen = false;
             SoundEngine.stopMusic(true);
+        }
+
+        function showTitleScreen() {
+            hideAllScreens();
+            document.getElementById('screen-title').style.display = 'block';
+            SoundEngine.startMusic('menu');
         }
 
         function showMainMenu() {
@@ -942,7 +986,7 @@
 
         socket.on('start_countdown', () => {
             if (radarInterval) clearInterval(radarInterval);
-            ['screen-1v1-hub', 'screen-1v1-lobby', 'screen-room-waiting', 'screen-join-custom'].forEach(id => {
+            ['screen-title', 'screen-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-room-waiting', 'screen-join-custom'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
