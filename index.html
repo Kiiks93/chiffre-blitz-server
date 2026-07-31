@@ -246,7 +246,6 @@
                    style="width:100%; padding:12px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:15px; outline:none; text-transform: uppercase;">
             
             <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;">MOT DE PASSE (Optionnel)</label>
-            <!-- Changement de type="password" à type="text" pour affichage en clair -->
             <input type="text" id="custom-room-pass" placeholder="Laisser vide si public" maxlength="15" 
                    style="width:100%; padding:12px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:20px; outline:none;">
             
@@ -497,6 +496,13 @@
         const SERVER_URL = "https://chiffre-blitz-server.onrender.com";
         const socket = io(SERVER_URL);
 
+        // Anti-freeze: Si le serveur Render redémarre ou s'endort
+        socket.on('disconnect', (reason) => {
+            SoundEngine.stopMusic(true);
+            alert("Connexion perdue avec le serveur. Retour au menu.");
+            showMainMenu();
+        });
+
         let myProfile = { username: "", region: "Hauts-de-France", country: "FR", points: 1000, coins: 100, trophies: 0, inventory: {}, equippedPower: null };
         const POWERS_CATALOG = [
             { id: 'spotlight', name: '💡 Projecteur', price: 80, desc: 'Illumine la bonne tuile (2s)', type: 'bonus' },
@@ -639,7 +645,6 @@
 
         function fetchRoomsList() { socket.emit('get_rooms_list'); }
 
-        // --- MODIFICATION ICI : Ne plus pré-remplir le code du salon ---
         function openCreateRoomModal() {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
             document.getElementById('custom-room-name').value = ''; // Reste vide par défaut
@@ -651,7 +656,6 @@
             document.getElementById('modal-create-room').style.display = 'none';
         }
 
-        // --- MODIFICATION ICI : Autoriser la création avec un champ vide ---
         function submitCreateRoom() {
             const code = document.getElementById('custom-room-name').value.trim().toUpperCase();
             const password = document.getElementById('custom-room-pass').value.trim();
@@ -672,6 +676,17 @@
             if (!roomCode) { alert("Veuillez entrer un code de salon valide."); return; }
             if (!socket.connected) { alert("Erreur : Non connecté au serveur."); return; }
             socket.emit('join_room', { code: roomCode, password: '' });
+        }
+
+        // Fonction appelée depuis la liste des salons ouverts
+        function joinRoomFromList(code, hasPassword) {
+            let password = '';
+            if (hasPassword) {
+                password = prompt("Ce salon est protégé par un mot de passe. Veuillez l'entrer :");
+                if (password === null) return; // Si l'utilisateur clique sur Annuler
+            }
+            if (!socket.connected) { alert("Erreur : Non connecté au serveur."); return; }
+            socket.emit('join_room', { code: code, password: password });
         }
 
         function leaveCustomRoom() {
@@ -697,9 +712,12 @@
             rooms.forEach(r => {
                 const row = document.createElement('div');
                 row.className = 'room-row';
+                // Ajout visuel du cadenas si le salon est protégé
+                const lockIcon = r.hasPassword ? ' 🔒' : '';
+                
                 row.innerHTML = `
-                    <span class="room-info">Salon <b>${r.code}</b> (${r.playersCount}/2)</span>
-                    <button class="power-btn equip" onclick="joinCustomRoom('${r.code}')">Rejoindre</button>
+                    <span class="room-info">Salon <b>${r.code}</b>${lockIcon} (${r.playersCount}/2)</span>
+                    <button class="power-btn equip" onclick="joinRoomFromList('${r.code}', ${r.hasPassword})">Rejoindre</button>
                 `;
                 listEl.appendChild(row);
             });
