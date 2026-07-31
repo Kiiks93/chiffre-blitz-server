@@ -18,6 +18,17 @@ let waitingPlayer = null;
 let rooms = {};
 let pendingRoomDeletions = {};
 
+const POWERS_PRICES = {
+    'spotlight': 80,
+    'freeze': 150,
+    'joker': 300,
+    'nova': 750,
+    'quake': 100,
+    'micro': 180,
+    'eclipse': 320,
+    'chaos': 900
+};
+
 function generateRandomPool(target) {
     let pool = [target];
     let candidates = [];
@@ -32,14 +43,63 @@ function generateRandomPool(target) {
 io.on('connection', (socket) => {
     console.log(`Un joueur s'est connecté : ${socket.id}`);
 
+    // Gestion centralisée et sécurisée du profil et de l'économie
     socket.on('register_player', (profile) => {
-        players[socket.id] = {
-            id: socket.id,
-            username: profile.username || 'Joueur',
-            region: profile.region || 'Hauts-de-France',
-            points: profile.points !== undefined ? profile.points : 0
-        };
+        if (!players[socket.id]) {
+            players[socket.id] = {
+                id: socket.id,
+                username: profile.username || 'Joueur',
+                region: profile.region || 'Hauts-de-France',
+                points: 0,
+                coins: 100, // 100 pièces de départ offertes
+                trophies: 0,
+                inventory: {},
+                equippedPower: null
+            };
+        } else {
+            players[socket.id].username = profile.username || players[socket.id].username;
+            players[socket.id].region = profile.region || players[socket.id].region;
+        }
         socket.emit('player_registered', players[socket.id]);
+    });
+
+    // Achat sécurisé d'un pouvoir (impossible de tricher via F12)
+    socket.on('buy_power', (powerId) => {
+        const player = players[socket.id];
+        if (!player) return;
+
+        const price = POWERS_PRICES[powerId];
+        if (price !== undefined && player.coins >= price) {
+            player.coins -= price;
+            player.inventory[powerId] = (player.inventory[powerId] || 0) + 1;
+            if (!player.equippedPower) player.equippedPower = powerId;
+
+            socket.emit('player_registered', player);
+            socket.emit('purchase_success');
+        } else {
+            socket.emit('room_error', "Fonds insuffisants ou pouvoir invalide !");
+        }
+    });
+
+    // Équipement sécurisé d'un pouvoir
+    socket.on('equip_power', (powerId) => {
+        const player = players[socket.id];
+        if (player) {
+            if (powerId === null || (player.inventory[powerId] && player.inventory[powerId] > 0)) {
+                player.equippedPower = (player.equippedPower === powerId) ? null : powerId;
+                socket.emit('player_registered', player);
+            }
+        }
+    });
+
+    // Récompense mode solo validée par le serveur
+    socket.on('claim_solo_reward', (score) => {
+        const player = players[socket.id];
+        if (player && typeof score === 'number' && score > 0) {
+            const earnedCoins = Math.floor(score / 2);
+            player.coins += earnedCoins;
+            socket.emit('player_registered', player);
+        }
     });
 
     socket.on('get_leaderboard', (type) => {
@@ -55,9 +115,12 @@ io.on('connection', (socket) => {
     });
 
     socket.on('win_tournament', () => {
-        if (players[socket.id]) {
-            players[socket.id].points += 50;
-            socket.emit('player_registered', players[socket.id]);
+        const player = players[socket.id];
+        if (player) {
+            player.points += 50;
+            player.coins += 150;
+            player.trophies += 1;
+            socket.emit('player_registered', player);
             socket.emit('tournament_reward_success', { pointsGained: 50, coinsGained: 150, trophiesGained: 1 });
         }
     });
@@ -303,17 +366,32 @@ function end1v1Game(roomCode, reason) {
             winnerId = p2Id;
         }
 
+        let coinsGainedP1 = 10;
+        let coinsGainedP2 = 10;
+
         if (winnerId) {
             let loserId = (winnerId === p1Id) ? p2Id : p1Id;
-            if (players[winnerId]) players[winnerId].points += 25;
-            if (players[loserId]) players[loserId].points = Math.max(0, players[loserId].points - 15);
+            if (players[winnerId]) {
+                players[winnerId].points += 25;
+                if (winnerId === p1Id) coinsGainedP1 = 30;
+                else coinsGainedP2 = 30;
+            }
+            if (players[loserId]) {
+                players[loserId].points = Math.max(0, players[loserId].points - 15);
+            }
         } else {
             if (players[p1Id]) players[p1Id].points += 5;
             if (players[p2Id]) players[p2Id].points += 5;
         }
 
-        if (players[p1Id]) io.to(p1Id).emit('player_registered', players[p1Id]);
-        if (players[p2Id]) io.to(p2Id).emit('player_registered', players[p2Id]);
+        if (players[p1Id]) {
+            players[p1Id].coins += coinsGainedP1;
+            io.to(p1Id).emit('player_registered', players[p1Id]);
+        }
+        if (players[p2Id]) {
+            players[p2Id].coins += coinsGainedP2;
+            io.to(p2Id).emit('player_registered', players[p2Id]);
+        }
 
         let formattedPlayers = {
             [p1Id]: { target: p1.target, score: p1.score },
