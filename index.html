@@ -148,7 +148,7 @@
     </div>
 
     <div class="user-stats">
-        <span>🪙 <strong id="user-coins-display">100</strong> Pièces</span>
+        <span>🪙 <strong id="user-coins-display">0</strong> Pièces</span>
         <span>🏆 <strong id="user-trophies-display">0</strong> Trophées</span>
     </div>
 
@@ -169,7 +169,7 @@
             </div>
             <div>
                 <strong style="color:#ff4b2b; font-size:13px;">🏋️ Entraînement Solo</strong>
-                <p style="margin:4px 0 0 0;">30 secondes chrono pour enchaîner un max de chiffres et gagner des pièces (🪙).</p>
+                <p style="margin:4px 0 0 0;">30 secondes chrono pour enchaîner un max de chiffres et gagner des pièces (🪙). Objectif ultime : 30 cases pour rafler le bonus max !</p>
             </div>
             <div>
                 <strong style="color:#00c6ff; font-size:13px;">⚔️ Duel 1v1 Online</strong>
@@ -181,7 +181,7 @@
             </div>
             <div>
                 <strong style="color:#00ff88; font-size:13px;">⭐ Système de Points & Classement</strong>
-                <p style="margin:4px 0 0 0;">Tout le monde commence à 0 point. Gagne des duels et tournois pour grimper dans le classement :</p>
+                <p style="margin:4px 0 0 0;">Tout le monde commence à 0 point et 0 pièce. Gagne des duels et tournois pour grimper dans le classement :</p>
                 <ul style="margin:4px 0 0 15px; padding:0;">
                     <li>Victoire 1v1 : +25 pts | Égalité : +5 pts | Défaite : -15 pts (min 0)</li>
                     <li>Victoire Tournoi : +50 pts + Trophée 🏆</li>
@@ -298,7 +298,7 @@
         <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:16px; margin:20px 0; text-align:left;">
             <p style="margin-top:0;">Arbre à élimination directe.</p>
             <p style="color:#aaa; font-size:13px;">Affrontez les meilleurs joueurs dans un tournoi épique pour décrocher le titre suprême.</p>
-            <div style="color:#ff8a00; font-weight:bold; margin-top:15px; text-align:center;">Récompenses de fin : 150 🪙 + 1 🏆 + 50 ⭐</div>
+            <div style="color:#ff8a00; font-weight:bold; margin-top:15px; text-align:center;">Récompenses de fin : 200 🪙 + 1 🏆 + 50 ⭐</div>
         </div>
         <button class="btn-secondary" onclick="showMainMenu()">⬅️ Retour Menu</button>
     </div>
@@ -546,18 +546,17 @@
             }
         });
 
-        // Profil synchronisé depuis le serveur (fini la triche via localStorage)
         let myProfile = { username: "", region: "Hauts-de-France", points: 0, coins: 0, trophies: 0, inventory: {}, equippedPower: null };
         
         const POWERS_CATALOG = [
-            { id: 'spotlight', name: '💡 Projecteur', price: 80, desc: 'Illumine la bonne tuile (2s)', type: 'bonus' },
-            { id: 'freeze', name: '⏳ Blocage du Temps', price: 150, desc: 'Gèle le chrono pendant 3s', type: 'bonus' },
-            { id: 'joker', name: '⚡ Joker Éclair', price: 300, desc: 'Valide la cible actuelle', type: 'bonus' },
-            { id: 'nova', name: '🌟 Nova Temporelle', price: 750, desc: 'GIGA : Valide 3 cibles', type: 'bonus' },
-            { id: 'quake', name: '📳 Séisme', price: 100, desc: 'Fait trembler l\'adversaire (2s)', type: 'malus' },
-            { id: 'micro', name: '🐜 Micro-Tuiles', price: 180, desc: 'Rétrécit la grille adverse (2s)', type: 'malus' },
-            { id: 'eclipse', name: '🌑 Éclipse', price: 320, desc: 'Floute la grille adverse (1.5s)', type: 'malus' },
-            { id: 'chaos', name: '🌪️ Chaos Absolu', price: 900, desc: 'GIGA : Combo de malus (5s)', type: 'malus' }
+            { id: 'spotlight', name: '💡 Projecteur', price: 40, desc: 'Illumine la bonne tuile (2s)', type: 'bonus' },
+            { id: 'freeze', name: '⏳ Blocage du Temps', price: 80, desc: 'Gèle le chrono pendant 3s', type: 'bonus' },
+            { id: 'joker', name: '⚡ Joker Éclair', price: 180, desc: 'Valide la cible actuelle', type: 'bonus' },
+            { id: 'nova', name: '🌟 Nova Temporelle', price: 450, desc: 'GIGA : Valide 3 cibles', type: 'bonus' },
+            { id: 'quake', name: '📳 Séisme', price: 50, desc: 'Fait trembler l\'adversaire (2s)', type: 'malus' },
+            { id: 'micro', name: '🐜 Micro-Tuiles', price: 100, desc: 'Rétrécit la grille adverse (2s)', type: 'malus' },
+            { id: 'eclipse', name: '🌑 Éclipse', price: 220, desc: 'Floute la grille adverse (1.5s)', type: 'malus' },
+            { id: 'chaos', name: '🌪️ Chaos Absolu', price: 600, desc: 'GIGA : Combo de malus (5s)', type: 'malus' }
         ];
 
         let current1v1Time = 30, radarInterval = null;
@@ -850,12 +849,10 @@
             });
         }
 
-        // Requête d'achat sécurisée envoyée au serveur
         function buyPower(id) {
             socket.emit('buy_power', id);
         }
 
-        // Requête d'équipement sécurisée envoyée au serveur
         function equipPower(id) {
             socket.emit('equip_power', id);
         }
@@ -881,7 +878,6 @@
             const stock = myProfile.inventory[powerId] || 0;
             if (stock <= 0) return;
             
-            // Note: Le serveur déduit la ressource lors d'une utilisation ou via synchronisation.
             myProfile.inventory[powerId]--;
             powerUsedInMatch = true;
             document.getElementById('btn-use-power').disabled = true;
@@ -1049,10 +1045,10 @@
             const oppId = Object.keys(data.players).find(id => id !== myId);
             const oppData = oppId ? data.players[oppId] : { target: '-', score: 0 };
             
-            let coinsGained = 10;
+            let coinsGained = 15;
             if (data.winnerId === myId) {
                 banner.innerText = "🏆 VICTOIRE !"; banner.style.color = "#00d2ff";
-                coinsGained = 30; SoundEngine.playVictory();
+                coinsGained = 40; SoundEngine.playVictory();
             } else if (data.winnerId) {
                 banner.innerText = "❌ DÉFAITE !"; banner.style.color = "#ff007f";
             } else {
@@ -1125,15 +1121,17 @@
         function endSoloGame() {
             hideAllScreens();
             const modal = document.getElementById('recap-modal');
-            const coinsGained = Math.floor(soloScore / 2);
             
-            // Envoyer la demande au serveur pour créditer les pièces proprement
+            const baseCoins = Math.floor(soloScore / 3);
+            const bonusCoins = soloScore >= 300 ? 100 : 0;
+            const coinsGained = baseCoins + bonusCoins;
+            
             socket.emit('claim_solo_reward', soloScore);
 
             document.getElementById('recap-banner').innerText = "🏋️ ENTRAÎNEMENT TERMINÉ";
             document.getElementById('recap-banner').style.color = "#00d2ff";
             document.getElementById('recap-1v1-rows').style.display = 'none';
-            document.getElementById('recap-reason').innerText = `Prochaine cible : ${soloTarget}`;
+            document.getElementById('recap-reason').innerText = `Cases validées : ${soloTarget - 1}`;
             document.getElementById('recap-my-score').innerText = soloScore;
             document.getElementById('recap-coins-gained').innerText = `+${coinsGained}`;
             SoundEngine.playVictory();
