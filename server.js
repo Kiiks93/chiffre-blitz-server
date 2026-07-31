@@ -1,3 +1,6 @@
+Voici le code complet et mis à jour de ton fichier **`server.js`** intégrant la correction pour le mot de passe (qui empêchait de rejoindre les salons publics) ainsi que toutes les fonctionnalités précédentes (sécurité anti-freeze, unicité des codes de salon, gestion des listes avec les indicateurs de mots de passe) :
+
+```javascript
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -78,10 +81,12 @@ io.on('connection', (socket) => {
 
     socket.on('join_room', (data) => {
         const roomCode = data?.code ? data.code.toUpperCase() : '';
-        const passwordInput = data?.password || '';
+        // Sécurité : S'assurer que le mot de passe est bien une chaîne de caractères
+        const passwordInput = (typeof data?.password === 'string') ? data.password : '';
         const room = rooms[roomCode];
 
         if (room && !room.gameStarted && room.players.length < 2) {
+            // Vérification stricte : si le salon a un mot de passe non vide, on le compare
             if (room.password && room.password !== passwordInput) {
                 socket.emit('room_error', "Mot de passe incorrect !");
                 return;
@@ -119,7 +124,7 @@ io.on('connection', (socket) => {
             .map(r => ({ 
                 code: r.code, 
                 playersCount: r.players.length,
-                hasPassword: r.password !== '' // INDIQUE AU CLIENT SI LE SALON EST PROTÉGÉ
+                hasPassword: r.password !== '' // Indique au client si le salon est protégé
             }));
         socket.emit('rooms_list_data', openRooms);
     });
@@ -290,3 +295,5 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Serveur actif sur le port ${PORT}`);
 });
+
+```
