@@ -531,7 +531,7 @@
             reconnectionDelay: 1000
         });
 
-        socket.on('disconnect', (reason) => {
+        socket.on('disconnect', () => {
             SoundEngine.stopMusic(true);
         });
 
@@ -546,9 +546,9 @@
             }
         });
 
-        let myProfile = { username: "", region: "Hauts-de-France", country: "FR", points: 0, coins: 100, trophies: 0, inventory: {}, equippedPower: null };
+        // Profil synchronisé depuis le serveur (fini la triche via localStorage)
+        let myProfile = { username: "", region: "Hauts-de-France", points: 0, coins: 0, trophies: 0, inventory: {}, equippedPower: null };
         
-        // POUVOIRS RÉÉQUILIBRÉS : 3e et 4e plus chers (surtout Nova et Chaos Absolu)
         const POWERS_CATALOG = [
             { id: 'spotlight', name: '💡 Projecteur', price: 80, desc: 'Illumine la bonne tuile (2s)', type: 'bonus' },
             { id: 'freeze', name: '⏳ Blocage du Temps', price: 150, desc: 'Gèle le chrono pendant 3s', type: 'bonus' },
@@ -565,7 +565,6 @@
         let powerUsedInMatch = false, currentShopTab = 'bonus', isTimeFrozen = false;
 
         document.addEventListener("DOMContentLoaded", () => {
-            loadLocalEconomy();
             showTitleScreen();
             checkAndShowProfileModal();
 
@@ -580,30 +579,10 @@
             }
         });
 
-        function loadLocalEconomy() {
-            const coins = localStorage.getItem('cb_coins');
-            const trophies = localStorage.getItem('cb_trophies');
-            const inventory = localStorage.getItem('cb_inventory');
-            const equipped = localStorage.getItem('cb_equipped');
-
-            if (coins !== null) myProfile.coins = parseInt(coins);
-            if (trophies !== null) myProfile.trophies = parseInt(trophies);
-            if (inventory) { try { myProfile.inventory = JSON.parse(inventory); } catch(e) { myProfile.inventory = {}; } }
-            if (equipped) myProfile.equippedPower = equipped;
-            updateEconomyUI();
-        }
-
-        function saveLocalEconomy() {
-            localStorage.setItem('cb_coins', myProfile.coins);
-            localStorage.setItem('cb_trophies', myProfile.trophies);
-            localStorage.setItem('cb_inventory', JSON.stringify(myProfile.inventory));
-            localStorage.setItem('cb_equipped', myProfile.equippedPower || '');
-            updateEconomyUI();
-        }
-
         function updateEconomyUI() {
             document.getElementById('user-coins-display').innerText = myProfile.coins;
             document.getElementById('user-trophies-display').innerText = myProfile.trophies;
+            document.getElementById('user-pts-display').innerText = myProfile.points;
         }
 
         function isProfileValid() {
@@ -644,14 +623,29 @@
         }
 
         function registerIfPossible() {
-            if (isProfileValid() && socket.connected) socket.emit('register_player', myProfile);
+            if (isProfileValid() && socket.connected) {
+                socket.emit('register_player', {
+                    username: localStorage.getItem('cb_username'),
+                    region: localStorage.getItem('cb_region')
+                });
+            }
         }
 
         socket.on('player_registered', (player) => {
             if (player) {
+                myProfile.username = player.username;
+                myProfile.region = player.region;
                 myProfile.points = player.points;
+                myProfile.coins = player.coins;
+                myProfile.trophies = player.trophies;
+                myProfile.inventory = player.inventory || {};
+                myProfile.equippedPower = player.equippedPower;
+                
                 document.getElementById('user-name-display').innerText = player.username;
-                document.getElementById('user-pts-display').innerText = player.points;
+                updateEconomyUI();
+                if (document.getElementById('modal-shop').style.display === 'flex') {
+                    switchShopTab(currentShopTab);
+                }
             }
         });
 
@@ -856,21 +850,14 @@
             });
         }
 
+        // Requête d'achat sécurisée envoyée au serveur
         function buyPower(id) {
-            const power = POWERS_CATALOG.find(p => p.id === id);
-            if (myProfile.coins >= power.price) {
-                myProfile.coins -= power.price;
-                myProfile.inventory[id] = (myProfile.inventory[id] || 0) + 1;
-                if (!myProfile.equippedPower) myProfile.equippedPower = id;
-                saveLocalEconomy();
-                switchShopTab(currentShopTab);
-            } else { alert("Pas assez de pièces !"); }
+            socket.emit('buy_power', id);
         }
 
+        // Requête d'équipement sécurisée envoyée au serveur
         function equipPower(id) {
-            myProfile.equippedPower = (myProfile.equippedPower === id) ? null : id;
-            saveLocalEconomy();
-            switchShopTab(currentShopTab);
+            socket.emit('equip_power', id);
         }
 
         function preparePowerHUD() {
@@ -885,7 +872,7 @@
                 nameLabel.innerText = `${power ? power.name : 'Aucun'} (${stock})`;
                 btn.disabled = false;
                 zone.style.display = 'block';
-            } else { zone.style.display = 'none'; myProfile.equippedPower = null; saveLocalEconomy(); }
+            } else { zone.style.display = 'none'; }
         }
 
         function triggerEquippedPower() {
@@ -893,6 +880,8 @@
             if (!powerId || powerUsedInMatch) return;
             const stock = myProfile.inventory[powerId] || 0;
             if (stock <= 0) return;
+            
+            // Note: Le serveur déduit la ressource lors d'une utilisation ou via synchronisation.
             myProfile.inventory[powerId]--;
             powerUsedInMatch = true;
             document.getElementById('btn-use-power').disabled = true;
@@ -922,7 +911,6 @@
                 socket.emit('send_malus', { type: powerId });
             }
             if (myProfile.inventory[powerId] <= 0) myProfile.equippedPower = null;
-            saveLocalEconomy();
         }
 
         function autoValidateTarget() {
@@ -947,19 +935,15 @@
                 setTimeout(() => grid.classList.remove('effect-eclipse'), 1500); 
             }
             else if (data.type === 'chaos') { 
-                // Enchaînement progressif échelonné sur 5 secondes
                 grid.classList.add('effect-quake');
-                
                 setTimeout(() => {
                     grid.classList.remove('effect-quake');
                     grid.classList.add('effect-micro');
                 }, 1600);
-                
                 setTimeout(() => {
                     grid.classList.remove('effect-micro');
                     grid.classList.add('effect-eclipse');
                 }, 3300);
-                
                 setTimeout(() => {
                     grid.classList.remove('effect-eclipse');
                 }, 5000);
@@ -1064,6 +1048,7 @@
             const myData = data.players[myId];
             const oppId = Object.keys(data.players).find(id => id !== myId);
             const oppData = oppId ? data.players[oppId] : { target: '-', score: 0 };
+            
             let coinsGained = 10;
             if (data.winnerId === myId) {
                 banner.innerText = "🏆 VICTOIRE !"; banner.style.color = "#00d2ff";
@@ -1073,8 +1058,7 @@
             } else {
                 banner.innerText = "⏱️ ÉGALITÉ !"; banner.style.color = "#ff8a00";
             }
-            myProfile.coins += coinsGained;
-            saveLocalEconomy();
+            
             document.getElementById('recap-reason').innerText = data.reason;
             document.getElementById('recap-my-target').innerText = myData ? myData.target : '-';
             document.getElementById('recap-opp-target').innerText = oppData ? oppData.target : '-';
@@ -1142,8 +1126,10 @@
             hideAllScreens();
             const modal = document.getElementById('recap-modal');
             const coinsGained = Math.floor(soloScore / 2);
-            myProfile.coins += coinsGained;
-            saveLocalEconomy();
+            
+            // Envoyer la demande au serveur pour créditer les pièces proprement
+            socket.emit('claim_solo_reward', soloScore);
+
             document.getElementById('recap-banner').innerText = "🏋️ ENTRAÎNEMENT TERMINÉ";
             document.getElementById('recap-banner').style.color = "#00d2ff";
             document.getElementById('recap-1v1-rows').style.display = 'none';
