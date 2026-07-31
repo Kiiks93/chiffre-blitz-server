@@ -1,4 +1,3 @@
-```javascript
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -8,18 +7,16 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: { origin: "*" },
-    pingTimeout: 60000, // Sécurité anti-freeze pour Render
+    pingTimeout: 60000,
     pingInterval: 25000
 });
 
-// Permet à Render de servir correctement tes fichiers
 app.use(express.static(__dirname));
 
 let players = {};
 let waitingPlayer = null;
-let rooms = {}; // Stockage des salons privés et des matchs en cours
+let rooms = {};
 
-// 1. GÉNÉRATEUR DE GRILLE
 function generateRandomPool(target) {
     let pool = [target];
     let candidates = [];
@@ -34,7 +31,6 @@ function generateRandomPool(target) {
 io.on('connection', (socket) => {
     console.log(`Un joueur s'est connecté : ${socket.id}`);
 
-    // Enregistrement du profil
     socket.on('register_player', (profile) => {
         players[socket.id] = {
             id: socket.id,
@@ -45,17 +41,14 @@ io.on('connection', (socket) => {
         socket.emit('player_registered', players[socket.id]);
     });
 
-    // --- GESTION DES SALONS PRIVÉS ---
     socket.on('create_room', (data) => {
         let roomCode = data?.code && data.code.trim() !== '' ? data.code.trim().toUpperCase() : '';
 
-        // SÉCURITÉ : Vérifier si le nom de salon choisi manuellement existe déjà
         if (roomCode !== '' && rooms[roomCode]) {
             socket.emit('room_error', "Ce nom de salon est déjà utilisé. Veuillez en choisir un autre.");
             return;
         }
 
-        // SÉCURITÉ : Générer un code aléatoire unique si le champ est vide
         if (roomCode === '') {
             do {
                 roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -79,12 +72,10 @@ io.on('connection', (socket) => {
 
     socket.on('join_room', (data) => {
         const roomCode = data?.code ? data.code.toUpperCase() : '';
-        // Sécurité : S'assurer que le mot de passe est bien une chaîne de caractères
         const passwordInput = (typeof data?.password === 'string') ? data.password : '';
         const room = rooms[roomCode];
 
         if (room && !room.gameStarted && room.players.length < 2) {
-            // Vérification stricte : si le salon a un mot de passe non vide, on le compare
             if (room.password && room.password !== passwordInput) {
                 socket.emit('room_error', "Mot de passe incorrect !");
                 return;
@@ -122,12 +113,11 @@ io.on('connection', (socket) => {
             .map(r => ({ 
                 code: r.code, 
                 playersCount: r.players.length,
-                hasPassword: r.password !== '' // Indique au client si le salon est protégé
+                hasPassword: r.password !== '' 
             }));
         socket.emit('rooms_list_data', openRooms);
     });
 
-    // --- MATCHMAKING ALÉATOIRE ---
     socket.on('find_1v1_match', () => {
         if (waitingPlayer && waitingPlayer !== socket.id) {
             const p1 = waitingPlayer;
@@ -164,7 +154,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // --- GESTION DES CLICS DU JOUEUR ---
     socket.on('player_click_1v1', (num) => {
         let roomCode = null;
         for (const code in rooms) {
@@ -190,7 +179,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // --- TRANSMISSION DES POUVOIRS MALUS ---
     socket.on('send_malus', (data) => {
         for (const code in rooms) {
             if (rooms[code].matchPlayers && rooms[code].matchPlayers[socket.id]) {
@@ -200,7 +188,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Déconnexion générale
     socket.on('disconnect', () => {
         if (waitingPlayer === socket.id) waitingPlayer = null;
         cleanupPlayerFromRooms(socket.id);
@@ -209,7 +196,6 @@ io.on('connection', (socket) => {
     });
 });
 
-// --- MOTEUR DU JEU (BOUCLE ET CHRONO) ---
 function cleanupPlayerFromRooms(socketId) {
     for (const code in rooms) {
         const room = rooms[code];
@@ -293,5 +279,3 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Serveur actif sur le port ${PORT}`);
 });
-
-```
