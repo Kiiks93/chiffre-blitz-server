@@ -44,16 +44,23 @@ io.on('connection', (socket) => {
     // --- GESTION DU CLASSEMENT ---
     socket.on('get_leaderboard', (type) => {
         let playersArray = Object.values(players);
-        // Tri par points décroissants
         playersArray.sort((a, b) => b.points - a.points);
 
-        // Optionnel : Filtrer par région si demandé
         if (type === 'regional' && players[socket.id]) {
             const userRegion = players[socket.id].region;
             playersArray = playersArray.filter(p => p.region === userRegion);
         }
 
-        socket.emit('leaderboard_data', { data: playersArray.slice(0, 20) }); // Top 20
+        socket.emit('leaderboard_data', { data: playersArray.slice(0, 20) });
+    });
+
+    // --- MODE TOURNOI ---
+    socket.on('win_tournament', () => {
+        if (players[socket.id]) {
+            players[socket.id].points += 50;
+            socket.emit('player_registered', players[socket.id]);
+            socket.emit('tournament_reward_success', { pointsGained: 50, coinsGained: 150, trophiesGained: 1 });
+        }
     });
 
     // --- GESTION DES SALONS PRIVÉS ---
@@ -283,18 +290,15 @@ function end1v1Game(roomCode, reason) {
             winnerId = p2Id;
         }
 
-        // --- MISE À JOUR DES POINTS ---
         if (winnerId) {
             let loserId = (winnerId === p1Id) ? p2Id : p1Id;
-            if (players[winnerId]) players[winnerId].points += 25; // Le gagnant gagne 25 points
-            if (players[loserId]) players[loserId].points = Math.max(0, players[loserId].points - 15); // Le perdant perd 15 points (minimum 0)
+            if (players[winnerId]) players[winnerId].points += 25;
+            if (players[loserId]) players[loserId].points = Math.max(0, players[loserId].points - 15);
         } else {
-            // En cas d'égalité, petit bonus de points
             if (players[p1Id]) players[p1Id].points += 5;
             if (players[p2Id]) players[p2Id].points += 5;
         }
 
-        // Envoyer les points mis à jour au client pour qu'il actualise son affichage s'il est enregistré
         if (players[p1Id]) io.to(p1Id).emit('player_registered', players[p1Id]);
         if (players[p2Id]) io.to(p2Id).emit('player_registered', players[p2Id]);
 
