@@ -36,7 +36,7 @@ io.on('connection', (socket) => {
             id: socket.id,
             username: profile.username || 'Joueur',
             region: profile.region || 'Hauts-de-France',
-            points: profile.points || 1000
+            points: profile.points !== undefined ? profile.points : 0
         };
         socket.emit('player_registered', players[socket.id]);
     });
