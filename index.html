@@ -229,7 +229,7 @@
         <button class="btn-secondary" onclick="cancel1v1Search()" style="max-width:200px; margin-top:30px;">❌ Annuler</button>
     </div>
 
-    <!-- ÉCRAN DES SALONS PRIVÉS (AVEC LISTE DES SALONS OUVERTS) -->
+    <!-- ÉCRAN DES SALONS PRIVÉS -->
     <div id="screen-rooms" style="display:none; max-width:400px; margin:0 auto;">
         <h2>🏠 Salons Privés</h2>
         <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:16px; margin:15px 0; display:flex; flex-direction:column; gap:10px;">
@@ -266,11 +266,10 @@
         <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:16px; margin:20px 0;">
             
             <div style="margin-bottom: 15px; text-align: left;">
-                <label style="font-size: 12px; color: #aaa; font-weight: bold;">LIEN D'INVITATION :</label>
+                <label style="font-size: 12px; color: #aaa; font-weight: bold;">INVITATION RAPIDE (SMS / WhatsApp) :</label>
                 <div style="display: flex; gap: 6px; margin-top: 5px;">
-                    <input type="text" id="room-share-link" readonly 
-                           style="flex:1; padding:8px; border-radius:8px; border:1px solid #00d2ff; background:#0f051d; color:#00d2ff; font-size:12px; outline:none;">
-                    <button class="power-btn equip" onclick="copyRoomLink()" style="padding: 8px 12px;">Copier 📋</button>
+                    <button class="btn-main btn-blue" onclick="shareRoomLink()" style="flex:1; padding:10px; font-size:14px;">📤 Partager le lien</button>
+                    <button class="power-btn equip" onclick="copyRoomLink()" style="padding: 10px 14px;">Copier 📋</button>
                 </div>
             </div>
 
@@ -546,12 +545,27 @@
         }
 
         const SERVER_URL = "https://chiffre-blitz-server.onrender.com";
-        const socket = io(SERVER_URL);
+        const socket = io(SERVER_URL, {
+            reconnection: true,
+            reconnectionAttempts: 10,
+            reconnectionDelay: 1000
+        });
 
+        // Gestion propre de la reconnexion sans alertes bloquantes
         socket.on('disconnect', (reason) => {
             SoundEngine.stopMusic(true);
-            alert("Connexion perdue avec le serveur. Retour à l'accueil.");
-            showTitleScreen();
+        });
+
+        socket.on('connect', () => {
+            registerIfPossible();
+            // Si on était dans un salon et que la page a rechargé, on retente de rejoindre via l'URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetRoom = urlParams.get('room');
+            if (targetRoom && isProfileValid()) {
+                setTimeout(() => {
+                    joinRoomDirect(targetRoom.toUpperCase(), '');
+                }, 500);
+            }
         });
 
         let myProfile = { username: "", region: "Hauts-de-France", country: "FR", points: 0, coins: 100, trophies: 0, inventory: {}, equippedPower: null };
@@ -653,7 +667,6 @@
             if (isProfileValid() && socket.connected) socket.emit('register_player', myProfile);
         }
 
-        socket.on('connect', () => { registerIfPossible(); });
         socket.on('player_registered', (player) => {
             if (player) {
                 myProfile.points = player.points;
@@ -675,12 +688,14 @@
 
         function showTitleScreen() {
             hideAllScreens();
+            window.history.replaceState({}, '', window.location.pathname); // Nettoie l'URL
             document.getElementById('screen-title').style.display = 'block';
             SoundEngine.startMusic('menu');
         }
 
         function showMainMenu() {
             hideAllScreens();
+            window.history.replaceState({}, '', window.location.pathname); // Nettoie l'URL
             document.getElementById('screen-menu').style.display = 'flex';
             SoundEngine.startMusic('menu');
         }
@@ -695,6 +710,7 @@
         function openRoomsScreen() {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
             hideAllScreens();
+            window.history.replaceState({}, '', window.location.pathname);
             document.getElementById('screen-rooms').style.display = 'block';
             fetchRoomsList();
         }
@@ -757,6 +773,7 @@
 
         function leaveCustomRoom() {
             socket.emit('leave_room');
+            window.history.replaceState({}, '', window.location.pathname);
             openRoomsScreen();
         }
 
@@ -766,6 +783,19 @@
             navigator.clipboard.writeText(input.value).then(() => {
                 alert("Lien du salon copié dans le presse-papier !");
             });
+        }
+
+        function shareRoomLink() {
+            const input = document.getElementById('room-share-link');
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Chiffre Blitz ⚡',
+                    text: 'Viens m\'affronter en duel sur Chiffre Blitz !',
+                    url: input.value
+                }).catch(() => {});
+            } else {
+                copyRoomLink();
+            }
         }
 
         socket.on('rooms_list_data', (rooms) => {
@@ -793,6 +823,7 @@
             document.getElementById('screen-room-waiting').style.display = 'block';
             document.getElementById('current-room-code').innerText = data.code;
             const shareUrl = `${window.location.origin}${window.location.pathname}?room=${data.code}`;
+            window.history.replaceState({}, '', `?room=${data.code}`); // Sauvegarde dans l'URL pour la persistance mobile
             document.getElementById('room-share-link').value = shareUrl;
             updateRoomPlayers(data.players);
         });
@@ -1021,6 +1052,7 @@
 
         socket.on('game_over_1v1', (data) => {
             hideAllScreens();
+            window.history.replaceState({}, '', window.location.pathname);
             const modal = document.getElementById('recap-modal');
             const banner = document.getElementById('recap-banner');
             document.getElementById('recap-1v1-rows').style.display = 'block';
