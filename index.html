@@ -47,6 +47,7 @@
         .btn-gold { background: linear-gradient(45deg, #f8b500, #fceabb); color: #222; box-shadow: 0 5px 20px rgba(248, 181, 0, 0.4); }
         .btn-purple { background: linear-gradient(45deg, #7b4397, #dc2430); box-shadow: 0 5px 20px rgba(123, 67, 151, 0.4); }
         .btn-shop { background: linear-gradient(45deg, #11998e, #38ef7d); color: #000; box-shadow: 0 5px 20px rgba(56, 239, 125, 0.4); }
+        .btn-reward { background: linear-gradient(45deg, #f12711, #f5af19); color: #fff; box-shadow: 0 5px 20px rgba(245, 175, 25, 0.4); margin-top: 8px; }
 
         .btn-secondary {
             background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #ccc;
@@ -151,6 +152,17 @@
         <span>🏆 <strong id="user-trophies-display">0</strong> <span data-i18n="trophies">Trophées</span></span>
     </div>
 
+    <!-- MODALE DE SOUTIEN & PUBLICITÉ AU LANCEMENT -->
+    <div id="modal-launch-ad" class="modal-overlay" style="display:none;">
+        <div class="modal-card" style="text-align:center;">
+            <h2 style="margin:0 0 10px 0; color:#00d2ff;">🤝 <span data-i18n="support_title">Soutenir le Créateur</span></h2>
+            <p style="color:#ccc; font-size:14px; line-height:1.5; margin-bottom:20px;" data-i18n="support_desc">
+                Chiffre Blitz est 100% gratuit et sans achat intégré. Pour nous aider à faire vivre et améliorer le jeu, une courte publicité de soutien va se lancer. Merci pour votre aide ! ❤️
+            </p>
+            <button class="btn-main btn-blue" onclick="playLaunchAd()" style="width:100%;" data-i18n="support_btn">Lancer la partie ⚡</button>
+        </div>
+    </div>
+
     <!-- ÉCRAN TITRE -->
     <div id="screen-title" class="menu-container" style="max-width:380px; margin: 10px auto; text-align: left;">
         <div style="text-align: center; margin-bottom: 10px;">
@@ -177,7 +189,7 @@
             </div>
         </div>
 
-        <button class="btn-main btn-blue" onclick="showMainMenu()" style="margin-top: 12px; width: 100%;" data-i18n="btn_play">JOUER ⚡</button>
+        <button class="btn-main btn-blue" onclick="checkLaunchAdAndStart()" style="margin-top: 12px; width: 100%;" data-i18n="btn_play">JOUER ⚡</button>
     </div>
 
     <!-- MENU PRINCIPAL -->
@@ -430,7 +442,10 @@
                 <span id="recap-coins-gained" style="font-weight:bold;">+0</span>
             </div>
 
-            <button class="btn-main" onclick="showMainMenu()" data-i18n="main_menu">MENU PRINCIPAL</button>
+            <!-- BOUTON DE PUBLICITÉ RÉCOMPENSÉE -->
+            <button class="btn-main btn-reward" onclick="watchRewardedAd()" data-i18n="reward_btn">🎁 Regarder une pub pour doubler (+🪙)</button>
+
+            <button class="btn-main" onclick="showMainMenu()" style="margin-top:10px;" data-i18n="main_menu">MENU PRINCIPAL</button>
         </div>
     </div>
 
@@ -455,6 +470,10 @@
                 menu_lb: "🏆 CLASSEMENT",
                 menu_tourney: "🎯 MODE TOURNOI",
                 menu_info: "ℹ️ Informations & Règles",
+                support_title: "Soutenir le Créateur",
+                support_desc: "Chiffre Blitz est 100% gratuit et sans achat intégré. Pour nous aider à faire vivre et améliorer le jeu, une courte publicité de soutien va se lancer. Merci pour votre aide ! ❤️",
+                support_btn: "Lancer la partie ⚡",
+                reward_btn: "🎁 Doubler les pièces (+🪙)",
                 hub_title: "⚔️ DUEL 1v1 ONLINE",
                 hub_subtitle: "Choisis ton mode de jeu :",
                 hub_random: "🎲 Matchmaking Aléatoire",
@@ -541,6 +560,10 @@
                 menu_lb: "🏆 LEADERBOARD",
                 menu_tourney: "🎯 TOURNAMENT MODE",
                 menu_info: "ℹ️ Info & Rules",
+                support_title: "Support the Creator",
+                support_desc: "Chiffre Blitz is 100% free with no in-app purchases. To help us maintain and improve the game, a short support ad will play. Thank you for your help! ❤️",
+                support_btn: "Start Playing ⚡",
+                reward_btn: "🎁 Double Coins (+🪙)",
                 hub_title: "⚔️ ONLINE 1v1 DUEL",
                 hub_subtitle: "Choose your game mode:",
                 hub_random: "🎲 Random Matchmaking",
@@ -612,6 +635,7 @@
         };
 
         let currentLang = localStorage.getItem('cb_lang') || 'fr';
+        let hasShownLaunchAd = false;
 
         function toggleLanguage() {
             currentLang = (currentLang === 'fr') ? 'en' : 'fr';
@@ -633,9 +657,35 @@
             document.getElementById('lang-btn').innerText = (currentLang === 'fr') ? 'ENG' : 'FR';
         }
 
-        // --- MOTEUR AUDIO LONG ET ÉVOLUTIF (64 PAS) ---
+        function checkLaunchAdAndStart() {
+            if (!hasShownLaunchAd) {
+                document.getElementById('modal-launch-ad').style.display = 'flex';
+            } else {
+                showMainMenu();
+            }
+        }
+
+        function playLaunchAd() {
+            document.getElementById('modal-launch-ad').style.display = 'none';
+            hasShownLaunchAd = true;
+            showMainMenu();
+        }
+
+        function watchRewardedAd() {
+            const coinsDisplay = document.getElementById('recap-coins-gained');
+            let currentGained = parseInt(coinsDisplay.innerText.replace('+', '')) || 0;
+            let doubled = currentGained * 2;
+            coinsDisplay.innerText = `+${doubled} (Doublé 🎁)`;
+            
+            myProfile.coins += currentGained;
+            updateEconomyUI();
+            
+            alert(currentLang === 'fr' ? "🎁 Publicité visionnée ! Vos pièces ont été doublées !" : "🎁 Ad watched! Your coins have been doubled!");
+        }
+
+        // --- MOTEUR AUDIO FLUIDE ET Équilibré ---
         const SoundEngine = {
-            ctx: null, isMuted: false, timerId: null, currentMode: null, step: 0, bpm: 142,
+            ctx: null, isMuted: false, timerId: null, currentMode: null, step: 0, bpm: 125,
             init() { 
                 if (!this.ctx) { 
                     this.ctx = new (window.AudioContext || window.webkitAudioContext)(); 
@@ -702,95 +752,80 @@
                 this.stopMusic(false);
                 this.step = 0;
 
-                this.bpm = (mode === 'menu') ? 120 : 142;
+                // Menu et Partie partagent maintenant un tempo posé, fluide et groovy (125 BPM)
+                this.bpm = 125;
                 const intervalMs = (60 / this.bpm / 4) * 1000;
 
                 this.timerId = setInterval(() => {
                     if (this.isMuted || !this.ctx || this.ctx.state !== 'running') return;
                     this.tickSequence(this.currentMode, this.step);
-                    this.step = (this.step + 1) % 64; // Boucle longue de 64 pas
+                    this.step = (this.step + 1) % 64;
                 }, intervalMs);
             },
             tickSequence(mode, step) {
                 const t = this.ctx.currentTime;
                 const scale = [110, 123.47, 130.81, 146.83, 164.81, 196, 220, 246.94, 261.63, 293.66, 329.63, 349.23, 392];
 
-                // Kick percussif
+                // Kick doux et rond sur les temps forts
                 if (step % 4 === 0) {
                     const osc = this.ctx.createOscillator();
                     const gain = this.ctx.createGain();
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(mode === 'menu' ? 120 : 150, t);
-                    osc.frequency.exponentialRampToValueAtTime(30, t + 0.08);
+                    osc.frequency.setValueAtTime(125, t);
+                    osc.frequency.exponentialRampToValueAtTime(35, t + 0.1);
                     gain.gain.setValueAtTime(0.18, t);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
                     osc.connect(gain); gain.connect(this.ctx.destination);
-                    osc.start(t); osc.stop(t + 0.09);
+                    osc.start(t); osc.stop(t + 0.11);
                 }
 
-                // Snare
+                // Snare chaleureuse et fluide
                 if (step === 4 || step === 12 || step === 20 || step === 28 || step === 36 || step === 44 || step === 52 || step === 60) {
-                    const bufferSize = this.ctx.sampleRate * 0.07;
+                    const bufferSize = this.ctx.sampleRate * 0.08;
                     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
                     const data = buffer.getChannelData(0);
                     for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
                     const noise = this.ctx.createBufferSource();
                     noise.buffer = buffer;
                     const filter = this.ctx.createBiquadFilter();
-                    filter.type = 'highpass'; filter.frequency.setValueAtTime(1400, t);
+                    filter.type = 'bandpass'; filter.frequency.setValueAtTime(1000, t);
                     const gain = this.ctx.createGain();
-                    gain.gain.setValueAtTime(0.1, t);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+                    gain.gain.setValueAtTime(0.08, t);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
                     noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
                     noise.start(t);
                 }
 
-                // Hi-hat léger
-                if (step % 2 === 1 && mode !== 'menu') {
-                    const bufferSize = this.ctx.sampleRate * 0.03;
-                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-                    const data = buffer.getChannelData(0);
-                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-                    const noise = this.ctx.createBufferSource();
-                    noise.buffer = buffer;
-                    const filter = this.ctx.createBiquadFilter();
-                    filter.type = 'highpass'; filter.frequency.setValueAtTime(6000, t);
-                    const gain = this.ctx.createGain();
-                    gain.gain.setValueAtTime(0.03, t);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
-                    noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-                    noise.start(t);
-                }
-
-                // Mélodie changeante sur 4 mesures (64 pas)
+                // Ligne mélodique fluide et harmonieuse en jeu (moins saccadée)
                 if (mode !== 'menu') {
                     const bar = Math.floor(step / 16);
-                    let melodyPatterns = [
-                        [0, 2, 4, 7, 9, 7, 4, 2, 3, 5, 7, 10, 9, 7, 5, 2],
-                        [2, 4, 5, 9, 11, 9, 5, 4, 5, 7, 9, 12, 11, 9, 7, 4],
-                        [4, 5, 7, 11, 12, 11, 7, 5, 7, 9, 11, 14, 12, 11, 9, 7],
-                        [7, 9, 11, 14, 16, 14, 11, 9, 11, 12, 14, 16, 14, 12, 9, 4]
+                    let fluidPatterns = [
+                        [0, 4, 7, 11, 7, 4, 2, 0, 3, 7, 10, 7, 3, 0, 2, 4],
+                        [2, 5, 9, 12, 9, 5, 4, 2, 4, 7, 11, 7, 4, 2, 0, 2],
+                        [4, 7, 11, 14, 11, 7, 5, 4, 5, 9, 12, 9, 5, 4, 2, 4],
+                        [7, 11, 14, 16, 14, 11, 9, 7, 4, 7, 11, 7, 4, 0, 2, 4]
                     ];
-                    const currentPattern = melodyPatterns[bar];
+                    const currentPattern = fluidPatterns[bar];
                     const noteIdx = currentPattern[step % 16];
-                    const freq = scale[noteIdx % scale.length] * 2;
+                    const freq = scale[noteIdx % scale.length];
 
                     const osc = this.ctx.createOscillator();
                     const gain = this.ctx.createGain();
                     const filter = this.ctx.createBiquadFilter();
 
-                    osc.type = (step % 4 === 0) ? 'sawtooth' : 'square';
+                    osc.type = 'triangle'; // Son plus doux et fluide
                     osc.frequency.setValueAtTime(freq, t);
 
                     filter.type = 'lowpass';
-                    filter.frequency.setValueAtTime(1800 + (bar * 200), t);
+                    filter.frequency.setValueAtTime(1200 + (bar * 150), t);
 
-                    gain.gain.setValueAtTime(0.04, t);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+                    gain.gain.setValueAtTime(0.05, t);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
 
                     osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-                    osc.start(t); osc.stop(t + 0.09);
+                    osc.start(t); osc.stop(t + 0.12);
                 } else {
+                    // Menu (tel quel, validé)
                     if (step % 2 === 0) {
                         const menuBar = Math.floor(step / 16);
                         const menuPatterns = [
@@ -946,7 +981,7 @@
         });
 
         function hideAllScreens() {
-            ['screen-title', 'screen-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room'].forEach(id => {
+            ['screen-title', 'screen-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room', 'modal-launch-ad'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
