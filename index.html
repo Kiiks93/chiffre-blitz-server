@@ -307,13 +307,13 @@
         </div>
     </div>
 
-    <!-- MODE TOURNOI -->
+    <!-- MODE TOURNOI (Propre, sans bouton de test) -->
     <div id="screen-tournament" style="display:none; max-width:400px; margin:0 auto;">
         <h2>🎯 Tournoi Blitz</h2>
-        <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:16px; margin:20px 0;">
-            <p>Arbre à élimination directe.</p>
-            <div style="color:#ff8a00; font-weight:bold; margin-bottom:15px;">Récompense : 150 🪙 + 1 🏆 + 50 ⭐</div>
-            <button class="btn-main btn-gold" onclick="simulateWinTournament()">🏆 Gagner le Tournoi</button>
+        <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:16px; margin:20px 0; text-align:left;">
+            <p style="margin-top:0;">Arbre à élimination directe.</p>
+            <p style="color:#aaa; font-size:13px;">Affrontez les meilleurs joueurs dans un tournoi épique pour décrocher le titre suprême.</p>
+            <div style="color:#ff8a00; font-weight:bold; margin-top:15px; text-align:center;">Récompenses de fin : 150 🪙 + 1 🏆 + 50 ⭐</div>
         </div>
         <button class="btn-secondary" onclick="showMainMenu()">⬅️ Retour Menu</button>
     </div>
@@ -815,20 +815,6 @@
             hideAllScreens();
             document.getElementById('screen-tournament').style.display = 'block';
         }
-
-        function simulateWinTournament() {
-            if (!socket.connected) return;
-            socket.emit('win_tournament');
-        }
-
-        socket.on('tournament_reward_success', (data) => {
-            myProfile.coins += data.coinsGained;
-            myProfile.trophies += data.trophiesGained;
-            saveLocalEconomy();
-            SoundEngine.playVictory();
-            alert(`🏆 VICTOIRE AU TOURNOI !\n\n+${data.pointsGained} Points ⭐\n+${data.coinsGained} Pièces 🪙\n+${data.trophiesGained} Trophée 🏆`);
-            showMainMenu();
-        });
 
         /* BOUTIQUE */
         function openShop() {
