@@ -21,7 +21,7 @@
         #user-name-display { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60px; }
 
         .user-stats {
-            display: flex; justify-content: center; gap: 15px; max-width: 400px; margin: 0 auto 10px auto;
+            display: flex; justify-content: center; gap: 15px; max-width: 400px; margin: 0 auto 15px auto;
             font-size: 13px; font-weight: bold; background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 20px;
         }
 
@@ -32,13 +32,6 @@
             color: #fff; border-radius: 12px; padding: 0 10px; height: 36px; font-size: 13px;
             display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
             font-weight: 800;
-        }
-
-        .audio-notice {
-            background: rgba(0, 210, 255, 0.15); border: 1px solid #00d2ff;
-            color: #00d2ff; padding: 8px 12px; border-radius: 20px; font-size: 13px;
-            font-weight: bold; max-width: 350px; margin: 0 auto 15px auto;
-            animation: pulseAudio 1.5s infinite; cursor: pointer;
         }
 
         .menu-container { display: flex; flex-direction: column; gap: 10px; max-width: 350px; margin: 15px auto; }
@@ -156,10 +149,6 @@
     <div class="user-stats">
         <span>🪙 <strong id="user-coins-display">0</strong> <span data-i18n="coins">Pièces</span></span>
         <span>🏆 <strong id="user-trophies-display">0</strong> <span data-i18n="trophies">Trophées</span></span>
-    </div>
-
-    <div id="audio-prompt" class="audio-notice" onclick="unlockAudio()" data-i18n="audio_prompt">
-        🔊 Touche l'écran pour activer l'ambiance lofi chill
     </div>
 
     <!-- ÉCRAN TITRE -->
@@ -446,11 +435,10 @@
     </div>
 
     <script>
-        // --- DICTIONNAIRE DE TRADUCTION COMPLET (FR / ENG) ---
+        // --- DICTIONNAIRE DE TRADUCTION ---
         const i18n = {
             fr: {
                 coins: "Pièces", trophies: "Trophées",
-                audio_prompt: "🔊 Touche l'écran pour activer l'ambiance lofi chill",
                 subtitle: "Le duel de calcul et de réflexes ultime",
                 rule1_title: "⚡ Principe du jeu",
                 rule1_desc: "Clique le plus vite possible sur les tuiles de la grille dans l'ordre croissant exact (1, puis 2, 3, etc.).",
@@ -537,7 +525,6 @@
             },
             en: {
                 coins: "Coins", trophies: "Trophies",
-                audio_prompt: "🔊 Tap the screen to enable lofi vibe",
                 subtitle: "The ultimate math and reflex duel",
                 rule1_title: "⚡ Game Rule",
                 rule1_desc: "Click as fast as possible on the grid tiles in exact ascending order (1, then 2, 3, etc.).",
@@ -643,13 +630,20 @@
                     el.innerText = dict[key];
                 }
             });
-            // Affiche la langue VERS laquelle on peut basculer (ou la langue active)
             document.getElementById('lang-btn').innerText = (currentLang === 'fr') ? 'ENG' : 'FR';
         }
 
+        // --- MOTEUR AUDIO STYLE GEOMETRY DASH & ARCADE CYBERPUNK ---
         const SoundEngine = {
-            ctx: null, isMuted: false, musicInterval: null, currentMode: null,
-            init() { if (!this.ctx) { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } },
+            ctx: null, isMuted: false, timerId: null, currentMode: null, step: 0, bpm: 130,
+            init() { 
+                if (!this.ctx) { 
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)(); 
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            },
             toggleMute() {
                 this.isMuted = !this.isMuted;
                 if (this.isMuted) this.stopMusic(false);
@@ -657,83 +651,141 @@
                 return this.isMuted;
             },
             playClick() {
-                if (this.isMuted) return; this.init(); if (this.ctx.state === 'suspended') return;
-                const osc = this.ctx.createOscillator(), gain = this.ctx.createGain(), filter = this.ctx.createBiquadFilter();
-                osc.type = 'sine'; filter.type = 'lowpass'; filter.frequency.setValueAtTime(300, this.ctx.currentTime);
-                osc.frequency.setValueAtTime(150, this.ctx.currentTime);
-                gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.08);
-                osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(); osc.stop(this.ctx.currentTime + 0.08);
+                if (this.isMuted) return; this.init();
+                const t = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, t);
+                osc.frequency.exponentialRampToValueAtTime(880, t + 0.06);
+                gain.gain.setValueAtTime(0.1, t);
+                gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(t); osc.stop(t + 0.06);
             },
             playError() {
-                if (this.isMuted) return; this.init(); if (this.ctx.state === 'suspended') return;
-                const osc = this.ctx.createOscillator(), gain = this.ctx.createGain(), filter = this.ctx.createBiquadFilter();
-                osc.type = 'sine'; filter.type = 'lowpass'; filter.frequency.setValueAtTime(180, this.ctx.currentTime);
-                osc.frequency.setValueAtTime(80, this.ctx.currentTime);
-                gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.12);
-                osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(); osc.stop(this.ctx.currentTime + 0.12);
+                if (this.isMuted) return; this.init();
+                const t = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, t);
+                osc.frequency.linearRampToValueAtTime(80, t + 0.1);
+                gain.gain.setValueAtTime(0.1, t);
+                gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(t); osc.stop(t + 0.1);
             },
             playVictory() {
-                if (this.isMuted) return; this.init(); if (this.ctx.state === 'suspended') return;
-                [220, 261.63, 329.63].forEach((freq, i) => {
+                if (this.isMuted) return; this.init();
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
                     setTimeout(() => {
                         if (this.isMuted) return;
-                        const osc = this.ctx.createOscillator(), gain = this.ctx.createGain(), filter = this.ctx.createBiquadFilter();
-                        osc.type = 'sine'; filter.type = 'lowpass'; filter.frequency.setValueAtTime(400, this.ctx.currentTime);
-                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                        gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
-                        gain.gain.exponentialRampToValueAtTime(0.00001, this.ctx.currentTime + 0.8);
-                        osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-                        osc.start(); osc.stop(this.ctx.currentTime + 0.8);
-                    }, i * 200);
+                        const t = this.ctx.currentTime;
+                        const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+                        osc.type = 'square';
+                        osc.frequency.setValueAtTime(freq, t);
+                        gain.gain.setValueAtTime(0.08, t);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+                        osc.connect(gain); gain.connect(this.ctx.destination);
+                        osc.start(t); osc.stop(t + 0.25);
+                    }, i * 120);
                 });
             },
-            stopMusic(clear = true) { if (this.musicInterval) clearInterval(this.musicInterval); if (clear) this.currentMode = null; },
+            stopMusic(clear = true) {
+                if (this.timerId) clearInterval(this.timerId);
+                this.timerId = null;
+                if (clear) this.currentMode = null;
+            },
             startMusic(mode) {
-                if (mode) this.currentMode = mode; 
-                if (this.isMuted) return; this.init();
-                if (this.ctx.state === 'suspended') return; 
+                if (mode) this.currentMode = mode;
+                if (this.isMuted) return;
+                this.init();
                 this.stopMusic(false);
+                this.step = 0;
 
-                let ambientChords = { 'menu': [130.81, 196.00, 261.63], 'solo': [110.00, 164.81, 220.00], '1v1': [146.83, 220.00, 293.66] };
-                let chord = ambientChords[mode] || ambientChords['menu'];
+                // Menu = Cyberpunk Arcade (125 BPM) | Partie = Geometry Dash Electro House (145 BPM)
+                this.bpm = (mode === 'menu') ? 125 : 145;
+                const intervalMs = (60 / this.bpm / 4) * 1000; // Pas de 16ème de note
 
-                const playPad = () => {
+                this.timerId = setInterval(() => {
                     if (this.isMuted || !this.ctx || this.ctx.state !== 'running') return;
-                    chord.forEach((baseFreq) => {
-                        const osc = this.ctx.createOscillator(), gain = this.ctx.createGain(), filter = this.ctx.createBiquadFilter();
-                        osc.type = 'sine'; filter.type = 'lowpass'; filter.frequency.setValueAtTime(220, this.ctx.currentTime);
-                        osc.frequency.setValueAtTime(baseFreq, this.ctx.currentTime);
-                        gain.gain.setValueAtTime(0.00001, this.ctx.currentTime);
-                        gain.gain.linearRampToValueAtTime(0.025, this.ctx.currentTime + 1.5);
-                        gain.gain.exponentialRampToValueAtTime(0.00001, this.ctx.currentTime + 4.0);
-                        osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-                        osc.start(); osc.stop(this.ctx.currentTime + 4.0);
-                    });
-                };
-                playPad();
-                this.musicInterval = setInterval(playPad, 4000);
+                    this.tickSequence(this.currentMode, this.step);
+                    this.step = (this.step + 1) % 32;
+                }, intervalMs);
+            },
+            tickSequence(mode, step) {
+                const t = this.ctx.currentTime;
+                const scale = [110, 123.47, 130.81, 146.83, 164.81, 196, 220, 246.94, 261.63, 293.66, 329.63];
+
+                // Kick percussif sur les temps forts (0, 4, 8, 12...)
+                if (step % 4 === 0) {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(mode === 'menu' ? 130 : 160, t);
+                    osc.frequency.exponentialRampToValueAtTime(35, t + 0.08);
+                    gain.gain.setValueAtTime(0.2, t);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(t); osc.stop(t + 0.09);
+                }
+
+                // Snare/Clap énergique sur les temps 2 et 4 (steps 4 et 12 en 8ème notes -> 4, 12, 20, 28)
+                if (step === 4 || step === 12 || step === 20 || step === 28) {
+                    const bufferSize = this.ctx.sampleRate * 0.08;
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                    const noise = this.ctx.createBufferSource();
+                    noise.buffer = buffer;
+                    const filter = this.ctx.createBiquadFilter();
+                    filter.type = 'highpass'; filter.frequency.setValueAtTime(1200, t);
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(0.12, t);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+                    noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                    noise.start(t);
+                }
+
+                // Mélodie / Lead Style Geometry Dash (arpèges rapides électro)
+                if (mode !== 'menu') {
+                    const melodyPattern = [0, 2, 4, 7, 9, 7, 4, 2, 3, 5, 7, 10, 9, 7, 5, 2];
+                    const noteIdx = melodyPattern[step % melodyPattern.length];
+                    const freq = scale[noteIdx % scale.length] * 2;
+
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    const filter = this.ctx.createBiquadFilter();
+
+                    osc.type = (step % 2 === 0) ? 'sawtooth' : 'square';
+                    osc.frequency.setValueAtTime(freq, t);
+
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(1500, t);
+
+                    gain.gain.setValueAtTime(0.045, t);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+
+                    osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(t); osc.stop(t + 0.09);
+                } else {
+                    // Ambiance menu / arcade cyberpunk
+                    if (step % 2 === 0) {
+                        const menuPattern = [0, 3, 5, 7];
+                        const freq = scale[menuPattern[(step / 2) % menuPattern.length]];
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'square';
+                        osc.frequency.setValueAtTime(freq, t);
+                        gain.gain.setValueAtTime(0.03, t);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
+                        osc.connect(gain); gain.connect(this.ctx.destination);
+                        osc.start(t); osc.stop(t + 0.15);
+                    }
+                }
             }
         };
 
-        function unlockAudio() {
-            SoundEngine.init();
-            if (SoundEngine.ctx && SoundEngine.ctx.state === 'suspended') {
-                SoundEngine.ctx.resume().then(() => {
-                    document.getElementById('audio-prompt').style.display = 'none';
-                    if (SoundEngine.currentMode && !SoundEngine.isMuted) SoundEngine.startMusic(SoundEngine.currentMode);
-                });
-            } else {
-                document.getElementById('audio-prompt').style.display = 'none';
-            }
-        }
-        ['click', 'touchstart', 'pointerdown'].forEach(e => window.addEventListener(e, unlockAudio, { once: true }));
-
         function toggleMute() {
-            unlockAudio();
             const muted = SoundEngine.toggleMute();
             document.getElementById('mute-btn').innerText = muted ? '🔇' : '🔊';
         }
