@@ -35,12 +35,28 @@ io.on('connection', (socket) => {
         players[socket.id] = {
             id: socket.id,
             username: profile.username || 'Joueur',
-            region: profile.region,
+            region: profile.region || 'Hauts-de-France',
             points: profile.points || 1000
         };
         socket.emit('player_registered', players[socket.id]);
     });
 
+    // --- GESTION DU CLASSEMENT ---
+    socket.on('get_leaderboard', (type) => {
+        let playersArray = Object.values(players);
+        // Tri par points décroissants
+        playersArray.sort((a, b) => b.points - a.points);
+
+        // Optionnel : Filtrer par région si demandé
+        if (type === 'regional' && players[socket.id]) {
+            const userRegion = players[socket.id].region;
+            playersArray = playersArray.filter(p => p.region === userRegion);
+        }
+
+        socket.emit('leaderboard_data', { data: playersArray.slice(0, 20) }); // Top 20
+    });
+
+    // --- GESTION DES SALONS PRIVÉS ---
     socket.on('create_room', (data) => {
         let roomCode = data?.code && data.code.trim() !== '' ? data.code.trim().toUpperCase() : '';
 
@@ -67,7 +83,6 @@ io.on('connection', (socket) => {
 
         socket.join(roomCode);
         socket.emit('room_joined_success', { code: roomCode, players: rooms[roomCode].players });
-        console.log(`Salon créé : ${roomCode} par ${socket.id}`);
     });
 
     socket.on('join_room', (data) => {
@@ -86,7 +101,6 @@ io.on('connection', (socket) => {
 
             io.to(roomCode).emit('room_players_update', { players: room.players });
             socket.emit('room_joined_success', { code: roomCode, players: room.players });
-            console.log(`Joueur ${socket.id} a rejoint le salon ${roomCode}`);
 
             if (room.players.length === 2) {
                 room.gameStarted = true;
@@ -118,6 +132,7 @@ io.on('connection', (socket) => {
         socket.emit('rooms_list_data', openRooms);
     });
 
+    // --- MATCHMAKING ALÉATOIRE ---
     socket.on('find_1v1_match', () => {
         if (waitingPlayer && waitingPlayer !== socket.id) {
             const p1 = waitingPlayer;
@@ -154,6 +169,7 @@ io.on('connection', (socket) => {
         }
     });
 
+    // --- GESTION DES CLICS DU JOUEUR ---
     socket.on('player_click_1v1', (num) => {
         let roomCode = null;
         for (const code in rooms) {
@@ -192,7 +208,6 @@ io.on('connection', (socket) => {
         if (waitingPlayer === socket.id) waitingPlayer = null;
         cleanupPlayerFromRooms(socket.id);
         delete players[socket.id];
-        console.log(`Déconnexion : ${socket.id}`);
     });
 });
 
@@ -262,8 +277,26 @@ function end1v1Game(roomCode, reason) {
         let p2 = room.matchPlayers[p2Id];
 
         let winnerId = null;
-        if (p1.score > p2.score) winnerId = p1Id;
-        else if (p2.score > p1.score) winnerId = p2Id;
+        if (p1.score > p2.score) {
+            winnerId = p1Id;
+        } else if (p2.score > p1.score) {
+            winnerId = p2Id;
+        }
+
+        // --- MISE À JOUR DES POINTS ---
+        if (winnerId) {
+            let loserId = (winnerId === p1Id) ? p2Id : p1Id;
+            if (players[winnerId]) players[winnerId].points += 25; // Le gagnant gagne 25 points
+            if (players[loserId]) players[loserId].points = Math.max(0, players[loserId].points - 15); // Le perdant perd 15 points (minimum 0)
+        } else {
+            // En cas d'égalité, petit bonus de points
+            if (players[p1Id]) players[p1Id].points += 5;
+            if (players[p2Id]) players[p2Id].points += 5;
+        }
+
+        // Envoyer les points mis à jour au client pour qu'il actualise son affichage s'il est enregistré
+        if (players[p1Id]) io.to(p1Id).emit('player_registered', players[p1Id]);
+        if (players[p2Id]) io.to(p2Id).emit('player_registered', players[p2Id]);
 
         let formattedPlayers = {
             [p1Id]: { target: p1.target, score: p1.score },
