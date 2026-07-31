@@ -194,19 +194,32 @@
     <!-- ÉCRAN DES SALONS PRIVÉS -->
     <div id="screen-rooms" style="display:none; max-width:400px; margin:0 auto;">
         <h2>🏠 Salons Privés</h2>
-        <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:16px; margin:15px 0;">
-            <button class="btn-main btn-blue" onclick="openCreateRoomModal()" style="width:100%; margin-bottom:12px;">✨ Créer un salon personnalisé</button>
-            <div style="display:flex; gap:8px;">
-                <input type="text" id="room-code-input" placeholder="Code du salon" 
-                       style="flex:1; padding:10px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-weight:bold; outline:none; text-transform:uppercase;">
-                <button class="btn-main btn-gold" onclick="joinCustomRoom()" style="padding:10px 15px; font-size:14px;">Rejoindre</button>
-            </div>
+        <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:16px; margin:15px 0; display:flex; flex-direction:column; gap:10px;">
+            <button class="btn-main btn-blue" onclick="openCreateRoomModal()" style="width:100%;">✨ Créer un salon personnalisé</button>
+            <button class="btn-main btn-gold" onclick="openJoinCustomScreen()" style="width:100%;">🔑 Rejoindre avec un code</button>
         </div>
         <h3 style="font-size:14px; text-align:left; color:#aaa; margin-top:15px;">Salons ouverts :</h3>
         <div id="rooms-list" class="rooms-list" style="max-height: 35vh; margin-bottom:15px;">
             <div style="text-align:center; color:#aaa; margin-top:10px;">Chargement des salons...</div>
         </div>
         <button class="btn-secondary" onclick="open1v1Hub()">⬅️ Retour</button>
+    </div>
+
+    <!-- ÉCRAN POUR REJOINDRE AVEC CODE ET MOT DE PASSE -->
+    <div id="screen-join-custom" style="display:none; max-width:400px; margin:0 auto;" class="menu-container">
+        <h2>🔑 Rejoindre un Salon</h2>
+        <p style="color:#aaa; font-size:13px; margin-bottom:10px;">Entre le code et le mot de passe (si requis) :</p>
+        
+        <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;">CODE DU SALON</label>
+        <input type="text" id="join-room-code-input" placeholder="Ex: AB12" maxlength="10" 
+               style="width:100%; padding:12px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:15px; outline:none; text-transform: uppercase;">
+        
+        <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;">MOT DE PASSE (Optionnel)</label>
+        <input type="text" id="join-room-pass-input" placeholder="Laisser vide si public" maxlength="15" 
+               style="width:100%; padding:12px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:20px; outline:none;">
+        
+        <button class="btn-main btn-blue" onclick="submitJoinCustomRoom()">Rejoindre ⚡</button>
+        <button class="btn-secondary" onclick="openRoomsScreen()" style="margin-top:0;">⬅️ Retour</button>
     </div>
 
     <!-- SALLE D'ATTENTE DU SALON PRIVÉ -->
@@ -530,7 +543,7 @@
             if (targetRoom) {
                 setTimeout(() => {
                     if (isProfileValid()) {
-                        joinCustomRoom(targetRoom.toUpperCase());
+                        joinCustomRoomDirect(targetRoom.toUpperCase(), '');
                     }
                 }, 1000);
             }
@@ -613,7 +626,7 @@
         });
 
         function hideAllScreens() {
-            ['screen-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room'].forEach(id => {
+            ['screen-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
@@ -647,7 +660,7 @@
 
         function openCreateRoomModal() {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-            document.getElementById('custom-room-name').value = ''; // Reste vide par défaut
+            document.getElementById('custom-room-name').value = '';
             document.getElementById('custom-room-pass').value = '';
             document.getElementById('modal-create-room').style.display = 'flex';
         }
@@ -660,7 +673,6 @@
             const code = document.getElementById('custom-room-name').value.trim().toUpperCase();
             const password = document.getElementById('custom-room-pass').value.trim();
             
-            // Si le joueur écrit quelque chose, il faut que ce soit valide. S'il laisse vide, ça passe au serveur.
             if (code !== '' && code.length < 2) { 
                 alert("Le nom du salon personnalisé doit contenir au moins 2 caractères."); 
                 return; 
@@ -671,20 +683,34 @@
             closeCreateRoomModal();
         }
 
-        function joinCustomRoom(code = null) {
-            const roomCode = code || document.getElementById('room-code-input').value.trim().toUpperCase();
-            if (!roomCode) { alert("Veuillez entrer un code de salon valide."); return; }
-            if (!socket.connected) { alert("Erreur : Non connecté au serveur."); return; }
-            socket.emit('join_room', { code: roomCode, password: '' });
+        // Ouvre l'écran séparé pour rejoindre un salon avec code/mot de passe
+        function openJoinCustomScreen(prefilledCode = '') {
+            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+            hideAllScreens();
+            document.getElementById('screen-join-custom').style.display = 'flex';
+            document.getElementById('join-room-code-input').value = prefilledCode;
+            document.getElementById('join-room-pass-input').value = '';
         }
 
-        // Fonction appelée depuis la liste des salons ouverts
+        // Soumission depuis l'écran dédié
+        function submitJoinCustomRoom() {
+            const roomCode = document.getElementById('join-room-code-input').value.trim().toUpperCase();
+            const password = document.getElementById('join-room-pass-input').value.trim();
+            if (!roomCode) { alert("Veuillez entrer un code de salon valide."); return; }
+            if (!socket.connected) { alert("Erreur : Non connecté au serveur."); return; }
+            socket.emit('join_room', { code: roomCode, password: password });
+        }
+
+        // Connexion directe (par exemple depuis la liste ou lien direct)
         function joinRoomFromList(code, hasPassword) {
-            let password = '';
             if (hasPassword) {
-                password = prompt("Ce salon est protégé par un mot de passe. Veuillez l'entrer :");
-                if (password === null) return; // Si l'utilisateur clique sur Annuler
+                openJoinCustomScreen(code);
+            } else {
+                joinRoomDirect(code, '');
             }
+        }
+
+        function joinRoomDirect(code, password) {
             if (!socket.connected) { alert("Erreur : Non connecté au serveur."); return; }
             socket.emit('join_room', { code: code, password: password });
         }
@@ -712,7 +738,6 @@
             rooms.forEach(r => {
                 const row = document.createElement('div');
                 row.className = 'room-row';
-                // Ajout visuel du cadenas si le salon est protégé
                 const lockIcon = r.hasPassword ? ' 🔒' : '';
                 
                 row.innerHTML = `
@@ -906,7 +931,7 @@
 
         socket.on('start_countdown', () => {
             if (radarInterval) clearInterval(radarInterval);
-            ['screen-1v1-hub', 'screen-1v1-lobby', 'screen-room-waiting'].forEach(id => {
+            ['screen-1v1-hub', 'screen-1v1-lobby', 'screen-room-waiting', 'screen-join-custom'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
