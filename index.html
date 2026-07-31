@@ -633,9 +633,9 @@
             document.getElementById('lang-btn').innerText = (currentLang === 'fr') ? 'ENG' : 'FR';
         }
 
-        // --- MOTEUR AUDIO STYLE GEOMETRY DASH & ARCADE CYBERPUNK ---
+        // --- MOTEUR AUDIO LONG ET ÉVOLUTIF (64 PAS) ---
         const SoundEngine = {
-            ctx: null, isMuted: false, timerId: null, currentMode: null, step: 0, bpm: 130,
+            ctx: null, isMuted: false, timerId: null, currentMode: null, step: 0, bpm: 142,
             init() { 
                 if (!this.ctx) { 
                     this.ctx = new (window.AudioContext || window.webkitAudioContext)(); 
@@ -702,81 +702,111 @@
                 this.stopMusic(false);
                 this.step = 0;
 
-                // Menu = Cyberpunk Arcade (125 BPM) | Partie = Geometry Dash Electro House (145 BPM)
-                this.bpm = (mode === 'menu') ? 125 : 145;
-                const intervalMs = (60 / this.bpm / 4) * 1000; // Pas de 16ème de note
+                this.bpm = (mode === 'menu') ? 120 : 142;
+                const intervalMs = (60 / this.bpm / 4) * 1000;
 
                 this.timerId = setInterval(() => {
                     if (this.isMuted || !this.ctx || this.ctx.state !== 'running') return;
                     this.tickSequence(this.currentMode, this.step);
-                    this.step = (this.step + 1) % 32;
+                    this.step = (this.step + 1) % 64; // Boucle longue de 64 pas
                 }, intervalMs);
             },
             tickSequence(mode, step) {
                 const t = this.ctx.currentTime;
-                const scale = [110, 123.47, 130.81, 146.83, 164.81, 196, 220, 246.94, 261.63, 293.66, 329.63];
+                const scale = [110, 123.47, 130.81, 146.83, 164.81, 196, 220, 246.94, 261.63, 293.66, 329.63, 349.23, 392];
 
-                // Kick percussif sur les temps forts (0, 4, 8, 12...)
+                // Kick percussif
                 if (step % 4 === 0) {
                     const osc = this.ctx.createOscillator();
                     const gain = this.ctx.createGain();
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(mode === 'menu' ? 130 : 160, t);
-                    osc.frequency.exponentialRampToValueAtTime(35, t + 0.08);
-                    gain.gain.setValueAtTime(0.2, t);
+                    osc.frequency.setValueAtTime(mode === 'menu' ? 120 : 150, t);
+                    osc.frequency.exponentialRampToValueAtTime(30, t + 0.08);
+                    gain.gain.setValueAtTime(0.18, t);
                     gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
                     osc.connect(gain); gain.connect(this.ctx.destination);
                     osc.start(t); osc.stop(t + 0.09);
                 }
 
-                // Snare/Clap énergique sur les temps 2 et 4 (steps 4 et 12 en 8ème notes -> 4, 12, 20, 28)
-                if (step === 4 || step === 12 || step === 20 || step === 28) {
-                    const bufferSize = this.ctx.sampleRate * 0.08;
+                // Snare
+                if (step === 4 || step === 12 || step === 20 || step === 28 || step === 36 || step === 44 || step === 52 || step === 60) {
+                    const bufferSize = this.ctx.sampleRate * 0.07;
                     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
                     const data = buffer.getChannelData(0);
                     for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
                     const noise = this.ctx.createBufferSource();
                     noise.buffer = buffer;
                     const filter = this.ctx.createBiquadFilter();
-                    filter.type = 'highpass'; filter.frequency.setValueAtTime(1200, t);
+                    filter.type = 'highpass'; filter.frequency.setValueAtTime(1400, t);
                     const gain = this.ctx.createGain();
-                    gain.gain.setValueAtTime(0.12, t);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+                    gain.gain.setValueAtTime(0.1, t);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
                     noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
                     noise.start(t);
                 }
 
-                // Mélodie / Lead Style Geometry Dash (arpèges rapides électro)
+                // Hi-hat léger
+                if (step % 2 === 1 && mode !== 'menu') {
+                    const bufferSize = this.ctx.sampleRate * 0.03;
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                    const noise = this.ctx.createBufferSource();
+                    noise.buffer = buffer;
+                    const filter = this.ctx.createBiquadFilter();
+                    filter.type = 'highpass'; filter.frequency.setValueAtTime(6000, t);
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(0.03, t);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
+                    noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                    noise.start(t);
+                }
+
+                // Mélodie changeante sur 4 mesures (64 pas)
                 if (mode !== 'menu') {
-                    const melodyPattern = [0, 2, 4, 7, 9, 7, 4, 2, 3, 5, 7, 10, 9, 7, 5, 2];
-                    const noteIdx = melodyPattern[step % melodyPattern.length];
+                    const bar = Math.floor(step / 16);
+                    let melodyPatterns = [
+                        [0, 2, 4, 7, 9, 7, 4, 2, 3, 5, 7, 10, 9, 7, 5, 2],
+                        [2, 4, 5, 9, 11, 9, 5, 4, 5, 7, 9, 12, 11, 9, 7, 4],
+                        [4, 5, 7, 11, 12, 11, 7, 5, 7, 9, 11, 14, 12, 11, 9, 7],
+                        [7, 9, 11, 14, 16, 14, 11, 9, 11, 12, 14, 16, 14, 12, 9, 4]
+                    ];
+                    const currentPattern = melodyPatterns[bar];
+                    const noteIdx = currentPattern[step % 16];
                     const freq = scale[noteIdx % scale.length] * 2;
 
                     const osc = this.ctx.createOscillator();
                     const gain = this.ctx.createGain();
                     const filter = this.ctx.createBiquadFilter();
 
-                    osc.type = (step % 2 === 0) ? 'sawtooth' : 'square';
+                    osc.type = (step % 4 === 0) ? 'sawtooth' : 'square';
                     osc.frequency.setValueAtTime(freq, t);
 
                     filter.type = 'lowpass';
-                    filter.frequency.setValueAtTime(1500, t);
+                    filter.frequency.setValueAtTime(1800 + (bar * 200), t);
 
-                    gain.gain.setValueAtTime(0.045, t);
+                    gain.gain.setValueAtTime(0.04, t);
                     gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
 
                     osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
                     osc.start(t); osc.stop(t + 0.09);
                 } else {
-                    // Ambiance menu / arcade cyberpunk
                     if (step % 2 === 0) {
-                        const menuPattern = [0, 3, 5, 7];
-                        const freq = scale[menuPattern[(step / 2) % menuPattern.length]];
+                        const menuBar = Math.floor(step / 16);
+                        const menuPatterns = [
+                            [0, 3, 5, 7],
+                            [2, 5, 7, 9],
+                            [3, 7, 8, 10],
+                            [5, 8, 10, 12]
+                        ];
+                        const chord = menuPatterns[menuBar];
+                        const freq = scale[chord[(step / 2) % chord.length]];
+                        
                         const osc = this.ctx.createOscillator();
                         const gain = this.ctx.createGain();
                         osc.type = 'square';
                         osc.frequency.setValueAtTime(freq, t);
-                        gain.gain.setValueAtTime(0.03, t);
+                        gain.gain.setValueAtTime(0.025, t);
                         gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
                         osc.connect(gain); gain.connect(this.ctx.destination);
                         osc.start(t); osc.stop(t + 0.15);
