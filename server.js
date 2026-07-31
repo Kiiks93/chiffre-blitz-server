@@ -1,5 +1,3 @@
-Voici le code complet et mis à jour de ton fichier **`server.js`** intégrant la correction pour le mot de passe (qui empêchait de rejoindre les salons publics) ainsi que toutes les fonctionnalités précédentes (sécurité anti-freeze, unicité des codes de salon, gestion des listes avec les indicateurs de mots de passe) :
-
 ```javascript
 const express = require('express');
 const http = require('http');
