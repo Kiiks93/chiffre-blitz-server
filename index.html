@@ -274,7 +274,8 @@
         <h2>🎯 Tournoi Blitz</h2>
         <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:16px; margin:20px 0;">
             <p>Arbre à élimination directe.</p>
-            <div style="color:#ff8a00; font-weight:bold;">Récompense : 150 🪙 + 1 🏆</div>
+            <div style="color:#ff8a00; font-weight:bold; margin-bottom:15px;">Récompense : 150 🪙 + 1 🏆 + 50 ⭐</div>
+            <button class="btn-main btn-gold" onclick="simulateWinTournament()">🏆 Gagner le Tournoi</button>
         </div>
         <button class="btn-secondary" onclick="showMainMenu()">⬅️ Retour Menu</button>
     </div>
@@ -509,7 +510,6 @@
         const SERVER_URL = "https://chiffre-blitz-server.onrender.com";
         const socket = io(SERVER_URL);
 
-        // Anti-freeze: Si le serveur Render redémarre ou s'endort
         socket.on('disconnect', (reason) => {
             SoundEngine.stopMusic(true);
             alert("Connexion perdue avec le serveur. Retour au menu.");
@@ -537,13 +537,12 @@
             showMainMenu();
             checkAndShowProfileModal();
 
-            // Gestion lien direct ?room=XYZ
             const urlParams = new URLSearchParams(window.location.search);
             const targetRoom = urlParams.get('room');
             if (targetRoom) {
                 setTimeout(() => {
                     if (isProfileValid()) {
-                        joinCustomRoomDirect(targetRoom.toUpperCase(), '');
+                        openJoinCustomScreen(targetRoom.toUpperCase());
                     }
                 }, 1000);
             }
@@ -683,7 +682,6 @@
             closeCreateRoomModal();
         }
 
-        // Ouvre l'écran séparé pour rejoindre un salon avec code/mot de passe
         function openJoinCustomScreen(prefilledCode = '') {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
             hideAllScreens();
@@ -692,7 +690,6 @@
             document.getElementById('join-room-pass-input').value = '';
         }
 
-        // Soumission depuis l'écran dédié
         function submitJoinCustomRoom() {
             const roomCode = document.getElementById('join-room-code-input').value.trim().toUpperCase();
             const password = document.getElementById('join-room-pass-input').value.trim();
@@ -701,7 +698,6 @@
             socket.emit('join_room', { code: roomCode, password: password });
         }
 
-        // Connexion directe (par exemple depuis la liste ou lien direct)
         function joinRoomFromList(code, hasPassword) {
             if (hasPassword) {
                 openJoinCustomScreen(code);
@@ -768,6 +764,27 @@
         }
 
         socket.on('room_error', (msg) => { alert(msg); });
+
+        // MODE TOURNOI
+        function openTournamentScreen() {
+            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+            hideAllScreens();
+            document.getElementById('screen-tournament').style.display = 'block';
+        }
+
+        function simulateWinTournament() {
+            if (!socket.connected) return;
+            socket.emit('win_tournament');
+        }
+
+        socket.on('tournament_reward_success', (data) => {
+            myProfile.coins += data.coinsGained;
+            myProfile.trophies += data.trophiesGained;
+            saveLocalEconomy();
+            SoundEngine.playVictory();
+            alert(`🏆 VICTOIRE AU TOURNOI !\n\n+${data.pointsGained} Points ⭐\n+${data.coinsGained} Pièces 🪙\n+${data.trophiesGained} Trophée 🏆`);
+            showMainMenu();
+        });
 
         /* BOUTIQUE */
         function openShop() {
@@ -883,12 +900,6 @@
             else if (data.type === 'eclipse') { grid.classList.add('effect-eclipse'); setTimeout(() => grid.classList.remove('effect-eclipse'), 1500); }
             else if (data.type === 'chaos') { grid.classList.add('effect-quake', 'effect-micro', 'effect-eclipse'); setTimeout(() => grid.classList.remove('effect-quake', 'effect-micro', 'effect-eclipse'), 2500); }
         });
-
-        function openTournamentScreen() {
-            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-            hideAllScreens();
-            document.getElementById('screen-tournament').style.display = 'block';
-        }
 
         function openLeaderboard() {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
