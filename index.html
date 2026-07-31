@@ -57,7 +57,6 @@
             padding: 10px 18px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%;
         }
 
-        /* MODALES ET POPUPS */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.92); display: flex; flex-direction: column;
@@ -68,7 +67,6 @@
             padding: 20px; max-width: 400px; width: 100%; max-height: 85vh; display: flex; flex-direction: column;
         }
         
-        /* ONGLETS */
         .tabs { display: flex; gap: 8px; margin-bottom: 15px; }
         .tab-btn {
             flex: 1; padding: 10px 5px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
@@ -87,7 +85,6 @@
         .lb-name, .room-info { flex: 1; font-weight: bold; margin-left: 10px; }
         .lb-pts { font-weight: 900; color: #00ff88; }
 
-        /* BOUTIQUE */
         .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; overflow-y: auto; max-height: 55vh; margin: 10px 0; padding-right: 5px; }
         .power-card { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; }
         .power-card.equipped { border-color: #00ff88; background: rgba(0, 255, 136, 0.1); }
@@ -99,7 +96,6 @@
         .power-btn.equip { background: #00d2ff; color: #000; }
         .power-btn.active { background: #00ff88; color: #000; }
 
-        /* HUD & Grille */
         .hud { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(255,255,255,0.08); padding: 12px; border-radius: 14px; margin-bottom: 10px; }
         .player-box { padding: 8px; border-radius: 10px; background: rgba(0,0,0,0.3); }
         .player-box.me { border: 2px solid #00d2ff; }
@@ -121,7 +117,6 @@
         }
         .tile:active { transform: scale(0.92); background: #3c1e69; }
 
-        /* Effets Pouvoirs */
         .tile.highlight-target { border-color: #00ff88 !important; background: #00ff88 !important; color: #000 !important; box-shadow: 0 0 20px #00ff88; }
         .grid.effect-quake { animation: quake 0.15s infinite; }
         .grid.effect-micro .tile { transform: scale(0.65); }
@@ -161,7 +156,6 @@
         🔊 Touche l'écran pour activer l'ambiance lofi chill
     </div>
 
-    <!-- PAGE D'ACCUEIL / INFORMATION DU JEU (TITLE SCREEN) -->
     <div id="screen-title" class="menu-container" style="max-width:380px; margin: 10px auto; text-align: left;">
         <div style="text-align: center; margin-bottom: 10px;">
             <h2 style="font-size: 26px; color: #00d2ff; margin: 0; text-shadow: 0 0 15px rgba(0,210,255,0.4);">CHIFFRE BLITZ ⚡</h2>
@@ -179,7 +173,7 @@
             </div>
             <div>
                 <strong style="color:#00c6ff; font-size:13px;">⚔️ Duel 1v1 Online</strong>
-                <p style="margin:4px 0 0 0;">Affronte un adversaire en temps réel (matchmaking aléatoire ou salons privés). Rejoins ou crée des salons avec code/mot de passe !</p>
+                <p style="margin:4px 0 0 0;">Affronte un adversaire en temps réel (matchmaking aléatoire ou salons privés). Utilise des pouvoirs tactiques équilibrés !</p>
             </div>
             <div>
                 <strong style="color:#f8b500; font-size:13px;">🎯 Mode Tournoi</strong>
@@ -198,7 +192,6 @@
         <button class="btn-main btn-blue" onclick="showMainMenu()" style="margin-top: 12px; width: 100%;">JOUER ⚡</button>
     </div>
 
-    <!-- MENU PRINCIPAL -->
     <div id="screen-menu" class="menu-container" style="display:none;">
         <button class="btn-main btn-blue" onclick="startSoloTraining()">🏋️ ENTRAÎNEMENT SOLO</button>
         <button class="btn-main" onclick="open1v1Hub()">⚔️ DUEL 1v1 ONLINE</button>
@@ -208,7 +201,6 @@
         <button class="btn-secondary" onclick="showTitleScreen()" style="margin-top:5px;">ℹ️ Informations & Règles</button>
     </div>
 
-    <!-- HUB DE CHOIX 1v1 ONLINE -->
     <div id="screen-1v1-hub" style="display:none; max-width:350px; margin:15px auto;" class="menu-container">
         <h2>⚔️ DUEL 1v1 ONLINE</h2>
         <p style="color:#aaa; font-size:13px; margin-bottom:10px;">Choisis ton mode de jeu :</p>
@@ -217,7 +209,6 @@
         <button class="btn-secondary" onclick="showMainMenu()">⬅️ Retour Menu</button>
     </div>
 
-    <!-- SALLE D'ATTENTE 1v1 ALÉATOIRE -->
     <div id="screen-1v1-lobby" style="display:none;">
         <div class="matchmaking-loader">
             <div class="radar-box">
@@ -229,7 +220,6 @@
         <button class="btn-secondary" onclick="cancel1v1Search()" style="max-width:200px; margin-top:30px;">❌ Annuler</button>
     </div>
 
-    <!-- ÉCRAN DES SALONS PRIVÉS -->
     <div id="screen-rooms" style="display:none; max-width:400px; margin:0 auto;">
         <h2>🏠 Salons Privés</h2>
         <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:16px; margin:15px 0; display:flex; flex-direction:column; gap:10px;">
@@ -243,7 +233,6 @@
         <button class="btn-secondary" onclick="open1v1Hub()">⬅️ Retour</button>
     </div>
 
-    <!-- ÉCRAN POUR REJOINDRE AVEC CODE ET MOT DE PASSE -->
     <div id="screen-join-custom" style="display:none; max-width:400px; margin:0 auto;" class="menu-container">
         <h2>🔑 Rejoindre un Salon</h2>
         <p style="color:#aaa; font-size:13px; margin-bottom:10px;">Entre le code et le mot de passe (si requis) :</p>
@@ -260,7 +249,6 @@
         <button class="btn-secondary" onclick="openRoomsScreen()" style="margin-top:0;">⬅️ Retour</button>
     </div>
 
-    <!-- SALLE D'ATTENTE DU SALON PRIVÉ -->
     <div id="screen-room-waiting" style="display:none; max-width:400px; margin:0 auto;">
         <h2>⚡ Salon : <span id="current-room-code" style="color:#00d2ff;">----</span></h2>
         <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:16px; margin:20px 0;">
@@ -285,7 +273,6 @@
         <button class="btn-secondary" onclick="leaveCustomRoom()">❌ Quitter le salon</button>
     </div>
 
-    <!-- MODAL DE CRÉATION DE SALON -->
     <div id="modal-create-room" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:center;">
             <h2 style="margin:0 0 10px 0; color:#00d2ff;">✨ CRÉER UN SALON</h2>
@@ -306,7 +293,6 @@
         </div>
     </div>
 
-    <!-- MODE TOURNOI -->
     <div id="screen-tournament" style="display:none; max-width:400px; margin:0 auto;">
         <h2>🎯 Tournoi Blitz</h2>
         <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:16px; margin:20px 0; text-align:left;">
@@ -317,7 +303,6 @@
         <button class="btn-secondary" onclick="showMainMenu()">⬅️ Retour Menu</button>
     </div>
 
-    <!-- MODAL POPUP PSEUDO & RÉGION -->
     <div id="modal-username" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:center;">
             <h2 style="margin:0 0 10px 0; color:#00d2ff;">⚡ BIENVENUE ⚡</h2>
@@ -349,7 +334,6 @@
         </div>
     </div>
 
-    <!-- MODAL BOUTIQUE -->
     <div id="modal-shop" class="modal-overlay" style="display:none;">
         <div class="modal-card">
             <h2 style="margin:0 0 10px 0; color:#38ef7d;">🛍️ BOUTIQUE</h2>
@@ -362,7 +346,6 @@
         </div>
     </div>
 
-    <!-- OVERLAY CLASSEMENT -->
     <div id="modal-leaderboard" class="modal-overlay" style="display:none;">
         <div class="modal-card">
             <h2 style="margin:0 0 15px 0; color:#00d2ff;">🏆 CLASSEMENT</h2>
@@ -378,13 +361,11 @@
         </div>
     </div>
 
-    <!-- OVERLAY DECOMPTE -->
     <div id="countdown-overlay" style="display:none;">
         <div style="font-size:24px; color:#aaa; margin-bottom:10px;">PRÉPAREZ-VOUS !</div>
         <div id="countdown-number" class="countdown-num">3</div>
     </div>
 
-    <!-- ECRAN DE JEU -->
     <div id="screen-game" style="display:none;">
         <div id="hud-1v1" class="hud" style="display:none;">
             <div class="player-box me">
@@ -421,7 +402,6 @@
         <div id="grid" class="grid"></div>
     </div>
 
-    <!-- MODAL RESULTAT -->
     <div id="recap-modal" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:center;">
             <div id="recap-banner" style="font-size:26px; font-weight:900; margin-bottom:10px;">RÉSULTAT</div>
@@ -551,14 +531,12 @@
             reconnectionDelay: 1000
         });
 
-        // Gestion propre de la reconnexion sans alertes bloquantes
         socket.on('disconnect', (reason) => {
             SoundEngine.stopMusic(true);
         });
 
         socket.on('connect', () => {
             registerIfPossible();
-            // Si on était dans un salon et que la page a rechargé, on retente de rejoindre via l'URL
             const urlParams = new URLSearchParams(window.location.search);
             const targetRoom = urlParams.get('room');
             if (targetRoom && isProfileValid()) {
@@ -569,15 +547,17 @@
         });
 
         let myProfile = { username: "", region: "Hauts-de-France", country: "FR", points: 0, coins: 100, trophies: 0, inventory: {}, equippedPower: null };
+        
+        // POUVOIRS RÉÉQUILIBRÉS : 3e et 4e plus chers (surtout Nova et Chaos Absolu)
         const POWERS_CATALOG = [
             { id: 'spotlight', name: '💡 Projecteur', price: 80, desc: 'Illumine la bonne tuile (2s)', type: 'bonus' },
-            { id: 'freeze', name: '⏳ Blocage du Temps', price: 120, desc: 'Gèle le chrono pendant 3s', type: 'bonus' },
-            { id: 'joker', name: '⚡ Joker Éclair', price: 180, desc: 'Valide la cible actuelle', type: 'bonus' },
-            { id: 'nova', name: '🌟 Nova Temporelle', price: 300, desc: 'GIGA : Valide 3 cibles', type: 'bonus' },
+            { id: 'freeze', name: '⏳ Blocage du Temps', price: 150, desc: 'Gèle le chrono pendant 3s', type: 'bonus' },
+            { id: 'joker', name: '⚡ Joker Éclair', price: 300, desc: 'Valide la cible actuelle', type: 'bonus' },
+            { id: 'nova', name: '🌟 Nova Temporelle', price: 750, desc: 'GIGA : Valide 3 cibles', type: 'bonus' },
             { id: 'quake', name: '📳 Séisme', price: 100, desc: 'Fait trembler l\'adversaire (2s)', type: 'malus' },
-            { id: 'micro', name: '🐜 Micro-Tuiles', price: 150, desc: 'Rétrécit la grille adverse (2s)', type: 'malus' },
-            { id: 'eclipse', name: '🌑 Éclipse', price: 220, desc: 'Floute la grille adverse (1.5s)', type: 'malus' },
-            { id: 'chaos', name: '🌪️ Chaos Absolu', price: 350, desc: 'GIGA : Combo de malus (2.5s)', type: 'malus' }
+            { id: 'micro', name: '🐜 Micro-Tuiles', price: 180, desc: 'Rétrécit la grille adverse (2s)', type: 'malus' },
+            { id: 'eclipse', name: '🌑 Éclipse', price: 320, desc: 'Floute la grille adverse (1.5s)', type: 'malus' },
+            { id: 'chaos', name: '🌪️ Chaos Absolu', price: 900, desc: 'GIGA : Combo de malus (5s)', type: 'malus' }
         ];
 
         let current1v1Time = 30, radarInterval = null;
@@ -688,14 +668,14 @@
 
         function showTitleScreen() {
             hideAllScreens();
-            window.history.replaceState({}, '', window.location.pathname); // Nettoie l'URL
+            window.history.replaceState({}, '', window.location.pathname);
             document.getElementById('screen-title').style.display = 'block';
             SoundEngine.startMusic('menu');
         }
 
         function showMainMenu() {
             hideAllScreens();
-            window.history.replaceState({}, '', window.location.pathname); // Nettoie l'URL
+            window.history.replaceState({}, '', window.location.pathname);
             document.getElementById('screen-menu').style.display = 'flex';
             SoundEngine.startMusic('menu');
         }
@@ -823,7 +803,7 @@
             document.getElementById('screen-room-waiting').style.display = 'block';
             document.getElementById('current-room-code').innerText = data.code;
             const shareUrl = `${window.location.origin}${window.location.pathname}?room=${data.code}`;
-            window.history.replaceState({}, '', `?room=${data.code}`); // Sauvegarde dans l'URL pour la persistance mobile
+            window.history.replaceState({}, '', `?room=${data.code}`);
             document.getElementById('room-share-link').value = shareUrl;
             updateRoomPlayers(data.players);
         });
@@ -840,14 +820,12 @@
 
         socket.on('room_error', (msg) => { alert(msg); });
 
-        // MODE TOURNOI
         function openTournamentScreen() {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
             hideAllScreens();
             document.getElementById('screen-tournament').style.display = 'block';
         }
 
-        /* BOUTIQUE */
         function openShop() {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
             document.getElementById('modal-shop').style.display = 'flex';
@@ -956,10 +934,36 @@
         socket.on('receive_malus', (data) => {
             const grid = document.getElementById('grid');
             SoundEngine.playError();
-            if (data.type === 'quake') { grid.classList.add('effect-quake'); setTimeout(() => grid.classList.remove('effect-quake'), 2000); }
-            else if (data.type === 'micro') { grid.classList.add('effect-micro'); setTimeout(() => grid.classList.remove('effect-micro'), 2000); }
-            else if (data.type === 'eclipse') { grid.classList.add('effect-eclipse'); setTimeout(() => grid.classList.remove('effect-eclipse'), 1500); }
-            else if (data.type === 'chaos') { grid.classList.add('effect-quake', 'effect-micro', 'effect-eclipse'); setTimeout(() => grid.classList.remove('effect-quake', 'effect-micro', 'effect-eclipse'), 2500); }
+            if (data.type === 'quake') { 
+                grid.classList.add('effect-quake'); 
+                setTimeout(() => grid.classList.remove('effect-quake'), 2000); 
+            }
+            else if (data.type === 'micro') { 
+                grid.classList.add('effect-micro'); 
+                setTimeout(() => grid.classList.remove('effect-micro'), 2000); 
+            }
+            else if (data.type === 'eclipse') { 
+                grid.classList.add('effect-eclipse'); 
+                setTimeout(() => grid.classList.remove('effect-eclipse'), 1500); 
+            }
+            else if (data.type === 'chaos') { 
+                // Enchaînement progressif échelonné sur 5 secondes
+                grid.classList.add('effect-quake');
+                
+                setTimeout(() => {
+                    grid.classList.remove('effect-quake');
+                    grid.classList.add('effect-micro');
+                }, 1600);
+                
+                setTimeout(() => {
+                    grid.classList.remove('effect-micro');
+                    grid.classList.add('effect-eclipse');
+                }, 3300);
+                
+                setTimeout(() => {
+                    grid.classList.remove('effect-eclipse');
+                }, 5000);
+            }
         });
 
         function openLeaderboard() {
