@@ -595,6 +595,8 @@
             <div id="recap-banner" style="font-size:22px; font-weight:900; margin-bottom:8px;">RÉSULTAT</div>
             <div id="recap-reason" style="color:#aaa; margin-bottom:12px; font-size:13px;"></div>
             
+            <div id="recap-admin-abuse-bonuses" style="margin: 8px 0 12px 0; font-size: 11px; color: #ff8a00; background: rgba(255,138,0,0.1); border: 1px dashed #ff8a00; border-radius: 8px; padding: 6px; display: none; text-align: left;"></div>
+
             <div id="recap-1v1-rows">
                 <div style="display:flex; justify-content:space-between; margin:6px 0; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:4px; font-size:13px;">
                     <span data-i18n="recap_my_target">🎯 Ma Cible :</span>
@@ -1091,6 +1093,7 @@
         let cachedOpponent = null;
         let adCallbackFunction = null;
         let selectedRankedItems = [];
+        let latestGlobalEvents = {};
 
         function getFlagEmoji(flag) {
             if (!flag) return '🇫🇷';
@@ -1254,6 +1257,7 @@
         });
 
         socket.on('events_state_update', (events) => {
+            latestGlobalEvents = events;
             const banner = document.getElementById('player-event-banner');
             if (!banner) return;
 
@@ -2077,6 +2081,18 @@
             document.getElementById('opp-profile-badge').innerHTML = getAvatarBadgeHTML(cachedOpponent.flag, cachedOpponent.avatar);
         }
 
+        function getActiveAbusesText(events) {
+            if (!events) return '';
+            let list = [];
+            if (events.coinRush) list.push("🪙 <b>Coin Rush</b> (Pièces x2)");
+            if (events.rankShield) list.push("🛡️ <b>Rank Shield</b> (Zéro perte de points)");
+            if (events.expressoMatch) list.push("⚡ <b>Expresso Match</b> (Parties en 20s)");
+            if (events.chaosMode) list.push("🌪️ <b>Chaos Mode</b>");
+            if (events.jackpotEclair) list.push("🎁 <b>Jackpot Éclair</b>");
+            if (events.saboteurMode) list.push("🕵️‍♂️ <b>Saboteur vs Sprinteur</b>");
+            return list.length > 0 ? "⚡ <b>Admin Abuse actifs :</b><br>" + list.join("<br>") : "";
+        }
+
         socket.on('start_countdown', (data) => {
             if (radarInterval) clearInterval(radarInterval);
             let oppData = extractOpponentInfo(data);
@@ -2162,6 +2178,15 @@
                 banner.innerText = currentLang === 'fr' ? "⏱️ ÉGALITÉ !" : "⏱️ DRAW!"; banner.style.color = "#ff8a00";
             }
             
+            const abuseBox = document.getElementById('recap-admin-abuse-bonuses');
+            const abuseText = getActiveAbusesText(data.globalEvents || latestGlobalEvents);
+            if (abuseText) {
+                abuseBox.innerHTML = abuseText;
+                abuseBox.style.display = 'block';
+            } else {
+                abuseBox.style.display = 'none';
+            }
+
             document.getElementById('recap-reason').innerText = data.reason;
             document.getElementById('recap-my-target').innerText = myData ? myData.target : '-';
             document.getElementById('recap-opp-target').innerText = oppData ? oppData.target : '-';
@@ -2169,6 +2194,17 @@
             document.getElementById('recap-coins-gained').innerText = `+${currentCoinsGained}`;
             modal.style.display = 'flex';
             registerIfPossible();
+        });
+
+        socket.on('solo_reward_result', (data) => {
+            const abuseBox = document.getElementById('recap-admin-abuse-bonuses');
+            const abuseText = getActiveAbusesText(data.globalEvents || latestGlobalEvents);
+            if (abuseText) {
+                abuseBox.innerHTML = abuseText;
+                abuseBox.style.display = 'block';
+            } else {
+                abuseBox.style.display = 'none';
+            }
         });
 
         function handle1v1TileClick(num) {
@@ -2353,6 +2389,15 @@
 
             currentCoinsGained = Math.min(100, Math.floor(soloScore / 3));
             socket.emit('claim_solo_reward', soloScore);
+
+            const abuseBox = document.getElementById('recap-admin-abuse-bonuses');
+            const abuseText = getActiveAbusesText(latestGlobalEvents);
+            if (abuseText) {
+                abuseBox.innerHTML = abuseText;
+                abuseBox.style.display = 'block';
+            } else {
+                abuseBox.style.display = 'none';
+            }
 
             document.getElementById('recap-banner').innerText = currentLang === 'fr' ? "🏋️ ENTRAÎNEMENT TERMINÉ" : "🏋️ TRAINING FINISHED";
             document.getElementById('recap-banner').style.color = "#00d2ff";
