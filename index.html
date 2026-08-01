@@ -85,10 +85,10 @@
         .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; overflow-y: auto; max-height: 55vh; margin: 10px 0; padding-right: 5px; }
         .power-card { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; }
         .power-card.equipped { border-color: #00ff88; background: rgba(0, 255, 136, 0.1); }
-        .power-card h4 { margin: 0 0 5px 0; font-size: 13px; color: #00d2ff; }
-        .power-card p { font-size: 11px; color: #aaa; margin: 0 0 8px 0; }
-        .stock-badge { font-size: 11px; font-weight: bold; color: #38ef7d; margin-bottom: 6px; }
-        .power-btn { padding: 6px 10px; border-radius: 8px; border: none; font-weight: bold; font-size: 12px; cursor: pointer; margin-top: 4px; width: 100%; }
+        .power-card h4 { margin: 0 0 4px 0; font-size: 13px; color: #00d2ff; }
+        .power-card p { font-size: 10px; color: #aaa; margin: 0 0 6px 0; line-height: 1.2; }
+        .stock-badge { font-size: 11px; font-weight: bold; color: #38ef7d; margin-bottom: 4px; }
+        .power-btn { padding: 5px 8px; border-radius: 6px; border: none; font-weight: bold; font-size: 11px; cursor: pointer; width: 100%; margin-top: 3px; }
         .power-btn.buy { background: #f8b500; color: #000; }
         .power-btn.equip { background: #00d2ff; color: #000; }
         .power-btn.active { background: #00ff88; color: #000; }
@@ -441,7 +441,7 @@
                 searching: "Searching for opponent...", cancel: "❌ Cancel", rooms_title: "🏠 Private Rooms", create_room: "✨ Create a room", back: "⬅️ Back",
                 room_label: "Room", waiting: "Waiting...", quit: "❌ Quit", welcome: "WELCOME ⚡", pseudo_label: "PSEUDO",
                 hud_my_target: "MY TARGET", hud_opp_target: "OPPONENT", hud_solo_target: "TARGET TO FIND", hud_score: "SCORE",
-                timer_label: "Time / Pressure", recap_score: "⭐ Mon Score :", recap_coins: "🪙 Coins Earned :",
+                timer_label: "Time / Pressure", recap_score: "⭐ My Score :", recap_coins: "🪙 Coins Earned :",
                 reward_ad: "🎁 Watch an ad to double (+🪙)", main_menu: "MAIN MENU",
                 p_spotlight_name: "💡 Spotlight", p_spotlight_desc: "Illuminates the correct tile (2s)",
                 p_freeze_name: "⏳ Time Freeze", p_freeze_desc: "Freezes the timer for 3s",
@@ -544,10 +544,7 @@
                         <div>
                             <div class="stock-badge">${t.owned}: x${count}</div>
                             <button class="power-btn buy" onclick="buyPower('${p.id}', ${p.price})">${t.buy} (${p.price} 🪙)</button>
-                            ${count > 0 ? 
-                                `<button class="power-btn ${isEquipped ? 'active' : 'equip'}" onclick="equipPower('${p.id}')">${isEquipped ? t.equipped : t.equip}</button>` : 
-                                ``
-                            }
+                            <button class="power-btn ${isEquipped ? 'active' : 'equip'}" style="${count > 0 ? 'display: block;' : 'display: none;'}" onclick="equipPower('${p.id}')">${isEquipped ? t.equipped : t.equip}</button>
                         </div>
                     </div>
                 `;
