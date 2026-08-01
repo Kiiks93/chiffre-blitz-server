@@ -19,7 +19,8 @@ const SUPABASE_KEY = process.env.SUPABASE_KEY;
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let socketToUser = {}; // Associe un socket.id à un pseudo actif en mémoire rapide
-let waitingPlayer = null;
+let unrankedQueue = []; // File d'attente non classée
+let rankedQueue = [];   // File d'attente classée (objets: { socket, points, joinedAt, items })
 let rooms = {};
 let pendingRoomDeletions = {};
 
@@ -33,6 +34,14 @@ const POWERS_PRICES = {
     'eclipse': 800,
     'chaos': 2000
 };
+
+// Fonction de calcul des rangs thématiques
+function getPlayerRank(points) {
+    if (points >= 1300) return { name: 'Calculateur', tier: 4 };
+    if (points >= 700)  return { name: 'Expert', tier: 3 };
+    if (points >= 300)  return { name: 'Chiffre', tier: 2 };
+    return { name: 'Novice', tier: 1 };
+}
 
 function generateRandomPool(target) {
     let pool = [target];
@@ -49,7 +58,6 @@ function generateRandomPool(target) {
 async function getOrCreatePlayer(username, region) {
     const cleanName = username.trim();
     
-    // Chercher le joueur dans Supabase
     let { data, error } = await supabase
         .from('players')
         .select('*')
@@ -57,7 +65,6 @@ async function getOrCreatePlayer(username, region) {
         .single();
 
     if (!data) {
-        // Création du profil s'il n'existe pas
         const newPlayer = {
             username: cleanName,
             region: region || 'Hauts-de-France',
@@ -77,7 +84,6 @@ async function getOrCreatePlayer(username, region) {
             .single();
         return inserted;
     } else {
-        // Mettre à jour la région si elle a changé
         if (region && data.region !== region) {
             await supabase
                 .from('players')
@@ -107,6 +113,42 @@ async function updatePlayerInDB(player) {
         .eq('id', player.id);
 }
 
+// --- BOUCLE SBMM ÉLASTIQUE (MATCHMAKING CLASSÉ) ---
+setInterval(() => {
+    if (rankedQueue.length < 2) return;
+
+    for (let i = 0; i < rankedQueue.length; i++) {
+        for (let j = i + 1; j < rankedQueue.length; j++) {
+            let p1 = rankedQueue[i];
+            let p2 = rankedQueue[j];
+
+            let waitTime = (Date.now() - Math.min(p1.joinedAt, p2.joinedAt)) / 1000;
+            let pointDiff = Math.abs(p1.points - p2.points);
+
+            // Tolérance SBMM progressive pour éviter tout blocage (ex: 0 vs 25 points)
+            let allowedDiff = 40;  // Phase 1 (0-10s) : Tranche très proche
+            if (waitTime > 10) allowedDiff = 150;  // Phase 2 (10-25s) : Tolérance large dans le rang
+            if (waitTime > 25) allowedDiff = 1000; // Phase 3 (25s+) : Ouverture maximale pour lancer à coup sûr
+
+            if (pointDiff <= allowedDiff || waitTime > 25) {
+                rankedQueue.splice(j, 1);
+                rankedQueue.splice(i, 1);
+                startRankedMatchSession(p1, p2);
+                return;
+            }
+        }
+    }
+}, 1000);
+
+// --- BOUCLE MATCHMAKING NON CLASSÉ ---
+setInterval(() => {
+    if (unrankedQueue.length >= 2) {
+        let s1 = unrankedQueue.shift();
+        let s2 = unrankedQueue.shift();
+        startUnrankedMatchSession(s1, s2);
+    }
+}, 1000);
+
 io.on('connection', (socket) => {
     console.log(`Un joueur s'est connecté : ${socket.id}`);
 
@@ -125,7 +167,6 @@ io.on('connection', (socket) => {
 
         socketToUser[socket.id] = username;
 
-        // Format renvoyé au client (on harmoniseequippedPower)
         socket.emit('player_registered', {
             username: dbPlayer.username,
             region: dbPlayer.region,
@@ -241,7 +282,7 @@ io.on('connection', (socket) => {
 
     socket.on('get_leaderboard', async (type) => {
         const username = socketToUser[socket.id];
-        let query = supabase.from('players').select('username, points, region').order('points', { ascending: false }).limit(20);
+        let query = supabase.from('players').select('username, points, region, avatar, flag').order('points', { ascending: false }).limit(20);
 
         if (type === 'regional' && username) {
             let dbPlayer = await getOrCreatePlayer(username);
@@ -332,6 +373,7 @@ io.on('connection', (socket) => {
             if (room.players.length === 2) {
                 room.gameStarted = true;
                 room.timeLeft = 30;
+                room.isRanked = false;
                 room.matchPlayers = {
                     [room.players[0].id]: { target: 1, score: 0, pool: generateRandomPool(1) },
                     [room.players[1].id]: { target: 1, score: 0, pool: generateRandomPool(1) }
@@ -359,39 +401,29 @@ io.on('connection', (socket) => {
         socket.emit('rooms_list_data', openRooms);
     });
 
+    // Matchmaking Non Classé
     socket.on('find_1v1_match', () => {
-        if (waitingPlayer && waitingPlayer !== socket.id) {
-            const p1 = waitingPlayer;
-            const p2 = socket.id;
-            waitingPlayer = null;
+        if (!unrankedQueue.includes(socket) && !rankedQueue.some(p => p.socket === socket)) {
+            unrankedQueue.push(socket);
+        }
+    });
 
-            const roomName = `match_${p1}_${p2}`;
-            const s1 = io.sockets.sockets.get(p1);
-            const s2 = io.sockets.sockets.get(p2);
-            
-            if (s1) s1.join(roomName);
-            if (s2) s2.join(roomName);
+    // Matchmaking Classé (avec sélection de 2 objets / loadout)
+    socket.on('find_ranked_match', async (data) => {
+        const username = socketToUser[socket.id];
+        let currentPoints = 0;
+        if (username) {
+            let dbPlayer = await getOrCreatePlayer(username);
+            if (dbPlayer) currentPoints = dbPlayer.points;
+        }
 
-            rooms[roomName] = {
-                code: roomName,
-                players: [
-                    { id: p1, username: socketToUser[p1] || 'Joueur 1' },
-                    { id: p2, username: socketToUser[p2] || 'Joueur 2' }
-                ],
-                gameStarted: true,
-                ended: false,
-                timeLeft: 30,
-                timerInterval: null,
-                matchPlayers: {
-                    [p1]: { target: 1, score: 0, pool: generateRandomPool(1) },
-                    [p2]: { target: 1, score: 0, pool: generateRandomPool(1) }
-                }
-            };
-
-            io.to(roomName).emit('start_countdown');
-            setTimeout(() => start1v1GameLoop(roomName), 3000);
-        } else {
-            waitingPlayer = socket.id;
+        if (!rankedQueue.some(p => p.socket === socket) && !unrankedQueue.includes(socket)) {
+            rankedQueue.push({
+                socket: socket,
+                points: currentPoints,
+                joinedAt: Date.now(),
+                items: data?.items || []
+            });
         }
     });
 
@@ -430,11 +462,69 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        if (waitingPlayer === socket.id) waitingPlayer = null;
+        unrankedQueue = unrankedQueue.filter(s => s !== socket);
+        rankedQueue = rankedQueue.filter(p => p.socket !== socket);
         cleanupPlayerFromRooms(socket.id, false);
         delete socketToUser[socket.id];
     });
 });
+
+// Lancement d'un match non classé
+function startUnrankedMatchSession(socket1, socket2) {
+    const roomName = `unranked_${socket1.id}_${socket2.id}`;
+    socket1.join(roomName);
+    socket2.join(roomName);
+
+    rooms[roomName] = {
+        code: roomName,
+        isRanked: false,
+        players: [
+            { id: socket1.id, username: socketToUser[socket1.id] || 'Joueur 1' },
+            { id: socket2.id, username: socketToUser[socket2.id] || 'Joueur 2' }
+        ],
+        gameStarted: true,
+        ended: false,
+        timeLeft: 30,
+        timerInterval: null,
+        matchPlayers: {
+            [socket1.id]: { target: 1, score: 0, pool: generateRandomPool(1) },
+            [socket2.id]: { target: 1, score: 0, pool: generateRandomPool(1) }
+        }
+    };
+
+    io.to(roomName).emit('start_countdown');
+    setTimeout(() => start1v1GameLoop(roomName), 3000);
+}
+
+// Lancement d'un match classé (SBMM)
+function startRankedMatchSession(entry1, entry2) {
+    const socket1 = entry1.socket;
+    const socket2 = entry2.socket;
+    const roomName = `ranked_${socket1.id}_${socket2.id}`;
+
+    socket1.join(roomName);
+    socket2.join(roomName);
+
+    rooms[roomName] = {
+        code: roomName,
+        isRanked: true,
+        players: [
+            { id: socket1.id, username: socketToUser[socket1.id] || 'Joueur 1' },
+            { id: socket2.id, username: socketToUser[socket2.id] || 'Joueur 2' }
+        ],
+        gameStarted: true,
+        ended: false,
+        timeLeft: 30,
+        timerInterval: null,
+        matchPlayers: {
+            [socket1.id]: { target: 1, score: 0, pool: generateRandomPool(1) },
+            [socket2.id]: { target: 1, score: 0, pool: generateRandomPool(1) }
+        }
+    };
+
+    io.to(roomName).emit('start_countdown');
+    setTimeout(() => start1v1GameLoop(roomName), 3000);
+}
 
 function cleanupPlayerFromRooms(socketId, explicitLeave = false) {
     for (const code in rooms) {
@@ -533,7 +623,11 @@ async function end1v1Game(roomCode, reason) {
             if (winningUser) {
                 let pWin = await getOrCreatePlayer(winningUser);
                 if (pWin) {
-                    pWin.points += 25;
+                    if (room.isRanked) {
+                        pWin.points += 25; // Gain de points SR en Classé
+                    } else {
+                        pWin.points += 5;  // Petit bonus en non-classé
+                    }
                     pWin.wins = (pWin.wins || 0) + 1;
                     if (winnerId === p1Id) coinsGainedP1 = 30;
                     else coinsGainedP2 = 30;
@@ -543,19 +637,22 @@ async function end1v1Game(roomCode, reason) {
             if (losingUser) {
                 let pLose = await getOrCreatePlayer(losingUser);
                 if (pLose) {
-                    pLose.points = Math.max(0, pLose.points - 15);
+                    if (room.isRanked) {
+                        pLose.points = Math.max(0, pLose.points - 20); // Perte de points SR en Classé (plancher à 0)
+                    }
                     pLose.losses = (pLose.losses || 0) + 1;
                     await updatePlayerInDB(pLose);
                 }
             }
         } else {
+            // Égalité
             if (u1) {
                 let p1Obj = await getOrCreatePlayer(u1);
-                if (p1Obj) { p1Obj.points += 5; await updatePlayerInDB(p1Obj); }
+                if (p1Obj) { p1Obj.points += room.isRanked ? 0 : 2; await updatePlayerInDB(p1Obj); }
             }
             if (u2) {
                 let p2Obj = await getOrCreatePlayer(u2);
-                if (p2Obj) { p2Obj.points += 5; await updatePlayerInDB(p2Obj); }
+                if (p2Obj) { p2Obj.points += room.isRanked ? 0 : 2; await updatePlayerInDB(p2Obj); }
             }
         }
 
