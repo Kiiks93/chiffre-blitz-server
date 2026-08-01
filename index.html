@@ -54,7 +54,7 @@
         }
 
         .user-stats {
-            display: flex; justify-content: center; gap: 10px; max-width: 400px; margin: 0 auto 8px auto;
+            display: flex; justify-content: center; gap: 8px; max-width: 400px; margin: 0 auto 8px auto;
             font-size: 11px; font-weight: bold; background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 16px;
         }
 
@@ -133,7 +133,6 @@
         .power-btn.equip { background: #00d2ff; color: #000; }
         .power-btn.active { background: #00ff88; color: #000; }
 
-        /* HUD & Cibles compacts pour mobile */
         .hud { display: grid; grid-template-columns: 1fr; gap: 6px; background: rgba(255,255,255,0.06); padding: 6px 10px; border-radius: 10px; margin-bottom: 6px; max-width: 400px; margin-left: auto; margin-right: auto; }
         .player-box { padding: 4px 8px; border-radius: 8px; background: rgba(0,0,0,0.3); }
         .player-box.me { border: 2px solid #00d2ff; }
@@ -196,11 +195,11 @@
         </div>
     </div>
 
-    <!-- BARRE DE STATS AVEC LE RANG EN DIRECT -->
+    <!-- BARRE DE STATS AVEC LE RANG & LES POINTS -->
     <div class="user-stats">
         <span>🪙 <strong id="user-coins-display">0</strong></span>
         <span>🏆 <strong id="user-trophies-display">0</strong></span>
-        <span>🏅 <strong id="user-rank-display" style="color:#00d2ff;">Novice</strong></span>
+        <span>🏅 <strong id="user-rank-display" style="color:#00d2ff;">Novice</strong> (<span id="user-points-display">0</span> pts)</span>
     </div>
 
     <!-- MODALE DE SOUTIEN (LANCEMENT) -->
@@ -221,7 +220,7 @@
         </div>
     </div>
 
-    <!-- ÉCRAN TITRE -->
+    <!-- ÉCRAN TITRE & RÈGLES -->
     <div id="screen-title" class="menu-container" style="max-width:380px; margin: 5px auto; text-align: left;">
         <div style="text-align: center; margin-bottom: 8px;">
             <h2 style="font-size: 22px; color: #00d2ff; margin: 0; text-shadow: 0 0 12px rgba(0,210,255,0.4);">CHIFFRE BLITZ ⚡</h2>
@@ -242,7 +241,11 @@
                 <p style="margin:3px 0 0 0;" data-i18n="rule3_desc">Affronte un adversaire en temps réel (matchmaking non classé, classé SBMM ou salons privés).</p>
             </div>
             <div>
-                <strong style="color:#f8b500; font-size:12px;" data-i18n="rule4_title">🎯 Mode Tournoi</strong>
+                <strong style="color:#f8b500; font-size:12px;" data-i18n="rule5_title">🏆 Système de Rangs</strong>
+                <p style="margin:3px 0 0 0;" data-i18n="rule5_desc">Monte en points en match classé à travers 4 paliers : Novice 🌱, Chiffre 🔢, Expert 🧠 et Calculateur ⚡ !</p>
+            </div>
+            <div>
+                <strong style="color:#7b4397; font-size:12px;" data-i18n="rule4_title">🎯 Mode Tournoi</strong>
                 <p style="margin:3px 0 0 0;" data-i18n="rule4_desc">Tournoi à élimination directe pour remporter des points, des pièces et des trophées (🏆).</p>
             </div>
         </div>
@@ -494,7 +497,7 @@
         <div id="countdown-number" class="countdown-num">3</div>
     </div>
 
-    <!-- ECRAN DE JEU COMPACT POUR TÉLÉPHONE -->
+    <!-- ECRAN DE JEU -->
     <div id="screen-game" style="display:none;">
         <div id="hud-1v1" class="hud" style="display:none;">
             <div class="player-box opponent">
@@ -518,7 +521,6 @@
             <span data-i18n="timer_label">Temps</span> : <span id="game-timer" style="color:#ff007f;">30</span>s
         </div>
 
-        <!-- CIBLE GÉANTE COMPACTE DIRECTEMENT AU-DESSUS DE LA GRILLE -->
         <div style="background: rgba(0, 210, 255, 0.12); border: 2px solid #00d2ff; border-radius: 10px; padding: 4px 10px; margin: 0 auto 6px auto; max-width: 400px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 0 12px rgba(0,210,255,0.2);">
             <span style="font-size: 11px; font-weight: bold; color: #aaa; letter-spacing: 0.5px;" data-i18n="target_label">CIBLE :</span>
             <span id="game-target-giant" style="font-size: 28px; font-weight: 900; color: #00d2ff; text-shadow: 0 0 10px rgba(0,210,255,0.6);">1</span>
@@ -576,6 +578,8 @@
                 rule2_desc: "Modes Classique, Aléatoire ou Avalanche pour enchaîner les chiffres et gagner des pièces (🪙).",
                 rule3_title: "⚔️ Duel 1v1 Online",
                 rule3_desc: "Affronte un adversaire en temps réel (matchmaking non classé, classé SBMM ou salons privés).",
+                rule5_title: "🏆 Système de Rangs",
+                rule5_desc: "Monte en points en match classé à travers 4 paliers : Novice 🌱, Chiffre 🔢, Expert 🧠 et Calculateur ⚡ !",
                 rule4_title: "🎯 Mode Tournoi",
                 rule4_desc: "Tournoi à élimination directe pour remporter des points, des pièces et des trophées (🏆).",
                 btn_play: "JOUER ⚡",
@@ -679,6 +683,8 @@
                 rule2_desc: "Classic, Random or Avalanche modes to chain numbers and earn coins (🪙).",
                 rule3_title: "⚔️ Online 1v1 Duel",
                 rule3_desc: "Face an opponent in real time (unranked, ranked SBMM or private rooms).",
+                rule5_title: "🏆 Ranks System",
+                rule5_desc: "Earn points in ranked matches across 4 tiers: Novice 🌱, Cipher 🔢, Expert 🧠 and Calculator ⚡!",
                 rule4_title: "🎯 Tournament Mode",
                 rule4_desc: "Single-elimination bracket to win points, coins, and trophies (🏆).",
                 btn_play: "PLAY ⚡",
@@ -1027,7 +1033,6 @@
         let adCallbackFunction = null;
         let selectedRankedItems = [];
 
-        // Fonction pour déterminer le nom du rang selon les points
         function getRankName(points) {
             if (points >= 1300) return currentLang === 'fr' ? 'Calculateur ⚡' : 'Calculator ⚡';
             if (points >= 700)  return currentLang === 'fr' ? 'Expert 🧠' : 'Expert 🧠';
@@ -1055,6 +1060,7 @@
             document.getElementById('user-coins-display').innerText = myProfile.coins;
             document.getElementById('user-trophies-display').innerText = myProfile.trophies;
             document.getElementById('user-rank-display').innerText = getRankName(myProfile.points);
+            document.getElementById('user-points-display').innerText = myProfile.points;
             document.getElementById('user-name-display').innerText = myProfile.username || "Définir pseudo";
             document.getElementById('user-avatar-badge').innerHTML = getAvatarBadgeHTML(myProfile.flag, myProfile.avatar);
         }
