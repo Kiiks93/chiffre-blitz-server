@@ -1,5 +1,5 @@
 const express = require('express');
-const http = http = require('http');
+const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 
@@ -18,7 +18,6 @@ let waitingPlayer = null;
 let rooms = {};
 let pendingRoomDeletions = {};
 
-// Tes prix d'origine rétablis
 const POWERS_PRICES = {
     'spotlight': 150,
     'freeze': 350,
