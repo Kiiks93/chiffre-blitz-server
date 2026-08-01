@@ -1,7 +1,7 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const mongoose = require('mongoose');
+const { createClient } = require('@supabase/supabase-js');
 const cors = require('cors');
 
 const app = express();
@@ -10,41 +10,18 @@ app.use(express.json());
 
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
+    cors: { origin: "*", methods: ["GET", "POST"] }
 });
 
-// Connexion MongoDB (remplace par ton URL MongoDB Atlas si besoin)
-const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/chiffre-blitz";
-mongoose.connect(MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-}).then(() => console.log("MongoDB connected")).catch(err => console.error("MongoDB connection error:", err));
-
-// Schéma du joueur incluant wins et losses
-const playerSchema = new mongoose.Schema({
-    socketId: String,
-    username: { type: String, unique: true, index: true },
-    region: String,
-    avatar: { type: Number, default: 1 },
-    flag: { type: String, default: '🇫🇷' },
-    points: { type: Number, default: 0 },
-    coins: { type: Number, default: 0 },
-    trophies: { type: Number, default: 0 },
-    wins: { type: Number, default: 0 },    // <--- Suivi des victoires
-    losses: { type: Number, default: 0 },  // <--- Suivi des défaites
-    inventory: { type: Object, default: {} },
-    equippedPower: { type: String, default: null }
-});
-
-const Player = mongoose.model('Player', playerSchema);
+// Connexion Supabase (récupérée depuis les variables d'environnement Render)
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 let matchmakingQueue = [];
 let rankedQueue = [];
-let activeGames = {}; // gameId -> game state
-let customRooms = {}; // code -> room state
+let activeGames = {}; 
+let customRooms = {}; 
 
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
@@ -53,27 +30,53 @@ io.on('connection', (socket) => {
     socket.on('register_player', async (data) => {
         try {
             if (!data || !data.username) return;
-            let player = await Player.findOne({ username: data.username });
-            if (!player) {
-                player = new Player({
+            
+            // Chercher le joueur dans la table 'players'
+            let { data: existingPlayer, error: fetchErr } = await supabase
+                .from('players')
+                .select('*')
+                .eq('username', data.username)
+                .single();
+
+            let player;
+            if (!existingPlayer) {
+                // Créer le joueur s'il n'existe pas
+                const newPlayerData = {
                     username: data.username,
                     region: data.region || 'Hauts-de-France',
                     avatar: data.avatar || 1,
                     flag: data.flag || '🇫🇷',
                     points: 0,
-                    coins: 100, // Bonus de départ
+                    coins: 100,
                     trophies: 0,
                     wins: 0,
                     losses: 0,
                     inventory: { spotlight: 1, freeze: 1 },
-                    equippedPower: 'spotlight'
-                });
+                    equipped_power: 'spotlight'
+                };
+                let { data: inserted, error: insertErr } = await supabase
+                    .from('players')
+                    .insert([newPlayerData])
+                    .select()
+                    .single();
+                if (insertErr) { console.error("Insert error:", insertErr); return; }
+                player = inserted;
+            } else {
+                // Mettre à jour les infos de session
+                const updateData = {
+                    region: data.region || existingPlayer.region,
+                    avatar: data.avatar !== undefined ? data.avatar : existingPlayer.avatar,
+                    flag: data.flag || existingPlayer.flag
+                };
+                let { data: updated, error: updateErr } = await supabase
+                    .from('players')
+                    .update(updateData)
+                    .eq('username', data.username)
+                    .select()
+                    .single();
+                if (updateErr) { console.error("Update error:", updateErr); return; }
+                player = updated;
             }
-            player.socketId = socket.id;
-            player.region = data.region || player.region;
-            player.avatar = data.avatar !== undefined ? data.avatar : player.avatar;
-            player.flag = data.flag || player.flag;
-            await player.save();
 
             socket.playerUsername = player.username;
             socket.playerRegion = player.region;
@@ -86,10 +89,10 @@ io.on('connection', (socket) => {
                 points: player.points,
                 coins: player.coins,
                 trophies: player.trophies,
-                wins: player.wins,
-                losses: player.losses,
+                wins: player.wins || 0,
+                losses: player.losses || 0,
                 inventory: player.inventory,
-                equippedPower: player.equippedPower
+                equippedPower: player.equipped_power
             });
         } catch (err) {
             console.error("Error in register_player:", err);
@@ -99,20 +102,20 @@ io.on('connection', (socket) => {
     // Classement (Inclus wins et losses)
     socket.on('get_leaderboard', async (type) => {
         try {
-            let query = {};
+            let query = supabase.from('players').select('username, region, avatar, flag, points, trophies, coins, wins, losses');
+            
             if (type === 'regional' && socket.playerRegion) {
-                query = { region: socket.playerRegion };
+                query = query.eq('region', socket.playerRegion);
             }
 
-            let sortCriteria = { points: -1 };
             if (type === 'coins') {
-                sortCriteria = { coins: -1 };
+                query = query.order('coins', { ascending: false }).limit(20);
+            } else {
+                query = query.order('points', { ascending: false }).limit(20);
             }
 
-            const topPlayers = await Player.find(query)
-                .sort(sortCriteria)
-                .limit(20)
-                .select('username region avatar flag points trophies coins wins losses'); // <--- Indispensable pour l'affichage
+            let { data: topPlayers, error } = await query;
+            if (error) { console.error("Leaderboard error:", error); return; }
 
             socket.emit('leaderboard_data', { type, data: topPlayers });
         } catch (err) {
@@ -150,12 +153,19 @@ io.on('connection', (socket) => {
     socket.on('claim_solo_reward', async (score) => {
         if (!socket.playerUsername) return;
         try {
-            const player = await Player.findOne({ username: socket.playerUsername });
+            let { data: player } = await supabase.from('players').select('*').eq('username', socket.playerUsername).single();
             if (player) {
                 const earnedCoins = Math.min(100, Math.floor(score / 3));
-                player.coins += earnedCoins;
-                await player.save();
-                sendUpdatedProfile(socket, player);
+                const newCoins = (player.coins || 0) + earnedCoins;
+                
+                let { data: updated } = await supabase
+                    .from('players')
+                    .update({ coins: newCoins })
+                    .eq('username', socket.playerUsername)
+                    .select()
+                    .single();
+
+                if (updated) sendUpdatedProfile(socket, updated);
             }
         } catch (err) {
             console.error("Error in claim_solo_reward:", err);
@@ -169,13 +179,22 @@ io.on('connection', (socket) => {
         const cost = prices[powerId];
         if (!cost) return;
         try {
-            const player = await Player.findOne({ username: socket.playerUsername });
+            let { data: player } = await supabase.from('players').select('*').eq('username', socket.playerUsername).single();
             if (player && player.coins >= cost) {
-                player.coins -= cost;
-                player.inventory[powerId] = (player.inventory[powerId] || 0) + 1;
-                player.markModified('inventory');
-                await player.save();
-                sendUpdatedProfile(socket, player);
+                let inventory = player.inventory || {};
+                inventory[powerId] = (inventory[powerId] || 0) + 1;
+                
+                let { data: updated } = await supabase
+                    .from('players')
+                    .update({ 
+                        coins: player.coins - cost,
+                        inventory: inventory
+                    })
+                    .eq('username', socket.playerUsername)
+                    .select()
+                    .single();
+
+                if (updated) sendUpdatedProfile(socket, updated);
             }
         } catch (err) {
             console.error("Error in buy_power:", err);
@@ -186,28 +205,29 @@ io.on('connection', (socket) => {
     socket.on('equip_power', async (powerId) => {
         if (!socket.playerUsername) return;
         try {
-            const player = await Player.findOne({ username: socket.playerUsername });
-            if (player && (player.inventory[powerId] || 0) > 0) {
-                player.equippedPower = player.equippedPower === powerId ? null : powerId;
-                await player.save();
-                sendUpdatedProfile(socket, player);
+            let { data: player } = await supabase.from('players').select('*').eq('username', socket.playerUsername).single();
+            if (player && player.inventory && (player.inventory[powerId] || 0) > 0) {
+                const newEquipped = player.equipped_power === powerId ? null : powerId;
+                let { data: updated } = await supabase
+                    .from('players')
+                    .update({ equipped_power: newEquipped })
+                    .eq('username', socket.playerUsername)
+                    .select()
+                    .single();
+
+                if (updated) sendUpdatedProfile(socket, updated);
             }
         } catch (err) {
             console.error("Error in equip_power:", err);
         }
     });
 
-    // Gestion Salons Privés
-    socket.on('get_rooms_list', () => {
-        sendRoomsListBroadcast();
-    });
+    // Salons Privés
+    socket.on('get_rooms_list', () => { sendRoomsListBroadcast(); });
 
     socket.on('create_room', (data) => {
         let code = data.code ? data.code.toUpperCase() : Math.random().toString(36).substring(2, 6).toUpperCase();
-        if (customRooms[code]) {
-            socket.emit('room_error', "Ce code de salon existe déjà.");
-            return;
-        }
+        if (customRooms[code]) { socket.emit('room_error', "Ce code existe déjà."); return; }
         customRooms[code] = {
             password: data.password || '',
             players: [{ id: socket.id, username: data.username, avatar: data.avatar, flag: data.flag }]
@@ -220,20 +240,11 @@ io.on('connection', (socket) => {
 
     socket.on('join_room', async (data) => {
         const room = customRooms[data.code];
-        if (!room) {
-            socket.emit('room_error', "Salon introuvable.");
-            return;
-        }
-        if (room.password && room.password !== data.password) {
-            socket.emit('room_error', "Mot de passe incorrect.");
-            return;
-        }
-        if (room.players.length >= 2) {
-            socket.emit('room_error', "Salon complet.");
-            return;
-        }
+        if (!room) { socket.emit('room_error', "Salon introuvable."); return; }
+        if (room.password && room.password !== data.password) { socket.emit('room_error', "Mot de passe incorrect."); return; }
+        if (room.players.length >= 2) { socket.emit('room_error', "Salon complet."); return; }
         try {
-            const player = await Player.findOne({ username: socket.playerUsername });
+            let { data: player } = await supabase.from('players').select('*').eq('username', socket.playerUsername).single();
             room.players.push({
                 id: socket.id,
                 username: socket.playerUsername,
@@ -258,9 +269,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('leave_room', () => {
-        leaveCurrentRoom(socket);
-    });
+    socket.on('leave_room', () => { leaveCurrentRoom(socket); });
 
     socket.on('disconnect', () => {
         matchmakingQueue = matchmakingQueue.filter(s => s.id !== socket.id);
@@ -273,11 +282,8 @@ io.on('connection', (socket) => {
 function leaveCurrentRoom(socket) {
     if (socket.roomCode && customRooms[socket.roomCode]) {
         customRooms[socket.roomCode].players = customRooms[socket.roomCode].players.filter(p => p.id !== socket.id);
-        if (customRooms[socket.roomCode].players.length === 0) {
-            delete customRooms[socket.roomCode];
-        } else {
-            io.to(socket.roomCode).emit('room_players_update', { players: customRooms[socket.roomCode].players });
-        }
+        if (customRooms[socket.roomCode].players.length === 0) delete customRooms[socket.roomCode];
+        else io.to(socket.roomCode).emit('room_players_update', { players: customRooms[socket.roomCode].players });
         socket.leave(socket.roomCode);
         socket.roomCode = null;
         sendRoomsListBroadcast();
@@ -286,9 +292,7 @@ function leaveCurrentRoom(socket) {
 
 function sendRoomsListBroadcast() {
     const list = Object.keys(customRooms).map(code => ({
-        code,
-        hasPassword: !!customRooms[code].password,
-        playersCount: customRooms[code].players.length
+        code, hasPassword: !!customRooms[code].password, playersCount: customRooms[code].players.length
     }));
     io.emit('rooms_list_data', list);
 }
@@ -302,10 +306,10 @@ function sendUpdatedProfile(socket, player) {
         points: player.points,
         coins: player.coins,
         trophies: player.trophies,
-        wins: player.wins,
-        losses: player.losses,
+        wins: player.wins || 0,
+        losses: player.losses || 0,
         inventory: player.inventory,
-        equippedPower: player.equippedPower
+        equippedPower: player.equipped_power
     });
 }
 
@@ -313,37 +317,26 @@ function sendUpdatedProfile(socket, player) {
 async function startGameDuel(p1, p2, isRanked) {
     const gameId = 'game_' + Math.random().toString(36).substring(2, 9);
     
-    const dbP1 = await Player.findOne({ username: p1.playerUsername });
-    const dbP2 = await Player.findOne({ username: p2.playerUsername });
+    let { data: dbP1 } = await supabase.from('players').select('*').eq('username', p1.playerUsername).single();
+    let { data: dbP2 } = await supabase.from('players').select('*').eq('username', p2.playerUsername).single();
 
     const p1Data = {
-        socket: p1,
-        username: p1.playerUsername,
-        avatar: dbP1 ? dbP1.avatar : 1,
-        flag: dbP1 ? dbP1.flag : '🇫🇷',
-        target: 1,
-        score: 0,
-        pool: generateRandomPool(1)
+        socket: p1, username: p1.playerUsername,
+        avatar: dbP1 ? dbP1.avatar : 1, flag: dbP1 ? dbP1.flag : '🇫🇷',
+        target: 1, score: 0, pool: generateRandomPool(1)
     };
-
     const p2Data = {
-        socket: p2,
-        username: p2.playerUsername,
-        avatar: dbP2 ? dbP2.avatar : 1,
-        flag: dbP2 ? dbP2.flag : '🇫🇷',
-        target: 1,
-        score: 0,
-        pool: generateRandomPool(1)
+        socket: p2, username: p2.playerUsername,
+        avatar: dbP2 ? dbP2.avatar : 1, flag: dbP2 ? dbP2.flag : '🇫🇷',
+        target: 1, score: 0, pool: generateRandomPool(1)
     };
 
     activeGames[gameId] = {
         players: { [p1.id]: p1Data, [p2.id]: p2Data },
-        timeLeft: 30,
-        isRanked: isRanked
+        timeLeft: 30, isRanked: isRanked
     };
 
-    p1.gameId = gameId;
-    p2.gameId = gameId;
+    p1.gameId = gameId; p2.gameId = gameId;
 
     p1.emit('start_countdown', { opponent: { username: p2Data.username, avatar: p2Data.avatar, flag: p2Data.flag } });
     p2.emit('start_countdown', { opponent: { username: p1Data.username, avatar: p1Data.avatar, flag: p1Data.flag } });
@@ -354,10 +347,7 @@ async function startGameDuel(p1, p2, isRanked) {
 
         const timerInterval = setInterval(async () => {
             const game = activeGames[gameId];
-            if (!game) {
-                clearInterval(timerInterval);
-                return;
-            }
+            if (!game) { clearInterval(timerInterval); return; }
             game.timeLeft--;
             p1.emit('timer_update', game.timeLeft);
             p2.emit('timer_update', game.timeLeft);
@@ -370,20 +360,15 @@ async function startGameDuel(p1, p2, isRanked) {
         activeGames[gameId].timerInterval = timerInterval;
     }, 3000);
 
-    // Écouteur de clics pendant le match
-    p1.removeAllListeners('player_click_1v1');
-    p2.removeAllListeners('player_click_1v1');
-
+    p1.removeAllListeners('player_click_1v1'); p2.removeAllListeners('player_click_1v1');
     p1.on('player_click_1v1', (num) => handleTileClick(gameId, p1.id, num));
     p2.on('player_click_1v1', (num) => handleTileClick(gameId, p2.id, num));
 
-    p1.removeAllListeners('use_power');
-    p2.removeAllListeners('use_power');
+    p1.removeAllListeners('use_power'); p2.removeAllListeners('use_power');
     p1.on('use_power', (powerId) => handleUsePower(gameId, p1.id, powerId));
     p2.on('use_power', (powerId) => handleUsePower(gameId, p2.id, powerId));
 
-    p1.removeAllListeners('send_malus');
-    p2.removeAllListeners('send_malus');
+    p1.removeAllListeners('send_malus'); p2.removeAllListeners('send_malus');
     p1.on('send_malus', (data) => handleSendMalus(gameId, p1.id, data.type));
     p2.on('send_malus', (data) => handleSendMalus(gameId, p2.id, data.type));
 }
@@ -391,12 +376,9 @@ async function startGameDuel(p1, p2, isRanked) {
 function generateRandomPool(currentTarget) {
     let pool = [currentTarget];
     let candidates = [];
-    for (let i = 1; i <= 50; i++) {
-        if (i !== currentTarget) candidates.push(i);
-    }
+    for (let i = 1; i <= 50; i++) if (i !== currentTarget) candidates.push(i);
     candidates.sort(() => Math.random() - 0.5);
-    pool = pool.concat(candidates.slice(0, 11)).sort(() => Math.random() - 0.5);
-    return pool;
+    return pool.concat(candidates.slice(0, 11)).sort(() => Math.random() - 0.5);
 }
 
 async function handleTileClick(gameId, socketId, num) {
@@ -413,30 +395,17 @@ async function handleTileClick(gameId, socketId, num) {
         player.target++;
         player.pool = generateRandomPool(player.target);
 
-        player.socket.emit('my_grid_updated', {
-            target: player.target,
-            newPool: player.pool,
-            success: true
-        });
-
+        player.socket.emit('my_grid_updated', { target: player.target, newPool: player.pool, success: true });
         if (opponent) {
-            opponent.socket.emit('opponent_progress', {
-                target: player.target,
-                opponent: { username: player.username, avatar: player.avatar, flag: player.flag }
-            });
+            opponent.socket.emit('opponent_progress', { target: player.target, opponent: { username: player.username, avatar: player.avatar, flag: player.flag } });
         }
 
-        // Victoire si le joueur atteint 50 ou plus
         if (player.target > 50) {
             clearInterval(game.timerInterval);
             await finishGame(gameId, socketId, `${player.username} a terminé toutes les cibles !`);
         }
     } else {
-        player.socket.emit('my_grid_updated', {
-            target: player.target,
-            newPool: player.pool,
-            success: false
-        });
+        player.socket.emit('my_grid_updated', { target: player.target, newPool: player.pool, success: false });
     }
 }
 
@@ -444,7 +413,7 @@ function handleUsePower(gameId, socketId, powerId) {
     const game = activeGames[gameId];
     if (!game) return;
     const opponentId = Object.keys(game.players).find(id => id !== socketId);
-    if (opponentId && (powerId === 'quake' || powerId === 'micro' || powerId === 'eclipse' || powerId === 'chaos')) {
+    if (opponentId && ['quake', 'micro', 'eclipse', 'chaos'].includes(powerId)) {
         game.players[opponentId].socket.emit('receive_malus', { type: powerId });
     }
 }
@@ -453,12 +422,10 @@ function handleSendMalus(gameId, socketId, type) {
     const game = activeGames[gameId];
     if (!game) return;
     const opponentId = Object.keys(game.players).find(id => id !== socketId);
-    if (opponentId) {
-        game.players[opponentId].socket.emit('receive_malus', { type: type });
-    }
+    if (opponentId) game.players[opponentId].socket.emit('receive_malus', { type });
 }
 
-// Fin de partie 1v1 avec incrémentation des victoires et défaites
+// Fin de partie 1v1 avec mise à jour des wins / losses dans Supabase
 async function finishGame(gameId, forcedWinnerId, reason) {
     const game = activeGames[gameId];
     if (!game) return;
@@ -477,34 +444,37 @@ async function finishGame(gameId, forcedWinnerId, reason) {
         else {
             if (p1Data.score > p2Data.score) winnerId = p1Id;
             else if (p2Data.score > p1Data.score) winnerId = p2Id;
-            else winnerId = null; // Égalité
+            else winnerId = null;
         }
     }
 
     const loserId = winnerId ? playerIds.find(id => id !== winnerId) : null;
 
-    // Mise à jour de la base de données (Victoires, Défaites, Points, Pièces)
     try {
         if (winnerId) {
-            const winnerDb = await Player.findOne({ username: game.players[winnerId].username });
-            if (winnerDb) {
-                winnerDb.wins += 1; // <--- Incrémentation victoire
-                winnerDb.points += game.isRanked ? 25 : 10;
-                winnerDb.coins += 30;
-                await winnerDb.save();
+            const wName = game.players[winnerId].username;
+            let { data: wDb } = await supabase.from('players').select('*').eq('username', wName).single();
+            if (wDb) {
+                await supabase.from('players').update({
+                    wins: (wDb.wins || 0) + 1,
+                    points: wDb.points + (game.isRanked ? 25 : 10),
+                    coins: wDb.coins + 30
+                }).eq('username', wName);
             }
         }
         if (loserId) {
-            const loserDb = await Player.findOne({ username: game.players[loserId].username });
-            if (loserDb) {
-                loserDb.losses += 1; // <--- Incrémentation défaite
-                loserDb.points = Math.max(0, loserDb.points - (game.isRanked ? 15 : 5));
-                loserDb.coins += 10;
-                await loserDb.save();
+            const lName = game.players[loserId].username;
+            let { data: lDb } = await supabase.from('players').select('*').eq('username', lName).single();
+            if (lDb) {
+                await supabase.from('players').update({
+                    losses: (lDb.losses || 0) + 1,
+                    points: Math.max(0, lDb.points - (game.isRanked ? 15 : 5)),
+                    coins: lDb.coins + 10
+                }).eq('username', lName);
             }
         }
     } catch (err) {
-        console.error("Error updating match stats in DB:", err);
+        console.error("Error updating Supabase match stats:", err);
     }
 
     const resultsData = {
@@ -521,6 +491,4 @@ async function finishGame(gameId, forcedWinnerId, reason) {
 }
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`Chiffre Blitz Server running on port ${PORT}`);
-});
+server.listen(PORT, () => { console.log(`Chiffre Blitz Server running on port ${PORT}`); });
