@@ -113,15 +113,43 @@
         #shop-tab-bonus.active { background: #38ef7d; color: #000; border-color: #38ef7d; }
         #shop-tab-malus.active { background: #ff4b2b; color: #fff; border-color: #ff4b2b; }
 
-        .leaderboard-list, .rooms-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 6px; text-align: left; }
-        .lb-row, .room-row {
+        /* CLASSEMENT REVISITÉ & PLUS LISIBLE */
+        .lb-filters-container {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 10px 10px 4px 10px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .lb-filters-container .tabs { margin-bottom: 6px; gap: 6px; }
+        .lb-filters-container .tab-btn {
+            padding: 7px 4px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.05); color: #bbb;
+        }
+        .lb-filters-container .tab-btn.active {
+            background: #00d2ff; color: #000; box-shadow: 0 0 10px rgba(0,210,255,0.4);
+        }
+
+        .leaderboard-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px; text-align: left; padding-right: 2px; }
+        .lb-row {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 10px 12px; border-radius: 12px; gap: 10px; transition: background 0.2s;
+        }
+        .lb-row:hover { background: rgba(255, 255, 255, 0.07); }
+        .lb-rank { font-weight: 900; font-size: 14px; width: 26px; text-align: center; flex-shrink: 0; }
+        .lb-user-info { flex: 1; display: flex; flex-direction: column; overflow: hidden; gap: 3px; }
+        .lb-name-row { display: flex; align-items: center; gap: 6px; font-weight: bold; font-size: 13px; color: #fff; }
+        .lb-sub-details { font-size: 10px; color: #a093b2; display: flex; gap: 8px; font-weight: 600; }
+        .lb-pts { font-weight: 900; font-size: 13px; text-align: right; white-space: nowrap; flex-shrink: 0; }
+
+        .rooms-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+        .room-row {
             display: flex; justify-content: space-between; align-items: center;
             background: rgba(255,255,255,0.05); padding: 8px 10px; border-radius: 8px; font-size: 12px; gap: 4px;
         }
-        .lb-rank { font-weight: 900; width: 20px; color: #00d2ff; }
-        .lb-name { flex: 1; font-weight: bold; display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .lb-details { font-size: 10px; color: #aaa; text-align: right; line-height: 1.2; }
-        .lb-pts { font-weight: 900; color: #00ff88; text-align: right; min-width: 60px; }
         .room-info { flex: 1; font-weight: bold; margin-left: 8px; display: flex; align-items: center; gap: 6px; }
 
         .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; overflow-y: auto; max-height: 50vh; margin: 8px 0; padding-right: 4px; }
@@ -477,28 +505,29 @@
         </div>
     </div>
 
-    <!-- OVERLAY CLASSEMENT -->
+    <!-- OVERLAY CLASSEMENT (DESIGN ÉPURÉ & AÉRÉ) -->
     <div id="modal-leaderboard" class="modal-overlay" style="display:none;">
-        <div class="modal-card">
-            <h2 style="margin:0 0 8px 0; color:#00d2ff; font-size:18px;" data-i18n="lb_title">🏆 CLASSEMENT</h2>
+        <div class="modal-card" style="max-width: 440px;">
+            <h2 style="margin:0 0 10px 0; color:#00d2ff; font-size:18px; letter-spacing:0.5px;" data-i18n="lb_title">🏆 CLASSEMENT</h2>
             
-            <div class="tabs" style="margin-bottom: 4px;">
-                <button id="lb-cat-points" class="tab-btn active" onclick="setLbCategory('points')">🏅 Points</button>
-                <button id="lb-cat-trophies" class="tab-btn" onclick="setLbCategory('trophies')">🏆 Trophées</button>
-                <button id="lb-cat-coins" class="tab-btn" onclick="setLbCategory('coins')">🪙 Argent</button>
-                <button id="lb-cat-combined" class="tab-btn" onclick="setLbCategory('combined')">⭐ Pts+Tr</button>
+            <div class="lb-filters-container">
+                <div class="tabs">
+                    <button id="lb-cat-points" class="tab-btn active" onclick="setLbCategory('points')">🏅 Points</button>
+                    <button id="lb-cat-trophies" class="tab-btn" onclick="setLbCategory('trophies')">🏆 Trophées</button>
+                    <button id="lb-cat-coins" class="tab-btn" onclick="setLbCategory('coins')">🪙 Argent</button>
+                    <button id="lb-cat-combined" class="tab-btn" onclick="setLbCategory('combined')">⭐ Combiné</button>
+                </div>
+                <div class="tabs">
+                    <button id="lb-scope-regional" class="tab-btn active" onclick="setLbScope('regional')" data-i18n="lb_reg">📍 Région</button>
+                    <button id="lb-scope-national" class="tab-btn" onclick="setLbScope('national')" data-i18n="lb_nat">🇫🇷 France</button>
+                    <button id="lb-scope-global" class="tab-btn" onclick="setLbScope('global')" data-i18n="lb_glb">🌍 Monde</button>
+                </div>
             </div>
 
-            <div class="tabs" style="margin-bottom: 12px;">
-                <button id="lb-scope-regional" class="tab-btn active" onclick="setLbScope('regional')" data-i18n="lb_reg">📍 Région</button>
-                <button id="lb-scope-national" class="tab-btn" onclick="setLbScope('national')" data-i18n="lb_nat">🇫🇷 France</button>
-                <button id="lb-scope-global" class="tab-btn" onclick="setLbScope('global')" data-i18n="lb_glb">🌍 Monde</button>
+            <div id="lb-list" class="leaderboard-list" style="max-height: 48vh;">
+                <div style="text-align:center; color:#aaa; margin-top:20px;" data-i18n="loading">Chargement...</div>
             </div>
-
-            <div id="lb-list" class="leaderboard-list">
-                <div style="text-align:center; color:#aaa; margin-top:15px;" data-i18n="loading">Chargement...</div>
-            </div>
-            <button class="btn-secondary" onclick="closeLeaderboard()" data-i18n="close">Fermer</button>
+            <button class="btn-secondary" onclick="closeLeaderboard()" style="margin-top:10px;" data-i18n="close">Fermer</button>
         </div>
     </div>
 
@@ -1638,7 +1667,7 @@
 
         function fetchLeaderboard() {
             const type = `${currentLbCategory}_${currentLbScope}`;
-            document.getElementById('lb-list').innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:12px;">Chargement...</div>`;
+            document.getElementById('lb-list').innerHTML = `<div style="text-align:center; color:#aaa; margin-top:20px; font-size:12px;" data-i18n="loading">Chargement...</div>`;
             socket.emit('get_leaderboard', type);
         }
 
@@ -1646,7 +1675,7 @@
             const container = document.getElementById('lb-list');
             container.innerHTML = '';
             if (!res.data || res.data.length === 0) { 
-                container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:12px;">Aucun joueur.</div>`; 
+                container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:20px; font-size:12px;">Aucun joueur.</div>`; 
                 return; 
             }
             
@@ -1663,7 +1692,7 @@
                 const points = p.points || 0;
                 const coins = p.coins || 0;
 
-                let rightBadge = `<span class="lb-pts">${points} pts</span>`;
+                let rightBadge = `<span class="lb-pts" style="color:#00ff88;">${points} pts</span>`;
                 if (category === 'coins') {
                     rightBadge = `<span class="lb-pts" style="color:#f8b500;">${coins} 🪙</span>`;
                 } else if (category === 'trophies') {
@@ -1673,11 +1702,23 @@
                     rightBadge = `<span class="lb-pts" style="color:#00d2ff;">${combinedScore} ⭐</span>`;
                 }
 
+                let rankDisplay = `#${index + 1}`;
+                let rankColor = '#00d2ff';
+                if (index === 0) { rankDisplay = '🥇'; rankColor = '#f8b500'; }
+                else if (index === 1) { rankDisplay = '🥈'; rankColor = '#e0e0e0'; }
+                else if (index === 2) { rankDisplay = '🥉'; rankColor = '#cd7f32'; }
+
                 row.innerHTML = `
-                    <span class="lb-rank">#${index + 1}</span>
-                    <span class="lb-name">${badgeHtml} ${p.username}</span>
-                    <div class="lb-details">
-                        🏆 ${trophies} | 🪙 ${coins} | V:${wins} / D:${losses}
+                    <span class="lb-rank" style="color: ${rankColor};">${rankDisplay}</span>
+                    <div class="lb-user-info">
+                        <div class="lb-name-row">
+                            ${badgeHtml} <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.username}</span>
+                        </div>
+                        <div class="lb-sub-details">
+                            <span>🏆 ${trophies}</span>
+                            <span>🪙 ${coins}</span>
+                            <span>⚔️ V:${wins} / D:${losses}</span>
+                        </div>
                     </div>
                     ${rightBadge}
                 `;
