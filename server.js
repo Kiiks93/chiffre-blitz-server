@@ -22,7 +22,7 @@ const activePlayers = {};
 const rooms = {};    
 const matchmakingQueue = [];
 const rankedQueue = [];
-let saboteurQueue = []; // Stocke { socketId, chosenMalus }
+let saboteurQueue = [];
 const activeMatches = {}; 
 const lastMatchEarnings = {};
 
@@ -370,6 +370,7 @@ io.on('connection', (socket) => {
 
     socket.on('find_ranked_match', (data) => {
         if (data && data.items && activePlayers[socket.id]) {
+            activePlayers[socket.id].equippedPowers = data.items;
             activePlayers[socket.id].equippedPower = data.items[0];
         }
         rankedQueue.push(socket.id);
@@ -384,7 +385,7 @@ io.on('connection', (socket) => {
         if (!globalEvents.saboteurMode) return;
         const chosenMalus = data && data.chosenMalus ? data.chosenMalus : ['inversion'];
 
-        saboteurQueue = saboteurQueue.filter(item => item.socketId !== socket.id);
+        saboteurQueue = saboteurQueue.filter(item => (item.socketId || item) !== socket.id);
         saboteurQueue.push({ socketId: socket.id, chosenMalus });
 
         if (saboteurQueue.length >= 2) {
