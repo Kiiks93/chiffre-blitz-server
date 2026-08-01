@@ -53,20 +53,6 @@
             text-shadow: 0 1px 3px rgba(0,0,0,0.9);
         }
 
-        .admin-toast {
-            position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
-            background: linear-gradient(45deg, #ff416c, #ff4b2b); color: #fff;
-            padding: 10px 16px; border-radius: 12px; font-weight: bold; font-size: 12px;
-            box-shadow: 0 4px 20px rgba(255, 65, 108, 0.5); z-index: 10000;
-            display: none; align-items: center; gap: 10px; max-width: 90%; text-align: left;
-            border: 1px solid rgba(255,255,255,0.3);
-            animation: slideDown 0.3s ease-out;
-        }
-        @keyframes slideDown {
-            from { transform: translate(-50%, -20px); opacity: 0; }
-            to { transform: translate(-50%, 0); opacity: 1; }
-        }
-
         .user-stats {
             display: flex; justify-content: center; gap: 12px; max-width: 400px; margin: 0 auto 8px auto;
             font-size: 13px; font-weight: bold; background: rgba(255,255,255,0.05); padding: 7px 12px; border-radius: 16px;
@@ -311,7 +297,7 @@
 
         <button class="btn-main btn-blue" onclick="openSoloMenu()" data-i18n="menu_solo">🏋️ ENTRAÎNEMENT SOLO</button>
         <button class="btn-main" onclick="open1v1Hub()" data-i18n="menu_1v1">⚔️ DUEL 1v1 ONLINE</button>
-        <button id="btn-trap-menu" class="btn-main" onclick="openTrapModeModal()" style="background:linear-gradient(45deg, #ff007f, #ff8a00); box-shadow: 0 4px 15px rgba(255,0,127,0.4);" data-i18n="menu_trap">💣 Mode Grille Maudite (Pièges)</button>
+        <button id="btn-trap-menu" class="btn-main" onclick="openTrapModeModal()" style="display:none; background:linear-gradient(45deg, #ff007f, #ff8a00); box-shadow: 0 4px 15px rgba(255,0,127,0.4);" data-i18n="menu_trap">💣 Mode Grille Maudite (Pièges)</button>
         
         <button class="btn-main btn-purple" onclick="openRoomsScreen()" data-i18n="menu_friends">👥 JOUER ENTRE AMIS</button>
         <button class="btn-main btn-shop" onclick="openShop()" data-i18n="menu_shop">🛍️ BOUTIQUE POUVOIRS</button>
@@ -646,11 +632,7 @@
             <span id="game-target-giant" style="font-size: 28px; font-weight: 900; color: #00d2ff; text-shadow: 0 0 10px rgba(0,210,255,0.6);">1</span>
         </div>
 
-        <div id="power-zone" style="display:none;">
-            <button id="btn-use-power" class="btn-power-hud" onclick="triggerEquippedPower()">
-                ⚡ <span id="power-hud-name">Aucun</span>
-            </button>
-        </div>
+        <div id="power-zone" style="display:none;"></div>
 
         <div id="grid" class="grid"></div>
     </div>
@@ -1152,7 +1134,7 @@
             region: localStorage.getItem('cb_region') || "Hauts-de-France",
             avatar: parseInt(localStorage.getItem('cb_avatar')) || 1,
             flag: localStorage.getItem('cb_flag') || "🇫🇷",
-            points: 0, coins: 0, trophies: 0, wins: 0, losses: 0, inventory: {}, equippedPower: null
+            points: 0, coins: 0, trophies: 0, wins: 0, losses: 0, inventory: {}, equippedPower: null, equippedPowers: []
         };
 
         let cachedOpponent = null;
@@ -1363,7 +1345,7 @@
         let current1v1Time = 30, radarInterval = null;
         let activeTrainingMode = 'classic';
         let soloTarget = 1, soloScore = 0, soloTimeLeft = 30, soloTimerInterval = null;
-        let powerUsedInMatch = false, currentShopTab = 'bonus', isTimeFrozen = false;
+        let currentShopTab = 'bonus', isTimeFrozen = false;
         let currentCoinsGained = 0, rewardDoubled = false;
 
         let avalancheGridData = [], avalancheTarget = null, avalancheInterval = null, avalancheTimerInterval = null, avalancheTimeLeft = 30;
@@ -1719,7 +1701,7 @@
             let digit = 1;
             radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById('radar-digit').innerText = digit; }, 70);
             
-            myProfile.equippedPower = selectedRankedItems[0];
+            myProfile.equippedPowers = selectedRankedItems;
             socket.emit('find_ranked_match', { items: selectedRankedItems });
         }
 
@@ -1898,28 +1880,36 @@
 
         function preparePowerHUD() {
             const zone = document.getElementById('power-zone');
-            const btn = document.getElementById('btn-use-power');
-            const nameLabel = document.getElementById('power-hud-name');
-            powerUsedInMatch = false;
-            const equippedId = myProfile.equippedPower;
-            const stock = equippedId ? (myProfile.inventory[equippedId] || 0) : 0;
-            if (equippedId && stock > 0) {
-                const powerInfo = i18n[currentLang].powers[equippedId];
-                nameLabel.innerText = `${powerInfo ? powerInfo.name : 'None'} (${stock})`;
-                btn.disabled = false;
-                zone.style.display = 'block';
-            } else { zone.style.display = 'none'; }
+            zone.innerHTML = '';
+            
+            const powers = myProfile.equippedPowers || (myProfile.equippedPower ? [myProfile.equippedPower] : []);
+            let usableCount = 0;
+
+            powers.forEach(powerId => {
+                const stock = myProfile.inventory[powerId] || 0;
+                if (stock > 0) {
+                    usableCount++;
+                    const powerInfo = i18n[currentLang].powers[powerId];
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-power-hud';
+                    btn.style.marginRight = '4px';
+                    btn.innerHTML = `⚡ ${powerInfo ? powerInfo.name : powerId} (${stock})`;
+                    btn.onclick = () => triggerSpecificPower(powerId, btn);
+                    zone.appendChild(btn);
+                }
+            });
+
+            zone.style.display = usableCount > 0 ? 'block' : 'none';
         }
 
-        function triggerEquippedPower() {
-            const powerId = myProfile.equippedPower;
-            if (!powerId || powerUsedInMatch) return;
+        function triggerSpecificPower(powerId, btnEl) {
             const stock = myProfile.inventory[powerId] || 0;
             if (stock <= 0) return;
             
             socket.emit('use_power', powerId);
-            powerUsedInMatch = true;
-            document.getElementById('btn-use-power').disabled = true;
+            myProfile.inventory[powerId]--;
+            btnEl.disabled = true;
+            btnEl.style.opacity = '0.5';
 
             const currentTarget = parseInt(document.getElementById('game-target-giant').innerText) || 1;
 
@@ -1944,6 +1934,8 @@
             } else {
                 socket.emit('send_malus', { type: powerId });
             }
+
+            setTimeout(() => preparePowerHUD(), 100);
         }
 
         function autoValidateTarget() {
@@ -2174,15 +2166,14 @@
             const resultText = document.getElementById('wheel-result-text');
             
             wheelEl.style.transition = 'transform 3.5s cubic-bezier(0.15, 0.75, 0.1, 1)';
-            wheelEl.style.transform = `rotate(${data.targetAngle}deg)`;
+            wheelEl.style.transform = `rotate(${data.targetAngle || 135}deg)`;
 
             setTimeout(() => {
                 if (data.outcome === 'jackpot') {
                     resultText.innerHTML = `🎉 <span style="color:#f8b500;">JACKPOT ! +${data.coinDelta} Pièces 🪙</span>`;
                     SoundEngine.playVictory();
                 } else if (data.outcome === 'objet') {
-                    const powerName = i18n[currentLang].powers[data.awardedItem] ? i18n[currentLang].powers[data.awardedItem].name : data.awardedItem;
-                    resultText.innerHTML = `🎁 <span style="color:#00c6ff;">OBJET GAGNÉ ! ${powerName} ⚡</span>`;
+                    resultText.innerHTML = `🎁 <span style="color:#00c6ff;">OBJET GAGNÉ ! ⚡</span>`;
                     SoundEngine.playVictory();
                 } else if (data.outcome === 'banqueroute') {
                     resultText.innerHTML = `💀 <span style="color:#ff4b2b;">PERDU ! ${data.coinDelta} Pièces 🪙</span>`;
@@ -2386,6 +2377,10 @@
             if (emptyIndices.length === 0) return false;
             let randomIdx = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
             avalancheGridData[randomIdx] = Math.floor(Math.random() * 50) + 1;
+            
+            if (avalancheTarget === null) {
+                updateAvalancheTarget();
+            }
             return true;
         }
 
