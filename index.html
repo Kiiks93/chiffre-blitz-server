@@ -114,6 +114,20 @@
         #shop-tab-bonus.active { background: #38ef7d; color: #000; border-color: #38ef7d; }
         #shop-tab-malus.active { background: #ff4b2b; color: #fff; border-color: #ff4b2b; }
 
+        /* BANDEAU ADMIN ABUSE POUR LES JOUEURS */
+        .event-banner {
+            background: linear-gradient(45deg, rgba(255, 138, 0, 0.2), rgba(255, 65, 108, 0.2));
+            border: 1px solid #ff8a00;
+            border-radius: 10px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            text-align: left;
+            font-size: 11px;
+            color: #ffd27f;
+            display: none;
+        }
+        .event-banner b { color: #fff; }
+
         /* CLASSEMENT REVISITÉ & LISIBLE (ONGLETS AGRANDIS) */
         .lb-filters-container {
             background: rgba(0, 0, 0, 0.25);
@@ -286,6 +300,9 @@
 
     <!-- MENU PRINCIPAL -->
     <div id="screen-menu" class="menu-container" style="display:none;">
+        <!-- BANDEAU D'INFORMATION DES ADMIN ABUSES ACTIFS POUR LES JOUEURS -->
+        <div id="player-event-banner" class="event-banner"></div>
+
         <button class="btn-main btn-blue" onclick="openSoloMenu()" data-i18n="menu_solo">🏋️ ENTRAÎNEMENT SOLO</button>
         <button class="btn-main" onclick="open1v1Hub()" data-i18n="menu_1v1">⚔️ DUEL 1v1 ONLINE</button>
         <button class="btn-main btn-purple" onclick="openRoomsScreen()" data-i18n="menu_friends">👥 JOUER ENTRE AMIS</button>
@@ -1211,6 +1228,27 @@
             registerIfPossible();
         });
 
+        // Gestion de l'affichage dynamique des boosts actifs pour les joueurs
+        socket.on('events_state_update', (events) => {
+            const banner = document.getElementById('player-event-banner');
+            if (!banner) return;
+
+            let activeList = [];
+            if (events.coinRush) activeList.push("🪙 <b>Coin Rush</b> (Pièces x2)");
+            if (events.rankShield) activeList.push("🛡️ <b>Rank Shield</b> (Zéro perte de points en classé)");
+            if (events.expressoMatch) activeList.push("⚡ <b>Expresso Match</b> (Parties rapides en 20s)");
+            if (events.chaosMode) activeList.push("🌪️ <b>Chaos Mode</b> (Modificateurs aléatoires)");
+            if (events.jackpotEclair) activeList.push("🎁 <b>Jackpot Éclair</b> (Coffres mystères)");
+            if (events.saboteurMode) activeList.push("🕵️‍♂️ <b>Saboteur vs Sprinteur</b> (Mode BO3 asymétrique)");
+
+            if (activeList.length > 0) {
+                banner.innerHTML = `⚡ <b>ADMIN ABUSE EN COURS :</b><br>` + activeList.join("<br>");
+                banner.style.display = 'block';
+            } else {
+                banner.style.display = 'none';
+            }
+        });
+
         const POWERS_CATALOG = [
             { id: 'spotlight', price: 150, type: 'bonus' },
             { id: 'freeze', price: 350, type: 'bonus' },
@@ -1312,38 +1350,51 @@
                         
                         <div style="max-height:60vh; overflow-y:auto; padding-right:4px; display:flex; flex-direction:column; gap:12px; font-size:12px;">
                             
-                            <!-- SECTION BOOSTS & MODE -->
+                            <!-- SECTION BOOSTS & MODE AVEC AIDE-MÉMOIRE -->
                             <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
-                                <strong style="color:#ff8a00; display:block; margin-bottom:8px;">⚡ BOOSTS & ÉVÉNEMENTS ACTIFS</strong>
-                                <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <strong style="color:#ff8a00; display:block; margin-bottom:8px;">⚡ BOOSTS & ÉVÉNEMENTS (ADMIN ABUSE)</strong>
+                                
+                                <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
                                     <span>🪙 Coin Rush (Pièces x2)</span>
                                     <input type="checkbox" id="chk-coinRush" onchange="sendAdminEventsUpdate()">
                                 </label>
-                                <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <p style="color:#aaa; font-size:10px; margin:2px 0 6px 0;">Double tous les gains de pièces (solo, 1v1, classé).</p>
+
+                                <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
                                     <span>🛡️ Rank Shield (Pas de perte de points)</span>
                                     <input type="checkbox" id="chk-rankShield" onchange="sendAdminEventsUpdate()">
                                 </label>
-                                <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <p style="color:#aaa; font-size:10px; margin:2px 0 6px 0;">Zéro perte de points en cas de défaite en match classé.</p>
+
+                                <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
                                     <span>⚡ Expresso Match (Timer 20s)</span>
                                     <input type="checkbox" id="chk-expressoMatch" onchange="sendAdminEventsUpdate()">
                                 </label>
-                                <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <p style="color:#aaa; font-size:10px; margin:2px 0 6px 0;">Accélère les duels 1v1 (20 secondes au lieu de 30s).</p>
+
+                                <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
                                     <span>🌪️ Chaos Mode (Modificateurs)</span>
                                     <input type="checkbox" id="chk-chaosMode" onchange="sendAdminEventsUpdate()">
                                 </label>
-                                <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <p style="color:#aaa; font-size:10px; margin:2px 0 6px 0;">Applique des modificateurs aléatoires funs pendant les matchs.</p>
+
+                                <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
                                     <span>🎁 Jackpot Éclair (Coffres mystères)</span>
                                     <input type="checkbox" id="chk-jackpotEclair" onchange="sendAdminEventsUpdate()">
                                 </label>
-                                <label style="display:flex; justify-content:space-between; align-items:center;">
+                                <p style="color:#aaa; font-size:10px; margin:2px 0 6px 0;">Petite chance d'obtenir des pièces bonus surprises en fin de match.</p>
+
+                                <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
                                     <span>🕵️‍♂️ Mode Exclusif : Saboteur vs Sprinteur (BO3)</span>
                                     <input type="checkbox" id="chk-saboteurMode" onchange="sendAdminEventsUpdate()">
                                 </label>
+                                <p style="color:#aaa; font-size:10px; margin:2px 0 0 0;">Mode asymétrique fun (un joueur piège, l'autre court en BO3).</p>
                             </div>
 
                             <!-- SECTION PLANIFICATION -->
                             <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
                                 <strong style="color:#00d2ff; display:block; margin-bottom:8px;">📅 PLANIFICATION AUTOMATIQUE</strong>
+                                <p style="color:#aaa; font-size:10px; margin:0 0 6px 0;">Programme tes événements à l'avance si tu n'es pas dispo.</p>
                                 <div style="display:flex; gap:6px; margin-bottom:6px;">
                                     <div style="flex:1;">
                                         <label style="font-size:10px; color:#aaa;">Début :</label>
@@ -1360,6 +1411,7 @@
                             <!-- SECTION BROADCAST -->
                             <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
                                 <strong style="color:#38ef7d; display:block; margin-bottom:8px;">📢 ANNONCE GLOBALE (BROADCAST)</strong>
+                                <p style="color:#aaa; font-size:10px; margin:0 0 6px 0;">Envoie une pop-up d'alerte sur l'écran de tous les joueurs connectés.</p>
                                 <input type="text" id="admin-broadcast-msg" placeholder="Message à afficher chez tous les joueurs..." style="width:100%; padding:6px; border-radius:6px; background:#0f051d; color:#fff; border:1px solid #38ef7d; margin-bottom:6px; outline:none;">
                                 <button class="power-btn buy" onclick="sendAdminBroadcast()" style="width:100%; padding:6px;">Envoyer l'annonce 🚀</button>
                             </div>
@@ -1367,6 +1419,7 @@
                             <!-- SECTION CADEAUX -->
                             <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
                                 <strong style="color:#f8b500; display:block; margin-bottom:8px;">🎁 DISTRIBUER UN CADEAU ADMIN</strong>
+                                <p style="color:#aaa; font-size:10px; margin:0 0 6px 0;">Donne des pièces ou des points à un joueur précis ou à tout le monde.</p>
                                 <input type="text" id="admin-gift-target" placeholder="Pseudo (ou laisser vide pour TOUS)" style="width:100%; padding:6px; border-radius:6px; background:#0f051d; color:#fff; border:1px solid #f8b500; margin-bottom:6px; outline:none;">
                                 <div style="display:flex; gap:6px; margin-bottom:6px;">
                                     <select id="admin-gift-currency" style="flex:1; padding:6px; border-radius:6px; background:#0f051d; color:#fff; border:1px solid #f8b500;">
