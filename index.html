@@ -128,6 +128,12 @@
         #countdown-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 5, 29, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
         .countdown-num { font-size: 90px; font-weight: 900; color: #00d2ff; }
 
+        .ad-timer-circle {
+            width: 70px; height: 70px; border-radius: 50%; border: 4px solid #00d2ff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; font-weight: 900; margin-bottom: 25px; color: #00d2ff;
+        }
+
         @keyframes radarSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulseAudio { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
         @keyframes quake { 0% { transform: translate(2px, 2px); } 50% { transform: translate(-2px, -2px); } 100% { transform: translate(2px, -2px); } }
@@ -149,6 +155,24 @@
     <div class="user-stats">
         <span>🪙 <strong id="user-coins-display">0</strong> <span data-i18n="coins">Pièces</span></span>
         <span>🏆 <strong id="user-trophies-display">0</strong> <span data-i18n="trophies">Trophées</span></span>
+    </div>
+
+    <!-- MODALE DE SOUTIEN (LANCEMENT) -->
+    <div id="modal-launch-ad" class="modal-overlay" style="display:none;">
+        <div class="modal-card" style="text-align:center;">
+            <h2 style="margin:0 0 10px 0; color:#00d2ff;" data-i18n="ad_title">Soutenir le Créateur</h2>
+            <p style="color:#ccc; font-size:14px; line-height:1.5; margin-bottom:20px;" data-i18n="ad_desc">Chiffre Blitz est 100% gratuit. Une publicité de soutien va se lancer. Merci ! ❤️</p>
+            <button class="btn-main btn-blue" onclick="playLaunchAd()" style="width:100%;" data-i18n="ad_btn">Lancer la partie ⚡</button>
+        </div>
+    </div>
+
+    <!-- SIMULATEUR DE PUBLICITE -->
+    <div id="simulated-ad-overlay" style="display:none;" class="modal-overlay">
+        <div class="modal-card" style="text-align:center; align-items:center;">
+            <div style="color:#aaa; font-size:16px; margin-bottom:20px; font-weight:bold;" data-i18n="ad_sponsored">VIDÉO SPONSORISÉE...</div>
+            <div class="ad-timer-circle" id="ad-timer">5</div>
+            <button id="ad-close-btn" class="btn-secondary" style="display:none; max-width:200px;" onclick="closeSimulatedAd()" data-i18n="close">Fermer</button>
+        </div>
     </div>
 
     <!-- ÉCRAN TITRE -->
@@ -177,7 +201,7 @@
             </div>
         </div>
 
-        <button class="btn-main btn-blue" onclick="showMainMenu()" style="margin-top: 12px; width: 100%;" data-i18n="btn_play">JOUER ⚡</button>
+        <button class="btn-main btn-blue" onclick="checkLaunchAdAndStart()" style="margin-top: 12px; width: 100%;" data-i18n="btn_play">JOUER ⚡</button>
     </div>
 
     <!-- MENU PRINCIPAL -->
@@ -513,6 +537,10 @@
                 main_menu: "MENU PRINCIPAL",
                 no_rooms: "Aucun salon ouvert.",
                 no_players: "Aucun joueur.",
+                ad_title: "Soutenir le Créateur",
+                ad_desc: "Chiffre Blitz est 100% gratuit. Une publicité de soutien va se lancer. Merci ! ❤️",
+                ad_btn: "Lancer la partie ⚡",
+                ad_sponsored: "VIDÉO SPONSORISÉE...",
                 powers: {
                     spotlight: { name: '💡 Projecteur', desc: 'Illumine la bonne tuile (2s)' },
                     freeze: { name: '⏳ Blocage du Temps', desc: 'Gèle le chrono pendant 3s' },
@@ -599,6 +627,10 @@
                 main_menu: "MAIN MENU",
                 no_rooms: "No open rooms.",
                 no_players: "No players.",
+                ad_title: "Support the Creator",
+                ad_desc: "Chiffre Blitz is 100% free. A support advertisement will play. Thank you! ❤️",
+                ad_btn: "Start Game ⚡",
+                ad_sponsored: "SPONSORED VIDEO...",
                 powers: {
                     spotlight: { name: '💡 Spotlight', desc: 'Highlights the correct tile (2s)' },
                     freeze: { name: '⏳ Time Freeze', desc: 'Freezes the timer for 3s' },
@@ -634,9 +666,9 @@
             document.getElementById('lang-btn').innerText = (currentLang === 'fr') ? 'ENG' : 'FR';
         }
 
-        // --- MOTEUR AUDIO LONG ET ÉVOLUTIF (64 PAS) ---
+        // --- MOTEUR AUDIO LONG, ÉVOLUTIF ET PLUS POSÉ ---
         const SoundEngine = {
-            ctx: null, isMuted: false, timerId: null, currentMode: null, step: 0, bpm: 142,
+            ctx: null, isMuted: false, timerId: null, currentMode: null, step: 0, bpm: 105,
             init() { 
                 if (!this.ctx) { 
                     this.ctx = new (window.AudioContext || window.webkitAudioContext)(); 
@@ -703,13 +735,14 @@
                 this.stopMusic(false);
                 this.step = 0;
 
-                this.bpm = (mode === 'menu') ? 120 : 142;
+                // Tempo baissé pour un rythme moins rapide et plus agréable
+                this.bpm = (mode === 'menu') ? 95 : 105;
                 const intervalMs = (60 / this.bpm / 4) * 1000;
 
                 this.timerId = setInterval(() => {
                     if (this.isMuted || !this.ctx || this.ctx.state !== 'running') return;
                     this.tickSequence(this.currentMode, this.step);
-                    this.step = (this.step + 1) % 64; // Boucle longue de 64 pas
+                    this.step = (this.step + 1) % 64;
                 }, intervalMs);
             },
             tickSequence(mode, step) {
@@ -721,7 +754,7 @@
                     const osc = this.ctx.createOscillator();
                     const gain = this.ctx.createGain();
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(mode === 'menu' ? 120 : 150, t);
+                    osc.frequency.setValueAtTime(mode === 'menu' ? 110 : 130, t);
                     osc.frequency.exponentialRampToValueAtTime(30, t + 0.08);
                     gain.gain.setValueAtTime(0.18, t);
                     gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
@@ -859,6 +892,8 @@
         let current1v1Time = 30, radarInterval = null;
         let soloTarget = 1, soloScore = 0, soloTimeLeft = 30, soloTimerInterval = null;
         let powerUsedInMatch = false, currentShopTab = 'bonus', isTimeFrozen = false;
+        let hasShownLaunchAd = false;
+        let adCallbackFunction = null;
 
         document.addEventListener("DOMContentLoaded", () => {
             applyTranslations();
@@ -947,7 +982,7 @@
         });
 
         function hideAllScreens() {
-            ['screen-title', 'screen-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room'].forEach(id => {
+            ['screen-title', 'screen-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room', 'modal-launch-ad', 'simulated-ad-overlay'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
@@ -969,6 +1004,53 @@
             window.history.replaceState({}, '', window.location.pathname);
             document.getElementById('screen-menu').style.display = 'flex';
             SoundEngine.startMusic('menu');
+        }
+
+        // --- GESTION PUBLICITÉ DE LANCEMENT ---
+        function checkLaunchAdAndStart() {
+            SoundEngine.init();
+            if (!hasShownLaunchAd) {
+                document.getElementById('modal-launch-ad').style.display = 'flex';
+            } else {
+                showMainMenu();
+            }
+        }
+
+        function playLaunchAd() {
+            document.getElementById('modal-launch-ad').style.display = 'none';
+            hasShownLaunchAd = true;
+            simulateAd(() => { showMainMenu(); });
+        }
+
+        function simulateAd(callback) {
+            SoundEngine.stopMusic(false); // Stoppe la musique pendant la pub
+            const overlay = document.getElementById('simulated-ad-overlay');
+            const timerEl = document.getElementById('ad-timer');
+            const closeBtn = document.getElementById('ad-close-btn');
+            overlay.style.display = 'flex';
+            closeBtn.style.display = 'none';
+            let timeLeft = 5;
+            timerEl.innerText = timeLeft;
+            
+            const interval = setInterval(() => {
+                timeLeft--;
+                timerEl.innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    timerEl.innerText = "✓";
+                    closeBtn.style.display = 'block';
+                    adCallbackFunction = callback;
+                }
+            }, 1000);
+        }
+
+        function closeSimulatedAd() {
+            document.getElementById('simulated-ad-overlay').style.display = 'none';
+            SoundEngine.startMusic('menu'); // Relance la musique après la pub
+            if (adCallbackFunction) {
+                adCallbackFunction();
+                adCallbackFunction = null;
+            }
         }
 
         function open1v1Hub() {
