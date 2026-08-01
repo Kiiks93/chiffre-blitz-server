@@ -142,7 +142,7 @@
         </div>
         <div class="header-btns">
             <button id="lang-btn" class="icon-btn" onclick="toggleLanguage()">ENG</button>
-            <button class="icon-btn" onclick="toggleMute()">🔊</button>
+            <button id="mute-btn" class="icon-btn" onclick="toggleMute()">🔊</button>
         </div>
     </div>
 
@@ -161,7 +161,7 @@
     </div>
 
     <!-- MODALE RÈGLES / COMMENT JOUER -->
-    <div id="modal-rules" class="modal-overlay" style="display:none;">
+    <div id="modal-rules" class="modal-overlay" style="display:flex;">
         <div class="modal-card" style="text-align:left;">
             <h2 style="margin:0 0 15px 0; color:#00d2ff; text-align:center;" data-i18n="rules_title">📖 RÈGLES DU JEU</h2>
             <div style="overflow-y:auto; flex:1; font-size:13px; color:#ccc; display:flex; flex-direction:column; gap:12px; padding-right:5px;">
@@ -175,7 +175,7 @@
                 </div>
                 <div>
                     <strong style="color:#E94057;" data-i18n="r_avalanche_title">🧊 Mode Avalanche (Style Tetris) :</strong>
-                    <p style="margin:4px 0 0 0;" data-i18n="r_avalanche_desc">Des chiffres s'empilent progressivement. Cliquez sur le chiffre cible affiché (présent dans la grille) pour libérer la case.</p>
+                    <p style="margin:4px 0 0 0;" data-i18n="r_avalanche_desc">Des chiffres s'empirent progressivement. Cliquez sur le chiffre cible affiché (présent dans la grille) pour libérer la case.</p>
                 </div>
                 <div>
                     <strong style="color:#00c6ff;" data-i18n="r_1v1_title">⚔️ Duel 1v1 Online :</strong>
@@ -372,7 +372,7 @@
                 rules_title: "📖 RÈGLES DU JEU",
                 r_classic_title: "⚡ Mode Classique (Solo) :", r_classic_desc: "Enchaînez le plus vite possible les chiffres dans l'ordre croissant exact de 1 à 50 pendant 30 secondes.",
                 r_random_title: "🎲 Mode Aléatoire (Solo) :", r_random_desc: "Un chiffre cible changeant s'affiche. Retrouvez-le et cliquez dessus le plus rapidement possible.",
-                r_avalanche_title: "🧊 Mode Avalanche (Style Tetris) :", r_avalanche_desc: "Des chiffres s'empilent progressivement. Cliquez sur le chiffre cible affiché (présent dans la grille) pour libérer la case.",
+                r_avalanche_title: "🧊 Mode Avalanche (Style Tetris) :", r_avalanche_desc: "Des chiffres s'empirent progressivement. Cliquez sur le chiffre cible affiché (présent dans la grille) pour libérer la case.",
                 r_1v1_title: "⚔️ Duel 1v1 Online :", r_1v1_desc: "Affrontez un adversaire en temps réel. Le premier à marquer le plus de points gagne la partie.",
                 close: "Fermer", shop_title: "🛍️ BOUTIQUE DE POUVOIRS", tab_bonus: "🟢 Bonus", tab_malus: "🔴 Malus",
                 lb_title: "🏆 CLASSEMENT", ad_sponsored: "VIDEO SPONSORISÉE...",
@@ -433,6 +433,19 @@
             }
         }
 
+        // Moteur Audio & Mute
+        const SoundEngine = {
+            ctx: null, isMuted: false,
+            init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); if (this.ctx.state === 'suspended') this.ctx.resume(); },
+            playClick() { if (this.isMuted) return; this.init(); const t = this.ctx.currentTime; const osc = this.ctx.createOscillator(), g = this.ctx.createGain(); osc.frequency.setValueAtTime(440, t); osc.frequency.exponentialRampToValueAtTime(880, t + 0.06); g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06); osc.connect(g); g.connect(this.ctx.destination); osc.start(t); osc.stop(t + 0.06); },
+            playError() { if (this.isMuted) return; this.init(); const t = this.ctx.currentTime; const osc = this.ctx.createOscillator(), g = this.ctx.createGain(); osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, t); g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.1); osc.connect(g); g.connect(this.ctx.destination); osc.start(t); osc.stop(t + 0.1); }
+        };
+
+        function toggleMute() {
+            SoundEngine.isMuted = !SoundEngine.isMuted;
+            document.getElementById('mute-btn').innerText = SoundEngine.isMuted ? '🔇' : '🔊';
+        }
+
         const SERVER_URL = window.location.origin;
         const socket = io(SERVER_URL, { reconnection: true });
 
@@ -448,7 +461,7 @@
         // Prix exacts synchronisés avec server.js
         const powersData = {
             bonus: [
-                { id: 'spotlight', nameKey: 'p_spotlight', name: '💡 Projecteur', desc: 'Illumine la bonne tuile', price: 30 },
+                { id: 'spotlight', name: '💡 Projecteur', desc: 'Illumine la bonne tuile', price: 30 },
                 { id: 'freeze', name: '⏳ Gel du Temps', desc: 'Gèle le chrono', price: 60 },
                 { id: 'joker', name: '⚡ Joker', desc: 'Valide la cible actuelle', price: 150 },
                 { id: 'nova', name: '🌟 Nova', desc: 'Valide plusieurs cibles', price: 400 }
@@ -471,7 +484,6 @@
             applyLanguage(savedLang);
             showTitleScreen();
             checkAndShowProfileModal();
-            // Affichage automatique des règles au premier lancement si souhaité, ou via le bouton
         });
 
         function isProfileValid() {
@@ -496,6 +508,8 @@
             myProfile.username = nameInput;
             document.getElementById('modal-username').style.display = 'none';
             socket.emit('register_player', myProfile);
+            // Ouvre automatiquement les règles au tout début après la saisie du profil
+            openRulesModal();
         }
 
         socket.on('player_registered', (player) => {
@@ -761,22 +775,26 @@
             renderTileGrid(pool, (num) => {
                 if (activeTrainingMode === 'classic') {
                     if (num === soloTarget) {
+                        SoundEngine.playClick();
                         soloTarget++;
                         soloScore += 10;
                         document.getElementById('solo-target').innerText = soloTarget;
                         document.getElementById('solo-score').innerText = soloScore;
                         generateSoloGrid();
                     } else {
+                        SoundEngine.playError();
                         soloTimeLeft = Math.max(0, soloTimeLeft - 1);
                     }
                 } else {
                     if (num === soloTarget) {
+                        SoundEngine.playClick();
                         soloScore += 15;
                         soloTarget = Math.floor(Math.random() * 50) + 1;
                         document.getElementById('solo-target').innerText = soloTarget;
                         document.getElementById('solo-score').innerText = soloScore;
                         generateSoloGrid();
                     } else {
+                        SoundEngine.playError();
                         soloTimeLeft = Math.max(0, soloTimeLeft - 1);
                     }
                 }
@@ -862,11 +880,14 @@
 
         function handleAvalancheClick(val, idx) {
             if (val === avalancheTarget) {
+                SoundEngine.playClick();
                 avalancheGridData[idx] = null;
                 soloScore += 20;
                 document.getElementById('solo-score').innerText = soloScore;
                 updateAvalancheTarget();
                 renderAvalancheGrid();
+            } else {
+                SoundEngine.playError();
             }
         }
 
@@ -877,7 +898,10 @@
                 const tile = document.createElement('div');
                 tile.className = 'tile';
                 tile.innerText = num;
-                tile.onclick = () => clickHandler(num);
+                tile.onclick = () => {
+                    SoundEngine.playClick();
+                    clickHandler(num);
+                };
                 grid.appendChild(tile);
             });
         }
@@ -933,8 +957,6 @@
                 container.innerHTML += `<div class="lb-row"><span class="lb-rank">#${i+1}</span><span class="lb-name">${p.username}</span><span class="lb-pts">${p.points} pts</span></div>`;
             });
         });
-
-        function toggleMute() {}
     </script>
 </body>
 </html>
