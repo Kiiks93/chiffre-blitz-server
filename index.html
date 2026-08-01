@@ -1304,6 +1304,10 @@
             registerIfPossible();
         });
 
+        socket.on('global_announcement', (msg) => {
+            alert("📢 ANNONCE GLOBALE : " + msg);
+        });
+
         socket.on('events_state_update', (events) => {
             latestGlobalEvents = events;
             const banner = document.getElementById('player-event-banner');
@@ -1469,6 +1473,25 @@
                                 <p style="color:#aaa; font-size:10px; margin:2px 0 2px 0;">Affiche le mode dans le menu.</p>
                             </div>
 
+                            <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
+                                <strong style="color:#f8b500; display:block; margin-bottom:8px;">🎁 CADEAUX / DON DE MONNAIE</strong>
+                                <input type="text" id="admin-gift-target" placeholder="Pseudo (laisser vide ou 'TOUS')" style="width:100%; padding:6px; border-radius:6px; border:1px solid #f8b500; background:#0f051d; color:#fff; margin-bottom:6px; outline:none; font-size:11px;">
+                                <div style="display:flex; gap:6px; margin-bottom:6px;">
+                                    <select id="admin-gift-currency" style="flex:1; padding:6px; border-radius:6px; border:1px solid #f8b500; background:#0f051d; color:#fff; font-size:11px; outline:none;">
+                                        <option value="coins">Pièces 🪙</option>
+                                        <option value="points">Points 🏅</option>
+                                    </select>
+                                    <input type="number" id="admin-gift-amount" placeholder="Montant" value="100" style="flex:1; padding:6px; border-radius:6px; border:1px solid #f8b500; background:#0f051d; color:#fff; font-size:11px; outline:none; text-align:center;">
+                                </div>
+                                <button class="btn-main btn-gold" onclick="sendAdminGift()" style="padding:8px; font-size:12px; width:100%;">Envoyer le Cadeau 🎁</button>
+                            </div>
+
+                            <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
+                                <strong style="color:#00d2ff; display:block; margin-bottom:8px;">📢 ANNONCE / MESSAGE GLOBAL</strong>
+                                <input type="text" id="admin-broadcast-input" placeholder="Message à diffuser à tous..." style="width:100%; padding:6px; border-radius:6px; border:1px solid #00d2ff; background:#0f051d; color:#fff; margin-bottom:6px; outline:none; font-size:11px;">
+                                <button class="btn-main btn-blue" onclick="sendAdminBroadcast()" style="padding:8px; font-size:12px; width:100%;">Diffuser l'Annonce ⚡</button>
+                            </div>
+
                         </div>
 
                         <button class="btn-secondary" onclick="document.getElementById('modal-admin-dashboard').style.display='none'" style="margin-top:10px;">Fermer le Panel</button>
@@ -1497,6 +1520,26 @@
                 saboteurMode: document.getElementById('chk-saboteurMode').checked
             };
             socket.emit('admin_update_events', updatedEvents);
+        }
+
+        function sendAdminGift() {
+            const targetUsername = document.getElementById('admin-gift-target').value;
+            const currency = document.getElementById('admin-gift-currency').value;
+            const amount = parseInt(document.getElementById('admin-gift-amount').value) || 0;
+            if (amount <= 0) { alert("Montant invalide !"); return; }
+            socket.emit('admin_give_gift', { targetUsername, currency, amount });
+            alert("Cadeau envoyé !");
+        }
+
+        function sendAdminBroadcast() {
+            const message = document.getElementById('admin-broadcast-input').value;
+            if (!message) return;
+            socket.emit('admin_broadcast_message', message);
+            alert("Message diffusé !");
+        }
+
+        function showAdminToast(msg) {
+            alert(msg);
         }
 
         function hideAllScreens() {
