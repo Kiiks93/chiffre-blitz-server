@@ -86,7 +86,7 @@ async function savePlayerToSupabase(socketId) {
 function generateRandomTraps(count) {
     let traps = [];
     while (traps.length < count) {
-        let randomTile = Math.floor(Math.random() * 50) + 1;
+        let randomTile = Math.floor(Math.random() * 12);
         if (!traps.includes(randomTile)) traps.push(randomTile);
     }
     return traps;
@@ -384,14 +384,15 @@ io.on('connection', (socket) => {
     socket.on('find_saboteur_match', (data) => {
         if (!globalEvents.saboteurMode) return;
         const chosenMalus = data && data.chosenMalus ? data.chosenMalus : ['inversion'];
+        const trappedTiles = data && data.trappedTiles ? data.trappedTiles : generateRandomTraps(2);
 
         saboteurQueue = saboteurQueue.filter(item => (item.socketId || item) !== socket.id);
-        saboteurQueue.push({ socketId: socket.id, chosenMalus });
+        saboteurQueue.push({ socketId: socket.id, chosenMalus, trappedTiles });
 
         if (saboteurQueue.length >= 2) {
             const item1 = saboteurQueue.shift();
             const item2 = saboteurQueue.shift();
-            startSaboteurMatchBetween(item1.socketId, item2.socketId, item1.chosenMalus, item2.chosenMalus);
+            startSaboteurMatchBetween(item1.socketId, item2.socketId, item1, item2);
         }
     });
 
@@ -410,15 +411,16 @@ io.on('connection', (socket) => {
             pData.pool = generatePool(pData.target);
 
             if (match.isSaboteur) {
+                const clickedIndex = pData.pool.indexOf(num);
                 const oppData = match.players[oppId];
-                if (oppData && oppData.traps && oppData.traps.includes(num)) {
+                if (oppData && oppData.traps && oppData.traps.includes(clickedIndex)) {
                     const triggeredMalus = oppData.chosenMalus[Math.floor(Math.random() * oppData.chosenMalus.length)];
                     if (triggeredMalus === 'inversion') {
                         pData.pool.sort(() => Math.random() - 0.5);
                     } else if (triggeredMalus === 'gel') {
                         socket.emit('receive_malus', { type: 'freeze' });
-                    } else if (triggeredMalus === 'penalite') {
-                        pData.score = Math.max(0, pData.score - 25);
+                    } else if (triggeredMalus === 'brouillage') {
+                        socket.emit('receive_malus', { type: 'eclipse' });
                     }
                 }
             }
@@ -647,7 +649,7 @@ function startMatchBetween(id1, id2, isRanked = false) {
     }, 1000);
 }
 
-function startSaboteurMatchBetween(id1, id2, p1ChosenMalus, p2ChosenMalus) {
+function startSaboteurMatchBetween(id1, id2, item1, item2) {
     const p1 = activePlayers[id1] || { socketId: id1, username: "Joueur 1", avatar: 1, flag: "🇫🇷", points: 0 };
     const p2 = activePlayers[id2] || { socketId: id2, username: "Joueur 2", avatar: 2, flag: "🇫🇷", points: 0 };
 
@@ -660,15 +662,15 @@ function startSaboteurMatchBetween(id1, id2, p1ChosenMalus, p2ChosenMalus) {
                 target: 1, 
                 score: 0, 
                 pool: generatePool(1),
-                chosenMalus: p1ChosenMalus || ['inversion'],
-                traps: generateRandomTraps(2)
+                chosenMalus: item1.chosenMalus || ['inversion'],
+                traps: item1.trappedTiles || generateRandomTraps(2)
             },
             [id2]: { 
                 target: 1, 
                 score: 0, 
                 pool: generatePool(1),
-                chosenMalus: p2ChosenMalus || ['inversion'],
-                traps: generateRandomTraps(2)
+                chosenMalus: item2.chosenMalus || ['inversion'],
+                traps: item2.trappedTiles || generateRandomTraps(2)
             }
         },
         isRanked: false,
