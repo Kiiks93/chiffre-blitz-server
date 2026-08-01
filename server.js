@@ -383,7 +383,8 @@ io.on('connection', (socket) => {
 
     socket.on('find_saboteur_match', (data) => {
         if (!globalEvents.saboteurMode) return;
-        const chosenMalus = data && data.chosenMalus ? data.chosenMalus : ['inversion'];
+        // Limite stricte à maximum 2 malus sélectionnés
+        const chosenMalus = data && data.chosenMalus ? data.chosenMalus.slice(0, 2) : ['inversion'];
         const trappedTiles = data && data.trappedTiles ? data.trappedTiles : generateRandomTraps(2);
 
         saboteurQueue = saboteurQueue.filter(item => (item.socketId || item) !== socket.id);
