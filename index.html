@@ -332,7 +332,7 @@
         <h2 style="color:#00d2ff; font-size:18px; margin-bottom:4px;" data-i18n="avalanche_menu_title">🧊 AVALANCHE (Difficultés)</h2>
         <button class="btn-main btn-avalanche-easy" onclick="startAvalancheGame(1800, 4)" data-i18n="diff_easy">Facile</button>
         <button class="btn-main btn-avalanche-medium" onclick="startAvalancheGame(1200, 3)" data-i18n="diff_medium">Moyen</button>
-        <button class="btn-main btn-avalanche-hard" onclick="startAvalancheGame(950, 4)" data-i18n="diff_hard">Difficile 💀</button>
+        <button class="btn-main btn-avalanche-hard" onclick="startAvalancheGame(800, 4)" data-i18n="diff_hard">Difficile 💀</button>
         <button class="btn-secondary" onclick="openSoloMenu()" data-i18n="back">⬅️ Retour</button>
     </div>
 
@@ -2423,7 +2423,6 @@
             avalancheInterval = setInterval(() => {
                 if (!isTimeFrozen) {
                     let added = spawnAvalancheNumber();
-                    updateAvalancheTarget();
                     renderAvalancheGrid();
                     if (!added) {
                         clearInterval(avalancheTimerInterval);
