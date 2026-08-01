@@ -175,11 +175,11 @@
         .power-btn.equip { background: #00d2ff; color: #000; }
         .power-btn.active { background: #00ff88; color: #000; }
 
-        /* GRILLE DE PRÉPARATION DES PIÈGES */
-        .trap-setup-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; max-width: 220px; margin: 6px auto; }
+        /* GRILLE DE PRÉPARATION DES PIÈGES (3 LIGNES x 4 COLONNES = 12 CASES) */
+        .trap-setup-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; max-width: 220px; margin: 6px auto; }
         .trap-setup-tile {
-            background: #2a1845; border: 2px solid #522d80; border-radius: 8px; height: 38px;
-            display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; cursor: pointer;
+            background: #2a1845; border: 2px solid #522d80; border-radius: 8px; height: 42px;
+            display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; cursor: pointer;
             transition: all 0.15s;
         }
         .trap-setup-tile:active { transform: scale(0.92); }
@@ -317,7 +317,7 @@
         <button class="btn-secondary" onclick="showTitleScreen()" style="margin-top:4px;" data-i18n="menu_info">ℹ️ Informations & Règles</button>
     </div>
 
-    <!-- MODAL DE PRÉPARATION DU MODE GRILLE MAUDITE -->
+    <!-- MODAL DE PRÉPARATION DU MODE GRILLE MAUDITE (12 CASES : 3x4) -->
     <div id="modal-trap-setup" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:left;">
             <h2 style="color:#ff007f; margin:0 0 4px 0; font-size:18px; text-align:center;">💣 GRILLE MAUDITE : PRÉPARATION</h2>
@@ -347,7 +347,7 @@
                 </label>
             </div>
 
-            <p style="color:#aaa; font-size:11px; margin-bottom:4px; text-align:center;">2. Sélectionne <b>2 cases</b> à piéger sur la grille adverse :</p>
+            <p style="color:#aaa; font-size:11px; margin-bottom:4px; text-align:center;">2. Sélectionne <b>2 cases</b> à piéger sur ta grille 12 cases (3x4) :</p>
             <div id="trap-setup-grid" class="trap-setup-grid"></div>
 
             <div style="display:flex; gap:8px; margin-top:10px;">
@@ -1639,7 +1639,8 @@
             const grid = document.getElementById('trap-setup-grid');
             if (!grid) return;
             grid.innerHTML = '';
-            for (let i = 0; i < 16; i++) {
+            // Grille de 12 cases (3 lignes x 4 colonnes)
+            for (let i = 0; i < 12; i++) {
                 const tile = document.createElement('div');
                 const isSelected = selectedTrappedIndices.includes(i);
                 tile.className = `trap-setup-tile ${isSelected ? 'selected' : ''}`;
@@ -2458,7 +2459,7 @@
             document.getElementById('solo-score').innerText = soloScore;
             document.getElementById('game-timer').innerText = avalancheTimeLeft;
 
-            avalancheGridData = Array(16).fill(null);
+            avalancheGridData = Array(12).fill(null);
             avalancheTarget = null;
             for(let i=0; i<initialCount; i++) spawnAvalancheNumber();
             updateAvalancheTarget();
