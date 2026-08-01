@@ -70,6 +70,8 @@
             color: #aaa; border-radius: 10px; font-weight: bold; font-size: 12px; cursor: pointer; transition: all 0.2s;
         }
         .tab-btn.active { background: #00d2ff; color: #000; border-color: #00d2ff; }
+        #shop-tab-bonus.active { background: #38ef7d; color: #000; border-color: #38ef7d; }
+        #shop-tab-malus.active { background: #ff4b2b; color: #fff; border-color: #ff4b2b; }
 
         .leaderboard-list, .rooms-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px; text-align: left; }
         .lb-row, .room-row {
@@ -82,12 +84,14 @@
 
         .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; overflow-y: auto; max-height: 55vh; margin: 10px 0; padding-right: 5px; }
         .power-card { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; }
+        .power-card.equipped { border-color: #00ff88; background: rgba(0, 255, 136, 0.1); }
         .power-card h4 { margin: 0 0 5px 0; font-size: 13px; color: #00d2ff; }
         .power-card p { font-size: 11px; color: #aaa; margin: 0 0 8px 0; }
         .stock-badge { font-size: 11px; font-weight: bold; color: #38ef7d; margin-bottom: 6px; }
         .power-btn { padding: 6px 10px; border-radius: 8px; border: none; font-weight: bold; font-size: 12px; cursor: pointer; margin-top: 4px; }
         .power-btn.buy { background: #f8b500; color: #000; }
         .power-btn.equip { background: #00d2ff; color: #000; }
+        .power-btn.active { background: #00ff88; color: #000; }
 
         .game-hud-panel {
             background: rgba(0, 210, 255, 0.08); border: 2px solid rgba(0, 210, 255, 0.4);
@@ -156,6 +160,18 @@
         </div>
     </div>
 
+    <!-- MODALE TEASING TOURNOI -->
+    <div id="modal-tournament-teaser" class="modal-overlay" style="display:none;">
+        <div class="modal-card" style="text-align:center;">
+            <h2 style="margin:0 0 10px 0; color:#ff4b2b;">🏆 TOURNOI ÉVÉNEMENTIEL</h2>
+            <p style="color:#ccc; font-size:14px; line-height:1.6; margin-bottom:20px;">
+                Ce mode ultra-compétitif est actuellement en cours de développement secret ! 🤫<br><br>
+                Préparez vos réflexes, affûtez votre rapidité... Le mode Tournoi arrive très bientôt ! 🚀
+            </p>
+            <button class="btn-main btn-blue" onclick="closeTournamentTeaser()" style="width:100%;">J'ai hâte ! 💪</button>
+        </div>
+    </div>
+
     <!-- MODALE RÈGLES / COMMENT JOUER -->
     <div id="modal-rules" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:left;">
@@ -171,7 +187,7 @@
                 </div>
                 <div>
                     <strong style="color:#E94057;">🧊 Mode Avalanche (Style Tetris) :</strong>
-                    <p style="margin:4px 0 0 0;">Des chiffres s'empilent progressivement. Cliquez sur le chiffre cible affiché (présent dans la grille) pour libérer la case. Choisissez votre difficulté (Facile, Moyen, Difficile) pour corser la vitesse d'apparition ! Si la grille est pleine, c'est perdu.</p>
+                    <p style="margin:4px 0 0 0;">Des chiffres s'empirent progressivement. Cliquez sur le chiffre cible affiché (présent dans la grille) pour libérer la case. Choisissez votre difficulté (Facile, Moyen, Difficile) pour corser la vitesse !</p>
                 </div>
                 <div>
                     <strong style="color:#00c6ff;">⚔️ Duel 1v1 Online :</strong>
@@ -179,6 +195,28 @@
                 </div>
             </div>
             <button class="btn-secondary" onclick="closeRulesModal()" style="margin-top:15px;">Fermer</button>
+        </div>
+    </div>
+
+    <!-- MODAL BOUTIQUE (BONUS / MALUS) -->
+    <div id="modal-shop" class="modal-overlay" style="display:none;">
+        <div class="modal-card">
+            <h2 style="margin:0 0 10px 0; color:#38ef7d;">🛍️ BOUTIQUE DE POUVOIRS</h2>
+            <div class="tabs">
+                <button id="shop-tab-bonus" class="tab-btn active" onclick="switchShopTab('bonus')">🟢 Bonus</button>
+                <button id="shop-tab-malus" class="tab-btn" onclick="switchShopTab('malus')">🔴 Malus</button>
+            </div>
+            <div id="shop-container" class="shop-grid"></div>
+            <button class="btn-secondary" onclick="closeShop()">Fermer</button>
+        </div>
+    </div>
+
+    <!-- CLASSEMENT -->
+    <div id="modal-leaderboard" class="modal-overlay" style="display:none;">
+        <div class="modal-card">
+            <h2 style="margin:0 0 15px 0; color:#00d2ff;">🏆 CLASSEMENT</h2>
+            <div id="lb-list" class="leaderboard-list"></div>
+            <button class="btn-secondary" onclick="closeLeaderboard()">Fermer</button>
         </div>
     </div>
 
@@ -214,6 +252,7 @@
     <div id="screen-menu" class="menu-container" style="display:none;">
         <button class="btn-main btn-blue" onclick="openSoloMenu()">🏋️ ENTRAÎNEMENT SOLO</button>
         <button class="btn-main" onclick="open1v1Hub()">⚔️ DUEL 1v1 ONLINE</button>
+        <button class="btn-main" style="background: linear-gradient(45deg, #f12711, #f5af19); box-shadow: 0 5px 20px rgba(241, 39, 17, 0.4);" onclick="openTournamentTeaser()">🏆 Tournoi (Bientôt 🚀)</button>
         <button class="btn-main btn-shop" onclick="openShop()">🛍️ BOUTIQUE POUVOIRS</button>
         <button class="btn-main btn-purple" onclick="openLeaderboard()">🏆 CLASSEMENT</button>
         <button class="btn-secondary" onclick="openRulesModal()" style="margin-top:5px;">ℹ️ Comment jouer / Règles</button>
@@ -262,7 +301,7 @@
     <!-- SALONS PRIVÉS -->
     <div id="screen-rooms" style="display:none; max-width:400px; margin:0 auto;">
         <h2>🏠 Salons Privés</h2>
-        <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:16px; margin:15px 0;">
+        <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:16px; margin:15px 0; display:flex; flex-direction:column; gap:10px;">
             <button class="btn-main btn-blue" onclick="submitCreateRoom()" style="width:100%;">✨ Créer un salon</button>
         </div>
         <div id="rooms-list" class="rooms-list" style="max-height: 35vh; margin-bottom:15px;"></div>
@@ -286,28 +325,6 @@
             <input type="text" id="username-input" placeholder="Ex: Kiiks" maxlength="15" 
                    style="width:100%; padding:12px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:15px; outline:none;">
             <button class="btn-main" onclick="saveProfileFromModal()">JOUER ⚡</button>
-        </div>
-    </div>
-
-    <!-- MODAL BOUTIQUE -->
-    <div id="modal-shop" class="modal-overlay" style="display:none;">
-        <div class="modal-card">
-            <h2 style="margin:0 0 10px 0; color:#38ef7d;">🛍️ BOUTIQUE</h2>
-            <div class="tabs">
-                <button id="shop-tab-bonus" class="tab-btn active" onclick="switchShopTab('bonus')">🟢 Bonus</button>
-                <button id="shop-tab-malus" class="tab-btn" onclick="switchShopTab('malus')">🔴 Malus</button>
-            </div>
-            <div id="shop-container" class="shop-grid"></div>
-            <button class="btn-secondary" onclick="closeShop()">Fermer</button>
-        </div>
-    </div>
-
-    <!-- CLASSEMENT -->
-    <div id="modal-leaderboard" class="modal-overlay" style="display:none;">
-        <div class="modal-card">
-            <h2 style="margin:0 0 15px 0; color:#00d2ff;">🏆 CLASSEMENT</h2>
-            <div id="lb-list" class="leaderboard-list"></div>
-            <button class="btn-secondary" onclick="closeLeaderboard()">Fermer</button>
         </div>
     </div>
 
@@ -369,11 +386,23 @@
         let hasShownLaunchAd = false;
         let hasWatchedAdThisGame = false;
         let activeTrainingMode = 'classic';
+        let currentShopTab = 'bonus';
+
+        const powersData = {
+            bonus: [
+                { id: 'spotlight', name: '💡 Projecteur', desc: 'Illumine la bonne tuile', price: 50 },
+                { id: 'freeze', name: '⏳ Gel du Temps', desc: 'Gèle le chrono 5 secondes', price: 80 }
+            ],
+            malus: [
+                { id: 'blind', name: '👁️ Aveuglement', desc: 'Cache brièvement la grille adverse', price: 100 },
+                { id: 'scrambler', name: '🌀 Brouilleur', desc: 'Mélange les chiffres adverses', price: 120 }
+            ]
+        };
 
         let avalancheGridData = [];
         let avalancheTarget = null;
         let avalancheInterval = null;
-        let avalancheSpawnSpeed = 1000; // Vitesse par défaut
+        let avalancheSpawnSpeed = 1000;
 
         let soloTarget = 1, soloScore = 0, soloTimeLeft = 30, soloTimerInterval = null;
 
@@ -385,6 +414,66 @@
 
         function openRulesModal() { document.getElementById('modal-rules').style.display = 'flex'; }
         function closeRulesModal() { document.getElementById('modal-rules').style.display = 'none'; }
+
+        function openTournamentTeaser() { document.getElementById('modal-tournament-teaser').style.display = 'flex'; }
+        function closeTournamentTeaser() { document.getElementById('modal-tournament-teaser').style.display = 'none'; }
+
+        // --- GESTION DE LA BOUTIQUE POUVOIRS (BONUS / MALUS) ---
+        function openShop() {
+            document.getElementById('modal-shop').style.display = 'flex';
+            switchShopTab('bonus');
+        }
+        function closeShop() { document.getElementById('modal-shop').style.display = 'none'; }
+
+        function switchShopTab(tab) {
+            currentShopTab = tab;
+            document.getElementById('shop-tab-bonus').className = tab === 'bonus' ? 'tab-btn active' : 'tab-btn';
+            document.getElementById('shop-tab-malus').className = tab === 'malus' ? 'tab-btn active' : 'tab-btn';
+            renderShopItems();
+        }
+
+        function renderShopItems() {
+            const container = document.getElementById('shop-container');
+            container.innerHTML = '';
+            powersData[currentShopTab].forEach(p => {
+                let owned = myProfile.inventory && myProfile.inventory[p.id];
+                let isEquipped = myProfile.equippedPower === p.id;
+                container.innerHTML += `
+                    <div class="power-card ${isEquipped ? 'equipped' : ''}">
+                        <div>
+                            <h4>${p.name}</h4>
+                            <p>${p.desc}</p>
+                        </div>
+                        <div>
+                            <div class="stock-badge">${owned ? 'Possédé (x'+owned+')' : p.price + ' 🪙'}</div>
+                            ${owned ? 
+                                `<button class="power-btn ${isEquipped ? 'active' : 'equip'}" onclick="equipPower('${p.id}')">${isEquipped ? 'Équipé' : 'Équiper'}</button>` :
+                                `<button class="power-btn buy" onclick="buyPower('${p.id}', ${p.price})">Acheter</button>`
+                            }
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function buyPower(id, price) {
+            if (myProfile.coins >= price) {
+                myProfile.coins -= price;
+                document.getElementById('user-coins-display').innerText = myProfile.coins;
+                if (!myProfile.inventory) myProfile.inventory = {};
+                myProfile.inventory[id] = (myProfile.inventory[id] || 0) + 1;
+                renderShopItems();
+                socket.emit('buy_power', { id, price });
+            } else {
+                alert("Pas assez de pièces !");
+            }
+        }
+
+        function equipPower(id) {
+            myProfile.equippedPower = id;
+            renderShopItems();
+            socket.emit('equip_power', id);
+        }
 
         function simulateAd(type, callback) {
             const overlay = document.getElementById('simulated-ad-overlay');
@@ -441,7 +530,7 @@
         const socket = io(SERVER_URL, { reconnection: true });
 
         socket.on('connect', () => { registerIfPossible(); });
-        let myProfile = { username: "", region: "Hauts-de-France", points: 0, coins: 0, trophies: 0 };
+        let myProfile = { username: "", region: "Hauts-de-France", points: 0, coins: 0, trophies: 0, inventory: {}, equippedPower: null };
 
         document.addEventListener("DOMContentLoaded", () => {
             showTitleScreen();
@@ -479,7 +568,7 @@
 
         socket.on('player_registered', (player) => {
             if (player) {
-                myProfile = player;
+                myProfile = Object.assign(myProfile, player);
                 document.getElementById('user-coins-display').innerText = player.coins;
                 document.getElementById('user-trophies-display').innerText = player.trophies;
                 document.getElementById('user-pts-display').innerText = player.points;
@@ -487,7 +576,7 @@
         });
 
         function hideAllScreens() {
-            ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-room-waiting', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'modal-username', 'modal-launch-ad', 'modal-rules'].forEach(id => {
+            ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-room-waiting', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'modal-username', 'modal-launch-ad', 'modal-rules', 'modal-tournament-teaser'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
@@ -499,11 +588,37 @@
         function showMainMenu() { hideAllScreens(); document.getElementById('screen-menu').style.display = 'flex'; }
         function openSoloMenu() { hideAllScreens(); document.getElementById('screen-solo-menu').style.display = 'flex'; }
         function open1v1Hub() { hideAllScreens(); document.getElementById('screen-1v1-hub').style.display = 'flex'; }
+        
+        // --- SALONS PRIVÉS / LOBBY ---
         function openRoomsScreen() { hideAllScreens(); document.getElementById('screen-rooms').style.display = 'block'; socket.emit('get_rooms_list'); }
-        function openShop() { document.getElementById('modal-shop').style.display = 'flex'; }
-        function closeShop() { document.getElementById('modal-shop').style.display = 'none'; }
+        function submitCreateRoom() { socket.emit('create_room', { username: myProfile.username }); }
+        function leaveCustomRoom() { socket.emit('leave_room'); openRoomsScreen(); }
+
+        socket.on('rooms_list_data', (rooms) => {
+            const listEl = document.getElementById('rooms-list');
+            listEl.innerHTML = rooms.length ? '' : '<div style="color:#aaa; text-align:center; padding:10px;">Aucun salon actif.</div>';
+            rooms.forEach(r => {
+                listEl.innerHTML += `<div class="room-row"><span>Salon <b>${r.code}</b> (${r.playersCount}/2)</span><button class="power-btn equip" onclick="socket.emit('join_room', {code:'${r.code}'})">Rejoindre</button></div>`;
+            });
+        });
+
+        socket.on('room_joined_success', (data) => {
+            hideAllScreens();
+            document.getElementById('screen-room-waiting').style.display = 'block';
+            document.getElementById('current-room-code').innerText = data.code;
+            document.getElementById('room-players-list').innerText = data.players.map(p => p.username).join(' vs ');
+        });
+
         function openLeaderboard() { document.getElementById('modal-leaderboard').style.display = 'flex'; socket.emit('get_leaderboard', 'global'); }
         function closeLeaderboard() { document.getElementById('modal-leaderboard').style.display = 'none'; }
+
+        socket.on('leaderboard_data', (res) => {
+            const container = document.getElementById('lb-list');
+            container.innerHTML = '';
+            res.data.forEach((p, i) => {
+                container.innerHTML += `<div class="lb-row"><span class="lb-rank">#${i+1}</span><span class="lb-name">${p.username}</span><span class="lb-pts">${p.points} pts</span></div>`;
+            });
+        });
 
         function startSoloTraining(mode, speed = 1000) {
             activeTrainingMode = mode;
@@ -684,31 +799,6 @@
 
         function startRandom1v1() { hideAllScreens(); document.getElementById('screen-1v1-lobby').style.display = 'flex'; socket.emit('find_1v1_match'); }
         function cancel1v1Search() { open1v1Hub(); }
-        function submitCreateRoom() { socket.emit('create_room', { code: '', username: myProfile.username }); }
-        function leaveCustomRoom() { socket.emit('leave_room'); openRoomsScreen(); }
-
-        socket.on('rooms_list_data', (rooms) => {
-            const listEl = document.getElementById('rooms-list');
-            listEl.innerHTML = rooms.length ? '' : 'Aucun salon.';
-            rooms.forEach(r => {
-                listEl.innerHTML += `<div class="room-row"><span>Salon ${r.code}</span><button class="power-btn equip" onclick="socket.emit('join_room', {code:'${r.code}', password:''})">Rejoindre</button></div>`;
-            });
-        });
-
-        socket.on('room_joined_success', (data) => {
-            hideAllScreens();
-            document.getElementById('screen-room-waiting').style.display = 'block';
-            document.getElementById('current-room-code').innerText = data.code;
-            document.getElementById('room-players-list').innerText = data.players.map(p => p.username).join(' vs ');
-        });
-
-        socket.on('leaderboard_data', (res) => {
-            const container = document.getElementById('lb-list');
-            container.innerHTML = '';
-            res.data.forEach((p, i) => {
-                container.innerHTML += `<div class="lb-row"><span class="lb-rank">#${i+1}</span><span class="lb-name">${p.username}</span><span class="lb-pts">${p.points} pts</span></div>`;
-            });
-        });
     </script>
 </body>
 </html>
