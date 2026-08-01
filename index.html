@@ -1043,8 +1043,6 @@
                 document.getElementById('modal-username').style.display = 'none';
                 registerIfPossible();
                 showTitleScreen();
-                // Affiche automatiquement le pop-up de pub de soutien à la connexion
-                setTimeout(() => { openLaunchAdModal(); }, 300);
             }
         }
 
@@ -1070,7 +1068,6 @@
             SoundEngine.init();
 
             showTitleScreen();
-            openLaunchAdModal();
         }
 
         function promptProfileChange() {
