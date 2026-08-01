@@ -83,7 +83,6 @@ async function savePlayerToSupabase(socketId) {
         .eq('id', p.dbId);
 }
 
-// Correction : Génère des indices de grille valides (0 à 11) au lieu de nombres entre 1 et 50
 function generateRandomTraps(count) {
     let traps = [];
     while (traps.length < count) {
@@ -384,7 +383,6 @@ io.on('connection', (socket) => {
 
     socket.on('find_saboteur_match', (data) => {
         if (!globalEvents.saboteurMode) return;
-        // Correction : Limitation stricte à maximum 2 malus sélectionnés
         const chosenMalus = data && data.chosenMalus ? data.chosenMalus.slice(0, 2) : ['inversion'];
         const trappedTiles = data && data.trappedTiles ? data.trappedTiles : generateRandomTraps(2);
 
@@ -408,23 +406,21 @@ io.on('connection', (socket) => {
         const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
 
         if (num === pData.target) {
+            // CORRECTION 1 : On calcule l'index de la case cliquée AVANT de modifier la cible et le pool
+            const clickedIndex = pData.pool.indexOf(num);
+
             pData.score += 10;
             pData.target++;
             pData.pool = generatePool(pData.target);
 
             if (match.isSaboteur) {
-                const clickedIndex = pData.pool.indexOf(num);
                 const oppData = match.players[oppId];
                 if (oppData && oppData.traps && oppData.traps.includes(clickedIndex)) {
                     const triggeredMalus = oppData.chosenMalus[Math.floor(Math.random() * oppData.chosenMalus.length)];
-                    if (triggeredMalus === 'inversion') {
-                        pData.pool.sort(() => Math.random() - 0.5);
-                    } else if (triggeredMalus === 'gel') {
-                        socket.emit('receive_malus', { type: 'freeze' });
-                    } else if (triggeredMalus === 'brouillage') {
-                        // Correction : Suppression de la pénalité -25 points et déclenchement effectif du brouillage (eclipse)
-                        socket.emit('receive_malus', { type: 'eclipse' });
-                    }
+                    
+                    // CORRECTION 2 : On renvoie directement le nom exact du malus (ex: 'brouillage', 'gel', 'inversion') 
+                    // pour que le client déclenche l'animation correspondante.
+                    socket.emit('receive_malus', { type: triggeredMalus });
                 }
             }
             
