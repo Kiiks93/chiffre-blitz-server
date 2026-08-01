@@ -113,7 +113,7 @@
         #shop-tab-bonus.active { background: #38ef7d; color: #000; border-color: #38ef7d; }
         #shop-tab-malus.active { background: #ff4b2b; color: #fff; border-color: #ff4b2b; }
 
-        /* CLASSEMENT REVISITÉ & PLUS LISIBLE */
+        /* CLASSEMENT REVISITÉ & LISIBLE */
         .lb-filters-container {
             background: rgba(0, 0, 0, 0.25);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -140,9 +140,9 @@
         }
         .lb-row:hover { background: rgba(255, 255, 255, 0.07); }
         .lb-rank { font-weight: 900; font-size: 14px; width: 26px; text-align: center; flex-shrink: 0; }
-        .lb-user-info { flex: 1; display: flex; flex-direction: column; overflow: hidden; gap: 3px; }
+        .lb-user-info { flex: 1; display: flex; flex-direction: column; overflow: hidden; gap: 4px; }
         .lb-name-row { display: flex; align-items: center; gap: 6px; font-weight: bold; font-size: 13px; color: #fff; }
-        .lb-sub-details { font-size: 10px; color: #a093b2; display: flex; gap: 8px; font-weight: 600; }
+        .lb-sub-details { font-size: 12px; color: #d0c5e2; display: flex; gap: 10px; font-weight: 700; }
         .lb-pts { font-weight: 900; font-size: 13px; text-align: right; white-space: nowrap; flex-shrink: 0; }
 
         .rooms-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 6px; text-align: left; }
@@ -1692,14 +1692,14 @@
                 const points = p.points || 0;
                 const coins = p.coins || 0;
 
-                let rightBadge = `<span class="lb-pts" style="color:#00ff88;">${points} pts</span>`;
+                let rightBadge = `<span class="lb-pts" style="color:#00ff88; font-size:14px;">${points} pts</span>`;
                 if (category === 'coins') {
-                    rightBadge = `<span class="lb-pts" style="color:#f8b500;">${coins} 🪙</span>`;
+                    rightBadge = `<span class="lb-pts" style="color:#f8b500; font-size:14px;">${coins} 🪙</span>`;
                 } else if (category === 'trophies') {
-                    rightBadge = `<span class="lb-pts" style="color:#fceabb;">${trophies} 🏆</span>`;
+                    rightBadge = `<span class="lb-pts" style="color:#fceabb; font-size:14px;">${trophies} 🏆</span>`;
                 } else if (category === 'combined') {
                     const combinedScore = points + (trophies * 20);
-                    rightBadge = `<span class="lb-pts" style="color:#00d2ff;">${combinedScore} ⭐</span>`;
+                    rightBadge = `<span class="lb-pts" style="color:#00d2ff; font-size:14px;">${combinedScore} ⭐</span>`;
                 }
 
                 let rankDisplay = `#${index + 1}`;
@@ -1712,7 +1712,7 @@
                     <span class="lb-rank" style="color: ${rankColor};">${rankDisplay}</span>
                     <div class="lb-user-info">
                         <div class="lb-name-row">
-                            ${badgeHtml} <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.username}</span>
+                            ${badgeHtml} <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px;">${p.username}</span>
                         </div>
                         <div class="lb-sub-details">
                             <span>🏆 ${trophies}</span>
