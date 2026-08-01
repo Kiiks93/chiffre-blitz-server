@@ -437,7 +437,7 @@
                 play_btn: "PLAY ⚡", menu_solo: "🏋️ SOLO TRAINING", menu_1v1: "⚔️ 1v1 ONLINE DUEL", menu_shop: "🛍️ POWERS SHOP", menu_lb: "🏆 LEADERBOARD", menu_rules: "ℹ️ How to play / Rules", menu_tournament: "🏆 Tournament (Soon 🚀)",
                 solo_menu_title: "TRAINING MODES", solo_menu_sub: "Choose your solo challenge:", solo_classic: "⚡ Classic (Ascending)", solo_random: "🎲 Random (Varied targets)",
                 solo_avalanche: "🧊 AVALANCHE (Difficulties)", diff_easy: "Easy", diff_medium: "Medium", diff_hard: "Hard 💀", back_menu: "⬅️ Back to Menu",
-                hub_1v1_title: "⚔️ 1v1 ONLINE DUEL", hub_random: "🎲 Random Matchmaking", hub_rooms: "🏠 Private Rooms / Lobby",
+                hub_1v1_title: "⚔️ 1v1 ONLINE DUEL", hub_random: "🎲 Random Matchmaking", hub_rooms: "🏠 Salons Privés / Lobby",
                 searching: "Searching for opponent...", cancel: "❌ Cancel", rooms_title: "🏠 Private Rooms", create_room: "✨ Create a room", back: "⬅️ Back",
                 room_label: "Room", waiting: "Waiting...", quit: "❌ Quit", welcome: "WELCOME ⚡", pseudo_label: "PSEUDO",
                 hud_my_target: "MY TARGET", hud_opp_target: "OPPONENT", hud_solo_target: "TARGET TO FIND", hud_score: "SCORE",
@@ -481,6 +481,7 @@
         let activeTrainingMode = 'classic';
         let currentShopTab = 'bonus';
         let hasUsedPowerThisGame = false;
+        let matchmakingInterval = null;
 
         const powersData = {
             bonus: [
@@ -986,8 +987,38 @@
             document.getElementById('recap-modal').style.display = 'flex';
         }
 
-        function startRandom1v1() { hideAllScreens(); document.getElementById('screen-1v1-lobby').style.display = 'flex'; socket.emit('find_1v1_match'); }
-        function cancel1v1Search() { open1v1Hub(); }
+        function startRandom1v1() { 
+            hideAllScreens(); 
+            document.getElementById('screen-1v1-lobby').style.display = 'flex'; 
+            
+            // Animation du compteur radar pour qu'il ne reste pas bloqué à 1
+            let count = 1;
+            const radarNumEl = document.getElementById('radar-digit');
+            radarNumEl.innerText = count;
+            if (matchmakingInterval) clearInterval(matchmakingInterval);
+            matchmakingInterval = setInterval(() => {
+                count++;
+                radarNumEl.innerText = count;
+            }, 1000);
+
+            socket.emit('find_1v1_match'); 
+        }
+
+        function cancel1v1Search() { 
+            if (matchmakingInterval) clearInterval(matchmakingInterval);
+            socket.emit('cancel_1v1_search');
+            open1v1Hub(); 
+        }
+
+        socket.on('match_found', (data) => {
+            if (matchmakingInterval) clearInterval(matchmakingInterval);
+            // Dès qu'un adversaire est trouvé, bascule sur l'écran de jeu 1v1
+            hideAllScreens();
+            document.getElementById('screen-game').style.display = 'block';
+            document.getElementById('hud-1v1').style.display = 'flex';
+            document.getElementById('hud-solo').style.display = 'none';
+            // TODO: Initialiser la logique du duel 1v1 avec data.players
+        });
     </script>
 </body>
 </html>
