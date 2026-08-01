@@ -10,7 +10,7 @@
         body { font-family: system-ui, -apple-system, sans-serif; background: #0f051d; color: #fff; margin: 0; padding: 10px; text-align: center; }
         
         .header-bar { display: flex; justify-content: space-between; align-items: center; max-width: 400px; margin: 0 auto 6px auto; gap: 6px; }
-        h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,210,255,0.4); white-space: nowrap; }
+        h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,210,255,0.4); white-space: nowrap; cursor: pointer; }
         
         .user-pill {
             background: rgba(255,255,255,0.08); border: 1px solid rgba(0,210,255,0.3);
@@ -497,7 +497,6 @@
     <div id="modal-shop" class="modal-overlay" style="display:none;">
         <div class="modal-card">
             <h2 style="margin:0 0 4px 0; color:#38ef7d; font-size:18px;" data-i18n="shop_title">🛍️ BOUTIQUE</h2>
-            <!-- Affichage de l'argent dans la boutique -->
             <div style="font-size: 13px; color: #f8b500; font-weight: bold; margin-bottom: 8px;">
                 🪙 <span data-i18n="coins">Pièces</span> : <span id="shop-coins-val">0</span>
             </div>
@@ -527,7 +526,6 @@
                     <button id="lb-scope-national" class="tab-btn" onclick="setLbScope('national')" data-i18n="lb_nat">🇫🇷 France</button>
                     <button id="lb-scope-global" class="tab-btn" onclick="setLbScope('global')" data-i18n="lb_glb">🌍 Monde</button>
                 </div>
-                <!-- Explication du mode combiné (Trophées prioritaires, Points en départage) -->
                 <div id="lb-combined-explanation" style="font-size: 11px; color: #00d2ff; text-align: center; margin-top: 2px; font-weight: 600; display: none;" data-i18n="lb_combined_desc">
                     💡 Combiné : Trophées prioritaires, départagés par les points
                 </div>
@@ -1207,6 +1205,12 @@
             }
         });
 
+        // Écouteur pour les cadeaux admin reçus en direct
+        socket.on('admin_gift_received', (data) => {
+            alert(`🎁 CADEAU ADMIN REÇU !\n\n+${data.amount} ${data.currency === 'coins' ? 'Pièces 🪙' : 'Points 🏅'}`);
+            registerIfPossible();
+        });
+
         const POWERS_CATALOG = [
             { id: 'spotlight', price: 150, type: 'bonus' },
             { id: 'freeze', price: 350, type: 'bonus' },
@@ -1226,10 +1230,28 @@
 
         let avalancheGridData = [], avalancheTarget = null, avalancheInterval = null, avalancheTimerInterval = null, avalancheTimeLeft = 30;
 
+        // --- GESTION DES CLICS SECRETS POUR LE PANEL ADMIN (10 CLICS SUR LE LOGO) ---
+        let logoClickCount = 0;
+        let logoClickTimer = null;
+
         document.addEventListener("DOMContentLoaded", () => {
             applyTranslations();
             updateEconomyUI();
             checkAndShowProfileModal();
+
+            const mainLogo = document.querySelector('h1');
+            if (mainLogo) {
+                mainLogo.addEventListener('click', () => {
+                    logoClickCount++;
+                    clearTimeout(logoClickTimer);
+                    logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 2500);
+
+                    if (logoClickCount >= 10) {
+                        logoClickCount = 0;
+                        openAdminLoginModal();
+                    }
+                });
+            }
 
             const urlParams = new URLSearchParams(window.location.search);
             const targetRoom = urlParams.get('room');
@@ -1238,6 +1260,180 @@
                     if (isProfileValid()) { openJoinCustomScreen(targetRoom.toUpperCase()); }
                 }, 1000);
             }
+        });
+
+        function openAdminLoginModal() {
+            let modal = document.getElementById('modal-admin-login');
+            if (!modal) {
+                const div = document.createElement('div');
+                div.id = 'modal-admin-login';
+                div.className = 'modal-overlay';
+                div.innerHTML = `
+                    <div class="modal-card" style="text-align:center;">
+                        <h2 style="color:#ff4b2b; margin-top:0;">🛡️ ACCÈS ADMINISTRATEUR</h2>
+                        <p style="color:#aaa; font-size:12px;">Entrez le mot de passe secret :</p>
+                        <input type="password" id="admin-pass-input" placeholder="Mot de passe" 
+                               style="width:100%; padding:10px; border-radius:8px; border:2px solid #ff4b2b; background:#0f051d; color:#fff; font-size:15px; text-align:center; margin-bottom:15px; outline:none;">
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn-secondary" onclick="document.getElementById('modal-admin-login').style.display='none'">Fermer</button>
+                            <button class="btn-main" onclick="submitAdminLogin()" style="flex:1; background:linear-gradient(45deg, #ff416c, #ff4b2b);">Connexion ⚡</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(div);
+                modal = div;
+            }
+            modal.style.display = 'flex';
+        }
+
+        function submitAdminLogin() {
+            const pass = document.getElementById('admin-pass-input').value;
+            socket.emit('admin_auth', pass);
+        }
+
+        socket.on('admin_auth_fail', (msg) => {
+            alert(msg);
+        });
+
+        socket.on('admin_auth_success', (data) => {
+            document.getElementById('modal-admin-login').style.display = 'none';
+            openAdminDashboard(data);
+        });
+
+        function openAdminDashboard(data) {
+            let dash = document.getElementById('modal-admin-dashboard');
+            if (!dash) {
+                const div = document.createElement('div');
+                div.id = 'modal-admin-dashboard';
+                div.className = 'modal-overlay';
+                div.innerHTML = `
+                    <div class="modal-card" style="max-width:450px; text-align:left;">
+                        <h2 style="color:#00d2ff; margin-top:0; text-align:center;">🎛️ PANEL ADMIN - CONTRÔLE</h2>
+                        
+                        <div style="max-height:60vh; overflow-y:auto; padding-right:4px; display:flex; flex-direction:column; gap:12px; font-size:12px;">
+                            
+                            <!-- SECTION BOOSTS & MODE -->
+                            <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
+                                <strong style="color:#ff8a00; display:block; margin-bottom:8px;">⚡ BOOSTS & ÉVÉNEMENTS ACTIFS</strong>
+                                <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                    <span>🪙 Coin Rush (Pièces x2)</span>
+                                    <input type="checkbox" id="chk-coinRush" onchange="sendAdminEventsUpdate()">
+                                </label>
+                                <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                    <span>🛡️ Rank Shield (Pas de perte de points)</span>
+                                    <input type="checkbox" id="chk-rankShield" onchange="sendAdminEventsUpdate()">
+                                </label>
+                                <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                    <span>⚡ Expresso Match (Timer 20s)</span>
+                                    <input type="checkbox" id="chk-expressoMatch" onchange="sendAdminEventsUpdate()">
+                                </label>
+                                <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                    <span>🌪️ Chaos Mode (Modificateurs)</span>
+                                    <input type="checkbox" id="chk-chaosMode" onchange="sendAdminEventsUpdate()">
+                                </label>
+                                <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                    <span>🎁 Jackpot Éclair (Coffres mystères)</span>
+                                    <input type="checkbox" id="chk-jackpotEclair" onchange="sendAdminEventsUpdate()">
+                                </label>
+                                <label style="display:flex; justify-content:space-between; align-items:center;">
+                                    <span>🕵️‍♂️ Mode Exclusif : Saboteur vs Sprinteur (BO3)</span>
+                                    <input type="checkbox" id="chk-saboteurMode" onchange="sendAdminEventsUpdate()">
+                                </label>
+                            </div>
+
+                            <!-- SECTION PLANIFICATION -->
+                            <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
+                                <strong style="color:#00d2ff; display:block; margin-bottom:8px;">📅 PLANIFICATION AUTOMATIQUE</strong>
+                                <div style="display:flex; gap:6px; margin-bottom:6px;">
+                                    <div style="flex:1;">
+                                        <label style="font-size:10px; color:#aaa;">Début :</label>
+                                        <input type="datetime-local" id="admin-start-date" style="width:100%; padding:4px; border-radius:6px; background:#0f051d; color:#fff; border:1px solid #00d2ff;">
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label style="font-size:10px; color:#aaa;">Fin :</label>
+                                        <input type="datetime-local" id="admin-end-date" style="width:100%; padding:4px; border-radius:6px; background:#0f051d; color:#fff; border:1px solid #00d2ff;">
+                                    </div>
+                                </div>
+                                <button class="power-btn equip" onclick="saveAdminSchedule()" style="width:100%; padding:6px;">Enregistrer le Planning 💾</button>
+                            </div>
+
+                            <!-- SECTION BROADCAST -->
+                            <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
+                                <strong style="color:#38ef7d; display:block; margin-bottom:8px;">📢 ANNONCE GLOBALE (BROADCAST)</strong>
+                                <input type="text" id="admin-broadcast-msg" placeholder="Message à afficher chez tous les joueurs..." style="width:100%; padding:6px; border-radius:6px; background:#0f051d; color:#fff; border:1px solid #38ef7d; margin-bottom:6px; outline:none;">
+                                <button class="power-btn buy" onclick="sendAdminBroadcast()" style="width:100%; padding:6px;">Envoyer l'annonce 🚀</button>
+                            </div>
+
+                            <!-- SECTION CADEAUX -->
+                            <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
+                                <strong style="color:#f8b500; display:block; margin-bottom:8px;">🎁 DISTRIBUER UN CADEAU ADMIN</strong>
+                                <input type="text" id="admin-gift-target" placeholder="Pseudo (ou laisser vide pour TOUS)" style="width:100%; padding:6px; border-radius:6px; background:#0f051d; color:#fff; border:1px solid #f8b500; margin-bottom:6px; outline:none;">
+                                <div style="display:flex; gap:6px; margin-bottom:6px;">
+                                    <select id="admin-gift-currency" style="flex:1; padding:6px; border-radius:6px; background:#0f051d; color:#fff; border:1px solid #f8b500;">
+                                        <option value="coins">🪙 Pièces</option>
+                                        <option value="points">🏅 Points</option>
+                                    </select>
+                                    <input type="number" id="admin-gift-amount" placeholder="Montant" value="100" style="flex:1; padding:6px; border-radius:6px; background:#0f051d; color:#fff; border:1px solid #f8b500; text-align:center;">
+                                </div>
+                                <button class="btn-main btn-gold" onclick="sendAdminGift()" style="width:100%; padding:8px; font-size:12px; margin-top:0;">Envoyer le Cadeau 🎁</button>
+                            </div>
+
+                        </div>
+
+                        <button class="btn-secondary" onclick="document.getElementById('modal-admin-dashboard').style.display='none'" style="margin-top:10px;">Fermer le Panel</button>
+                    </div>
+                `;
+                document.body.appendChild(div);
+                dash = div;
+            }
+
+            if (data.events) {
+                for (let key in data.events) {
+                    const chk = document.getElementById(`chk-${key}`);
+                    if (chk) chk.checked = data.events[key];
+                }
+            }
+            dash.style.display = 'flex';
+        }
+
+        function sendAdminEventsUpdate() {
+            const updatedEvents = {
+                coinRush: document.getElementById('chk-coinRush').checked,
+                rankShield: document.getElementById('chk-rankShield').checked,
+                expressoMatch: document.getElementById('chk-expressoMatch').checked,
+                chaosMode: document.getElementById('chk-chaosMode').checked,
+                jackpotEclair: document.getElementById('chk-jackpotEclair').checked,
+                saboteurMode: document.getElementById('chk-saboteurMode').checked
+            };
+            socket.emit('admin_update_events', updatedEvents);
+        }
+
+        function saveAdminSchedule() {
+            const startDate = document.getElementById('admin-start-date').value;
+            const endDate = document.getElementById('admin-end-date').value;
+            socket.emit('admin_update_schedule', { startDate, endDate });
+            alert("Planning enregistré !");
+        }
+
+        function sendAdminBroadcast() {
+            const msg = document.getElementById('admin-broadcast-msg').value.trim();
+            if (!msg) return;
+            socket.emit('admin_broadcast_message', msg);
+            document.getElementById('admin-broadcast-msg').value = '';
+            alert("Annonce envoyée à tous les joueurs !");
+        }
+
+        function sendAdminGift() {
+            const targetUsername = document.getElementById('admin-gift-target').value.trim();
+            const currency = document.getElementById('admin-gift-currency').value;
+            const amount = parseInt(document.getElementById('admin-gift-amount').value) || 0;
+            
+            socket.emit('admin_give_gift', { targetUsername, currency, amount });
+            alert("Cadeau envoyé avec succès !");
+        }
+
+        socket.on('global_announcement', (message) => {
+            alert(`📢 ANNONCE ADMIN :\n\n${message}`);
         });
 
         function hideAllScreens() {
@@ -1720,7 +1916,6 @@
             
             const category = res.type ? res.type.split('_')[0] : 'points';
 
-            // Tri strict pour le combiné : Trophées en premier (décroissant), puis Points en départage (décroissant)
             if (category === 'combined') {
                 res.data.sort((a, b) => {
                     const diffTrophies = (b.trophies || 0) - (a.trophies || 0);
