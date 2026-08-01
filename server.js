@@ -267,7 +267,92 @@ io.on('connection', (socket) => {
             console.error("Erreur equip_power:", err.message);
         }
     });
+// --- CONFIGURATION ADMIN & ÉVÉNEMENTS ---
+let adminPassword = "SECRET_ADMIN_PASSWORD_123"; // Modifie ton mot de passe ici
 
+let globalEvents = {
+    coinRush: false,       // 1. Pièces x2
+    rankShield: false,     // 2. Zéro perte de points en classé
+    expressoMatch: false,  // 3. Matchs plus rapides (20s)
+    chaosMode: false,      // 4. Modificateurs aléatoires
+    jackpotEclair: false,  // 5. Coffres mystères de fin de match
+    saboteurMode: false    // 6. Mode Exclusif Asymétrique BO3
+};
+
+let eventSchedule = {
+    startDate: null,
+    endDate: null
+};
+
+// Vérification automatique de la planification des dates (toutes les 30 secondes)
+setInterval(() => {
+    if (eventSchedule.startDate && eventSchedule.endDate) {
+        const now = Date.now();
+        const start = new Date(eventSchedule.startDate).getTime();
+        const end = new Date(eventSchedule.endDate).getTime();
+        
+        const shouldBeActive = now >= start && now <= end;
+        if (globalEvents._isScheduledActive !== shouldBeActive) {
+            globalEvents._isScheduledActive = shouldBeActive;
+            // Si tu veux automatiser l'activation globale par planning :
+            // globalEvents.coinRush = shouldBeActive; 
+            io.emit('events_state_update', globalEvents);
+        }
+    }
+}, 30000);
+
+// Événements Socket.io pour l'Admin
+io.on('connection', (socket) => {
+    
+    // Envoyer l'état actuel des événements au joueur qui se connecte
+    socket.emit('events_state_update', globalEvents);
+
+    // Connexion Admin
+    socket.on('admin_auth', (password) => {
+        if (password === adminPassword) {
+            socket.isAdmin = true;
+            socket.emit('admin_auth_success', { events: globalEvents, schedule: eventSchedule });
+        } else {
+            socket.emit('admin_auth_fail', "Mot de passe incorrect !");
+        }
+    });
+
+    // Modification des états des Boosts / Mode Exclusif
+    socket.on('admin_update_events', (newEvents) => {
+        if (!socket.isAdmin) return;
+        globalEvents = { ...globalEvents, ...newEvents };
+        // Diffuser à tous les joueurs connectés en direct
+        io.emit('events_state_update', globalEvents);
+    });
+
+    // Mise à jour du Planning
+    socket.on('admin_update_schedule', (scheduleData) => {
+        if (!socket.isAdmin) return;
+        eventSchedule = scheduleData;
+        socket.emit('admin_schedule_saved', eventSchedule);
+    });
+
+    // Envoi d'un message global (Broadcast)
+    socket.on('admin_broadcast_message', (message) => {
+        if (!socket.isAdmin) return;
+        io.emit('global_announcement', message);
+    });
+
+    // Distribution de cadeaux (Pièces 🪙 ou Points 🏅)
+    socket.on('admin_give_gift', async (data) => {
+        if (!socket.isAdmin) return;
+        const { targetUsername, currency, amount } = data; // currency: 'coins' ou 'points'
+        
+        // Si targetUsername est vide ou "TOUS", on distribue à tout le monde
+        // Sinon on cherche le joueur dans ta base de données
+        if (!targetUsername || targetUsername.toUpperCase() === 'TOUS') {
+            // Logique pour distribuer à tous les joueurs connectés ou en DB
+            io.emit('admin_gift_received', { currency, amount, message: "Cadeau Admin global !" });
+        } else {
+            // Logique pour un joueur spécifique
+            // ex: db.collection('players').updateOne({ username: targetUsername }, { $inc: { [currency]: amount } });
+        }
+    });
     // Salons Privés
     socket.on('get_rooms_list', () => { sendRoomsListBroadcast(); });
 
