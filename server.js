@@ -29,7 +29,7 @@ io.on('connection', (socket) => {
     socket.on('register_player', (data) => {
         const username = data.username;
         if (!playersDB[username]) {
-            playersDB[username] = { username: username, region: data.region || 'Hauts-de-France', points: 0, coins: 0, trophies: 0, inventory: {}, equippedPower: null };
+            playersDB[username] = { username: username, region: data.region || 'Hauts-de-France', points: 0, coins: 10000, trophies: 0, inventory: {}, equippedPower: null };
         }
         socket.username = username;
         players[socket.id] = { id: socket.id, username: username };
