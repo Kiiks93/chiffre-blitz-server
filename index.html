@@ -842,13 +842,17 @@
                 if (clear) this.currentMode = null;
             },
             startMusic(mode) {
-                if (mode) this.currentMode = mode;
                 if (this.isMuted) return;
                 this.init();
                 if (this.ctx && this.ctx.state === 'suspended') {
                     this.ctx.resume();
                 }
+                // Si la musique de ce même mode joue déjà, on ne fait rien pour éviter qu'elle ne recommence du début !
+                if (this.timerId && this.currentMode === mode) {
+                    return;
+                }
                 this.stopMusic(false);
+                this.currentMode = mode;
                 this.step = 0;
 
                 this.bpm = (mode === 'menu') ? 95 : 105;
@@ -1038,6 +1042,9 @@
                 updateEconomyUI();
                 document.getElementById('modal-username').style.display = 'none';
                 registerIfPossible();
+                showTitleScreen();
+                // Affiche automatiquement le pop-up de pub de soutien à la connexion
+                setTimeout(() => { openLaunchAdModal(); }, 300);
             }
         }
 
@@ -1062,7 +1069,8 @@
             registerIfPossible();
             SoundEngine.init();
 
-            showMainMenu();
+            showTitleScreen();
+            openLaunchAdModal();
         }
 
         function promptProfileChange() {
@@ -1125,9 +1133,6 @@
             applyTranslations();
             updateEconomyUI();
             checkAndShowProfileModal();
-            if (isProfileValid()) {
-                showTitleScreen();
-            }
 
             const urlParams = new URLSearchParams(window.location.search);
             const targetRoom = urlParams.get('room');
