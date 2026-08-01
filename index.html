@@ -16,9 +16,9 @@
             background: rgba(255,255,255,0.08); border: 1px solid rgba(0,210,255,0.3);
             border-radius: 20px; padding: 6px 10px; font-size: 11px; color: #00d2ff; font-weight: bold;
             display: flex; align-items: center; gap: 4px; cursor: pointer; white-space: nowrap;
-            max-width: 150px; overflow: hidden; text-overflow: ellipsis;
+            max-width: 160px; overflow: hidden; text-overflow: ellipsis;
         }
-        #user-name-display { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60px; }
+        #user-name-display { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 70px; }
 
         .user-stats {
             display: flex; justify-content: center; gap: 15px; max-width: 400px; margin: 0 auto 15px auto;
@@ -154,7 +154,7 @@
     <div class="header-bar">
         <h1>Chiffre Blitz ⚡</h1>
         <div id="user-pill" class="user-pill" onclick="promptProfileChange()">
-            <span id="user-avatar-badge" style="background: rgba(0,210,255,0.2); padding: 2px 5px; border-radius: 6px; font-size: 10px;">#1</span>
+            <span id="user-avatar-badge" style="background: rgba(0,210,255,0.2); padding: 2px 5px; border-radius: 6px; font-size: 10px;">🇫🇷 #1</span>
             <span id="user-name-display">Définir pseudo</span>
         </div>
         <div class="header-btns">
@@ -975,6 +975,8 @@
             equippedPower: null
         };
 
+        let cachedOpponent = null;
+
         function saveLocalPreferences() {
             localStorage.setItem('cb_username', myProfile.username);
             localStorage.setItem('cb_region', myProfile.region);
@@ -986,8 +988,8 @@
             document.getElementById('user-coins-display').innerText = myProfile.coins;
             document.getElementById('user-trophies-display').innerText = myProfile.trophies;
             document.getElementById('user-pts-display').innerText = myProfile.points;
-            document.getElementById('user-name-display').innerText = myProfile.username;
-            document.getElementById('user-avatar-badge').innerText = `${myProfile.flag} #${myProfile.avatar}`;
+            document.getElementById('user-name-display').innerText = myProfile.username || "Définir pseudo";
+            document.getElementById('user-avatar-badge').innerText = `${myProfile.flag || '🇫🇷'} #${myProfile.avatar || 1}`;
         }
 
         function isProfileValid() {
@@ -998,7 +1000,6 @@
 
         function checkAndShowProfileModal() {
             if (!isProfileValid()) {
-                document.getElementById('user-name-display').innerText = "Définir pseudo";
                 document.getElementById('modal-username').style.display = 'flex';
             } else {
                 myProfile.username = localStorage.getItem('cb_username');
@@ -1031,6 +1032,13 @@
             document.getElementById('modal-username').style.display = 'none';
             registerIfPossible();
             SoundEngine.init();
+
+            // Transition automatique vers le menu ou l'écran principal
+            if (!hasShownLaunchAd) {
+                checkLaunchAdAndStart();
+            } else {
+                showMainMenu();
+            }
         }
 
         function promptProfileChange() {
@@ -1100,8 +1108,10 @@
         document.addEventListener("DOMContentLoaded", () => {
             applyTranslations();
             updateEconomyUI();
-            showTitleScreen();
             checkAndShowProfileModal();
+            if (isProfileValid()) {
+                showTitleScreen();
+            }
 
             const urlParams = new URLSearchParams(window.location.search);
             const targetRoom = urlParams.get('room');
@@ -1354,6 +1364,12 @@
             const playersListEl = document.getElementById('room-players-list');
             if (!players || players.length === 0) { playersListEl.innerText = i18n[currentLang].waiting_opponent; return; }
             playersListEl.innerText = players.map(p => `${p.flag || '🇫🇷'} ${p.username} (#${p.avatar || 1})`).join(' vs ');
+            
+            // Mémoriser l'adversaire s'il est présent dans la room
+            if (players && socket.id) {
+                const opp = players.find(p => p.id !== socket.id && p.socketId !== socket.id);
+                if (opp) cachedOpponent = opp;
+            }
         }
 
         socket.on('room_error', (msg) => { alert(msg); });
@@ -1536,13 +1552,21 @@
 
         function cancel1v1Search() { open1v1Hub(); }
 
+        function updateOpponentDisplay(opp) {
+            if (!opp) return;
+            const name = opp.username || opp.name || opp.pseudo || "Adversaire";
+            const flag = opp.flag || "🇫🇷";
+            const avatar = opp.avatar !== undefined ? opp.avatar : 1;
+            document.getElementById('opp-profile-name').innerText = name;
+            document.getElementById('opp-profile-badge').innerText = `${flag} #${avatar}`;
+        }
+
         socket.on('start_countdown', (data) => {
             if (radarInterval) clearInterval(radarInterval);
             
-            // Affichage dynamique des infos de l'adversaire si présentes dans l'événement de départ ou jeu
-            if (data && data.opponent) {
-                document.getElementById('opp-profile-name').innerText = data.opponent.username || "Adversaire";
-                document.getElementById('opp-profile-badge').innerText = `${data.opponent.flag || '🇫🇷'} #${data.opponent.avatar || 1}`;
+            let oppData = (data && (data.opponent || data.opp || data.player2)) || cachedOpponent;
+            if (oppData) {
+                updateOpponentDisplay(oppData);
             }
 
             ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-avalanche-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-room-waiting', 'screen-join-custom'].forEach(id => {
@@ -1576,9 +1600,9 @@
             const targetVal = data.myTarget || 1;
             document.getElementById('game-target-giant').innerText = targetVal;
             
-            if (data.opponent) {
-                document.getElementById('opp-profile-name').innerText = data.opponent.username || "Adversaire";
-                document.getElementById('opp-profile-badge').innerText = `${data.opponent.flag || '🇫🇷'} #${data.opponent.avatar || 1}`;
+            let oppData = data.opponent || data.opp || data.player2 || cachedOpponent;
+            if (oppData) {
+                updateOpponentDisplay(oppData);
             }
             
             renderGrid(data.myPool, handle1v1TileClick);
@@ -1597,6 +1621,9 @@
 
         socket.on('opponent_progress', (data) => {
             document.getElementById('opp-target').innerText = data.target;
+            if (data.opponent) {
+                updateOpponentDisplay(data.opponent);
+            }
         });
 
         socket.on('game_over_1v1', (data) => {
