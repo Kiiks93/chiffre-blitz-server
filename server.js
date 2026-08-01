@@ -282,7 +282,7 @@ io.on('connection', (socket) => {
 
     socket.on('get_leaderboard', async (type) => {
         const username = socketToUser[socket.id];
-        let query = supabase.from('players').select('username, points, region, avatar, flag').order('points', { ascending: false }).limit(20);
+        let query = supabase.from('players').select('username, points, region').order('points', { ascending: false }).limit(20);
 
         if (type === 'regional' && username) {
             let dbPlayer = await getOrCreatePlayer(username);
