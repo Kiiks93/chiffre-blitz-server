@@ -13,8 +13,8 @@ const io = new Server(server, {
 });
 
 // --- CONFIGURATION SUPABASE ---
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jjhoblvdpbstxwuelmoa.supabase.co'; // Remplace par ton URL Supabase si non hébergé en env
-const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqaG9ibHZkcGJzdHh3dWVsbW9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzNDMwNTksImV4cCI6MjEwMDkxOTA1OX0.BIIuE0e3WbpJ6asxPx7FpH01FESDHfqRUMBW54jfh4E'; // Remplace par ta clé Anon/Service Key
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jjhoblvdpbstxwuelmoa.supabase.co';
+const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqaG9ibHZkcGJzdHh3dWVsbW9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzNDMwNTksImV4cCI6MjEwMDkxOTA1OX0.BIIuE0e3WbpJ6asxPx7FpH01FESDHfqRUMBW54jfh4E';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // --- STOCKAGE EN MÉMOIRE (Sessions actives) ---
@@ -79,7 +79,7 @@ async function savePlayerToSupabase(socketId) {
             avatar: p.avatar,
             flag: p.flag
         })
-        .eq('username', p.username);
+        .eq('id', p.id);
 }
 
 io.on('connection', (socket) => {
@@ -87,23 +87,23 @@ io.on('connection', (socket) => {
 
     socket.emit('events_state_update', globalEvents);
 
-    // --- ENREGISTREMENT / PROFIL (SYNCHRONISATION SUPABASE) ---
+    // --- ENREGISTREMENT / PROFIL (INSENSIBLE À LA CASSE) ---
     socket.on('register_player', async (data) => {
-        const username = data.username || "Joueur";
+        const rawUsername = data.username ? data.username.trim() : "Joueur";
         try {
-            // Chercher le joueur dans la table Supabase
-            let { data: dbPlayer, error } = await supabase
+            // Recherche insensible à la casse dans Supabase (ex: Kiiks93 == kiiks93)
+            let { data: matchedPlayers, error } = await supabase
                 .from('players')
                 .select('*')
-                .eq('username', username)
-                .single();
+                .ilike('username', rawUsername);
 
+            let dbPlayer = matchedPlayers && matchedPlayers.length > 0 ? matchedPlayers[0] : null;
             let playerData;
 
             if (error || !dbPlayer) {
-                // Si le joueur n'existe pas, on l'insère dans Supabase
+                // Si aucun joueur n'existe (peu importe les majuscules), on le crée
                 const newRecord = {
-                    username: username,
+                    username: rawUsername,
                     region: data.region || "Hauts-de-France",
                     country: data.flag ? data.flag.replace(/['"]/g, '').trim() : "FR",
                     avatar: data.avatar || 1,
@@ -129,7 +129,8 @@ io.on('connection', (socket) => {
                     playerData = { ...newRecord, id: socket.id };
                 }
             } else {
-                // S'il existe, on met à jour ses infos de base (région, avatar, flag) si modifiées
+                // Le joueur existe déjà (avec la même casse ou une casse différente)
+                playerData = dbPlayer;
                 const { data: updated } = await supabase
                     .from('players')
                     .update({
@@ -137,11 +138,11 @@ io.on('connection', (socket) => {
                         avatar: data.avatar || dbPlayer.avatar,
                         flag: data.flag || dbPlayer.flag
                     })
-                    .eq('username', username)
+                    .eq('id', dbPlayer.id)
                     .select()
                     .single();
 
-                playerData = updated || dbPlayer;
+                if (updated) playerData = updated;
             }
 
             // Stockage en mémoire pour la session active du socket
@@ -217,7 +218,6 @@ io.on('connection', (socket) => {
             } else if (category === 'coins') {
                 query = query.order('coins', { ascending: false });
             } else if (category === 'combined') {
-                // Trophées prioritaires, départagés par les points
                 query = query.order('trophies', { ascending: false }).order('points', { ascending: false });
             }
 
@@ -317,10 +317,8 @@ io.on('connection', (socket) => {
         }
     });
 
-    // --- CLICS EN JEU 1v1 ---
     socket.on('player_click_1v1', (num) => {
         // Logique de gestion des clics 1v1
-        // (Tu gardes ou relies ici ta logique existante si gérée dans des fonctions globales)
     });
 
     // --- RÉCOMPENSE SOLO ---
@@ -392,7 +390,6 @@ io.on('connection', (socket) => {
         const rIdx = rankedQueue.indexOf(socket.id);
         if (rIdx !== -1) rankedQueue.splice(rIdx, 1);
 
-        // Sauvegarder une dernière fois en quittant
         await savePlayerToSupabase(socket.id);
         delete activePlayers[socket.id];
     });
@@ -455,7 +452,6 @@ async function endMatch(id1, id2, matchData, isRanked) {
     if (s1 > s2) winnerId = id1;
     else if (s2 > s1) winnerId = id2;
 
-    // Gestion des points / trophées / victoires / défaites en classé
     if (isRanked) {
         const p1 = activePlayers[id1];
         const p2 = activePlayers[id2];
