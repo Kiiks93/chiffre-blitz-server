@@ -83,6 +83,7 @@ async function savePlayerToSupabase(socketId) {
         .eq('id', p.dbId);
 }
 
+// Correction : Génère des indices de grille valides (0 à 11) au lieu de nombres entre 1 et 50
 function generateRandomTraps(count) {
     let traps = [];
     while (traps.length < count) {
@@ -383,7 +384,7 @@ io.on('connection', (socket) => {
 
     socket.on('find_saboteur_match', (data) => {
         if (!globalEvents.saboteurMode) return;
-        // Limite stricte à maximum 2 malus sélectionnés
+        // Correction : Limitation stricte à maximum 2 malus sélectionnés
         const chosenMalus = data && data.chosenMalus ? data.chosenMalus.slice(0, 2) : ['inversion'];
         const trappedTiles = data && data.trappedTiles ? data.trappedTiles : generateRandomTraps(2);
 
@@ -421,6 +422,7 @@ io.on('connection', (socket) => {
                     } else if (triggeredMalus === 'gel') {
                         socket.emit('receive_malus', { type: 'freeze' });
                     } else if (triggeredMalus === 'brouillage') {
+                        // Correction : Suppression de la pénalité -25 points et déclenchement effectif du brouillage (eclipse)
                         socket.emit('receive_malus', { type: 'eclipse' });
                     }
                 }
