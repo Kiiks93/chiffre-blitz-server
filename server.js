@@ -13,7 +13,6 @@ const io = new Server(server, {
     cors: { origin: "*", methods: ["GET", "POST"] }
 });
 
-// Connexion Supabase (récupérée depuis les variables d'environnement Render)
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -26,23 +25,22 @@ let customRooms = {};
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
-    // Enregistrement / Connexion du joueur
+    // Enregistrement / Connexion du joueur (Insensible à la casse)
     socket.on('register_player', async (data) => {
         try {
             if (!data || !data.username) return;
+            const cleanUsername = data.username.trim();
             
-            // Chercher le joueur dans la table 'players'
             let { data: existingPlayer, error: fetchErr } = await supabase
                 .from('players')
                 .select('*')
-                .eq('username', data.username)
-                .single();
+                .ilike('username', cleanUsername)
+                .maybeSingle();
 
             let player;
             if (!existingPlayer) {
-                // Créer le joueur s'il n'existe pas
                 const newPlayerData = {
-                    username: data.username,
+                    username: cleanUsername,
                     region: data.region || 'Hauts-de-France',
                     avatar: data.avatar || 1,
                     flag: data.flag || '🇫🇷',
@@ -62,7 +60,6 @@ io.on('connection', (socket) => {
                 if (insertErr) { console.error("Insert error:", insertErr); return; }
                 player = inserted;
             } else {
-                // Mettre à jour les infos de session
                 const updateData = {
                     region: data.region || existingPlayer.region,
                     avatar: data.avatar !== undefined ? data.avatar : existingPlayer.avatar,
@@ -71,7 +68,7 @@ io.on('connection', (socket) => {
                 let { data: updated, error: updateErr } = await supabase
                     .from('players')
                     .update(updateData)
-                    .eq('username', data.username)
+                    .eq('username', existingPlayer.username)
                     .select()
                     .single();
                 if (updateErr) { console.error("Update error:", updateErr); return; }
@@ -86,20 +83,20 @@ io.on('connection', (socket) => {
                 region: player.region,
                 avatar: player.avatar,
                 flag: player.flag,
-                points: player.points,
-                coins: player.coins,
-                trophies: player.trophies,
+                points: player.points || 0,
+                coins: player.coins || 0,
+                trophies: player.trophies || 0,
                 wins: player.wins || 0,
                 losses: player.losses || 0,
-                inventory: player.inventory,
-                equippedPower: player.equipped_power
+                inventory: player.inventory || {},
+                equippedPower: player.equipped_power || null
             });
         } catch (err) {
             console.error("Error in register_player:", err);
         }
     });
 
-    // Classement (Inclus wins et losses)
+    // Classement
     socket.on('get_leaderboard', async (type) => {
         try {
             let query = supabase.from('players').select('username, region, avatar, flag, points, trophies, coins, wins, losses');
@@ -117,7 +114,7 @@ io.on('connection', (socket) => {
             let { data: topPlayers, error } = await query;
             if (error) { console.error("Leaderboard error:", error); return; }
 
-            socket.emit('leaderboard_data', { type, data: topPlayers });
+            socket.emit('leaderboard_data', { type, data: topPlayers || [] });
         } catch (err) {
             console.error("Error in get_leaderboard:", err);
         }
@@ -149,19 +146,25 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Récompenses Solo
+    // Récompenses Solo (Met à jour les Pièces ET les Points)
     socket.on('claim_solo_reward', async (score) => {
         if (!socket.playerUsername) return;
         try {
-            let { data: player } = await supabase.from('players').select('*').eq('username', socket.playerUsername).single();
+            let { data: player } = await supabase.from('players').select('*').ilike('username', socket.playerUsername).maybeSingle();
             if (player) {
                 const earnedCoins = Math.min(100, Math.floor(score / 3));
+                const earnedPoints = Math.floor(score / 5); // Gagne des points en solo selon le score
+                
                 const newCoins = (player.coins || 0) + earnedCoins;
+                const newPoints = (player.points || 0) + earnedPoints;
                 
                 let { data: updated } = await supabase
                     .from('players')
-                    .update({ coins: newCoins })
-                    .eq('username', socket.playerUsername)
+                    .update({ 
+                        coins: newCoins,
+                        points: newPoints
+                    })
+                    .eq('username', player.username)
                     .select()
                     .single();
 
@@ -179,7 +182,7 @@ io.on('connection', (socket) => {
         const cost = prices[powerId];
         if (!cost) return;
         try {
-            let { data: player } = await supabase.from('players').select('*').eq('username', socket.playerUsername).single();
+            let { data: player } = await supabase.from('players').select('*').ilike('username', socket.playerUsername).maybeSingle();
             if (player && player.coins >= cost) {
                 let inventory = player.inventory || {};
                 inventory[powerId] = (inventory[powerId] || 0) + 1;
@@ -190,7 +193,7 @@ io.on('connection', (socket) => {
                         coins: player.coins - cost,
                         inventory: inventory
                     })
-                    .eq('username', socket.playerUsername)
+                    .eq('username', player.username)
                     .select()
                     .single();
 
@@ -205,13 +208,13 @@ io.on('connection', (socket) => {
     socket.on('equip_power', async (powerId) => {
         if (!socket.playerUsername) return;
         try {
-            let { data: player } = await supabase.from('players').select('*').eq('username', socket.playerUsername).single();
+            let { data: player } = await supabase.from('players').select('*').ilike('username', socket.playerUsername).maybeSingle();
             if (player && player.inventory && (player.inventory[powerId] || 0) > 0) {
                 const newEquipped = player.equipped_power === powerId ? null : powerId;
                 let { data: updated } = await supabase
                     .from('players')
                     .update({ equipped_power: newEquipped })
-                    .eq('username', socket.playerUsername)
+                    .eq('username', player.username)
                     .select()
                     .single();
 
@@ -244,7 +247,7 @@ io.on('connection', (socket) => {
         if (room.password && room.password !== data.password) { socket.emit('room_error', "Mot de passe incorrect."); return; }
         if (room.players.length >= 2) { socket.emit('room_error', "Salon complet."); return; }
         try {
-            let { data: player } = await supabase.from('players').select('*').eq('username', socket.playerUsername).single();
+            let { data: player } = await supabase.from('players').select('*').ilike('username', socket.playerUsername).maybeSingle();
             room.players.push({
                 id: socket.id,
                 username: socket.playerUsername,
@@ -303,13 +306,13 @@ function sendUpdatedProfile(socket, player) {
         region: player.region,
         avatar: player.avatar,
         flag: player.flag,
-        points: player.points,
-        coins: player.coins,
-        trophies: player.trophies,
+        points: player.points || 0,
+        coins: player.coins || 0,
+        trophies: player.trophies || 0,
         wins: player.wins || 0,
         losses: player.losses || 0,
-        inventory: player.inventory,
-        equippedPower: player.equipped_power
+        inventory: player.inventory || {},
+        equippedPower: player.equipped_power || null
     });
 }
 
@@ -317,16 +320,16 @@ function sendUpdatedProfile(socket, player) {
 async function startGameDuel(p1, p2, isRanked) {
     const gameId = 'game_' + Math.random().toString(36).substring(2, 9);
     
-    let { data: dbP1 } = await supabase.from('players').select('*').eq('username', p1.playerUsername).single();
-    let { data: dbP2 } = await supabase.from('players').select('*').eq('username', p2.playerUsername).single();
+    let { data: dbP1 } = await supabase.from('players').select('*').ilike('username', p1.playerUsername).maybeSingle();
+    let { data: dbP2 } = await supabase.from('players').select('*').ilike('username', p2.playerUsername).maybeSingle();
 
     const p1Data = {
-        socket: p1, username: p1.playerUsername,
+        socket: p1, username: dbP1 ? dbP1.username : p1.playerUsername,
         avatar: dbP1 ? dbP1.avatar : 1, flag: dbP1 ? dbP1.flag : '🇫🇷',
         target: 1, score: 0, pool: generateRandomPool(1)
     };
     const p2Data = {
-        socket: p2, username: p2.playerUsername,
+        socket: p2, username: dbP2 ? dbP2.username : p2.playerUsername,
         avatar: dbP2 ? dbP2.avatar : 1, flag: dbP2 ? dbP2.flag : '🇫🇷',
         target: 1, score: 0, pool: generateRandomPool(1)
     };
@@ -425,7 +428,7 @@ function handleSendMalus(gameId, socketId, type) {
     if (opponentId) game.players[opponentId].socket.emit('receive_malus', { type });
 }
 
-// Fin de partie 1v1 avec mise à jour des wins / losses dans Supabase
+// Fin de partie 1v1 avec mise à jour sécurisée des points, wins, losses et coins
 async function finishGame(gameId, forcedWinnerId, reason) {
     const game = activeGames[gameId];
     if (!game) return;
@@ -453,24 +456,26 @@ async function finishGame(gameId, forcedWinnerId, reason) {
     try {
         if (winnerId) {
             const wName = game.players[winnerId].username;
-            let { data: wDb } = await supabase.from('players').select('*').eq('username', wName).single();
+            let { data: wDb } = await supabase.from('players').select('*').ilike('username', wName).maybeSingle();
             if (wDb) {
+                const pointsGained = game.isRanked ? 25 : 10;
                 await supabase.from('players').update({
                     wins: (wDb.wins || 0) + 1,
-                    points: wDb.points + (game.isRanked ? 25 : 10),
-                    coins: wDb.coins + 30
-                }).eq('username', wName);
+                    points: (wDb.points || 0) + pointsGained,
+                    coins: (wDb.coins || 0) + 30
+                }).eq('username', wDb.username);
             }
         }
         if (loserId) {
             const lName = game.players[loserId].username;
-            let { data: lDb } = await supabase.from('players').select('*').eq('username', lName).single();
+            let { data: lDb } = await supabase.from('players').select('*').ilike('username', lName).maybeSingle();
             if (lDb) {
+                const pointsLost = game.isRanked ? 15 : 5;
                 await supabase.from('players').update({
                     losses: (lDb.losses || 0) + 1,
-                    points: Math.max(0, lDb.points - (game.isRanked ? 15 : 5)),
-                    coins: lDb.coins + 10
-                }).eq('username', lName);
+                    points: Math.max(0, (lDb.points || 0) - pointsLost),
+                    coins: (lDb.coins || 0) + 10
+                }).eq('username', lDb.username);
             }
         }
     } catch (err) {
