@@ -489,7 +489,7 @@ io.on('connection', (socket) => {
         player.coins += earnedCoins;
         lastMatchEarnings[socket.id] = earnedCoins;
 
-        let triggerWheel = (globalEvents.jackpotEclair && Math.random() < 0.03);
+        let triggerWheel = (globalEvents.jackpotEclair && Math.random() < 0.12);
 
         await savePlayerToSupabase(socket.id);
         socket.emit('player_registered', player);
@@ -766,7 +766,7 @@ async function endMatch(id1, id2, matchData, isRanked) {
             lastMatchEarnings[sId] = totalCoins;
             matchRewards[sId] = { baseCoins, rushBonus, totalCoins };
 
-            if (isWinner && globalEvents.jackpotEclair && Math.random() < 0.03) {
+            if (isWinner && globalEvents.jackpotEclair && Math.random() < 0.12) {
                 io.to(sId).emit('trigger_jackpot_wheel');
             }
         }
