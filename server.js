@@ -14,7 +14,6 @@ let players = {};
 let waitingPlayerId = null;
 let customRooms = {};
 
-// Grille de prix officielle sécurisée côté serveur
 const POWERS_PRICES = {
     'spotlight': 30,
     'freeze': 60,
@@ -30,8 +29,7 @@ io.on('connection', (socket) => {
     socket.on('register_player', (data) => {
         const username = data.username;
         if (!playersDB[username]) {
-            // Initialisation à 0 pièce
-            playersDB[username] = { username: username, region: data.region || 'Hauts-de-France', points: 0, coins: 10000, trophies: 0, inventory: {}, equippedPower: null };
+            playersDB[username] = { username: username, region: data.region || 'Hauts-de-France', points: 0, coins: 0, trophies: 0, inventory: {}, equippedPower: null };
         }
         socket.username = username;
         players[socket.id] = { id: socket.id, username: username };
@@ -59,7 +57,6 @@ io.on('connection', (socket) => {
         const username = socket.username;
         const officialPrice = POWERS_PRICES[data.id];
 
-        // Vérification de la sécurité basée sur le dictionnaire serveur
         if (username && playersDB[username] && officialPrice !== undefined) {
             if (playersDB[username].coins >= officialPrice) {
                 playersDB[username].coins -= officialPrice;
@@ -74,6 +71,21 @@ io.on('connection', (socket) => {
         const username = socket.username;
         if (username && playersDB[username]) {
             playersDB[username].equippedPower = id;
+        }
+    });
+
+    // CONSOMMATION D'UN POUVOIR CÔTÉ SERVEUR
+    socket.on('use_power', (id) => {
+        const username = socket.username;
+        if (username && playersDB[username] && playersDB[username].inventory && playersDB[username].inventory[id] > 0) {
+            playersDB[username].inventory[id]--;
+            if (playersDB[username].inventory[id] <= 0) {
+                delete playersDB[username].inventory[id];
+                if (playersDB[username].equippedPower === id) {
+                    playersDB[username].equippedPower = null;
+                }
+            }
+            socket.emit('player_registered', playersDB[username]);
         }
     });
 
