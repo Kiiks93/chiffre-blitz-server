@@ -311,13 +311,50 @@
 
         <button class="btn-main btn-blue" onclick="openSoloMenu()" data-i18n="menu_solo">🏋️ ENTRAÎNEMENT SOLO</button>
         <button class="btn-main" onclick="open1v1Hub()" data-i18n="menu_1v1">⚔️ DUEL 1v1 ONLINE</button>
-        <button id="btn-saboteur-menu" class="btn-main" onclick="startSaboteurQueue()" style="display:none; background:linear-gradient(45deg, #ff007f, #7b4397); box-shadow: 0 4px 15px rgba(255,0,127,0.4);" data-i18n="menu_saboteur">🕵️‍♂️ Mode Saboteur vs Sprinteur</button>
+        <button id="btn-trap-menu" class="btn-main" onclick="openTrapModeModal()" style="background:linear-gradient(45deg, #ff007f, #ff8a00); box-shadow: 0 4px 15px rgba(255,0,127,0.4);" data-i18n="menu_trap">💣 Mode Grille Maudite (Pièges)</button>
         
         <button class="btn-main btn-purple" onclick="openRoomsScreen()" data-i18n="menu_friends">👥 JOUER ENTRE AMIS</button>
         <button class="btn-main btn-shop" onclick="openShop()" data-i18n="menu_shop">🛍️ BOUTIQUE POUVOIRS</button>
         <button class="btn-main btn-gold" onclick="openLeaderboard()" data-i18n="menu_lb">🏆 CLASSEMENT</button>
         <button class="btn-main btn-purple" onclick="openTournamentScreen()" data-i18n="menu_tourney">🎯 MODE TOURNOI</button>
         <button class="btn-secondary" onclick="showTitleScreen()" style="margin-top:4px;" data-i18n="menu_info">ℹ️ Informations & Règles</button>
+    </div>
+
+    <!-- MODAL DE PRÉPARATION DU MODE GRILLE MAUDITE -->
+    <div id="modal-trap-setup" class="modal-overlay" style="display:none;">
+        <div class="modal-card" style="text-align:left;">
+            <h2 style="color:#ff007f; margin:0 0 4px 0; font-size:18px; text-align:center;">💣 GRILLE MAUDITE : PRÉPARATION</h2>
+            <p style="color:#aaa; font-size:12px; margin-bottom:12px; text-align:center;">Choisis 2 malus exclusifs à déclencher chez ton adversaire :</p>
+            
+            <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:15px;">
+                <label style="background:rgba(255,255,255,0.05); padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px;">
+                    <input type="checkbox" name="trap-malus" value="inversion" style="accent-color:#ff007f;">
+                    <div>
+                        <strong style="color:#ff007f;">🌀 Inversion Spatiale</strong>
+                        <div style="color:#aaa; font-size:10px;">Mélange deux chiffres sur la grille adverse.</div>
+                    </div>
+                </label>
+                <label style="background:rgba(255,255,255,0.05); padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px;">
+                    <input type="checkbox" name="trap-malus" value="gel" style="accent-color:#ff007f;">
+                    <div>
+                        <strong style="color:#ff8a00;">🛑 Gel Temporel</strong>
+                        <div style="color:#aaa; font-size:10px;">Bloque la tuile piégée pendant 3 secondes.</div>
+                    </div>
+                </label>
+                <label style="background:rgba(255,255,255,0.05); padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px;">
+                    <input type="checkbox" name="trap-malus" value="penalite" style="accent-color:#ff007f;">
+                    <div>
+                        <strong style="color:#ff4b2b;">💀 Pénalité Sèche</strong>
+                        <div style="color:#aaa; font-size:10px;">Retire 25 points au score de l'adversaire.</div>
+                    </div>
+                </label>
+            </div>
+
+            <div style="display:flex; gap:8px;">
+                <button class="btn-secondary" onclick="document.getElementById('modal-trap-setup').style.display='none'" style="margin-top:0;">Annuler</button>
+                <button class="btn-main" onclick="startTrapQueue()" style="margin-top:0; flex:1; background:linear-gradient(45deg, #ff007f, #ff8a00);">Lancer la Recherche 💣</button>
+            </div>
+        </div>
     </div>
 
     <div id="screen-solo-menu" class="menu-container" style="display:none;">
@@ -667,7 +704,7 @@
                 btn_play: "JOUER ⚡",
                 menu_solo: "🏋️ ENTRAÎNEMENT SOLO",
                 menu_1v1: "⚔️ DUEL 1v1 ONLINE",
-                menu_saboteur: "🕵️‍♂️ Mode Saboteur vs Sprinteur",
+                menu_trap: "💣 Mode Grille Maudite (Pièges)",
                 menu_friends: "👥 JOUER ENTRE AMIS",
                 menu_shop: "🛍️ BOUTIQUE POUVOIRS",
                 menu_lb: "🏆 CLASSEMENT",
@@ -775,7 +812,7 @@
                 btn_play: "PLAY ⚡",
                 menu_solo: "🏋️ SOLO TRAINING",
                 menu_1v1: "⚔️ ONLINE 1v1 DUEL",
-                menu_saboteur: "🕵️‍♂️ Saboteur vs Sprinter Mode",
+                menu_trap: "💣 Cursed Grid Mode (Traps)",
                 menu_friends: "👥 PLAY WITH FRIENDS",
                 menu_shop: "🛍️ POWERS SHOP",
                 menu_lb: "🏆 LEADERBOARD",
@@ -1288,10 +1325,10 @@
         socket.on('events_state_update', (events) => {
             latestGlobalEvents = events;
             const banner = document.getElementById('player-event-banner');
-            const saboteurBtn = document.getElementById('btn-saboteur-menu');
+            const trapBtn = document.getElementById('btn-trap-menu');
             
-            if (saboteurBtn) {
-                saboteurBtn.style.display = events.saboteurMode ? 'flex' : 'none';
+            if (trapBtn) {
+                trapBtn.style.display = events.saboteurMode ? 'flex' : 'none';
             }
 
             if (!banner) return;
@@ -1302,7 +1339,7 @@
             if (events.expressoMatch) activeList.push("⚡ <b>Expresso Match</b> (Parties rapides en 20s)");
             if (events.chaosMode) activeList.push("🌪️ <b>Chaos Mode</b> (Modificateurs aléatoires en non classé)");
             if (events.jackpotEclair) activeList.push("🎁 <b>Jackpot Éclair</b> (Coffres mystères)");
-            if (events.saboteurMode) activeList.push("🕵️‍♂️ <b>Mode Exclusif : Saboteur vs Sprinteur</b>");
+            if (events.saboteurMode) activeList.push("💣 <b>Mode Exclusif : Grille Maudite (Pièges)</b>");
 
             if (activeList.length > 0) {
                 banner.innerHTML = `⚡ <b>ADMIN ABUSE EN COURS :</b><br>` + activeList.join("<br>");
@@ -1418,79 +1455,36 @@
                                     <input type="checkbox" id="chk-coinRush" onchange="sendAdminEventsUpdate()">
                                 </label>
                                 <p style="color:#aaa; font-size:10px; margin:2px 0 2px 0;">Double tous les gains de pièces.</p>
-                                <button class="power-btn equip" onclick="socket.emit('admin_test_coin_rush')" style="width:100%; padding:5px; font-size:10px; margin-bottom:6px;">🪙 Tester Coin Rush (+60 Pièces)</button>
 
                                 <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
                                     <span>🛡️ Rank Shield (Pas de perte de points)</span>
                                     <input type="checkbox" id="chk-rankShield" onchange="sendAdminEventsUpdate()">
                                 </label>
                                 <p style="color:#aaa; font-size:10px; margin:2px 0 2px 0;">Zéro perte de points en classé.</p>
-                                <button class="power-btn equip" onclick="socket.emit('admin_test_shield')" style="width:100%; padding:5px; font-size:10px; margin-bottom:6px;">🛡️ Tester Rank Shield</button>
 
                                 <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
                                     <span>⚡ Expresso Match (Timer 20s)</span>
                                     <input type="checkbox" id="chk-expressoMatch" onchange="sendAdminEventsUpdate()">
                                 </label>
                                 <p style="color:#aaa; font-size:10px; margin:2px 0 2px 0;">Accélère les duels 1v1 (20s).</p>
-                                <button class="power-btn equip" onclick="socket.emit('admin_test_expresso')" style="width:100%; padding:5px; font-size:10px; margin-bottom:6px;">⚡ Tester Expresso Match</button>
 
                                 <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
                                     <span>🌪️ Chaos Mode (En Non Classé uniquement)</span>
                                     <input type="checkbox" id="chk-chaosMode" onchange="sendAdminEventsUpdate()">
                                 </label>
                                 <p style="color:#aaa; font-size:10px; margin:2px 0 2px 0;">Applique des modificateurs aléatoires.</p>
-                                <button class="power-btn equip" onclick="socket.emit('admin_test_chaos')" style="width:100%; padding:5px; font-size:10px; margin-bottom:6px;">🌪️ Tester un Malus Chaos</button>
 
                                 <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
                                     <span>🎁 Jackpot Éclair (Coffres mystères)</span>
                                     <input type="checkbox" id="chk-jackpotEclair" onchange="sendAdminEventsUpdate()">
                                 </label>
                                 <p style="color:#aaa; font-size:10px; margin:2px 0 2px 0;">Petite chance d'obtenir des pièces bonus.</p>
-                                <button class="btn-main btn-gold" onclick="socket.emit('admin_test_jackpot')" style="width:100%; padding:5px; font-size:10px; margin-bottom:6px;">🎲 Tester la Roue Jackpot</button>
 
                                 <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-                                    <span>🕵️‍♂️ Mode Saboteur vs Sprinteur</span>
+                                    <span>💣 Mode Grille Maudite (Pièges)</span>
                                     <input type="checkbox" id="chk-saboteurMode" onchange="sendAdminEventsUpdate()">
                                 </label>
                                 <p style="color:#aaa; font-size:10px; margin:2px 0 2px 0;">Affiche le mode dans le menu.</p>
-                                <button class="power-btn equip" onclick="socket.emit('admin_test_saboteur')" style="width:100%; padding:5px; font-size:10px;">🕵️‍♂️ Tester Mode Saboteur</button>
-                            </div>
-
-                            <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
-                                <strong style="color:#00d2ff; display:block; margin-bottom:8px;">📅 PLANIFICATION AUTOMATIQUE</strong>
-                                <p style="color:#aaa; font-size:10px; margin:0 0 6px 0;">Programme tes événements à l'avance si tu n'es pas dispo.</p>
-                                <div style="display:flex; gap:6px; margin-bottom:6px;">
-                                    <div style="flex:1;">
-                                        <label style="font-size:10px; color:#aaa;">Début :</label>
-                                        <input type="datetime-local" id="admin-start-date" style="width:100%; padding:4px; border-radius:6px; background:#0f051d; color:#fff; border:1px solid #00d2ff;">
-                                    </div>
-                                    <div style="flex:1;">
-                                        <label style="font-size:10px; color:#aaa;">Fin :</label>
-                                        <input type="datetime-local" id="admin-end-date" style="width:100%; padding:4px; border-radius:6px; background:#0f051d; color:#fff; border:1px solid #00d2ff;">
-                                    </div>
-                                </div>
-                                <button class="power-btn equip" onclick="saveAdminSchedule()" style="width:100%; padding:6px;">Enregistrer le Planning 💾</button>
-                            </div>
-
-                            <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
-                                <strong style="color:#38ef7d; display:block; margin-bottom:8px;">📢 ANNONCE GLOBALE (BROADCAST)</strong>
-                                <p style="color:#aaa; font-size:10px; margin:0 0 6px 0;">Envoie une notification non bloquante chez tous les joueurs connectés.</p>
-                                <input type="text" id="admin-broadcast-msg" placeholder="Message à afficher chez tous les joueurs..." style="width:100%; padding:6px; border-radius:6px; background:#0f051d; color:#fff; border:1px solid #38ef7d; margin-bottom:6px; outline:none;">
-                                <button class="power-btn buy" onclick="sendAdminBroadcast()" style="width:100%; padding:6px;">Envoyer l'annonce 🚀</button>
-                            </div>
-
-                            <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
-                                <strong style="color:#f8b500; display:block; margin-bottom:8px;">🎁 DISTRIBUER UN CADEAU ADMIN</strong>
-                                <p style="color:#aaa; font-size:10px; margin:0 0 6px 0;">Donne des pièces ou des points à un joueur précis ou à tout le monde.</p>
-                                <input type="text" id="admin-gift-target" placeholder="Pseudo (ou laisser vide pour TOUS)" style="width:100%; padding:6px; border-radius:6px; background:#0f051d; color:#fff; border:1px solid #f8b500; margin-bottom:6px; outline:none;">
-                                <div style="display:flex; gap:6px; margin-bottom:6px;">
-                                    <select id="admin-gift-currency" style="flex:1; padding:6px; border-radius:6px; background:#0f051d; color:#fff; border:1px solid #f8b500;">
-                                        <option value="coins">🪙 Pièces</option>
-                                        <option value="points">🏅 Points</option>
-                                    </select>
-                                    <input type="number" id="admin-gift-amount" placeholder="Montant" value="100" style="flex:1; padding:6px; border-radius:6px; background:#0f051d; color:#fff; border:1px solid #f8b500; text-align:center;">
-                                </div>
-                                <button class="btn-main btn-gold" onclick="sendAdminGift()" style="width:100%; padding:8px; font-size:12px; margin-top:0;">Envoyer le Cadeau 🎁</button>
                             </div>
 
                         </div>
@@ -1523,53 +1517,8 @@
             socket.emit('admin_update_events', updatedEvents);
         }
 
-        function saveAdminSchedule() {
-            const startDate = document.getElementById('admin-start-date').value;
-            const endDate = document.getElementById('admin-end-date').value;
-            socket.emit('admin_update_schedule', { startDate, endDate });
-            alert("Planning enregistré !");
-        }
-
-        function sendAdminBroadcast() {
-            const msg = document.getElementById('admin-broadcast-msg').value.trim();
-            if (!msg) return;
-            socket.emit('admin_broadcast_message', msg);
-            document.getElementById('admin-broadcast-msg').value = '';
-            alert("Annonce envoyée à tous les joueurs !");
-        }
-
-        function sendAdminGift() {
-            const targetUsername = document.getElementById('admin-gift-target').value.trim();
-            const currency = document.getElementById('admin-gift-currency').value;
-            const amount = parseInt(document.getElementById('admin-gift-amount').value) || 0;
-            
-            socket.emit('admin_give_gift', { targetUsername, currency, amount });
-            alert("Cadeau envoyé avec succès !");
-        }
-
-        socket.on('global_announcement', (message) => {
-            showAdminToast(message);
-        });
-
-        function showAdminToast(message) {
-            let toast = document.getElementById('admin-broadcast-toast');
-            if (!toast) {
-                toast = document.createElement('div');
-                toast.id = 'admin-broadcast-toast';
-                toast.className = 'admin-toast';
-                document.body.appendChild(toast);
-            }
-            toast.innerHTML = `<span>📢 <b>ADMIN :</b> ${message}</span> <button onclick="this.parentElement.style.display='none'" style="background:none;border:none;color:#fff;font-weight:bold;cursor:pointer;font-size:14px;margin-left:auto;">✕</button>`;
-            toast.style.display = 'flex';
-            
-            if (toast.hideTimeout) clearTimeout(toast.hideTimeout);
-            toast.hideTimeout = setTimeout(() => {
-                toast.style.display = 'none';
-            }, 8000);
-        }
-
         function hideAllScreens() {
-            ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-avalanche-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room', 'modal-launch-ad', 'simulated-ad-overlay', 'modal-ranked-loadout', 'modal-jackpot-wheel'].forEach(id => {
+            ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-avalanche-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room', 'modal-launch-ad', 'simulated-ad-overlay', 'modal-ranked-loadout', 'modal-jackpot-wheel', 'modal-trap-setup'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
@@ -1615,6 +1564,29 @@
             hideAllScreens();
             document.getElementById('screen-avalanche-menu').style.display = 'flex';
             SoundEngine.startMusic('menu');
+        }
+
+        function openTrapModeModal() {
+            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+            document.querySelectorAll('input[name="trap-malus"]').forEach(chk => chk.checked = false);
+            document.getElementById('modal-trap-setup').style.display = 'flex';
+        }
+
+        function startTrapQueue() {
+            const selectedMalus = [];
+            document.querySelectorAll('input[name="trap-malus"]:checked').forEach(chk => {
+                selectedMalus.push(chk.value);
+            });
+            if (selectedMalus.length === 0) {
+                alert(currentLang === 'fr' ? 'Veuillez sélectionner au moins un malus piégé !' : 'Please select at least one trapped malus!');
+                return;
+            }
+            document.getElementById('modal-trap-setup').style.display = 'none';
+            hideAllScreens();
+            document.getElementById('screen-1v1-lobby').style.display = 'flex';
+            let digit = 1;
+            radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById('radar-digit').innerText = digit; }, 70);
+            socket.emit('find_saboteur_match', { chosenMalus: selectedMalus });
         }
 
         function simulateAd(callback) {
@@ -1679,15 +1651,6 @@
             let digit = 1;
             radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById('radar-digit').innerText = digit; }, 70);
             socket.emit('find_1v1_match');
-        }
-
-        function startSaboteurQueue() {
-            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-            hideAllScreens();
-            document.getElementById('screen-1v1-lobby').style.display = 'flex';
-            let digit = 1;
-            radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById('radar-digit').innerText = digit; }, 70);
-            socket.emit('find_saboteur_match');
         }
 
         function openRankedLoadoutModal() {
@@ -2154,25 +2117,9 @@
                     document.getElementById('hud-1v1').style.display = 'grid';
                     document.getElementById('hud-solo').style.display = 'none';
 
-                    const role = data.role;
-                    const gridEl = document.getElementById('grid');
-
-                    if (role === 'saboteur') {
-                        document.getElementById('game-target-giant').innerText = "SABOTAGE 🕵️‍♂️";
-                        gridEl.innerHTML = `
-                            <div style="grid-column: span 4; display:flex; flex-direction:column; gap:10px; padding:15px; background:rgba(255,0,127,0.1); border:2px solid #ff007f; border-radius:12px;">
-                                <h3 style="margin:0; color:#ff007f; font-size:14px;">🛠️ PANNEAU DE SABOTAGE</h3>
-                                <p style="font-size:11px; color:#ccc; margin:0;">Ralentis ton adversaire en lui envoyant des pièges en continu !</p>
-                                <button class="btn-main" style="background:#ff4b2b; padding:10px;" onclick="socket.emit('send_malus', {type:'quake'})">📳 Déclencher un Séisme</button>
-                                <button class="btn-main" style="background:#ff8a00; padding:10px;" onclick="socket.emit('send_malus', {type:'micro'})">🐜 Réduire les tuiles</button>
-                                <button class="btn-main" style="background:#7b4397; padding:10px;" onclick="socket.emit('send_malus', {type:'eclipse'})">🌑 Projeter une Éclipse</button>
-                            </div>
-                        `;
-                    } else {
-                        if (latest1v1StartData) {
-                            document.getElementById('game-target-giant').innerText = latest1v1StartData.myTarget || 1;
-                            renderGrid(latest1v1StartData.myPool, handle1v1TileClick);
-                        }
+                    if (latest1v1StartData) {
+                        document.getElementById('game-target-giant').innerText = latest1v1StartData.myTarget || 1;
+                        renderGrid(latest1v1StartData.myPool, handle1v1TileClick);
                     }
 
                     preparePowerHUD();
