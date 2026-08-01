@@ -18,8 +18,8 @@ const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6Ik
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // --- STOCKAGE EN MÉMOIRE (Sessions actives) ---
-const activePlayers = {}; // socket.id -> données de session du joueur
-const rooms = {};   // code du salon -> { code, password, players: [], hostId }
+const activePlayers = {}; 
+const rooms = {};   
 const matchmakingQueue = [];
 const rankedQueue = [];
 
@@ -41,7 +41,6 @@ let eventSchedule = {
     endDate: null
 };
 
-// Vérification automatique de la planification des dates (toutes les 30 secondes)
 setInterval(() => {
     if (eventSchedule.startDate && eventSchedule.endDate) {
         const now = Date.now();
@@ -60,7 +59,6 @@ app.get('/', (req, res) => {
     res.send('Chiffre Blitz Server is running ⚡');
 });
 
-// Fonction utilitaire pour sauvegarder l'état d'un joueur dans Supabase
 async function savePlayerToSupabase(socketId) {
     const p = activePlayers[socketId];
     if (!p) return;
@@ -87,7 +85,6 @@ io.on('connection', (socket) => {
 
     socket.emit('events_state_update', globalEvents);
 
-    // --- ENREGISTREMENT / PROFIL (INSENSIBLE À LA CASSE) ---
     socket.on('register_player', async (data) => {
         const rawUsername = data.username ? data.username.trim() : "Joueur";
         try {
@@ -163,7 +160,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // --- BOUTIQUE ---
     socket.on('buy_power', async (powerId) => {
         const player = activePlayers[socket.id];
         if (!player) return;
@@ -194,7 +190,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // --- CLASSEMENT DIRECT DEPUIS SUPABASE ---
     socket.on('get_leaderboard', async (type) => {
         try {
             const [category, scope] = type.split('_');
@@ -228,7 +223,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // --- SALONS PRIVÉS ---
     socket.on('get_rooms_list', () => {
         const openRooms = Object.values(rooms).map(r => ({
             code: r.code,
@@ -289,7 +283,6 @@ io.on('connection', (socket) => {
         leaveAllRooms(socket);
     });
 
-    // --- MATCHMAKING 1v1 ---
     socket.on('find_1v1_match', () => {
         matchmakingQueue.push(socket.id);
         if (matchmakingQueue.length >= 2) {
@@ -311,16 +304,13 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('player_click_1v1', (num) => {
-        // Logique de gestion des clics 1v1
-    });
+    socket.on('player_click_1v1', (num) => {});
 
-    // --- RÉCOMPENSE SOLO ---
     socket.on('claim_solo_reward', async (score) => {
         const player = activePlayers[socket.id];
         if (!player) return;
-        let earnedCoins = Math.min(100, Math.floor(score / 3));
-        if (globalEvents.coinRush) earnedCoins *= 2;
+        let baseCoins = Math.min(100, Math.floor(score / 3));
+        let earnedCoins = globalEvents.coinRush ? baseCoins * 2 : baseCoins;
         player.coins += earnedCoins;
 
         await savePlayerToSupabase(socket.id);
@@ -328,7 +318,6 @@ io.on('connection', (socket) => {
         socket.emit('solo_reward_result', { earnedCoins, globalEvents });
     });
 
-    // --- SYSTÈME D'ADMINISTRATION ---
     socket.on('admin_auth', (password) => {
         if (password === ADMIN_PASSWORD) {
             socket.isAdmin = true;
@@ -477,6 +466,16 @@ async function endMatch(id1, id2, matchData, isRanked) {
     if (s1 > s2) winnerId = id1;
     else if (s2 > s1) winnerId = id2;
 
+    // Attribution des pièces pour les deux joueurs (avec support du boost Coin Rush)
+    for (let sId of [id1, id2]) {
+        const p = activePlayers[sId];
+        if (p) {
+            let baseCoins = (winnerId === sId) ? 30 : 10;
+            let earnedCoins = globalEvents.coinRush ? baseCoins * 2 : baseCoins;
+            p.coins += earnedCoins;
+        }
+    }
+
     if (isRanked) {
         const p1 = activePlayers[id1];
         const p2 = activePlayers[id2];
@@ -501,12 +500,13 @@ async function endMatch(id1, id2, matchData, isRanked) {
                     p1.points = Math.max(0, (p1.points || 0) - 15);
                 }
             }
-            await savePlayerToSupabase(id1);
-            await savePlayerToSupabase(id2);
-            io.to(id1).emit('player_registered', p1);
-            io.to(id2).emit('player_registered', p2);
         }
     }
+
+    await savePlayerToSupabase(id1);
+    await savePlayerToSupabase(id2);
+    io.to(id1).emit('player_registered', activePlayers[id1]);
+    io.to(id2).emit('player_registered', activePlayers[id2]);
 
     io.to(id1).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents });
     io.to(id2).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents });
