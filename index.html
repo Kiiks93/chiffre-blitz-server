@@ -143,8 +143,8 @@
     </div>
 
     <div class="user-stats">
-        <span>🪙 <strong id="user-coins-display">0</strong> <span data-i18n="coins">Pièces</span></span>
-        <span>🏆 <strong id="user-trophies-display">0</strong> <span data-i18n="trophies">Trophées</span></span>
+        <span>🪙 <strong id="user-coins-display">0</strong> Pièces</span>
+        <span>🏆 <strong id="user-trophies-display">0</strong> Trophées</span>
     </div>
 
     <!-- MODALE DE SOUTIEN -->
@@ -156,46 +156,36 @@
         </div>
     </div>
 
-    <!-- MODALE RÈGLES / COMMENT JOUER -->
-    <div id="modal-rules" class="modal-overlay" style="display:none;">
-        <div class="modal-card" style="text-align:left;">
-            <h2 style="margin:0 0 15px 0; color:#00d2ff; text-align:center;">📖 RÈGLES DU JEU</h2>
-            <div style="overflow-y:auto; flex:1; font-size:13px; color:#ccc; display:flex; flex-direction:column; gap:12px; padding-right:5px;">
-                <div>
-                    <strong style="color:#00d2ff;">⚡ Mode Classique (Solo) :</strong>
-                    <p style="margin:4px 0 0 0;">Cliquez le plus vite possible sur les tuiles de la grille dans l'ordre croissant exact : 1, puis 2, 3, 4, etc., pendant 30 secondes.</p>
-                </div>
-                <div>
-                    <strong style="color:#f8b500;">🎲 Mode Aléatoire (Solo) :</strong>
-                    <p style="margin:4px 0 0 0;">Un chiffre cible changeant s'affiche en haut. Retrouvez-le et cliquez dessus le plus rapidement possible sur la grille.</p>
-                </div>
-                <div>
-                    <strong style="color:#E94057;">🧊 Mode Avalanche (Style Tetris) :</strong>
-                    <p style="margin:4px 0 0 0;">Des chiffres s'empilent et remplissent la grille progressivement sous pression temporelle. Cliquez sur le chiffre cible présent dans la grille pour libérer la case. Si la grille est entièrement saturée, c'est perdu !</p>
-                </div>
-                <div>
-                    <strong style="color:#00c6ff;">⚔️ Duel 1v1 Online :</strong>
-                    <p style="margin:4px 0 0 0;">Affrontez un adversaire en temps réel en mode croissant. Le premier à atteindre 30 ou qui a le meilleur score gagne la partie et des trophées.</p>
-                </div>
-            </div>
-            <button class="btn-secondary" onclick="closeRulesModal()" style="margin-top:15px;">Fermer</button>
-        </div>
-    </div>
-
     <!-- SIMULATEUR DE PUBLICITE -->
     <div id="simulated-ad-overlay" style="display:none;">
         <div id="ad-text" style="color:#aaa; font-size:16px; margin-bottom:20px; font-weight:bold;">VIDEO SPONSORISÉE...</div>
         <div class="ad-timer-circle" id="ad-timer">5</div>
-        <button id="ad-close-btn" class="btn-secondary" style="display:none; max-width:200px; background:#1e1035; color:#fff;" data-i18n="close">Fermer</button>
+        <button id="ad-close-btn" class="btn-secondary" style="display:none; max-width:200px; background:#1e1035; color:#fff;">Fermer</button>
     </div>
 
-    <!-- ÉCRAN TITRE -->
+    <!-- ÉCRAN TITRE AVEC PANNEAU EXPLICATIF COMPLET -->
     <div id="screen-title" class="menu-container" style="max-width:380px; margin: 10px auto; text-align: left;">
-        <div style="text-align: center; margin-bottom: 10px;">
+        <div style="text-align: center; margin-bottom: 8px;">
             <h2 style="font-size: 24px; color: #00d2ff; margin: 0; text-shadow: 0 0 15px rgba(0,210,255,0.4);">CHIFFRE BLITZ ⚡</h2>
-            <p style="color: #aaa; font-size: 11px; margin: 5px 0 0 0;" data-i18n="subtitle">Le duel de calcul et de réflexes ultime</p>
+            <p style="color: #aaa; font-size: 11px; margin: 4px 0 0 0;">Le duel de calcul et de réflexes ultime</p>
         </div>
-        <button class="btn-main btn-blue" onclick="checkLaunchAdAndStart()" style="margin-top: 12px; width: 100%;" data-i18n="btn_play">JOUER ⚡</button>
+
+        <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 16px; font-size: 11px; color: #ccc; max-height: 42vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+            <div>
+                <strong style="color:#00d2ff; font-size:12px;">⚡ Modes d'Entraînement Solo</strong>
+                <p style="margin:3px 0 0 0;">• <b>Classique :</b> Enchaînez les chiffres de 1 en 1 dans l'ordre croissant.<br>• <b>Aléatoire :</b> Trouvez rapidement les chiffres cibles dynamiques qui s'affichent.<br>• <b>Avalanche :</b> Survivez à l'empilement progressif des chiffres façon Tetris !</p>
+            </div>
+            <div>
+                <strong style="color:#ff4b2b; font-size:12px;">⚔️ Duel 1v1 Online</strong>
+                <p style="margin:3px 0 0 0;">Affrontez d'autres joueurs en temps réel via le matchmaking ou des salons privés.</p>
+            </div>
+            <div>
+                <strong style="color:#f8b500; font-size:12px;">🪙 Pièces, Trophées & Classement</strong>
+                <p style="margin:3px 0 0 0;">Gagnez des pièces pour acheter des pouvoirs dans la boutique, accumulez des points et grimpez dans le classement régional/mondial !</p>
+            </div>
+        </div>
+
+        <button class="btn-main btn-blue" onclick="checkLaunchAdAndStart()" style="margin-top: 10px; width: 100%;">JOUER ⚡</button>
     </div>
 
     <!-- MENU PRINCIPAL -->
@@ -204,7 +194,7 @@
         <button class="btn-main" onclick="open1v1Hub()">⚔️ DUEL 1v1 ONLINE</button>
         <button class="btn-main btn-shop" onclick="openShop()">🛍️ BOUTIQUE POUVOIRS</button>
         <button class="btn-main btn-purple" onclick="openLeaderboard()">🏆 CLASSEMENT</button>
-        <button class="btn-secondary" onclick="openRulesModal()" style="margin-top:5px;">ℹ️ Comment jouer / Règles</button>
+        <button class="btn-secondary" onclick="showTitleScreen()" style="margin-top:5px;">ℹ️ Retour Règles</button>
     </div>
 
     <!-- MENU SOLO -->
@@ -362,9 +352,6 @@
             location.reload();
         }
 
-        function openRulesModal() { document.getElementById('modal-rules').style.display = 'flex'; }
-        function closeRulesModal() { document.getElementById('modal-rules').style.display = 'none'; }
-
         function simulateAd(type, callback) {
             const overlay = document.getElementById('simulated-ad-overlay');
             const timerEl = document.getElementById('ad-timer');
@@ -466,7 +453,7 @@
         });
 
         function hideAllScreens() {
-            ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-room-waiting', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'modal-username', 'modal-launch-ad', 'modal-rules'].forEach(id => {
+            ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-room-waiting', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'modal-username', 'modal-launch-ad'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
@@ -482,7 +469,7 @@
         function openShop() { document.getElementById('modal-shop').style.display = 'flex'; }
         function closeShop() { document.getElementById('modal-shop').style.display = 'none'; }
         function openLeaderboard() { document.getElementById('modal-leaderboard').style.display = 'flex'; socket.emit('get_leaderboard', 'global'); }
-        function closeLeaderboard() { document.getElementById('modal-leaderboard'].style.display = 'none'; }
+        function closeLeaderboard() { document.getElementById('modal-leaderboard').style.display = 'none'; }
 
         function startSoloTraining(mode) {
             activeTrainingMode = mode;
