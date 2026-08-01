@@ -201,6 +201,15 @@
         <span>🏆 <strong id="user-trophies-display">0</strong> <span data-i18n="trophies">Trophées</span></span>
     </div>
 
+    <!-- MODALE DE SOUTIEN (LANCEMENT) -->
+    <div id="modal-launch-ad" class="modal-overlay" style="display:none;">
+        <div class="modal-card" style="text-align:center;">
+            <h2 style="margin:0 0 10px 0; color:#00d2ff;" data-i18n="ad_title">Soutenir le Créateur</h2>
+            <p style="color:#ccc; font-size:14px; line-height:1.5; margin-bottom:20px;" data-i18n="ad_desc">Chiffre Blitz est 100% gratuit. Une publicité de soutien va se lancer. Merci ! ❤️</p>
+            <button class="btn-main btn-blue" onclick="playLaunchAd()" style="width:100%;" data-i18n="ad_btn">Lancer la partie ⚡</button>
+        </div>
+    </div>
+
     <!-- SIMULATEUR DE PUBLICITE (SPONSORISÉE) -->
     <div id="simulated-ad-overlay" style="display:none;" class="modal-overlay">
         <div class="modal-card" style="text-align:center; align-items:center;">
@@ -236,7 +245,7 @@
             </div>
         </div>
 
-        <button class="btn-main btn-blue" onclick="showMainMenu()" style="margin-top: 12px; width: 100%;" data-i18n="btn_play">JOUER ⚡</button>
+        <button class="btn-main btn-blue" onclick="checkLaunchAdAndStart()" style="margin-top: 12px; width: 100%;" data-i18n="btn_play">JOUER ⚡</button>
     </div>
 
     <!-- MENU PRINCIPAL -->
@@ -627,6 +636,9 @@
                 main_menu: "MENU PRINCIPAL",
                 no_rooms: "Aucun salon ouvert.",
                 no_players: "Aucun joueur.",
+                ad_title: "Soutenir le Créateur",
+                ad_desc: "Chiffre Blitz est 100% gratuit. Une publicité de soutien va se lancer. Merci ! ❤️",
+                ad_btn: "Lancer la partie ⚡",
                 ad_sponsored: "VIDÉO SPONSORISÉE...",
                 powers: {
                     spotlight: { name: '💡 Projecteur', desc: 'Illumine la bonne tuile (2s)' },
@@ -723,6 +735,9 @@
                 main_menu: "MAIN MENU",
                 no_rooms: "No open rooms.",
                 no_players: "No players.",
+                ad_title: "Support the Creator",
+                ad_desc: "Chiffre Blitz is 100% free. A support advertisement will play. Thank you! ❤️",
+                ad_btn: "Start Game ⚡",
                 ad_sponsored: "SPONSORED VIDEO...",
                 powers: {
                     spotlight: { name: '💡 Spotlight', desc: 'Highlights the correct tile (2s)' },
@@ -980,6 +995,8 @@
         };
 
         let cachedOpponent = null;
+        let hasShownLaunchAd = false;
+        let adCallbackFunction = null;
 
         // Fonction pour générer le badge avatar (Drapeau en fond + Nombre au-dessus)
         function getAvatarBadgeHTML(flag, avatarNum) {
@@ -1123,7 +1140,7 @@
         });
 
         function hideAllScreens() {
-            ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-avalanche-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room', 'simulated-ad-overlay'].forEach(id => {
+            ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-avalanche-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room', 'modal-launch-ad', 'simulated-ad-overlay'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
@@ -1146,6 +1163,21 @@
             window.history.replaceState({}, '', window.location.pathname);
             document.getElementById('screen-menu').style.display = 'flex';
             SoundEngine.startMusic('menu');
+        }
+
+        function checkLaunchAdAndStart() {
+            SoundEngine.init();
+            if (!hasShownLaunchAd) {
+                document.getElementById('modal-launch-ad').style.display = 'flex';
+            } else {
+                showMainMenu();
+            }
+        }
+
+        function playLaunchAd() {
+            document.getElementById('modal-launch-ad').style.display = 'none';
+            hasShownLaunchAd = true;
+            simulateAd(() => { showMainMenu(); });
         }
 
         function openSoloMenu() {
@@ -1185,7 +1217,6 @@
             }, 1000);
         }
 
-        let adCallbackFunction = null;
         function closeSimulatedAd() {
             document.getElementById('simulated-ad-overlay').style.display = 'none';
             SoundEngine.startMusic('menu');
