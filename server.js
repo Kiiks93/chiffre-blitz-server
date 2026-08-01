@@ -372,12 +372,28 @@ io.on('connection', (socket) => {
             }
             io.emit('admin_gift_received', { currency, amount, message: "Cadeau Admin global !" });
         } else {
-            const targetEntry = Object.entries(activePlayers).find(([sId, p]) => p.username.toLowerCase() === targetUsername.toLowerCase());
-            if (targetEntry) {
-                const [targetSocketId, targetPlayer] = targetEntry;
-                targetPlayer[currency] = (targetPlayer[currency] || 0) + amount;
-                await savePlayerToSupabase(targetSocketId);
-                io.to(targetSocketId).emit('player_registered', targetPlayer);
+            const { data: matchedPlayers } = await supabase
+                .from('players')
+                .select('*')
+                .ilike('username', targetUsername.trim())
+                .limit(1);
+
+            if (matchedPlayers && matchedPlayers.length > 0) {
+                const targetDbPlayer = matchedPlayers[0];
+                const activeEntry = Object.entries(activePlayers).find(([sId, p]) => p.id === targetDbPlayer.id);
+
+                if (activeEntry) {
+                    const [targetSocketId, targetPlayer] = activeEntry;
+                    targetPlayer[currency] = (targetPlayer[currency] || 0) + amount;
+                    await savePlayerToSupabase(targetSocketId);
+                    io.to(targetSocketId).emit('player_registered', targetPlayer);
+                } else {
+                    targetDbPlayer[currency] = (targetDbPlayer[currency] || 0) + amount;
+                    await supabase
+                        .from('players')
+                        .update({ [currency]: targetDbPlayer[currency] })
+                        .eq('id', targetDbPlayer.id);
+                }
             }
         }
     });
