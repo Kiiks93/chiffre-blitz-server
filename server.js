@@ -474,6 +474,7 @@ io.on('connection', (socket) => {
         }
     });
 
+    // --- GESTIONNAIRE ADMIN ---
     socket.on('admin_auth', (password) => {
         if (password === ADMIN_PASSWORD) {
             socket.isAdmin = true;
