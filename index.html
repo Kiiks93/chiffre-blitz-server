@@ -47,8 +47,9 @@
         .btn-gold { background: linear-gradient(45deg, #f8b500, #fceabb); color: #222; box-shadow: 0 5px 20px rgba(248, 181, 0, 0.4); }
         .btn-purple { background: linear-gradient(45deg, #7b4397, #dc2430); box-shadow: 0 5px 20px rgba(123, 67, 151, 0.4); }
         .btn-shop { background: linear-gradient(45deg, #11998e, #38ef7d); color: #000; box-shadow: 0 5px 20px rgba(56, 239, 125, 0.4); }
+        .btn-avalanche-main { background: linear-gradient(45deg, #0072ff, #7b4397); box-shadow: 0 5px 20px rgba(123, 67, 151, 0.4); color: #fff; }
         
-        /* Boutons de difficultés Avalanche harmonisés au format grand encadré (identique à la photo) */
+        /* Boutons de difficultés Avalanche */
         .btn-avalanche-easy { background: linear-gradient(45deg, #11998e, #38ef7d); color: #000; box-shadow: 0 5px 20px rgba(56, 239, 125, 0.4); }
         .btn-avalanche-medium { background: linear-gradient(45deg, #f8b500, #fceabb); color: #222; box-shadow: 0 5px 20px rgba(248, 181, 0, 0.4); }
         .btn-avalanche-hard { background: linear-gradient(45deg, #ff416c, #ff4b2b); color: #fff; box-shadow: 0 5px 20px rgba(255, 65, 108, 0.4); }
@@ -222,22 +223,22 @@
         <button class="btn-secondary" onclick="showTitleScreen()" style="margin-top:5px;" data-i18n="menu_info">ℹ️ Informations & Règles</button>
     </div>
 
-    <!-- MENU SOLO (Structure exacte demandée : Classique, Aléatoire, puis séparateur, puis titre Avalanche avec icône et les 3 gros blocs de difficultés) -->
+    <!-- MENU SOLO (3 boutons principaux aux mêmes dimensions) -->
     <div id="screen-solo-menu" class="menu-container" style="display:none;">
         <h2 style="color:#00d2ff; font-size:20px; margin-bottom:5px;" data-i18n="solo_menu_title">MODES D'ENTRAÎNEMENT</h2>
         <button class="btn-main btn-blue" onclick="startSoloTraining('classic')" data-i18n="solo_classic">⚡ Classique (Croissant)</button>
         <button class="btn-main btn-gold" onclick="startSoloTraining('random')" data-i18n="solo_random">🎲 Aléatoire (Cibles variées)</button>
-        
-        <div style="margin-top:8px; border-top:1px solid rgba(255,255,255,0.15); padding-top:12px; display: flex; flex-direction: column; gap: 10px;">
-            <div style="text-align: center; margin-bottom: 2px;">
-                <span style="font-size: 13px; font-weight: bold; color: #00d2ff; text-shadow: 0 0 10px rgba(0,210,255,0.4);" data-i18n="solo_avalanche">🧊 AVALANCHE (Difficultés)</span>
-            </div>
-            <button class="btn-main btn-avalanche-easy" onclick="startAvalancheGame(1800, 4)" data-i18n="diff_easy">Facile</button>
-            <button class="btn-main btn-avalanche-medium" onclick="startAvalancheGame(1200, 3)" data-i18n="diff_medium">Moyen</button>
-            <button class="btn-main btn-avalanche-hard" onclick="startAvalancheGame(1200, 1)" data-i18n="diff_hard">Difficile 💀</button>
-        </div>
-
+        <button class="btn-main btn-avalanche-main" onclick="openAvalancheDifficulties()" data-i18n="solo_avalanche_btn">🧊 Avalanche (Difficultés)</button>
         <button class="btn-secondary" onclick="showMainMenu()" data-i18n="back_menu">⬅️ Retour Menu</button>
+    </div>
+
+    <!-- SOUS-MENU DIFFICULTÉS AVALANCHE -->
+    <div id="screen-avalanche-menu" class="menu-container" style="display:none;">
+        <h2 style="color:#00d2ff; font-size:20px; margin-bottom:5px;" data-i18n="avalanche_menu_title">🧊 AVALANCHE (Difficultés)</h2>
+        <button class="btn-main btn-avalanche-easy" onclick="startAvalancheGame(1800, 4)" data-i18n="diff_easy">Facile</button>
+        <button class="btn-main btn-avalanche-medium" onclick="startAvalancheGame(1200, 3)" data-i18n="diff_medium">Moyen</button>
+        <button class="btn-main btn-avalanche-hard" onclick="startAvalancheGame(1200, 1)" data-i18n="diff_hard">Difficile 💀</button>
+        <button class="btn-secondary" onclick="openSoloMenu()" data-i18n="back">⬅️ Retour</button>
     </div>
 
     <!-- HUB DE CHOIX 1v1 ONLINE -->
@@ -510,14 +511,15 @@
                 solo_menu_title: "MODES D'ENTRAÎNEMENT",
                 solo_classic: "⚡ Classique (Croissant)",
                 solo_random: "🎲 Aléatoire (Cibles variées)",
-                solo_avalanche: "🧊 AVALANCHE (Difficultés)",
+                solo_avalanche_btn: "🧊 Avalanche (Difficultés)",
+                avalanche_menu_title: "🧊 AVALANCHE (Difficultés)",
                 diff_easy: "Facile", diff_medium: "Moyen", diff_hard: "Difficile 💀",
                 back_menu: "⬅️ Retour Menu",
                 hub_title: "⚔️ DUEL 1v1 ONLINE",
                 hub_subtitle: "Choisis ton mode de jeu :",
                 hub_random: "🎲 Matchmaking Aléatoire",
                 hub_rooms: "🏠 Salons Privés / Lobby",
-                back: "⬅️ Retour Menu",
+                back: "⬅️ Retour",
                 searching: "Recherche d'adversaire...",
                 cancel: "❌ Annuler",
                 rooms_title: "🏠 Salons Privés",
@@ -606,14 +608,15 @@
                 solo_menu_title: "TRAINING MODES",
                 solo_classic: "⚡ Classic (Ascending)",
                 solo_random: "🎲 Random (Varied targets)",
-                solo_avalanche: "🧊 AVALANCHE (Difficulties)",
+                solo_avalanche_btn: "🧊 Avalanche (Difficulties)",
+                avalanche_menu_title: "🧊 AVALANCHE (Difficulties)",
                 diff_easy: "Easy", diff_medium: "Medium", diff_hard: "Hard 💀",
                 back_menu: "⬅️ Back to Menu",
                 hub_title: "⚔️ ONLINE 1v1 DUEL",
                 hub_subtitle: "Choose your game mode:",
                 hub_random: "🎲 Random Matchmaking",
                 hub_rooms: "🏠 Private Rooms / Lobby",
-                back: "⬅️ Back to Menu",
+                back: "⬅️ Back",
                 searching: "Searching for opponent...",
                 cancel: "❌ Cancel",
                 rooms_title: "🏠 Private Rooms",
@@ -1055,7 +1058,7 @@
         });
 
         function hideAllScreens() {
-            ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room', 'modal-launch-ad', 'simulated-ad-overlay'].forEach(id => {
+            ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-avalanche-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room', 'modal-launch-ad', 'simulated-ad-overlay'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
@@ -1084,6 +1087,12 @@
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
             hideAllScreens();
             document.getElementById('screen-solo-menu').style.display = 'flex';
+            SoundEngine.startMusic('menu');
+        }
+
+        function openAvalancheDifficulties() {
+            hideAllScreens();
+            document.getElementById('screen-avalanche-menu').style.display = 'flex';
             SoundEngine.startMusic('menu');
         }
 
@@ -1470,7 +1479,7 @@
 
         socket.on('start_countdown', () => {
             if (radarInterval) clearInterval(radarInterval);
-            ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-room-waiting', 'screen-join-custom'].forEach(id => {
+            ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-avalanche-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-room-waiting', 'screen-join-custom'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
