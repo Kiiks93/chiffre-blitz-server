@@ -57,6 +57,7 @@ io.on('connection', (socket) => {
                 const newPlayerData = {
                     username: cleanUsername,
                     region: data.region || 'Hauts-de-France',
+                    country: 'FR',
                     avatar: data.avatar || 1,
                     flag: data.flag || '🇫🇷',
                     points: 0,
@@ -94,7 +95,7 @@ io.on('connection', (socket) => {
 
                 if (updateErr) {
                     console.error("Erreur lors de la mise à jour Supabase (update):", updateErr.message);
-                    player = existingPlayer; // Fallback sur l'existant si l'update échoue
+                    player = existingPlayer;
                 } else {
                     player = updated;
                 }
@@ -122,19 +123,32 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Classement
+    // Classement multi-critères dynamique (Points / Trophées / Pièces / Combiné x Région / France / Monde)
     socket.on('get_leaderboard', async (type) => {
         try {
-            let query = supabase.from('players').select('username, region, avatar, flag, points, trophies, coins, wins, losses');
-            
-            if (type === 'regional' && socket.playerRegion) {
-                query = query.eq('region', socket.playerRegion);
-            }
+            const parts = (type || 'points_regional').split('_');
+            const category = parts[0] || 'points';
+            const scope = parts[1] || 'regional';
 
-            if (type === 'coins') {
+            let query = supabase.from('players').select('username, region, country, avatar, flag, points, trophies, coins, wins, losses');
+            
+            // Filtre géographique
+            if (scope === 'regional' && socket.playerRegion) {
+                query = query.eq('region', socket.playerRegion);
+            } else if (scope === 'national') {
+                query = query.eq('country', 'FR');
+            }
+            // Si 'global', aucun filtre géographique
+
+            // Tri selon la catégorie demandée
+            if (category === 'coins') {
                 query = query.order('coins', { ascending: false }).limit(20);
+            } else if (category === 'trophies') {
+                query = query.order('trophies', { ascending: false }).order('points', { ascending: false }).limit(20);
+            } else if (category === 'combined') {
+                query = query.order('points', { ascending: false }).order('trophies', { ascending: false }).limit(20);
             } else {
-                query = query.order('points', { ascending: false }).limit(20);
+                query = query.order('points', { ascending: false }).order('trophies', { ascending: false }).limit(20);
             }
 
             let { data: topPlayers, error } = await query;
@@ -142,6 +156,10 @@ io.on('connection', (socket) => {
                 console.error("Erreur leaderboard Supabase:", error.message); 
                 socket.emit('leaderboard_data', { type, data: [] });
                 return; 
+            }
+
+            if (category === 'combined' && topPlayers) {
+                topPlayers.sort((a, b) => (b.points + (b.trophies * 20)) - (a.points + (a.trophies * 20)));
             }
 
             socket.emit('leaderboard_data', { type, data: topPlayers || [] });
@@ -482,9 +500,11 @@ async function finishGame(gameId, forcedWinnerId, reason) {
             let { data: wDb } = await supabase.from('players').select('*').ilike('username', wName).maybeSingle();
             if (wDb) {
                 const pointsGained = game.isRanked ? 25 : 10;
+                const trophiesGained = game.isRanked ? 1 : 0;
                 await supabase.from('players').update({
                     wins: (wDb.wins || 0) + 1,
                     points: (wDb.points || 0) + pointsGained,
+                    trophies: (wDb.trophies || 0) + trophiesGained,
                     coins: (wDb.coins || 0) + 30
                 }).eq('username', wDb.username);
             }
@@ -494,9 +514,11 @@ async function finishGame(gameId, forcedWinnerId, reason) {
             let { data: lDb } = await supabase.from('players').select('*').ilike('username', lName).maybeSingle();
             if (lDb) {
                 const pointsLost = game.isRanked ? 15 : 5;
+                const trophiesLost = game.isRanked ? 1 : 0;
                 await supabase.from('players').update({
                     losses: (lDb.losses || 0) + 1,
                     points: Math.max(0, (lDb.points || 0) - pointsLost),
+                    trophies: Math.max(0, (lDb.trophies || 0) - trophiesLost),
                     coins: (lDb.coins || 0) + 10
                 }).eq('username', lDb.username);
             }
