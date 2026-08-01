@@ -24,6 +24,7 @@ const matchmakingQueue = [];
 const rankedQueue = [];
 const saboteurQueue = [];
 const activeMatches = {}; 
+const lastMatchEarnings = {};
 
 // --- CONFIGURATION ADMIN & ÉVÉNEMENTS ---
 const ADMIN_PASSWORD = "*JE_SUIS_ADMIN1301*";
@@ -210,6 +211,38 @@ io.on('connection', (socket) => {
         io.to(oppId).emit('receive_malus', { type: data.type });
     });
 
+    socket.on('spin_jackpot_wheel', async () => {
+        const player = activePlayers[socket.id];
+        if (!player) return;
+        
+        const roll = Math.random();
+        let outcome = 'rien';
+        let coinDelta = 0;
+
+        if (roll < 0.33) {
+            outcome = 'jackpot';
+            coinDelta = 250;
+        } else if (roll < 0.66) {
+            outcome = 'banqueroute';
+            coinDelta = -150; 
+        } else {
+            outcome = 'rien';
+            coinDelta = 0;
+        }
+
+        if (coinDelta < 0) {
+            player.coins = Math.max(0, player.coins + coinDelta);
+        } else {
+            player.coins += coinDelta;
+        }
+
+        lastMatchEarnings[socket.id] = (lastMatchEarnings[socket.id] || 0) + coinDelta;
+
+        await savePlayerToSupabase(socket.id);
+        socket.emit('player_registered', player);
+        socket.emit('jackpot_wheel_result', { outcome, coinDelta, newCoins: player.coins });
+    });
+
     socket.on('get_leaderboard', async (type) => {
         try {
             const [category, scope] = type.split('_');
@@ -391,21 +424,29 @@ io.on('connection', (socket) => {
         if (!player) return;
         let baseCoins = Math.min(100, Math.floor(score / 3));
         let rushBonus = globalEvents.coinRush ? baseCoins : 0;
-        let jackpotBonus = (globalEvents.jackpotEclair && Math.random() < 0.35) ? 150 : 0;
-        let earnedCoins = baseCoins + rushBonus + jackpotBonus;
+        let earnedCoins = baseCoins + rushBonus;
         
         player.coins += earnedCoins;
+        lastMatchEarnings[socket.id] = earnedCoins;
+
+        // Chance rare (3%) de déclencher la Roue Jackpot si l'événement est actif
+        let triggerWheel = (globalEvents.jackpotEclair && Math.random() < 0.03);
+
         await savePlayerToSupabase(socket.id);
         socket.emit('player_registered', player);
-        socket.emit('solo_reward_result', { baseCoins, rushBonus, jackpotBonus, earnedCoins, globalEvents });
+        socket.emit('solo_reward_result', { baseCoins, rushBonus, earnedCoins, triggerWheel, globalEvents });
     });
 
-    socket.on('double_reward', async (amount) => {
+    socket.on('double_reward', async () => {
         const player = activePlayers[socket.id];
         if (!player) return;
-        player.coins += amount;
-        await savePlayerToSupabase(socket.id);
-        socket.emit('player_registered', player);
+        const earnings = lastMatchEarnings[socket.id] || 0;
+        if (earnings > 0) {
+            player.coins += earnings;
+            lastMatchEarnings[socket.id] = 0;
+            await savePlayerToSupabase(socket.id);
+            socket.emit('player_registered', player);
+        }
     });
 
     socket.on('admin_auth', (password) => {
@@ -496,6 +537,7 @@ io.on('connection', (socket) => {
         if (sIdx !== -1) saboteurQueue.splice(sIdx, 1);
 
         delete activeMatches[socket.id];
+        delete lastMatchEarnings[socket.id];
 
         await savePlayerToSupabase(socket.id);
         delete activePlayers[socket.id];
@@ -656,13 +698,19 @@ async function endMatch(id1, id2, matchData, isRanked) {
     for (let sId of [id1, id2]) {
         const p = activePlayers[sId];
         if (p) {
-            let baseCoins = (winnerId === sId) ? 30 : 10;
+            const isWinner = (winnerId === sId);
+            let baseCoins = isWinner ? 30 : 10;
             let rushBonus = globalEvents.coinRush ? baseCoins : 0;
-            let jackpotBonus = (globalEvents.jackpotEclair && Math.random() < 0.4) ? 200 : 0;
-            let totalCoins = baseCoins + rushBonus + jackpotBonus;
+            let totalCoins = baseCoins + rushBonus;
             
             p.coins += totalCoins;
-            matchRewards[sId] = { baseCoins, rushBonus, jackpotBonus, totalCoins };
+            lastMatchEarnings[sId] = totalCoins;
+            matchRewards[sId] = { baseCoins, rushBonus, totalCoins };
+
+            // Chance rare (3%) pour le gagnant de déclencher la Roue Jackpot
+            if (isWinner && globalEvents.jackpotEclair && Math.random() < 0.03) {
+                io.to(sId).emit('trigger_jackpot_wheel');
+            }
         }
     }
 
