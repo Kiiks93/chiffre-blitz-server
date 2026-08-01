@@ -22,6 +22,7 @@ const activePlayers = {};
 const rooms = {};   
 const matchmakingQueue = [];
 const rankedQueue = [];
+const activeMatches = {}; // Suivi des matchs 1v1 en cours
 
 // --- CONFIGURATION ADMIN & ÉVÉNEMENTS ---
 const ADMIN_PASSWORD = "*JE_SUIS_ADMIN1301*";
@@ -190,6 +191,23 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('use_power', async (powerId) => {
+        const player = activePlayers[socket.id];
+        if (!player) return;
+        if (player.inventory[powerId] && player.inventory[powerId] > 0) {
+            player.inventory[powerId]--;
+            await savePlayerToSupabase(socket.id);
+            socket.emit('player_registered', player);
+        }
+    });
+
+    socket.on('send_malus', (data) => {
+        const match = activeMatches[socket.id];
+        if (!match) return;
+        const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
+        io.to(oppId).emit('receive_malus', { type: data.type });
+    });
+
     socket.on('get_leaderboard', async (type) => {
         try {
             const [category, scope] = type.split('_');
@@ -304,7 +322,40 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('player_click_1v1', (num) => {});
+    socket.on('player_click_1v1', (num) => {
+        const match = activeMatches[socket.id];
+        if (!match || match.ended) return;
+        const pData = match.players[socket.id];
+        if (!pData) return;
+
+        const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
+
+        if (num === pData.target) {
+            pData.score += 10;
+            pData.target++;
+            pData.pool = generatePool(pData.target);
+            
+            socket.emit('my_grid_updated', {
+                target: pData.target,
+                newPool: pData.pool,
+                success: true,
+                score: pData.score
+            });
+
+            io.to(oppId).emit('opponent_progress', {
+                target: pData.target,
+                score: pData.score,
+                opponent: activePlayers[socket.id]
+            });
+        } else {
+            socket.emit('my_grid_updated', {
+                target: pData.target,
+                newPool: pData.pool,
+                success: false,
+                score: pData.score
+            });
+        }
+    });
 
     socket.on('claim_solo_reward', async (score) => {
         const player = activePlayers[socket.id];
@@ -404,6 +455,8 @@ io.on('connection', (socket) => {
         const rIdx = rankedQueue.indexOf(socket.id);
         if (rIdx !== -1) rankedQueue.splice(rIdx, 1);
 
+        delete activeMatches[socket.id];
+
         await savePlayerToSupabase(socket.id);
         delete activePlayers[socket.id];
     });
@@ -426,25 +479,35 @@ function startMatchBetween(id1, id2, isRanked = false) {
     const p1 = activePlayers[id1] || { id: id1, username: "Joueur 1", avatar: 1, flag: "🇫🇷", points: 0 };
     const p2 = activePlayers[id2] || { id: id2, username: "Joueur 2", avatar: 2, flag: "🇫🇷", points: 0 };
 
-    const matchData = {
+    const match = {
+        id1,
+        id2,
         timeLeft: globalEvents.expressoMatch ? 20 : 30,
         players: {
             [id1]: { target: 1, score: 0, pool: generatePool(1) },
             [id2]: { target: 1, score: 0, pool: generatePool(1) }
-        }
+        },
+        isRanked,
+        ended: false
     };
 
-    io.to(id1).emit('start_countdown', { opponent: p2, timeLeft: matchData.timeLeft, myTarget: 1, myPool: matchData.players[id1].pool });
-    io.to(id2).emit('start_countdown', { opponent: p1, timeLeft: matchData.timeLeft, myTarget: 1, myPool: matchData.players[id2].pool });
+    activeMatches[id1] = match;
+    activeMatches[id2] = match;
+
+    io.to(id1).emit('start_countdown', { opponent: p2, timeLeft: match.timeLeft, myTarget: 1, myPool: match.players[id1].pool });
+    io.to(id2).emit('start_countdown', { opponent: p1, timeLeft: match.timeLeft, myTarget: 1, myPool: match.players[id2].pool });
 
     const gameInterval = setInterval(() => {
-        matchData.timeLeft--;
-        io.to(id1).emit('timer_update', matchData.timeLeft);
-        io.to(id2).emit('timer_update', matchData.timeLeft);
+        match.timeLeft--;
+        io.to(id1).emit('timer_update', match.timeLeft);
+        io.to(id2).emit('timer_update', match.timeLeft);
 
-        if (matchData.timeLeft <= 0) {
+        if (match.timeLeft <= 0 || match.ended) {
             clearInterval(gameInterval);
-            endMatch(id1, id2, matchData, isRanked);
+            if (!match.ended) {
+                match.ended = true;
+                endMatch(id1, id2, match, isRanked);
+            }
         }
     }, 1000);
 }
@@ -458,15 +521,17 @@ function generatePool(target) {
 }
 
 async function endMatch(id1, id2, matchData, isRanked) {
-    const s1 = matchData.players[id1].score;
-    const s2 = matchData.players[id2].score;
+    delete activeMatches[id1];
+    delete activeMatches[id2];
+
+    const s1 = matchData.players[id1] ? matchData.players[id1].score : 0;
+    const s2 = matchData.players[id2] ? matchData.players[id2].score : 0;
 
     let winnerId = null;
     let reason = "Temps écoulé !";
     if (s1 > s2) winnerId = id1;
     else if (s2 > s1) winnerId = id2;
 
-    // Attribution des pièces pour les deux joueurs (avec support du boost Coin Rush)
     for (let sId of [id1, id2]) {
         const p = activePlayers[sId];
         if (p) {
@@ -505,8 +570,8 @@ async function endMatch(id1, id2, matchData, isRanked) {
 
     await savePlayerToSupabase(id1);
     await savePlayerToSupabase(id2);
-    io.to(id1).emit('player_registered', activePlayers[id1]);
-    io.to(id2).emit('player_registered', activePlayers[id2]);
+    if (activePlayers[id1]) io.to(id1).emit('player_registered', activePlayers[id1]);
+    if (activePlayers[id2]) io.to(id2).emit('player_registered', activePlayers[id2]);
 
     io.to(id1).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents });
     io.to(id2).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents });
