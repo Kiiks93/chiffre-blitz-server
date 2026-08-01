@@ -369,8 +369,8 @@ io.on('connection', (socket) => {
                 activePlayers[sId][currency] = (activePlayers[sId][currency] || 0) + amount;
                 await savePlayerToSupabase(sId);
                 io.to(sId).emit('player_registered', activePlayers[sId]);
+                io.to(sId).emit('admin_gift_received', { currency, amount });
             }
-            io.emit('admin_gift_received', { currency, amount, message: "Cadeau Admin global !" });
         } else {
             const { data: matchedPlayers } = await supabase
                 .from('players')
@@ -387,6 +387,7 @@ io.on('connection', (socket) => {
                     targetPlayer[currency] = (targetPlayer[currency] || 0) + amount;
                     await savePlayerToSupabase(targetSocketId);
                     io.to(targetSocketId).emit('player_registered', targetPlayer);
+                    io.to(targetSocketId).emit('admin_gift_received', { currency, amount });
                 } else {
                     targetDbPlayer[currency] = (targetDbPlayer[currency] || 0) + amount;
                     await supabase
