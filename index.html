@@ -257,6 +257,7 @@
     <div id="screen-menu" class="menu-container" style="display:none;">
         <button class="btn-main btn-blue" onclick="openSoloMenu()" data-i18n="menu_solo">🏋️ ENTRAÎNEMENT SOLO</button>
         <button class="btn-main" onclick="open1v1Hub()" data-i18n="menu_1v1">⚔️ DUEL 1v1 ONLINE</button>
+        <button class="btn-main btn-purple" onclick="openRoomsScreen()" data-i18n="menu_friends">👥 JOUER ENTRE AMIS</button>
         <button class="btn-main btn-shop" onclick="openShop()" data-i18n="menu_shop">🛍️ BOUTIQUE POUVOIRS</button>
         <button class="btn-main btn-gold" onclick="openLeaderboard()" data-i18n="menu_lb">🏆 CLASSEMENT</button>
         <button class="btn-main btn-purple" onclick="openTournamentScreen()" data-i18n="menu_tourney">🎯 MODE TOURNOI</button>
@@ -287,7 +288,6 @@
         <p style="color:#aaa; font-size:12px; margin-bottom:8px;" data-i18n="hub_subtitle">Choisis ton mode de jeu :</p>
         <button class="btn-main btn-blue" onclick="startRandom1v1()" data-i18n="hub_random">🎲 Matchmaking non classé</button>
         <button class="btn-main btn-gold" onclick="openRankedLoadoutModal()" data-i18n="hub_ranked">⚔️ Matchmaking Classé (SBMM)</button>
-        <button class="btn-main btn-purple" onclick="openRoomsScreen()" data-i18n="hub_rooms">🏠 Salons Privés / Lobby</button>
         <button class="btn-secondary" onclick="showMainMenu()" data-i18n="back_menu">⬅️ Retour Menu</button>
     </div>
 
@@ -318,7 +318,7 @@
 
     <!-- ÉCRAN DES SALONS PRIVÉS -->
     <div id="screen-rooms" style="display:none; max-width:400px; margin:0 auto;">
-        <h2 data-i18n="rooms_title" style="font-size:18px; margin-bottom:8px;">🏠 Salons Privés</h2>
+        <h2 data-i18n="rooms_title" style="font-size:18px; margin-bottom:8px;">👥 Jouer entre amis</h2>
         <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:14px; margin:10px 0; display:flex; flex-direction:column; gap:8px;">
             <button class="btn-main btn-blue" onclick="openCreateRoomModal()" style="width:100%;" data-i18n="rooms_create">✨ Créer un salon personnalisé</button>
             <button class="btn-main btn-gold" onclick="openJoinCustomScreen()" style="width:100%;" data-i18n="rooms_join_code">🔑 Rejoindre avec un code</button>
@@ -327,7 +327,7 @@
         <div id="rooms-list" class="rooms-list" style="max-height: 30vh; margin-bottom:10px;">
             <div style="text-align:center; color:#aaa; margin-top:8px;" data-i18n="loading">Chargement des salons...</div>
         </div>
-        <button class="btn-secondary" onclick="open1v1Hub()" data-i18n="back">⬅️ Retour</button>
+        <button class="btn-secondary" onclick="showMainMenu()" data-i18n="back_menu">⬅️ Retour Menu</button>
     </div>
 
     <!-- ÉCRAN POUR REJOINDRE AVEC CODE ET MOT DE PASSE -->
@@ -585,6 +585,7 @@
                 btn_play: "JOUER ⚡",
                 menu_solo: "🏋️ ENTRAÎNEMENT SOLO",
                 menu_1v1: "⚔️ DUEL 1v1 ONLINE",
+                menu_friends: "👥 JOUER ENTRE AMIS",
                 menu_shop: "🛍️ BOUTIQUE POUVOIRS",
                 menu_lb: "🏆 CLASSEMENT",
                 menu_tourney: "🎯 MODE TOURNOI",
@@ -600,14 +601,13 @@
                 hub_subtitle: "Choisis ton mode de jeu :",
                 hub_random: "🎲 Matchmaking non classé",
                 hub_ranked: "⚔️ Matchmaking Classé (SBMM)",
-                hub_rooms: "🏠 Salons Privés / Lobby",
                 ranked_modal_title: "⚔️ PRÉPARATION CLASSÉE",
                 ranked_modal_sub: "Choisis 2 objets de ton inventaire pour le match classé :",
                 ranked_start_btn: "Lancer le Classé ⚡",
                 back: "⬅️ Retour",
                 searching: "Recherche d'adversaire...",
                 cancel: "❌ Annuler",
-                rooms_title: "🏠 Salons Privés",
+                rooms_title: "👥 Jouer entre amis",
                 rooms_create: "✨ Créer un salon personnalisé",
                 rooms_join_code: "🔑 Rejoindre avec un code",
                 rooms_open_list: "Salons ouverts :",
@@ -690,6 +690,7 @@
                 btn_play: "PLAY ⚡",
                 menu_solo: "🏋️ SOLO TRAINING",
                 menu_1v1: "⚔️ ONLINE 1v1 DUEL",
+                menu_friends: "👥 PLAY WITH FRIENDS",
                 menu_shop: "🛍️ POWERS SHOP",
                 menu_lb: "🏆 LEADERBOARD",
                 menu_tourney: "🎯 TOURNAMENT MODE",
@@ -705,14 +706,13 @@
                 hub_subtitle: "Choose your game mode:",
                 hub_random: "🎲 Unranked Matchmaking",
                 hub_ranked: "⚔️ Ranked Matchmaking (SBMM)",
-                hub_rooms: "🏠 Private Rooms / Lobby",
                 ranked_modal_title: "⚔️ RANKED LOADOUT",
                 ranked_modal_sub: "Choose 2 items from your inventory for the ranked match:",
                 ranked_start_btn: "Start Ranked ⚡",
                 back: "⬅️ Back",
                 searching: "Searching for opponent...",
                 cancel: "❌ Cancel",
-                rooms_title: "🏠 Private Rooms",
+                rooms_title: "👥 Play with Friends",
                 rooms_create: "✨ Create Custom Room",
                 rooms_join_code: "🔑 Join with Code",
                 rooms_open_list: "Open rooms:",
