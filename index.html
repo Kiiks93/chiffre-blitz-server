@@ -147,16 +147,16 @@
     </div>
 
     <div class="user-stats">
-        <span>🪙 <strong id="user-coins-display">0</strong> Pièces</span>
-        <span>🏆 <strong id="user-trophies-display">0</strong> Trophées</span>
+        <span>🪙 <strong id="user-coins-display">0</strong> <span data-i18n="coins">Pièces</span></span>
+        <span>🏆 <strong id="user-trophies-display">0</strong> <span data-i18n="trophies">Trophées</span></span>
     </div>
 
     <!-- MODALE DE SOUTIEN -->
     <div id="modal-launch-ad" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:center;">
-            <h2 style="margin:0 0 10px 0; color:#00d2ff;">Soutenir le Créateur</h2>
-            <p style="color:#ccc; font-size:14px; line-height:1.5; margin-bottom:20px;">Chiffre Blitz est 100% gratuit. Une publicité de soutien va se lancer. Merci ! ❤️</p>
-            <button class="btn-main btn-blue" onclick="playLaunchAd()" style="width:100%;">Lancer la partie ⚡</button>
+            <h2 style="margin:0 0 10px 0; color:#00d2ff;" data-i18n="ad_title">Soutenir le Créateur</h2>
+            <p style="color:#ccc; font-size:14px; line-height:1.5; margin-bottom:20px;" data-i18n="ad_desc">Chiffre Blitz est 100% gratuit. Une publicité de soutien va se lancer. Merci ! ❤️</p>
+            <button class="btn-main btn-blue" onclick="playLaunchAd()" style="width:100%;" data-i18n="ad_btn">Lancer la partie ⚡</button>
         </div>
     </div>
 
@@ -164,126 +164,126 @@
     <div id="modal-tournament-teaser" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:center;">
             <h2 style="margin:0 0 10px 0; color:#ff4b2b;">🏆 TOURNOI ÉVÉNEMENTIEL</h2>
-            <p style="color:#ccc; font-size:14px; line-height:1.6; margin-bottom:20px;">
+            <p style="color:#ccc; font-size:14px; line-height:1.6; margin-bottom:20px;" data-i18n="tourney_desc">
                 Ce mode ultra-compétitif est actuellement en cours de développement secret ! 🤫<br><br>
                 Préparez vos réflexes, affûtez votre rapidité... Le mode Tournoi arrive très bientôt ! 🚀
             </p>
-            <button class="btn-main btn-blue" onclick="closeTournamentTeaser()" style="width:100%;">J'ai hâte ! 💪</button>
+            <button class="btn-main btn-blue" onclick="closeTournamentTeaser()" style="width:100%;" data-i18n="tourney_btn">J'ai hâte ! 💪</button>
         </div>
     </div>
 
     <!-- MODALE RÈGLES / COMMENT JOUER -->
     <div id="modal-rules" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:left;">
-            <h2 style="margin:0 0 15px 0; color:#00d2ff; text-align:center;">📖 RÈGLES DU JEU</h2>
+            <h2 style="margin:0 0 15px 0; color:#00d2ff; text-align:center;" data-i18n="rules_title">📖 RÈGLES DU JEU</h2>
             <div style="overflow-y:auto; flex:1; font-size:13px; color:#ccc; display:flex; flex-direction:column; gap:12px; padding-right:5px;">
                 <div>
                     <strong style="color:#00d2ff;">⚡ Mode Classique (Solo) :</strong>
-                    <p style="margin:4px 0 0 0;">Cliquez le plus vite possible sur les tuiles dans l'ordre croissant exact de 1 à 50 pendant 30 secondes.</p>
+                    <p style="margin:4px 0 0 0;" data-i18n="rule_classic">Cliquez le plus vite possible sur les tuiles dans l'ordre croissant exact de 1 à 50 pendant 30 secondes.</p>
                 </div>
                 <div>
                     <strong style="color:#f8b500;">🎲 Mode Aléatoire (Solo) :</strong>
-                    <p style="margin:4px 0 0 0;">Un chiffre cible changeant s'affiche. Retrouvez-le et cliquez dessus le plus rapidement possible.</p>
+                    <p style="margin:4px 0 0 0;" data-i18n="rule_random">Un chiffre cible changeant s'affiche. Retrouvez-le et cliquez dessus le plus rapidement possible.</p>
                 </div>
                 <div>
                     <strong style="color:#E94057;">🧊 Mode Avalanche (Style Tetris) :</strong>
-                    <p style="margin:4px 0 0 0;">Des chiffres s'empirent progressivement. Cliquez sur le chiffre cible affiché (présent dans la grille) pour libérer la case. Choisissez votre difficulté (Facile, Moyen, Difficile) pour corser la vitesse !</p>
+                    <p style="margin:4px 0 0 0;" data-i18n="rule_avalanche">Des chiffres s'empirent progressivement. Cliquez sur le chiffre cible affiché (présent dans la grille) pour libérer la case. Choisissez votre difficulté (Facile, Moyen, Difficile) pour corser la vitesse !</p>
                 </div>
                 <div>
                     <strong style="color:#00c6ff;">⚔️ Duel 1v1 Online :</strong>
-                    <p style="margin:4px 0 0 0;">Affrontez un adversaire en temps réel. Le premier à atteindre 30 gagne la partie.</p>
+                    <p style="margin:4px 0 0 0;" data-i18n="rule_1v1">Affrontez un adversaire en temps réel. Le premier à atteindre 30 gagne la partie.</p>
                 </div>
             </div>
-            <button class="btn-secondary" onclick="closeRulesModal()" style="margin-top:15px;">Fermer</button>
+            <button class="btn-secondary" onclick="closeRulesModal()" style="margin-top:15px;" data-i18n="close">Fermer</button>
         </div>
     </div>
 
     <!-- MODAL BOUTIQUE -->
     <div id="modal-shop" class="modal-overlay" style="display:none;">
         <div class="modal-card">
-            <h2 style="margin:0 0 10px 0; color:#38ef7d;">🛍️ BOUTIQUE DE POUVOIRS</h2>
+            <h2 style="margin:0 0 10px 0; color:#38ef7d;" data-i18n="shop_title">🛍️ BOUTIQUE DE POUVOIRS</h2>
             <div class="tabs">
-                <button id="shop-tab-bonus" class="tab-btn active" onclick="switchShopTab('bonus')">🟢 Bonus</button>
-                <button id="shop-tab-malus" class="tab-btn" onclick="switchShopTab('malus')">🔴 Malus</button>
+                <button id="shop-tab-bonus" class="tab-btn active" onclick="switchShopTab('bonus')" data-i18n="tab_bonus">🟢 Bonus</button>
+                <button id="shop-tab-malus" class="tab-btn" onclick="switchShopTab('malus')" data-i18n="tab_malus">🔴 Malus</button>
             </div>
             <div id="shop-container" class="shop-grid"></div>
-            <button class="btn-secondary" onclick="closeShop()">Fermer</button>
+            <button class="btn-secondary" onclick="closeShop()" data-i18n="close">Fermer</button>
         </div>
     </div>
 
     <!-- CLASSEMENT -->
     <div id="modal-leaderboard" class="modal-overlay" style="display:none;">
         <div class="modal-card">
-            <h2 style="margin:0 0 15px 0; color:#00d2ff;">🏆 CLASSEMENT</h2>
+            <h2 style="margin:0 0 15px 0; color:#00d2ff;" data-i18n="lb_title">🏆 CLASSEMENT</h2>
             <div id="lb-list" class="leaderboard-list"></div>
-            <button class="btn-secondary" onclick="closeLeaderboard()">Fermer</button>
+            <button class="btn-secondary" onclick="closeLeaderboard()" data-i18n="close">Fermer</button>
         </div>
     </div>
 
     <!-- SIMULATEUR DE PUBLICITE -->
     <div id="simulated-ad-overlay" style="display:none;">
-        <div id="ad-text" style="color:#aaa; font-size:16px; margin-bottom:20px; font-weight:bold;">VIDEO SPONSORISÉE...</div>
+        <div id="ad-text" style="color:#aaa; font-size:16px; margin-bottom:20px; font-weight:bold;" data-i18n="ad_sponsored">VIDEO SPONSORISÉE...</div>
         <div class="ad-timer-circle" id="ad-timer">5</div>
-        <button id="ad-close-btn" class="btn-secondary" style="display:none; max-width:200px; background:#1e1035; color:#fff;">Fermer</button>
+        <button id="ad-close-btn" class="btn-secondary" style="display:none; max-width:200px; background:#1e1035; color:#fff;" data-i18n="close">Fermer</button>
     </div>
 
     <!-- ÉCRAN TITRE -->
     <div id="screen-title" class="menu-container" style="max-width:380px; margin: 10px auto; text-align: left;">
         <div style="text-align: center; margin-bottom: 8px;">
             <h2 style="font-size: 24px; color: #00d2ff; margin: 0; text-shadow: 0 0 15px rgba(0,210,255,0.4);">CHIFFRE BLITZ ⚡</h2>
-            <p style="color: #aaa; font-size: 11px; margin: 4px 0 0 0;">Le duel de calcul et de réflexes ultime</p>
+            <p style="color: #aaa; font-size: 11px; margin: 4px 0 0 0;" data-i18n="title_sub">Le duel de calcul et de réflexes ultime</p>
         </div>
 
         <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 16px; font-size: 11px; color: #ccc; max-height: 42vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
             <div>
-                <strong style="color:#00d2ff; font-size:12px;">⚡ Modes d'Entraînement Solo</strong>
-                <p style="margin:3px 0 0 0;">• <b>Classique :</b> Enchaînez les chiffres dans l'ordre croissant.<br>• <b>Aléatoire :</b> Trouvez les cibles dynamiques.<br>• <b>Avalanche :</b> Survivez à l'empilement progressif (3 niveaux de difficulté) !</p>
+                <strong style="color:#00d2ff; font-size:12px;" data-i18n="desc_solo_title">⚡ Modes d'Entraînement Solo</strong>
+                <p style="margin:3px 0 0 0;" data-i18n="desc_solo_text">• <b>Classique :</b> Enchaînez les chiffres dans l'ordre croissant.<br>• <b>Aléatoire :</b> Trouvez les cibles dynamiques.<br>• <b>Avalanche :</b> Survivez à l'empilement progressif (3 niveaux de difficulté) !</p>
             </div>
             <div>
-                <strong style="color:#ff4b2b; font-size:12px;">⚔️ Duel 1v1 Online & Boutique</strong>
-                <p style="margin:3px 0 0 0;">Affrontez d'autres joueurs, gagnez des pièces et achetez des pouvoirs stratégiques.</p>
+                <strong style="color:#ff4b2b; font-size:12px;" data-i18n="desc_multi_title">⚔️ Duel 1v1 Online & Boutique</strong>
+                <p style="margin:3px 0 0 0;" data-i18n="desc_multi_text">Affrontez d'autres joueurs, gagnez des pièces et achetez des pouvoirs stratégiques.</p>
             </div>
         </div>
 
-        <button class="btn-main btn-blue" onclick="checkLaunchAdAndStart()" style="margin-top: 10px; width: 100%;">JOUER ⚡</button>
+        <button class="btn-main btn-blue" onclick="checkLaunchAdAndStart()" style="margin-top: 10px; width: 100%;" data-i18n="play_btn">JOUER ⚡</button>
     </div>
 
-    <!-- MENU PRINCIPAL (TOURNOI EN DERNIER) -->
+    <!-- MENU PRINCIPAL -->
     <div id="screen-menu" class="menu-container" style="display:none;">
-        <button class="btn-main btn-blue" onclick="openSoloMenu()">🏋️ ENTRAÎNEMENT SOLO</button>
-        <button class="btn-main" onclick="open1v1Hub()">⚔️ DUEL 1v1 ONLINE</button>
-        <button class="btn-main btn-shop" onclick="openShop()">🛍️ BOUTIQUE POUVOIRS</button>
-        <button class="btn-main btn-purple" onclick="openLeaderboard()">🏆 CLASSEMENT</button>
-        <button class="btn-secondary" onclick="openRulesModal()" style="margin-top:5px;">ℹ️ Comment jouer / Règles</button>
-        <button class="btn-main" style="background: linear-gradient(45deg, #f12711, #f5af19); box-shadow: 0 5px 20px rgba(241, 39, 17, 0.4);" onclick="openTournamentTeaser()">🏆 Tournoi (Bientôt 🚀)</button>
+        <button class="btn-main btn-blue" onclick="openSoloMenu()" data-i18n="menu_solo">🏋️ ENTRAÎNEMENT SOLO</button>
+        <button class="btn-main" onclick="open1v1Hub()" data-i18n="menu_1v1">⚔️ DUEL 1v1 ONLINE</button>
+        <button class="btn-main btn-shop" onclick="openShop()" data-i18n="menu_shop">🛍️ BOUTIQUE POUVOIRS</button>
+        <button class="btn-main btn-purple" onclick="openLeaderboard()" data-i18n="menu_lb">🏆 CLASSEMENT</button>
+        <button class="btn-main" style="background: linear-gradient(45deg, #f12711, #f5af19); box-shadow: 0 5px 20px rgba(241, 39, 17, 0.4);" onclick="openTournamentTeaser()" data-i18n="menu_tournament">🏆 Tournoi (Bientôt 🚀)</button>
+        <button class="btn-secondary" onclick="openRulesModal()" style="margin-top:5px;" data-i18n="menu_rules">ℹ️ Comment jouer / Règles</button>
     </div>
 
     <!-- MENU SOLO -->
     <div id="screen-solo-menu" class="menu-container" style="display:none;">
-        <h2 style="color:#00d2ff; font-size:20px; margin-bottom:5px;">MODES D'ENTRAÎNEMENT</h2>
-        <p style="color:#aaa; font-size:13px; margin-bottom:10px;">Choisis ton défi solo :</p>
+        <h2 style="color:#00d2ff; font-size:20px; margin-bottom:5px;" data-i18n="solo_menu_title">MODES D'ENTRAÎNEMENT</h2>
+        <p style="color:#aaa; font-size:13px; margin-bottom:10px;" data-i18n="solo_menu_sub">Choisis ton défi solo :</p>
         
-        <button class="btn-main btn-blue" onclick="startSoloTraining('classic')">⚡ Classique (Croissant)</button>
-        <button class="btn-main btn-gold" onclick="startSoloTraining('random')">🎲 Aléatoire (Cibles variées)</button>
+        <button class="btn-main btn-blue" onclick="startSoloTraining('classic')" data-i18n="solo_classic">⚡ Classique (Croissant)</button>
+        <button class="btn-main btn-gold" onclick="startSoloTraining('random')" data-i18n="solo_random">🎲 Aléatoire (Cibles variées)</button>
         
         <div style="margin-top:5px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
-            <p style="color:#E94057; font-size:12px; font-weight:bold; margin-bottom:6px;">🧊 AVALANCHE (Difficultés)</p>
+            <p style="color:#E94057; font-size:12px; font-weight:bold; margin-bottom:6px;" data-i18n="solo_avalanche">🧊 AVALANCHE (Difficultés)</p>
             <div style="display: flex; gap: 6px;">
-                <button class="power-btn equip" style="flex:1; padding:10px; background:#38ef7d; color:#000;" onclick="startSoloTraining('avalanche', 1800)">Facile</button>
-                <button class="power-btn equip" style="flex:1; padding:10px; background:#f8b500; color:#000;" onclick="startSoloTraining('avalanche', 1000)">Moyen</button>
-                <button class="power-btn equip" style="flex:1; padding:10px; background:#ff4b2b; color:#fff;" onclick="startSoloTraining('avalanche', 500)">Difficile 💀</button>
+                <button class="power-btn equip" style="flex:1; padding:10px; background:#38ef7d; color:#000;" onclick="startSoloTraining('avalanche', 1800)" data-i18n="diff_easy">Facile</button>
+                <button class="power-btn equip" style="flex:1; padding:10px; background:#f8b500; color:#000;" onclick="startSoloTraining('avalanche', 1000)" data-i18n="diff_medium">Moyen</button>
+                <button class="power-btn equip" style="flex:1; padding:10px; background:#ff4b2b; color:#fff;" onclick="startSoloTraining('avalanche', 500)" data-i18n="diff_hard">Difficile 💀</button>
             </div>
         </div>
         
-        <button class="btn-secondary" onclick="showMainMenu()">⬅️ Retour Menu</button>
+        <button class="btn-secondary" onclick="showMainMenu()" data-i18n="back_menu">⬅️ Retour Menu</button>
     </div>
 
     <!-- HUB 1v1 -->
     <div id="screen-1v1-hub" style="display:none; max-width:350px; margin:15px auto;" class="menu-container">
-        <h2>⚔️ DUEL 1v1 ONLINE</h2>
-        <button class="btn-main btn-blue" onclick="startRandom1v1()">🎲 Matchmaking Aléatoire</button>
-        <button class="btn-main btn-purple" onclick="openRoomsScreen()">🏠 Salons Privés / Lobby</button>
-        <button class="btn-secondary" onclick="showMainMenu()">⬅️ Retour Menu</button>
+        <h2 data-i18n="hub_1v1_title">⚔️ DUEL 1v1 ONLINE</h2>
+        <button class="btn-main btn-blue" onclick="startRandom1v1()" data-i18n="hub_random">🎲 Matchmaking Aléatoire</button>
+        <button class="btn-main btn-purple" onclick="openRoomsScreen()" data-i18n="hub_rooms">🏠 Salons Privés / Lobby</button>
+        <button class="btn-secondary" onclick="showMainMenu()" data-i18n="back_menu">⬅️ Retour Menu</button>
     </div>
 
     <!-- SALLE D'ATTENTE 1v1 -->
@@ -293,38 +293,38 @@
                 <div class="radar-ring"></div>
                 <div id="radar-digit" class="radar-num">1</div>
             </div>
-            <div style="margin-top:20px; font-size:18px; font-weight:bold; color:#00d2ff;">Recherche d'adversaire...</div>
+            <div style="margin-top:20px; font-size:18px; font-weight:bold; color:#00d2ff;" data-i18n="searching">Recherche d'adversaire...</div>
         </div>
-        <button class="btn-secondary" onclick="cancel1v1Search()" style="max-width:200px; margin-top:30px;">❌ Annuler</button>
+        <button class="btn-secondary" onclick="cancel1v1Search()" style="max-width:200px; margin-top:30px;" data-i18n="cancel">❌ Annuler</button>
     </div>
 
     <!-- SALONS PRIVÉS -->
     <div id="screen-rooms" style="display:none; max-width:400px; margin:0 auto;">
-        <h2>🏠 Salons Privés</h2>
+        <h2 data-i18n="rooms_title">🏠 Salons Privés</h2>
         <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:16px; margin:15px 0; display:flex; flex-direction:column; gap:10px;">
-            <button class="btn-main btn-blue" onclick="submitCreateRoom()" style="width:100%;">✨ Créer un salon</button>
+            <button class="btn-main btn-blue" onclick="submitCreateRoom()" style="width:100%;" data-i18n="create_room">✨ Créer un salon</button>
         </div>
         <div id="rooms-list" class="rooms-list" style="max-height: 35vh; margin-bottom:15px;"></div>
-        <button class="btn-secondary" onclick="open1v1Hub()">⬅️ Retour</button>
+        <button class="btn-secondary" onclick="open1v1Hub()" data-i18n="back">⬅️ Retour</button>
     </div>
 
     <!-- SALLE ATTENTE SALON -->
     <div id="screen-room-waiting" style="display:none; max-width:400px; margin:0 auto;">
-        <h2>⚡ Salon : <span id="current-room-code" style="color:#00d2ff;">----</span></h2>
+        <h2>⚡ <span data-i18n="room_label">Salon</span> : <span id="current-room-code" style="color:#00d2ff;">----</span></h2>
         <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:16px; margin:20px 0;">
-            <div id="room-players-list" style="font-weight:bold; font-size:16px; color:#00ff88; margin-bottom:15px;">En attente...</div>
+            <div id="room-players-list" style="font-weight:bold; font-size:16px; color:#00ff88; margin-bottom:15px;" data-i18n="waiting">En attente...</div>
         </div>
-        <button class="btn-secondary" onclick="leaveCustomRoom()">❌ Quitter</button>
+        <button class="btn-secondary" onclick="leaveCustomRoom()" data-i18n="quit">❌ Quitter</button>
     </div>
 
     <!-- MODAL PROFIL -->
     <div id="modal-username" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:center;">
-            <h2 style="margin:0 0 10px 0; color:#00d2ff;">BIENVENUE ⚡</h2>
-            <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;">PSEUDO</label>
+            <h2 style="margin:0 0 10px 0; color:#00d2ff;" data-i18n="welcome">BIENVENUE ⚡</h2>
+            <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;" data-i18n="pseudo_label">PSEUDO</label>
             <input type="text" id="username-input" placeholder="Ex: Kiiks" maxlength="15" 
                    style="width:100%; padding:12px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:15px; outline:none;">
-            <button class="btn-main" onclick="saveProfileFromModal()">JOUER ⚡</button>
+            <button class="btn-main" onclick="saveProfileFromModal()" data-i18n="play_btn">JOUER ⚡</button>
         </div>
     </div>
 
@@ -332,30 +332,30 @@
     <div id="screen-game" style="display:none;">
         <div id="hud-1v1" class="game-hud-panel" style="display:none;">
             <div class="hud-item">
-                <div class="hud-label">MA CIBLE</div>
+                <div class="hud-label" data-i18n="hud_my_target">MA CIBLE</div>
                 <div class="hud-value" id="my-target">1</div>
             </div>
             <div class="hud-divider"></div>
             <div class="hud-item">
-                <div class="hud-label">ADVERSAIRE</div>
+                <div class="hud-label" data-i18n="hud_opp_target">ADVERSAIRE</div>
                 <div class="hud-value" style="color:#ff007f;" id="opp-target">1</div>
             </div>
         </div>
 
         <div id="hud-solo" class="game-hud-panel" style="display:none;">
             <div class="hud-item">
-                <div class="hud-label">CIBLE À TROUVER</div>
+                <div class="hud-label" data-i18n="hud_solo_target">CIBLE À TROUVER</div>
                 <div class="hud-value" id="solo-target">1</div>
             </div>
             <div class="hud-divider"></div>
             <div class="hud-item">
-                <div class="hud-label">SCORE</div>
+                <div class="hud-label" data-i18n="hud_score">SCORE</div>
                 <div class="hud-value score" id="solo-score">0</div>
             </div>
         </div>
         
         <div style="font-size:16px; margin-bottom:12px; font-weight:bold; color:#aaa;">
-            Temps / Pression : <span id="game-timer" style="color:#ff007f;">30</span>s
+            <span data-i18n="timer_label">Temps / Pression</span> : <span id="game-timer" style="color:#ff007f;">30</span>s
         </div>
 
         <div id="grid" class="grid"></div>
@@ -368,27 +368,93 @@
             <div id="recap-reason" style="color:#aaa; margin-bottom:15px;"></div>
             
             <div style="display:flex; justify-content:space-between; margin:8px 0;">
-                <span>⭐ Mon Score :</span>
+                <span data-i18n="recap_score">⭐ Mon Score :</span>
                 <span id="recap-my-score" style="font-weight:bold;">-</span>
             </div>
 
             <div style="display:flex; justify-content:space-between; margin:8px 0; color:#f8b500;">
-                <span>🪙 Pièces Gagnées :</span>
+                <span data-i18n="recap_coins">🪙 Pièces Gagnées :</span>
                 <span id="recap-coins-gained" style="font-weight:bold;">+0</span>
             </div>
 
-            <button id="btn-reward-ad" class="btn-main btn-reward" onclick="watchRewardedAd()">🎁 Regarder une pub pour doubler (+🪙)</button>
-            <button class="btn-main" onclick="showMainMenu()" style="margin-top:10px;">MENU PRINCIPAL</button>
+            <button id="btn-reward-ad" class="btn-main btn-reward" onclick="watchRewardedAd()" data-i18n="reward_ad">🎁 Regarder une pub pour doubler (+🪙)</button>
+            <button class="btn-main" onclick="showMainMenu()" style="margin-top:10px;" data-i18n="main_menu">MENU PRINCIPAL</button>
         </div>
     </div>
 
     <script>
+        const translations = {
+            fr: {
+                coins: "Pièces", trophies: "Trophées",
+                ad_title: "Soutenir le Créateur", ad_desc: "Chiffre Blitz est 100% gratuit. Une publicité de soutien va se lancer. Merci ! ❤️", ad_btn: "Lancer la partie ⚡",
+                tourney_desc: "Ce mode ultra-compétitif est actuellement en cours de développement secret ! 🤫<br><br>Préparez vos réflexes, affûtez votre rapidité... Le mode Tournoi arrive très bientôt ! 🚀", tourney_btn: "J'ai hâte ! 💪",
+                rules_title: "📖 RÈGLES DU JEU", rule_classic: "Cliquez le plus vite possible sur les tuiles dans l'ordre croissant exact de 1 à 50 pendant 30 secondes.",
+                rule_random: "Un chiffre cible changeant s'affiche. Retrouvez-le et cliquez dessus le plus rapidement possible.",
+                rule_avalanche: "Des chiffres s'empirent progressivement. Cliquez sur le chiffre cible affiché (présent dans la grille) pour libérer la case. Choisissez votre difficulté (Facile, Moyen, Difficile) pour corser la vitesse !",
+                rule_1v1: "Affrontez un adversaire en temps réel. Le premier à atteindre 30 gagne la partie.",
+                close: "Fermer", shop_title: "🛍️ BOUTIQUE DE POUVOIRS", tab_bonus: "🟢 Bonus", tab_malus: "🔴 Malus",
+                lb_title: "🏆 CLASSEMENT", ad_sponsored: "VIDEO SPONSORISÉE...",
+                title_sub: "Le duel de calcul et de réflexes ultime",
+                desc_solo_title: "⚡ Modes d'Entraînement Solo", desc_solo_text: "• <b>Classique :</b> Enchaînez les chiffres dans l'ordre croissant.<br>• <b>Aléatoire :</b> Trouvez les cibles dynamiques.<br>• <b>Avalanche :</b> Survivez à l'empilement progressif (3 niveaux de difficulté) !",
+                desc_multi_title: "⚔️ Duel 1v1 Online & Boutique", desc_multi_text: "Affrontez d'autres joueurs, gagnez des pièces et achetez des pouvoirs stratégiques.",
+                play_btn: "JOUER ⚡", menu_solo: "🏋️ ENTRAÎNEMENT SOLO", menu_1v1: "⚔️ DUEL 1v1 ONLINE", menu_shop: "🛍️ BOUTIQUE POUVOIRS", menu_lb: "🏆 CLASSEMENT", menu_rules: "ℹ️ Comment jouer / Règles", menu_tournament: "🏆 Tournoi (Bientôt 🚀)",
+                solo_menu_title: "MODES D'ENTRAÎNEMENT", solo_menu_sub: "Choisis ton défi solo :", solo_classic: "⚡ Classique (Croissant)", solo_random: "🎲 Aléatoire (Cibles variées)",
+                solo_avalanche: "🧊 AVALANCHE (Difficultés)", diff_easy: "Facile", diff_medium: "Moyen", diff_hard: "Difficile 💀", back_menu: "⬅️ Retour Menu",
+                hub_1v1_title: "⚔️ DUEL 1v1 ONLINE", hub_random: "🎲 Matchmaking Aléatoire", hub_rooms: "🏠 Salons Privés / Lobby",
+                searching: "Recherche d'adversaire...", cancel: "❌ Annuler", rooms_title: "🏠 Salons Privés", create_room: "✨ Créer un salon", back: "⬅️ Retour",
+                room_label: "Salon", waiting: "En attente...", quit: "❌ Quitter", welcome: "BIENVENUE ⚡", pseudo_label: "PSEUDO",
+                hud_my_target: "MA CIBLE", hud_opp_target: "ADVERSAIRE", hud_solo_target: "CIBLE À TROUVER", hud_score: "SCORE",
+                timer_label: "Temps / Pression", recap_score: "⭐ Mon Score :", recap_coins: "🪙 Pièces Gagnées :",
+                reward_ad: "🎁 Regarder une pub pour doubler (+🪙)", main_menu: "MENU PRINCIPAL"
+            },
+            en: {
+                coins: "Coins", trophies: "Trophies",
+                ad_title: "Support the Creator", ad_desc: "Chiffre Blitz is 100% free. A support advertisement will play. Thank you! ❤️", ad_btn: "Start Game ⚡",
+                tourney_desc: "This ultra-competitive mode is currently under secret development! 🤫<br><br>Prepare your reflexes, sharpen your speed... Tournament mode is coming very soon! 🚀", tourney_btn: "I can't wait! 💪",
+                rules_title: "📖 GAME RULES", rule_classic: "Click as fast as possible on the tiles in exact ascending order from 1 to 50 for 30 seconds.",
+                rule_random: "A changing target number appears. Find it and click on it as quickly as possible.",
+                rule_avalanche: "Numbers pile up progressively. Click the displayed target number (present in the grid) to free the cell. Choose your difficulty (Easy, Medium, Hard) to ramp up the speed!",
+                rule_1v1: "Face an opponent in real time. The first to reach 30 wins the game.",
+                close: "Close", shop_title: "🛍️ POWERS SHOP", tab_bonus: "🟢 Bonus", tab_malus: "🔴 Malus",
+                lb_title: "🏆 LEADERBOARD", ad_sponsored: "SPONSORED VIDEO...",
+                title_sub: "The ultimate calculation and reflex duel",
+                desc_solo_title: "⚡ Solo Training Modes", desc_solo_text: "• <b>Classic:</b> Chain numbers in ascending order.<br>• <b>Random:</b> Find dynamic targets.<br>• <b>Avalanche:</b> Survive the progressive stacking (3 difficulty levels)!",
+                desc_multi_title: "⚔️ 1v1 Online Duel & Shop", desc_multi_text: "Battle other players, earn coins, and buy strategic powers.",
+                play_btn: "PLAY ⚡", menu_solo: "🏋️ SOLO TRAINING", menu_1v1: "⚔️ 1v1 ONLINE DUEL", menu_shop: "🛍️ POWERS SHOP", menu_lb: "🏆 LEADERBOARD", menu_rules: "ℹ️ How to play / Rules", menu_tournament: "🏆 Tournament (Soon 🚀)",
+                solo_menu_title: "TRAINING MODES", solo_menu_sub: "Choose your solo challenge:", solo_classic: "⚡ Classic (Ascending)", solo_random: "🎲 Random (Varied targets)",
+                solo_avalanche: "🧊 AVALANCHE (Difficulties)", diff_easy: "Easy", diff_medium: "Medium", diff_hard: "Hard 💀", back_menu: "⬅️ Back to Menu",
+                hub_1v1_title: "⚔️ 1v1 ONLINE DUEL", hub_random: "🎲 Random Matchmaking", hub_rooms: "🏠 Private Rooms / Lobby",
+                searching: "Searching for opponent...", cancel: "❌ Cancel", rooms_title: "🏠 Private Rooms", create_room: "✨ Create a room", back: "⬅️ Back",
+                room_label: "Room", waiting: "Waiting...", quit: "❌ Quit", welcome: "WELCOME ⚡", pseudo_label: "PSEUDO",
+                hud_my_target: "MY TARGET", hud_opp_target: "OPPONENT", hud_solo_target: "TARGET TO FIND", hud_score: "SCORE",
+                timer_label: "Time / Pressure", recap_score: "⭐ My Score :", recap_coins: "🪙 Coins Earned :",
+                reward_ad: "🎁 Watch an ad to double (+🪙)", main_menu: "MAIN MENU"
+            }
+        };
+
+        function toggleLanguage() {
+            let current = localStorage.getItem('cb_lang') || 'fr';
+            let next = (current === 'fr') ? 'en' : 'fr';
+            localStorage.setItem('cb_lang', next);
+            applyLanguage(next);
+        }
+
+        function applyLanguage(lang) {
+            document.getElementById('lang-btn').innerText = (lang === 'fr') ? 'ENG' : 'FR';
+            const elements = document.querySelectorAll('[data-i18n]');
+            elements.forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    el.innerHTML = translations[lang][key];
+                }
+            });
+        }
+
         let hasShownLaunchAd = false;
         let hasWatchedAdThisGame = false;
         let activeTrainingMode = 'classic';
         let currentShopTab = 'bonus';
 
-        // Prix mis à jour pour correspondre au backend
         const powersData = {
             bonus: [
                 { id: 'spotlight', name: '💡 Projecteur', desc: 'Illumine la bonne tuile (2s)', price: 30 },
@@ -410,12 +476,6 @@
         let avalancheSpawnSpeed = 1000;
 
         let soloTarget = 1, soloScore = 0, soloTimeLeft = 30, soloTimerInterval = null;
-
-        function toggleLanguage() {
-            let current = localStorage.getItem('cb_lang') || 'fr';
-            localStorage.setItem('cb_lang', current === 'fr' ? 'en' : 'fr');
-            location.reload();
-        }
 
         function openRulesModal() { document.getElementById('modal-rules').style.display = 'flex'; }
         function closeRulesModal() { document.getElementById('modal-rules').style.display = 'none'; }
@@ -537,6 +597,13 @@
         let myProfile = { username: "", region: "Hauts-de-France", points: 0, coins: 0, trophies: 0, inventory: {}, equippedPower: null };
 
         document.addEventListener("DOMContentLoaded", () => {
+            let savedLang = localStorage.getItem('cb_lang');
+            if (!savedLang) {
+                let browserLang = navigator.language || navigator.userLanguage || 'fr';
+                savedLang = browserLang.startsWith('fr') ? 'fr' : 'en';
+                localStorage.setItem('cb_lang', savedLang);
+            }
+            applyLanguage(savedLang);
             showTitleScreen();
             checkAndShowProfileModal();
         });
