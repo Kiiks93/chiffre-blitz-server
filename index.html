@@ -47,6 +47,12 @@
         .btn-gold { background: linear-gradient(45deg, #f8b500, #fceabb); color: #222; box-shadow: 0 5px 20px rgba(248, 181, 0, 0.4); }
         .btn-purple { background: linear-gradient(45deg, #7b4397, #dc2430); box-shadow: 0 5px 20px rgba(123, 67, 151, 0.4); }
         .btn-shop { background: linear-gradient(45deg, #11998e, #38ef7d); color: #000; box-shadow: 0 5px 20px rgba(56, 239, 125, 0.4); }
+        
+        /* Boutons Avalanche harmonisés */
+        .btn-avalanche-easy { background: linear-gradient(45deg, #11998e, #38ef7d); color: #000; box-shadow: 0 5px 20px rgba(56, 239, 125, 0.4); }
+        .btn-avalanche-medium { background: linear-gradient(45deg, #f8b500, #fceabb); color: #222; box-shadow: 0 5px 20px rgba(248, 181, 0, 0.4); }
+        .btn-avalanche-hard { background: linear-gradient(45deg, #ff416c, #ff4b2b); color: #fff; box-shadow: 0 5px 20px rgba(255, 65, 108, 0.4); }
+
         .btn-reward { background: linear-gradient(45deg, #f12711, #f5af19); color: #fff; box-shadow: 0 5px 20px rgba(245, 175, 25, 0.4); margin-bottom: 10px; width: 100%; font-size: 14px; padding: 12px; }
 
         .btn-secondary {
@@ -223,11 +229,11 @@
         <button class="btn-main btn-gold" onclick="startSoloTraining('random')" data-i18n="solo_random">🎲 Aléatoire (Cibles variées)</button>
         
         <div style="margin-top:5px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
-            <p style="color:#E94057; font-size:12px; font-weight:bold; margin-bottom:6px;" data-i18n="solo_avalanche">🧊 AVALANCHE (Difficultés)</p>
+            <p style="color:#00d2ff; font-size:12px; font-weight:bold; margin-bottom:6px;" data-i18n="solo_avalanche">🧊 AVALANCHE (Difficultés)</p>
             <div style="display: flex; gap: 6px;">
-                <button class="power-btn equip" style="flex:1; padding:10px; background:#38ef7d; color:#000;" onclick="startAvalancheGame(1800)" data-i18n="diff_easy">Facile</button>
-                <button class="power-btn equip" style="flex:1; padding:10px; background:#f8b500; color:#000;" onclick="startAvalancheGame(1200)" data-i18n="diff_medium">Moyen</button>
-                <button class="power-btn equip" style="flex:1; padding:10px; background:#ff4b2b; color:#fff;" onclick="startAvalancheGame(600)" data-i18n="diff_hard">Difficile 💀</button>
+                <button class="btn-main btn-avalanche-easy" style="flex:1; padding:12px 6px; font-size:14px;" onclick="startAvalancheGame(1800, 4)" data-i18n="diff_easy">Facile</button>
+                <button class="btn-main btn-avalanche-medium" style="flex:1; padding:12px 6px; font-size:14px;" onclick="startAvalancheGame(1200, 3)" data-i18n="diff_medium">Moyen</button>
+                <button class="btn-main btn-avalanche-hard" style="flex:1; padding:12px 6px; font-size:14px;" onclick="startAvalancheGame(600, 1)" data-i18n="diff_hard">Difficile 💀</button>
             </div>
         </div>
 
@@ -1635,8 +1641,8 @@
             }
         }
 
-        // Mode Avalanche (Difficultés rééquilibrées et timer de 30s max)
-        function startAvalancheGame(speed) {
+        // Mode Avalanche (Difficultés avec nombre initial de chiffres personnalisable)
+        function startAvalancheGame(speed, initialCount) {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
             hideAllScreens();
             document.getElementById('screen-game').style.display = 'block';
@@ -1651,7 +1657,7 @@
 
             avalancheGridData = Array(16).fill(null);
             avalancheTarget = null;
-            for(let i=0; i<4; i++) spawnAvalancheNumber();
+            for(let i=0; i<initialCount; i++) spawnAvalancheNumber();
             updateAvalancheTarget();
             renderAvalancheGrid();
 
