@@ -1623,9 +1623,8 @@
             if (rewardDoubled) return;
             simulateAd(() => {
                 rewardDoubled = true;
+                socket.emit('double_reward', currentCoinsGained);
                 currentCoinsGained *= 2;
-                myProfile.coins += currentCoinsGained;
-                updateEconomyUI();
                 document.getElementById('recap-coins-gained').innerText = `+${currentCoinsGained} (x2 ⚡)`;
                 const doubleBtn = document.getElementById('btn-double-reward');
                 doubleBtn.disabled = true;
@@ -2187,14 +2186,8 @@
             doubleBtn.style.opacity = '1';
             doubleBtn.innerText = currentLang === 'fr' ? '📺 Doubler mes gains (Pub)' : '📺 Double my rewards (Ad)';
 
-            let baseCoins = (data.winnerId === myId) ? 30 : 10;
-            const events = data.globalEvents || latestGlobalEvents;
-            const isCoinRush = events && events.coinRush;
-            let bonusCoins = isCoinRush ? baseCoins : 0;
-            if (events && events.jackpotEclair && Math.random() < 0.4) {
-                bonusCoins += 200;
-            }
-            currentCoinsGained = baseCoins + bonusCoins;
+            const myReward = data.rewards && data.rewards[myId] ? data.rewards[myId] : { baseCoins: 30, rushBonus: 0, jackpotBonus: 0, totalCoins: 30 };
+            currentCoinsGained = myReward.totalCoins;
 
             if (data.winnerId === myId) {
                 banner.innerText = currentLang === 'fr' ? "🏆 VICTOIRE !" : "🏆 VICTORY!"; banner.style.color = "#00d2ff";
@@ -2210,14 +2203,21 @@
             document.getElementById('recap-opp-target').innerText = oppData ? oppData.target : '-';
             document.getElementById('recap-my-score').innerText = myData ? myData.score : 0;
 
-            if (isCoinRush || (events && events.jackpotEclair)) {
-                document.getElementById('recap-coins-gained').innerHTML = `+${baseCoins} <span style="color:#ff8a00;">+${bonusCoins}(BOOST)</span>`;
-            } else {
-                document.getElementById('recap-coins-gained').innerText = `+${baseCoins}`;
-            }
+            let htmlCoins = `+${myReward.baseCoins}`;
+            if (myReward.rushBonus > 0) htmlCoins += ` <span style="color:#ff8a00;">+${myReward.rushBonus}(RUSH)</span>`;
+            if (myReward.jackpotBonus > 0) htmlCoins += ` <span style="color:#38ef7d;">+${myReward.jackpotBonus}(JACKPOT)</span>`;
+            document.getElementById('recap-coins-gained').innerHTML = htmlCoins;
 
             modal.style.display = 'flex';
             registerIfPossible();
+        });
+
+        socket.on('solo_reward_result', (data) => {
+            currentCoinsGained = data.earnedCoins;
+            let htmlCoins = `+${data.baseCoins}`;
+            if (data.rushBonus > 0) htmlCoins += ` <span style="color:#ff8a00;">+${data.rushBonus}(RUSH)</span>`;
+            if (data.jackpotBonus > 0) htmlCoins += ` <span style="color:#38ef7d;">+${data.jackpotBonus}(JACKPOT)</span>`;
+            document.getElementById('recap-coins-gained').innerHTML = htmlCoins;
         });
 
         function handle1v1TileClick(num) {
@@ -2400,14 +2400,6 @@
             doubleBtn.style.opacity = '1';
             doubleBtn.innerText = currentLang === 'fr' ? '📺 Doubler mes gains (Pub)' : '📺 Double my rewards (Ad)';
 
-            let baseCoins = Math.min(100, Math.floor(soloScore / 3));
-            const isCoinRush = latestGlobalEvents && latestGlobalEvents.coinRush;
-            let bonusCoins = isCoinRush ? baseCoins : 0;
-            if (latestGlobalEvents && latestGlobalEvents.jackpotEclair && Math.random() < 0.35) {
-                bonusCoins += 150;
-            }
-            currentCoinsGained = baseCoins + bonusCoins;
-
             socket.emit('claim_solo_reward', soloScore);
 
             document.getElementById('recap-banner').innerText = currentLang === 'fr' ? "🏋️ ENTRAÎNEMENT TERMINÉ" : "🏋️ TRAINING FINISHED";
@@ -2415,12 +2407,6 @@
             document.getElementById('recap-1v1-rows').style.display = 'none';
             document.getElementById('recap-reason').innerText = `${currentLang === 'fr' ? 'Score' : 'Score'} : ${soloScore}`;
             document.getElementById('recap-my-score').innerText = soloScore;
-
-            if (isCoinRush || (latestGlobalEvents && latestGlobalEvents.jackpotEclair)) {
-                document.getElementById('recap-coins-gained').innerHTML = `+${baseCoins} <span style="color:#ff8a00;">+${bonusCoins}(BOOST)</span>`;
-            } else {
-                document.getElementById('recap-coins-gained').innerText = `+${baseCoins}`;
-            }
 
             SoundEngine.playVictory();
             modal.style.display = 'flex';
