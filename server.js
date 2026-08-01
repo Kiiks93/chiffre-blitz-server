@@ -14,11 +14,23 @@ let players = {};
 let waitingPlayerId = null;
 let customRooms = {};
 
+// Grille de prix officielle sécurisée côté serveur
+const POWERS_PRICES = {
+    'spotlight': 30,
+    'freeze': 60,
+    'joker': 150,
+    'nova': 400,
+    'quake': 40,
+    'micro': 80,
+    'eclipse': 200,
+    'chaos': 500
+};
+
 io.on('connection', (socket) => {
     socket.on('register_player', (data) => {
         const username = data.username;
         if (!playersDB[username]) {
-            playersDB[username] = { username: username, region: data.region || 'Hauts-de-France', points: 0, coins: 100, trophies: 0, inventory: {}, equippedPower: null };
+            playersDB[username] = { username: username, region: data.region || 'Hauts-de-France', points: 0, coins: 150, trophies: 0, inventory: {}, equippedPower: null };
         }
         socket.username = username;
         players[socket.id] = { id: socket.id, username: username };
@@ -44,9 +56,12 @@ io.on('connection', (socket) => {
 
     socket.on('buy_power', (data) => {
         const username = socket.username;
-        if (username && playersDB[username]) {
-            if (playersDB[username].coins >= data.price) {
-                playersDB[username].coins -= data.price;
+        const officialPrice = POWERS_PRICES[data.id];
+
+        // Vérification de la sécurité basée sur le dictionnaire serveur
+        if (username && playersDB[username] && officialPrice !== undefined) {
+            if (playersDB[username].coins >= officialPrice) {
+                playersDB[username].coins -= officialPrice;
                 if (!playersDB[username].inventory) playersDB[username].inventory = {};
                 playersDB[username].inventory[data.id] = (playersDB[username].inventory[data.id] || 0) + 1;
                 socket.emit('player_registered', playersDB[username]);
