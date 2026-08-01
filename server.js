@@ -257,35 +257,50 @@ io.on('connection', (socket) => {
         const roll = Math.random();
         let outcome = 'rien';
         let coinDelta = 0;
+        let awardedItem = null;
         let P = 0;
 
-        if (roll < 0.33) {
+        const powersList = ['spotlight', 'freeze', 'joker', 'nova', 'quake', 'micro', 'eclipse', 'chaos'];
+
+        // 4 secteurs de 90° :
+        // 1. Jackpot (20%) : 0°-90° (P entre 20 et 70)
+        // 2. Objet (25%) : 90°-180° (P entre 110 et 160)
+        // 3. Rien (25%) : 180°-270° (P entre 200 et 250)
+        // 4. Perdu (30%) : 270°-360° (P entre 290 et 340)
+        if (roll < 0.20) {
             outcome = 'jackpot';
             coinDelta = 250;
-            P = Math.floor(Math.random() * 80) + 20;
-        } else if (roll < 0.66) {
-            outcome = 'banqueroute';
-            coinDelta = -150; 
-            P = Math.floor(Math.random() * 80) + 140;
-        } else {
+            P = Math.floor(Math.random() * 50) + 20;
+        } else if (roll < 0.45) {
+            outcome = 'objet';
+            awardedItem = powersList[Math.floor(Math.random() * powersList.length)];
+            player.inventory[awardedItem] = (player.inventory[awardedItem] || 0) + 1;
+            P = Math.floor(Math.random() * 50) + 110;
+        } else if (roll < 0.70) {
             outcome = 'rien';
             coinDelta = 0;
-            P = Math.floor(Math.random() * 80) + 260;
+            P = Math.floor(Math.random() * 50) + 200;
+        } else {
+            outcome = 'banqueroute';
+            coinDelta = -150; 
+            P = Math.floor(Math.random() * 50) + 290;
         }
 
         const targetAngle = 1800 + ((360 - P) % 360);
 
         if (coinDelta < 0) {
             player.coins = Math.max(0, player.coins + coinDelta);
-        } else {
+        } else if (coinDelta > 0) {
             player.coins += coinDelta;
         }
 
-        lastMatchEarnings[socket.id] = (lastMatchEarnings[socket.id] || 0) + coinDelta;
+        if (coinDelta !== 0) {
+            lastMatchEarnings[socket.id] = (lastMatchEarnings[socket.id] || 0) + coinDelta;
+        }
 
         await savePlayerToSupabase(socket.id);
         socket.emit('player_registered', player);
-        socket.emit('jackpot_wheel_result', { outcome, coinDelta, newCoins: player.coins, targetAngle });
+        socket.emit('jackpot_wheel_result', { outcome, coinDelta, awardedItem, newCoins: player.coins, targetAngle });
     });
 
     socket.on('get_leaderboard', async (type) => {
