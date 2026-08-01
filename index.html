@@ -88,7 +88,7 @@
         .power-card h4 { margin: 0 0 5px 0; font-size: 13px; color: #00d2ff; }
         .power-card p { font-size: 11px; color: #aaa; margin: 0 0 8px 0; }
         .stock-badge { font-size: 11px; font-weight: bold; color: #38ef7d; margin-bottom: 6px; }
-        .power-btn { padding: 6px 10px; border-radius: 8px; border: none; font-weight: bold; font-size: 12px; cursor: pointer; margin-top: 4px; }
+        .power-btn { padding: 6px 10px; border-radius: 8px; border: none; font-weight: bold; font-size: 12px; cursor: pointer; margin-top: 4px; width: 100%; }
         .power-btn.buy { background: #f8b500; color: #000; }
         .power-btn.equip { background: #00d2ff; color: #000; }
         .power-btn.active { background: #00ff88; color: #000; }
@@ -358,9 +358,9 @@
             <span data-i18n="timer_label">Temps / Pression</span> : <span id="game-timer" style="color:#ff007f;">30</span>s
         </div>
 
-        <!-- BOUTON D'UTILISATION DU POUVOIR ÉQUIPÉ (CONSOMMABLE) -->
+        <!-- BOUTON D'UTILISATION DU POUVOIR ÉQUIPÉ -->
         <div style="margin-bottom: 12px;">
-            <button id="btn-use-power" class="power-btn equip" style="display:none; padding: 10px 20px; font-size: 14px; background: linear-gradient(45deg, #11998e, #38ef7d); color: #000; margin: 0 auto;" onclick="useEquippedPower()">⚡ Pouvoir</button>
+            <button id="btn-use-power" class="power-btn equip" style="display:none; padding: 10px 20px; font-size: 14px; background: linear-gradient(45deg, #11998e, #38ef7d); color: #000; margin: 0 auto; width: auto;" onclick="useEquippedPower()">⚡ Pouvoir</button>
         </div>
 
         <div id="grid" class="grid"></div>
@@ -419,7 +419,7 @@
                 p_micro_name: "🐜 Micro-Tuiles", p_micro_desc: "Rétrécit la grille adverse (2s)",
                 p_eclipse_name: "🌑 Éclipse", p_eclipse_desc: "Floute la grille adverse (1.5s)",
                 p_chaos_name: "🌪️ Chaos Absolu", p_chaos_desc: "GIGA : Combo de malus (5s)",
-                owned: "Possédé", equip: "Équiper", equipped: "Équipé", buy: "Acheter", not_enough_coins: "Pas assez de pièces !"
+                owned: "En stock", equip: "Équiper", equipped: "Équipé", buy: "Acheter", not_enough_coins: "Pas assez de pièces !"
             },
             en: {
                 coins: "Coins", trophies: "Trophies",
@@ -451,7 +451,7 @@
                 p_micro_name: "🐜 Micro-Tiles", p_micro_desc: "Shrinks opponent's grid (2s)",
                 p_eclipse_name: "🌑 Eclipse", p_eclipse_desc: "Blurs opponent's grid (1.5s)",
                 p_chaos_name: "🌪️ Absolute Chaos", p_chaos_desc: "GIGA: Malus combo (5s)",
-                owned: "Owned", equip: "Equip", equipped: "Equipped", buy: "Buy", not_enough_coins: "Not enough coins!"
+                owned: "In stock", equip: "Equip", equipped: "Equipped", buy: "Buy", not_enough_coins: "Not enough coins!"
             }
         };
 
@@ -530,7 +530,7 @@
             let t = translations[currentLang];
 
             powersData[currentShopTab].forEach(p => {
-                let owned = myProfile.inventory && myProfile.inventory[p.id];
+                let count = (myProfile.inventory && myProfile.inventory[p.id]) || 0;
                 let isEquipped = myProfile.equippedPower === p.id;
                 let itemName = t[p.nameKey];
                 let itemDesc = t[p.descKey];
@@ -542,10 +542,11 @@
                             <p>${itemDesc}</p>
                         </div>
                         <div>
-                            <div class="stock-badge">${owned ? `${t.owned} (x${owned})` : p.price + ' 🪙'}</div>
-                            ${owned ? 
-                                `<button class="power-btn ${isEquipped ? 'active' : 'equip'}" onclick="equipPower('${p.id}')">${isEquipped ? t.equipped : t.equip}</button>` :
-                                `<button class="power-btn buy" onclick="buyPower('${p.id}', ${p.price})">${t.buy}</button>`
+                            <div class="stock-badge">${t.owned}: x${count}</div>
+                            <button class="power-btn buy" onclick="buyPower('${p.id}', ${p.price})">${t.buy} (${p.price} 🪙)</button>
+                            ${count > 0 ? 
+                                `<button class="power-btn ${isEquipped ? 'active' : 'equip'}" onclick="equipPower('${p.id}')">${isEquipped ? t.equipped : t.equip}</button>` : 
+                                ``
                             }
                         </div>
                     </div>
@@ -600,7 +601,6 @@
             hasUsedPowerThisGame = true;
             myProfile.inventory[pId]--;
             
-            // Si le stock tombe à 0, déséquiper automatiquement le pouvoir
             if (myProfile.inventory[pId] <= 0) {
                 delete myProfile.inventory[pId];
                 myProfile.equippedPower = null;
@@ -608,10 +608,8 @@
 
             updateGamePowerButton();
 
-            // Synchroniser la consommation avec le serveur
             if (socket.connected) socket.emit('use_power', pId);
 
-            // Effets du pouvoir en jeu
             if (pId === 'joker') {
                 if (activeTrainingMode === 'classic' || activeTrainingMode === 'random') {
                     handleClassicOrRandomClick(soloTarget);
