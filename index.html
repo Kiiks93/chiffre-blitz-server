@@ -1882,7 +1882,12 @@
             const zone = document.getElementById('power-zone');
             zone.innerHTML = '';
             
-            const powers = myProfile.equippedPowers || (myProfile.equippedPower ? [myProfile.equippedPower] : []);
+            let powers = [];
+            if (myProfile.equippedPowers && myProfile.equippedPowers.length > 0) {
+                powers = myProfile.equippedPowers;
+            } else if (myProfile.equippedPower) {
+                powers = [myProfile.equippedPower];
+            }
             let usableCount = 0;
 
             powers.forEach(powerId => {
