@@ -699,7 +699,7 @@
             document.getElementById('lang-btn').innerText = (currentLang === 'fr') ? 'ENG' : 'FR';
         }
 
-        // --- MOTEUR AUDIO ROBUSTE AVEC PERSISTANCE ---
+        // --- MOTEUR AUDIO ROBUSTE AVEC PERSISTANCE ET DÉBLOCAGE AU CLIC ---
         const SoundEngine = {
             ctx: null, isMuted: false, timerId: null, currentMode: null, step: 0, bpm: 105,
             init() { 
@@ -894,6 +894,11 @@
             document.getElementById('mute-btn').innerText = muted ? '🔇' : '🔊';
         }
 
+        // Déblocage automatique de l'audio au premier clic utilisateur (Politique Autoplay des navigateurs)
+        document.addEventListener('click', () => {
+            SoundEngine.init();
+        }, { once: true });
+
         const SERVER_URL = "https://chiffre-blitz-server.onrender.com";
         const socket = io(SERVER_URL, {
             reconnection: true,
@@ -1004,16 +1009,16 @@
             }
         });
 
-        // PRIX DE LA BOUTIQUE (Alignés avec server.js)
+        // PRIX DE LA BOUTIQUE ORIGINAUX RESTAURÉS
         const POWERS_CATALOG = [
-            { id: 'spotlight', price: 30, type: 'bonus' },
-            { id: 'freeze', price: 60, type: 'bonus' },
-            { id: 'joker', price: 150, type: 'bonus' },
-            { id: 'nova', price: 400, type: 'bonus' },
-            { id: 'quake', price: 40, type: 'malus' },
-            { id: 'micro', price: 80, type: 'malus' },
-            { id: 'eclipse', price: 200, type: 'malus' },
-            { id: 'chaos', price: 500, type: 'malus' }
+            { id: 'spotlight', price: 150, type: 'bonus' },
+            { id: 'freeze', price: 350, type: 'bonus' },
+            { id: 'joker', price: 600, type: 'bonus' },
+            { id: 'nova', price: 1200, type: 'bonus' },
+            { id: 'quake', price: 200, type: 'malus' },
+            { id: 'micro', price: 400, type: 'malus' },
+            { id: 'eclipse', price: 800, type: 'malus' },
+            { id: 'chaos', price: 2000, type: 'malus' }
         ];
 
         let current1v1Time = 30, radarInterval = null;
@@ -1356,7 +1361,9 @@
             const stock = myProfile.inventory[powerId] || 0;
             if (stock <= 0) return;
             
-            myProfile.inventory[powerId]--;
+            // On notifie le serveur de décrémenter le stock dans la base de données autoritaire
+            socket.emit('use_power', powerId);
+
             powerUsedInMatch = true;
             document.getElementById('btn-use-power').disabled = true;
 
@@ -1384,7 +1391,6 @@
             } else {
                 socket.emit('send_malus', { type: powerId });
             }
-            if (myProfile.inventory[powerId] <= 0) myProfile.equippedPower = null;
         }
 
         function autoValidateTarget() {
