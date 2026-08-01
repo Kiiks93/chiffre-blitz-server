@@ -53,9 +53,10 @@
             text-shadow: 0 1px 3px rgba(0,0,0,0.9);
         }
 
+        /* BARRE DE STATS AGRANDIE POUR PLUS DE LISIBILITÉ */
         .user-stats {
-            display: flex; justify-content: center; gap: 8px; max-width: 400px; margin: 0 auto 8px auto;
-            font-size: 11px; font-weight: bold; background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 16px;
+            display: flex; justify-content: center; gap: 12px; max-width: 400px; margin: 0 auto 8px auto;
+            font-size: 13px; font-weight: bold; background: rgba(255,255,255,0.05); padding: 7px 12px; border-radius: 16px;
         }
 
         .header-btns { display: flex; gap: 4px; align-items: center; }
@@ -225,11 +226,11 @@
         </div>
     </div>
 
-    <!-- BARRE DE STATS AVEC LE RANG & LES POINTS -->
+    <!-- BARRE DE STATS AGRANDIE (PIÈCES, TROPHÉES, RANG & POINTS) -->
     <div class="user-stats">
-        <span>🪙 <strong id="user-coins-display">0</strong></span>
-        <span>🏆 <strong id="user-trophies-display">0</strong></span>
-        <span>🏅 <strong id="user-rank-display" style="color:#00d2ff;">Novice</strong> (<span id="user-points-display">0</span> pts)</span>
+        <span>🪙 <strong id="user-coins-display" style="font-size: 14px;">0</strong></span>
+        <span>🏆 <strong id="user-trophies-display" style="font-size: 14px;">0</strong></span>
+        <span>🏅 <strong id="user-rank-display" style="color:#00d2ff; font-size: 14px;">Novice</strong> (<span id="user-points-display" style="font-size: 13px;">0</span> pts)</span>
     </div>
 
     <!-- MODALE DE SOUTIEN (LANCEMENT) -->
@@ -505,7 +506,7 @@
         </div>
     </div>
 
-    <!-- OVERLAY CLASSEMENT (DESIGN ÉPURÉ & AÉRÉ) -->
+    <!-- OVERLAY CLASSEMENT AVEC EXPLICATION DU COMBINÉ -->
     <div id="modal-leaderboard" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="max-width: 440px;">
             <h2 style="margin:0 0 10px 0; color:#00d2ff; font-size:18px; letter-spacing:0.5px;" data-i18n="lb_title">🏆 CLASSEMENT</h2>
@@ -522,9 +523,13 @@
                     <button id="lb-scope-national" class="tab-btn" onclick="setLbScope('national')" data-i18n="lb_nat">🇫🇷 France</button>
                     <button id="lb-scope-global" class="tab-btn" onclick="setLbScope('global')" data-i18n="lb_glb">🌍 Monde</button>
                 </div>
+                <!-- Explication explicite du mode combiné -->
+                <div id="lb-combined-explanation" style="font-size: 11px; color: #00d2ff; text-align: center; margin-top: 2px; font-weight: 600; display: none;" data-i18n="lb_combined_desc">
+                    💡 Score combiné : Points + (Trophées × 20)
+                </div>
             </div>
 
-            <div id="lb-list" class="leaderboard-list" style="max-height: 48vh;">
+            <div id="lb-list" class="leaderboard-list" style="max-height: 45vh;">
                 <div style="text-align:center; color:#aaa; margin-top:20px;" data-i18n="loading">Chargement...</div>
             </div>
             <button class="btn-secondary" onclick="closeLeaderboard()" style="margin-top:10px;" data-i18n="close">Fermer</button>
@@ -686,6 +691,7 @@
                 lb_reg: "📍 Région",
                 lb_nat: "🇫🇷 France",
                 lb_glb: "🌍 Monde",
+                lb_combined_desc: "💡 Score combiné : Points + (Trophées × 20)",
                 get_ready: "PRÉPAREZ-VOUS !",
                 hud_opp_target: "CIBLE ADVERSAIRE",
                 hud_solo_score: "SCORE",
@@ -791,6 +797,7 @@
                 lb_reg: "📍 Region",
                 lb_nat: "🇫🇷 France",
                 lb_glb: "🌍 World",
+                lb_combined_desc: "💡 Combined score: Points + (Trophies × 20)",
                 get_ready: "GET READY!",
                 hud_opp_target: "OPPONENT TARGET",
                 hud_solo_score: "SCORE",
@@ -833,6 +840,7 @@
             if (document.getElementById('modal-ranked-loadout').style.display === 'flex') {
                 renderRankedLoadoutItems();
             }
+            updateCombinedExplanationVisibility();
         }
 
         function applyTranslations() {
@@ -1640,6 +1648,7 @@
         function openLeaderboard() {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
             document.getElementById('modal-leaderboard').style.display = 'flex';
+            updateCombinedExplanationVisibility();
             fetchLeaderboard();
         }
 
@@ -1653,7 +1662,15 @@
                 const btn = document.getElementById(`lb-cat-${c}`);
                 if (btn) btn.classList.toggle('active', c === cat);
             });
+            updateCombinedExplanationVisibility();
             fetchLeaderboard();
+        }
+
+        function updateCombinedExplanationVisibility() {
+            const explEl = document.getElementById('lb-combined-explanation');
+            if (explEl) {
+                explEl.style.display = (currentLbCategory === 'combined') ? 'block' : 'none';
+            }
         }
 
         function setLbScope(scope) {
