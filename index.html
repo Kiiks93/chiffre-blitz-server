@@ -226,8 +226,8 @@
             <p style="color:#E94057; font-size:12px; font-weight:bold; margin-bottom:6px;" data-i18n="solo_avalanche">🧊 AVALANCHE (Difficultés)</p>
             <div style="display: flex; gap: 6px;">
                 <button class="power-btn equip" style="flex:1; padding:10px; background:#38ef7d; color:#000;" onclick="startAvalancheGame(1800)" data-i18n="diff_easy">Facile</button>
-                <button class="power-btn equip" style="flex:1; padding:10px; background:#f8b500; color:#000;" onclick="startAvalancheGame(1000)" data-i18n="diff_medium">Moyen</button>
-                <button class="power-btn equip" style="flex:1; padding:10px; background:#ff4b2b; color:#fff;" onclick="startAvalancheGame(500)" data-i18n="diff_hard">Difficile 💀</button>
+                <button class="power-btn equip" style="flex:1; padding:10px; background:#f8b500; color:#000;" onclick="startAvalancheGame(1200)" data-i18n="diff_medium">Moyen</button>
+                <button class="power-btn equip" style="flex:1; padding:10px; background:#ff4b2b; color:#fff;" onclick="startAvalancheGame(600)" data-i18n="diff_hard">Difficile 💀</button>
             </div>
         </div>
 
@@ -1034,6 +1034,8 @@
         let avalancheGridData = [];
         let avalancheTarget = null;
         let avalancheInterval = null;
+        let avalancheTimerInterval = null;
+        let avalancheTimeLeft = 30;
 
         document.addEventListener("DOMContentLoaded", () => {
             applyTranslations();
@@ -1060,6 +1062,7 @@
             if (radarInterval) clearInterval(radarInterval);
             if (soloTimerInterval) clearInterval(soloTimerInterval);
             if (avalancheInterval) clearInterval(avalancheInterval);
+            if (avalancheTimerInterval) clearInterval(avalancheTimerInterval);
             isTimeFrozen = false;
         }
 
@@ -1632,7 +1635,7 @@
             }
         }
 
-        // Mode Avalanche
+        // Mode Avalanche (Difficultés rééquilibrées et timer de 30s max)
         function startAvalancheGame(speed) {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
             hideAllScreens();
@@ -1641,7 +1644,10 @@
             document.getElementById('hud-1v1').style.display = 'none';
 
             soloScore = 0;
+            avalancheTimeLeft = 30;
+            isTimeFrozen = false;
             document.getElementById('solo-score').innerText = soloScore;
+            document.getElementById('game-timer').innerText = avalancheTimeLeft;
 
             avalancheGridData = Array(16).fill(null);
             avalancheTarget = null;
@@ -1649,22 +1655,34 @@
             updateAvalancheTarget();
             renderAvalancheGrid();
 
-            let pressureTimer = 0;
-            document.getElementById('game-timer').innerText = pressureTimer + 's';
             preparePowerHUD();
             SoundEngine.startMusic('solo');
 
-            avalancheInterval = setInterval(() => {
-                pressureTimer++;
-                document.getElementById('game-timer').innerText = pressureTimer + 's';
-                
-                let added = spawnAvalancheNumber();
-                updateAvalancheTarget();
-                renderAvalancheGrid();
+            // Timer de fin (décompte de 30s max)
+            avalancheTimerInterval = setInterval(() => {
+                if (!isTimeFrozen) {
+                    avalancheTimeLeft--;
+                    document.getElementById('game-timer').innerText = Math.max(0, avalancheTimeLeft);
+                    if (avalancheTimeLeft <= 0) {
+                        clearInterval(avalancheTimerInterval);
+                        clearInterval(avalancheInterval);
+                        endSoloGame();
+                    }
+                }
+            }, 1000);
 
-                if (!added) {
-                    clearInterval(avalancheInterval);
-                    endSoloGame();
+            // Intervalle d'apparition des chiffres en avalanche
+            avalancheInterval = setInterval(() => {
+                if (!isTimeFrozen) {
+                    let added = spawnAvalancheNumber();
+                    updateAvalancheTarget();
+                    renderAvalancheGrid();
+
+                    if (!added) {
+                        clearInterval(avalancheTimerInterval);
+                        clearInterval(avalancheInterval);
+                        endSoloGame();
+                    }
                 }
             }, speed);
         }
