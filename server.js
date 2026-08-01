@@ -91,7 +91,6 @@ io.on('connection', (socket) => {
     socket.on('register_player', async (data) => {
         const rawUsername = data.username ? data.username.trim() : "Joueur";
         try {
-            // Recherche insensible à la casse dans Supabase (ex: Kiiks93 == kiiks93)
             let { data: matchedPlayers, error } = await supabase
                 .from('players')
                 .select('*')
@@ -101,7 +100,6 @@ io.on('connection', (socket) => {
             let playerData;
 
             if (error || !dbPlayer) {
-                // Si aucun joueur n'existe (peu importe les majuscules), on le crée
                 const newRecord = {
                     username: rawUsername,
                     region: data.region || "Hauts-de-France",
@@ -129,7 +127,6 @@ io.on('connection', (socket) => {
                     playerData = { ...newRecord, id: socket.id };
                 }
             } else {
-                // Le joueur existe déjà (avec la même casse ou une casse différente)
                 playerData = dbPlayer;
                 const { data: updated } = await supabase
                     .from('players')
@@ -145,7 +142,6 @@ io.on('connection', (socket) => {
                 if (updated) playerData = updated;
             }
 
-            // Stockage en mémoire pour la session active du socket
             activePlayers[socket.id] = {
                 id: playerData.id || socket.id,
                 username: playerData.username,
@@ -201,16 +197,14 @@ io.on('connection', (socket) => {
     // --- CLASSEMENT DIRECT DEPUIS SUPABASE ---
     socket.on('get_leaderboard', async (type) => {
         try {
-            const [category, scope] = type.split('_'); // ex: points_regional
+            const [category, scope] = type.split('_');
             let query = supabase.from('players').select('*');
 
-            // Filtrer par région si demandé
             if (scope === 'regional' && activePlayers[socket.id]) {
                 const myReg = activePlayers[socket.id].region;
                 query = query.eq('region', myReg);
             }
 
-            // Trier selon la catégorie
             if (category === 'points') {
                 query = query.order('points', { ascending: false });
             } else if (category === 'trophies') {
@@ -331,6 +325,7 @@ io.on('connection', (socket) => {
 
         await savePlayerToSupabase(socket.id);
         socket.emit('player_registered', player);
+        socket.emit('solo_reward_result', { earnedCoins, globalEvents });
     });
 
     // --- SYSTÈME D'ADMINISTRATION ---
@@ -379,8 +374,6 @@ io.on('connection', (socket) => {
             }
         } else {
             const cleanTarget = targetUsername.trim().toLowerCase();
-            
-            // 1. Recherche dans les joueurs connectés en session active (insensible à la casse)
             let foundActiveSocketId = null;
             for (let sId in activePlayers) {
                 if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === cleanTarget) {
@@ -396,7 +389,6 @@ io.on('connection', (socket) => {
                 io.to(foundActiveSocketId).emit('player_registered', targetPlayer);
                 io.to(foundActiveSocketId).emit('admin_gift_received', { currency, amount, message: msg });
             } else {
-                // 2. Si le joueur n'est pas connecté, recherche en base de données Supabase (insensible à la casse)
                 const { data: matchedPlayers } = await supabase
                     .from('players')
                     .select('*')
@@ -516,8 +508,8 @@ async function endMatch(id1, id2, matchData, isRanked) {
         }
     }
 
-    io.to(id1).emit('game_over_1v1', { winnerId, reason, players: matchData.players });
-    io.to(id2).emit('game_over_1v1', { winnerId, reason, players: matchData.players });
+    io.to(id1).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents });
+    io.to(id2).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents });
 }
 
 const PORT = process.env.PORT || 3000;
