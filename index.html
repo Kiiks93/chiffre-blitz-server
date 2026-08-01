@@ -916,41 +916,104 @@
             }
         });
 
-        // --- GESTION DU PROFIL & PERSISTANCE LOCALE ---
+        // --- GESTION DU PROFIL (Serveur Autoritaire pour l'économie) ---
         let myProfile = {
             username: localStorage.getItem('cb_username') || "",
             region: localStorage.getItem('cb_region') || "Hauts-de-France",
-            points: parseInt(localStorage.getItem('cb_points')) || 0,
-            coins: parseInt(localStorage.getItem('cb_coins')) || 0,
-            trophies: parseInt(localStorage.getItem('cb_trophies')) || 0,
-            inventory: JSON.parse(localStorage.getItem('cb_inventory') || '{}'),
-            equippedPower: localStorage.getItem('cb_equippedPower') || null
+            points: 0,
+            coins: 0,
+            trophies: 0,
+            inventory: {},
+            equippedPower: null
         };
 
-        function saveProfileToLocalStorage() {
+        function saveLocalPreferences() {
             localStorage.setItem('cb_username', myProfile.username);
             localStorage.setItem('cb_region', myProfile.region);
-            localStorage.setItem('cb_points', myProfile.points);
-            localStorage.setItem('cb_coins', myProfile.coins);
-            localStorage.setItem('cb_trophies', myProfile.trophies);
-            localStorage.setItem('cb_inventory', JSON.stringify(myProfile.inventory));
-            if (myProfile.equippedPower) {
-                localStorage.setItem('cb_equippedPower', myProfile.equippedPower);
+        }
+
+        function updateEconomyUI() {
+            document.getElementById('user-coins-display').innerText = myProfile.coins;
+            document.getElementById('user-trophies-display').innerText = myProfile.trophies;
+            document.getElementById('user-pts-display').innerText = myProfile.points;
+        }
+
+        function isProfileValid() {
+            const savedName = localStorage.getItem('cb_username');
+            const savedRegion = localStorage.getItem('cb_region');
+            return savedName && savedName.trim().length >= 3 && savedName !== "Profil" && savedName !== "Définir un pseudo" && savedRegion;
+        }
+
+        function checkAndShowProfileModal() {
+            if (!isProfileValid()) {
+                document.getElementById('user-name-display').innerText = "Définir pseudo";
+                document.getElementById('modal-username').style.display = 'flex';
             } else {
-                localStorage.removeItem('cb_equippedPower');
+                myProfile.username = localStorage.getItem('cb_username');
+                myProfile.region = localStorage.getItem('cb_region');
+                document.getElementById('user-name-display').innerText = myProfile.username;
+                document.getElementById('modal-username').style.display = 'none';
+                registerIfPossible();
             }
         }
-        
-        // PRIX DE LA BOUTIQUE RÉÉQUILIBRÉS
+
+        function saveProfileFromModal() {
+            const nameInput = document.getElementById('username-input').value.trim();
+            const regionInput = document.getElementById('region-input').value;
+            if (nameInput.length < 3) { alert("Ton pseudo doit contenir au moins 3 caractères !"); return; }
+            myProfile.username = nameInput; 
+            myProfile.region = regionInput;
+            saveLocalPreferences();
+            document.getElementById('user-name-display').innerText = nameInput;
+            document.getElementById('modal-username').style.display = 'none';
+            registerIfPossible();
+            SoundEngine.init();
+        }
+
+        function promptProfileChange() {
+            document.getElementById('username-input').value = isProfileValid() ? myProfile.username : '';
+            if (myProfile.region) document.getElementById('region-input').value = myProfile.region;
+            document.getElementById('modal-username').style.display = 'flex';
+        }
+
+        function registerIfPossible() {
+            if (isProfileValid() && socket.connected) {
+                socket.emit('register_player', {
+                    username: myProfile.username,
+                    region: myProfile.region
+                });
+            }
+        }
+
+        // Le serveur est la seule source de vérité pour les pièces, trophées et inventaire !
+        socket.on('player_registered', (player) => {
+            if (player) {
+                myProfile.username = player.username;
+                myProfile.region = player.region;
+                myProfile.points = player.points || 0;
+                myProfile.coins = player.coins || 0;
+                myProfile.trophies = player.trophies || 0;
+                myProfile.inventory = player.inventory || {};
+                myProfile.equippedPower = player.equippedPower || null;
+                
+                document.getElementById('user-name-display').innerText = myProfile.username;
+                updateEconomyUI();
+                if (document.getElementById('modal-shop').style.display === 'flex') {
+                    switchShopTab(currentShopTab);
+                }
+            }
+        });
+
+        // PRIX DE LA BOUTIQUE (Alignés avec server.js)
         const POWERS_CATALOG = [
-            { id: 'spotlight', price: 150, type: 'bonus' },
-            { id: 'freeze', price: 350, type: 'bonus' },
-            { id: 'joker', price: 600, type: 'bonus' },
-            { id: 'nova', price: 1200, type: 'bonus' },
-            { id: 'quake', price: 200, type: 'malus' },
-            { id: 'micro', price: 400, type: 'malus' },
-            { id: 'eclipse', price: 800, type: 'malus' },
-            { id: 'chaos', price: 2000, type: 'malus' }
+            { id: 'spotlight', price: 30, type: 'bonus' },
+            { id: 'freeze', price: 60, type: 'bonus' },
+            { id: 'joker', price: 150, type: 'bonus' },
+            { id: 'nova', price: 400, type: 'bonus' },
+            { id: 'quake', price: 40, type: 'malus' },
+            { id: 'micro', price: 80, type: 'malus' },
+            { id: 'eclipse', price: 200, type: 'malus' },
+            { id: 'chaos', price: 500, type: 'malus' }
         ];
 
         let current1v1Time = 30, radarInterval = null;
@@ -981,83 +1044,6 @@
                         openJoinCustomScreen(targetRoom.toUpperCase());
                     }
                 }, 1000);
-            }
-        });
-
-        function updateEconomyUI() {
-            document.getElementById('user-coins-display').innerText = myProfile.coins;
-            document.getElementById('user-trophies-display').innerText = myProfile.trophies;
-            document.getElementById('user-pts-display').innerText = myProfile.points;
-            saveProfileToLocalStorage();
-        }
-
-        function isProfileValid() {
-            const savedName = localStorage.getItem('cb_username');
-            const savedRegion = localStorage.getItem('cb_region');
-            return savedName && savedName.trim().length >= 3 && savedName !== "Profil" && savedName !== "Définir un pseudo" && savedRegion;
-        }
-
-        function checkAndShowProfileModal() {
-            if (!isProfileValid()) {
-                document.getElementById('user-name-display').innerText = "Définir pseudo";
-                document.getElementById('modal-username').style.display = 'flex';
-            } else {
-                myProfile.username = localStorage.getItem('cb_username');
-                myProfile.region = localStorage.getItem('cb_region');
-                document.getElementById('user-name-display').innerText = myProfile.username;
-                document.getElementById('modal-username').style.display = 'none';
-                updateEconomyUI();
-                registerIfPossible();
-            }
-        }
-
-        function saveProfileFromModal() {
-            const nameInput = document.getElementById('username-input').value.trim();
-            const regionInput = document.getElementById('region-input').value;
-            if (nameInput.length < 3) { alert("Ton pseudo doit contenir au moins 3 caractères !"); return; }
-            myProfile.username = nameInput; myProfile.region = regionInput;
-            saveProfileToLocalStorage();
-            document.getElementById('user-name-display').innerText = nameInput;
-            document.getElementById('modal-username').style.display = 'none';
-            updateEconomyUI();
-            registerIfPossible();
-            SoundEngine.init();
-        }
-
-        function promptProfileChange() {
-            document.getElementById('username-input').value = isProfileValid() ? myProfile.username : '';
-            if (myProfile.region) document.getElementById('region-input').value = myProfile.region;
-            document.getElementById('modal-username').style.display = 'flex';
-        }
-
-        function registerIfPossible() {
-            if (isProfileValid() && socket.connected) {
-                socket.emit('register_player', {
-                    username: myProfile.username,
-                    region: myProfile.region
-                });
-            }
-        }
-
-        socket.on('player_registered', (player) => {
-            if (player) {
-                myProfile.username = player.username;
-                myProfile.region = player.region;
-                myProfile.points = Math.max(myProfile.points, player.points || 0);
-                myProfile.coins = Math.max(myProfile.coins, player.coins || 0);
-                myProfile.trophies = Math.max(myProfile.trophies, player.trophies || 0);
-                if (player.inventory) {
-                    for (let key in player.inventory) {
-                        myProfile.inventory[key] = Math.max(myProfile.inventory[key] || 0, player.inventory[key]);
-                    }
-                }
-                if (player.equippedPower) myProfile.equippedPower = player.equippedPower;
-                
-                document.getElementById('user-name-display').innerText = myProfile.username;
-                updateEconomyUI();
-                if (document.getElementById('modal-shop').style.display === 'flex') {
-                    switchShopTab(currentShopTab);
-                }
             }
         });
 
@@ -1111,7 +1097,6 @@
 
         function simulateAd(callback) {
             SoundEngine.stopMusic(false);
-            // Masquer le récapitulatif pour laisser la pub au premier plan
             document.getElementById('recap-modal').style.display = 'none';
             
             const overlay = document.getElementById('simulated-ad-overlay');
@@ -1157,7 +1142,6 @@
                 doubleBtn.style.opacity = '0.5';
                 doubleBtn.innerText = currentLang === 'fr' ? '✅ Gains doublés !' : '✅ Rewards doubled!';
                 
-                // Réafficher le récapitulatif avec les gains doublés
                 document.getElementById('recap-modal').style.display = 'flex';
             });
         }
@@ -1342,23 +1326,12 @@
         }
 
         function buyPower(id) {
-            const power = POWERS_CATALOG.find(p => p.id === id);
-            if (!power) return;
-            if (myProfile.coins < power.price) {
-                alert(currentLang === 'fr' ? "Pas assez de pièces !" : "Not enough coins!");
-                return;
-            }
-            myProfile.coins -= power.price;
-            myProfile.inventory[id] = (myProfile.inventory[id] || 0) + 1;
-            updateEconomyUI();
-            switchShopTab(currentShopTab);
+            if (!socket.connected) return;
             socket.emit('buy_power', id);
         }
 
         function equipPower(id) {
-            myProfile.equippedPower = id;
-            saveProfileToLocalStorage();
-            switchShopTab(currentShopTab);
+            if (!socket.connected) return;
             socket.emit('equip_power', id);
         }
 
@@ -1384,7 +1357,6 @@
             if (stock <= 0) return;
             
             myProfile.inventory[powerId]--;
-            saveProfileToLocalStorage();
             powerUsedInMatch = true;
             document.getElementById('btn-use-power').disabled = true;
 
@@ -1558,19 +1530,15 @@
             doubleBtn.style.opacity = '1';
             doubleBtn.innerText = currentLang === 'fr' ? '📺 Doubler mes gains (Pub)' : '📺 Double my rewards (Ad)';
 
-            currentCoinsGained = (data.winnerId === myId) ? 40 : 20;
-            myProfile.coins += currentCoinsGained;
+            currentCoinsGained = (data.winnerId === myId) ? 30 : 10;
             if (data.winnerId === myId) {
                 banner.innerText = currentLang === 'fr' ? "🏆 VICTOIRE !" : "🏆 VICTORY!"; banner.style.color = "#00d2ff";
-                myProfile.trophies += 1;
-                myProfile.points += 50;
                 SoundEngine.playVictory();
             } else if (data.winnerId) {
                 banner.innerText = currentLang === 'fr' ? "❌ DÉFAITE !" : "❌ DEFEAT!"; banner.style.color = "#ff007f";
             } else {
                 banner.innerText = currentLang === 'fr' ? "⏱️ ÉGALITÉ !" : "⏱️ DRAW!"; banner.style.color = "#ff8a00";
             }
-            updateEconomyUI();
             
             document.getElementById('recap-reason').innerText = data.reason;
             document.getElementById('recap-my-target').innerText = myData ? myData.target : '-';
@@ -1758,14 +1726,8 @@
             doubleBtn.style.opacity = '1';
             doubleBtn.innerText = currentLang === 'fr' ? '📺 Doubler mes gains (Pub)' : '📺 Double my rewards (Ad)';
 
-            const baseCoins = Math.floor(soloScore / 3);
-            const bonusCoins = soloScore >= 300 ? 100 : 0;
-            currentCoinsGained = baseCoins + bonusCoins;
+            currentCoinsGained = Math.min(100, Math.floor(soloScore / 3));
             
-            myProfile.coins += currentCoinsGained;
-            myProfile.points += soloScore;
-            updateEconomyUI();
-
             socket.emit('claim_solo_reward', soloScore);
 
             document.getElementById('recap-banner').innerText = currentLang === 'fr' ? "🏋️ ENTRAÎNEMENT TERMINÉ" : "🏋️ TRAINING FINISHED";
