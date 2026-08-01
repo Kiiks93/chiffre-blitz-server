@@ -1092,7 +1092,6 @@
         let adCallbackFunction = null;
         let selectedRankedItems = [];
 
-        // Helper pour convertir un code pays ou nettoyer le format du flag venant de Supabase
         function getFlagEmoji(flag) {
             if (!flag) return '🇫🇷';
             let cleanFlag = flag.replace(/['"]/g, '').trim();
@@ -1107,7 +1106,6 @@
             return cleanFlag;
         }
 
-        // Fonction robuste pour parser un joueur et mapper toutes les variantes possibles de Supabase/Serveur
         function parsePlayer(p) {
             if (!p) return {};
             return {
@@ -1228,7 +1226,6 @@
             }
         }
 
-        // Réception stricte des données venant de Supabase via le serveur
         socket.on('player_registered', (rawData) => {
             if (rawData) {
                 const player = parsePlayer(rawData);
@@ -1252,7 +1249,7 @@
         });
 
         socket.on('admin_gift_received', (data) => {
-            alert(`🎁 CADEAU ADMIN REÇU !\n\n+${data.amount} ${data.currency === 'coins' ? 'Pièces 🪙' : 'Points 🏅'}`);
+            showAdminToast(data.message || `🎁 Cadeau reçu : +${data.amount}`);
             registerIfPossible();
         });
 
@@ -1999,7 +1996,6 @@
             socket.emit('get_leaderboard', type);
         }
 
-        // Affichage du classement avec parsing sécurisé de chaque joueur de Supabase
         socket.on('leaderboard_data', (res) => {
             const container = document.getElementById('lb-list');
             container.innerHTML = '';
