@@ -47,7 +47,6 @@
         .btn-gold { background: linear-gradient(45deg, #f8b500, #fceabb); color: #222; box-shadow: 0 5px 20px rgba(248, 181, 0, 0.4); }
         .btn-purple { background: linear-gradient(45deg, #7b4397, #dc2430); box-shadow: 0 5px 20px rgba(123, 67, 151, 0.4); }
         .btn-shop { background: linear-gradient(45deg, #11998e, #38ef7d); color: #000; box-shadow: 0 5px 20px rgba(56, 239, 125, 0.4); }
-        .btn-reward { background: linear-gradient(45deg, #f12711, #f5af19); color: #fff; box-shadow: 0 5px 20px rgba(245, 175, 25, 0.4); margin-top: 8px; }
 
         .btn-secondary {
             background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #ccc;
@@ -85,59 +84,60 @@
         .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; overflow-y: auto; max-height: 55vh; margin: 10px 0; padding-right: 5px; }
         .power-card { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; }
         .power-card.equipped { border-color: #00ff88; background: rgba(0, 255, 136, 0.1); }
-        .power-card h4 { margin: 0 0 4px 0; font-size: 13px; color: #00d2ff; }
-        .power-card p { font-size: 10px; color: #aaa; margin: 0 0 6px 0; line-height: 1.2; }
-        .stock-badge { font-size: 11px; font-weight: bold; color: #38ef7d; margin-bottom: 4px; }
-        .power-btn { padding: 5px 8px; border-radius: 6px; border: none; font-weight: bold; font-size: 11px; cursor: pointer; width: 100%; margin-top: 3px; }
+        .power-card h4 { margin: 0 0 5px 0; font-size: 13px; color: #00d2ff; }
+        .power-card p { font-size: 11px; color: #aaa; margin: 0 0 8px 0; }
+        .stock-badge { font-size: 11px; font-weight: bold; color: #38ef7d; margin-bottom: 6px; }
+        .power-btn { padding: 6px 10px; border-radius: 8px; border: none; font-weight: bold; font-size: 12px; cursor: pointer; margin-top: 4px; }
         .power-btn.buy { background: #f8b500; color: #000; }
         .power-btn.equip { background: #00d2ff; color: #000; }
         .power-btn.active { background: #00ff88; color: #000; }
 
-        .game-hud-panel {
-            background: rgba(0, 210, 255, 0.08); border: 2px solid rgba(0, 210, 255, 0.4);
-            border-radius: 18px; padding: 12px; max-width: 400px; margin: 0 auto 15px auto;
-            display: flex; justify-content: space-around; align-items: center;
-            box-shadow: 0 0 20px rgba(0, 210, 255, 0.15);
-        }
-        .hud-item { text-align: center; flex: 1; }
-        .hud-label { font-size: 11px; color: #aaa; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
-        .hud-value { font-size: 30px; font-weight: 900; color: #00d2ff; margin-top: 2px; }
-        .hud-value.score { color: #00ff88; }
-        .hud-divider { width: 1px; height: 35px; background: rgba(255,255,255,0.15); }
+        .hud { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(255,255,255,0.08); padding: 12px; border-radius: 14px; margin-bottom: 10px; }
+        .player-box { padding: 8px; border-radius: 10px; background: rgba(0,0,0,0.3); }
+        .player-box.me { border: 2px solid #00d2ff; }
+        .player-box.opponent { border: 2px solid #ff007f; }
 
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 400px; margin: 0 auto; }
+        .btn-power-hud {
+            background: linear-gradient(45deg, #ff8a00, #e52e71); color: #fff; border: none;
+            padding: 8px 16px; border-radius: 12px; font-weight: 900; font-size: 13px; cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 138, 0, 0.5); margin-bottom: 10px; transition: transform 0.1s;
+        }
+        .btn-power-hud:active { transform: scale(0.95); }
+        .btn-power-hud:disabled { filter: grayscale(1); opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 400px; margin: 0 auto; transition: transform 0.2s, filter 0.2s; }
         .tile {
             background: #2a1845; border: 2px solid #522d80; border-radius: 12px; height: 65px;
             display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; cursor: pointer;
-            transition: transform 0.1s, background-color 0.1s;
+            transition: transform 0.2s, border-color 0.2s, background-color 0.2s;
         }
         .tile:active { transform: scale(0.92); background: #3c1e69; }
-        .tile.empty { background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.05); cursor: default; }
+
+        .tile.highlight-target { border-color: #00ff88 !important; background: #00ff88 !important; color: #000 !important; box-shadow: 0 0 20px #00ff88; }
+        .grid.effect-quake { animation: quake 0.15s infinite; }
+        .grid.effect-micro .tile { transform: scale(0.65); }
+        .grid.effect-eclipse { filter: brightness(0) blur(8px); pointer-events: none; }
+        
+        #game-timer.frozen { color: #00d2ff !important; text-shadow: 0 0 10px #00d2ff; animation: pulseAudio 0.5s infinite; }
 
         .matchmaking-loader { display: flex; flex-direction: column; align-items: center; margin-top: 40px; }
         .radar-box { position: relative; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; }
         .radar-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 4px solid transparent; border-top-color: #00d2ff; border-right-color: #ff007f; animation: radarSpin 1.2s linear infinite; }
         .radar-num { font-size: 32px; font-weight: 900; color: #00d2ff; }
 
-        #simulated-ad-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; z-index: 10000;
-        }
-        .ad-timer-circle {
-            width: 70px; height: 70px; border-radius: 50%; border: 4px solid #00d2ff;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 28px; font-weight: 900; margin-bottom: 25px; color: #00d2ff;
-        }
+        #countdown-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 5, 29, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
+        .countdown-num { font-size: 90px; font-weight: 900; color: #00d2ff; }
 
         @keyframes radarSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulseAudio { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+        @keyframes quake { 0% { transform: translate(2px, 2px); } 50% { transform: translate(-2px, -2px); } 100% { transform: translate(2px, -2px); } }
     </style>
 </head>
 <body>
 
     <div class="header-bar">
         <h1>Chiffre Blitz ⚡</h1>
-        <div id="user-pill" class="user-pill" onclick="checkAndShowProfileModal()">
+        <div id="user-pill" class="user-pill" onclick="promptProfileChange()">
             👤 <span id="user-name-display">Définir pseudo</span> (<span id="user-pts-display">0</span> pts)
         </div>
         <div class="header-btns">
@@ -151,124 +151,55 @@
         <span>🏆 <strong id="user-trophies-display">0</strong> <span data-i18n="trophies">Trophées</span></span>
     </div>
 
-    <!-- MODALE DE SOUTIEN (LANCEMENT) -->
-    <div id="modal-launch-ad" class="modal-overlay" style="display:none;">
-        <div class="modal-card" style="text-align:center;">
-            <h2 style="margin:0 0 10px 0; color:#00d2ff;" data-i18n="ad_title">Soutenir le Créateur</h2>
-            <p style="color:#ccc; font-size:14px; line-height:1.5; margin-bottom:20px;" data-i18n="ad_desc">Chiffre Blitz est 100% gratuit. Une publicité de soutien va se lancer. Merci ! ❤️</p>
-            <button class="btn-main btn-blue" onclick="playLaunchAd()" style="width:100%;" data-i18n="ad_btn">Lancer la partie ⚡</button>
-        </div>
-    </div>
-
-    <!-- MODALE RÈGLES / COMMENT JOUER -->
-    <div id="modal-rules" class="modal-overlay" style="display:none;">
-        <div class="modal-card" style="text-align:left;">
-            <h2 style="margin:0 0 15px 0; color:#00d2ff; text-align:center;" data-i18n="rules_title">📖 RÈGLES DU JEU</h2>
-            <div style="overflow-y:auto; flex:1; font-size:13px; color:#ccc; display:flex; flex-direction:column; gap:12px; padding-right:5px;">
-                <div>
-                    <strong style="color:#00d2ff;" data-i18n="r_classic_title">⚡ Mode Classique (Solo) :</strong>
-                    <p style="margin:4px 0 0 0;" data-i18n="r_classic_desc">Enchaînez le plus vite possible les chiffres dans l'ordre croissant exact de 1 à 50 pendant 30 secondes.</p>
-                </div>
-                <div>
-                    <strong style="color:#f8b500;" data-i18n="r_random_title">🎲 Mode Aléatoire (Solo) :</strong>
-                    <p style="margin:4px 0 0 0;" data-i18n="r_random_desc">Un chiffre cible changeant s'affiche. Retrouvez-le et cliquez dessus le plus rapidement possible.</p>
-                </div>
-                <div>
-                    <strong style="color:#E94057;" data-i18n="r_avalanche_title">🧊 Mode Avalanche (Style Tetris) :</strong>
-                    <p style="margin:4px 0 0 0;" data-i18n="r_avalanche_desc">Des chiffres s'empirent progressivement. Cliquez sur le chiffre cible affiché (présent dans la grille) pour libérer la case.</p>
-                </div>
-                <div>
-                    <strong style="color:#00c6ff;" data-i18n="r_1v1_title">⚔️ Duel 1v1 Online :</strong>
-                    <p style="margin:4px 0 0 0;" data-i18n="r_1v1_desc">Affrontez un adversaire en temps réel. Le premier à marquer le plus de points gagne la partie.</p>
-                </div>
-            </div>
-            <button class="btn-secondary" onclick="closeRulesModal()" style="margin-top:15px;" data-i18n="close">Fermer</button>
-        </div>
-    </div>
-
-    <!-- MODALE COMPTE À REBOURS 1v1 -->
-    <div id="modal-1v1-countdown" class="modal-overlay" style="display:none;">
-        <div class="modal-card" style="text-align:center;">
-            <h2 style="color:#00d2ff; margin-bottom:10px;" data-i18n="found_title">⚔️ ADVERSAIRE TROUVÉ !</h2>
-            <p style="color:#aaa; font-size:14px; margin-bottom:20px;" data-i18n="found_sub">La partie va commencer...</p>
-            <div id="countdown-number" style="font-size:60px; font-weight:900; color:#ff007f;">3</div>
-        </div>
-    </div>
-
-    <!-- MODAL BOUTIQUE -->
-    <div id="modal-shop" class="modal-overlay" style="display:none;">
-        <div class="modal-card">
-            <h2 style="margin:0 0 10px 0; color:#38ef7d;" data-i18n="shop_title">🛍️ BOUTIQUE DE POUVOIRS</h2>
-            <div class="tabs">
-                <button id="shop-tab-bonus" class="tab-btn active" onclick="switchShopTab('bonus')" data-i18n="tab_bonus">🟢 Bonus</button>
-                <button id="shop-tab-malus" class="tab-btn" onclick="switchShopTab('malus')" data-i18n="tab_malus">🔴 Malus</button>
-            </div>
-            <div id="shop-container" class="shop-grid"></div>
-            <button class="btn-secondary" onclick="closeShop()" data-i18n="close">Fermer</button>
-        </div>
-    </div>
-
-    <!-- CLASSEMENT -->
-    <div id="modal-leaderboard" class="modal-overlay" style="display:none;">
-        <div class="modal-card">
-            <h2 style="margin:0 0 15px 0; color:#00d2ff;" data-i18n="lb_title">🏆 CLASSEMENT</h2>
-            <div id="lb-list" class="leaderboard-list"></div>
-            <button class="btn-secondary" onclick="closeLeaderboard()" data-i18n="close">Fermer</button>
-        </div>
-    </div>
-
-    <!-- SIMULATEUR DE PUBLICITE -->
-    <div id="simulated-ad-overlay" style="display:none;">
-        <div style="color:#aaa; font-size:16px; margin-bottom:20px; font-weight:bold;" data-i18n="ad_sponsored">VIDEO SPONSORISÉE...</div>
-        <div class="ad-timer-circle" id="ad-timer">5</div>
-        <button id="ad-close-btn" class="btn-secondary" style="display:none; max-width:200px; background:#1e1035; color:#fff;" onclick="closeSimulatedAd()" data-i18n="close">Fermer</button>
-    </div>
-
     <!-- ÉCRAN TITRE -->
     <div id="screen-title" class="menu-container" style="max-width:380px; margin: 10px auto; text-align: left;">
-        <div style="text-align: center; margin-bottom: 8px;">
+        <div style="text-align: center; margin-bottom: 10px;">
             <h2 style="font-size: 24px; color: #00d2ff; margin: 0; text-shadow: 0 0 15px rgba(0,210,255,0.4);">CHIFFRE BLITZ ⚡</h2>
-            <p style="color: #aaa; font-size: 11px; margin: 4px 0 0 0;" data-i18n="title_sub">Le duel de calcul et de réflexes ultime</p>
+            <p style="color: #aaa; font-size: 11px; margin: 5px 0 0 0;" data-i18n="subtitle">Le duel de calcul et de réflexes ultime</p>
         </div>
-        <button class="btn-main btn-blue" onclick="checkLaunchAdAndStart()" style="margin-top: 10px; width: 100%;" data-i18n="play_btn">JOUER ⚡</button>
+
+        <div style="background: rgba(255,255,255,0.05); padding: 14px; border-radius: 16px; font-size: 12px; color: #ccc; max-height: 44vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+            <div>
+                <strong style="color:#00d2ff; font-size:13px;" data-i18n="rule1_title">⚡ Principe du jeu</strong>
+                <p style="margin:4px 0 0 0;" data-i18n="rule1_desc">Clique le plus vite possible sur les tuiles de la grille dans l'ordre croissant exact (1, puis 2, 3, etc.).</p>
+            </div>
+            <div>
+                <strong style="color:#ff4b2b; font-size:13px;" data-i18n="rule2_title">🏋️ Entraînement Solo</strong>
+                <p style="margin:4px 0 0 0;" data-i18n="rule2_desc">30 secondes chrono pour enchaîner un max de chiffres et gagner des pièces (🪙). Objectif 30 cases pour rafler le bonus max !</p>
+            </div>
+            <div>
+                <strong style="color:#00c6ff; font-size:13px;" data-i18n="rule3_title">⚔️ Duel 1v1 Online</strong>
+                <p style="margin:4px 0 0 0;" data-i18n="rule3_desc">Affronte un adversaire en temps réel (matchmaking ou salons privés avec code/mot de passe).</p>
+            </div>
+            <div>
+                <strong style="color:#f8b500; font-size:13px;" data-i18n="rule4_title">🎯 Mode Tournoi</strong>
+                <p style="margin:4px 0 0 0;" data-i18n="rule4_desc">Tournoi à élimination directe pour remporter des points, des pièces et des trophées (🏆).</p>
+            </div>
+        </div>
+
+        <button class="btn-main btn-blue" onclick="showMainMenu()" style="margin-top: 12px; width: 100%;" data-i18n="btn_play">JOUER ⚡</button>
     </div>
 
     <!-- MENU PRINCIPAL -->
     <div id="screen-menu" class="menu-container" style="display:none;">
-        <button class="btn-main btn-blue" onclick="openSoloMenu()" data-i18n="menu_solo">🏋️ ENTRAÎNEMENT SOLO</button>
+        <button class="btn-main btn-blue" onclick="startSoloTraining()" data-i18n="menu_solo">🏋️ ENTRAÎNEMENT SOLO</button>
         <button class="btn-main" onclick="open1v1Hub()" data-i18n="menu_1v1">⚔️ DUEL 1v1 ONLINE</button>
         <button class="btn-main btn-shop" onclick="openShop()" data-i18n="menu_shop">🛍️ BOUTIQUE POUVOIRS</button>
-        <button class="btn-main btn-purple" onclick="openLeaderboard()" data-i18n="menu_lb">🏆 CLASSEMENT</button>
-        <button class="btn-secondary" onclick="openRulesModal()" style="margin-top:5px;" data-i18n="menu_rules">ℹ️ Comment jouer / Règles</button>
+        <button class="btn-main btn-gold" onclick="openLeaderboard()" data-i18n="menu_lb">🏆 CLASSEMENT</button>
+        <button class="btn-main btn-purple" onclick="openTournamentScreen()" data-i18n="menu_tourney">🎯 MODE TOURNOI</button>
+        <button class="btn-secondary" onclick="showTitleScreen()" style="margin-top:5px;" data-i18n="menu_info">ℹ️ Informations & Règles</button>
     </div>
 
-    <!-- MENU SOLO -->
-    <div id="screen-solo-menu" class="menu-container" style="display:none;">
-        <h2 style="color:#00d2ff; font-size:20px; margin-bottom:5px;" data-i18n="solo_menu_title">MODES D'ENTRAÎNEMENT</h2>
-        <button class="btn-main btn-blue" onclick="startSoloTraining('classic')" data-i18n="solo_classic">⚡ Classique (Croissant)</button>
-        <button class="btn-main btn-gold" onclick="startSoloTraining('random')" data-i18n="solo_random">🎲 Aléatoire (Cibles variées)</button>
-        
-        <div style="margin-top:5px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
-            <p style="color:#E94057; font-size:12px; font-weight:bold; margin-bottom:6px;" data-i18n="solo_avalanche">🧊 AVALANCHE (Difficultés)</p>
-            <div style="display: flex; gap: 6px;">
-                <button class="power-btn equip" style="flex:1; padding:10px; background:#38ef7d; color:#000;" onclick="startAvalancheGame(1800)" data-i18n="diff_easy">Facile</button>
-                <button class="power-btn equip" style="flex:1; padding:10px; background:#f8b500; color:#000;" onclick="startAvalancheGame(1000)" data-i18n="diff_medium">Moyen</button>
-                <button class="power-btn equip" style="flex:1; padding:10px; background:#ff4b2b; color:#fff;" onclick="startAvalancheGame(500)" data-i18n="diff_hard">Difficile 💀</button>
-            </div>
-        </div>
-
-        <button class="btn-secondary" onclick="showMainMenu()" data-i18n="back_menu">⬅️ Retour Menu</button>
-    </div>
-
-    <!-- HUB 1v1 -->
+    <!-- HUB DE CHOIX 1v1 ONLINE -->
     <div id="screen-1v1-hub" style="display:none; max-width:350px; margin:15px auto;" class="menu-container">
-        <h2 data-i18n="hub_1v1_title">⚔️ DUEL 1v1 ONLINE</h2>
+        <h2 data-i18n="hub_title">⚔️ DUEL 1v1 ONLINE</h2>
+        <p style="color:#aaa; font-size:13px; margin-bottom:10px;" data-i18n="hub_subtitle">Choisis ton mode de jeu :</p>
         <button class="btn-main btn-blue" onclick="startRandom1v1()" data-i18n="hub_random">🎲 Matchmaking Aléatoire</button>
         <button class="btn-main btn-purple" onclick="openRoomsScreen()" data-i18n="hub_rooms">🏠 Salons Privés / Lobby</button>
-        <button class="btn-secondary" onclick="showMainMenu()" data-i18n="back_menu">⬅️ Retour Menu</button>
+        <button class="btn-secondary" onclick="showMainMenu()" data-i18n="back">⬅️ Retour Menu</button>
     </div>
 
-    <!-- SALLE D'ATTENTE 1v1 -->
+    <!-- SALLE D'ATTENTE 1v1 ALÉATOIRE -->
     <div id="screen-1v1-lobby" style="display:none;">
         <div class="matchmaking-loader">
             <div class="radar-box">
@@ -280,77 +211,218 @@
         <button class="btn-secondary" onclick="cancel1v1Search()" style="max-width:200px; margin-top:30px;" data-i18n="cancel">❌ Annuler</button>
     </div>
 
-    <!-- SALONS PRIVÉS -->
+    <!-- ÉCRAN DES SALONS PRIVÉS -->
     <div id="screen-rooms" style="display:none; max-width:400px; margin:0 auto;">
         <h2 data-i18n="rooms_title">🏠 Salons Privés</h2>
         <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:16px; margin:15px 0; display:flex; flex-direction:column; gap:10px;">
-            <input type="text" id="room-code-input" placeholder="Code de salon (optionnel)" maxlength="6" style="padding:10px; border-radius:8px; border:1px solid #00d2ff; background:#0f051d; color:#fff; text-align:center; font-weight:bold;">
-            <input type="password" id="room-pass-input" placeholder="Mot de passe (optionnel)" style="padding:10px; border-radius:8px; border:1px solid #00d2ff; background:#0f051d; color:#fff; text-align:center;">
-            <button class="btn-main btn-blue" onclick="submitCreateRoom()" style="width:100%;" data-i18n="create_room">✨ Créer un salon</button>
+            <button class="btn-main btn-blue" onclick="openCreateRoomModal()" style="width:100%;" data-i18n="rooms_create">✨ Créer un salon personnalisé</button>
+            <button class="btn-main btn-gold" onclick="openJoinCustomScreen()" style="width:100%;" data-i18n="rooms_join_code">🔑 Rejoindre avec un code</button>
         </div>
-        <div id="rooms-list" class="rooms-list" style="max-height: 35vh; margin-bottom:15px;"></div>
+        <h3 style="font-size:14px; text-align:left; color:#aaa; margin-top:15px;" data-i18n="rooms_open_list">Salons ouverts :</h3>
+        <div id="rooms-list" class="rooms-list" style="max-height: 35vh; margin-bottom:15px;">
+            <div style="text-align:center; color:#aaa; margin-top:10px;" data-i18n="loading">Chargement des salons...</div>
+        </div>
         <button class="btn-secondary" onclick="open1v1Hub()" data-i18n="back">⬅️ Retour</button>
     </div>
 
-    <!-- SALLE ATTENTE SALON -->
-    <div id="screen-room-waiting" style="display:none; max-width:400px; margin:0 auto;">
-        <h2>⚡ <span data-i18n="room_label">Salon</span> : <span id="current-room-code" style="color:#00d2ff;">----</span></h2>
-        <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:16px; margin:20px 0;">
-            <div id="room-players-list" style="font-weight:bold; font-size:16px; color:#00ff88; margin-bottom:15px;" data-i18n="waiting">En attente...</div>
-        </div>
-        <button class="btn-secondary" onclick="leaveCustomRoom()" data-i18n="quit">❌ Quitter</button>
+    <!-- ÉCRAN POUR REJOINDRE AVEC CODE ET MOT DE PASSE -->
+    <div id="screen-join-custom" style="display:none; max-width:400px; margin:0 auto;" class="menu-container">
+        <h2 data-i18n="join_title">🔑 Rejoindre un Salon</h2>
+        <p style="color:#aaa; font-size:13px; margin-bottom:10px;" data-i18n="join_subtitle">Entre le code et le mot de passe (si requis) :</p>
+        
+        <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;" data-i18n="room_code_label">CODE DU SALON</label>
+        <input type="text" id="join-room-code-input" placeholder="Ex: AB12" maxlength="10" 
+               style="width:100%; padding:12px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:15px; outline:none; text-transform: uppercase;">
+        
+        <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;" data-i18n="room_pass_label">MOT DE PASSE (Optionnel)</label>
+        <input type="text" id="join-room-pass-input" placeholder="Laisser vide si public" maxlength="15" 
+               style="width:100%; padding:12px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:20px; outline:none;">
+        
+        <button class="btn-main btn-blue" onclick="submitJoinCustomRoom()" data-i18n="join_btn">Rejoindre ⚡</button>
+        <button class="btn-secondary" onclick="openRoomsScreen()" style="margin-top:0;" data-i18n="back">⬅️ Retour</button>
     </div>
 
-    <!-- MODAL PROFIL -->
+    <!-- SALLE D'ATTENTE DU SALON PRIVÉ -->
+    <div id="screen-room-waiting" style="display:none; max-width:400px; margin:0 auto;">
+        <h2>⚡ <span data-i18n="room_header">Salon</span> : <span id="current-room-code" style="color:#00d2ff;">----</span></h2>
+        <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:16px; margin:20px 0;">
+            
+            <div style="margin-bottom: 15px; text-align: left;">
+                <label style="font-size: 12px; color: #aaa; font-weight: bold;" data-i18n="share_label">INVITATION RAPIDE (SMS / WhatsApp) :</label>
+                <div style="display: flex; gap: 6px; margin-top: 5px;">
+                    <button class="btn-main btn-blue" onclick="shareRoomLink()" style="flex:1; padding:10px; font-size:14px;" data-i18n="share_btn">📤 Partager le lien</button>
+                    <button class="power-btn equip" onclick="copyRoomLink()" style="padding: 10px 14px;" data-i18n="copy_btn">Copier 📋</button>
+                </div>
+                <input type="text" id="room-share-link" style="position: absolute; left: -9999px;" readonly>
+            </div>
+
+            <p style="color:#aaa; font-size:14px; margin-bottom:10px;" data-i18n="players_in_room">Joueurs dans le salon :</p>
+            <div id="room-players-list" style="font-weight:bold; font-size:16px; color:#00ff88; margin-bottom:15px;">En attente...</div>
+            <div class="matchmaking-loader" style="margin-top:10px;">
+                <div class="radar-box" style="width:60px; height:60px;">
+                    <div class="radar-ring"></div>
+                </div>
+                <div style="margin-top:10px; font-size:14px; color:#aaa;" data-i18n="waiting_opponent">En attente d'un adversaire...</div>
+            </div>
+        </div>
+        <button class="btn-secondary" onclick="leaveCustomRoom()" data-i18n="leave_room">❌ Quitter le salon</button>
+    </div>
+
+    <!-- MODAL DE CRÉATION DE SALON -->
+    <div id="modal-create-room" class="modal-overlay" style="display:none;">
+        <div class="modal-card" style="text-align:center;">
+            <h2 style="margin:0 0 10px 0; color:#00d2ff;" data-i18n="create_modal_title">✨ CRÉER UN SALON</h2>
+            <p style="color:#aaa; font-size:14px; margin-bottom:15px;" data-i18n="create_modal_sub">Personnalise ton salon privé :</p>
+            
+            <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;" data-i18n="room_code_label">NOM / CODE DU SALON</label>
+            <input type="text" id="custom-room-name" placeholder="Laisser vide pour code aléatoire" maxlength="10" 
+                   style="width:100%; padding:12px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:15px; outline:none; text-transform: uppercase;">
+            
+            <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;" data-i18n="room_pass_label">MOT DE PASSE (Optionnel)</label>
+            <input type="text" id="custom-room-pass" placeholder="Laisser vide si public" maxlength="15" 
+                   style="width:100%; padding:12px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:20px; outline:none;">
+            
+            <div style="display:flex; gap:10px;">
+                <button class="btn-secondary" onclick="closeCreateRoomModal()" style="margin-top:0;" data-i18n="cancel">Annuler</button>
+                <button class="btn-main" onclick="submitCreateRoom()" style="margin-top:0; flex:1;" data-i18n="create_btn">Créer ⚡</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODE TOURNOI -->
+    <div id="screen-tournament" style="display:none; max-width:400px; margin:0 auto;">
+        <h2 data-i18n="tourney_screen_title">🎯 Tournoi Blitz</h2>
+        <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:16px; margin:20px 0; text-align:left;">
+            <p style="margin-top:0;" data-i18n="tourney_desc1">Arbre à élimination directe.</p>
+            <p style="color:#aaa; font-size:13px;" data-i18n="tourney_desc2">Affrontez les meilleurs joueurs dans un tournoi épique pour décrocher le titre suprême.</p>
+            <div style="color:#ff8a00; font-weight:bold; margin-top:15px; text-align:center;" data-i18n="tourney_rewards">Récompenses : 200 🪙 + 1 🏆 + 50 ⭐</div>
+        </div>
+        <button class="btn-secondary" onclick="showMainMenu()" data-i18n="back">⬅️ Retour Menu</button>
+    </div>
+
+    <!-- MODAL POPUP PSEUDO & RÉGION -->
     <div id="modal-username" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:center;">
-            <h2 style="margin:0 0 10px 0; color:#00d2ff;" data-i18n="welcome">BIENVENUE ⚡</h2>
-            <input type="text" id="username-input" placeholder="Votre Pseudo" maxlength="15" style="width:100%; padding:12px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:15px; outline:none;">
-            <button class="btn-main" onclick="saveProfileFromModal()" data-i18n="play_btn">JOUER ⚡</button>
+            <h2 style="margin:0 0 10px 0; color:#00d2ff;" data-i18n="welcome_title">⚡ BIENVENUE ⚡</h2>
+            <p style="color:#aaa; font-size:14px; margin-bottom:15px;" data-i18n="welcome_sub">Configure ton profil pour jouer :</p>
+            
+            <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;" data-i18n="pseudo_label">PSEUDO</label>
+            <input type="text" id="username-input" placeholder="Ex: Kiiks" maxlength="15" 
+                   style="width:100%; padding:12px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:16px; font-weight:bold; text-align:center; margin-bottom:15px; outline:none;">
+            
+            <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px; font-weight:bold;" data-i18n="region_label">RÉGION</label>
+            <select id="region-input" style="width:100%; padding:12px; border-radius:10px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:15px; font-weight:bold; margin-bottom:20px; outline:none;">
+                <option value="Hauts-de-France">Hauts-de-France</option>
+                <option value="Île-de-France">Île-de-France</option>
+                <option value="Auvergne-Rhône-Alpes">Auvergne-Rhône-Alpes</option>
+                <option value="Nouvelle-Aquitaine">Nouvelle-Aquitaine</option>
+                <option value="Occitanie">Occitanie</option>
+                <option value="Grand Est">Grand Est</option>
+                <option value="Provence-Alpes-Côte d'Azur">Provence-Alpes-Côte d'Azur</option>
+                <option value="Pays de la Loire">Pays de la Loire</option>
+                <option value="Normandie">Normandie</option>
+                <option value="Bretagne">Bretagne</option>
+                <option value="Bourgogne-Franche-Comté">Bourgogne-Franche-Comté</option>
+                <option value="Centre-Val de Loire">Centre-Val de Loire</option>
+                <option value="Corse">Corse</option>
+                <option value="DOM-TOM / Autre">DOM-TOM / Autre</option>
+            </select>
+            
+            <button class="btn-main" onclick="saveProfileFromModal()" data-i18n="btn_play">JOUER ⚡</button>
         </div>
     </div>
 
-    <!-- ÉCRAN DE JEU -->
-    <div id="screen-game" style="display:none;">
-        <div id="hud-1v1" class="game-hud-panel" style="display:none;">
-            <div class="hud-item">
-                <div class="hud-label" data-i18n="hud_my_target">MA CIBLE</div>
-                <div class="hud-value" id="my-target">1</div>
+    <!-- MODAL BOUTIQUE -->
+    <div id="modal-shop" class="modal-overlay" style="display:none;">
+        <div class="modal-card">
+            <h2 style="margin:0 0 10px 0; color:#38ef7d;" data-i18n="shop_title">🛍️ BOUTIQUE</h2>
+            <div class="tabs">
+                <button id="shop-tab-bonus" class="tab-btn active" onclick="switchShopTab('bonus')" data-i18n="shop_tab_bonus">🟢 Bonus (pour soi)</button>
+                <button id="shop-tab-malus" class="tab-btn" onclick="switchShopTab('malus')" data-i18n="shop_tab_malus">🔴 Malus (adversaire)</button>
             </div>
-            <div class="hud-divider"></div>
-            <div class="hud-item">
-                <div class="hud-label" data-i18n="hud_opp_score">ADVERSAIRE (Score)</div>
-                <div class="hud-value score" id="opp-score">0</div>
+            <div id="shop-container" class="shop-grid"></div>
+            <button class="btn-secondary" onclick="closeShop()" data-i18n="close">Fermer</button>
+        </div>
+    </div>
+
+    <!-- OVERLAY CLASSEMENT -->
+    <div id="modal-leaderboard" class="modal-overlay" style="display:none;">
+        <div class="modal-card">
+            <h2 style="margin:0 0 15px 0; color:#00d2ff;" data-i18n="lb_title">🏆 CLASSEMENT</h2>
+            <div class="tabs">
+                <button id="tab-regional" class="tab-btn active" onclick="fetchLeaderboard('regional')" data-i18n="lb_reg">📍 Région</button>
+                <button id="tab-national" class="tab-btn" onclick="fetchLeaderboard('national')" data-i18n="lb_nat">🇫🇷 France</button>
+                <button id="tab-global" class="tab-btn" onclick="fetchLeaderboard('global')" data-i18n="lb_glb">🌍 Monde</button>
+            </div>
+            <div id="lb-list" class="leaderboard-list">
+                <div style="text-align:center; color:#aaa; margin-top:20px;" data-i18n="loading">Chargement...</div>
+            </div>
+            <button class="btn-secondary" onclick="closeLeaderboard()" data-i18n="close">Fermer</button>
+        </div>
+    </div>
+
+    <!-- OVERLAY DECOMPTE -->
+    <div id="countdown-overlay" style="display:none;">
+        <div style="font-size:24px; color:#aaa; margin-bottom:10px;" data-i18n="get_ready">PRÉPAREZ-VOUS !</div>
+        <div id="countdown-number" class="countdown-num">3</div>
+    </div>
+
+    <!-- ECRAN DE JEU -->
+    <div id="screen-game" style="display:none;">
+        <div id="hud-1v1" class="hud" style="display:none;">
+            <div class="player-box me">
+                <div data-i18n="hud_my_target">MA CIBLE</div>
+                <div style="font-size:26px; color:#00d2ff; font-weight:bold;" id="my-target">1</div>
+            </div>
+            <div class="player-box opponent">
+                <div data-i18n="hud_opp_target">ADVERSAIRE</div>
+                <div style="font-size:26px; color:#ff007f; font-weight:bold;" id="opp-target">1</div>
             </div>
         </div>
 
-        <div id="hud-solo" class="game-hud-panel" style="display:none;">
-            <div class="hud-item">
-                <div class="hud-label" data-i18n="hud_solo_target">CIBLE À TROUVER</div>
-                <div class="hud-value" id="solo-target">1</div>
+        <div id="hud-solo" class="hud" style="display:none;">
+            <div class="player-box me">
+                <div data-i18n="hud_solo_target">CIBLE ACTUELLE</div>
+                <div style="font-size:26px; color:#00d2ff; font-weight:bold;" id="solo-target">1</div>
             </div>
-            <div class="hud-divider"></div>
-            <div class="hud-item">
-                <div class="hud-label" data-i18n="hud_score">SCORE</div>
-                <div class="hud-value score" id="solo-score">0</div>
+            <div class="player-box me">
+                <div data-i18n="hud_solo_score">SCORE</div>
+                <div style="font-size:26px; color:#00ff88; font-weight:bold;" id="solo-score">0</div>
             </div>
         </div>
         
-        <div style="font-size:16px; margin-bottom:12px; font-weight:bold; color:#aaa;">
+        <div style="font-size:18px; margin-bottom:10px; font-weight:bold;">
             <span data-i18n="timer_label">Temps</span> : <span id="game-timer" style="color:#ff007f;">30</span>s
+        </div>
+
+        <div id="power-zone" style="display:none;">
+            <button id="btn-use-power" class="btn-power-hud" onclick="triggerEquippedPower()">
+                ⚡ <span id="power-hud-name">Aucun</span>
+            </button>
         </div>
 
         <div id="grid" class="grid"></div>
     </div>
 
-    <!-- MODAL RÉSULTAT -->
+    <!-- MODAL RESULTAT -->
     <div id="recap-modal" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:center;">
             <div id="recap-banner" style="font-size:26px; font-weight:900; margin-bottom:10px;">RÉSULTAT</div>
             <div id="recap-reason" style="color:#aaa; margin-bottom:15px;"></div>
             
+            <div id="recap-1v1-rows">
+                <div style="display:flex; justify-content:space-between; margin:8px 0; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px;">
+                    <span data-i18n="recap_my_target">🎯 Ma Cible :</span>
+                    <span id="recap-my-target" style="color:#00d2ff; font-weight:bold;">-</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin:8px 0; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px;">
+                    <span data-i18n="recap_opp_target">🎯 Cible Adversaire :</span>
+                    <span id="recap-opp-target" style="color:#ff007f; font-weight:bold;">-</span>
+                </div>
+            </div>
+
             <div style="display:flex; justify-content:space-between; margin:8px 0;">
-                <span data-i18n="recap_score">⭐ Score final :</span>
+                <span data-i18n="recap_my_score">⭐ Mon Score :</span>
                 <span id="recap-my-score" style="font-weight:bold;">-</span>
             </div>
 
@@ -359,465 +431,958 @@
                 <span id="recap-coins-gained" style="font-weight:bold;">+0</span>
             </div>
 
-            <button id="btn-reward-ad" class="btn-main btn-reward" onclick="watchRewardedAd()" data-i18n="reward_ad">🎁 Regarder une pub pour doubler (+🪙)</button>
-            <button class="btn-main" onclick="showMainMenu()" style="margin-top:10px;" data-i18n="main_menu">MENU PRINCIPAL</button>
+            <button class="btn-main" onclick="showMainMenu()" data-i18n="main_menu">MENU PRINCIPAL</button>
         </div>
     </div>
 
     <script>
-        const translations = {
+        // --- DICTIONNAIRE DE TRADUCTION ---
+        const i18n = {
             fr: {
                 coins: "Pièces", trophies: "Trophées",
-                ad_title: "Soutenir le Créateur", ad_desc: "Chiffre Blitz est 100% gratuit. Une publicité de soutien va se lancer. Merci ! ❤️", ad_btn: "Lancer la partie ⚡",
-                rules_title: "📖 RÈGLES DU JEU",
-                r_classic_title: "⚡ Mode Classique (Solo) :", r_classic_desc: "Enchaînez le plus vite possible les chiffres dans l'ordre croissant exact de 1 à 50 pendant 30 secondes.",
-                r_random_title: "🎲 Mode Aléatoire (Solo) :", r_random_desc: "Un chiffre cible changeant s'affiche. Retrouvez-le et cliquez dessus le plus rapidement possible.",
-                r_avalanche_title: "🧊 Mode Avalanche (Style Tetris) :", r_avalanche_desc: "Des chiffres s'empirent progressivement. Cliquez sur le chiffre cible affiché (présent dans la grille) pour libérer la case.",
-                r_1v1_title: "⚔️ Duel 1v1 Online :", r_1v1_desc: "Affrontez un adversaire en temps réel. Le premier à marquer le plus de points gagne la partie.",
-                close: "Fermer", shop_title: "🛍️ BOUTIQUE DE POUVOIRS", tab_bonus: "🟢 Bonus", tab_malus: "🔴 Malus",
-                lb_title: "🏆 CLASSEMENT", ad_sponsored: "VIDEO SPONSORISÉE...",
-                title_sub: "Le duel de calcul et de réflexes ultime",
-                play_btn: "JOUER ⚡", menu_solo: "🏋️ ENTRAÎNEMENT SOLO", menu_1v1: "⚔️ DUEL 1v1 ONLINE", menu_shop: "🛍️ BOUTIQUE POUVOIRS", menu_lb: "🏆 CLASSEMENT", menu_rules: "ℹ️ Comment jouer / Règles",
-                solo_menu_title: "MODES D'ENTRAÎNEMENT", solo_classic: "⚡ Classique (Croissant)", solo_random: "🎲 Aléatoire (Cibles variées)",
-                solo_avalanche: "🧊 AVALANCHE (Difficultés)", diff_easy: "Facile", diff_medium: "Moyen", diff_hard: "Difficile 💀", back_menu: "⬅️ Retour Menu",
-                hub_1v1_title: "⚔️ DUEL 1v1 ONLINE", hub_random: "🎲 Matchmaking Aléatoire", hub_rooms: "🏠 Salons Privés / Lobby",
-                searching: "Recherche d'adversaire...", cancel: "❌ Annuler", rooms_title: "🏠 Salons Privés", create_room: "✨ Créer un salon", back: "⬅️ Retour",
-                room_label: "Salon", waiting: "En attente...", quit: "❌ Quitter", welcome: "BIENVENUE ⚡",
-                hud_my_target: "MA CIBLE", hud_opp_score: "ADVERSAIRE (Score)", hud_solo_target: "CIBLE À TROUVER", hud_score: "SCORE",
-                timer_label: "Temps", recap_score: "⭐ Score final :", recap_coins: "🪙 Pièces Gagnées :",
-                reward_ad: "🎁 Regarder une pub pour doubler (+🪙)", main_menu: "MENU PRINCIPAL",
-                found_title: "⚔️ ADVERSAIRE TROUVÉ !", found_sub: "La partie va commencer..."
+                subtitle: "Le duel de calcul et de réflexes ultime",
+                rule1_title: "⚡ Principe du jeu",
+                rule1_desc: "Clique le plus vite possible sur les tuiles de la grille dans l'ordre croissant exact (1, puis 2, 3, etc.).",
+                rule2_title: "🏋️ Entraînement Solo",
+                rule2_desc: "30 secondes chrono pour enchaîner un max de chiffres et gagner des pièces (🪙). Objectif 30 cases pour rafler le bonus max !",
+                rule3_title: "⚔️ Duel 1v1 Online",
+                rule3_desc: "Affronte un adversaire en temps réel (matchmaking ou salons privés avec code/mot de passe).",
+                rule4_title: "🎯 Mode Tournoi",
+                rule4_desc: "Tournoi à élimination directe pour remporter des points, des pièces et des trophées (🏆).",
+                btn_play: "JOUER ⚡",
+                menu_solo: "🏋️ ENTRAÎNEMENT SOLO",
+                menu_1v1: "⚔️ DUEL 1v1 ONLINE",
+                menu_shop: "🛍️ BOUTIQUE POUVOIRS",
+                menu_lb: "🏆 CLASSEMENT",
+                menu_tourney: "🎯 MODE TOURNOI",
+                menu_info: "ℹ️ Informations & Règles",
+                hub_title: "⚔️ DUEL 1v1 ONLINE",
+                hub_subtitle: "Choisis ton mode de jeu :",
+                hub_random: "🎲 Matchmaking Aléatoire",
+                hub_rooms: "🏠 Salons Privés / Lobby",
+                back: "⬅️ Retour Menu",
+                searching: "Recherche d'adversaire...",
+                cancel: "❌ Annuler",
+                rooms_title: "🏠 Salons Privés",
+                rooms_create: "✨ Créer un salon personnalisé",
+                rooms_join_code: "🔑 Rejoindre avec un code",
+                rooms_open_list: "Salons ouverts :",
+                loading: "Chargement...",
+                join_title: "🔑 Rejoindre un Salon",
+                join_subtitle: "Entre le code et le mot de passe (si requis) :",
+                room_code_label: "CODE DU SALON",
+                room_pass_label: "MOT DE PASSE (Optionnel)",
+                join_btn: "Rejoindre ⚡",
+                room_header: "Salon",
+                share_label: "INVITATION RAPIDE (SMS / WhatsApp) :",
+                share_btn: "📤 Partager le lien",
+                copy_btn: "Copier 📋",
+                link_copied: "Lien du salon copié dans le presse-papier !",
+                players_in_room: "Joueurs dans le salon :",
+                waiting_opponent: "En attente d'un adversaire...",
+                leave_room: "❌ Quitter le salon",
+                create_modal_title: "✨ CRÉER UN SALON",
+                create_modal_sub: "Personnalise ton salon privé :",
+                create_btn: "Créer ⚡",
+                tourney_screen_title: "🎯 Tournoi Blitz",
+                tourney_desc1: "Arbre à élimination directe.",
+                tourney_desc2: "Affrontez les meilleurs joueurs dans un tournoi épique pour décrocher le titre suprême.",
+                tourney_rewards: "Récompenses : 200 🪙 + 1 🏆 + 50 ⭐",
+                welcome_title: "⚡ BIENVENUE ⚡",
+                welcome_sub: "Configure ton profil pour jouer :",
+                pseudo_label: "PSEUDO",
+                region_label: "RÉGION",
+                shop_title: "🛍️ BOUTIQUE",
+                shop_tab_bonus: "🟢 Bonus (pour soi)",
+                shop_tab_malus: "🔴 Malus (adversaire)",
+                close: "Fermer",
+                lb_title: "🏆 CLASSEMENT",
+                lb_reg: "📍 Région",
+                lb_nat: "🇫🇷 France",
+                lb_glb: "🌍 Monde",
+                get_ready: "PRÉPAREZ-VOUS !",
+                hud_my_target: "MA CIBLE",
+                hud_opp_target: "ADVERSAIRE",
+                hud_solo_target: "CIBLE ACTUELLE",
+                hud_solo_score: "SCORE",
+                timer_label: "Temps",
+                recap_my_target: "🎯 Ma Cible :",
+                recap_opp_target: "🎯 Cible Adversaire :",
+                recap_my_score: "⭐ Mon Score :",
+                recap_coins: "🪙 Pièces Gagnées :",
+                main_menu: "MENU PRINCIPAL",
+                no_rooms: "Aucun salon ouvert.",
+                no_players: "Aucun joueur.",
+                powers: {
+                    spotlight: { name: '💡 Projecteur', desc: 'Illumine la bonne tuile (2s)' },
+                    freeze: { name: '⏳ Blocage du Temps', desc: 'Gèle le chrono pendant 3s' },
+                    joker: { name: '⚡ Joker Éclair', desc: 'Valide la cible actuelle' },
+                    nova: { name: '🌟 Nova Temporelle', desc: 'GIGA : Valide 3 cibles' },
+                    quake: { name: '📳 Séisme', desc: 'Fait trembler l\'adversaire (2s)' },
+                    micro: { name: '🐜 Micro-Tuiles', desc: 'Rétrécit la grille adverse (2s)' },
+                    eclipse: { name: '🌑 Éclipse', desc: 'Floute la grille adverse (1.5s)' },
+                    chaos: { name: '🌪️ Chaos Absolu', desc: 'GIGA : Combo de malus (5s)' }
+                }
             },
             en: {
                 coins: "Coins", trophies: "Trophies",
-                ad_title: "Support the Creator", ad_desc: "Chiffre Blitz is 100% free. A support advertisement will play. Thank you! ❤️", ad_btn: "Start Game ⚡",
-                rules_title: "📖 GAME RULES",
-                r_classic_title: "⚡ Classic Mode (Solo):", r_classic_desc: "Chain numbers as fast as possible in exact ascending order from 1 to 50 for 30 seconds.",
-                r_random_title: "🎲 Random Mode (Solo):", r_random_desc: "A changing target number appears. Find it and click on it as quickly as possible.",
-                r_avalanche_title: "🧊 Avalanche Mode (Tetris Style):", r_avalanche_desc: "Numbers pile up progressively. Click the displayed target number present in the grid to clear the cell.",
-                r_1v1_title: "⚔️ 1v1 Online Duel:", r_1v1_desc: "Face an opponent in real time. The first to score the most points wins the game.",
-                close: "Close", shop_title: "🛍️ POWERS SHOP", tab_bonus: "🟢 Bonus", tab_malus: "🔴 Malus",
-                lb_title: "🏆 LEADERBOARD", ad_sponsored: "SPONSORED VIDEO...",
-                title_sub: "The ultimate calculation and reflex duel",
-                play_btn: "PLAY ⚡", menu_solo: "🏋️ SOLO TRAINING", menu_1v1: "⚔️ 1v1 ONLINE DUEL", menu_shop: "🛍️ POWERS SHOP", menu_lb: "🏆 LEADERBOARD", menu_rules: "ℹ️ How to play / Rules",
-                solo_menu_title: "TRAINING MODES", solo_classic: "⚡ Classic (Ascending)", solo_random: "🎲 Random (Varied targets)",
-                solo_avalanche: "🧊 AVALANCHE (Difficulties)", diff_easy: "Easy", diff_medium: "Medium", diff_hard: "Hard 💀", back_menu: "⬅️ Back to Menu",
-                hub_1v1_title: "⚔️ 1v1 ONLINE DUEL", hub_random: "🎲 Random Matchmaking", hub_rooms: "🏠 Private Rooms / Lobby",
-                searching: "Searching for opponent...", cancel: "❌ Cancel", rooms_title: "🏠 Private Rooms", create_room: "✨ Create a room", back: "⬅️ Retour",
-                room_label: "Room", waiting: "Waiting...", quit: "❌ Quit", welcome: "WELCOME ⚡",
-                hud_my_target: "MY TARGET", hud_opp_score: "OPPONENT (Score)", hud_solo_target: "TARGET TO FIND", hud_score: "SCORE",
-                timer_label: "Time", recap_score: "⭐ Final Score :", recap_coins: "🪙 Coins Earned :",
-                reward_ad: "🎁 Watch an ad to double (+🪙)", main_menu: "MAIN MENU",
-                found_title: "⚔️ OPPONENT FOUND!", found_sub: "The match is about to start..."
+                subtitle: "The ultimate math and reflex duel",
+                rule1_title: "⚡ Game Rule",
+                rule1_desc: "Click as fast as possible on the grid tiles in exact ascending order (1, then 2, 3, etc.).",
+                rule2_title: "🏋️ Solo Training",
+                rule2_desc: "30 seconds timer to chain numbers and earn coins (🪙). Goal: 30 tiles for max bonus!",
+                rule3_title: "⚔️ Online 1v1 Duel",
+                rule3_desc: "Face an opponent in real time (matchmaking or private rooms with code/password).",
+                rule4_title: "🎯 Tournament Mode",
+                rule4_desc: "Single-elimination bracket to win points, coins, and trophies (🏆).",
+                btn_play: "PLAY ⚡",
+                menu_solo: "🏋️ SOLO TRAINING",
+                menu_1v1: "⚔️ ONLINE 1v1 DUEL",
+                menu_shop: "🛍️ POWERS SHOP",
+                menu_lb: "🏆 LEADERBOARD",
+                menu_tourney: "🎯 TOURNAMENT MODE",
+                menu_info: "ℹ️ Info & Rules",
+                hub_title: "⚔️ ONLINE 1v1 DUEL",
+                hub_subtitle: "Choose your game mode:",
+                hub_random: "🎲 Random Matchmaking",
+                hub_rooms: "🏠 Private Rooms / Lobby",
+                back: "⬅️ Back to Menu",
+                searching: "Searching for opponent...",
+                cancel: "❌ Cancel",
+                rooms_title: "🏠 Private Rooms",
+                rooms_create: "✨ Create Custom Room",
+                rooms_join_code: "🔑 Join with Code",
+                rooms_open_list: "Open rooms:",
+                loading: "Loading...",
+                join_title: "🔑 Join a Room",
+                join_subtitle: "Enter the code and password (if required):",
+                room_code_label: "ROOM CODE",
+                room_pass_label: "PASSWORD (Optional)",
+                join_btn: "Join ⚡",
+                room_header: "Room",
+                share_label: "QUICK INVITE (SMS / WhatsApp):",
+                share_btn: "📤 Share Link",
+                copy_btn: "Copy 📋",
+                link_copied: "Room link copied to clipboard!",
+                players_in_room: "Players in room:",
+                waiting_opponent: "Waiting for opponent...",
+                leave_room: "❌ Leave Room",
+                create_modal_title: "✨ CREATE A ROOM",
+                create_modal_sub: "Customize your private room:",
+                create_btn: "Create ⚡",
+                tourney_screen_title: "🎯 Blitz Tournament",
+                tourney_desc1: "Single-elimination bracket.",
+                tourney_desc2: "Face the best players in an epic tournament to claim the supreme title.",
+                tourney_rewards: "Rewards: 200 🪙 + 1 🏆 + 50 ⭐",
+                welcome_title: "⚡ WELCOME ⚡",
+                welcome_sub: "Set up your profile to play:",
+                pseudo_label: "PSEUDO",
+                region_label: "REGION",
+                shop_title: "🛍️ SHOP",
+                shop_tab_bonus: "🟢 Bonus (self)",
+                shop_tab_malus: "🔴 Malus (opponent)",
+                close: "Close",
+                lb_title: "🏆 LEADERBOARD",
+                lb_reg: "📍 Region",
+                lb_nat: "🇫🇷 France",
+                lb_glb: "🌍 World",
+                get_ready: "GET READY!",
+                hud_my_target: "MY TARGET",
+                hud_opp_target: "OPPONENT",
+                hud_solo_target: "CURRENT TARGET",
+                hud_solo_score: "SCORE",
+                timer_label: "Time",
+                recap_my_target: "🎯 My Target:",
+                recap_opp_target: "🎯 Opponent Target:",
+                recap_my_score: "⭐ My Score:",
+                recap_coins: "🪙 Coins Earned:",
+                main_menu: "MAIN MENU",
+                no_rooms: "No open rooms.",
+                no_players: "No players.",
+                powers: {
+                    spotlight: { name: '💡 Spotlight', desc: 'Highlights the correct tile (2s)' },
+                    freeze: { name: '⏳ Time Freeze', desc: 'Freezes the timer for 3s' },
+                    joker: { name: '⚡ Lightning Joker', desc: 'Validates current target' },
+                    nova: { name: '🌟 Time Nova', desc: 'GIGA: Validates 3 targets' },
+                    quake: { name: '📳 Quake', desc: 'Shakes opponent grid (2s)' },
+                    micro: { name: '🐜 Micro-Tiles', desc: 'Shrinks opponent grid (2s)' },
+                    eclipse: { name: '🌑 Eclipse', desc: 'Blurs opponent grid (1.5s)' },
+                    chaos: { name: '🌪️ Absolute Chaos', desc: 'GIGA: Malus combo (5s)' }
+                }
             }
         };
 
-        function toggleLanguage() {
-            let current = localStorage.getItem('cb_lang') || 'fr';
-            let next = (current === 'fr') ? 'en' : 'fr';
-            localStorage.setItem('cb_lang', next);
-            applyLanguage(next);
-        }
+        let currentLang = localStorage.getItem('cb_lang') || 'fr';
 
-        function applyLanguage(lang) {
-            document.getElementById('lang-btn').innerText = (lang === 'fr') ? 'ENG' : 'FR';
-            const elements = document.querySelectorAll('[data-i18n]');
-            elements.forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if (translations[lang] && translations[lang][key]) {
-                    el.innerHTML = translations[lang][key];
-                }
-            });
+        function toggleLanguage() {
+            currentLang = (currentLang === 'fr') ? 'en' : 'fr';
+            localStorage.setItem('cb_lang', currentLang);
+            applyTranslations();
             if (document.getElementById('modal-shop').style.display === 'flex') {
-                renderShopItems();
+                switchShopTab(currentShopTab);
             }
         }
 
-        // Moteur Audio & Musique d'ambiance
+        function applyTranslations() {
+            const dict = i18n[currentLang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (dict[key]) {
+                    el.innerText = dict[key];
+                }
+            });
+            document.getElementById('lang-btn').innerText = (currentLang === 'fr') ? 'ENG' : 'FR';
+        }
+
+        // --- MOTEUR AUDIO LONG ET ÉVOLUTIF (64 PAS) ---
         const SoundEngine = {
-            ctx: null, isMuted: false, bgmInterval: null,
+            ctx: null, isMuted: false, timerId: null, currentMode: null, step: 0, bpm: 142,
             init() { 
-                if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); 
-                if (this.ctx.state === 'suspended') this.ctx.resume(); 
-                this.startBGM();
+                if (!this.ctx) { 
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)(); 
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
             },
-            playClick() { 
-                if (this.isMuted) return; 
-                this.init(); 
-                const t = this.ctx.currentTime; 
-                const osc = this.ctx.createOscillator(), g = this.ctx.createGain(); 
-                osc.frequency.setValueAtTime(440, t); 
-                osc.frequency.exponentialRampToValueAtTime(880, t + 0.06); 
-                g.gain.setValueAtTime(0.1, t); 
-                g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06); 
-                osc.connect(g); g.connect(this.ctx.destination); 
-                osc.start(t); osc.stop(t + 0.06); 
+            toggleMute() {
+                this.isMuted = !this.isMuted;
+                if (this.isMuted) this.stopMusic(false);
+                else if (this.currentMode) this.startMusic(this.currentMode);
+                return this.isMuted;
             },
-            playError() { 
-                if (this.isMuted) return; 
-                this.init(); 
-                const t = this.ctx.currentTime; 
-                const osc = this.ctx.createOscillator(), g = this.ctx.createGain(); 
-                osc.type = 'sawtooth'; 
-                osc.frequency.setValueAtTime(150, t); 
-                g.gain.setValueAtTime(0.1, t); 
-                g.gain.exponentialRampToValueAtTime(0.0001, t + 0.1); 
-                osc.connect(g); g.connect(this.ctx.destination); 
-                osc.start(t); osc.stop(t + 0.1); 
+            playClick() {
+                if (this.isMuted) return; this.init();
+                const t = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, t);
+                osc.frequency.exponentialRampToValueAtTime(880, t + 0.06);
+                gain.gain.setValueAtTime(0.1, t);
+                gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(t); osc.stop(t + 0.06);
             },
-            startBGM() {
-                if (this.bgmInterval) return;
-                const notes = [220, 246.94, 277.18, 329.63, 369.99];
-                let index = 0;
-                this.bgmInterval = setInterval(() => {
-                    if (this.isMuted || !this.ctx) return;
-                    try {
+            playError() {
+                if (this.isMuted) return; this.init();
+                const t = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, t);
+                osc.frequency.linearRampToValueAtTime(80, t + 0.1);
+                gain.gain.setValueAtTime(0.1, t);
+                gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(t); osc.stop(t + 0.1);
+            },
+            playVictory() {
+                if (this.isMuted) return; this.init();
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                    setTimeout(() => {
+                        if (this.isMuted) return;
                         const t = this.ctx.currentTime;
-                        const osc = this.ctx.createOscillator();
-                        const g = this.ctx.createGain();
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(notes[index % notes.length], t);
-                        g.gain.setValueAtTime(0.015, t);
-                        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
-                        osc.connect(g);
-                        g.connect(this.ctx.destination);
-                        osc.start(t);
-                        osc.stop(t + 0.4);
-                        index++;
-                    } catch(e) {}
-                }, 700);
+                        const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+                        osc.type = 'square';
+                        osc.frequency.setValueAtTime(freq, t);
+                        gain.gain.setValueAtTime(0.08, t);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+                        osc.connect(gain); gain.connect(this.ctx.destination);
+                        osc.start(t); osc.stop(t + 0.25);
+                    }, i * 120);
+                });
             },
-            stopBGM() {
-                if (this.bgmInterval) {
-                    clearInterval(this.bgmInterval);
-                    this.bgmInterval = null;
+            stopMusic(clear = true) {
+                if (this.timerId) clearInterval(this.timerId);
+                this.timerId = null;
+                if (clear) this.currentMode = null;
+            },
+            startMusic(mode) {
+                if (mode) this.currentMode = mode;
+                if (this.isMuted) return;
+                this.init();
+                this.stopMusic(false);
+                this.step = 0;
+
+                this.bpm = (mode === 'menu') ? 120 : 142;
+                const intervalMs = (60 / this.bpm / 4) * 1000;
+
+                this.timerId = setInterval(() => {
+                    if (this.isMuted || !this.ctx || this.ctx.state !== 'running') return;
+                    this.tickSequence(this.currentMode, this.step);
+                    this.step = (this.step + 1) % 64; // Boucle longue de 64 pas
+                }, intervalMs);
+            },
+            tickSequence(mode, step) {
+                const t = this.ctx.currentTime;
+                const scale = [110, 123.47, 130.81, 146.83, 164.81, 196, 220, 246.94, 261.63, 293.66, 329.63, 349.23, 392];
+
+                // Kick percussif
+                if (step % 4 === 0) {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(mode === 'menu' ? 120 : 150, t);
+                    osc.frequency.exponentialRampToValueAtTime(30, t + 0.08);
+                    gain.gain.setValueAtTime(0.18, t);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(t); osc.stop(t + 0.09);
+                }
+
+                // Snare
+                if (step === 4 || step === 12 || step === 20 || step === 28 || step === 36 || step === 44 || step === 52 || step === 60) {
+                    const bufferSize = this.ctx.sampleRate * 0.07;
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                    const noise = this.ctx.createBufferSource();
+                    noise.buffer = buffer;
+                    const filter = this.ctx.createBiquadFilter();
+                    filter.type = 'highpass'; filter.frequency.setValueAtTime(1400, t);
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(0.1, t);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+                    noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                    noise.start(t);
+                }
+
+                // Hi-hat léger
+                if (step % 2 === 1 && mode !== 'menu') {
+                    const bufferSize = this.ctx.sampleRate * 0.03;
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                    const noise = this.ctx.createBufferSource();
+                    noise.buffer = buffer;
+                    const filter = this.ctx.createBiquadFilter();
+                    filter.type = 'highpass'; filter.frequency.setValueAtTime(6000, t);
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(0.03, t);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
+                    noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                    noise.start(t);
+                }
+
+                // Mélodie changeante sur 4 mesures (64 pas)
+                if (mode !== 'menu') {
+                    const bar = Math.floor(step / 16);
+                    let melodyPatterns = [
+                        [0, 2, 4, 7, 9, 7, 4, 2, 3, 5, 7, 10, 9, 7, 5, 2],
+                        [2, 4, 5, 9, 11, 9, 5, 4, 5, 7, 9, 12, 11, 9, 7, 4],
+                        [4, 5, 7, 11, 12, 11, 7, 5, 7, 9, 11, 14, 12, 11, 9, 7],
+                        [7, 9, 11, 14, 16, 14, 11, 9, 11, 12, 14, 16, 14, 12, 9, 4]
+                    ];
+                    const currentPattern = melodyPatterns[bar];
+                    const noteIdx = currentPattern[step % 16];
+                    const freq = scale[noteIdx % scale.length] * 2;
+
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    const filter = this.ctx.createBiquadFilter();
+
+                    osc.type = (step % 4 === 0) ? 'sawtooth' : 'square';
+                    osc.frequency.setValueAtTime(freq, t);
+
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(1800 + (bar * 200), t);
+
+                    gain.gain.setValueAtTime(0.04, t);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+
+                    osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(t); osc.stop(t + 0.09);
+                } else {
+                    if (step % 2 === 0) {
+                        const menuBar = Math.floor(step / 16);
+                        const menuPatterns = [
+                            [0, 3, 5, 7],
+                            [2, 5, 7, 9],
+                            [3, 7, 8, 10],
+                            [5, 8, 10, 12]
+                        ];
+                        const chord = menuPatterns[menuBar];
+                        const freq = scale[chord[(step / 2) % chord.length]];
+                        
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'square';
+                        osc.frequency.setValueAtTime(freq, t);
+                        gain.gain.setValueAtTime(0.025, t);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
+                        osc.connect(gain); gain.connect(this.ctx.destination);
+                        osc.start(t); osc.stop(t + 0.15);
+                    }
                 }
             }
         };
 
         function toggleMute() {
-            SoundEngine.isMuted = !SoundEngine.isMuted;
-            document.getElementById('mute-btn').innerText = SoundEngine.isMuted ? '🔇' : '🔊';
-            if (SoundEngine.isMuted) {
-                SoundEngine.stopBGM();
-            } else {
-                SoundEngine.init();
-            }
+            const muted = SoundEngine.toggleMute();
+            document.getElementById('mute-btn').innerText = muted ? '🔇' : '🔊';
         }
 
-        const SERVER_URL = window.location.origin;
-        const socket = io(SERVER_URL, { reconnection: true });
+        const SERVER_URL = "https://chiffre-blitz-server.onrender.com";
+        const socket = io(SERVER_URL, {
+            reconnection: true,
+            reconnectionAttempts: 10,
+            reconnectionDelay: 1000
+        });
+
+        socket.on('disconnect', () => {
+            SoundEngine.stopMusic(true);
+        });
+
+        socket.on('connect', () => {
+            registerIfPossible();
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetRoom = urlParams.get('room');
+            if (targetRoom && isProfileValid()) {
+                setTimeout(() => {
+                    joinRoomDirect(targetRoom.toUpperCase(), '');
+                }, 500);
+            }
+        });
 
         let myProfile = { username: "", region: "Hauts-de-France", points: 0, coins: 0, trophies: 0, inventory: {}, equippedPower: null };
-        let activeTrainingMode = 'classic';
+        
+        const POWERS_CATALOG = [
+            { id: 'spotlight', price: 40, type: 'bonus' },
+            { id: 'freeze', price: 80, type: 'bonus' },
+            { id: 'joker', price: 180, type: 'bonus' },
+            { id: 'nova', price: 450, type: 'bonus' },
+            { id: 'quake', price: 50, type: 'malus' },
+            { id: 'micro', price: 100, type: 'malus' },
+            { id: 'eclipse', price: 220, type: 'malus' },
+            { id: 'chaos', price: 600, type: 'malus' }
+        ];
+
+        let current1v1Time = 30, radarInterval = null;
         let soloTarget = 1, soloScore = 0, soloTimeLeft = 30, soloTimerInterval = null;
-        let is1v1Active = false;
-        let matchmakingInterval = null;
-        let hasShownLaunchAd = false;
-        let hasWatchedAdThisGame = false;
-        let adCallbackFunction = null;
-
-        const powersData = {
-            bonus: [
-                { id: 'spotlight', name: '💡 Projecteur', desc: 'Illumine la bonne tuile', price: 30 },
-                { id: 'freeze', name: '⏳ Gel du Temps', desc: 'Gèle le chrono', price: 60 },
-                { id: 'joker', name: '⚡ Joker', desc: 'Valide la cible actuelle', price: 150 },
-                { id: 'nova', name: '🌟 Nova', desc: 'Valide plusieurs cibles', price: 400 }
-            ],
-            malus: [
-                { id: 'quake', name: '📳 Séisme', desc: 'Fait trembler l adversaire', price: 40 },
-                { id: 'micro', name: '🐜 Micro-Tuiles', desc: 'Rétrécit la grille adverse', price: 80 },
-                { id: 'eclipse', name: '🌑 Éclipse', desc: 'Floute la grille adverse', price: 200 },
-                { id: 'chaos', name: '🌪️ Chaos', desc: 'Combo de malus', price: 500 }
-            ]
-        };
-        let currentShopTab = 'bonus';
-
-        let avalancheGridData = [];
-        let avalancheTarget = null;
-        let avalancheInterval = null;
+        let powerUsedInMatch = false, currentShopTab = 'bonus', isTimeFrozen = false;
 
         document.addEventListener("DOMContentLoaded", () => {
-            let savedLang = localStorage.getItem('cb_lang') || 'fr';
-            applyLanguage(savedLang);
+            applyTranslations();
             showTitleScreen();
             checkAndShowProfileModal();
-            // Lancement initial de l'audio au premier clic sur la page si nécessaire
-            document.body.addEventListener('click', () => {
-                SoundEngine.init();
-            }, { once: true });
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetRoom = urlParams.get('room');
+            if (targetRoom) {
+                setTimeout(() => {
+                    if (isProfileValid()) {
+                        openJoinCustomScreen(targetRoom.toUpperCase());
+                    }
+                }, 1000);
+            }
         });
+
+        function updateEconomyUI() {
+            document.getElementById('user-coins-display').innerText = myProfile.coins;
+            document.getElementById('user-trophies-display').innerText = myProfile.trophies;
+            document.getElementById('user-pts-display').innerText = myProfile.points;
+        }
 
         function isProfileValid() {
             const savedName = localStorage.getItem('cb_username');
-            return savedName && savedName.trim().length >= 3;
+            const savedRegion = localStorage.getItem('cb_region');
+            return savedName && savedName.trim().length >= 3 && savedName !== "Profil" && savedName !== "Définir un pseudo" && savedRegion;
         }
 
         function checkAndShowProfileModal() {
             if (!isProfileValid()) {
+                document.getElementById('user-name-display').innerText = "Définir pseudo";
                 document.getElementById('modal-username').style.display = 'flex';
             } else {
                 myProfile.username = localStorage.getItem('cb_username');
+                myProfile.region = localStorage.getItem('cb_region');
                 document.getElementById('user-name-display').innerText = myProfile.username;
-                socket.emit('register_player', myProfile);
+                document.getElementById('modal-username').style.display = 'none';
+                registerIfPossible();
             }
         }
 
         function saveProfileFromModal() {
             const nameInput = document.getElementById('username-input').value.trim();
-            if (nameInput.length < 3) return;
+            const regionInput = document.getElementById('region-input').value;
+            if (nameInput.length < 3) { alert("Ton pseudo doit contenir au moins 3 caractères !"); return; }
+            myProfile.username = nameInput; myProfile.region = regionInput;
             localStorage.setItem('cb_username', nameInput);
-            myProfile.username = nameInput;
+            localStorage.setItem('cb_region', regionInput);
+            document.getElementById('user-name-display').innerText = nameInput;
             document.getElementById('modal-username').style.display = 'none';
-            socket.emit('register_player', myProfile);
+            registerIfPossible();
+        }
+
+        function promptProfileChange() {
+            document.getElementById('username-input').value = isProfileValid() ? myProfile.username : '';
+            if (myProfile.region) document.getElementById('region-input').value = myProfile.region;
+            document.getElementById('modal-username').style.display = 'flex';
+        }
+
+        function registerIfPossible() {
+            if (isProfileValid() && socket.connected) {
+                socket.emit('register_player', {
+                    username: localStorage.getItem('cb_username'),
+                    region: localStorage.getItem('cb_region')
+                });
+            }
         }
 
         socket.on('player_registered', (player) => {
-            myProfile = Object.assign(myProfile, player);
-            document.getElementById('user-coins-display').innerText = player.coins;
-            document.getElementById('user-trophies-display').innerText = player.trophies;
-            document.getElementById('user-pts-display').innerText = player.points;
-            if (document.getElementById('modal-shop').style.display === 'flex') {
-                renderShopItems();
+            if (player) {
+                myProfile.username = player.username;
+                myProfile.region = player.region;
+                myProfile.points = player.points;
+                myProfile.coins = player.coins;
+                myProfile.trophies = player.trophies;
+                myProfile.inventory = player.inventory || {};
+                myProfile.equippedPower = player.equippedPower;
+                
+                document.getElementById('user-name-display').innerText = player.username;
+                updateEconomyUI();
+                if (document.getElementById('modal-shop').style.display === 'flex') {
+                    switchShopTab(currentShopTab);
+                }
             }
-        });
-
-        socket.on('room_error', (msg) => {
-            alert(msg);
         });
 
         function hideAllScreens() {
-            ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-room-waiting', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'modal-username', 'modal-1v1-countdown', 'modal-launch-ad', 'modal-rules'].forEach(id => {
+            ['screen-title', 'screen-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
+            if (radarInterval) clearInterval(radarInterval);
             if (soloTimerInterval) clearInterval(soloTimerInterval);
-            if (avalancheInterval) clearInterval(avalancheInterval);
+            isTimeFrozen = false;
+            SoundEngine.stopMusic(true);
         }
 
-        function showTitleScreen() { hideAllScreens(); document.getElementById('screen-title').style.display = 'block'; }
-        function showMainMenu() { hideAllScreens(); document.getElementById('screen-menu').style.display = 'flex'; }
-        function openSoloMenu() { hideAllScreens(); document.getElementById('screen-solo-menu').style.display = 'flex'; }
-        function open1v1Hub() { hideAllScreens(); document.getElementById('screen-1v1-hub').style.display = 'flex'; }
-        
-        function openRoomsScreen() { 
-            hideAllScreens(); 
-            document.getElementById('screen-rooms').style.display = 'block'; 
-            socket.emit('get_rooms_list'); 
+        function showTitleScreen() {
+            hideAllScreens();
+            window.history.replaceState({}, '', window.location.pathname);
+            document.getElementById('screen-title').style.display = 'block';
+            SoundEngine.startMusic('menu');
+        }
+
+        function showMainMenu() {
+            hideAllScreens();
+            window.history.replaceState({}, '', window.location.pathname);
+            document.getElementById('screen-menu').style.display = 'flex';
+            SoundEngine.startMusic('menu');
+        }
+
+        function open1v1Hub() {
+            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+            hideAllScreens();
+            document.getElementById('screen-1v1-hub').style.display = 'flex';
+            SoundEngine.startMusic('menu');
+        }
+
+        function openRoomsScreen() {
+            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+            hideAllScreens();
+            window.history.replaceState({}, '', window.location.pathname);
+            document.getElementById('screen-rooms').style.display = 'block';
+            fetchRoomsList();
+        }
+
+        function fetchRoomsList() { socket.emit('get_rooms_list'); }
+
+        function openCreateRoomModal() {
+            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+            document.getElementById('custom-room-name').value = '';
+            document.getElementById('custom-room-pass').value = '';
+            document.getElementById('modal-create-room').style.display = 'flex';
+        }
+
+        function closeCreateRoomModal() {
+            document.getElementById('modal-create-room').style.display = 'none';
         }
 
         function submitCreateRoom() {
-            const code = document.getElementById('room-code-input').value.trim();
-            const password = document.getElementById('room-pass-input').value;
-            socket.emit('create_room', { code, password, username: myProfile.username });
+            const code = document.getElementById('custom-room-name').value.trim().toUpperCase();
+            const password = document.getElementById('custom-room-pass').value.trim();
+            
+            if (code !== '' && code.length < 2) { 
+                alert("Le nom du salon personnalisé doit contenir au moins 2 caractères."); 
+                return; 
+            }
+            if (!socket.connected) { alert("Erreur : Non connecté au serveur."); return; }
+
+            socket.emit('create_room', { code: code, password: password, username: myProfile.username });
+            closeCreateRoomModal();
         }
 
-        function leaveCustomRoom() { 
-            socket.emit('leave_room'); 
-            open1v1Hub(); 
+        function openJoinCustomScreen(prefilledCode = '') {
+            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+            hideAllScreens();
+            document.getElementById('screen-join-custom').style.display = 'flex';
+            document.getElementById('join-room-code-input').value = prefilledCode;
+            document.getElementById('join-room-pass-input').value = '';
         }
 
-        // Gestion Règles
-        function openRulesModal() { document.getElementById('modal-rules').style.display = 'flex'; }
-        function closeRulesModal() { document.getElementById('modal-rules').style.display = 'none'; }
+        function submitJoinCustomRoom() {
+            const roomCode = document.getElementById('join-room-code-input').value.trim().toUpperCase();
+            const password = document.getElementById('join-room-pass-input').value.trim();
+            if (!roomCode) { alert("Veuillez entrer un code de salon valide."); return; }
+            if (!socket.connected) { alert("Erreur : Non connecté au serveur."); return; }
+            socket.emit('join_room', { code: roomCode, password: password });
+        }
 
-        // Gestion Publicités
-        function checkLaunchAdAndStart() {
-            if (!hasShownLaunchAd) {
-                document.getElementById('modal-launch-ad').style.display = 'flex';
+        function joinRoomFromList(code, hasPassword) {
+            if (hasPassword) {
+                openJoinCustomScreen(code);
             } else {
-                showMainMenu();
+                joinRoomDirect(code, '');
             }
         }
 
-        function playLaunchAd() {
-            document.getElementById('modal-launch-ad').style.display = 'none';
-            hasShownLaunchAd = true;
-            simulateAd(() => { showMainMenu(); });
+        function joinRoomDirect(code, password) {
+            if (!socket.connected) { alert("Erreur : Non connecté au serveur."); return; }
+            socket.emit('join_room', { code: code, password: password });
         }
 
-        function watchRewardedAd() {
-            if (hasWatchedAdThisGame) return;
-            simulateAd(() => {
-                hasWatchedAdThisGame = true;
-                document.getElementById('btn-reward-ad').style.display = 'none';
-                let coinsDisplay = document.getElementById('recap-coins-gained');
-                let currentCoins = parseInt(coinsDisplay.innerText.replace('+', '')) || 0;
-                let doubled = currentCoins * 2;
-                coinsDisplay.innerText = `+${doubled} (Doublé 🎁)`;
-                myProfile.coins += currentCoins;
-                document.getElementById('user-coins-display').innerText = myProfile.coins;
+        function leaveCustomRoom() {
+            socket.emit('leave_room');
+            window.history.replaceState({}, '', window.location.pathname);
+            openRoomsScreen();
+        }
+
+        function copyRoomLink() {
+            const input = document.getElementById('room-share-link');
+            input.select();
+            navigator.clipboard.writeText(input.value).then(() => {
+                alert(i18n[currentLang].link_copied);
             });
         }
 
-        function simulateAd(callback) {
-            const overlay = document.getElementById('simulated-ad-overlay');
-            const timerEl = document.getElementById('ad-timer');
-            const closeBtn = document.getElementById('ad-close-btn');
-            overlay.style.display = 'flex';
-            closeBtn.style.display = 'none';
-            let timeLeft = 5;
-            timerEl.innerText = timeLeft;
-            
-            const interval = setInterval(() => {
-                timeLeft--;
-                timerEl.innerText = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(interval);
-                    timerEl.innerText = "✓";
-                    closeBtn.style.display = 'block';
-                    adCallbackFunction = callback;
-                }
-            }, 1000);
-        }
-
-        function closeSimulatedAd() {
-            document.getElementById('simulated-ad-overlay').style.display = 'none';
-            if (adCallbackFunction) {
-                adCallbackFunction();
-                adCallbackFunction = null;
+        function shareRoomLink() {
+            const input = document.getElementById('room-share-link');
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Chiffre Blitz ⚡',
+                    text: 'Viens m\'affronter en duel sur Chiffre Blitz !',
+                    url: input.value
+                }).catch(() => {});
+            } else {
+                copyRoomLink();
             }
         }
 
         socket.on('rooms_list_data', (rooms) => {
             const listEl = document.getElementById('rooms-list');
-            listEl.innerHTML = rooms.length ? '' : '<div style="color:#aaa; text-align:center; padding:10px;">Aucun salon actif.</div>';
+            listEl.innerHTML = '';
+            if (!rooms || rooms.length === 0) {
+                listEl.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:10px;">${i18n[currentLang].no_rooms}</div>`;
+                return;
+            }
             rooms.forEach(r => {
-                listEl.innerHTML += `<div class="room-row"><span>Salon <b>${r.code}</b> (${r.playersCount}/2) ${r.hasPassword ? '🔒' : ''}</span><button class="power-btn equip" onclick="joinSpecificRoom('${r.code}', '${r.hasPassword}')">Rejoindre</button></div>`;
+                const row = document.createElement('div');
+                row.className = 'room-row';
+                const lockIcon = r.hasPassword ? ' 🔒' : '';
+                
+                row.innerHTML = `
+                    <span class="room-info">Salon <b>${r.code}</b>${lockIcon} (${r.playersCount}/2)</span>
+                    <button class="power-btn equip" onclick="joinRoomFromList('${r.code}', ${r.hasPassword})">${currentLang === 'fr' ? 'Rejoindre' : 'Join'}</button>
+                `;
+                listEl.appendChild(row);
             });
         });
-
-        function joinSpecificRoom(code, hasPassword) {
-            let password = '';
-            if (hasPassword === 'true') {
-                password = prompt("Entrez le mot de passe du salon :");
-            }
-            socket.emit('join_room', { code, password });
-        }
 
         socket.on('room_joined_success', (data) => {
             hideAllScreens();
             document.getElementById('screen-room-waiting').style.display = 'block';
             document.getElementById('current-room-code').innerText = data.code;
-            document.getElementById('room-players-list').innerText = data.players.map(p => p.username).join(' vs ');
+            const shareUrl = `${window.location.origin}${window.location.pathname}?room=${data.code}`;
+            window.history.replaceState({}, '', `?room=${data.code}`);
+            document.getElementById('room-share-link').value = shareUrl;
+            updateRoomPlayers(data.players);
         });
 
         socket.on('room_players_update', (data) => {
-            document.getElementById('room-players-list').innerText = data.players.map(p => p.username).join(' vs ');
+            updateRoomPlayers(data.players);
         });
 
-        // --- MATCHMAKING & 1V1 ---
-        function startRandom1v1() { 
-            hideAllScreens(); 
-            document.getElementById('screen-1v1-lobby').style.display = 'flex'; 
+        function updateRoomPlayers(players) {
+            const playersListEl = document.getElementById('room-players-list');
+            if (!players || players.length === 0) { playersListEl.innerText = i18n[currentLang].waiting_opponent; return; }
+            playersListEl.innerText = players.map(p => p.username).join(' vs ');
+        }
+
+        socket.on('room_error', (msg) => { alert(msg); });
+
+        function openTournamentScreen() {
+            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+            hideAllScreens();
+            document.getElementById('screen-tournament').style.display = 'block';
+        }
+
+        function openShop() {
+            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+            document.getElementById('modal-shop').style.display = 'flex';
+            switchShopTab(currentShopTab);
+        }
+        function closeShop() { document.getElementById('modal-shop').style.display = 'none'; }
+
+        function switchShopTab(type) {
+            currentShopTab = type;
+            document.getElementById('shop-tab-bonus').classList.toggle('active', type === 'bonus');
+            document.getElementById('shop-tab-malus').classList.toggle('active', type === 'malus');
+            const container = document.getElementById('shop-container');
+            container.innerHTML = '';
             
-            let count = 1;
-            const radarNumEl = document.getElementById('radar-digit');
-            radarNumEl.innerText = count;
-            if (matchmakingInterval) clearInterval(matchmakingInterval);
-            matchmakingInterval = setInterval(() => {
-                count++;
-                radarNumEl.innerText = count;
-            }, 1000);
-
-            socket.emit('find_1v1_match'); 
+            const powersDict = i18n[currentLang].powers;
+            POWERS_CATALOG.filter(p => p.type === type).forEach(p => {
+                const powerInfo = powersDict[p.id];
+                const qty = myProfile.inventory[p.id] || 0;
+                const isEquipped = myProfile.equippedPower === p.id;
+                const card = document.createElement('div');
+                card.className = `power-card ${isEquipped ? 'equipped' : ''}`;
+                card.innerHTML = `
+                    <h4>${powerInfo.name}</h4>
+                    <p>${powerInfo.desc}</p>
+                    <div class="stock-badge">Stock : ${qty}</div>
+                    <div style="font-weight:bold; margin-bottom:8px; color:#f8b500;">${p.price} 🪙</div>
+                    <button class="power-btn buy" onclick="buyPower('${p.id}')">${currentLang === 'fr' ? 'Acheter (+1)' : 'Buy (+1)'}</button>
+                    ${qty > 0 ? `<button class="power-btn ${isEquipped ? 'active' : 'equip'}" onclick="equipPower('${p.id}')">${isEquipped ? (currentLang === 'fr' ? 'Équipé ✅' : 'Equipped ✅') : (currentLang === 'fr' ? 'Équiper' : 'Equip')}</button>` : ''}
+                `;
+                container.appendChild(card);
+            });
         }
 
-        function cancel1v1Search() { 
-            if (matchmakingInterval) clearInterval(matchmakingInterval);
-            socket.emit('leave_room');
-            open1v1Hub(); 
+        function buyPower(id) { socket.emit('buy_power', id); }
+        function equipPower(id) { socket.emit('equip_power', id); }
+
+        function preparePowerHUD() {
+            const zone = document.getElementById('power-zone');
+            const btn = document.getElementById('btn-use-power');
+            const nameLabel = document.getElementById('power-hud-name');
+            powerUsedInMatch = false;
+            const equippedId = myProfile.equippedPower;
+            const stock = equippedId ? (myProfile.inventory[equippedId] || 0) : 0;
+            if (equippedId && stock > 0) {
+                const powerInfo = i18n[currentLang].powers[equippedId];
+                nameLabel.innerText = `${powerInfo ? powerInfo.name : 'None'} (${stock})`;
+                btn.disabled = false;
+                zone.style.display = 'block';
+            } else { zone.style.display = 'none'; }
         }
+
+        function triggerEquippedPower() {
+            const powerId = myProfile.equippedPower;
+            if (!powerId || powerUsedInMatch) return;
+            const stock = myProfile.inventory[powerId] || 0;
+            if (stock <= 0) return;
+            
+            myProfile.inventory[powerId]--;
+            powerUsedInMatch = true;
+            document.getElementById('btn-use-power').disabled = true;
+
+            const is1v1 = document.getElementById('hud-1v1').style.display !== 'none';
+            const currentTarget = is1v1 ? (parseInt(document.getElementById('my-target').innerText) || 1) : soloTarget;
+
+            if (powerId === 'spotlight') {
+                document.querySelectorAll('.tile').forEach(t => {
+                    if (parseInt(t.innerText) === currentTarget) {
+                        t.classList.add('highlight-target');
+                        setTimeout(() => t.classList.remove('highlight-target'), 2000);
+                    }
+                });
+            } else if (powerId === 'joker') {
+                autoValidateTarget();
+            } else if (powerId === 'freeze') {
+                isTimeFrozen = true;
+                const timerEl = document.getElementById('game-timer');
+                timerEl.classList.add('frozen');
+                setTimeout(() => { isTimeFrozen = false; timerEl.classList.remove('frozen'); }, 3000);
+            } else if (powerId === 'nova') {
+                autoValidateTarget();
+                setTimeout(() => autoValidateTarget(), 250);
+                setTimeout(() => autoValidateTarget(), 500);
+            } else {
+                socket.emit('send_malus', { type: powerId });
+            }
+            if (myProfile.inventory[powerId] <= 0) myProfile.equippedPower = null;
+        }
+
+        function autoValidateTarget() {
+            const is1v1 = document.getElementById('hud-1v1').style.display !== 'none';
+            if (is1v1) handle1v1TileClick(parseInt(document.getElementById('my-target').innerText) || 1);
+            else handleSoloTileClick(soloTarget);
+        }
+
+        socket.on('receive_malus', (data) => {
+            const grid = document.getElementById('grid');
+            SoundEngine.playError();
+            if (data.type === 'quake') { 
+                grid.classList.add('effect-quake'); 
+                setTimeout(() => grid.classList.remove('effect-quake'), 2000); 
+            }
+            else if (data.type === 'micro') { 
+                grid.classList.add('effect-micro'); 
+                setTimeout(() => grid.classList.remove('effect-micro'), 2000); 
+            }
+            else if (data.type === 'eclipse') { 
+                grid.classList.add('effect-eclipse'); 
+                setTimeout(() => grid.classList.remove('effect-eclipse'), 1500); 
+            }
+            else if (data.type === 'chaos') { 
+                grid.classList.add('effect-quake');
+                setTimeout(() => {
+                    grid.classList.remove('effect-quake');
+                    grid.classList.add('effect-micro');
+                }, 1600);
+                setTimeout(() => {
+                    grid.classList.remove('effect-micro');
+                    grid.classList.add('effect-eclipse');
+                }, 3300);
+                setTimeout(() => {
+                    grid.classList.remove('effect-eclipse');
+                }, 5000);
+            }
+        });
+
+        function openLeaderboard() {
+            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+            document.getElementById('modal-leaderboard').style.display = 'flex';
+            fetchLeaderboard('regional');
+        }
+        function closeLeaderboard() { document.getElementById('modal-leaderboard').style.display = 'none'; }
+
+        function fetchLeaderboard(type) {
+            ['regional', 'national', 'global'].forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if (btn) btn.classList.toggle('active', t === type);
+            });
+            document.getElementById('lb-list').innerHTML = `<div style="text-align:center; color:#aaa; margin-top:20px;">${i18n[currentLang].loading}</div>`;
+            socket.emit('get_leaderboard', type);
+        }
+
+        socket.on('leaderboard_data', (res) => {
+            const container = document.getElementById('lb-list');
+            container.innerHTML = '';
+            if (!res.data || res.data.length === 0) { container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:20px;">${i18n[currentLang].no_players}</div>`; return; }
+            res.data.forEach((p, index) => {
+                const row = document.createElement('div');
+                row.className = 'lb-row';
+                row.innerHTML = `<span class="lb-rank">#${index + 1}</span><span class="lb-name">${p.username}</span><span class="lb-pts">${p.points} pts</span>`;
+                container.appendChild(row);
+            });
+        });
+
+        function startRandom1v1() {
+            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+            hideAllScreens();
+            document.getElementById('screen-1v1-lobby').style.display = 'flex';
+            let digit = 1;
+            radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById('radar-digit').innerText = digit; }, 70);
+            socket.emit('find_1v1_match');
+        }
+
+        function cancel1v1Search() { open1v1Hub(); }
 
         socket.on('start_countdown', () => {
-            if (matchmakingInterval) clearInterval(matchmakingInterval);
-            hideAllScreens();
-            document.getElementById('modal-1v1-countdown').style.display = 'flex';
-            let cdNum = 3;
-            document.getElementById('countdown-number').innerText = cdNum;
-            
-            let cdInterval = setInterval(() => {
-                cdNum--;
-                if (cdNum > 0) {
-                    document.getElementById('countdown-number').innerText = cdNum;
+            if (radarInterval) clearInterval(radarInterval);
+            ['screen-title', 'screen-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-room-waiting', 'screen-join-custom'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+            document.getElementById('countdown-overlay').style.display = 'flex';
+            let count = 3;
+            document.getElementById('countdown-number').innerText = count;
+            const timer = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    document.getElementById('countdown-number').innerText = count;
                 } else {
-                    clearInterval(cdInterval);
-                    document.getElementById('modal-1v1-countdown').style.display = 'none';
+                    clearInterval(timer);
+                    document.getElementById('countdown-overlay').style.display = 'none';
+                    document.getElementById('screen-game').style.display = 'block';
+                    document.getElementById('hud-1v1').style.display = 'grid';
+                    document.getElementById('hud-solo').style.display = 'none';
+                    preparePowerHUD();
+                    current1v1Time = 30;
+                    isTimeFrozen = false;
+                    SoundEngine.startMusic('1v1');
                 }
             }, 1000);
         });
 
         socket.on('game_started', (data) => {
-            is1v1Active = true;
-            hasWatchedAdThisGame = false;
-            document.getElementById('btn-reward-ad').style.display = 'block';
-            hideAllScreens();
-            document.getElementById('screen-game').style.display = 'block';
-            document.getElementById('hud-1v1').style.display = 'flex';
-            document.getElementById('hud-solo').style.display = 'none';
-            
-            document.getElementById('my-target').innerText = data.myTarget;
-            document.getElementById('opp-score').innerText = "0";
-            document.getElementById('game-timer').innerText = data.timeLeft;
-
-            renderTileGrid(data.myPool, (num) => {
-                socket.emit('player_click_1v1', num);
-            });
+            current1v1Time = data.timeLeft;
+            document.getElementById('game-timer').innerText = Math.max(0, current1v1Time);
+            document.getElementById('my-target').innerText = data.myTarget || 1;
+            renderGrid(data.myPool, handle1v1TileClick);
         });
 
-        socket.on('timer_update', (timeLeft) => {
-            document.getElementById('game-timer').innerText = timeLeft;
+        socket.on('timer_update', (time) => {
+            if (!isTimeFrozen) { current1v1Time = time; document.getElementById('game-timer').innerText = Math.max(0, time); }
         });
 
         socket.on('my_grid_updated', (data) => {
             document.getElementById('my-target').innerText = data.target;
-            renderTileGrid(data.newPool, (num) => {
-                socket.emit('player_click_1v1', num);
-            });
+            renderGrid(data.newPool, handle1v1TileClick);
+            if (data.success) SoundEngine.playClick();
+            else SoundEngine.playError();
         });
 
         socket.on('opponent_progress', (data) => {
-            document.getElementById('opp-score').innerText = data.score;
+            document.getElementById('opp-target').innerText = data.target;
         });
 
         socket.on('game_over_1v1', (data) => {
-            is1v1Active = false;
             hideAllScreens();
-            let won = data.winnerId === socket.id;
-            document.getElementById('recap-banner').innerText = won ? "VICTOIRE 🏆" : "DÉFAITE 💀";
+            window.history.replaceState({}, '', window.location.pathname);
+            const modal = document.getElementById('recap-modal');
+            const banner = document.getElementById('recap-banner');
+            document.getElementById('recap-1v1-rows').style.display = 'block';
+            const myId = socket.id;
+            const myData = data.players[myId];
+            const oppId = Object.keys(data.players).find(id => id !== myId);
+            const oppData = oppId ? data.players[oppId] : { target: '-', score: 0 };
+            
+            let coinsGained = 15;
+            if (data.winnerId === myId) {
+                banner.innerText = currentLang === 'fr' ? "🏆 VICTOIRE !" : "🏆 VICTORY!"; banner.style.color = "#00d2ff";
+                coinsGained = 40; SoundEngine.playVictory();
+            } else if (data.winnerId) {
+                banner.innerText = currentLang === 'fr' ? "❌ DÉFAITE !" : "❌ DEFEAT!"; banner.style.color = "#ff007f";
+            } else {
+                banner.innerText = currentLang === 'fr' ? "⏱️ ÉGALITÉ !" : "⏱️ DRAW!"; banner.style.color = "#ff8a00";
+            }
+            
             document.getElementById('recap-reason').innerText = data.reason;
-            document.getElementById('recap-my-score').innerText = "Partie terminée";
-            document.getElementById('recap-coins-gained').innerText = won ? "+30" : "+10";
-            document.getElementById('recap-modal').style.display = 'flex';
+            document.getElementById('recap-my-target').innerText = myData ? myData.target : '-';
+            document.getElementById('recap-opp-target').innerText = oppData ? oppData.target : '-';
+            document.getElementById('recap-my-score').innerText = myData ? myData.score : 0;
+            document.getElementById('recap-coins-gained').innerText = `+${coinsGained}`;
+            modal.style.display = 'flex';
+            registerIfPossible();
         });
 
-        // --- ENTRAÎNEMENT SOLO ---
-        function startSoloTraining(mode) {
-            is1v1Active = false;
-            activeTrainingMode = mode;
-            hasWatchedAdThisGame = false;
-            document.getElementById('btn-reward-ad').style.display = 'block';
+        function handle1v1TileClick(num) {
+            if (current1v1Time <= 0) return;
+            socket.emit('player_click_1v1', num);
+        }
+
+        function startSoloTraining() {
+            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
             hideAllScreens();
-            
+            soloTarget = 1; soloScore = 0; soloTimeLeft = 30; isTimeFrozen = false;
             document.getElementById('screen-game').style.display = 'block';
-            document.getElementById('hud-solo').style.display = 'flex';
+            document.getElementById('hud-solo').style.display = 'grid';
             document.getElementById('hud-1v1').style.display = 'none';
-
-            soloScore = 0;
-            soloTarget = 1;
-            soloTimeLeft = 30;
-            document.getElementById('solo-score').innerText = soloScore;
             document.getElementById('solo-target').innerText = soloTarget;
+            document.getElementById('solo-score').innerText = soloScore;
             document.getElementById('game-timer').innerText = soloTimeLeft;
-
+            preparePowerHUD();
             generateSoloGrid();
-
+            SoundEngine.startMusic('solo');
             soloTimerInterval = setInterval(() => {
-                soloTimeLeft--;
-                document.getElementById('game-timer').innerText = Math.max(0, soloTimeLeft);
-                if (soloTimeLeft <= 0) {
-                    clearInterval(soloTimerInterval);
-                    endSoloGame();
+                if (!isTimeFrozen) {
+                    soloTimeLeft--;
+                    document.getElementById('game-timer').innerText = Math.max(0, soloTimeLeft);
+                    if (soloTimeLeft <= 0) endSoloGame();
                 }
             }, 1000);
         }
@@ -825,198 +1390,63 @@
         function generateSoloGrid() {
             let pool = [soloTarget];
             let candidates = [];
-            for (let i = 1; i <= 50; i++) {
-                if (i !== soloTarget) candidates.push(i);
-            }
+            for (let i = 1; i <= 50; i++) if (i !== soloTarget) candidates.push(i);
             candidates.sort(() => Math.random() - 0.5);
-            pool = pool.concat(candidates.slice(0, 11));
-            pool.sort(() => Math.random() - 0.5);
-
-            renderTileGrid(pool, (num) => {
-                if (activeTrainingMode === 'classic') {
-                    if (num === soloTarget) {
-                        SoundEngine.playClick();
-                        soloTarget++;
-                        soloScore += 10;
-                        document.getElementById('solo-target').innerText = soloTarget;
-                        document.getElementById('solo-score').innerText = soloScore;
-                        generateSoloGrid();
-                    } else {
-                        SoundEngine.playError();
-                        soloTimeLeft = Math.max(0, soloTimeLeft - 1);
-                    }
-                } else {
-                    if (num === soloTarget) {
-                        SoundEngine.playClick();
-                        soloScore += 15;
-                        soloTarget = Math.floor(Math.random() * 50) + 1;
-                        document.getElementById('solo-target').innerText = soloTarget;
-                        document.getElementById('solo-score').innerText = soloScore;
-                        generateSoloGrid();
-                    } else {
-                        SoundEngine.playError();
-                        soloTimeLeft = Math.max(0, soloTimeLeft - 1);
-                    }
-                }
-            });
+            pool = pool.concat(candidates.slice(0, 11)).sort(() => Math.random() - 0.5);
+            renderGrid(pool, handleSoloTileClick);
         }
 
-        // Mode Avalanche
-        function startAvalancheGame(speed) {
-            is1v1Active = false;
-            hasWatchedAdThisGame = false;
-            document.getElementById('btn-reward-ad').style.display = 'block';
-            hideAllScreens();
-
-            document.getElementById('screen-game').style.display = 'block';
-            document.getElementById('hud-solo').style.display = 'flex';
-            document.getElementById('hud-1v1').style.display = 'none';
-
-            soloScore = 0;
-            document.getElementById('solo-score').innerText = soloScore;
-
-            avalancheGridData = Array(16).fill(null);
-            avalancheTarget = null;
-            for(let i=0; i<4; i++) spawnAvalancheNumber();
-            updateAvalancheTarget();
-            renderAvalancheGrid();
-
-            let pressureTimer = 0;
-            document.getElementById('game-timer').innerText = pressureTimer + 's';
-
-            avalancheInterval = setInterval(() => {
-                pressureTimer++;
-                document.getElementById('game-timer').innerText = pressureTimer + 's';
-                
-                let added = spawnAvalancheNumber();
-                updateAvalancheTarget();
-                renderAvalancheGrid();
-
-                if (!added) {
-                    clearInterval(avalancheInterval);
-                    endSoloGame();
-                }
-            }, speed);
-        }
-
-        function spawnAvalancheNumber() {
-            let emptyIndices = [];
-            avalancheGridData.forEach((val, idx) => { if (val === null) emptyIndices.push(idx); });
-            if (emptyIndices.length === 0) return false;
-
-            let randomIdx = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
-            let randomNum = Math.floor(Math.random() * 50) + 1;
-            avalancheGridData[randomIdx] = randomNum;
-            return true;
-        }
-
-        function updateAvalancheTarget() {
-            let activeNumbers = avalancheGridData.filter(v => v !== null);
-            if (activeNumbers.length > 0) {
-                avalancheTarget = activeNumbers[Math.floor(Math.random() * activeNumbers.length)];
-                document.getElementById('solo-target').innerText = avalancheTarget;
-            } else {
-                avalancheTarget = null;
-                document.getElementById('solo-target').innerText = '-';
-            }
-        }
-
-        function renderAvalancheGrid() {
-            const grid = document.getElementById('grid');
-            grid.innerHTML = '';
-            avalancheGridData.forEach((val, idx) => {
-                const tile = document.createElement('div');
-                if (val !== null) {
-                    tile.className = 'tile';
-                    tile.innerText = val;
-                    tile.onclick = () => handleAvalancheClick(val, idx);
-                } else {
-                    tile.className = 'tile empty';
-                    tile.innerText = '';
-                }
-                grid.appendChild(tile);
-            });
-        }
-
-        function handleAvalancheClick(val, idx) {
-            if (val === avalancheTarget) {
+        function handleSoloTileClick(num) {
+            if (soloTimeLeft <= 0) return;
+            if (num === soloTarget) {
                 SoundEngine.playClick();
-                avalancheGridData[idx] = null;
-                soloScore += 20;
+                soloTarget++; soloScore += 10;
+                document.getElementById('solo-target').innerText = soloTarget;
                 document.getElementById('solo-score').innerText = soloScore;
-                updateAvalancheTarget();
-                renderAvalancheGrid();
+                generateSoloGrid();
             } else {
                 SoundEngine.playError();
+                if (!isTimeFrozen) {
+                    soloTimeLeft = Math.max(0, soloTimeLeft - 1);
+                    document.getElementById('game-timer').innerText = Math.max(0, soloTimeLeft);
+                    if (soloTimeLeft <= 0) endSoloGame();
+                }
             }
-        }
-
-        function renderTileGrid(pool, clickHandler) {
-            const grid = document.getElementById('grid');
-            grid.innerHTML = '';
-            pool.forEach(num => {
-                const tile = document.createElement('div');
-                tile.className = 'tile';
-                tile.innerText = num;
-                tile.onclick = () => {
-                    SoundEngine.playClick();
-                    clickHandler(num);
-                };
-                grid.appendChild(tile);
-            });
         }
 
         function endSoloGame() {
             hideAllScreens();
+            const modal = document.getElementById('recap-modal');
+            
+            const baseCoins = Math.floor(soloScore / 3);
+            const bonusCoins = soloScore >= 300 ? 100 : 0;
+            const coinsGained = baseCoins + bonusCoins;
+            
             socket.emit('claim_solo_reward', soloScore);
-            const earnedCoins = Math.min(100, Math.floor(soloScore / 3));
-            document.getElementById('recap-banner').innerText = "ENTRAÎNEMENT TERMINÉ";
-            document.getElementById('recap-reason').innerText = "";
+
+            document.getElementById('recap-banner').innerText = currentLang === 'fr' ? "🏋️ ENTRAÎNEMENT TERMINÉ" : "🏋️ TRAINING FINISHED";
+            document.getElementById('recap-banner').style.color = "#00d2ff";
+            document.getElementById('recap-1v1-rows').style.display = 'none';
+            document.getElementById('recap-reason').innerText = `${currentLang === 'fr' ? 'Cases validées' : 'Validated tiles'} : ${soloTarget - 1}`;
             document.getElementById('recap-my-score').innerText = soloScore;
-            document.getElementById('recap-coins-gained').innerText = `+${earnedCoins}`;
-            document.getElementById('recap-modal').style.display = 'flex';
+            document.getElementById('recap-coins-gained').innerText = `+${coinsGained}`;
+            SoundEngine.playVictory();
+            modal.style.display = 'flex';
         }
 
-        // --- BOUTIQUE & CLASSEMENT ---
-        function openShop() { document.getElementById('modal-shop').style.display = 'flex'; switchShopTab('bonus'); }
-        function closeShop() { document.getElementById('modal-shop').style.display = 'none'; }
-        function switchShopTab(tab) {
-            currentShopTab = tab;
-            document.getElementById('shop-tab-bonus').className = tab === 'bonus' ? 'tab-btn active' : 'tab-btn';
-            document.getElementById('shop-tab-malus').className = tab === 'malus' ? 'tab-btn active' : 'tab-btn';
-            renderShopItems();
-        }
-        function renderShopItems() {
-            const container = document.getElementById('shop-container');
-            container.innerHTML = '';
-            powersData[currentShopTab].forEach(p => {
-                let count = (myProfile.inventory && myProfile.inventory[p.id]) || 0;
-                let isEquipped = myProfile.equippedPower === p.id;
-                container.innerHTML += `
-                    <div class="power-card ${isEquipped ? 'equipped' : ''}">
-                        <div>
-                            <h4>${p.name}</h4>
-                            <p>${p.desc}</p>
-                        </div>
-                        <div>
-                            <div class="stock-badge">Stock : x${count}</div>
-                            <button class="power-btn buy" onclick="socket.emit('buy_power', '${p.id}')">Acheter (${p.price} 🪙)</button>
-                            ${count > 0 ? `<button class="power-btn ${isEquipped ? 'active' : 'equip'}" onclick="socket.emit('equip_power', '${p.id}')">${isEquipped ? 'Équipé' : 'Équiper'}</button>` : ''}
-                        </div>
-                    </div>
-                `;
+        function renderGrid(pool, handler) {
+            const grid = document.getElementById('grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            if (!pool) return;
+            pool.forEach(num => {
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                tile.innerText = num;
+                tile.onclick = () => handler(num);
+                grid.appendChild(tile);
             });
         }
-
-        function openLeaderboard() { document.getElementById('modal-leaderboard').style.display = 'flex'; socket.emit('get_leaderboard', 'global'); }
-        function closeLeaderboard() { document.getElementById('modal-leaderboard').style.display = 'none'; }
-        socket.on('leaderboard_data', (res) => {
-            const container = document.getElementById('lb-list');
-            container.innerHTML = '';
-            res.data.forEach((p, i) => {
-                container.innerHTML += `<div class="lb-row"><span class="lb-rank">#${i+1}</span><span class="lb-name">${p.username}</span><span class="lb-pts">${p.points} pts</span></div>`;
-            });
-        });
     </script>
 </body>
 </html>
