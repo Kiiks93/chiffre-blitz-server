@@ -47,7 +47,6 @@
         .btn-gold { background: linear-gradient(45deg, #f8b500, #fceabb); color: #222; box-shadow: 0 5px 20px rgba(248, 181, 0, 0.4); }
         .btn-purple { background: linear-gradient(45deg, #7b4397, #dc2430); box-shadow: 0 5px 20px rgba(123, 67, 151, 0.4); }
         .btn-shop { background: linear-gradient(45deg, #11998e, #38ef7d); color: #000; box-shadow: 0 5px 20px rgba(56, 239, 125, 0.4); }
-        .btn-reward { background: linear-gradient(45deg, #f12711, #f5af19); color: #fff; box-shadow: 0 5px 20px rgba(245, 175, 25, 0.4); margin-top: 8px; }
 
         .btn-secondary {
             background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #ccc;
@@ -168,7 +167,7 @@
         </div>
     </div>
 
-    <!-- SIMULATEUR DE PUBLICITE -->
+    <!-- SIMULATEUR DE PUBLICITE (SPONSORISÉE) -->
     <div id="simulated-ad-overlay" style="display:none;" class="modal-overlay">
         <div class="modal-card" style="text-align:center; align-items:center;">
             <div style="color:#aaa; font-size:16px; margin-bottom:20px; font-weight:bold;" data-i18n="ad_sponsored">VIDÉO SPONSORISÉE...</div>
@@ -767,7 +766,6 @@
                 this.stopMusic(false);
                 this.step = 0;
 
-                // Tempo baissé pour un rythme moins rapide et plus agréable
                 this.bpm = (mode === 'menu') ? 95 : 105;
                 const intervalMs = (60 / this.bpm / 4) * 1000;
 
@@ -910,6 +908,7 @@
 
         let myProfile = { username: "", region: "Hauts-de-France", points: 0, coins: 0, trophies: 0, inventory: {}, equippedPower: null };
         
+        // PRIX DE LA BOUTIQUE RESTAURÉS À L'ORIGINE DU FICHIER FOURNI
         const POWERS_CATALOG = [
             { id: 'spotlight', price: 40, type: 'bonus' },
             { id: 'freeze', price: 80, type: 'bonus' },
