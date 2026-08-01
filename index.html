@@ -47,10 +47,11 @@
         .btn-gold { background: linear-gradient(45deg, #f8b500, #fceabb); color: #222; box-shadow: 0 5px 20px rgba(248, 181, 0, 0.4); }
         .btn-purple { background: linear-gradient(45deg, #7b4397, #dc2430); box-shadow: 0 5px 20px rgba(123, 67, 151, 0.4); }
         .btn-shop { background: linear-gradient(45deg, #11998e, #38ef7d); color: #000; box-shadow: 0 5px 20px rgba(56, 239, 125, 0.4); }
+        .btn-reward { background: linear-gradient(45deg, #f12711, #f5af19); color: #fff; box-shadow: 0 5px 20px rgba(245, 175, 25, 0.4); margin-bottom: 10px; width: 100%; font-size: 14px; padding: 12px; }
 
         .btn-secondary {
             background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #ccc;
-            padding: 10px 18px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%;
+            padding: 10px 18px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%;
         }
 
         .modal-overlay {
@@ -469,10 +470,13 @@
                 <span id="recap-my-score" style="font-weight:bold;">-</span>
             </div>
 
-            <div style="display:flex; justify-content:space-between; margin:8px 0; color:#f8b500;">
+            <div style="display:flex; justify-content:space-between; margin:8px 0; color:#f8b500; margin-bottom:15px;">
                 <span data-i18n="recap_coins">🪙 Pièces Gagnées :</span>
                 <span id="recap-coins-gained" style="font-weight:bold;">+0</span>
             </div>
+
+            <!-- BOUTON DOUBLER LES GAINS (PUB) -->
+            <button id="btn-double-reward" class="btn-main btn-reward" onclick="watchAdToDoubleReward()" data-i18n="double_reward">📺 Doubler mes gains (Pub)</button>
 
             <button class="btn-main" onclick="showMainMenu()" data-i18n="main_menu">MENU PRINCIPAL</button>
         </div>
@@ -559,6 +563,7 @@
                 recap_opp_target: "🎯 Cible Adversaire :",
                 recap_my_score: "⭐ Mon Score :",
                 recap_coins: "🪙 Pièces Gagnées :",
+                double_reward: "📺 Doubler mes gains (Pub)",
                 main_menu: "MENU PRINCIPAL",
                 no_rooms: "Aucun salon ouvert.",
                 no_players: "Aucun joueur.",
@@ -655,6 +660,7 @@
                 recap_opp_target: "🎯 Opponent Target:",
                 recap_my_score: "⭐ My Score:",
                 recap_coins: "🪙 Coins Earned:",
+                double_reward: "📺 Double my rewards (Ad)",
                 main_menu: "MAIN MENU",
                 no_rooms: "No open rooms.",
                 no_players: "No players.",
@@ -779,7 +785,6 @@
                 const t = this.ctx.currentTime;
                 const scale = [110, 123.47, 130.81, 146.83, 164.81, 196, 220, 246.94, 261.63, 293.66, 329.63, 349.23, 392];
 
-                // Kick percussif
                 if (step % 4 === 0) {
                     const osc = this.ctx.createOscillator();
                     const gain = this.ctx.createGain();
@@ -792,7 +797,6 @@
                     osc.start(t); osc.stop(t + 0.09);
                 }
 
-                // Snare
                 if (step === 4 || step === 12 || step === 20 || step === 28 || step === 36 || step === 44 || step === 52 || step === 60) {
                     const bufferSize = this.ctx.sampleRate * 0.07;
                     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
@@ -809,7 +813,6 @@
                     noise.start(t);
                 }
 
-                // Hi-hat léger
                 if (step % 2 === 1 && mode !== 'menu') {
                     const bufferSize = this.ctx.sampleRate * 0.03;
                     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
@@ -826,7 +829,6 @@
                     noise.start(t);
                 }
 
-                // Mélodie changeante sur 4 mesures (64 pas)
                 if (mode !== 'menu') {
                     const bar = Math.floor(step / 16);
                     let melodyPatterns = [
@@ -908,16 +910,16 @@
 
         let myProfile = { username: "", region: "Hauts-de-France", points: 0, coins: 0, trophies: 0, inventory: {}, equippedPower: null };
         
-        // PRIX DE LA BOUTIQUE RESTAURÉS À L'ORIGINE DU FICHIER FOURNI
+        // PRIX DE LA BOUTIQUE AUGMENTÉS POUR RÉÉQUILIBRER L'ÉCONOMIE
         const POWERS_CATALOG = [
-            { id: 'spotlight', price: 40, type: 'bonus' },
-            { id: 'freeze', price: 80, type: 'bonus' },
-            { id: 'joker', price: 180, type: 'bonus' },
-            { id: 'nova', price: 450, type: 'bonus' },
-            { id: 'quake', price: 50, type: 'malus' },
-            { id: 'micro', price: 100, type: 'malus' },
-            { id: 'eclipse', price: 220, type: 'malus' },
-            { id: 'chaos', price: 600, type: 'malus' }
+            { id: 'spotlight', price: 150, type: 'bonus' },
+            { id: 'freeze', price: 350, type: 'bonus' },
+            { id: 'joker', price: 600, type: 'bonus' },
+            { id: 'nova', price: 1200, type: 'bonus' },
+            { id: 'quake', price: 200, type: 'malus' },
+            { id: 'micro', price: 400, type: 'malus' },
+            { id: 'eclipse', price: 800, type: 'malus' },
+            { id: 'chaos', price: 2000, type: 'malus' }
         ];
 
         let current1v1Time = 30, radarInterval = null;
@@ -926,6 +928,8 @@
         let powerUsedInMatch = false, currentShopTab = 'bonus', isTimeFrozen = false;
         let hasShownLaunchAd = false;
         let adCallbackFunction = null;
+        let currentCoinsGained = 0;
+        let rewardDoubled = false;
 
         // Variables pour mode Avalanche
         let avalancheGridData = [];
@@ -1097,6 +1101,22 @@
                 adCallbackFunction();
                 adCallbackFunction = null;
             }
+        }
+
+        // --- BOUTON DOUBLER LES GAINS (RÉCOMPENSE RECAP) ---
+        function watchAdToDoubleReward() {
+            if (rewardDoubled) return;
+            simulateAd(() => {
+                rewardDoubled = true;
+                currentCoinsGained *= 2;
+                myProfile.coins += currentCoinsGained; // Rajout du bonus doublé
+                updateEconomyUI();
+                document.getElementById('recap-coins-gained').innerText = `+${currentCoinsGained} (x2 ⚡)`;
+                const doubleBtn = document.getElementById('btn-double-reward');
+                doubleBtn.disabled = true;
+                doubleBtn.style.opacity = '0.5';
+                doubleBtn.innerText = currentLang === 'fr' ? '✅ Gains doublés !' : '✅ Rewards doubled!';
+            });
         }
 
         function open1v1Hub() {
@@ -1469,10 +1489,16 @@
             const oppId = Object.keys(data.players).find(id => id !== myId);
             const oppData = oppId ? data.players[oppId] : { target: '-', score: 0 };
             
-            let coinsGained = 15;
+            rewardDoubled = false;
+            const doubleBtn = document.getElementById('btn-double-reward');
+            doubleBtn.disabled = false;
+            doubleBtn.style.opacity = '1';
+            doubleBtn.innerText = currentLang === 'fr' ? '📺 Doubler mes gains (Pub)' : '📺 Double my rewards (Ad)';
+
+            currentCoinsGained = (data.winnerId === myId) ? 40 : 20;
             if (data.winnerId === myId) {
                 banner.innerText = currentLang === 'fr' ? "🏆 VICTOIRE !" : "🏆 VICTORY!"; banner.style.color = "#00d2ff";
-                coinsGained = 40; SoundEngine.playVictory();
+                SoundEngine.playVictory();
             } else if (data.winnerId) {
                 banner.innerText = currentLang === 'fr' ? "❌ DÉFAITE !" : "❌ DEFEAT!"; banner.style.color = "#ff007f";
             } else {
@@ -1483,7 +1509,7 @@
             document.getElementById('recap-my-target').innerText = myData ? myData.target : '-';
             document.getElementById('recap-opp-target').innerText = oppData ? oppData.target : '-';
             document.getElementById('recap-my-score').innerText = myData ? myData.score : 0;
-            document.getElementById('recap-coins-gained').innerText = `+${coinsGained}`;
+            document.getElementById('recap-coins-gained').innerText = `+${currentCoinsGained}`;
             modal.style.display = 'flex';
             registerIfPossible();
         });
@@ -1659,9 +1685,15 @@
             hideAllScreens();
             const modal = document.getElementById('recap-modal');
             
+            rewardDoubled = false;
+            const doubleBtn = document.getElementById('btn-double-reward');
+            doubleBtn.disabled = false;
+            doubleBtn.style.opacity = '1';
+            doubleBtn.innerText = currentLang === 'fr' ? '📺 Doubler mes gains (Pub)' : '📺 Double my rewards (Ad)';
+
             const baseCoins = Math.floor(soloScore / 3);
             const bonusCoins = soloScore >= 300 ? 100 : 0;
-            const coinsGained = baseCoins + bonusCoins;
+            currentCoinsGained = baseCoins + bonusCoins;
             
             socket.emit('claim_solo_reward', soloScore);
 
@@ -1670,7 +1702,7 @@
             document.getElementById('recap-1v1-rows').style.display = 'none';
             document.getElementById('recap-reason').innerText = `${currentLang === 'fr' ? 'Score' : 'Score'} : ${soloScore}`;
             document.getElementById('recap-my-score').innerText = soloScore;
-            document.getElementById('recap-coins-gained').innerText = `+${coinsGained}`;
+            document.getElementById('recap-coins-gained').innerText = `+${currentCoinsGained}`;
             SoundEngine.playVictory();
             modal.style.display = 'flex';
         }
