@@ -1431,50 +1431,44 @@
                     <div class="modal-card" style="max-width:450px; text-align:left;">
                         <h2 style="color:#00d2ff; margin-top:0; text-align:center;">🎛️ PANEL ADMIN - CONTRÔLE</h2>
                         
-                        <div style="max-height:60vh; overflow-y:auto; padding-right:4px; display:flex; flex-direction:column; gap:12px; font-size:12px;">
+                        <div style="max-height:65vh; overflow-y:auto; padding-right:6px; display:flex; flex-direction:column; gap:10px; font-size:12px;">
                             
                             <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
-                                <strong style="color:#ff8a00; display:block; margin-bottom:8px;">⚡ BOOSTS & ÉVÉNEMENTS (ADMIN ABUSE)</strong>
+                                <strong style="color:#ff8a00; display:block; margin-bottom:6px;">⚡ BOOSTS & ÉVÉNEMENTS (ADMIN ABUSE)</strong>
                                 
                                 <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
                                     <span>🪙 Coin Rush (Pièces x2)</span>
                                     <input type="checkbox" id="chk-coinRush" onchange="sendAdminEventsUpdate()">
                                 </label>
-                                <p style="color:#aaa; font-size:10px; margin:2px 0 2px 0;">Double tous les gains de pièces.</p>
 
                                 <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
                                     <span>🛡️ Rank Shield (Pas de perte de points)</span>
                                     <input type="checkbox" id="chk-rankShield" onchange="sendAdminEventsUpdate()">
                                 </label>
-                                <p style="color:#aaa; font-size:10px; margin:2px 0 2px 0;">Zéro perte de points en classé.</p>
 
                                 <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
                                     <span>⚡ Expresso Match (Timer 20s)</span>
                                     <input type="checkbox" id="chk-expressoMatch" onchange="sendAdminEventsUpdate()">
                                 </label>
-                                <p style="color:#aaa; font-size:10px; margin:2px 0 2px 0;">Accélère les duels 1v1 (20s).</p>
 
                                 <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
                                     <span>🌪️ Chaos Mode (En Non Classé uniquement)</span>
                                     <input type="checkbox" id="chk-chaosMode" onchange="sendAdminEventsUpdate()">
                                 </label>
-                                <p style="color:#aaa; font-size:10px; margin:2px 0 2px 0;">Applique des modificateurs aléatoires.</p>
 
                                 <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
                                     <span>🎁 Jackpot Éclair (Coffres mystères)</span>
                                     <input type="checkbox" id="chk-jackpotEclair" onchange="sendAdminEventsUpdate()">
                                 </label>
-                                <p style="color:#aaa; font-size:10px; margin:2px 0 2px 0;">Petite chance d'obtenir des pièces bonus.</p>
 
                                 <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
                                     <span>💣 Mode Grille Maudite (Pièges)</span>
                                     <input type="checkbox" id="chk-saboteurMode" onchange="sendAdminEventsUpdate()">
                                 </label>
-                                <p style="color:#aaa; font-size:10px; margin:2px 0 2px 0;">Affiche le mode dans le menu.</p>
                             </div>
 
                             <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
-                                <strong style="color:#f8b500; display:block; margin-bottom:8px;">🎁 CADEAUX / DON DE MONNAIE</strong>
+                                <strong style="color:#f8b500; display:block; margin-bottom:6px;">🎁 CADEAUX / DON DE MONNAIE</strong>
                                 <input type="text" id="admin-gift-target" placeholder="Pseudo (laisser vide ou 'TOUS')" style="width:100%; padding:6px; border-radius:6px; border:1px solid #f8b500; background:#0f051d; color:#fff; margin-bottom:6px; outline:none; font-size:11px;">
                                 <div style="display:flex; gap:6px; margin-bottom:6px;">
                                     <select id="admin-gift-currency" style="flex:1; padding:6px; border-radius:6px; border:1px solid #f8b500; background:#0f051d; color:#fff; font-size:11px; outline:none;">
@@ -1487,7 +1481,7 @@
                             </div>
 
                             <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
-                                <strong style="color:#00d2ff; display:block; margin-bottom:8px;">📢 ANNONCE / MESSAGE GLOBAL</strong>
+                                <strong style="color:#00d2ff; display:block; margin-bottom:6px;">📢 ANNONCE / MESSAGE GLOBAL</strong>
                                 <input type="text" id="admin-broadcast-input" placeholder="Message à diffuser à tous..." style="width:100%; padding:6px; border-radius:6px; border:1px solid #00d2ff; background:#0f051d; color:#fff; margin-bottom:6px; outline:none; font-size:11px;">
                                 <button class="btn-main btn-blue" onclick="sendAdminBroadcast()" style="padding:8px; font-size:12px; width:100%;">Diffuser l'Annonce ⚡</button>
                             </div>
