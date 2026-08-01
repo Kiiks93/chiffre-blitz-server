@@ -390,15 +390,22 @@ io.on('connection', (socket) => {
         const player = activePlayers[socket.id];
         if (!player) return;
         let baseCoins = Math.min(100, Math.floor(score / 3));
-        let earnedCoins = globalEvents.coinRush ? baseCoins * 2 : baseCoins;
-        if (globalEvents.jackpotEclair && Math.random() < 0.35) {
-            earnedCoins += 150;
-        }
+        let rushBonus = globalEvents.coinRush ? baseCoins : 0;
+        let jackpotBonus = (globalEvents.jackpotEclair && Math.random() < 0.35) ? 150 : 0;
+        let earnedCoins = baseCoins + rushBonus + jackpotBonus;
+        
         player.coins += earnedCoins;
-
         await savePlayerToSupabase(socket.id);
         socket.emit('player_registered', player);
-        socket.emit('solo_reward_result', { earnedCoins, globalEvents });
+        socket.emit('solo_reward_result', { baseCoins, rushBonus, jackpotBonus, earnedCoins, globalEvents });
+    });
+
+    socket.on('double_reward', async (amount) => {
+        const player = activePlayers[socket.id];
+        if (!player) return;
+        player.coins += amount;
+        await savePlayerToSupabase(socket.id);
+        socket.emit('player_registered', player);
     });
 
     socket.on('admin_auth', (password) => {
@@ -551,7 +558,6 @@ function startMatchBetween(id1, id2, isRanked = false) {
         io.to(id1).emit('timer_update', match.timeLeft);
         io.to(id2).emit('timer_update', match.timeLeft);
 
-        // Chaos mode actif uniquement en mode non classé
         if (globalEvents.chaosMode && !isRanked) {
             chaosTimer++;
             if (chaosTimer >= 8) {
@@ -645,15 +651,18 @@ async function endMatch(id1, id2, matchData, isRanked) {
     if (s1 > s2) winnerId = id1;
     else if (s2 > s1) winnerId = id2;
 
+    const matchRewards = {};
+
     for (let sId of [id1, id2]) {
         const p = activePlayers[sId];
         if (p) {
             let baseCoins = (winnerId === sId) ? 30 : 10;
-            let earnedCoins = globalEvents.coinRush ? baseCoins * 2 : baseCoins;
-            if (globalEvents.jackpotEclair && Math.random() < 0.4) {
-                earnedCoins += 200;
-            }
-            p.coins += earnedCoins;
+            let rushBonus = globalEvents.coinRush ? baseCoins : 0;
+            let jackpotBonus = (globalEvents.jackpotEclair && Math.random() < 0.4) ? 200 : 0;
+            let totalCoins = baseCoins + rushBonus + jackpotBonus;
+            
+            p.coins += totalCoins;
+            matchRewards[sId] = { baseCoins, rushBonus, jackpotBonus, totalCoins };
         }
     }
 
@@ -689,8 +698,8 @@ async function endMatch(id1, id2, matchData, isRanked) {
     if (activePlayers[id1]) io.to(id1).emit('player_registered', activePlayers[id1]);
     if (activePlayers[id2]) io.to(id2).emit('player_registered', activePlayers[id2]);
 
-    io.to(id1).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents });
-    io.to(id2).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents });
+    io.to(id1).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents, rewards: matchRewards });
+    io.to(id2).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents, rewards: matchRewards });
 }
 
 const PORT = process.env.PORT || 3000;
