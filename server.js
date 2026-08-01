@@ -1,5 +1,5 @@
 const express = require('express');
-const http = require('http');
+const http = http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 
@@ -18,16 +18,16 @@ let waitingPlayer = null;
 let rooms = {};
 let pendingRoomDeletions = {};
 
-// Grille de prix équilibrée par rapport au nouveau plafond solo (100 pièces max)
+// Tes prix d'origine rétablis
 const POWERS_PRICES = {
-    'spotlight': 30,
-    'freeze': 60,
-    'joker': 150,
-    'nova': 400,
-    'quake': 40,
-    'micro': 80,
-    'eclipse': 200,
-    'chaos': 500
+    'spotlight': 150,
+    'freeze': 350,
+    'joker': 600,
+    'nova': 1200,
+    'quake': 200,
+    'micro': 400,
+    'eclipse': 800,
+    'chaos': 2000
 };
 
 function generateRandomPool(target) {
@@ -90,7 +90,20 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Récompense solo : Plafonnée à 100 pièces max (30 cases en 30s = score de 300 = 100 pièces)
+    socket.on('use_power', (powerId) => {
+        const player = players[socket.id];
+        if (player && player.inventory[powerId] && player.inventory[powerId] > 0) {
+            player.inventory[powerId]--;
+            if (player.inventory[powerId] <= 0) {
+                delete player.inventory[powerId];
+                if (player.equippedPower === powerId) {
+                    player.equippedPower = null;
+                }
+            }
+            socket.emit('player_registered', player);
+        }
+    });
+
     socket.on('claim_solo_reward', (score) => {
         const player = players[socket.id];
         if (player && typeof score === 'number' && score > 0) {
