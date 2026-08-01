@@ -1092,7 +1092,7 @@
         let adCallbackFunction = null;
         let selectedRankedItems = [];
         let latestGlobalEvents = {};
-        let latest1v1StartData = null; // Stockage des données initiales du match
+        let latest1v1StartData = null;
 
         function getFlagEmoji(flag) {
             if (!flag) return '🇫🇷';
@@ -1824,7 +1824,7 @@
                 return `${getAvatarBadgeHTML(p.flag, p.avatar)} ${p.username}`;
             }).join(' <span style="color:#aaa; margin:0 4px;">vs</span> ');
             if (players && socket.id) {
-                const opp = players.find(p => p.id !== socket.id && p.socketId !== socket.id);
+                const opp = players.find(p => (p.socketId || p.id) !== socket.id);
                 if (opp) cachedOpponent = parsePlayer(opp);
             }
         }
@@ -2064,7 +2064,7 @@
             else if (data.opp) rawOpp = data.opp;
             else if (data.players) {
                 if (Array.isArray(data.players)) {
-                    rawOpp = data.players.find(p => p.id !== socket.id && p.socketId !== socket.id);
+                    rawOpp = data.players.find(p => (p.socketId || p.id) !== socket.id);
                 } else if (typeof data.players === 'object') {
                     const oppId = Object.keys(data.players).find(id => id !== socket.id);
                     if (oppId) rawOpp = data.players[oppId];
@@ -2082,7 +2082,7 @@
 
         socket.on('start_countdown', (data) => {
             if (radarInterval) clearInterval(radarInterval);
-            latest1v1StartData = data; // Stockage pour initialisation après le compte à rebours
+            latest1v1StartData = data; 
             let oppData = extractOpponentInfo(data);
             if (oppData) updateOpponentDisplay(oppData);
 
@@ -2104,10 +2104,25 @@
                     document.getElementById('hud-1v1').style.display = 'grid';
                     document.getElementById('hud-solo').style.display = 'none';
 
-                    // INITIALISATION DE LA GRILLE ET DE LA CIBLE EN 1V1
-                    if (latest1v1StartData) {
-                        document.getElementById('game-target-giant').innerText = latest1v1StartData.myTarget || 1;
-                        renderGrid(latest1v1StartData.myPool, handle1v1TileClick);
+                    const role = data.role; // 'sprinter' ou 'saboteur'
+                    const gridEl = document.getElementById('grid');
+
+                    if (role === 'saboteur') {
+                        document.getElementById('game-target-giant').innerText = "SABOTAGE 🕵️‍♂️";
+                        gridEl.innerHTML = `
+                            <div style="grid-column: span 4; display:flex; flex-direction:column; gap:10px; padding:15px; background:rgba(255,0,127,0.1); border:2px solid #ff007f; border-radius:12px;">
+                                <h3 style="margin:0; color:#ff007f; font-size:14px;">🛠️ PANNEAU DE SABOTAGE</h3>
+                                <p style="font-size:11px; color:#ccc; margin:0;">Ralentis ton adversaire en lui envoyant des pièges en continu !</p>
+                                <button class="btn-main" style="background:#ff4b2b; padding:10px;" onclick="socket.emit('send_malus', {type:'quake'})">📳 Déclencher un Séisme</button>
+                                <button class="btn-main" style="background:#ff8a00; padding:10px;" onclick="socket.emit('send_malus', {type:'micro'})">🐜 Réduire les tuiles</button>
+                                <button class="btn-main" style="background:#7b4397; padding:10px;" onclick="socket.emit('send_malus', {type:'eclipse'})">🌑 Projeter une Éclipse</button>
+                            </div>
+                        `;
+                    } else {
+                        if (latest1v1StartData) {
+                            document.getElementById('game-target-giant').innerText = latest1v1StartData.myTarget || 1;
+                            renderGrid(latest1v1StartData.myPool, handle1v1TileClick);
+                        }
                     }
 
                     preparePowerHUD();
@@ -2156,6 +2171,9 @@
             const events = data.globalEvents || latestGlobalEvents;
             const isCoinRush = events && events.coinRush;
             let bonusCoins = isCoinRush ? baseCoins : 0;
+            if (events && events.jackpotEclair && Math.random() < 0.4) {
+                bonusCoins += 200;
+            }
             currentCoinsGained = baseCoins + bonusCoins;
 
             if (data.winnerId === myId) {
@@ -2172,7 +2190,7 @@
             document.getElementById('recap-opp-target').innerText = oppData ? oppData.target : '-';
             document.getElementById('recap-my-score').innerText = myData ? myData.score : 0;
 
-            if (isCoinRush) {
+            if (isCoinRush || (events && events.jackpotEclair)) {
                 document.getElementById('recap-coins-gained').innerHTML = `+${baseCoins} <span style="color:#ff8a00;">+${bonusCoins}(BOOST)</span>`;
             } else {
                 document.getElementById('recap-coins-gained').innerText = `+${baseCoins}`;
@@ -2365,6 +2383,9 @@
             let baseCoins = Math.min(100, Math.floor(soloScore / 3));
             const isCoinRush = latestGlobalEvents && latestGlobalEvents.coinRush;
             let bonusCoins = isCoinRush ? baseCoins : 0;
+            if (latestGlobalEvents && latestGlobalEvents.jackpotEclair && Math.random() < 0.35) {
+                bonusCoins += 150;
+            }
             currentCoinsGained = baseCoins + bonusCoins;
 
             socket.emit('claim_solo_reward', soloScore);
@@ -2375,7 +2396,7 @@
             document.getElementById('recap-reason').innerText = `${currentLang === 'fr' ? 'Score' : 'Score'} : ${soloScore}`;
             document.getElementById('recap-my-score').innerText = soloScore;
 
-            if (isCoinRush) {
+            if (isCoinRush || (latestGlobalEvents && latestGlobalEvents.jackpotEclair)) {
                 document.getElementById('recap-coins-gained').innerHTML = `+${baseCoins} <span style="color:#ff8a00;">+${bonusCoins}(BOOST)</span>`;
             } else {
                 document.getElementById('recap-coins-gained').innerText = `+${baseCoins}`;
