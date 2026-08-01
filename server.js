@@ -364,6 +364,7 @@ io.on('connection', (socket) => {
         if (!socket.isAdmin) return;
         const { targetUsername, currency, amount } = data;
         const currencyLabel = currency === 'coins' ? 'Pièces 🪙' : 'Points 🏅';
+        const msg = `🎁 Cadeau Admin reçu : +${amount} ${currencyLabel} !`;
         
         if (!targetUsername || targetUsername.toUpperCase() === 'TOUS') {
             for (let sId in activePlayers) {
@@ -377,28 +378,37 @@ io.on('connection', (socket) => {
                 });
             }
         } else {
-            const { data: matchedPlayers } = await supabase
-                .from('players')
-                .select('*')
-                .ilike('username', targetUsername.trim())
-                .limit(1);
+            const cleanTarget = targetUsername.trim().toLowerCase();
+            
+            // 1. Recherche dans les joueurs connectés en session active (insensible à la casse)
+            let foundActiveSocketId = null;
+            for (let sId in activePlayers) {
+                if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === cleanTarget) {
+                    foundActiveSocketId = sId;
+                    break;
+                }
+            }
 
-            if (matchedPlayers && matchedPlayers.length > 0) {
-                const targetDbPlayer = matchedPlayers[0];
-                const activeEntry = Object.entries(activePlayers).find(([sId, p]) => p.id === targetDbPlayer.id);
-                const msg = `🎁 Cadeau Admin reçu : +${amount} ${currencyLabel} !`;
+            if (foundActiveSocketId) {
+                const targetPlayer = activePlayers[foundActiveSocketId];
+                targetPlayer[currency] = (targetPlayer[currency] || 0) + amount;
+                await savePlayerToSupabase(foundActiveSocketId);
+                io.to(foundActiveSocketId).emit('player_registered', targetPlayer);
+                io.to(foundActiveSocketId).emit('admin_gift_received', { currency, amount, message: msg });
+            } else {
+                // 2. Si le joueur n'est pas connecté, recherche en base de données Supabase (insensible à la casse)
+                const { data: matchedPlayers } = await supabase
+                    .from('players')
+                    .select('*')
+                    .ilike('username', targetUsername.trim())
+                    .limit(1);
 
-                if (activeEntry) {
-                    const [targetSocketId, targetPlayer] = activeEntry;
-                    targetPlayer[currency] = (targetPlayer[currency] || 0) + amount;
-                    await savePlayerToSupabase(targetSocketId);
-                    io.to(targetSocketId).emit('player_registered', targetPlayer);
-                    io.to(targetSocketId).emit('admin_gift_received', { currency, amount, message: msg });
-                } else {
-                    targetDbPlayer[currency] = (targetDbPlayer[currency] || 0) + amount;
+                if (matchedPlayers && matchedPlayers.length > 0) {
+                    const targetDbPlayer = matchedPlayers[0];
+                    const updatedVal = (targetDbPlayer[currency] || 0) + amount;
                     await supabase
                         .from('players')
-                        .update({ [currency]: targetDbPlayer[currency] })
+                        .update({ [currency]: updatedVal })
                         .eq('id', targetDbPlayer.id);
                 }
             }
