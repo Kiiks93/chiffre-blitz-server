@@ -129,6 +129,19 @@
         #countdown-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 5, 29, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
         .countdown-num { font-size: 90px; font-weight: 900; color: #00d2ff; }
 
+        /* SIMULATEUR DE PUBLICITE WEB */
+        #simulated-ad-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 10000;
+        }
+        .ad-timer-circle {
+            width: 70px; height: 70px; border-radius: 50%; border: 4px solid #00d2ff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; font-weight: 900; margin-bottom: 25px; color: #00d2ff;
+            box-shadow: 0 0 15px rgba(0,210,255,0.4);
+        }
+
         @keyframes radarSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulseAudio { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
         @keyframes quake { 0% { transform: translate(2px, 2px); } 50% { transform: translate(-2px, -2px); } 100% { transform: translate(2px, -2px); } }
@@ -161,6 +174,13 @@
             </p>
             <button class="btn-main btn-blue" onclick="playLaunchAd()" style="width:100%;" data-i18n="support_btn">Lancer la partie ⚡</button>
         </div>
+    </div>
+
+    <!-- SIMULATEUR DE PUBLICITE (Pour tester sur le web sans AdMob) -->
+    <div id="simulated-ad-overlay" style="display:none;">
+        <div id="ad-text" style="color:#aaa; font-size:16px; margin-bottom:20px; font-weight:bold;">VIDEO SPONSORISÉE...</div>
+        <div class="ad-timer-circle" id="ad-timer">5</div>
+        <button id="ad-close-btn" class="btn-secondary" style="display:none; max-width:200px; background:#1e1035; color:#fff;" data-i18n="close">Fermer</button>
     </div>
 
     <!-- ÉCRAN TITRE -->
@@ -443,7 +463,7 @@
             </div>
 
             <!-- BOUTON DE PUBLICITÉ RÉCOMPENSÉE -->
-            <button class="btn-main btn-reward" onclick="watchRewardedAd()" data-i18n="reward_btn">🎁 Regarder une pub pour doubler (+🪙)</button>
+            <button id="btn-reward-ad" class="btn-main btn-reward" onclick="watchRewardedAd()" data-i18n="reward_btn">🎁 Regarder une pub pour doubler (+🪙)</button>
 
             <button class="btn-main" onclick="showMainMenu()" style="margin-top:10px;" data-i18n="main_menu">MENU PRINCIPAL</button>
         </div>
@@ -636,6 +656,7 @@
 
         let currentLang = localStorage.getItem('cb_lang') || 'fr';
         let hasShownLaunchAd = false;
+        let hasWatchedAdThisGame = false;
 
         function toggleLanguage() {
             currentLang = (currentLang === 'fr') ? 'en' : 'fr';
@@ -657,6 +678,40 @@
             document.getElementById('lang-btn').innerText = (currentLang === 'fr') ? 'ENG' : 'FR';
         }
 
+        // --- GESTION DU SIMULATEUR DE PUBLICITE ---
+        function simulateAd(type, callback) {
+            const overlay = document.getElementById('simulated-ad-overlay');
+            const timerEl = document.getElementById('ad-timer');
+            const closeBtn = document.getElementById('ad-close-btn');
+            const adText = document.getElementById('ad-text');
+            
+            overlay.style.display = 'flex';
+            closeBtn.style.display = 'none';
+            SoundEngine.stopMusic(false);
+
+            let timeLeft = (type === 'interstitial') ? 5 : 10;
+            
+            adText.innerText = (type === 'interstitial') 
+                ? (currentLang === 'fr' ? 'SOUTIEN AU CRÉATEUR...' : 'SUPPORTING CREATOR...')
+                : (currentLang === 'fr' ? 'VIDÉO SPONSORISÉE...' : 'SPONSORED VIDEO...');
+            
+            timerEl.innerText = timeLeft;
+
+            const interval = setInterval(() => {
+                timeLeft--;
+                timerEl.innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    timerEl.innerText = "✓";
+                    closeBtn.style.display = 'block';
+                    closeBtn.onclick = () => {
+                        overlay.style.display = 'none';
+                        if (callback) callback();
+                    };
+                }
+            }, 1000);
+        }
+
         function checkLaunchAdAndStart() {
             if (!hasShownLaunchAd) {
                 document.getElementById('modal-launch-ad').style.display = 'flex';
@@ -668,19 +723,29 @@
         function playLaunchAd() {
             document.getElementById('modal-launch-ad').style.display = 'none';
             hasShownLaunchAd = true;
-            showMainMenu();
+            simulateAd('interstitial', () => {
+                showMainMenu();
+            });
         }
 
         function watchRewardedAd() {
-            const coinsDisplay = document.getElementById('recap-coins-gained');
-            let currentGained = parseInt(coinsDisplay.innerText.replace('+', '')) || 0;
-            let doubled = currentGained * 2;
-            coinsDisplay.innerText = `+${doubled} (Doublé 🎁)`;
-            
-            myProfile.coins += currentGained;
-            updateEconomyUI();
-            
-            alert(currentLang === 'fr' ? "🎁 Publicité visionnée ! Vos pièces ont été doublées !" : "🎁 Ad watched! Your coins have been doubled!");
+            if (hasWatchedAdThisGame) return;
+
+            simulateAd('reward', () => {
+                hasWatchedAdThisGame = true;
+                document.getElementById('btn-reward-ad').style.display = 'none'; // Verrouille le bouton
+                
+                const coinsDisplay = document.getElementById('recap-coins-gained');
+                let currentGained = parseInt(coinsDisplay.innerText.replace('+', '')) || 0;
+                let doubled = currentGained * 2;
+                coinsDisplay.innerText = `+${doubled} (Doublé 🎁)`;
+                
+                myProfile.coins += currentGained;
+                updateEconomyUI();
+                
+                alert(currentLang === 'fr' ? "🎁 Publicité visionnée ! Vos pièces ont été doublées !" : "🎁 Ad watched! Your coins have been doubled!");
+                SoundEngine.startMusic('menu');
+            });
         }
 
         // --- MOTEUR AUDIO FLUIDE ET Équilibré ---
@@ -752,7 +817,6 @@
                 this.stopMusic(false);
                 this.step = 0;
 
-                // Menu et Partie partagent maintenant un tempo posé, fluide et groovy (125 BPM)
                 this.bpm = 125;
                 const intervalMs = (60 / this.bpm / 4) * 1000;
 
@@ -766,7 +830,6 @@
                 const t = this.ctx.currentTime;
                 const scale = [110, 123.47, 130.81, 146.83, 164.81, 196, 220, 246.94, 261.63, 293.66, 329.63, 349.23, 392];
 
-                // Kick doux et rond sur les temps forts
                 if (step % 4 === 0) {
                     const osc = this.ctx.createOscillator();
                     const gain = this.ctx.createGain();
@@ -779,7 +842,6 @@
                     osc.start(t); osc.stop(t + 0.11);
                 }
 
-                // Snare chaleureuse et fluide
                 if (step === 4 || step === 12 || step === 20 || step === 28 || step === 36 || step === 44 || step === 52 || step === 60) {
                     const bufferSize = this.ctx.sampleRate * 0.08;
                     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
@@ -796,7 +858,6 @@
                     noise.start(t);
                 }
 
-                // Ligne mélodique fluide et harmonieuse en jeu (moins saccadée)
                 if (mode !== 'menu') {
                     const bar = Math.floor(step / 16);
                     let fluidPatterns = [
@@ -813,7 +874,7 @@
                     const gain = this.ctx.createGain();
                     const filter = this.ctx.createBiquadFilter();
 
-                    osc.type = 'triangle'; // Son plus doux et fluide
+                    osc.type = 'triangle';
                     osc.frequency.setValueAtTime(freq, t);
 
                     filter.type = 'lowpass';
@@ -825,7 +886,6 @@
                     osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
                     osc.start(t); osc.stop(t + 0.12);
                 } else {
-                    // Menu (tel quel, validé)
                     if (step % 2 === 0) {
                         const menuBar = Math.floor(step / 16);
                         const menuPatterns = [
@@ -1306,6 +1366,11 @@
 
         function startRandom1v1() {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+            
+            // On réinitialise la sécurité des pubs à chaque nouveau match
+            hasWatchedAdThisGame = false;
+            document.getElementById('btn-reward-ad').style.display = 'block';
+
             hideAllScreens();
             document.getElementById('screen-1v1-lobby').style.display = 'flex';
             let digit = 1;
@@ -1401,6 +1466,11 @@
 
         function startSoloTraining() {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+            
+            // On réinitialise la sécurité des pubs à chaque nouveau match
+            hasWatchedAdThisGame = false;
+            document.getElementById('btn-reward-ad').style.display = 'block';
+
             hideAllScreens();
             soloTarget = 1; soloScore = 0; soloTimeLeft = 30; isTimeFrozen = false;
             document.getElementById('screen-game').style.display = 'block';
