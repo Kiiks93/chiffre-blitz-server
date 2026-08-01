@@ -93,7 +93,7 @@
         .power-btn.equip { background: #00d2ff; color: #000; }
         .power-btn.active { background: #00ff88; color: #000; }
 
-        .hud { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(255,255,255,0.08); padding: 12px; border-radius: 14px; margin-bottom: 10px; }
+        .hud { display: grid; grid-template-columns: 1fr; gap: 10px; background: rgba(255,255,255,0.08); padding: 10px; border-radius: 14px; margin-bottom: 10px; max-width: 400px; margin-left: auto; margin-right: auto; }
         .player-box { padding: 8px; border-radius: 10px; background: rgba(0,0,0,0.3); }
         .player-box.me { border: 2px solid #00d2ff; }
         .player-box.opponent { border: 2px solid #ff007f; }
@@ -414,21 +414,13 @@
     <!-- ECRAN DE JEU -->
     <div id="screen-game" style="display:none;">
         <div id="hud-1v1" class="hud" style="display:none;">
-            <div class="player-box me">
-                <div data-i18n="hud_my_target">MA CIBLE</div>
-                <div style="font-size:26px; color:#00d2ff; font-weight:bold;" id="my-target">1</div>
-            </div>
             <div class="player-box opponent">
-                <div data-i18n="hud_opp_target">ADVERSAIRE</div>
+                <div data-i18n="hud_opp_target">CIBLE ADVERSAIRE</div>
                 <div style="font-size:26px; color:#ff007f; font-weight:bold;" id="opp-target">1</div>
             </div>
         </div>
 
         <div id="hud-solo" class="hud" style="display:none;">
-            <div class="player-box me">
-                <div data-i18n="hud_solo_target">CIBLE ACTUELLE</div>
-                <div style="font-size:26px; color:#00d2ff; font-weight:bold;" id="solo-target">1</div>
-            </div>
             <div class="player-box me">
                 <div data-i18n="hud_solo_score">SCORE</div>
                 <div style="font-size:26px; color:#00ff88; font-weight:bold;" id="solo-score">0</div>
@@ -560,9 +552,7 @@
                 lb_nat: "🇫🇷 France",
                 lb_glb: "🌍 Monde",
                 get_ready: "PRÉPAREZ-VOUS !",
-                hud_my_target: "MA CIBLE",
-                hud_opp_target: "ADVERSAIRE",
-                hud_solo_target: "CIBLE ACTUELLE",
+                hud_opp_target: "CIBLE ADVERSAIRE",
                 hud_solo_score: "SCORE",
                 timer_label: "Temps",
                 target_label: "CIBLE :",
@@ -658,9 +648,7 @@
                 lb_nat: "🇫🇷 France",
                 lb_glb: "🌍 World",
                 get_ready: "GET READY!",
-                hud_my_target: "MY TARGET",
-                hud_opp_target: "OPPONENT",
-                hud_solo_target: "CURRENT TARGET",
+                hud_opp_target: "OPPONENT TARGET",
                 hud_solo_score: "SCORE",
                 timer_label: "Time",
                 target_label: "TARGET:",
@@ -711,15 +699,20 @@
             document.getElementById('lang-btn').innerText = (currentLang === 'fr') ? 'ENG' : 'FR';
         }
 
-        // --- MOTEUR AUDIO LONG, ÉVOLUTIF ET PLUS POSÉ ---
+        // --- MOTEUR AUDIO ROBUSTE AVEC PERSISTANCE ---
         const SoundEngine = {
             ctx: null, isMuted: false, timerId: null, currentMode: null, step: 0, bpm: 105,
             init() { 
-                if (!this.ctx) { 
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)(); 
-                }
-                if (this.ctx.state === 'suspended') {
-                    this.ctx.resume();
+                try {
+                    if (!this.ctx) { 
+                        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                        this.ctx = new AudioCtx(); 
+                    }
+                    if (this.ctx.state === 'suspended') {
+                        this.ctx.resume();
+                    }
+                } catch(e) {
+                    console.log("Audio not supported or blocked", e);
                 }
             },
             toggleMute() {
@@ -730,6 +723,7 @@
             },
             playClick() {
                 if (this.isMuted) return; this.init();
+                if (!this.ctx) return;
                 const t = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
                 osc.type = 'triangle';
@@ -742,6 +736,7 @@
             },
             playError() {
                 if (this.isMuted) return; this.init();
+                if (!this.ctx) return;
                 const t = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
                 osc.type = 'sawtooth';
@@ -754,9 +749,10 @@
             },
             playVictory() {
                 if (this.isMuted) return; this.init();
+                if (!this.ctx) return;
                 [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
                     setTimeout(() => {
-                        if (this.isMuted) return;
+                        if (this.isMuted || !this.ctx) return;
                         const t = this.ctx.currentTime;
                         const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
                         osc.type = 'square';
@@ -777,6 +773,9 @@
                 if (mode) this.currentMode = mode;
                 if (this.isMuted) return;
                 this.init();
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
                 this.stopMusic(false);
                 this.step = 0;
 
@@ -790,6 +789,7 @@
                 }, intervalMs);
             },
             tickSequence(mode, step) {
+                if (!this.ctx) return;
                 const t = this.ctx.currentTime;
                 const scale = [110, 123.47, 130.81, 146.83, 164.81, 196, 220, 246.94, 261.63, 293.66, 329.63, 349.23, 392];
 
@@ -916,7 +916,30 @@
             }
         });
 
-        let myProfile = { username: "", region: "Hauts-de-France", points: 0, coins: 0, trophies: 0, inventory: {}, equippedPower: null };
+        // --- GESTION DU PROFIL & PERSISTANCE LOCALE ---
+        let myProfile = {
+            username: localStorage.getItem('cb_username') || "",
+            region: localStorage.getItem('cb_region') || "Hauts-de-France",
+            points: parseInt(localStorage.getItem('cb_points')) || 0,
+            coins: parseInt(localStorage.getItem('cb_coins')) || 0,
+            trophies: parseInt(localStorage.getItem('cb_trophies')) || 0,
+            inventory: JSON.parse(localStorage.getItem('cb_inventory') || '{}'),
+            equippedPower: localStorage.getItem('cb_equippedPower') || null
+        };
+
+        function saveProfileToLocalStorage() {
+            localStorage.setItem('cb_username', myProfile.username);
+            localStorage.setItem('cb_region', myProfile.region);
+            localStorage.setItem('cb_points', myProfile.points);
+            localStorage.setItem('cb_coins', myProfile.coins);
+            localStorage.setItem('cb_trophies', myProfile.trophies);
+            localStorage.setItem('cb_inventory', JSON.stringify(myProfile.inventory));
+            if (myProfile.equippedPower) {
+                localStorage.setItem('cb_equippedPower', myProfile.equippedPower);
+            } else {
+                localStorage.removeItem('cb_equippedPower');
+            }
+        }
         
         // PRIX DE LA BOUTIQUE RÉÉQUILIBRÉS
         const POWERS_CATALOG = [
@@ -946,6 +969,7 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             applyTranslations();
+            updateEconomyUI();
             showTitleScreen();
             checkAndShowProfileModal();
 
@@ -964,6 +988,7 @@
             document.getElementById('user-coins-display').innerText = myProfile.coins;
             document.getElementById('user-trophies-display').innerText = myProfile.trophies;
             document.getElementById('user-pts-display').innerText = myProfile.points;
+            saveProfileToLocalStorage();
         }
 
         function isProfileValid() {
@@ -981,6 +1006,7 @@
                 myProfile.region = localStorage.getItem('cb_region');
                 document.getElementById('user-name-display').innerText = myProfile.username;
                 document.getElementById('modal-username').style.display = 'none';
+                updateEconomyUI();
                 registerIfPossible();
             }
         }
@@ -990,10 +1016,10 @@
             const regionInput = document.getElementById('region-input').value;
             if (nameInput.length < 3) { alert("Ton pseudo doit contenir au moins 3 caractères !"); return; }
             myProfile.username = nameInput; myProfile.region = regionInput;
-            localStorage.setItem('cb_username', nameInput);
-            localStorage.setItem('cb_region', regionInput);
+            saveProfileToLocalStorage();
             document.getElementById('user-name-display').innerText = nameInput;
             document.getElementById('modal-username').style.display = 'none';
+            updateEconomyUI();
             registerIfPossible();
             SoundEngine.init();
         }
@@ -1007,8 +1033,8 @@
         function registerIfPossible() {
             if (isProfileValid() && socket.connected) {
                 socket.emit('register_player', {
-                    username: localStorage.getItem('cb_username'),
-                    region: localStorage.getItem('cb_region')
+                    username: myProfile.username,
+                    region: myProfile.region
                 });
             }
         }
@@ -1017,13 +1043,17 @@
             if (player) {
                 myProfile.username = player.username;
                 myProfile.region = player.region;
-                myProfile.points = player.points;
-                myProfile.coins = player.coins;
-                myProfile.trophies = player.trophies;
-                myProfile.inventory = player.inventory || {};
-                myProfile.equippedPower = player.equippedPower;
+                myProfile.points = Math.max(myProfile.points, player.points || 0);
+                myProfile.coins = Math.max(myProfile.coins, player.coins || 0);
+                myProfile.trophies = Math.max(myProfile.trophies, player.trophies || 0);
+                if (player.inventory) {
+                    for (let key in player.inventory) {
+                        myProfile.inventory[key] = Math.max(myProfile.inventory[key] || 0, player.inventory[key]);
+                    }
+                }
+                if (player.equippedPower) myProfile.equippedPower = player.equippedPower;
                 
-                document.getElementById('user-name-display').innerText = player.username;
+                document.getElementById('user-name-display').innerText = myProfile.username;
                 updateEconomyUI();
                 if (document.getElementById('modal-shop').style.display === 'flex') {
                     switchShopTab(currentShopTab);
@@ -1040,7 +1070,6 @@
             if (soloTimerInterval) clearInterval(soloTimerInterval);
             if (avalancheInterval) clearInterval(avalancheInterval);
             isTimeFrozen = false;
-            SoundEngine.stopMusic(true);
         }
 
         function showTitleScreen() {
@@ -1082,6 +1111,9 @@
 
         function simulateAd(callback) {
             SoundEngine.stopMusic(false);
+            // Masquer le récapitulatif pour laisser la pub au premier plan
+            document.getElementById('recap-modal').style.display = 'none';
+            
             const overlay = document.getElementById('simulated-ad-overlay');
             const timerEl = document.getElementById('ad-timer');
             const closeBtn = document.getElementById('ad-close-btn');
@@ -1124,6 +1156,9 @@
                 doubleBtn.disabled = true;
                 doubleBtn.style.opacity = '0.5';
                 doubleBtn.innerText = currentLang === 'fr' ? '✅ Gains doublés !' : '✅ Rewards doubled!';
+                
+                // Réafficher le récapitulatif avec les gains doublés
+                document.getElementById('recap-modal').style.display = 'flex';
             });
         }
 
@@ -1306,8 +1341,26 @@
             });
         }
 
-        function buyPower(id) { socket.emit('buy_power', id); }
-        function equipPower(id) { socket.emit('equip_power', id); }
+        function buyPower(id) {
+            const power = POWERS_CATALOG.find(p => p.id === id);
+            if (!power) return;
+            if (myProfile.coins < power.price) {
+                alert(currentLang === 'fr' ? "Pas assez de pièces !" : "Not enough coins!");
+                return;
+            }
+            myProfile.coins -= power.price;
+            myProfile.inventory[id] = (myProfile.inventory[id] || 0) + 1;
+            updateEconomyUI();
+            switchShopTab(currentShopTab);
+            socket.emit('buy_power', id);
+        }
+
+        function equipPower(id) {
+            myProfile.equippedPower = id;
+            saveProfileToLocalStorage();
+            switchShopTab(currentShopTab);
+            socket.emit('equip_power', id);
+        }
 
         function preparePowerHUD() {
             const zone = document.getElementById('power-zone');
@@ -1331,11 +1384,12 @@
             if (stock <= 0) return;
             
             myProfile.inventory[powerId]--;
+            saveProfileToLocalStorage();
             powerUsedInMatch = true;
             document.getElementById('btn-use-power').disabled = true;
 
             const is1v1 = document.getElementById('hud-1v1').style.display !== 'none';
-            const currentTarget = is1v1 ? (parseInt(document.getElementById('my-target').innerText) || 1) : soloTarget;
+            const currentTarget = parseInt(document.getElementById('game-target-giant').innerText) || 1;
 
             if (powerId === 'spotlight') {
                 document.querySelectorAll('.tile').forEach(t => {
@@ -1363,7 +1417,7 @@
 
         function autoValidateTarget() {
             const is1v1 = document.getElementById('hud-1v1').style.display !== 'none';
-            if (is1v1) handle1v1TileClick(parseInt(document.getElementById('my-target').innerText) || 1);
+            if (is1v1) handle1v1TileClick(parseInt(document.getElementById('game-target-giant').innerText) || 1);
             else handleSoloTileClick(soloTarget);
         }
 
@@ -1468,7 +1522,6 @@
             current1v1Time = data.timeLeft;
             document.getElementById('game-timer').innerText = Math.max(0, current1v1Time);
             const targetVal = data.myTarget || 1;
-            document.getElementById('my-target').innerText = targetVal;
             document.getElementById('game-target-giant').innerText = targetVal;
             renderGrid(data.myPool, handle1v1TileClick);
         });
@@ -1478,7 +1531,6 @@
         });
 
         socket.on('my_grid_updated', (data) => {
-            document.getElementById('my-target').innerText = data.target;
             document.getElementById('game-target-giant').innerText = data.target;
             renderGrid(data.newPool, handle1v1TileClick);
             if (data.success) SoundEngine.playClick();
@@ -1507,14 +1559,18 @@
             doubleBtn.innerText = currentLang === 'fr' ? '📺 Doubler mes gains (Pub)' : '📺 Double my rewards (Ad)';
 
             currentCoinsGained = (data.winnerId === myId) ? 40 : 20;
+            myProfile.coins += currentCoinsGained;
             if (data.winnerId === myId) {
                 banner.innerText = currentLang === 'fr' ? "🏆 VICTOIRE !" : "🏆 VICTORY!"; banner.style.color = "#00d2ff";
+                myProfile.trophies += 1;
+                myProfile.points += 50;
                 SoundEngine.playVictory();
             } else if (data.winnerId) {
                 banner.innerText = currentLang === 'fr' ? "❌ DÉFAITE !" : "❌ DEFEAT!"; banner.style.color = "#ff007f";
             } else {
                 banner.innerText = currentLang === 'fr' ? "⏱️ ÉGALITÉ !" : "⏱️ DRAW!"; banner.style.color = "#ff8a00";
             }
+            updateEconomyUI();
             
             document.getElementById('recap-reason').innerText = data.reason;
             document.getElementById('recap-my-target').innerText = myData ? myData.target : '-';
@@ -1541,7 +1597,6 @@
             document.getElementById('screen-game').style.display = 'block';
             document.getElementById('hud-solo').style.display = 'grid';
             document.getElementById('hud-1v1').style.display = 'none';
-            document.getElementById('solo-target').innerText = soloTarget;
             document.getElementById('game-target-giant').innerText = soloTarget;
             document.getElementById('solo-score').innerText = soloScore;
             document.getElementById('game-timer').innerText = soloTimeLeft;
@@ -1573,7 +1628,6 @@
                 if (num === soloTarget) {
                     SoundEngine.playClick();
                     soloTarget++; soloScore += 10;
-                    document.getElementById('solo-target').innerText = soloTarget;
                     document.getElementById('game-target-giant').innerText = soloTarget;
                     document.getElementById('solo-score').innerText = soloScore;
                     generateSoloGrid();
@@ -1590,7 +1644,6 @@
                     SoundEngine.playClick();
                     soloScore += 15;
                     soloTarget = Math.floor(Math.random() * 50) + 1;
-                    document.getElementById('solo-target').innerText = soloTarget;
                     document.getElementById('game-target-giant').innerText = soloTarget;
                     document.getElementById('solo-score').innerText = soloScore;
                     generateSoloGrid();
@@ -1657,11 +1710,9 @@
             let activeNumbers = avalancheGridData.filter(v => v !== null);
             if (activeNumbers.length > 0) {
                 avalancheTarget = activeNumbers[Math.floor(Math.random() * activeNumbers.length)];
-                document.getElementById('solo-target').innerText = avalancheTarget;
                 document.getElementById('game-target-giant').innerText = avalancheTarget;
             } else {
                 avalancheTarget = null;
-                document.getElementById('solo-target').innerText = '-';
                 document.getElementById('game-target-giant').innerText = '-';
             }
         }
@@ -1711,6 +1762,10 @@
             const bonusCoins = soloScore >= 300 ? 100 : 0;
             currentCoinsGained = baseCoins + bonusCoins;
             
+            myProfile.coins += currentCoinsGained;
+            myProfile.points += soloScore;
+            updateEconomyUI();
+
             socket.emit('claim_solo_reward', soloScore);
 
             document.getElementById('recap-banner').innerText = currentLang === 'fr' ? "🏋️ ENTRAÎNEMENT TERMINÉ" : "🏋️ TRAINING FINISHED";
