@@ -18,7 +18,7 @@ io.on('connection', (socket) => {
     socket.on('register_player', (data) => {
         const username = data.username;
         if (!playersDB[username]) {
-            playersDB[username] = { username: username, region: data.region || 'Hauts-de-France', points: 0, coins: 0, trophies: 0 };
+            playersDB[username] = { username: username, region: data.region || 'Hauts-de-France', points: 0, coins: 100, trophies: 0, inventory: {}, equippedPower: null };
         }
         socket.username = username;
         players[socket.id] = { id: socket.id, username: username };
@@ -39,6 +39,25 @@ io.on('connection', (socket) => {
         if (username && playersDB[username]) {
             playersDB[username].coins += Number(bonusCoins) || 0;
             socket.emit('player_registered', playersDB[username]);
+        }
+    });
+
+    socket.on('buy_power', (data) => {
+        const username = socket.username;
+        if (username && playersDB[username]) {
+            if (playersDB[username].coins >= data.price) {
+                playersDB[username].coins -= data.price;
+                if (!playersDB[username].inventory) playersDB[username].inventory = {};
+                playersDB[username].inventory[data.id] = (playersDB[username].inventory[data.id] || 0) + 1;
+                socket.emit('player_registered', playersDB[username]);
+            }
+        }
+    });
+
+    socket.on('equip_power', (id) => {
+        const username = socket.username;
+        if (username && playersDB[username]) {
+            playersDB[username].equippedPower = id;
         }
     });
 
@@ -68,6 +87,21 @@ io.on('connection', (socket) => {
         io.to(data.code).emit('room_joined_success', { code: data.code, players: playersData });
     });
 
+    socket.on('leave_room', () => {
+        for (let code in customRooms) {
+            let room = customRooms[code];
+            let index = room.players.indexOf(socket.id);
+            if (index !== -1) {
+                room.players.splice(index, 1);
+                socket.leave(code);
+                if (room.players.length === 0) {
+                    delete customRooms[code];
+                }
+                break;
+            }
+        }
+    });
+
     socket.on('find_1v1_match', () => {
         if (waitingPlayerId && waitingPlayerId !== socket.id) {
             waitingPlayerId = null;
@@ -78,6 +112,16 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         if (waitingPlayerId === socket.id) waitingPlayerId = null;
+        for (let code in customRooms) {
+            let room = customRooms[code];
+            let index = room.players.indexOf(socket.id);
+            if (index !== -1) {
+                room.players.splice(index, 1);
+                socket.leave(code);
+                if (room.players.length === 0) delete customRooms[code];
+                break;
+            }
+        }
         delete players[socket.id];
     });
 });
