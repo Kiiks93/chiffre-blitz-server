@@ -22,7 +22,7 @@ const activePlayers = {};
 const rooms = {};   
 const matchmakingQueue = [];
 const rankedQueue = [];
-const activeMatches = {}; // Suivi des matchs 1v1 en cours
+const activeMatches = {}; 
 
 // --- CONFIGURATION ADMIN & ÉVÉNEMENTS ---
 const ADMIN_PASSWORD = "*JE_SUIS_ADMIN1301*";
@@ -78,7 +78,7 @@ async function savePlayerToSupabase(socketId) {
             avatar: p.avatar,
             flag: p.flag
         })
-        .eq('id', p.id);
+        .eq('id', p.dbId);
 }
 
 io.on('connection', (socket) => {
@@ -141,7 +141,9 @@ io.on('connection', (socket) => {
             }
 
             activePlayers[socket.id] = {
-                id: playerData.id || socket.id,
+                socketId: socket.id,
+                dbId: playerData.id || socket.id,
+                id: socket.id,
                 username: playerData.username,
                 region: playerData.region,
                 avatar: playerData.avatar,
@@ -185,7 +187,6 @@ io.on('connection', (socket) => {
         if (!player) return;
         if ((player.inventory[powerId] || 0) > 0) {
             player.equippedPower = powerId;
-            
             await savePlayerToSupabase(socket.id);
             socket.emit('player_registered', player);
         }
@@ -257,10 +258,17 @@ io.on('connection', (socket) => {
             return;
         }
 
+        const currentPlayer = activePlayers[socket.id] || { 
+            socketId: socket.id, 
+            username: data.username, 
+            avatar: data.avatar, 
+            flag: data.flag 
+        };
+
         rooms[code] = {
             code: code,
             password: data.password || '',
-            players: [activePlayers[socket.id] || { id: socket.id, username: data.username, avatar: data.avatar, flag: data.flag }],
+            players: [currentPlayer],
             hostId: socket.id
         };
 
@@ -283,7 +291,12 @@ io.on('connection', (socket) => {
             return;
         }
 
-        const currentPlayer = activePlayers[socket.id] || { id: socket.id, username: "Joueur", avatar: 1, flag: "🇫🇷" };
+        const currentPlayer = activePlayers[socket.id] || { 
+            socketId: socket.id, 
+            username: "Joueur", 
+            avatar: 1, 
+            flag: "🇫🇷" 
+        };
         room.players.push(currentPlayer);
         socket.join(room.code);
 
@@ -292,7 +305,9 @@ io.on('connection', (socket) => {
 
         if (room.players.length === 2) {
             setTimeout(() => {
-                startMatchBetween(room.players[0].id, room.players[1].id);
+                const p1SocketId = room.players[0].socketId || room.players[0].id;
+                const p2SocketId = room.players[1].socketId || room.players[1].id;
+                startMatchBetween(p1SocketId, p2SocketId);
             }, 1000);
         }
     });
@@ -325,6 +340,10 @@ io.on('connection', (socket) => {
     socket.on('player_click_1v1', (num) => {
         const match = activeMatches[socket.id];
         if (!match || match.ended) return;
+        
+        // En mode Saboteur, le joueur saboteur ne clique pas sur les chiffres de la grille principale
+        if (match.isSaboteur && match.roles[socket.id] === 'saboteur') return;
+
         const pData = match.players[socket.id];
         if (!pData) return;
 
@@ -362,6 +381,9 @@ io.on('connection', (socket) => {
         if (!player) return;
         let baseCoins = Math.min(100, Math.floor(score / 3));
         let earnedCoins = globalEvents.coinRush ? baseCoins * 2 : baseCoins;
+        if (globalEvents.jackpotEclair && Math.random() < 0.35) {
+            earnedCoins += 150; // Bonus Jackpot Éclair
+        }
         player.coins += earnedCoins;
 
         await savePlayerToSupabase(socket.id);
@@ -465,7 +487,7 @@ io.on('connection', (socket) => {
 function leaveAllRooms(socket) {
     for (let code in rooms) {
         const room = rooms[code];
-        room.players = room.players.filter(p => p.id !== socket.id);
+        room.players = room.players.filter(p => (p.socketId || p.id) !== socket.id);
         socket.leave(code);
         if (room.players.length === 0) {
             delete rooms[code];
@@ -476,8 +498,11 @@ function leaveAllRooms(socket) {
 }
 
 function startMatchBetween(id1, id2, isRanked = false) {
-    const p1 = activePlayers[id1] || { id: id1, username: "Joueur 1", avatar: 1, flag: "🇫🇷", points: 0 };
-    const p2 = activePlayers[id2] || { id: id2, username: "Joueur 2", avatar: 2, flag: "🇫🇷", points: 0 };
+    const p1 = activePlayers[id1] || { socketId: id1, username: "Joueur 1", avatar: 1, flag: "🇫🇷", points: 0 };
+    const p2 = activePlayers[id2] || { socketId: id2, username: "Joueur 2", avatar: 2, flag: "🇫🇷", points: 0 };
+
+    const isSaboteur = globalEvents.saboteurMode;
+    const roles = isSaboteur ? { [id1]: 'sprinter', [id2]: 'saboteur' } : {};
 
     const match = {
         id1,
@@ -488,19 +513,48 @@ function startMatchBetween(id1, id2, isRanked = false) {
             [id2]: { target: 1, score: 0, pool: generatePool(1) }
         },
         isRanked,
+        isSaboteur,
+        roles,
         ended: false
     };
 
     activeMatches[id1] = match;
     activeMatches[id2] = match;
 
-    io.to(id1).emit('start_countdown', { opponent: p2, timeLeft: match.timeLeft, myTarget: 1, myPool: match.players[id1].pool });
-    io.to(id2).emit('start_countdown', { opponent: p1, timeLeft: match.timeLeft, myTarget: 1, myPool: match.players[id2].pool });
+    io.to(id1).emit('start_countdown', { 
+        opponent: p2, 
+        timeLeft: match.timeLeft, 
+        myTarget: 1, 
+        myPool: match.players[id1].pool,
+        role: isSaboteur ? 'sprinter' : null
+    });
+    
+    io.to(id2).emit('start_countdown', { 
+        opponent: p1, 
+        timeLeft: match.timeLeft, 
+        myTarget: 1, 
+        myPool: match.players[id2].pool,
+        role: isSaboteur ? 'saboteur' : null
+    });
+
+    let chaosTimer = 0;
 
     const gameInterval = setInterval(() => {
         match.timeLeft--;
         io.to(id1).emit('timer_update', match.timeLeft);
         io.to(id2).emit('timer_update', match.timeLeft);
+
+        // Logique Chaos Mode : Envoie un malus aléatoire toutes les 8 secondes aux deux joueurs
+        if (globalEvents.chaosMode) {
+            chaosTimer++;
+            if (chaosTimer >= 8) {
+                chaosTimer = 0;
+                const maluses = ['quake', 'micro', 'eclipse'];
+                const randomMalus = maluses[Math.floor(Math.random() * maluses.length)];
+                io.to(id1).emit('receive_malus', { type: randomMalus });
+                io.to(id2).emit('receive_malus', { type: randomMalus });
+            }
+        }
 
         if (match.timeLeft <= 0 || match.ended) {
             clearInterval(gameInterval);
@@ -537,11 +591,14 @@ async function endMatch(id1, id2, matchData, isRanked) {
         if (p) {
             let baseCoins = (winnerId === sId) ? 30 : 10;
             let earnedCoins = globalEvents.coinRush ? baseCoins * 2 : baseCoins;
+            if (globalEvents.jackpotEclair && Math.random() < 0.4) {
+                earnedCoins += 200; // Jackpot Éclair fin de match
+            }
             p.coins += earnedCoins;
         }
     }
 
-    if (isRanked) {
+    if (isRanked && !matchData.isSaboteur) {
         const p1 = activePlayers[id1];
         const p2 = activePlayers[id2];
 
