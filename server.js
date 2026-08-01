@@ -211,6 +211,45 @@ io.on('connection', (socket) => {
         io.to(oppId).emit('receive_malus', { type: data.type });
     });
 
+    // --- TESTS ADMIN MANUELS POUR CHAQUE BOOST ---
+    socket.on('admin_test_coin_rush', async () => {
+        if (!socket.isAdmin) return;
+        const player = activePlayers[socket.id];
+        if (!player) return;
+        const bonus = 60; // 30 base + 30 rush
+        player.coins += bonus;
+        await savePlayerToSupabase(socket.id);
+        socket.emit('player_registered', player);
+        socket.emit('admin_gift_received', { currency: 'coins', amount: bonus, message: `🪙 Test Coin Rush : +${bonus} Pièces !` });
+    });
+
+    socket.on('admin_test_shield', () => {
+        if (!socket.isAdmin) return;
+        socket.emit('admin_gift_received', { currency: 'points', amount: 0, message: `🛡️ Test Rank Shield : Bouclier actif (0 point perdu en cas de défaite).` });
+    });
+
+    socket.on('admin_test_expresso', () => {
+        if (!socket.isAdmin) return;
+        socket.emit('admin_gift_received', { currency: 'points', amount: 0, message: `⚡ Test Expresso Match : Chrono réduit à 20s pour le prochain duel !` });
+    });
+
+    socket.on('admin_test_chaos', () => {
+        if (!socket.isAdmin) return;
+        const maluses = ['quake', 'micro', 'eclipse', 'chaos'];
+        const randomMalus = maluses[Math.floor(Math.random() * maluses.length)];
+        socket.emit('receive_malus', { type: randomMalus });
+    });
+
+    socket.on('admin_test_jackpot', () => {
+        if (!socket.isAdmin) return;
+        socket.emit('trigger_jackpot_wheel');
+    });
+
+    socket.on('admin_test_saboteur', () => {
+        if (!socket.isAdmin) return;
+        socket.emit('admin_gift_received', { currency: 'points', amount: 0, message: `🕵️‍♂️ Test Saboteur : Mode actif dans le menu principal.` });
+    });
+
     socket.on('spin_jackpot_wheel', async () => {
         const player = activePlayers[socket.id];
         if (!player) return;
@@ -429,7 +468,6 @@ io.on('connection', (socket) => {
         player.coins += earnedCoins;
         lastMatchEarnings[socket.id] = earnedCoins;
 
-        // Chance rare (3%) de déclencher la Roue Jackpot si l'événement est actif
         let triggerWheel = (globalEvents.jackpotEclair && Math.random() < 0.03);
 
         await savePlayerToSupabase(socket.id);
@@ -707,7 +745,6 @@ async function endMatch(id1, id2, matchData, isRanked) {
             lastMatchEarnings[sId] = totalCoins;
             matchRewards[sId] = { baseCoins, rushBonus, totalCoins };
 
-            // Chance rare (3%) pour le gagnant de déclencher la Roue Jackpot
             if (isWinner && globalEvents.jackpotEclair && Math.random() < 0.03) {
                 io.to(sId).emit('trigger_jackpot_wheel');
             }
