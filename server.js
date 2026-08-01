@@ -383,8 +383,9 @@ io.on('connection', (socket) => {
 
     socket.on('find_saboteur_match', (data) => {
         if (!globalEvents.saboteurMode) return;
+        // Limitation stricte à maximum 2 malus et 2 pièges sélectionnés
         const chosenMalus = data && data.chosenMalus ? data.chosenMalus.slice(0, 2) : ['inversion'];
-        const trappedTiles = data && data.trappedTiles ? data.trappedTiles : generateRandomTraps(2);
+        const trappedTiles = data && Array.isArray(data.trappedTiles) ? data.trappedTiles.slice(0, 2) : generateRandomTraps(2);
 
         saboteurQueue = saboteurQueue.filter(item => (item.socketId || item) !== socket.id);
         saboteurQueue.push({ socketId: socket.id, chosenMalus, trappedTiles });
@@ -406,7 +407,7 @@ io.on('connection', (socket) => {
         const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
 
         if (num === pData.target) {
-            // CORRECTION 1 : On calcule l'index de la case cliquée AVANT de modifier la cible et le pool
+            // Calcul de l'index de la case cliquée AVANT la modification de la cible et du pool
             const clickedIndex = pData.pool.indexOf(num);
 
             pData.score += 10;
@@ -418,9 +419,23 @@ io.on('connection', (socket) => {
                 if (oppData && oppData.traps && oppData.traps.includes(clickedIndex)) {
                     const triggeredMalus = oppData.chosenMalus[Math.floor(Math.random() * oppData.chosenMalus.length)];
                     
-                    // CORRECTION 2 : On renvoie directement le nom exact du malus (ex: 'brouillage', 'gel', 'inversion') 
-                    // pour que le client déclenche l'animation correspondante.
-                    socket.emit('receive_malus', { type: triggeredMalus });
+                    // Conversion des noms de malus vers les types reconnus par le client pour lancer l'animation
+                    let malusType = 'freeze';
+                    if (triggeredMalus === 'inversion') {
+                        malusType = 'inversion';
+                    } else if (triggeredMalus === 'gel') {
+                        malusType = 'freeze';
+                    } else if (triggeredMalus === 'brouillage') {
+                        malusType = 'eclipse';
+                    } else {
+                        malusType = triggeredMalus;
+                    }
+
+                    if (malusType === 'inversion') {
+                        pData.pool.sort(() => Math.random() - 0.5);
+                    } else {
+                        socket.emit('receive_malus', { type: malusType });
+                    }
                 }
             }
             
