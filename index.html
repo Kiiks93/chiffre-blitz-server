@@ -405,7 +405,17 @@
                 room_label: "Salon", waiting: "En attente...", quit: "❌ Quitter", welcome: "BIENVENUE ⚡", pseudo_label: "PSEUDO",
                 hud_my_target: "MA CIBLE", hud_opp_target: "ADVERSAIRE", hud_solo_target: "CIBLE À TROUVER", hud_score: "SCORE",
                 timer_label: "Temps / Pression", recap_score: "⭐ Mon Score :", recap_coins: "🪙 Pièces Gagnées :",
-                reward_ad: "🎁 Regarder une pub pour doubler (+🪙)", main_menu: "MENU PRINCIPAL"
+                reward_ad: "🎁 Regarder une pub pour doubler (+🪙)", main_menu: "MENU PRINCIPAL",
+                // Boutique
+                p_spotlight_name: "💡 Projecteur", p_spotlight_desc: "Illumine la bonne tuile (2s)",
+                p_freeze_name: "⏳ Blocage du Temps", p_freeze_desc: "Gèle le chrono pendant 3s",
+                p_joker_name: "⚡ Joker Éclair", p_joker_desc: "Valide la cible actuelle",
+                p_nova_name: "🌟 Nova Temporelle", p_nova_desc: "GIGA : Valide 3 cibles",
+                p_quake_name: "📳 Séisme", p_quake_desc: "Fait trembler l'adversaire (2s)",
+                p_micro_name: "🐜 Micro-Tuiles", p_micro_desc: "Rétrécit la grille adverse (2s)",
+                p_eclipse_name: "🌑 Éclipse", p_eclipse_desc: "Floute la grille adverse (1.5s)",
+                p_chaos_name: "🌪️ Chaos Absolu", p_chaos_desc: "GIGA : Combo de malus (5s)",
+                owned: "Possédé", equip: "Équiper", equipped: "Équipé", buy: "Acheter", not_enough_coins: "Pas assez de pièces !"
             },
             en: {
                 coins: "Coins", trophies: "Trophies",
@@ -428,7 +438,17 @@
                 room_label: "Room", waiting: "Waiting...", quit: "❌ Quit", welcome: "WELCOME ⚡", pseudo_label: "PSEUDO",
                 hud_my_target: "MY TARGET", hud_opp_target: "OPPONENT", hud_solo_target: "TARGET TO FIND", hud_score: "SCORE",
                 timer_label: "Time / Pressure", recap_score: "⭐ My Score :", recap_coins: "🪙 Coins Earned :",
-                reward_ad: "🎁 Watch an ad to double (+🪙)", main_menu: "MAIN MENU"
+                reward_ad: "🎁 Watch an ad to double (+🪙)", main_menu: "MAIN MENU",
+                // Shop
+                p_spotlight_name: "💡 Spotlight", p_spotlight_desc: "Illuminates the correct tile (2s)",
+                p_freeze_name: "⏳ Time Freeze", p_freeze_desc: "Freezes the timer for 3s",
+                p_joker_name: "⚡ Lightning Joker", p_joker_desc: "Validates the current target",
+                p_nova_name: "🌟 Time Nova", p_nova_desc: "GIGA: Validates 3 targets",
+                p_quake_name: "📳 Earthquake", p_quake_desc: "Shakes opponent's screen (2s)",
+                p_micro_name: "🐜 Micro-Tiles", p_micro_desc: "Shrinks opponent's grid (2s)",
+                p_eclipse_name: "🌑 Eclipse", p_eclipse_desc: "Blurs opponent's grid (1.5s)",
+                p_chaos_name: "🌪️ Absolute Chaos", p_chaos_desc: "GIGA: Malus combo (5s)",
+                owned: "Owned", equip: "Equip", equipped: "Equipped", buy: "Buy", not_enough_coins: "Not enough coins!"
             }
         };
 
@@ -448,6 +468,10 @@
                     el.innerHTML = translations[lang][key];
                 }
             });
+            // Actualiser la boutique si elle est ouverte pour appliquer la langue
+            if (document.getElementById('modal-shop').style.display === 'flex') {
+                renderShopItems();
+            }
         }
 
         let hasShownLaunchAd = false;
@@ -457,16 +481,16 @@
 
         const powersData = {
             bonus: [
-                { id: 'spotlight', name: '💡 Projecteur', desc: 'Illumine la bonne tuile (2s)', price: 30 },
-                { id: 'freeze', name: '⏳ Blocage du Temps', desc: 'Gèle le chrono pendant 3s', price: 60 },
-                { id: 'joker', name: '⚡ Joker Éclair', desc: 'Valide la cible actuelle', price: 150 },
-                { id: 'nova', name: '🌟 Nova Temporelle', desc: 'GIGA : Valide 3 cibles', price: 400 }
+                { id: 'spotlight', nameKey: 'p_spotlight_name', descKey: 'p_spotlight_desc', price: 30 },
+                { id: 'freeze', nameKey: 'p_freeze_name', descKey: 'p_freeze_desc', price: 60 },
+                { id: 'joker', nameKey: 'p_joker_name', descKey: 'p_joker_desc', price: 150 },
+                { id: 'nova', nameKey: 'p_nova_name', descKey: 'p_nova_desc', price: 400 }
             ],
             malus: [
-                { id: 'quake', name: '📳 Séisme', desc: 'Fait trembler l\'adversaire (2s)', price: 40 },
-                { id: 'micro', name: '🐜 Micro-Tuiles', desc: 'Rétrécit la grille adverse (2s)', price: 80 },
-                { id: 'eclipse', name: '🌑 Éclipse', desc: 'Floute la grille adverse (1.5s)', price: 200 },
-                { id: 'chaos', name: '🌪️ Chaos Absolu', desc: 'GIGA : Combo de malus (5s)', price: 500 }
+                { id: 'quake', nameKey: 'p_quake_name', descKey: 'p_quake_desc', price: 40 },
+                { id: 'micro', nameKey: 'p_micro_name', descKey: 'p_micro_desc', price: 80 },
+                { id: 'eclipse', nameKey: 'p_eclipse_name', descKey: 'p_eclipse_desc', price: 200 },
+                { id: 'chaos', nameKey: 'p_chaos_name', descKey: 'p_chaos_desc', price: 500 }
             ]
         };
 
@@ -499,20 +523,26 @@
         function renderShopItems() {
             const container = document.getElementById('shop-container');
             container.innerHTML = '';
+            let currentLang = localStorage.getItem('cb_lang') || 'fr';
+            let t = translations[currentLang];
+
             powersData[currentShopTab].forEach(p => {
                 let owned = myProfile.inventory && myProfile.inventory[p.id];
                 let isEquipped = myProfile.equippedPower === p.id;
+                let itemName = t[p.nameKey];
+                let itemDesc = t[p.descKey];
+
                 container.innerHTML += `
                     <div class="power-card ${isEquipped ? 'equipped' : ''}">
                         <div>
-                            <h4>${p.name}</h4>
-                            <p>${p.desc}</p>
+                            <h4>${itemName}</h4>
+                            <p>${itemDesc}</p>
                         </div>
                         <div>
-                            <div class="stock-badge">${owned ? 'Possédé (x'+owned+')' : p.price + ' 🪙'}</div>
+                            <div class="stock-badge">${owned ? `${t.owned} (x${owned})` : p.price + ' 🪙'}</div>
                             ${owned ? 
-                                `<button class="power-btn ${isEquipped ? 'active' : 'equip'}" onclick="equipPower('${p.id}')">${isEquipped ? 'Équipé' : 'Équiper'}</button>` :
-                                `<button class="power-btn buy" onclick="buyPower('${p.id}', ${p.price})">Acheter</button>`
+                                `<button class="power-btn ${isEquipped ? 'active' : 'equip'}" onclick="equipPower('${p.id}')">${isEquipped ? t.equipped : t.equip}</button>` :
+                                `<button class="power-btn buy" onclick="buyPower('${p.id}', ${p.price})">${t.buy}</button>`
                             }
                         </div>
                     </div>
@@ -521,6 +551,7 @@
         }
 
         function buyPower(id, price) {
+            let currentLang = localStorage.getItem('cb_lang') || 'fr';
             if (myProfile.coins >= price) {
                 myProfile.coins -= price;
                 document.getElementById('user-coins-display').innerText = myProfile.coins;
@@ -529,7 +560,7 @@
                 renderShopItems();
                 socket.emit('buy_power', { id, price });
             } else {
-                alert("Pas assez de pièces !");
+                alert(translations[currentLang].not_enough_coins);
             }
         }
 
