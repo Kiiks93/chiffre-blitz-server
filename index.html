@@ -862,6 +862,22 @@
                     osc.start(t); osc.stop(t + 0.09);
                 }
 
+                if (step === 4 || step === 12 || step === 20 || step === 28 || step === 36 || step === 44 || step === 52 || step === 60) {
+                    const bufferSize = this.ctx.sampleRate * 0.07;
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                    const noise = this.ctx.createBufferSource();
+                    noise.buffer = buffer;
+                    const filter = this.ctx.createBiquadFilter();
+                    filter.type = 'highpass'; filter.frequency.setValueAtTime(1400, t);
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(0.1, t);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+                    noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                    noise.start(t);
+                }
+
                 if (step % 2 === 1 && mode !== 'menu') {
                     const bufferSize = this.ctx.sampleRate * 0.03;
                     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
@@ -905,6 +921,27 @@
 
                     osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
                     osc.start(t); osc.stop(t + 0.09);
+                } else {
+                    if (step % 2 === 0) {
+                        const menuBar = Math.floor(step / 16);
+                        const menuPatterns = [
+                            [0, 3, 5, 7],
+                            [2, 5, 7, 9],
+                            [3, 7, 8, 10],
+                            [5, 8, 10, 12]
+                        ];
+                        const chord = menuPatterns[menuBar];
+                        const freq = scale[chord[(step / 2) % chord.length]];
+                        
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'square';
+                        osc.frequency.setValueAtTime(freq, t);
+                        gain.gain.setValueAtTime(0.025, t);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
+                        osc.connect(gain); gain.connect(this.ctx.destination);
+                        osc.start(t); osc.stop(t + 0.15);
+                    }
                 }
             }
         };
@@ -1009,7 +1046,6 @@
             registerIfPossible();
             SoundEngine.init();
 
-            // Transition directe vers le menu principal
             showMainMenu();
         }
 
@@ -1450,18 +1486,37 @@
 
         function cancel1v1Search() { open1v1Hub(); }
 
+        // Extraction robuste des informations de l'adversaire
+        function extractOpponentInfo(data) {
+            if (!data) return cachedOpponent;
+            if (data.opponent) return data.opponent;
+            if (data.player2) return data.player2;
+            if (data.opp) return data.opp;
+            if (data.players) {
+                if (Array.isArray(data.players)) {
+                    const opp = data.players.find(p => p.id !== socket.id && p.socketId !== socket.id);
+                    if (opp) return opp;
+                } else if (typeof data.players === 'object') {
+                    const oppId = Object.keys(data.players).find(id => id !== socket.id);
+                    if (oppId) return data.players[oppId];
+                }
+            }
+            return cachedOpponent;
+        }
+
         function updateOpponentDisplay(opp) {
             if (!opp) return;
+            cachedOpponent = opp;
             const name = opp.username || opp.name || opp.pseudo || "Adversaire";
             const flag = opp.flag || "🇫🇷";
-            const avatar = opp.avatar !== undefined ? opp.avatar : 1;
+            const avatar = (opp.avatar !== undefined && opp.avatar !== null) ? opp.avatar : 1;
             document.getElementById('opp-profile-name').innerText = name;
             document.getElementById('opp-profile-badge').innerHTML = getAvatarBadgeHTML(flag, avatar);
         }
 
         socket.on('start_countdown', (data) => {
             if (radarInterval) clearInterval(radarInterval);
-            let oppData = (data && (data.opponent || data.opp || data.player2)) || cachedOpponent;
+            let oppData = extractOpponentInfo(data);
             if (oppData) updateOpponentDisplay(oppData);
 
             ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-avalanche-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-room-waiting', 'screen-join-custom'].forEach(id => {
@@ -1494,7 +1549,7 @@
             document.getElementById('game-timer').innerText = Math.max(0, current1v1Time);
             document.getElementById('game-target-giant').innerText = data.myTarget || 1;
             
-            let oppData = data.opponent || data.opp || data.player2 || cachedOpponent;
+            let oppData = extractOpponentInfo(data);
             if (oppData) updateOpponentDisplay(oppData);
             
             renderGrid(data.myPool, handle1v1TileClick);
@@ -1513,7 +1568,8 @@
 
         socket.on('opponent_progress', (data) => {
             document.getElementById('opp-target').innerText = data.target;
-            if (data.opponent) updateOpponentDisplay(data.opponent);
+            let oppData = extractOpponentInfo(data);
+            if (oppData) updateOpponentDisplay(oppData);
         });
 
         socket.on('game_over_1v1', (data) => {
