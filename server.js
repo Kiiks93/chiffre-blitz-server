@@ -396,7 +396,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('player_click_1v1', (num) => {
+    socket.on('player_click_1v1', (clickedIndex) => {
         const match = activeMatches[socket.id];
         if (!match || match.ended) return;
 
@@ -405,29 +405,29 @@ io.on('connection', (socket) => {
 
         const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
 
-        if (num === pData.target) {
-            const clickedIndex = pData.pool.indexOf(num);
+        if (typeof clickedIndex !== 'number' || clickedIndex < 0 || clickedIndex >= pData.pool.length) return;
 
+        const num = pData.pool[clickedIndex];
+
+        if (match.isSaboteur) {
+            const oppData = match.players[oppId];
+            if (oppData && oppData.traps && oppData.traps.includes(clickedIndex)) {
+                oppData.traps = oppData.traps.filter(t => t !== clickedIndex);
+
+                const triggeredMalus = oppData.chosenMalus[Math.floor(Math.random() * oppData.chosenMalus.length)];
+                
+                if (triggeredMalus === 'inversion') {
+                    pData.pool.sort(() => Math.random() - 0.5);
+                }
+                
+                socket.emit('receive_malus', { type: triggeredMalus });
+            }
+        }
+
+        if (num === pData.target) {
             pData.score += 10;
             pData.target++;
             pData.pool = generatePool(pData.target);
-
-            if (match.isSaboteur) {
-                const oppData = match.players[oppId];
-                if (oppData && oppData.traps && oppData.traps.includes(clickedIndex)) {
-                    // CONSOMMATION DU PIÈGE : Le piège se désactive après avoir été déclenché une fois
-                    oppData.traps = oppData.traps.filter(t => t !== clickedIndex);
-
-                    const triggeredMalus = oppData.chosenMalus[Math.floor(Math.random() * oppData.chosenMalus.length)];
-                    
-                    if (triggeredMalus === 'inversion') {
-                        pData.pool.sort(() => Math.random() - 0.5);
-                    }
-                    
-                    // Envoi du malus au joueur pour déclencher son animation visuelle
-                    socket.emit('receive_malus', { type: triggeredMalus });
-                }
-            }
             
             socket.emit('my_grid_updated', {
                 target: pData.target,
