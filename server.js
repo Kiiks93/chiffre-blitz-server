@@ -1,7 +1,7 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const server = http.createServer(app);
@@ -13,8 +13,12 @@ const io = new Server(server, {
 
 app.use(express.static(__dirname));
 
-let players = {}; // Stocke les profils par leur pseudo (username) pour la persistance
-let socketToUser = {}; // Associe un socket.id à un pseudo actif
+// Initialisation de Supabase
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let socketToUser = {}; // Associe un socket.id à un pseudo actif en mémoire rapide
 let waitingPlayer = null;
 let rooms = {};
 let pendingRoomDeletions = {};
@@ -41,116 +45,235 @@ function generateRandomPool(target) {
     return pool.sort(() => Math.random() - 0.5);
 }
 
+// Fonction utilitaire pour récupérer ou créer un joueur dans Supabase
+async function getOrCreatePlayer(username, region) {
+    const cleanName = username.trim();
+    
+    // Chercher le joueur dans Supabase
+    let { data, error } = await supabase
+        .from('players')
+        .select('*')
+        .ilike('username', cleanName)
+        .single();
+
+    if (!data) {
+        // Création du profil s'il n'existe pas
+        const newPlayer = {
+            username: cleanName,
+            region: region || 'Hauts-de-France',
+            country: 'FR',
+            points: 0,
+            coins: 10000,
+            trophies: 0,
+            inventory: {},
+            equipped_power: null,
+            wins: 0,
+            losses: 0
+        };
+        const { data: inserted, error: insertErr } = await supabase
+            .from('players')
+            .insert([newPlayer])
+            .select()
+            .single();
+        return inserted;
+    } else {
+        // Mettre à jour la région si elle a changé
+        if (region && data.region !== region) {
+            await supabase
+                .from('players')
+                .update({ region: region })
+                .eq('id', data.id);
+            data.region = region;
+        }
+        return data;
+    }
+}
+
+// Fonction utilitaire pour sauvegarder les modifications d'un joueur dans Supabase
+async function updatePlayerInDB(player) {
+    if (!player || !player.id) return;
+    await supabase
+        .from('players')
+        .update({
+            points: player.points,
+            coins: player.coins,
+            trophies: player.trophies,
+            inventory: player.inventory,
+            equipped_power: player.equipped_power,
+            wins: player.wins,
+            losses: player.losses,
+            region: player.region
+        })
+        .eq('id', player.id);
+}
+
 io.on('connection', (socket) => {
     console.log(`Un joueur s'est connecté : ${socket.id}`);
 
-    socket.on('register_player', (profile) => {
+    socket.on('register_player', async (profile) => {
         const username = profile && profile.username ? profile.username.trim() : '';
         if (!username) return;
 
-        // Si le joueur rafraîchit la page, l'ancien socket est encore temporairement enregistré.
-        // On nettoie l'ancienne association pour autoriser la reconnexion immédiate avec son profil.
         for (let sId in socketToUser) {
             if (socketToUser[sId].toLowerCase() === username.toLowerCase()) {
                 delete socketToUser[sId];
             }
         }
 
-        if (!players[username]) {
-            // Nouveau joueur : création du profil avec les valeurs de départ
-            players[username] = {
-                username: username,
-                region: profile.region || 'Hauts-de-France',
-                points: 0,
-                coins: 10000,
-                trophies: 0,
-                inventory: {},
-                equippedPower: null
-            };
-        } else {
-            // Joueur existant (rafraîchissement) : on restaure sa progression et met à jour sa région
-            players[username].region = profile.region || players[username].region;
-        }
+        let dbPlayer = await getOrCreatePlayer(username, profile.region);
+        if (!dbPlayer) return;
 
         socketToUser[socket.id] = username;
-        socket.emit('player_registered', players[username]);
+
+        // Format renvoyé au client (on harmoniseequippedPower)
+        socket.emit('player_registered', {
+            username: dbPlayer.username,
+            region: dbPlayer.region,
+            points: dbPlayer.points,
+            coins: dbPlayer.coins,
+            trophies: dbPlayer.trophies,
+            inventory: dbPlayer.inventory || {},
+            equippedPower: dbPlayer.equipped_power
+        });
     });
 
-    socket.on('buy_power', (powerId) => {
+    socket.on('buy_power', async (powerId) => {
         const username = socketToUser[socket.id];
-        const player = players[username];
-        if (!player) return;
+        if (!username) return;
 
+        let dbPlayer = await getOrCreatePlayer(username);
         const price = POWERS_PRICES[powerId];
-        if (price !== undefined && player.coins >= price) {
-            player.coins -= price;
-            player.inventory[powerId] = (player.inventory[powerId] || 0) + 1;
-            if (!player.equippedPower) player.equippedPower = powerId;
 
-            socket.emit('player_registered', player);
+        if (price !== undefined && dbPlayer.coins >= price) {
+            dbPlayer.coins -= price;
+            if (!dbPlayer.inventory) dbPlayer.inventory = {};
+            dbPlayer.inventory[powerId] = (dbPlayer.inventory[powerId] || 0) + 1;
+            if (!dbPlayer.equipped_power) dbPlayer.equipped_power = powerId;
+
+            await updatePlayerInDB(dbPlayer);
+
+            socket.emit('player_registered', {
+                username: dbPlayer.username,
+                region: dbPlayer.region,
+                points: dbPlayer.points,
+                coins: dbPlayer.coins,
+                trophies: dbPlayer.trophies,
+                inventory: dbPlayer.inventory,
+                equippedPower: dbPlayer.equipped_power
+            });
             socket.emit('purchase_success');
         } else {
             socket.emit('room_error', "Fonds insuffisants ou pouvoir invalide !");
         }
     });
 
-    socket.on('equip_power', (powerId) => {
+    socket.on('equip_power', async (powerId) => {
         const username = socketToUser[socket.id];
-        const player = players[username];
-        if (player) {
-            if (powerId === null || (player.inventory[powerId] && player.inventory[powerId] > 0)) {
-                player.equippedPower = (player.equippedPower === powerId) ? null : powerId;
-                socket.emit('player_registered', player);
+        if (!username) return;
+
+        let dbPlayer = await getOrCreatePlayer(username);
+        if (dbPlayer) {
+            if (powerId === null || (dbPlayer.inventory && dbPlayer.inventory[powerId] && dbPlayer.inventory[powerId] > 0)) {
+                dbPlayer.equipped_power = (dbPlayer.equipped_power === powerId) ? null : powerId;
+                await updatePlayerInDB(dbPlayer);
+
+                socket.emit('player_registered', {
+                    username: dbPlayer.username,
+                    region: dbPlayer.region,
+                    points: dbPlayer.points,
+                    coins: dbPlayer.coins,
+                    trophies: dbPlayer.trophies,
+                    inventory: dbPlayer.inventory || {},
+                    equippedPower: dbPlayer.equipped_power
+                });
             }
         }
     });
 
-    socket.on('use_power', (powerId) => {
+    socket.on('use_power', async (powerId) => {
         const username = socketToUser[socket.id];
-        const player = players[username];
-        if (player && player.inventory[powerId] && player.inventory[powerId] > 0) {
-            player.inventory[powerId]--;
-            if (player.inventory[powerId] <= 0) {
-                delete player.inventory[powerId];
-                if (player.equippedPower === powerId) {
-                    player.equippedPower = null;
+        if (!username) return;
+
+        let dbPlayer = await getOrCreatePlayer(username);
+        if (dbPlayer && dbPlayer.inventory && dbPlayer.inventory[powerId] && dbPlayer.inventory[powerId] > 0) {
+            dbPlayer.inventory[powerId]--;
+            if (dbPlayer.inventory[powerId] <= 0) {
+                delete dbPlayer.inventory[powerId];
+                if (dbPlayer.equipped_power === powerId) {
+                    dbPlayer.equipped_power = null;
                 }
             }
-            socket.emit('player_registered', player);
+            await updatePlayerInDB(dbPlayer);
+
+            socket.emit('player_registered', {
+                username: dbPlayer.username,
+                region: dbPlayer.region,
+                points: dbPlayer.points,
+                coins: dbPlayer.coins,
+                trophies: dbPlayer.trophies,
+                inventory: dbPlayer.inventory,
+                equippedPower: dbPlayer.equipped_power
+            });
         }
     });
 
-    socket.on('claim_solo_reward', (score) => {
+    socket.on('claim_solo_reward', async (score) => {
         const username = socketToUser[socket.id];
-        const player = players[username];
-        if (player && typeof score === 'number' && score > 0) {
+        if (!username) return;
+
+        let dbPlayer = await getOrCreatePlayer(username);
+        if (dbPlayer && typeof score === 'number' && score > 0) {
             const earnedCoins = Math.min(100, Math.floor(score / 3));
-            player.coins += earnedCoins;
-            socket.emit('player_registered', player);
+            dbPlayer.coins += earnedCoins;
+            await updatePlayerInDB(dbPlayer);
+
+            socket.emit('player_registered', {
+                username: dbPlayer.username,
+                region: dbPlayer.region,
+                points: dbPlayer.points,
+                coins: dbPlayer.coins,
+                trophies: dbPlayer.trophies,
+                inventory: dbPlayer.inventory || {},
+                equippedPower: dbPlayer.equipped_power
+            });
         }
     });
 
-    socket.on('get_leaderboard', (type) => {
-        let playersArray = Object.values(players);
-        playersArray.sort((a, b) => b.points - a.points);
-
+    socket.on('get_leaderboard', async (type) => {
         const username = socketToUser[socket.id];
-        if (type === 'regional' && username && players[username]) {
-            const userRegion = players[username].region;
-            playersArray = playersArray.filter(p => p.region === userRegion);
+        let query = supabase.from('players').select('username, points, region').order('points', { ascending: false }).limit(20);
+
+        if (type === 'regional' && username) {
+            let dbPlayer = await getOrCreatePlayer(username);
+            if (dbPlayer) {
+                query = query.eq('region', dbPlayer.region);
+            }
         }
 
-        socket.emit('leaderboard_data', { data: playersArray.slice(0, 20) });
+        const { data, error } = await query;
+        socket.emit('leaderboard_data', { data: data || [] });
     });
 
-    socket.on('win_tournament', () => {
+    socket.on('win_tournament', async () => {
         const username = socketToUser[socket.id];
-        const player = players[username];
-        if (player) {
-            player.points += 50;
-            player.coins += 150;
-            player.trophies += 1;
-            socket.emit('player_registered', player);
+        if (!username) return;
+
+        let dbPlayer = await getOrCreatePlayer(username);
+        if (dbPlayer) {
+            dbPlayer.points += 50;
+            dbPlayer.coins += 150;
+            dbPlayer.trophies += 1;
+            await updatePlayerInDB(dbPlayer);
+
+            socket.emit('player_registered', {
+                username: dbPlayer.username,
+                region: dbPlayer.region,
+                points: dbPlayer.points,
+                coins: dbPlayer.coins,
+                trophies: dbPlayer.trophies,
+                inventory: dbPlayer.inventory || {},
+                equippedPower: dbPlayer.equipped_power
+            });
             socket.emit('tournament_reward_success', { pointsGained: 50, coinsGained: 150, trophiesGained: 1 });
         }
     });
@@ -376,7 +499,7 @@ function start1v1GameLoop(roomCode) {
     }, 1000);
 }
 
-function end1v1Game(roomCode, reason) {
+async function end1v1Game(roomCode, reason) {
     let room = rooms[roomCode];
     if (!room || room.ended) return;
 
@@ -407,26 +530,52 @@ function end1v1Game(roomCode, reason) {
             let winningUser = socketToUser[winnerId];
             let losingUser = socketToUser[loserId];
 
-            if (winningUser && players[winningUser]) {
-                players[winningUser].points += 25;
-                if (winnerId === p1Id) coinsGainedP1 = 30;
-                else coinsGainedP2 = 30;
+            if (winningUser) {
+                let pWin = await getOrCreatePlayer(winningUser);
+                if (pWin) {
+                    pWin.points += 25;
+                    pWin.wins = (pWin.wins || 0) + 1;
+                    if (winnerId === p1Id) coinsGainedP1 = 30;
+                    else coinsGainedP2 = 30;
+                    await updatePlayerInDB(pWin);
+                }
             }
-            if (losingUser && players[losingUser]) {
-                players[losingUser].points = Math.max(0, players[losingUser].points - 15);
+            if (losingUser) {
+                let pLose = await getOrCreatePlayer(losingUser);
+                if (pLose) {
+                    pLose.points = Math.max(0, pLose.points - 15);
+                    pLose.losses = (pLose.losses || 0) + 1;
+                    await updatePlayerInDB(pLose);
+                }
             }
         } else {
-            if (u1 && players[u1]) players[u1].points += 5;
-            if (u2 && players[u2]) players[u2].points += 5;
+            if (u1) {
+                let p1Obj = await getOrCreatePlayer(u1);
+                if (p1Obj) { p1Obj.points += 5; await updatePlayerInDB(p1Obj); }
+            }
+            if (u2) {
+                let p2Obj = await getOrCreatePlayer(u2);
+                if (p2Obj) { p2Obj.points += 5; await updatePlayerInDB(p2Obj); }
+            }
         }
 
-        if (u1 && players[u1]) {
-            players[u1].coins += coinsGainedP1;
-            io.to(p1Id).emit('player_registered', players[u1]);
+        if (u1) {
+            let dbP1 = await getOrCreatePlayer(u1);
+            dbP1.coins += coinsGainedP1;
+            await updatePlayerInDB(dbP1);
+            io.to(p1Id).emit('player_registered', {
+                username: dbP1.username, region: dbP1.region, points: dbP1.points,
+                coins: dbP1.coins, trophies: dbP1.trophies, inventory: dbP1.inventory || {}, equippedPower: dbP1.equipped_power
+            });
         }
-        if (u2 && players[u2]) {
-            players[u2].coins += coinsGainedP2;
-            io.to(p2Id).emit('player_registered', players[u2]);
+        if (u2) {
+            let dbP2 = await getOrCreatePlayer(u2);
+            dbP2.coins += coinsGainedP2;
+            await updatePlayerInDB(dbP2);
+            io.to(p2Id).emit('player_registered', {
+                username: dbP2.username, region: dbP2.region, points: dbP2.points,
+                coins: dbP2.coins, trophies: dbP2.trophies, inventory: dbP2.inventory || {}, equippedPower: dbP2.equipped_power
+            });
         }
 
         let formattedPlayers = {
