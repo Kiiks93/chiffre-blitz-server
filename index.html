@@ -280,9 +280,23 @@
     <div id="screen-1v1-hub" style="display:none; max-width:350px; margin:15px auto;" class="menu-container">
         <h2 data-i18n="hub_title">⚔️ DUEL 1v1 ONLINE</h2>
         <p style="color:#aaa; font-size:13px; margin-bottom:10px;" data-i18n="hub_subtitle">Choisis ton mode de jeu :</p>
-        <button class="btn-main btn-blue" onclick="startRandom1v1()" data-i18n="hub_random">🎲 Matchmaking Aléatoire</button>
+        <button class="btn-main btn-blue" onclick="startRandom1v1()" data-i18n="hub_random">🎲 Matchmaking non classé</button>
+        <button class="btn-main btn-gold" onclick="openRankedLoadoutModal()" data-i18n="hub_ranked">⚔️ Matchmaking Classé</button>
         <button class="btn-main btn-purple" onclick="openRoomsScreen()" data-i18n="hub_rooms">🏠 Salons Privés / Lobby</button>
         <button class="btn-secondary" onclick="showMainMenu()" data-i18n="back_menu">⬅️ Retour Menu</button>
+    </div>
+
+    <!-- MODAL CHOIX 2 OBJETS CLASSÉ -->
+    <div id="modal-ranked-loadout" class="modal-overlay" style="display:none;">
+        <div class="modal-card">
+            <h2 style="margin:0 0 10px 0; color:#f8b500;" data-i18n="ranked_modal_title">⚔️ PRÉPARATION CLASSÉE</h2>
+            <p style="color:#aaa; font-size:13px; margin-bottom:15px;" data-i18n="ranked_modal_sub">Choisis 2 objets de ton inventaire pour le match classé :</p>
+            <div id="ranked-items-container" class="shop-grid" style="max-height: 45vh;"></div>
+            <div style="margin-top: 15px; display: flex; gap: 10px;">
+                <button class="btn-secondary" onclick="closeRankedLoadoutModal()" style="margin-top:0;" data-i18n="cancel">Annuler</button>
+                <button class="btn-main btn-gold" onclick="startRankedMatch()" style="margin-top:0; flex:1;" data-i18n="ranked_start_btn">Lancer le Classé ⚡</button>
+            </div>
+        </div>
     </div>
 
     <!-- SALLE D'ATTENTE 1v1 ALÉATOIRE -->
@@ -579,8 +593,12 @@
                 back_menu: "⬅️ Retour Menu",
                 hub_title: "⚔️ DUEL 1v1 ONLINE",
                 hub_subtitle: "Choisis ton mode de jeu :",
-                hub_random: "🎲 Matchmaking Aléatoire",
+                hub_random: "🎲 Matchmaking non classé",
+                hub_ranked: "⚔️ Matchmaking Classé",
                 hub_rooms: "🏠 Salons Privés / Lobby",
+                ranked_modal_title: "⚔️ PRÉPARATION CLASSÉE",
+                ranked_modal_sub: "Choisis 2 objets de ton inventaire pour le match classé :",
+                ranked_start_btn: "Lancer le Classé ⚡",
                 back: "⬅️ Retour",
                 searching: "Recherche d'adversaire...",
                 cancel: "❌ Annuler",
@@ -678,8 +696,12 @@
                 back_menu: "⬅️ Back to Menu",
                 hub_title: "⚔️ ONLINE 1v1 DUEL",
                 hub_subtitle: "Choose your game mode:",
-                hub_random: "🎲 Random Matchmaking",
+                hub_random: "🎲 Unranked Matchmaking",
+                hub_ranked: "⚔️ Ranked Matchmaking",
                 hub_rooms: "🏠 Private Rooms / Lobby",
+                ranked_modal_title: "⚔️ RANKED LOADOUT",
+                ranked_modal_sub: "Choose 2 items from your inventory for the ranked match:",
+                ranked_start_btn: "Start Ranked ⚡",
                 back: "⬅️ Back",
                 searching: "Searching for opponent...",
                 cancel: "❌ Cancel",
@@ -760,6 +782,9 @@
             applyTranslations();
             if (document.getElementById('modal-shop').style.display === 'flex') {
                 switchShopTab(currentShopTab);
+            }
+            if (document.getElementById('modal-ranked-loadout').style.display === 'flex') {
+                renderRankedLoadoutItems();
             }
         }
 
@@ -847,7 +872,6 @@
                 if (this.ctx && this.ctx.state === 'suspended') {
                     this.ctx.resume();
                 }
-                // Si la musique de ce même mode joue déjà, on ne fait rien pour éviter qu'elle ne recommence du début !
                 if (this.timerId && this.currentMode === mode) {
                     return;
                 }
@@ -1000,8 +1024,8 @@
 
         let cachedOpponent = null;
         let adCallbackFunction = null;
+        let selectedRankedItems = [];
 
-        // Fonction pour générer le badge avatar (Drapeau en fond + Nombre au-dessus)
         function getAvatarBadgeHTML(flag, avatarNum) {
             return `
                 <div class="avatar-flag-badge">
@@ -1141,7 +1165,7 @@
         });
 
         function hideAllScreens() {
-            ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-avalanche-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room', 'modal-launch-ad', 'simulated-ad-overlay'].forEach(id => {
+            ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-avalanche-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room', 'modal-launch-ad', 'simulated-ad-overlay', 'modal-ranked-loadout'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
@@ -1244,6 +1268,88 @@
             document.getElementById('screen-1v1-hub').style.display = 'flex';
             SoundEngine.startMusic('menu');
         }
+
+        function startRandom1v1() {
+            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+            hideAllScreens();
+            document.getElementById('screen-1v1-lobby').style.display = 'flex';
+            let digit = 1;
+            radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById('radar-digit').innerText = digit; }, 70);
+            socket.emit('find_1v1_match');
+        }
+
+        // --- MATCHMAKING CLASSÉ & LOADOUT (2 OBJETS) ---
+        function openRankedLoadoutModal() {
+            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+            selectedRankedItems = [];
+            document.getElementById('modal-ranked-loadout').style.display = 'flex';
+            renderRankedLoadoutItems();
+        }
+
+        function closeRankedLoadoutModal() {
+            document.getElementById('modal-ranked-loadout').style.display = 'none';
+        }
+
+        function renderRankedLoadoutItems() {
+            const container = document.getElementById('ranked-items-container');
+            container.innerHTML = '';
+            const powersDict = i18n[currentLang].powers;
+            const ownedPowers = POWERS_CATALOG.filter(p => (myProfile.inventory[p.id] || 0) > 0);
+            
+            if (ownedPowers.length === 0) {
+                container.innerHTML = `<div style="grid-column: span 2; text-align:center; color:#aaa; padding:20px;">${currentLang === 'fr' ? 'Ton inventaire est vide ! Achète des objets dans la boutique.' : 'Your inventory is empty! Buy items in the shop.'}</div>`;
+                return;
+            }
+
+            ownedPowers.forEach(p => {
+                const powerInfo = powersDict[p.id];
+                const qty = myProfile.inventory[p.id] || 0;
+                const isSelected = selectedRankedItems.includes(p.id);
+                const card = document.createElement('div');
+                card.className = `power-card ${isSelected ? 'equipped' : ''}`;
+                card.style.cursor = 'pointer';
+                card.onclick = () => toggleRankedItem(p.id);
+                card.innerHTML = `
+                    <h4>${powerInfo.name}</h4>
+                    <p>${powerInfo.desc}</p>
+                    <div class="stock-badge">Stock : ${qty}</div>
+                    <div style="font-weight:bold; margin-top:4px; color:${isSelected ? '#00ff88' : '#f8b500'};">
+                        ${isSelected ? (currentLang === 'fr' ? 'Sélectionné ✅' : 'Selected ✅') : (currentLang === 'fr' ? 'Sélectionner' : 'Select')}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function toggleRankedItem(id) {
+            if (selectedRankedItems.includes(id)) {
+                selectedRankedItems = selectedRankedItems.filter(item => item !== id);
+            } else {
+                if (selectedRankedItems.length >= 2) {
+                    alert(currentLang === 'fr' ? 'Tu peux sélectionner 2 objets maximum pour le mode classé.' : 'You can select a maximum of 2 items for ranked mode.');
+                    return;
+                }
+                selectedRankedItems.push(id);
+            }
+            renderRankedLoadoutItems();
+        }
+
+        function startRankedMatch() {
+            if (selectedRankedItems.length === 0) {
+                alert(currentLang === 'fr' ? 'Veuillez sélectionner au moins un objet pour le match classé.' : 'Please select at least one item for the ranked match.');
+                return;
+            }
+            closeRankedLoadoutModal();
+            hideAllScreens();
+            document.getElementById('screen-1v1-lobby').style.display = 'flex';
+            let digit = 1;
+            radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById('radar-digit').innerText = digit; }, 70);
+            
+            myProfile.equippedPower = selectedRankedItems[0];
+            socket.emit('find_ranked_match', { items: selectedRankedItems });
+        }
+
+        function cancel1v1Search() { open1v1Hub(); }
 
         function openRoomsScreen() {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
@@ -1502,18 +1608,6 @@
             });
         });
 
-        function startRandom1v1() {
-            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-            hideAllScreens();
-            document.getElementById('screen-1v1-lobby').style.display = 'flex';
-            let digit = 1;
-            radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById('radar-digit').innerText = digit; }, 70);
-            socket.emit('find_1v1_match');
-        }
-
-        function cancel1v1Search() { open1v1Hub(); }
-
-        // Extraction robuste des informations de l'adversaire
         function extractOpponentInfo(data) {
             if (!data) return cachedOpponent;
             if (data.opponent) return data.opponent;
