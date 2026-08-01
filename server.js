@@ -363,13 +363,18 @@ io.on('connection', (socket) => {
     socket.on('admin_give_gift', async (data) => {
         if (!socket.isAdmin) return;
         const { targetUsername, currency, amount } = data;
+        const currencyLabel = currency === 'coins' ? 'Pièces 🪙' : 'Points 🏅';
         
         if (!targetUsername || targetUsername.toUpperCase() === 'TOUS') {
             for (let sId in activePlayers) {
                 activePlayers[sId][currency] = (activePlayers[sId][currency] || 0) + amount;
                 await savePlayerToSupabase(sId);
                 io.to(sId).emit('player_registered', activePlayers[sId]);
-                io.to(sId).emit('admin_gift_received', { currency, amount });
+                io.to(sId).emit('admin_gift_received', { 
+                    currency, 
+                    amount, 
+                    message: `🎁 Cadeau Admin global : +${amount} ${currencyLabel} !` 
+                });
             }
         } else {
             const { data: matchedPlayers } = await supabase
@@ -381,13 +386,14 @@ io.on('connection', (socket) => {
             if (matchedPlayers && matchedPlayers.length > 0) {
                 const targetDbPlayer = matchedPlayers[0];
                 const activeEntry = Object.entries(activePlayers).find(([sId, p]) => p.id === targetDbPlayer.id);
+                const msg = `🎁 Cadeau Admin reçu : +${amount} ${currencyLabel} !`;
 
                 if (activeEntry) {
                     const [targetSocketId, targetPlayer] = activeEntry;
                     targetPlayer[currency] = (targetPlayer[currency] || 0) + amount;
                     await savePlayerToSupabase(targetSocketId);
                     io.to(targetSocketId).emit('player_registered', targetPlayer);
-                    io.to(targetSocketId).emit('admin_gift_received', { currency, amount });
+                    io.to(targetSocketId).emit('admin_gift_received', { currency, amount, message: msg });
                 } else {
                     targetDbPlayer[currency] = (targetDbPlayer[currency] || 0) + amount;
                     await supabase
