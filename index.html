@@ -68,7 +68,7 @@
             to { transform: translate(-50%, 0); opacity: 1; }
         }
 
-        /* BARRE DE STATS AGRANDIE POUR PLUS DE LISIBILITÉ */
+        /* BARRE DE STATS SUPABASE */
         .user-stats {
             display: flex; justify-content: center; gap: 12px; max-width: 400px; margin: 0 auto 8px auto;
             font-size: 13px; font-weight: bold; background: rgba(255,255,255,0.05); padding: 7px 12px; border-radius: 16px;
@@ -129,7 +129,6 @@
         #shop-tab-bonus.active { background: #38ef7d; color: #000; border-color: #38ef7d; }
         #shop-tab-malus.active { background: #ff4b2b; color: #fff; border-color: #ff4b2b; }
 
-        /* BANDEAU ADMIN ABUSE POUR LES JOUEURS */
         .event-banner {
             background: linear-gradient(45deg, rgba(255, 138, 0, 0.2), rgba(255, 65, 108, 0.2));
             border: 1px solid #ff8a00;
@@ -143,7 +142,6 @@
         }
         .event-banner b { color: #fff; }
 
-        /* CLASSEMENT REVISITÉ & LISIBLE (ONGLETS AGRANDIS) */
         .lb-filters-container {
             background: rgba(0, 0, 0, 0.25);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -255,7 +253,7 @@
         </div>
     </div>
 
-    <!-- BARRE DE STATS AGRANDIE (PIÈCES, TROPHÉES, RANG & POINTS) -->
+    <!-- BARRE DE STATS (SUPABASE SOURCE DE VÉRITÉ) -->
     <div class="user-stats">
         <span>🪙 <strong id="user-coins-display" style="font-size: 14px;">0</strong></span>
         <span>🏆 <strong id="user-trophies-display" style="font-size: 14px;">0</strong></span>
@@ -315,7 +313,6 @@
 
     <!-- MENU PRINCIPAL -->
     <div id="screen-menu" class="menu-container" style="display:none;">
-        <!-- BANDEAU D'INFORMATION DES ADMIN ABUSES ACTIFS POUR LES JOUEURS -->
         <div id="player-event-banner" class="event-banner"></div>
 
         <button class="btn-main btn-blue" onclick="openSoloMenu()" data-i18n="menu_solo">🏋️ ENTRAÎNEMENT SOLO</button>
@@ -457,7 +454,7 @@
         </div>
     </div>
 
-    <!-- MODE TOURNOI (TEASING / EN COURS DE RÉFLEXION) -->
+    <!-- MODE TOURNOI -->
     <div id="screen-tournament" style="display:none; max-width:400px; margin:0 auto;" class="menu-container">
         <h2 data-i18n="tourney_screen_title" style="color:#00d2ff; font-size:18px;">🎯 Tournoi Blitz</h2>
         <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:14px; margin:10px 0; text-align:center;">
@@ -468,7 +465,7 @@
         <button class="btn-secondary" onclick="showMainMenu()" data-i18n="back">⬅️ Retour Menu</button>
     </div>
 
-    <!-- MODAL POPUP PSEUDO, AVATAR (1-999) & DRAPEAU -->
+    <!-- MODAL POPUP PSEUDO, AVATAR & DRAPEAU -->
     <div id="modal-username" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:center;">
             <h2 style="margin:0 0 8px 0; color:#00d2ff; font-size:18px;" data-i18n="welcome_title">⚡ BIENVENUE ⚡</h2>
@@ -541,7 +538,7 @@
         </div>
     </div>
 
-    <!-- OVERLAY CLASSEMENT AVEC ONGLETS AGRANDIS ET EXPLICATION DU COMBINÉ (TRIÉ PAR TROPHÉES PUIS POINTS) -->
+    <!-- OVERLAY CLASSEMENT -->
     <div id="modal-leaderboard" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="max-width: 440px;">
             <h2 style="margin:0 0 10px 0; color:#00d2ff; font-size:18px; letter-spacing:0.5px;" data-i18n="lb_title">🏆 CLASSEMENT</h2>
@@ -1219,17 +1216,22 @@
             }
         }
 
+        // MISE À JOUR STRICTE DEPUIS SUPABASE (VIA LE SERVEUR)
         socket.on('player_registered', (player) => {
             if (player) {
                 myProfile.username = player.username;
                 myProfile.region = player.region;
                 if (player.avatar) myProfile.avatar = player.avatar;
                 if (player.flag) myProfile.flag = player.flag;
+                
+                // Récupération stricte depuis Supabase
                 myProfile.points = player.points || 0;
                 myProfile.coins = player.coins || 0;
                 myProfile.trophies = player.trophies || 0;
+                
                 myProfile.inventory = player.inventory || {};
                 myProfile.equippedPower = player.equippedPower || null;
+                
                 updateEconomyUI();
                 if (document.getElementById('modal-shop').style.display === 'flex') {
                     switchShopTab(currentShopTab);
@@ -1237,13 +1239,11 @@
             }
         });
 
-        // Écouteur pour les cadeaux admin reçus en direct
         socket.on('admin_gift_received', (data) => {
             alert(`🎁 CADEAU ADMIN REÇU !\n\n+${data.amount} ${data.currency === 'coins' ? 'Pièces 🪙' : 'Points 🏅'}`);
             registerIfPossible();
         });
 
-        // Gestion de l'affichage dynamique des boosts actifs pour les joueurs
         socket.on('events_state_update', (events) => {
             const banner = document.getElementById('player-event-banner');
             if (!banner) return;
@@ -1283,7 +1283,6 @@
 
         let avalancheGridData = [], avalancheTarget = null, avalancheInterval = null, avalancheTimerInterval = null, avalancheTimeLeft = 30;
 
-        // --- GESTION DES CLICS SECRETS POUR LE PANEL ADMIN (10 CLICS SUR LE LOGO) ---
         let logoClickCount = 0;
         let logoClickTimer = null;
 
@@ -1344,9 +1343,7 @@
             socket.emit('admin_auth', pass);
         }
 
-        socket.on('admin_auth_fail', (msg) => {
-            alert(msg);
-        });
+        socket.on('admin_auth_fail', (msg) => { alert(msg); });
 
         socket.on('admin_auth_success', (data) => {
             document.getElementById('modal-admin-login').style.display = 'none';
@@ -1365,7 +1362,6 @@
                         
                         <div style="max-height:60vh; overflow-y:auto; padding-right:4px; display:flex; flex-direction:column; gap:12px; font-size:12px;">
                             
-                            <!-- SECTION BOOSTS & MODE AVEC AIDE-MÉMOIRE -->
                             <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
                                 <strong style="color:#ff8a00; display:block; margin-bottom:8px;">⚡ BOOSTS & ÉVÉNEMENTS (ADMIN ABUSE)</strong>
                                 
@@ -1406,7 +1402,6 @@
                                 <p style="color:#aaa; font-size:10px; margin:2px 0 0 0;">Mode asymétrique fun (un joueur piège, l'autre court en BO3).</p>
                             </div>
 
-                            <!-- SECTION PLANIFICATION -->
                             <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
                                 <strong style="color:#00d2ff; display:block; margin-bottom:8px;">📅 PLANIFICATION AUTOMATIQUE</strong>
                                 <p style="color:#aaa; font-size:10px; margin:0 0 6px 0;">Programme tes événements à l'avance si tu n'es pas dispo.</p>
@@ -1423,7 +1418,6 @@
                                 <button class="power-btn equip" onclick="saveAdminSchedule()" style="width:100%; padding:6px;">Enregistrer le Planning 💾</button>
                             </div>
 
-                            <!-- SECTION BROADCAST -->
                             <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
                                 <strong style="color:#38ef7d; display:block; margin-bottom:8px;">📢 ANNONCE GLOBALE (BROADCAST)</strong>
                                 <p style="color:#aaa; font-size:10px; margin:0 0 6px 0;">Envoie une notification non bloquante chez tous les joueurs connectés.</p>
@@ -1431,7 +1425,6 @@
                                 <button class="power-btn buy" onclick="sendAdminBroadcast()" style="width:100%; padding:6px;">Envoyer l'annonce 🚀</button>
                             </div>
 
-                            <!-- SECTION CADEAUX -->
                             <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
                                 <strong style="color:#f8b500; display:block; margin-bottom:8px;">🎁 DISTRIBUER UN CADEAU ADMIN</strong>
                                 <p style="color:#aaa; font-size:10px; margin:0 0 6px 0;">Donne des pièces ou des points à un joueur précis ou à tout le monde.</p>
@@ -1500,7 +1493,6 @@
             alert("Cadeau envoyé avec succès !");
         }
 
-        // Réception des annonces globales sous forme de notification non bloquante (Toast)
         socket.on('global_announcement', (message) => {
             showAdminToast(message);
         });
