@@ -198,7 +198,7 @@
         </div>
     </div>
 
-    <!-- MODAL BOUTIQUE (BONUS / MALUS) -->
+    <!-- MODAL BOUTIQUE (4 BONUS & 4 MALUS D'ORIGINE) -->
     <div id="modal-shop" class="modal-overlay" style="display:none;">
         <div class="modal-card">
             <h2 style="margin:0 0 10px 0; color:#38ef7d;">🛍️ BOUTIQUE DE POUVOIRS</h2>
@@ -248,14 +248,15 @@
         <button class="btn-main btn-blue" onclick="checkLaunchAdAndStart()" style="margin-top: 10px; width: 100%;">JOUER ⚡</button>
     </div>
 
-    <!-- MENU PRINCIPAL -->
+    <!-- MENU PRINCIPAL (TOURNOI EN DERNIER) -->
     <div id="screen-menu" class="menu-container" style="display:none;">
         <button class="btn-main btn-blue" onclick="openSoloMenu()">🏋️ ENTRAÎNEMENT SOLO</button>
         <button class="btn-main" onclick="open1v1Hub()">⚔️ DUEL 1v1 ONLINE</button>
-        <button class="btn-main" style="background: linear-gradient(45deg, #f12711, #f5af19); box-shadow: 0 5px 20px rgba(241, 39, 17, 0.4);" onclick="openTournamentTeaser()">🏆 Tournoi (Bientôt 🚀)</button>
         <button class="btn-main btn-shop" onclick="openShop()">🛍️ BOUTIQUE POUVOIRS</button>
         <button class="btn-main btn-purple" onclick="openLeaderboard()">🏆 CLASSEMENT</button>
         <button class="btn-secondary" onclick="openRulesModal()" style="margin-top:5px;">ℹ️ Comment jouer / Règles</button>
+        <!-- BOUTON TOURNOI EN DERNIER -->
+        <button class="btn-main" style="background: linear-gradient(45deg, #f12711, #f5af19); box-shadow: 0 5px 20px rgba(241, 39, 17, 0.4);" onclick="openTournamentTeaser()">🏆 Tournoi (Bientôt 🚀)</button>
     </div>
 
     <!-- MENU SOLO -->
@@ -388,14 +389,19 @@
         let activeTrainingMode = 'classic';
         let currentShopTab = 'bonus';
 
+        // 4 BONUS ET 4 MALUS D'ORIGINE
         const powersData = {
             bonus: [
-                { id: 'spotlight', name: '💡 Projecteur', desc: 'Illumine la bonne tuile', price: 50 },
-                { id: 'freeze', name: '⏳ Gel du Temps', desc: 'Gèle le chrono 5 secondes', price: 80 }
+                { id: 'spotlight', name: '💡 Projecteur', desc: 'Illumine la bonne tuile (2s)', price: 50 },
+                { id: 'freeze', name: '⏳ Blocage du Temps', desc: 'Gèle le chrono pendant 3s', price: 80 },
+                { id: 'joker', name: '⚡ Joker Éclair', desc: 'Valide la cible actuelle', price: 100 },
+                { id: 'nova', name: '🌟 Nova Temporelle', desc: 'GIGA : Valide 3 cibles', price: 150 }
             ],
             malus: [
-                { id: 'blind', name: '👁️ Aveuglement', desc: 'Cache brièvement la grille adverse', price: 100 },
-                { id: 'scrambler', name: '🌀 Brouilleur', desc: 'Mélange les chiffres adverses', price: 120 }
+                { id: 'quake', name: '📳 Séisme', desc: 'Fait trembler l\'adversaire (2s)', price: 70 },
+                { id: 'micro', name: '🐜 Micro-Tuiles', desc: 'Rétrécit la grille adverse (2s)', price: 90 },
+                { id: 'eclipse', name: '🌑 Éclipse', desc: 'Floute la grille adverse (1.5s)', price: 110 },
+                { id: 'chaos', name: '🌪️ Chaos Absolu', desc: 'GIGA : Combo de malus (5s)', price: 160 }
             ]
         };
 
@@ -418,7 +424,6 @@
         function openTournamentTeaser() { document.getElementById('modal-tournament-teaser').style.display = 'flex'; }
         function closeTournamentTeaser() { document.getElementById('modal-tournament-teaser').style.display = 'none'; }
 
-        // --- GESTION DE LA BOUTIQUE POUVOIRS (BONUS / MALUS) ---
         function openShop() {
             document.getElementById('modal-shop').style.display = 'flex';
             switchShopTab('bonus');
@@ -589,7 +594,6 @@
         function openSoloMenu() { hideAllScreens(); document.getElementById('screen-solo-menu').style.display = 'flex'; }
         function open1v1Hub() { hideAllScreens(); document.getElementById('screen-1v1-hub').style.display = 'flex'; }
         
-        // --- SALONS PRIVÉS / LOBBY ---
         function openRoomsScreen() { hideAllScreens(); document.getElementById('screen-rooms').style.display = 'block'; socket.emit('get_rooms_list'); }
         function submitCreateRoom() { socket.emit('create_room', { username: myProfile.username }); }
         function leaveCustomRoom() { socket.emit('leave_room'); openRoomsScreen(); }
