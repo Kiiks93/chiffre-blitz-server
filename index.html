@@ -435,8 +435,14 @@
             </div>
         </div>
         
-        <div style="font-size:18px; margin-bottom:10px; font-weight:bold;">
+        <div style="font-size:18px; margin-bottom:8px; font-weight:bold;">
             <span data-i18n="timer_label">Temps</span> : <span id="game-timer" style="color:#ff007f;">30</span>s
+        </div>
+
+        <!-- CIBLE GÉANTE DIRECTEMENT AU-DESSUS DE LA GRILLE -->
+        <div style="background: rgba(0, 210, 255, 0.12); border: 2px solid #00d2ff; border-radius: 14px; padding: 6px 15px; margin: 0 auto 10px auto; max-width: 400px; display: flex; align-items: center; justify-content: center; gap: 12px; box-shadow: 0 0 20px rgba(0,210,255,0.25);">
+            <span style="font-size: 13px; font-weight: bold; color: #aaa; letter-spacing: 1px;" data-i18n="target_label">CIBLE :</span>
+            <span id="game-target-giant" style="font-size: 36px; font-weight: 900; color: #00d2ff; text-shadow: 0 0 12px rgba(0,210,255,0.6);">1</span>
         </div>
 
         <div id="power-zone" style="display:none;">
@@ -559,6 +565,7 @@
                 hud_solo_target: "CIBLE ACTUELLE",
                 hud_solo_score: "SCORE",
                 timer_label: "Temps",
+                target_label: "CIBLE :",
                 recap_my_target: "🎯 Ma Cible :",
                 recap_opp_target: "🎯 Cible Adversaire :",
                 recap_my_score: "⭐ Mon Score :",
@@ -656,6 +663,7 @@
                 hud_solo_target: "CURRENT TARGET",
                 hud_solo_score: "SCORE",
                 timer_label: "Time",
+                target_label: "TARGET:",
                 recap_my_target: "🎯 My Target:",
                 recap_opp_target: "🎯 Opponent Target:",
                 recap_my_score: "⭐ My Score:",
@@ -703,7 +711,7 @@
             document.getElementById('lang-btn').innerText = (currentLang === 'fr') ? 'ENG' : 'FR';
         }
 
-        // --- MOTEUR AUDIO LONG, ÉVOLUTIF ET PLUS POSÉ (BPM BAISSÉ) ---
+        // --- MOTEUR AUDIO LONG, ÉVOLUTIF ET PLUS POSÉ ---
         const SoundEngine = {
             ctx: null, isMuted: false, timerId: null, currentMode: null, step: 0, bpm: 105,
             init() { 
@@ -910,7 +918,7 @@
 
         let myProfile = { username: "", region: "Hauts-de-France", points: 0, coins: 0, trophies: 0, inventory: {}, equippedPower: null };
         
-        // PRIX DE LA BOUTIQUE AUGMENTÉS POUR RÉÉQUILIBRER L'ÉCONOMIE
+        // PRIX DE LA BOUTIQUE RÉÉQUILIBRÉS
         const POWERS_CATALOG = [
             { id: 'spotlight', price: 150, type: 'bonus' },
             { id: 'freeze', price: 350, type: 'bonus' },
@@ -1109,7 +1117,7 @@
             simulateAd(() => {
                 rewardDoubled = true;
                 currentCoinsGained *= 2;
-                myProfile.coins += currentCoinsGained; // Rajout du bonus doublé
+                myProfile.coins += currentCoinsGained;
                 updateEconomyUI();
                 document.getElementById('recap-coins-gained').innerText = `+${currentCoinsGained} (x2 ⚡)`;
                 const doubleBtn = document.getElementById('btn-double-reward');
@@ -1459,7 +1467,9 @@
         socket.on('game_started', (data) => {
             current1v1Time = data.timeLeft;
             document.getElementById('game-timer').innerText = Math.max(0, current1v1Time);
-            document.getElementById('my-target').innerText = data.myTarget || 1;
+            const targetVal = data.myTarget || 1;
+            document.getElementById('my-target').innerText = targetVal;
+            document.getElementById('game-target-giant').innerText = targetVal;
             renderGrid(data.myPool, handle1v1TileClick);
         });
 
@@ -1469,6 +1479,7 @@
 
         socket.on('my_grid_updated', (data) => {
             document.getElementById('my-target').innerText = data.target;
+            document.getElementById('game-target-giant').innerText = data.target;
             renderGrid(data.newPool, handle1v1TileClick);
             if (data.success) SoundEngine.playClick();
             else SoundEngine.playError();
@@ -1531,6 +1542,7 @@
             document.getElementById('hud-solo').style.display = 'grid';
             document.getElementById('hud-1v1').style.display = 'none';
             document.getElementById('solo-target').innerText = soloTarget;
+            document.getElementById('game-target-giant').innerText = soloTarget;
             document.getElementById('solo-score').innerText = soloScore;
             document.getElementById('game-timer').innerText = soloTimeLeft;
             preparePowerHUD();
@@ -1562,6 +1574,7 @@
                     SoundEngine.playClick();
                     soloTarget++; soloScore += 10;
                     document.getElementById('solo-target').innerText = soloTarget;
+                    document.getElementById('game-target-giant').innerText = soloTarget;
                     document.getElementById('solo-score').innerText = soloScore;
                     generateSoloGrid();
                 } else {
@@ -1578,6 +1591,7 @@
                     soloScore += 15;
                     soloTarget = Math.floor(Math.random() * 50) + 1;
                     document.getElementById('solo-target').innerText = soloTarget;
+                    document.getElementById('game-target-giant').innerText = soloTarget;
                     document.getElementById('solo-score').innerText = soloScore;
                     generateSoloGrid();
                 } else {
@@ -1644,9 +1658,11 @@
             if (activeNumbers.length > 0) {
                 avalancheTarget = activeNumbers[Math.floor(Math.random() * activeNumbers.length)];
                 document.getElementById('solo-target').innerText = avalancheTarget;
+                document.getElementById('game-target-giant').innerText = avalancheTarget;
             } else {
                 avalancheTarget = null;
                 document.getElementById('solo-target').innerText = '-';
+                document.getElementById('game-target-giant').innerText = '-';
             }
         }
 
