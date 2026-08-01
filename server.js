@@ -341,7 +341,6 @@ io.on('connection', (socket) => {
         const match = activeMatches[socket.id];
         if (!match || match.ended) return;
         
-        // En mode Saboteur, le joueur saboteur ne clique pas sur les chiffres de la grille principale
         if (match.isSaboteur && match.roles[socket.id] === 'saboteur') return;
 
         const pData = match.players[socket.id];
@@ -382,7 +381,7 @@ io.on('connection', (socket) => {
         let baseCoins = Math.min(100, Math.floor(score / 3));
         let earnedCoins = globalEvents.coinRush ? baseCoins * 2 : baseCoins;
         if (globalEvents.jackpotEclair && Math.random() < 0.35) {
-            earnedCoins += 150; // Bonus Jackpot Éclair
+            earnedCoins += 150;
         }
         player.coins += earnedCoins;
 
@@ -423,7 +422,7 @@ io.on('connection', (socket) => {
         const currencyLabel = currency === 'coins' ? 'Pièces 🪙' : 'Points 🏅';
         const msg = `🎁 Cadeau Admin reçu : +${amount} ${currencyLabel} !`;
         
-        if (!targetUsername || targetUsername.toUpperCase() === 'TOUS') {
+        if (!targetUsername || targetUsername.trim() === '' || targetUsername.toUpperCase() === 'TOUS') {
             for (let sId in activePlayers) {
                 activePlayers[sId][currency] = (activePlayers[sId][currency] || 0) + amount;
                 await savePlayerToSupabase(sId);
@@ -451,13 +450,12 @@ io.on('connection', (socket) => {
                 io.to(foundActiveSocketId).emit('player_registered', targetPlayer);
                 io.to(foundActiveSocketId).emit('admin_gift_received', { currency, amount, message: msg });
             } else {
-                const { data: matchedPlayers } = await supabase
+                const { data: matchedPlayers, error } = await supabase
                     .from('players')
                     .select('*')
-                    .ilike('username', targetUsername.trim())
-                    .limit(1);
+                    .ilike('username', targetUsername.trim());
 
-                if (matchedPlayers && matchedPlayers.length > 0) {
+                if (!error && matchedPlayers && matchedPlayers.length > 0) {
                     const targetDbPlayer = matchedPlayers[0];
                     const updatedVal = (targetDbPlayer[currency] || 0) + amount;
                     await supabase
@@ -544,7 +542,6 @@ function startMatchBetween(id1, id2, isRanked = false) {
         io.to(id1).emit('timer_update', match.timeLeft);
         io.to(id2).emit('timer_update', match.timeLeft);
 
-        // Logique Chaos Mode : Envoie un malus aléatoire toutes les 8 secondes aux deux joueurs
         if (globalEvents.chaosMode) {
             chaosTimer++;
             if (chaosTimer >= 8) {
@@ -592,7 +589,7 @@ async function endMatch(id1, id2, matchData, isRanked) {
             let baseCoins = (winnerId === sId) ? 30 : 10;
             let earnedCoins = globalEvents.coinRush ? baseCoins * 2 : baseCoins;
             if (globalEvents.jackpotEclair && Math.random() < 0.4) {
-                earnedCoins += 200; // Jackpot Éclair fin de match
+                earnedCoins += 200;
             }
             p.coins += earnedCoins;
         }
