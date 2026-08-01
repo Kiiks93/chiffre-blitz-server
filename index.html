@@ -161,7 +161,7 @@
     </div>
 
     <!-- MODALE RÈGLES / COMMENT JOUER -->
-    <div id="modal-rules" class="modal-overlay" style="display:flex;">
+    <div id="modal-rules" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:left;">
             <h2 style="margin:0 0 15px 0; color:#00d2ff; text-align:center;" data-i18n="rules_title">📖 RÈGLES DU JEU</h2>
             <div style="overflow-y:auto; flex:1; font-size:13px; color:#ccc; display:flex; flex-direction:column; gap:12px; padding-right:5px;">
@@ -403,7 +403,7 @@
                 solo_menu_title: "TRAINING MODES", solo_classic: "⚡ Classic (Ascending)", solo_random: "🎲 Random (Varied targets)",
                 solo_avalanche: "🧊 AVALANCHE (Difficulties)", diff_easy: "Easy", diff_medium: "Medium", diff_hard: "Hard 💀", back_menu: "⬅️ Back to Menu",
                 hub_1v1_title: "⚔️ 1v1 ONLINE DUEL", hub_random: "🎲 Random Matchmaking", hub_rooms: "🏠 Private Rooms / Lobby",
-                searching: "Searching for opponent...", cancel: "❌ Cancel", rooms_title: "🏠 Private Rooms", create_room: "✨ Create a room", back: "⬅️ Back",
+                searching: "Searching for opponent...", cancel: "❌ Cancel", rooms_title: "🏠 Private Rooms", create_room: "✨ Create a room", back: "⬅️ Retour",
                 room_label: "Room", waiting: "Waiting...", quit: "❌ Quit", welcome: "WELCOME ⚡",
                 hud_my_target: "MY TARGET", hud_opp_score: "OPPONENT (Score)", hud_solo_target: "TARGET TO FIND", hud_score: "SCORE",
                 timer_label: "Time", recap_score: "⭐ Final Score :", recap_coins: "🪙 Coins Earned :",
@@ -433,17 +433,76 @@
             }
         }
 
-        // Moteur Audio & Mute
+        // Moteur Audio & Musique d'ambiance
         const SoundEngine = {
-            ctx: null, isMuted: false,
-            init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); if (this.ctx.state === 'suspended') this.ctx.resume(); },
-            playClick() { if (this.isMuted) return; this.init(); const t = this.ctx.currentTime; const osc = this.ctx.createOscillator(), g = this.ctx.createGain(); osc.frequency.setValueAtTime(440, t); osc.frequency.exponentialRampToValueAtTime(880, t + 0.06); g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06); osc.connect(g); g.connect(this.ctx.destination); osc.start(t); osc.stop(t + 0.06); },
-            playError() { if (this.isMuted) return; this.init(); const t = this.ctx.currentTime; const osc = this.ctx.createOscillator(), g = this.ctx.createGain(); osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, t); g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.1); osc.connect(g); g.connect(this.ctx.destination); osc.start(t); osc.stop(t + 0.1); }
+            ctx: null, isMuted: false, bgmInterval: null,
+            init() { 
+                if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); 
+                if (this.ctx.state === 'suspended') this.ctx.resume(); 
+                this.startBGM();
+            },
+            playClick() { 
+                if (this.isMuted) return; 
+                this.init(); 
+                const t = this.ctx.currentTime; 
+                const osc = this.ctx.createOscillator(), g = this.ctx.createGain(); 
+                osc.frequency.setValueAtTime(440, t); 
+                osc.frequency.exponentialRampToValueAtTime(880, t + 0.06); 
+                g.gain.setValueAtTime(0.1, t); 
+                g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06); 
+                osc.connect(g); g.connect(this.ctx.destination); 
+                osc.start(t); osc.stop(t + 0.06); 
+            },
+            playError() { 
+                if (this.isMuted) return; 
+                this.init(); 
+                const t = this.ctx.currentTime; 
+                const osc = this.ctx.createOscillator(), g = this.ctx.createGain(); 
+                osc.type = 'sawtooth'; 
+                osc.frequency.setValueAtTime(150, t); 
+                g.gain.setValueAtTime(0.1, t); 
+                g.gain.exponentialRampToValueAtTime(0.0001, t + 0.1); 
+                osc.connect(g); g.connect(this.ctx.destination); 
+                osc.start(t); osc.stop(t + 0.1); 
+            },
+            startBGM() {
+                if (this.bgmInterval) return;
+                const notes = [220, 246.94, 277.18, 329.63, 369.99];
+                let index = 0;
+                this.bgmInterval = setInterval(() => {
+                    if (this.isMuted || !this.ctx) return;
+                    try {
+                        const t = this.ctx.currentTime;
+                        const osc = this.ctx.createOscillator();
+                        const g = this.ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(notes[index % notes.length], t);
+                        g.gain.setValueAtTime(0.015, t);
+                        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+                        osc.connect(g);
+                        g.connect(this.ctx.destination);
+                        osc.start(t);
+                        osc.stop(t + 0.4);
+                        index++;
+                    } catch(e) {}
+                }, 700);
+            },
+            stopBGM() {
+                if (this.bgmInterval) {
+                    clearInterval(this.bgmInterval);
+                    this.bgmInterval = null;
+                }
+            }
         };
 
         function toggleMute() {
             SoundEngine.isMuted = !SoundEngine.isMuted;
             document.getElementById('mute-btn').innerText = SoundEngine.isMuted ? '🔇' : '🔊';
+            if (SoundEngine.isMuted) {
+                SoundEngine.stopBGM();
+            } else {
+                SoundEngine.init();
+            }
         }
 
         const SERVER_URL = window.location.origin;
@@ -458,7 +517,6 @@
         let hasWatchedAdThisGame = false;
         let adCallbackFunction = null;
 
-        // Prix exacts synchronisés avec server.js
         const powersData = {
             bonus: [
                 { id: 'spotlight', name: '💡 Projecteur', desc: 'Illumine la bonne tuile', price: 30 },
@@ -484,6 +542,10 @@
             applyLanguage(savedLang);
             showTitleScreen();
             checkAndShowProfileModal();
+            // Lancement initial de l'audio au premier clic sur la page si nécessaire
+            document.body.addEventListener('click', () => {
+                SoundEngine.init();
+            }, { once: true });
         });
 
         function isProfileValid() {
@@ -508,8 +570,6 @@
             myProfile.username = nameInput;
             document.getElementById('modal-username').style.display = 'none';
             socket.emit('register_player', myProfile);
-            // Ouvre automatiquement les règles au tout début après la saisie du profil
-            openRulesModal();
         }
 
         socket.on('player_registered', (player) => {
