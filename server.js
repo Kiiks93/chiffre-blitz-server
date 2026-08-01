@@ -15,6 +15,11 @@ const io = new Server(server, {
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+    console.error("⚠️ ERREUR CRITIQUE : SUPABASE_URL ou SUPABASE_KEY est manquant dans les variables d'environnement de Render !");
+}
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 let matchmakingQueue = [];
@@ -25,20 +30,30 @@ let customRooms = {};
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
-    // Enregistrement / Connexion du joueur (Insensible à la casse)
+    // Enregistrement / Connexion du joueur
     socket.on('register_player', async (data) => {
         try {
-            if (!data || !data.username) return;
+            if (!data || !data.username) {
+                console.log("Register error: Données invalides reçues");
+                return;
+            }
             const cleanUsername = data.username.trim();
-            
+            console.log(`Tentative de connexion pour : ${cleanUsername}`);
+
             let { data: existingPlayer, error: fetchErr } = await supabase
                 .from('players')
                 .select('*')
                 .ilike('username', cleanUsername)
                 .maybeSingle();
 
+            if (fetchErr) {
+                console.error("Erreur lors de la lecture Supabase (fetch):", fetchErr.message);
+                return;
+            }
+
             let player;
             if (!existingPlayer) {
+                console.log(`Joueur ${cleanUsername} introuvable, création du profil...`);
                 const newPlayerData = {
                     username: cleanUsername,
                     region: data.region || 'Hauts-de-France',
@@ -57,9 +72,14 @@ io.on('connection', (socket) => {
                     .insert([newPlayerData])
                     .select()
                     .single();
-                if (insertErr) { console.error("Insert error:", insertErr); return; }
+
+                if (insertErr) {
+                    console.error("Erreur lors de l'insertion Supabase (insert):", insertErr.message);
+                    return;
+                }
                 player = inserted;
             } else {
+                console.log(`Joueur ${cleanUsername} trouvé, mise à jour de la session...`);
                 const updateData = {
                     region: data.region || existingPlayer.region,
                     avatar: data.avatar !== undefined ? data.avatar : existingPlayer.avatar,
@@ -71,8 +91,13 @@ io.on('connection', (socket) => {
                     .eq('username', existingPlayer.username)
                     .select()
                     .single();
-                if (updateErr) { console.error("Update error:", updateErr); return; }
-                player = updated;
+
+                if (updateErr) {
+                    console.error("Erreur lors de la mise à jour Supabase (update):", updateErr.message);
+                    player = existingPlayer; // Fallback sur l'existant si l'update échoue
+                } else {
+                    player = updated;
+                }
             }
 
             socket.playerUsername = player.username;
@@ -91,8 +116,9 @@ io.on('connection', (socket) => {
                 inventory: player.inventory || {},
                 equippedPower: player.equipped_power || null
             });
+            console.log(`Profil envoyé avec succès pour : ${player.username}`);
         } catch (err) {
-            console.error("Error in register_player:", err);
+            console.error("Erreur critique dans register_player:", err.message);
         }
     });
 
@@ -112,11 +138,16 @@ io.on('connection', (socket) => {
             }
 
             let { data: topPlayers, error } = await query;
-            if (error) { console.error("Leaderboard error:", error); return; }
+            if (error) { 
+                console.error("Erreur leaderboard Supabase:", error.message); 
+                socket.emit('leaderboard_data', { type, data: [] });
+                return; 
+            }
 
             socket.emit('leaderboard_data', { type, data: topPlayers || [] });
         } catch (err) {
-            console.error("Error in get_leaderboard:", err);
+            console.error("Erreur critique get_leaderboard:", err.message);
+            socket.emit('leaderboard_data', { type, data: [] });
         }
     });
 
@@ -146,24 +177,21 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Récompenses Solo (Met à jour les Pièces ET les Points)
+    // Récompenses Solo
     socket.on('claim_solo_reward', async (score) => {
         if (!socket.playerUsername) return;
         try {
             let { data: player } = await supabase.from('players').select('*').ilike('username', socket.playerUsername).maybeSingle();
             if (player) {
                 const earnedCoins = Math.min(100, Math.floor(score / 3));
-                const earnedPoints = Math.floor(score / 5); // Gagne des points en solo selon le score
+                const earnedPoints = Math.floor(score / 5);
                 
                 const newCoins = (player.coins || 0) + earnedCoins;
                 const newPoints = (player.points || 0) + earnedPoints;
                 
                 let { data: updated } = await supabase
                     .from('players')
-                    .update({ 
-                        coins: newCoins,
-                        points: newPoints
-                    })
+                    .update({ coins: newCoins, points: newPoints })
                     .eq('username', player.username)
                     .select()
                     .single();
@@ -171,7 +199,7 @@ io.on('connection', (socket) => {
                 if (updated) sendUpdatedProfile(socket, updated);
             }
         } catch (err) {
-            console.error("Error in claim_solo_reward:", err);
+            console.error("Erreur claim_solo_reward:", err.message);
         }
     });
 
@@ -189,10 +217,7 @@ io.on('connection', (socket) => {
                 
                 let { data: updated } = await supabase
                     .from('players')
-                    .update({ 
-                        coins: player.coins - cost,
-                        inventory: inventory
-                    })
+                    .update({ coins: player.coins - cost, inventory: inventory })
                     .eq('username', player.username)
                     .select()
                     .single();
@@ -200,7 +225,7 @@ io.on('connection', (socket) => {
                 if (updated) sendUpdatedProfile(socket, updated);
             }
         } catch (err) {
-            console.error("Error in buy_power:", err);
+            console.error("Erreur buy_power:", err.message);
         }
     });
 
@@ -221,7 +246,7 @@ io.on('connection', (socket) => {
                 if (updated) sendUpdatedProfile(socket, updated);
             }
         } catch (err) {
-            console.error("Error in equip_power:", err);
+            console.error("Erreur equip_power:", err.message);
         }
     });
 
@@ -268,7 +293,7 @@ io.on('connection', (socket) => {
                 if (p1 && p2) startGameDuel(p1, p2, false);
             }
         } catch (err) {
-            console.error("Error in join_room:", err);
+            console.error("Erreur join_room:", err.message);
         }
     });
 
@@ -316,7 +341,6 @@ function sendUpdatedProfile(socket, player) {
     });
 }
 
-// Lancer un Duel 1v1
 async function startGameDuel(p1, p2, isRanked) {
     const gameId = 'game_' + Math.random().toString(36).substring(2, 9);
     
@@ -428,7 +452,6 @@ function handleSendMalus(gameId, socketId, type) {
     if (opponentId) game.players[opponentId].socket.emit('receive_malus', { type });
 }
 
-// Fin de partie 1v1 avec mise à jour sécurisée des points, wins, losses et coins
 async function finishGame(gameId, forcedWinnerId, reason) {
     const game = activeGames[gameId];
     if (!game) return;
@@ -479,7 +502,7 @@ async function finishGame(gameId, forcedWinnerId, reason) {
             }
         }
     } catch (err) {
-        console.error("Error updating Supabase match stats:", err);
+        console.error("Erreur finishGame Supabase:", err.message);
     }
 
     const resultsData = {
