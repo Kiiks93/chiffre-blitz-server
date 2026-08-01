@@ -409,7 +409,6 @@ io.on('connection', (socket) => {
             pData.target++;
             pData.pool = generatePool(pData.target);
 
-            // Vérification des pièges en Mode Grille Maudite
             if (match.isSaboteur) {
                 const oppData = match.players[oppId];
                 if (oppData && oppData.traps && oppData.traps.includes(num)) {
@@ -758,7 +757,6 @@ async function endMatch(id1, id2, matchData, isRanked) {
             if (winnerId === id1) {
                 p1.wins = (p1.wins || 0) + 1;
                 p1.points = (p1.points || 0) + 25;
-                p1.trophies = (p1.trophies || 0) + 1;
 
                 p2.losses = (p2.losses || 0) + 1;
                 if (!globalEvents.rankShield) {
@@ -767,7 +765,6 @@ async function endMatch(id1, id2, matchData, isRanked) {
             } else if (winnerId === id2) {
                 p2.wins = (p2.wins || 0) + 1;
                 p2.points = (p2.points || 0) + 25;
-                p2.trophies = (p2.trophies || 0) + 1;
 
                 p1.losses = (p1.losses || 0) + 1;
                 if (!globalEvents.rankShield) {
