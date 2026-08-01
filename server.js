@@ -383,7 +383,6 @@ io.on('connection', (socket) => {
 
     socket.on('find_saboteur_match', (data) => {
         if (!globalEvents.saboteurMode) return;
-        // Limitation stricte à maximum 2 malus et 2 pièges sélectionnés
         const chosenMalus = data && data.chosenMalus ? data.chosenMalus.slice(0, 2) : ['inversion'];
         const trappedTiles = data && Array.isArray(data.trappedTiles) ? data.trappedTiles.slice(0, 2) : generateRandomTraps(2);
 
@@ -407,7 +406,6 @@ io.on('connection', (socket) => {
         const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
 
         if (num === pData.target) {
-            // Calcul de l'index de la case cliquée AVANT la modification de la cible et du pool
             const clickedIndex = pData.pool.indexOf(num);
 
             pData.score += 10;
@@ -417,25 +415,17 @@ io.on('connection', (socket) => {
             if (match.isSaboteur) {
                 const oppData = match.players[oppId];
                 if (oppData && oppData.traps && oppData.traps.includes(clickedIndex)) {
+                    // CONSOMMATION DU PIÈGE : Le piège se désactive après avoir été déclenché une fois
+                    oppData.traps = oppData.traps.filter(t => t !== clickedIndex);
+
                     const triggeredMalus = oppData.chosenMalus[Math.floor(Math.random() * oppData.chosenMalus.length)];
                     
-                    // Conversion des noms de malus vers les types reconnus par le client pour lancer l'animation
-                    let malusType = 'freeze';
                     if (triggeredMalus === 'inversion') {
-                        malusType = 'inversion';
-                    } else if (triggeredMalus === 'gel') {
-                        malusType = 'freeze';
-                    } else if (triggeredMalus === 'brouillage') {
-                        malusType = 'eclipse';
-                    } else {
-                        malusType = triggeredMalus;
-                    }
-
-                    if (malusType === 'inversion') {
                         pData.pool.sort(() => Math.random() - 0.5);
-                    } else {
-                        socket.emit('receive_malus', { type: malusType });
                     }
+                    
+                    // Envoi du malus au joueur pour déclencher son animation visuelle
+                    socket.emit('receive_malus', { type: triggeredMalus });
                 }
             }
             
