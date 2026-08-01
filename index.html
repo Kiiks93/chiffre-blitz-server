@@ -175,6 +175,16 @@
         .power-btn.equip { background: #00d2ff; color: #000; }
         .power-btn.active { background: #00ff88; color: #000; }
 
+        /* GRILLE DE PRÉPARATION DES PIÈGES */
+        .trap-setup-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; max-width: 220px; margin: 6px auto; }
+        .trap-setup-tile {
+            background: #2a1845; border: 2px solid #522d80; border-radius: 8px; height: 38px;
+            display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; cursor: pointer;
+            transition: all 0.15s;
+        }
+        .trap-setup-tile:active { transform: scale(0.92); }
+        .trap-setup-tile.selected { border-color: #ff007f !important; background: rgba(255, 0, 127, 0.35) !important; color: #ff007f; box-shadow: 0 0 10px #ff007f; }
+
         .hud { display: grid; grid-template-columns: 1fr; gap: 6px; background: rgba(255,255,255,0.06); padding: 6px 10px; border-radius: 10px; margin-bottom: 6px; max-width: 400px; margin-left: auto; margin-right: auto; }
         .player-box { padding: 4px 8px; border-radius: 8px; background: rgba(0,0,0,0.3); }
         .player-box.me { border: 2px solid #00d2ff; }
@@ -311,24 +321,24 @@
     <div id="modal-trap-setup" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:left;">
             <h2 style="color:#ff007f; margin:0 0 4px 0; font-size:18px; text-align:center;">💣 GRILLE MAUDITE : PRÉPARATION</h2>
-            <p style="color:#aaa; font-size:12px; margin-bottom:12px; text-align:center;">Choisis 2 malus exclusifs à déclencher chez ton adversaire :</p>
+            <p style="color:#aaa; font-size:11px; margin-bottom:6px; text-align:center;">1. Choisis tes malus exclusifs :</p>
             
-            <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:15px;">
-                <label style="background:rgba(255,255,255,0.05); padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px;">
+            <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;">
+                <label style="background:rgba(255,255,255,0.05); padding:6px 8px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:8px; cursor:pointer; font-size:11px;">
                     <input type="checkbox" name="trap-malus" value="inversion" style="accent-color:#ff007f;">
                     <div>
                         <strong style="color:#ff007f;">🌀 Inversion Spatiale</strong>
                         <div style="color:#aaa; font-size:10px;">Mélange deux chiffres sur la grille adverse.</div>
                     </div>
                 </label>
-                <label style="background:rgba(255,255,255,0.05); padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px;">
+                <label style="background:rgba(255,255,255,0.05); padding:6px 8px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:8px; cursor:pointer; font-size:11px;">
                     <input type="checkbox" name="trap-malus" value="gel" style="accent-color:#ff007f;">
                     <div>
                         <strong style="color:#ff8a00;">🛑 Gel Temporel</strong>
                         <div style="color:#aaa; font-size:10px;">Bloque la tuile piégée pendant 3 secondes.</div>
                     </div>
                 </label>
-                <label style="background:rgba(255,255,255,0.05); padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px;">
+                <label style="background:rgba(255,255,255,0.05); padding:6px 8px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:8px; cursor:pointer; font-size:11px;">
                     <input type="checkbox" name="trap-malus" value="penalite" style="accent-color:#ff007f;">
                     <div>
                         <strong style="color:#ff4b2b;">💀 Pénalité Sèche</strong>
@@ -337,7 +347,10 @@
                 </label>
             </div>
 
-            <div style="display:flex; gap:8px;">
+            <p style="color:#aaa; font-size:11px; margin-bottom:4px; text-align:center;">2. Sélectionne <b>2 cases</b> à piéger sur la grille adverse :</p>
+            <div id="trap-setup-grid" class="trap-setup-grid"></div>
+
+            <div style="display:flex; gap:8px; margin-top:10px;">
                 <button class="btn-secondary" onclick="document.getElementById('modal-trap-setup').style.display='none'" style="margin-top:0;">Annuler</button>
                 <button class="btn-main" onclick="startTrapQueue()" style="margin-top:0; flex:1; background:linear-gradient(45deg, #ff007f, #ff8a00);">Lancer la Recherche 💣</button>
             </div>
@@ -1141,6 +1154,7 @@
         let cachedOpponent = null;
         let adCallbackFunction = null;
         let selectedRankedItems = [];
+        let selectedTrappedIndices = [];
         let latestGlobalEvents = {};
         let latest1v1StartData = null;
 
@@ -1616,7 +1630,36 @@
         function openTrapModeModal() {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
             document.querySelectorAll('input[name="trap-malus"]').forEach(chk => chk.checked = false);
+            selectedTrappedIndices = [];
+            renderTrapSetupGrid();
             document.getElementById('modal-trap-setup').style.display = 'flex';
+        }
+
+        function renderTrapSetupGrid() {
+            const grid = document.getElementById('trap-setup-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            for (let i = 0; i < 16; i++) {
+                const tile = document.createElement('div');
+                const isSelected = selectedTrappedIndices.includes(i);
+                tile.className = `trap-setup-tile ${isSelected ? 'selected' : ''}`;
+                tile.innerText = i + 1;
+                tile.onclick = () => toggleTrapTile(i);
+                grid.appendChild(tile);
+            }
+        }
+
+        function toggleTrapTile(index) {
+            if (selectedTrappedIndices.includes(index)) {
+                selectedTrappedIndices = selectedTrappedIndices.filter(idx => idx !== index);
+            } else {
+                if (selectedTrappedIndices.length >= 2) {
+                    alert(currentLang === 'fr' ? 'Tu peux piéger 2 cases maximum sur la grille.' : 'You can trap a maximum of 2 tiles on the grid.');
+                    return;
+                }
+                selectedTrappedIndices.push(index);
+            }
+            renderTrapSetupGrid();
         }
 
         function startTrapQueue() {
@@ -1628,12 +1671,20 @@
                 alert(currentLang === 'fr' ? 'Veuillez sélectionner au moins un malus piégé !' : 'Please select at least one trapped malus!');
                 return;
             }
+            if (selectedTrappedIndices.length === 0) {
+                alert(currentLang === 'fr' ? 'Veuillez sélectionner au moins une case à piéger sur la grille !' : 'Please select at least one tile to trap on the grid!');
+                return;
+            }
             document.getElementById('modal-trap-setup').style.display = 'none';
             hideAllScreens();
             document.getElementById('screen-1v1-lobby').style.display = 'flex';
             let digit = 1;
             radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById('radar-digit').innerText = digit; }, 70);
-            socket.emit('find_saboteur_match', { chosenMalus: selectedMalus });
+            
+            socket.emit('find_saboteur_match', { 
+                chosenMalus: selectedMalus, 
+                trappedTiles: selectedTrappedIndices 
+            });
         }
 
         function simulateAd(callback) {
