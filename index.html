@@ -70,8 +70,6 @@
             color: #aaa; border-radius: 10px; font-weight: bold; font-size: 12px; cursor: pointer; transition: all 0.2s;
         }
         .tab-btn.active { background: #00d2ff; color: #000; border-color: #00d2ff; }
-        #shop-tab-bonus.active { background: #38ef7d; color: #000; border-color: #38ef7d; }
-        #shop-tab-malus.active { background: #ff4b2b; color: #fff; border-color: #ff4b2b; }
 
         .leaderboard-list, .rooms-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px; text-align: left; }
         .lb-row, .room-row {
@@ -84,25 +82,31 @@
 
         .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; overflow-y: auto; max-height: 55vh; margin: 10px 0; padding-right: 5px; }
         .power-card { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; }
-        .power-card.equipped { border-color: #00ff88; background: rgba(0, 255, 136, 0.1); }
         .power-card h4 { margin: 0 0 5px 0; font-size: 13px; color: #00d2ff; }
         .power-card p { font-size: 11px; color: #aaa; margin: 0 0 8px 0; }
         .stock-badge { font-size: 11px; font-weight: bold; color: #38ef7d; margin-bottom: 6px; }
         .power-btn { padding: 6px 10px; border-radius: 8px; border: none; font-weight: bold; font-size: 12px; cursor: pointer; margin-top: 4px; }
         .power-btn.buy { background: #f8b500; color: #000; }
         .power-btn.equip { background: #00d2ff; color: #000; }
-        .power-btn.active { background: #00ff88; color: #000; }
 
-        .hud { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(255,255,255,0.08); padding: 12px; border-radius: 14px; margin-bottom: 10px; }
-        .player-box { padding: 8px; border-radius: 10px; background: rgba(0,0,0,0.3); }
-        .player-box.me { border: 2px solid #00d2ff; }
-        .player-box.opponent { border: 2px solid #ff007f; }
+        /* NOUVEAU DESIGN CENTRALISÉ DU HUD DE JEU */
+        .game-hud-panel {
+            background: rgba(0, 210, 255, 0.08); border: 2px solid rgba(0, 210, 255, 0.4);
+            border-radius: 18px; padding: 12px; max-width: 400px; margin: 0 auto 15px auto;
+            display: flex; justify-content: space-around; align-items: center;
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.15);
+        }
+        .hud-item { text-align: center; flex: 1; }
+        .hud-label { font-size: 11px; color: #aaa; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        .hud-value { font-size: 30px; font-weight: 900; color: #00d2ff; margin-top: 2px; }
+        .hud-value.score { color: #00ff88; }
+        .hud-divider { width: 1px; height: 35px; background: rgba(255,255,255,0.15); }
 
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 400px; margin: 0 auto; transition: transform 0.2s, filter 0.2s; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 400px; margin: 0 auto; }
         .tile {
             background: #2a1845; border: 2px solid #522d80; border-radius: 12px; height: 65px;
             display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; cursor: pointer;
-            transition: transform 0.2s, border-color 0.2s, background-color 0.2s;
+            transition: transform 0.1s, background-color 0.1s;
         }
         .tile:active { transform: scale(0.92); background: #3c1e69; }
         .tile.empty { background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.05); cursor: default; }
@@ -111,9 +115,6 @@
         .radar-box { position: relative; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; }
         .radar-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 4px solid transparent; border-top-color: #00d2ff; border-right-color: #ff007f; animation: radarSpin 1.2s linear infinite; }
         .radar-num { font-size: 32px; font-weight: 900; color: #00d2ff; }
-
-        #countdown-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 5, 29, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
-        .countdown-num { font-size: 90px; font-weight: 900; color: #00d2ff; }
 
         #simulated-ad-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -124,7 +125,6 @@
             width: 70px; height: 70px; border-radius: 50%; border: 4px solid #00d2ff;
             display: flex; align-items: center; justify-content: center;
             font-size: 28px; font-weight: 900; margin-bottom: 25px; color: #00d2ff;
-            box-shadow: 0 0 15px rgba(0,210,255,0.4);
         }
 
         @keyframes radarSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -148,13 +148,11 @@
         <span>🏆 <strong id="user-trophies-display">0</strong> <span data-i18n="trophies">Trophées</span></span>
     </div>
 
-    <!-- MODALE DE SOUTIEN & PUBLICITÉ AU LANCEMENT -->
+    <!-- MODALE DE SOUTIEN -->
     <div id="modal-launch-ad" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:center;">
             <h2 style="margin:0 0 10px 0; color:#00d2ff;" data-i18n="support_title">Soutenir le Créateur</h2>
-            <p style="color:#ccc; font-size:14px; line-height:1.5; margin-bottom:20px;" data-i18n="support_desc">
-                Chiffre Blitz est 100% gratuit. Une courte publicité de soutien va se lancer. Merci ! ❤️
-            </p>
+            <p style="color:#ccc; font-size:14px; line-height:1.5; margin-bottom:20px;" data-i18n="support_desc">Chiffre Blitz est 100% gratuit. Une publicité de soutien va se lancer. Merci ! ❤️</p>
             <button class="btn-main btn-blue" onclick="playLaunchAd()" style="width:100%;" data-i18n="support_btn">Lancer la partie ⚡</button>
         </div>
     </div>
@@ -184,7 +182,7 @@
         <button class="btn-secondary" onclick="showTitleScreen()" style="margin-top:5px;" data-i18n="menu_info">ℹ️ Informations</button>
     </div>
 
-    <!-- MENU DE SÉLECTION DU MODE SOLO -->
+    <!-- MENU SOLO -->
     <div id="screen-solo-menu" class="menu-container" style="display:none;">
         <h2 style="color:#00d2ff; font-size:20px; margin-bottom:5px;" data-i18n="solo_menu_title">MODES D'ENTRAÎNEMENT</h2>
         <p style="color:#aaa; font-size:13px; margin-bottom:15px;" data-i18n="solo_menu_sub">Choisis ton défi solo :</p>
@@ -196,7 +194,7 @@
         <button class="btn-secondary" onclick="showMainMenu()" data-i18n="back">⬅️ Retour Menu</button>
     </div>
 
-    <!-- HUB 1v1 ONLINE -->
+    <!-- HUB 1v1 -->
     <div id="screen-1v1-hub" style="display:none; max-width:350px; margin:15px auto;" class="menu-container">
         <h2 data-i18n="hub_title">⚔️ DUEL 1v1 ONLINE</h2>
         <button class="btn-main btn-blue" onclick="startRandom1v1()" data-i18n="hub_random">🎲 Matchmaking Aléatoire</button>
@@ -219,14 +217,14 @@
     <!-- SALONS PRIVÉS -->
     <div id="screen-rooms" style="display:none; max-width:400px; margin:0 auto;">
         <h2 data-i18n="rooms_title">🏠 Salons Privés</h2>
-        <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:16px; margin:15px 0; display:flex; flex-direction:column; gap:10px;">
+        <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:16px; margin:15px 0;">
             <button class="btn-main btn-blue" onclick="submitCreateRoom()" style="width:100%;" data-i18n="rooms_create">✨ Créer un salon</button>
         </div>
         <div id="rooms-list" class="rooms-list" style="max-height: 35vh; margin-bottom:15px;"></div>
         <button class="btn-secondary" onclick="open1v1Hub()" data-i18n="back">⬅️ Retour</button>
     </div>
 
-    <!-- SALLE D'ATTENTE SALON -->
+    <!-- SALLE ATTENTE SALON -->
     <div id="screen-room-waiting" style="display:none; max-width:400px; margin:0 auto;">
         <h2>⚡ <span data-i18n="room_header">Salon</span> : <span id="current-room-code" style="color:#00d2ff;">----</span></h2>
         <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:16px; margin:20px 0;">
@@ -268,31 +266,34 @@
         </div>
     </div>
 
-    <!-- ÉCRAN DE JEU -->
+    <!-- ÉCRAN DE JEU AVEC HUD CENTRALISÉ -->
     <div id="screen-game" style="display:none;">
-        <div id="hud-1v1" class="hud" style="display:none;">
-            <div class="player-box me">
-                <div data-i18n="hud_my_target">MA CIBLE</div>
-                <div style="font-size:26px; color:#00d2ff; font-weight:bold;" id="my-target">1</div>
+        <div id="hud-1v1" class="game-hud-panel" style="display:none;">
+            <div class="hud-item">
+                <div class="hud-label" data-i18n="hud_my_target">MA CIBLE</div>
+                <div class="hud-value" id="my-target">1</div>
             </div>
-            <div class="player-box opponent">
-                <div data-i18n="hud_opp_target">ADVERSAIRE</div>
-                <div style="font-size:26px; color:#ff007f; font-weight:bold;" id="opp-target">1</div>
+            <div class="hud-divider"></div>
+            <div class="hud-item">
+                <div class="hud-label" data-i18n="hud_opp_target">ADVERSAIRE</div>
+                <div class="hud-value" style="color:#ff007f;" id="opp-target">1</div>
             </div>
         </div>
 
-        <div id="hud-solo" class="hud" style="display:none;">
-            <div class="player-box me">
-                <div data-i18n="hud_solo_target">CIBLE ACTUELLE</div>
-                <div style="font-size:26px; color:#00d2ff; font-weight:bold;" id="solo-target">1</div>
+        <!-- HUD SOLO / AVALANCHE CENTRALISÉ ET OPTIMISÉ VISUELLEMENT -->
+        <div id="hud-solo" class="game-hud-panel" style="display:none;">
+            <div class="hud-item">
+                <div class="hud-label" data-i18n="hud_solo_target">CIBLE À TROUVER</div>
+                <div class="hud-value" id="solo-target">1</div>
             </div>
-            <div class="player-box me">
-                <div data-i18n="hud_solo_score">SCORE</div>
-                <div style="font-size:26px; color:#00ff88; font-weight:bold;" id="solo-score">0</div>
+            <div class="hud-divider"></div>
+            <div class="hud-item">
+                <div class="hud-label" data-i18n="hud_solo_score">SCORE</div>
+                <div class="hud-value score" id="solo-score">0</div>
             </div>
         </div>
         
-        <div style="font-size:18px; margin-bottom:10px; font-weight:bold;">
+        <div style="font-size:16px; margin-bottom:12px; font-weight:bold; color:#aaa;">
             <span data-i18n="timer_label">Temps / Pression</span> : <span id="game-timer" style="color:#ff007f;">30</span>s
         </div>
 
@@ -305,13 +306,6 @@
             <div id="recap-banner" style="font-size:26px; font-weight:900; margin-bottom:10px;">RÉSULTAT</div>
             <div id="recap-reason" style="color:#aaa; margin-bottom:15px;"></div>
             
-            <div id="recap-1v1-rows" style="display:none;">
-                <div style="display:flex; justify-content:space-between; margin:8px 0;">
-                    <span data-i18n="recap_my_target">🎯 Ma Cible :</span>
-                    <span id="recap-my-target" style="color:#00d2ff; font-weight:bold;">-</span>
-                </div>
-            </div>
-
             <div style="display:flex; justify-content:space-between; margin:8px 0;">
                 <span data-i18n="recap_my_score">⭐ Mon Score :</span>
                 <span id="recap-my-score" style="font-weight:bold;">-</span>
@@ -367,17 +361,12 @@
                 lb_title: "🏆 CLASSEMENT",
                 hud_my_target: "MA CIBLE",
                 hud_opp_target: "ADVERSAIRE",
-                hud_solo_target: "CIBLE ACTUELLE",
+                hud_solo_target: "CIBLE À TROUVER",
                 hud_solo_score: "SCORE",
                 timer_label: "Temps / Pression",
-                recap_my_target: "🎯 Ma Cible :",
                 recap_my_score: "⭐ Mon Score :",
                 recap_coins: "🪙 Pièces Gagnées :",
-                main_menu: "MENU PRINCIPAL",
-                powers: {
-                    spotlight: { name: '💡 Projecteur', desc: 'Illumine la bonne tuile' },
-                    freeze: { name: '⏳ Gel du Temps', desc: 'Gèle le chrono' }
-                }
+                main_menu: "MENU PRINCIPAL"
             },
             en: {
                 coins: "Coins", trophies: "Trophies",
@@ -417,28 +406,23 @@
                 lb_title: "🏆 LEADERBOARD",
                 hud_my_target: "MY TARGET",
                 hud_opp_target: "OPPONENT",
-                hud_solo_target: "CURRENT TARGET",
+                hud_solo_target: "TARGET TO FIND",
                 hud_solo_score: "SCORE",
                 timer_label: "Time / Pressure",
-                recap_my_target: "🎯 My Target:",
                 recap_my_score: "⭐ My Score:",
                 recap_coins: "🪙 Coins Earned:",
-                main_menu: "MAIN MENU",
-                powers: {
-                    spotlight: { name: '💡 Spotlight', desc: 'Highlights tile' },
-                    freeze: { name: '⏳ Time Freeze', desc: 'Freezes timer' }
-                }
+                main_menu: "MAIN MENU"
             }
         };
 
         let currentLang = localStorage.getItem('cb_lang') || 'fr';
         let hasShownLaunchAd = false;
         let hasWatchedAdThisGame = false;
-        let activeTrainingMode = 'classic'; // 'classic', 'random', 'avalanche'
+        let activeTrainingMode = 'classic';
 
-        // Variables pour le mode Avalanche (Tetris-style)
-        let avalancheGridData = []; // Tableau de 16 cases contenant un nombre ou null
-        let avalancheTarget = 1;
+        // Variables Avalanche
+        let avalancheGridData = [];
+        let avalancheTarget = null;
         let avalancheInterval = null;
 
         let soloTarget = 1, soloScore = 0, soloTimeLeft = 30, soloTimerInterval = null;
@@ -514,7 +498,7 @@
         const socket = io(SERVER_URL, { reconnection: true });
 
         socket.on('connect', () => { registerIfPossible(); });
-        let myProfile = { username: "", region: "Hauts-de-France", points: 0, coins: 0, trophies: 0, inventory: {}, equippedPower: null };
+        let myProfile = { username: "", region: "Hauts-de-France", points: 0, coins: 0, trophies: 0 };
 
         document.addEventListener("DOMContentLoaded", () => {
             applyTranslations();
@@ -574,7 +558,7 @@
         function openSoloMenu() { hideAllScreens(); document.getElementById('screen-solo-menu').style.display = 'flex'; }
         function open1v1Hub() { hideAllScreens(); document.getElementById('screen-1v1-hub').style.display = 'flex'; }
         function openRoomsScreen() { hideAllScreens(); document.getElementById('screen-rooms').style.display = 'block'; socket.emit('get_rooms_list'); }
-        function openShop() { document.getElementById('modal-shop').style.display = 'flex'; switchShopTab('bonus'); }
+        function openShop() { document.getElementById('modal-shop').style.display = 'flex'; }
         function closeShop() { document.getElementById('modal-shop').style.display = 'none'; }
         function openLeaderboard() { document.getElementById('modal-leaderboard').style.display = 'flex'; socket.emit('get_leaderboard', 'global'); }
         function closeLeaderboard() { document.getElementById('modal-leaderboard').style.display = 'none'; }
@@ -587,7 +571,7 @@
             hideAllScreens();
             
             document.getElementById('screen-game').style.display = 'block';
-            document.getElementById('hud-solo').style.display = 'grid';
+            document.getElementById('hud-solo').style.display = 'flex';
             document.getElementById('hud-1v1').style.display = 'none';
 
             soloScore = 0;
@@ -607,13 +591,13 @@
                 }, 1000);
             } 
             else if (mode === 'avalanche') {
-                // Mode Avalanche (Tetris-style de remplissage)
-                avalancheTarget = 1;
-                document.getElementById('solo-target').innerText = avalancheTarget;
+                // Mode Avalanche : Remplissage progressif et cible aléatoire parmi les chiffres présents
                 avalancheGridData = Array(16).fill(null);
+                avalancheTarget = null;
                 
-                // Remplir quelques cases au départ
+                // Remplir 4 cases au départ
                 for(let i=0; i<4; i++) spawnAvalancheNumber();
+                updateAvalancheTarget();
                 renderAvalancheGrid();
 
                 let pressureTimer = 0;
@@ -623,12 +607,12 @@
                     pressureTimer++;
                     document.getElementById('game-timer').innerText = pressureTimer + 's';
                     
-                    // Ajout d'un chiffre toutes les 1.8 secondes (la pression augmente)
                     let added = spawnAvalancheNumber();
+                    updateAvalancheTarget();
                     renderAvalancheGrid();
 
                     if (!added) {
-                        // Grille pleine -> Game Over façon Tetris !
+                        // Grille saturée -> Game Over façon Tetris !
                         endSoloGame();
                     }
                 }, 1800);
@@ -644,13 +628,13 @@
                 candidates.sort(() => Math.random() - 0.5);
                 pool = pool.concat(candidates.slice(0, 11)).sort(() => Math.random() - 0.5);
             } else {
-                // Random
-                soloTarget = Math.floor(Math.random() * 40) + 1;
+                // Mode Aléatoire solo
+                soloTarget = Math.floor(Math.random() * 50) + 1;
                 document.getElementById('solo-target').innerText = soloTarget;
                 pool = [soloTarget];
                 while (pool.length < 12) {
                     let r = Math.floor(Math.random() * 50) + 1;
-                    if (!pool.includes(r)) pool.includes(r) || pool.push(r);
+                    if (!pool.includes(r)) pool.push(r);
                 }
                 pool.sort(() => Math.random() - 0.5);
             }
@@ -670,7 +654,6 @@
                     soloTimeLeft = Math.max(0, soloTimeLeft - 1);
                 }
             } else {
-                // Random mode click
                 if (num === soloTarget) {
                     SoundEngine.playClick();
                     soloScore += 15;
@@ -683,17 +666,28 @@
             }
         }
 
-        // --- LOGIQUE AVALANCHE (Tetris-style) ---
+        // --- LOGIQUE AVALANCHE (Cibles piochées parmi les chiffres de la grille) ---
         function spawnAvalancheNumber() {
             let emptyIndices = [];
             avalancheGridData.forEach((val, idx) => { if (val === null) emptyIndices.push(idx); });
-            if (emptyIndices.length === 0) return false; // Grille pleine !
+            if (emptyIndices.length === 0) return false;
 
             let randomIdx = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
-            // Génère un nombre aléatoire entre 1 et 50 pour encombrer la grille
             let randomNum = Math.floor(Math.random() * 50) + 1;
             avalancheGridData[randomIdx] = randomNum;
             return true;
+        }
+
+        function updateAvalancheTarget() {
+            let activeNumbers = avalancheGridData.filter(v => v !== null);
+            if (activeNumbers.length > 0) {
+                // Choisit aléatoirement un chiffre qui est ACTUELLEMENT présent dans la grille
+                avalancheTarget = activeNumbers[Math.floor(Math.random() * activeNumbers.length)];
+                document.getElementById('solo-target').innerText = avalancheTarget;
+            } else {
+                avalancheTarget = null;
+                document.getElementById('solo-target').innerText = '-';
+            }
         }
 
         function renderAvalancheGrid() {
@@ -713,14 +707,13 @@
             });
         }
 
-        function handleAvalancheClick(num, idx) {
-            if (num === avalancheTarget) {
+        function handleAvalancheClick(val, idx) {
+            if (val === avalancheTarget) {
                 SoundEngine.playClick();
-                avalancheGridData[idx] = null; // Libère la case (comme une ligne effacée dans Tetris)
-                avalancheTarget++;
+                avalancheGridData[idx] = null; // Vide la case (effet Tetris)
                 soloScore += 20;
-                document.getElementById('solo-target').innerText = avalancheTarget;
                 document.getElementById('solo-score').innerText = soloScore;
+                updateAvalancheTarget(); // Tire un nouveau chiffre parmi ceux restants
                 renderAvalancheGrid();
             } else {
                 SoundEngine.playError();
@@ -753,7 +746,6 @@
             document.getElementById('recap-modal').style.display = 'flex';
         }
 
-        // Mode Online basique
         function startRandom1v1() { hideAllScreens(); document.getElementById('screen-1v1-lobby').style.display = 'flex'; socket.emit('find_1v1_match'); }
         function cancel1v1Search() { open1v1Hub(); }
         function submitCreateRoom() { socket.emit('create_room', { code: '', username: myProfile.username }); }
