@@ -48,18 +48,12 @@ io.on('connection', (socket) => {
         const username = profile && profile.username ? profile.username.trim() : '';
         if (!username) return;
 
-        // Vérifie si le pseudo est déjà utilisé par un autre socket actif en jeu
-        let isAlreadyActive = false;
+        // Si le joueur rafraîchit la page, l'ancien socket est encore temporairement enregistré.
+        // On nettoie l'ancienne association pour autoriser la reconnexion immédiate avec son profil.
         for (let sId in socketToUser) {
-            if (socketToUser[sId].toLowerCase() === username.toLowerCase() && sId !== socket.id) {
-                isAlreadyActive = true;
-                break;
+            if (socketToUser[sId].toLowerCase() === username.toLowerCase()) {
+                delete socketToUser[sId];
             }
-        }
-
-        if (isAlreadyActive) {
-            socket.emit('room_error', "Ce pseudo est déjà utilisé en jeu par un autre joueur !");
-            return;
         }
 
         if (!players[username]) {
@@ -74,7 +68,7 @@ io.on('connection', (socket) => {
                 equippedPower: null
             };
         } else {
-            // Joueur existant (reconnexion / rafraîchissement) : on restaure sa progression et met à jour sa région
+            // Joueur existant (rafraîchissement) : on restaure sa progression et met à jour sa région
             players[username].region = profile.region || players[username].region;
         }
 
@@ -316,7 +310,6 @@ io.on('connection', (socket) => {
         if (waitingPlayer === socket.id) waitingPlayer = null;
         cleanupPlayerFromRooms(socket.id, false);
         delete socketToUser[socket.id];
-        // On ne supprime PAS le profil dans players[username] pour conserver la progression et l'inventaire !
     });
 });
 
