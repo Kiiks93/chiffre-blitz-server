@@ -53,7 +53,6 @@
             text-shadow: 0 1px 3px rgba(0,0,0,0.9);
         }
 
-        /* TOAST DE NOTIFICATION ADMIN NON BLOQUANT */
         .admin-toast {
             position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
             background: linear-gradient(45deg, #ff416c, #ff4b2b); color: #fff;
@@ -68,7 +67,6 @@
             to { transform: translate(-50%, 0); opacity: 1; }
         }
 
-        /* BARRE DE STATS SUPABASE */
         .user-stats {
             display: flex; justify-content: center; gap: 12px; max-width: 400px; margin: 0 auto 8px auto;
             font-size: 13px; font-weight: bold; background: rgba(255,255,255,0.05); padding: 7px 12px; border-radius: 16px;
@@ -253,14 +251,13 @@
         </div>
     </div>
 
-    <!-- BARRE DE STATS (SUPABASE SOURCE DE VÉRITÉ) -->
+    <!-- BARRE DE STATS (SUPABASE) -->
     <div class="user-stats">
         <span>🪙 <strong id="user-coins-display" style="font-size: 14px;">0</strong></span>
         <span>🏆 <strong id="user-trophies-display" style="font-size: 14px;">0</strong></span>
         <span>🏅 <strong id="user-rank-display" style="color:#00d2ff; font-size: 14px;">Novice</strong> (<span id="user-points-display" style="font-size: 13px;">0</span> pts)</span>
     </div>
 
-    <!-- MODALE DE SOUTIEN (LANCEMENT) -->
     <div id="modal-launch-ad" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:center;">
             <h2 style="margin:0 0 10px 0; color:#00d2ff;" data-i18n="ad_title">Soutenir le Créateur</h2>
@@ -269,7 +266,6 @@
         </div>
     </div>
 
-    <!-- SIMULATEUR DE PUBLICITE (SPONSORISÉE) -->
     <div id="simulated-ad-overlay" style="display:none;" class="modal-overlay">
         <div class="modal-card" style="text-align:center; align-items:center;">
             <div style="color:#aaa; font-size:15px; margin-bottom:15px; font-weight:bold;" data-i18n="ad_sponsored">VIDÉO SPONSORISÉE...</div>
@@ -278,7 +274,6 @@
         </div>
     </div>
 
-    <!-- ÉCRAN TITRE & RÈGLES -->
     <div id="screen-title" class="menu-container" style="max-width:380px; margin: 5px auto; text-align: left;">
         <div style="text-align: center; margin-bottom: 8px;">
             <h2 style="font-size: 22px; color: #00d2ff; margin: 0; text-shadow: 0 0 12px rgba(0,210,255,0.4);">CHIFFRE BLITZ ⚡</h2>
@@ -311,7 +306,6 @@
         <button class="btn-main btn-blue" onclick="openLaunchAdModal()" style="margin-top: 10px; width: 100%;" data-i18n="btn_play">JOUER ⚡</button>
     </div>
 
-    <!-- MENU PRINCIPAL -->
     <div id="screen-menu" class="menu-container" style="display:none;">
         <div id="player-event-banner" class="event-banner"></div>
 
@@ -324,7 +318,6 @@
         <button class="btn-secondary" onclick="showTitleScreen()" style="margin-top:4px;" data-i18n="menu_info">ℹ️ Informations & Règles</button>
     </div>
 
-    <!-- MENU SOLO -->
     <div id="screen-solo-menu" class="menu-container" style="display:none;">
         <h2 style="color:#00d2ff; font-size:18px; margin-bottom:4px;" data-i18n="solo_menu_title">MODES D'ENTRAÎNEMENT</h2>
         <button class="btn-main btn-blue" onclick="startSoloTraining('classic')" data-i18n="solo_classic">⚡ Classique (Croissant)</button>
@@ -333,7 +326,6 @@
         <button class="btn-secondary" onclick="showMainMenu()" data-i18n="back_menu">⬅️ Retour Menu</button>
     </div>
 
-    <!-- SOUS-MENU DIFFICULTÉS AVALANCHE -->
     <div id="screen-avalanche-menu" class="menu-container" style="display:none;">
         <h2 style="color:#00d2ff; font-size:18px; margin-bottom:4px;" data-i18n="avalanche_menu_title">🧊 AVALANCHE (Difficultés)</h2>
         <button class="btn-main btn-avalanche-easy" onclick="startAvalancheGame(1800, 4)" data-i18n="diff_easy">Facile</button>
@@ -342,7 +334,6 @@
         <button class="btn-secondary" onclick="openSoloMenu()" data-i18n="back">⬅️ Retour</button>
     </div>
 
-    <!-- HUB DE CHOIX 1v1 ONLINE -->
     <div id="screen-1v1-hub" style="display:none; max-width:350px; margin:10px auto;" class="menu-container">
         <h2 data-i18n="hub_title" style="font-size: 18px; margin-bottom: 4px;">⚔️ DUEL 1v1 ONLINE</h2>
         <p style="color:#aaa; font-size:12px; margin-bottom:8px;" data-i18n="hub_subtitle">Choisis ton mode de jeu :</p>
@@ -351,7 +342,6 @@
         <button class="btn-secondary" onclick="showMainMenu()" data-i18n="back_menu">⬅️ Retour Menu</button>
     </div>
 
-    <!-- MODAL CHOIX 2 OBJETS CLASSÉ -->
     <div id="modal-ranked-loadout" class="modal-overlay" style="display:none;">
         <div class="modal-card">
             <h2 style="margin:0 0 8px 0; color:#f8b500; font-size:18px;" data-i18n="ranked_modal_title">⚔️ PRÉPARATION CLASSÉE</h2>
@@ -364,7 +354,6 @@
         </div>
     </div>
 
-    <!-- SALLE D'ATTENTE 1v1 ALÉATOIRE -->
     <div id="screen-1v1-lobby" style="display:none;">
         <div class="matchmaking-loader">
             <div class="radar-box">
@@ -376,7 +365,6 @@
         <button class="btn-secondary" onclick="cancel1v1Search()" style="max-width:180px; margin-top:20px;" data-i18n="cancel">❌ Annuler</button>
     </div>
 
-    <!-- ÉCRAN DES SALONS PRIVÉS -->
     <div id="screen-rooms" style="display:none; max-width:400px; margin:0 auto;">
         <h2 data-i18n="rooms_title" style="font-size:18px; margin-bottom:8px;">👥 Jouer entre amis</h2>
         <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:14px; margin:10px 0; display:flex; flex-direction:column; gap:8px;">
@@ -390,7 +378,6 @@
         <button class="btn-secondary" onclick="showMainMenu()" data-i18n="back_menu">⬅️ Retour Menu</button>
     </div>
 
-    <!-- ÉCRAN POUR REJOINDRE AVEC CODE ET MOT DE PASSE -->
     <div id="screen-join-custom" style="display:none; max-width:400px; margin:0 auto;" class="menu-container">
         <h2 data-i18n="join_title" style="font-size:18px;">🔑 Rejoindre un Salon</h2>
         <p style="color:#aaa; font-size:12px; margin-bottom:8px;" data-i18n="join_subtitle">Entre le code et le mot de passe (si requis) :</p>
@@ -407,7 +394,6 @@
         <button class="btn-secondary" onclick="openRoomsScreen()" style="margin-top:0;" data-i18n="back">⬅️ Retour</button>
     </div>
 
-    <!-- SALLE D'ATTENTE DU SALON PRIVÉ -->
     <div id="screen-room-waiting" style="display:none; max-width:400px; margin:0 auto;">
         <h2 style="font-size:18px;">⚡ <span data-i18n="room_header">Salon</span> : <span id="current-room-code" style="color:#00d2ff;">----</span></h2>
         <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:14px; margin:15px 0;">
@@ -433,7 +419,6 @@
         <button class="btn-secondary" onclick="leaveCustomRoom()" data-i18n="leave_room">❌ Quitter le salon</button>
     </div>
 
-    <!-- MODAL DE CRÉATION DE SALON -->
     <div id="modal-create-room" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:center;">
             <h2 style="margin:0 0 8px 0; color:#00d2ff; font-size:18px;" data-i18n="create_modal_title">✨ CRÉER UN SALON</h2>
@@ -454,7 +439,6 @@
         </div>
     </div>
 
-    <!-- MODE TOURNOI -->
     <div id="screen-tournament" style="display:none; max-width:400px; margin:0 auto;" class="menu-container">
         <h2 data-i18n="tourney_screen_title" style="color:#00d2ff; font-size:18px;">🎯 Tournoi Blitz</h2>
         <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:14px; margin:10px 0; text-align:center;">
@@ -465,7 +449,6 @@
         <button class="btn-secondary" onclick="showMainMenu()" data-i18n="back">⬅️ Retour Menu</button>
     </div>
 
-    <!-- MODAL POPUP PSEUDO, AVATAR & DRAPEAU -->
     <div id="modal-username" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:center;">
             <h2 style="margin:0 0 8px 0; color:#00d2ff; font-size:18px;" data-i18n="welcome_title">⚡ BIENVENUE ⚡</h2>
@@ -522,7 +505,6 @@
         </div>
     </div>
 
-    <!-- MODAL BOUTIQUE -->
     <div id="modal-shop" class="modal-overlay" style="display:none;">
         <div class="modal-card">
             <h2 style="margin:0 0 4px 0; color:#38ef7d; font-size:18px;" data-i18n="shop_title">🛍️ BOUTIQUE</h2>
@@ -538,7 +520,6 @@
         </div>
     </div>
 
-    <!-- OVERLAY CLASSEMENT -->
     <div id="modal-leaderboard" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="max-width: 440px;">
             <h2 style="margin:0 0 10px 0; color:#00d2ff; font-size:18px; letter-spacing:0.5px;" data-i18n="lb_title">🏆 CLASSEMENT</h2>
@@ -567,13 +548,11 @@
         </div>
     </div>
 
-    <!-- OVERLAY DECOMPTE -->
     <div id="countdown-overlay" style="display:none;">
         <div style="font-size:20px; color:#aaa; margin-bottom:8px;" data-i18n="get_ready">PRÉPAREZ-VOUS !</div>
         <div id="countdown-number" class="countdown-num">3</div>
     </div>
 
-    <!-- ECRAN DE JEU -->
     <div id="screen-game" style="display:none;">
         <div id="hud-1v1" class="hud" style="display:none;">
             <div class="player-box opponent">
@@ -611,7 +590,6 @@
         <div id="grid" class="grid"></div>
     </div>
 
-    <!-- MODAL RESULTAT -->
     <div id="recap-modal" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:center;">
             <div id="recap-banner" style="font-size:22px; font-weight:900; margin-bottom:8px;">RÉSULTAT</div>
@@ -1107,12 +1085,46 @@
             region: localStorage.getItem('cb_region') || "Hauts-de-France",
             avatar: parseInt(localStorage.getItem('cb_avatar')) || 1,
             flag: localStorage.getItem('cb_flag') || "🇫🇷",
-            points: 0, coins: 0, trophies: 0, inventory: {}, equippedPower: null
+            points: 0, coins: 0, trophies: 0, wins: 0, losses: 0, inventory: {}, equippedPower: null
         };
 
         let cachedOpponent = null;
         let adCallbackFunction = null;
         let selectedRankedItems = [];
+
+        // Helper pour convertir un code pays ou nettoyer le format du flag venant de Supabase
+        function getFlagEmoji(flag) {
+            if (!flag) return '🇫🇷';
+            let cleanFlag = flag.replace(/['"]/g, '').trim();
+            if (cleanFlag.length === 2) {
+                try {
+                    const codePoints = cleanFlag.toUpperCase().split('').map(char => 127397 + char.charCodeAt(0));
+                    return String.fromCodePoint(...codePoints);
+                } catch(e) {
+                    return '🇫🇷';
+                }
+            }
+            return cleanFlag;
+        }
+
+        // Fonction robuste pour parser un joueur et mapper toutes les variantes possibles de Supabase/Serveur
+        function parsePlayer(p) {
+            if (!p) return {};
+            return {
+                id: p.id || '',
+                username: p.username || p.name || p.pseudo || 'Joueur',
+                region: p.region || 'Hauts-de-France',
+                points: Number(p.points !== undefined ? p.points : (p.score !== undefined ? p.score : 0)),
+                coins: Number(p.coins !== undefined ? p.coins : (p.argent !== undefined ? p.argent : 0)),
+                trophies: Number(p.trophies !== undefined ? p.trophies : (p.trophees !== undefined ? p.trophees : 0)),
+                wins: Number(p.wins !== undefined ? p.wins : (p.victories !== undefined ? p.victories : 0)),
+                losses: Number(p.losses !== undefined ? p.losses : (p.defeats !== undefined ? p.defeats : 0)),
+                avatar: Number(p.avatar !== undefined ? p.avatar : 1),
+                flag: getFlagEmoji(p.flag),
+                inventory: p.inventory || {},
+                equippedPower: p.equippedPower || p.equipped_power || null
+            };
+        }
 
         function getRankName(points) {
             if (points >= 1300) return currentLang === 'fr' ? 'Calculateur ⚡' : 'Calculator ⚡';
@@ -1165,7 +1177,7 @@
                 myProfile.username = localStorage.getItem('cb_username');
                 myProfile.region = localStorage.getItem('cb_region');
                 myProfile.avatar = parseInt(localStorage.getItem('cb_avatar')) || 1;
-                myProfile.flag = localStorage.getItem('cb_flag') || "🇫🇷";
+                myProfile.flag = getFlagEmoji(localStorage.getItem('cb_flag') || "🇫🇷");
                 updateEconomyUI();
                 document.getElementById('modal-username').style.display = 'none';
                 registerIfPossible();
@@ -1186,7 +1198,7 @@
             myProfile.username = nameInput; 
             myProfile.region = regionInput;
             myProfile.avatar = avatarVal;
-            myProfile.flag = flagVal;
+            myProfile.flag = getFlagEmoji(flagVal);
 
             saveLocalPreferences();
             updateEconomyUI();
@@ -1216,21 +1228,21 @@
             }
         }
 
-        // MISE À JOUR STRICTE DEPUIS SUPABASE (VIA LE SERVEUR)
-        socket.on('player_registered', (player) => {
-            if (player) {
+        // Réception stricte des données venant de Supabase via le serveur
+        socket.on('player_registered', (rawData) => {
+            if (rawData) {
+                const player = parsePlayer(rawData);
                 myProfile.username = player.username;
                 myProfile.region = player.region;
-                if (player.avatar) myProfile.avatar = player.avatar;
-                if (player.flag) myProfile.flag = player.flag;
-                
-                // Récupération stricte depuis Supabase
-                myProfile.points = player.points || 0;
-                myProfile.coins = player.coins || 0;
-                myProfile.trophies = player.trophies || 0;
-                
-                myProfile.inventory = player.inventory || {};
-                myProfile.equippedPower = player.equippedPower || null;
+                myProfile.avatar = player.avatar;
+                myProfile.flag = player.flag;
+                myProfile.points = player.points;
+                myProfile.coins = player.coins;
+                myProfile.trophies = player.trophies;
+                myProfile.wins = player.wins;
+                myProfile.losses = player.losses;
+                myProfile.inventory = player.inventory;
+                myProfile.equippedPower = player.equippedPower;
                 
                 updateEconomyUI();
                 if (document.getElementById('modal-shop').style.display === 'flex') {
@@ -1254,7 +1266,7 @@
             if (events.expressoMatch) activeList.push("⚡ <b>Expresso Match</b> (Parties rapides en 20s)");
             if (events.chaosMode) activeList.push("🌪️ <b>Chaos Mode</b> (Modificateurs aléatoires)");
             if (events.jackpotEclair) activeList.push("🎁 <b>Jackpot Éclair</b> (Coffres mystères)");
-            if (events.saboteurMode) activeList.push("🕵️‍♂️ <b>Saboteur vs Sprinteur</b> (Mode BO3 asymétrique)");
+            if (events.saboteurMode) activeList.push("🕵️‍♂️ <b>Mode Exclusif : Saboteur vs Sprinteur</b> (Mode BO3 asymétrique)");
 
             if (activeList.length > 0) {
                 banner.innerHTML = `⚡ <b>ADMIN ABUSE EN COURS :</b><br>` + activeList.join("<br>");
@@ -1807,10 +1819,13 @@
         function updateRoomPlayers(players) {
             const playersListEl = document.getElementById('room-players-list');
             if (!players || players.length === 0) { playersListEl.innerText = i18n[currentLang].waiting_opponent; return; }
-            playersListEl.innerHTML = players.map(p => `${getAvatarBadgeHTML(p.flag, p.avatar)} ${p.username}`).join(' <span style="color:#aaa; margin:0 4px;">vs</span> ');
+            playersListEl.innerHTML = players.map(rawData => {
+                const p = parsePlayer(rawData);
+                return `${getAvatarBadgeHTML(p.flag, p.avatar)} ${p.username}`;
+            }).join(' <span style="color:#aaa; margin:0 4px;">vs</span> ');
             if (players && socket.id) {
                 const opp = players.find(p => p.id !== socket.id && p.socketId !== socket.id);
-                if (opp) cachedOpponent = opp;
+                if (opp) cachedOpponent = parsePlayer(opp);
             }
         }
 
@@ -1984,6 +1999,7 @@
             socket.emit('get_leaderboard', type);
         }
 
+        // Affichage du classement avec parsing sécurisé de chaque joueur de Supabase
         socket.on('leaderboard_data', (res) => {
             const container = document.getElementById('lb-list');
             container.innerHTML = '';
@@ -1993,33 +2009,28 @@
             }
             
             const category = res.type ? res.type.split('_')[0] : 'points';
+            const parsedList = res.data.map(p => parsePlayer(p));
 
             if (category === 'combined') {
-                res.data.sort((a, b) => {
-                    const diffTrophies = (b.trophies || 0) - (a.trophies || 0);
+                parsedList.sort((a, b) => {
+                    const diffTrophies = b.trophies - a.trophies;
                     if (diffTrophies !== 0) return diffTrophies;
-                    return (b.points || 0) - (a.points || 0);
+                    return b.points - a.points;
                 });
             }
 
-            res.data.forEach((p, index) => {
+            parsedList.forEach((p, index) => {
                 const row = document.createElement('div');
                 row.className = 'lb-row';
                 const badgeHtml = getAvatarBadgeHTML(p.flag, p.avatar);
                 
-                const trophies = p.trophies || 0;
-                const wins = p.wins || 0;
-                const losses = p.losses || 0;
-                const points = p.points || 0;
-                const coins = p.coins || 0;
-
-                let rightBadge = `<span class="lb-pts" style="color:#00ff88; font-size:14px;">${points} pts</span>`;
+                let rightBadge = `<span class="lb-pts" style="color:#00ff88; font-size:14px;">${p.points} pts</span>`;
                 if (category === 'coins') {
-                    rightBadge = `<span class="lb-pts" style="color:#f8b500; font-size:14px;">${coins} 🪙</span>`;
+                    rightBadge = `<span class="lb-pts" style="color:#f8b500; font-size:14px;">${p.coins} 🪙</span>`;
                 } else if (category === 'trophies') {
-                    rightBadge = `<span class="lb-pts" style="color:#fceabb; font-size:14px;">${trophies} 🏆</span>`;
+                    rightBadge = `<span class="lb-pts" style="color:#fceabb; font-size:14px;">${p.trophies} 🏆</span>`;
                 } else if (category === 'combined') {
-                    rightBadge = `<span class="lb-pts" style="color:#00d2ff; font-size:13px;">🏆${trophies} | ${points}pts</span>`;
+                    rightBadge = `<span class="lb-pts" style="color:#00d2ff; font-size:13px;">🏆${p.trophies} | ${p.points}pts</span>`;
                 }
 
                 let rankDisplay = `#${index + 1}`;
@@ -2035,9 +2046,9 @@
                             ${badgeHtml} <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px;">${p.username}</span>
                         </div>
                         <div class="lb-sub-details">
-                            <span>🏆 ${trophies}</span>
-                            <span>🪙 ${coins}</span>
-                            <span>⚔️ V:${wins} / D:${losses}</span>
+                            <span>🏆 ${p.trophies}</span>
+                            <span>🪙 ${p.coins}</span>
+                            <span>⚔️ V:${p.wins} / D:${p.losses}</span>
                         </div>
                     </div>
                     ${rightBadge}
@@ -2048,29 +2059,26 @@
 
         function extractOpponentInfo(data) {
             if (!data) return cachedOpponent;
-            if (data.opponent) return data.opponent;
-            if (data.player2) return data.player2;
-            if (data.opp) return data.opp;
-            if (data.players) {
+            let rawOpp = null;
+            if (data.opponent) rawOpp = data.opponent;
+            else if (data.player2) rawOpp = data.player2;
+            else if (data.opp) rawOpp = data.opp;
+            else if (data.players) {
                 if (Array.isArray(data.players)) {
-                    const opp = data.players.find(p => p.id !== socket.id && p.socketId !== socket.id);
-                    if (opp) return opp;
+                    rawOpp = data.players.find(p => p.id !== socket.id && p.socketId !== socket.id);
                 } else if (typeof data.players === 'object') {
                     const oppId = Object.keys(data.players).find(id => id !== socket.id);
-                    if (oppId) return data.players[oppId];
+                    if (oppId) rawOpp = data.players[oppId];
                 }
             }
-            return cachedOpponent;
+            return rawOpp ? parsePlayer(rawOpp) : cachedOpponent;
         }
 
         function updateOpponentDisplay(opp) {
             if (!opp) return;
-            cachedOpponent = opp;
-            const name = opp.username || opp.name || opp.pseudo || "Adversaire";
-            const flag = opp.flag || "🇫🇷";
-            const avatar = (opp.avatar !== undefined && opp.avatar !== null) ? opp.avatar : 1;
-            document.getElementById('opp-profile-name').innerText = name;
-            document.getElementById('opp-profile-badge').innerHTML = getAvatarBadgeHTML(flag, avatar);
+            cachedOpponent = parsePlayer(opp);
+            document.getElementById('opp-profile-name').innerText = cachedOpponent.username;
+            document.getElementById('opp-profile-badge').innerHTML = getAvatarBadgeHTML(cachedOpponent.flag, cachedOpponent.avatar);
         }
 
         socket.on('start_countdown', (data) => {
