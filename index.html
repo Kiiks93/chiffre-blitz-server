@@ -1092,6 +1092,7 @@
         let adCallbackFunction = null;
         let selectedRankedItems = [];
         let latestGlobalEvents = {};
+        let latest1v1StartData = null; // Stockage des données initiales du match
 
         function getFlagEmoji(flag) {
             if (!flag) return '🇫🇷';
@@ -2081,6 +2082,7 @@
 
         socket.on('start_countdown', (data) => {
             if (radarInterval) clearInterval(radarInterval);
+            latest1v1StartData = data; // Stockage pour initialisation après le compte à rebours
             let oppData = extractOpponentInfo(data);
             if (oppData) updateOpponentDisplay(oppData);
 
@@ -2101,23 +2103,19 @@
                     document.getElementById('screen-game').style.display = 'block';
                     document.getElementById('hud-1v1').style.display = 'grid';
                     document.getElementById('hud-solo').style.display = 'none';
+
+                    // INITIALISATION DE LA GRILLE ET DE LA CIBLE EN 1V1
+                    if (latest1v1StartData) {
+                        document.getElementById('game-target-giant').innerText = latest1v1StartData.myTarget || 1;
+                        renderGrid(latest1v1StartData.myPool, handle1v1TileClick);
+                    }
+
                     preparePowerHUD();
-                    current1v1Time = 30;
+                    current1v1Time = latest1v1StartData ? latest1v1StartData.timeLeft : 30;
                     isTimeFrozen = false;
                     SoundEngine.startMusic('1v1');
                 }
             }, 1000);
-        });
-
-        socket.on('game_started', (data) => {
-            current1v1Time = data.timeLeft;
-            document.getElementById('game-timer').innerText = Math.max(0, current1v1Time);
-            document.getElementById('game-target-giant').innerText = data.myTarget || 1;
-            
-            let oppData = extractOpponentInfo(data);
-            if (oppData) updateOpponentDisplay(oppData);
-            
-            renderGrid(data.myPool, handle1v1TileClick);
         });
 
         socket.on('timer_update', (time) => {
@@ -2182,10 +2180,6 @@
 
             modal.style.display = 'flex';
             registerIfPossible();
-        });
-
-        socket.on('solo_reward_result', (data) => {
-            // Utilisé pour synchroniser si besoin
         });
 
         function handle1v1TileClick(num) {
