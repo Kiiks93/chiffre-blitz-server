@@ -18,7 +18,7 @@ const matchmakingQueue = [];
 const rankedQueue = [];
 
 // --- CONFIGURATION ADMIN & ÉVÉNEMENTS ---
-const ADMIN_PASSWORD = "SECRET_ADMIN_PASSWORD_123"; // 🔑 Modifie ton mot de passe admin ici
+const ADMIN_PASSWORD = "*JE_SUIS_ADMIN1301*"; // 🔑 Modifie ton mot de passe admin ici
 
 let globalEvents = {
     coinRush: false,       // 1. Pièces x2
