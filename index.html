@@ -317,32 +317,32 @@
         <button class="btn-secondary" onclick="showTitleScreen()" style="margin-top:4px;" data-i18n="menu_info">ℹ️ Informations & Règles</button>
     </div>
 
-    <!-- MODAL DE PRÉPARATION DU MODE GRILLE MAUDITE (12 cases : 3x4) -->
+    <!-- MODAL DE PRÉPARATION DU MODE GRILLE MAUDITE (12 cases : 3x4) - Max 2 sur 3 -->
     <div id="modal-trap-setup" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:left;">
             <h2 style="color:#ff007f; margin:0 0 4px 0; font-size:18px; text-align:center;">💣 GRILLE MAUDITE : PRÉPARATION</h2>
-            <p style="color:#aaa; font-size:11px; margin-bottom:6px; text-align:center;">1. Choisis tes malus exclusifs :</p>
+            <p style="color:#aaa; font-size:11px; margin-bottom:6px; text-align:center;">1. Choisis tes malus exclusifs (<b>Maximum 2 sur 3</b>) :</p>
             
             <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;">
                 <label style="background:rgba(255,255,255,0.05); padding:6px 8px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:8px; cursor:pointer; font-size:11px;">
-                    <input type="checkbox" name="trap-malus" value="inversion" style="accent-color:#ff007f;">
+                    <input type="checkbox" name="trap-malus" value="inversion" style="accent-color:#ff007f;" onchange="validateTrapMalusSelection(this)">
                     <div>
                         <strong style="color:#ff007f;">🌀 Inversion Spatiale</strong>
                         <div style="color:#aaa; font-size:10px;">Mélange deux chiffres sur la grille adverse.</div>
                     </div>
                 </label>
                 <label style="background:rgba(255,255,255,0.05); padding:6px 8px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:8px; cursor:pointer; font-size:11px;">
-                    <input type="checkbox" name="trap-malus" value="gel" style="accent-color:#ff007f;">
+                    <input type="checkbox" name="trap-malus" value="gel" style="accent-color:#ff007f;" onchange="validateTrapMalusSelection(this)">
                     <div>
                         <strong style="color:#ff8a00;">🛑 Gel Temporel</strong>
                         <div style="color:#aaa; font-size:10px;">Bloque la tuile piégée pendant 3 secondes.</div>
                     </div>
                 </label>
                 <label style="background:rgba(255,255,255,0.05); padding:6px 8px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:8px; cursor:pointer; font-size:11px;">
-                    <input type="checkbox" name="trap-malus" value="penalite" style="accent-color:#ff007f;">
+                    <input type="checkbox" name="trap-malus" value="brouillage" style="accent-color:#ff007f;" onchange="validateTrapMalusSelection(this)">
                     <div>
-                        <strong style="color:#ff4b2b;">💀 Pénalité Sèche</strong>
-                        <div style="color:#aaa; font-size:10px;">Retire 25 points au score de l'adversaire.</div>
+                        <strong style="color:#ff4b2b;">🌫️ Brouillage de Cible</strong>
+                        <div style="color:#aaa; font-size:10px;">Masque temporairement la cible à trouver pendant 3s.</div>
                     </div>
                 </label>
             </div>
@@ -1157,6 +1157,7 @@
         let selectedTrappedIndices = [];
         let latestGlobalEvents = {};
         let latest1v1StartData = null;
+        let pendingGameOverData = null;
 
         function getFlagEmoji(flag) {
             if (!flag) return '🇫🇷';
@@ -1635,6 +1636,14 @@
             document.getElementById('modal-trap-setup').style.display = 'flex';
         }
 
+        function validateTrapMalusSelection(changedBox) {
+            const checkedBoxes = document.querySelectorAll('input[name="trap-malus"]:checked');
+            if (checkedBoxes.length > 2) {
+                changedBox.checked = false;
+                alert(currentLang === 'fr' ? 'Tu peux choisir au maximum 2 malus sur 3 !' : 'You can choose a maximum of 2 malus out of 3!');
+            }
+        }
+
         function renderTrapSetupGrid() {
             const grid = document.getElementById('trap-setup-grid');
             if (!grid) return;
@@ -2069,6 +2078,8 @@
         socket.on('receive_malus', (data) => {
             const grid = document.getElementById('grid');
             SoundEngine.playError();
+            showNotificationToast(`💥 PIÈGE ADVERSAIRE DÉCLENCHÉ ! Malus reçu !`, 'announcement');
+            triggerTrapVisualEffect();
             if (data.type === 'quake') { grid.classList.add('effect-quake'); setTimeout(() => grid.classList.remove('effect-quake'), 2000); }
             else if (data.type === 'micro') { grid.classList.add('effect-micro'); setTimeout(() => grid.classList.remove('effect-micro'), 2000); }
             else if (data.type === 'eclipse') { grid.classList.add('effect-eclipse'); setTimeout(() => grid.classList.remove('effect-eclipse'), 1500); }
@@ -2079,6 +2090,17 @@
                 setTimeout(() => { grid.classList.remove('effect-eclipse'); }, 5000);
             }
         });
+
+        function triggerTrapVisualEffect() {
+            const grid = document.getElementById('grid');
+            if (!grid) return;
+            grid.style.border = '3px solid #ff007f';
+            grid.style.boxShadow = '0 0 25px #ff007f';
+            setTimeout(() => {
+                grid.style.border = '';
+                grid.style.boxShadow = '';
+            }, 1200);
+        }
 
         let currentLbCategory = 'points';
         let currentLbScope = 'regional';
@@ -2251,8 +2273,13 @@
         socket.on('my_grid_updated', (data) => {
             document.getElementById('game-target-giant').innerText = data.target;
             renderGrid(data.newPool, handle1v1TileClick);
-            if (data.success) SoundEngine.playClick();
-            else SoundEngine.playError();
+            if (data.success) {
+                SoundEngine.playClick();
+            } else {
+                SoundEngine.playError();
+                showNotificationToast(`💥 CASE PIÉGÉE DÉCLENCHÉE !`, 'announcement');
+                triggerTrapVisualEffect();
+            }
         });
 
         socket.on('opponent_progress', (data) => {
@@ -2262,6 +2289,7 @@
         });
 
         socket.on('trigger_jackpot_wheel', () => {
+            document.getElementById('recap-modal').style.display = 'none';
             const wheelModal = document.getElementById('modal-jackpot-wheel');
             const spinBtn = document.getElementById('btn-spin-wheel');
             const resultText = document.getElementById('wheel-result-text');
@@ -2306,11 +2334,24 @@
 
                 setTimeout(() => {
                     document.getElementById('modal-jackpot-wheel').style.display = 'none';
+                    if (pendingGameOverData) {
+                        showGameOverRecap(pendingGameOverData);
+                        pendingGameOverData = null;
+                    }
                 }, 2500);
             }, 3600);
         });
 
         socket.on('game_over_1v1', (data) => {
+            const wheelModal = document.getElementById('modal-jackpot-wheel');
+            if (wheelModal && wheelModal.style.display === 'flex') {
+                pendingGameOverData = data;
+                return;
+            }
+            showGameOverRecap(data);
+        });
+
+        function showGameOverRecap(data) {
             hideAllScreens();
             window.history.replaceState({}, '', window.location.pathname);
             const modal = document.getElementById('recap-modal');
@@ -2350,7 +2391,7 @@
 
             modal.style.display = 'flex';
             registerIfPossible();
-        });
+        }
 
         socket.on('solo_reward_result', (data) => {
             currentCoinsGained = data.earnedCoins;
