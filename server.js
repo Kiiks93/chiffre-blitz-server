@@ -22,6 +22,7 @@ const activePlayers = {};
 const rooms = {};   
 const matchmakingQueue = [];
 const rankedQueue = [];
+const saboteurQueue = [];
 const activeMatches = {}; 
 
 // --- CONFIGURATION ADMIN & ÉVÉNEMENTS ---
@@ -337,6 +338,16 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('find_saboteur_match', () => {
+        if (!globalEvents.saboteurMode) return;
+        saboteurQueue.push(socket.id);
+        if (saboteurQueue.length >= 2) {
+            const p1 = saboteurQueue.shift();
+            const p2 = saboteurQueue.shift();
+            startSaboteurMatchBetween(p1, p2);
+        }
+    });
+
     socket.on('player_click_1v1', (num) => {
         const match = activeMatches[socket.id];
         if (!match || match.ended) return;
@@ -474,6 +485,8 @@ io.on('connection', (socket) => {
         if (qIdx !== -1) matchmakingQueue.splice(qIdx, 1);
         const rIdx = rankedQueue.indexOf(socket.id);
         if (rIdx !== -1) rankedQueue.splice(rIdx, 1);
+        const sIdx = saboteurQueue.indexOf(socket.id);
+        if (sIdx !== -1) saboteurQueue.splice(sIdx, 1);
 
         delete activeMatches[socket.id];
 
@@ -499,9 +512,6 @@ function startMatchBetween(id1, id2, isRanked = false) {
     const p1 = activePlayers[id1] || { socketId: id1, username: "Joueur 1", avatar: 1, flag: "🇫🇷", points: 0 };
     const p2 = activePlayers[id2] || { socketId: id2, username: "Joueur 2", avatar: 2, flag: "🇫🇷", points: 0 };
 
-    const isSaboteur = globalEvents.saboteurMode;
-    const roles = isSaboteur ? { [id1]: 'sprinter', [id2]: 'saboteur' } : {};
-
     const match = {
         id1,
         id2,
@@ -511,8 +521,7 @@ function startMatchBetween(id1, id2, isRanked = false) {
             [id2]: { target: 1, score: 0, pool: generatePool(1) }
         },
         isRanked,
-        isSaboteur,
-        roles,
+        isSaboteur: false,
         ended: false
     };
 
@@ -524,7 +533,7 @@ function startMatchBetween(id1, id2, isRanked = false) {
         timeLeft: match.timeLeft, 
         myTarget: 1, 
         myPool: match.players[id1].pool,
-        role: isSaboteur ? 'sprinter' : null
+        role: null
     });
     
     io.to(id2).emit('start_countdown', { 
@@ -532,7 +541,7 @@ function startMatchBetween(id1, id2, isRanked = false) {
         timeLeft: match.timeLeft, 
         myTarget: 1, 
         myPool: match.players[id2].pool,
-        role: isSaboteur ? 'saboteur' : null
+        role: null
     });
 
     let chaosTimer = 0;
@@ -542,7 +551,8 @@ function startMatchBetween(id1, id2, isRanked = false) {
         io.to(id1).emit('timer_update', match.timeLeft);
         io.to(id2).emit('timer_update', match.timeLeft);
 
-        if (globalEvents.chaosMode) {
+        // Chaos mode actif uniquement en mode non classé
+        if (globalEvents.chaosMode && !isRanked) {
             chaosTimer++;
             if (chaosTimer >= 8) {
                 chaosTimer = 0;
@@ -558,6 +568,58 @@ function startMatchBetween(id1, id2, isRanked = false) {
             if (!match.ended) {
                 match.ended = true;
                 endMatch(id1, id2, match, isRanked);
+            }
+        }
+    }, 1000);
+}
+
+function startSaboteurMatchBetween(id1, id2) {
+    const p1 = activePlayers[id1] || { socketId: id1, username: "Joueur 1", avatar: 1, flag: "🇫🇷", points: 0 };
+    const p2 = activePlayers[id2] || { socketId: id2, username: "Joueur 2", avatar: 2, flag: "🇫🇷", points: 0 };
+
+    const match = {
+        id1,
+        id2,
+        timeLeft: 30,
+        players: {
+            [id1]: { target: 1, score: 0, pool: generatePool(1) },
+            [id2]: { target: 1, score: 0, pool: generatePool(1) }
+        },
+        isRanked: false,
+        isSaboteur: true,
+        roles: { [id1]: 'sprinter', [id2]: 'saboteur' },
+        ended: false
+    };
+
+    activeMatches[id1] = match;
+    activeMatches[id2] = match;
+
+    io.to(id1).emit('start_countdown', { 
+        opponent: p2, 
+        timeLeft: match.timeLeft, 
+        myTarget: 1, 
+        myPool: match.players[id1].pool,
+        role: 'sprinter'
+    });
+    
+    io.to(id2).emit('start_countdown', { 
+        opponent: p1, 
+        timeLeft: match.timeLeft, 
+        myTarget: 1, 
+        myPool: match.players[id2].pool,
+        role: 'saboteur'
+    });
+
+    const gameInterval = setInterval(() => {
+        match.timeLeft--;
+        io.to(id1).emit('timer_update', match.timeLeft);
+        io.to(id2).emit('timer_update', match.timeLeft);
+
+        if (match.timeLeft <= 0 || match.ended) {
+            clearInterval(gameInterval);
+            if (!match.ended) {
+                match.ended = true;
+                endMatch(id1, id2, match, false);
             }
         }
     }, 1000);
