@@ -13,7 +13,8 @@ const io = new Server(server, {
 
 app.use(express.static(__dirname));
 
-let players = {};
+let players = {}; // Stocke les profils par leur pseudo (username) pour la persistance
+let socketToUser = {}; // Associe un socket.id à un pseudo actif
 let waitingPlayer = null;
 let rooms = {};
 let pendingRoomDeletions = {};
@@ -44,10 +45,27 @@ io.on('connection', (socket) => {
     console.log(`Un joueur s'est connecté : ${socket.id}`);
 
     socket.on('register_player', (profile) => {
-        if (!players[socket.id]) {
-            players[socket.id] = {
-                id: socket.id,
-                username: profile.username || 'Joueur',
+        const username = profile && profile.username ? profile.username.trim() : '';
+        if (!username) return;
+
+        // Vérifie si le pseudo est déjà utilisé par un autre socket actif en jeu
+        let isAlreadyActive = false;
+        for (let sId in socketToUser) {
+            if (socketToUser[sId].toLowerCase() === username.toLowerCase() && sId !== socket.id) {
+                isAlreadyActive = true;
+                break;
+            }
+        }
+
+        if (isAlreadyActive) {
+            socket.emit('room_error', "Ce pseudo est déjà utilisé en jeu par un autre joueur !");
+            return;
+        }
+
+        if (!players[username]) {
+            // Nouveau joueur : création du profil avec les valeurs de départ
+            players[username] = {
+                username: username,
                 region: profile.region || 'Hauts-de-France',
                 points: 0,
                 coins: 10000,
@@ -56,14 +74,17 @@ io.on('connection', (socket) => {
                 equippedPower: null
             };
         } else {
-            players[socket.id].username = profile.username || players[socket.id].username;
-            players[socket.id].region = profile.region || players[socket.id].region;
+            // Joueur existant (reconnexion / rafraîchissement) : on restaure sa progression et met à jour sa région
+            players[username].region = profile.region || players[username].region;
         }
-        socket.emit('player_registered', players[socket.id]);
+
+        socketToUser[socket.id] = username;
+        socket.emit('player_registered', players[username]);
     });
 
     socket.on('buy_power', (powerId) => {
-        const player = players[socket.id];
+        const username = socketToUser[socket.id];
+        const player = players[username];
         if (!player) return;
 
         const price = POWERS_PRICES[powerId];
@@ -80,7 +101,8 @@ io.on('connection', (socket) => {
     });
 
     socket.on('equip_power', (powerId) => {
-        const player = players[socket.id];
+        const username = socketToUser[socket.id];
+        const player = players[username];
         if (player) {
             if (powerId === null || (player.inventory[powerId] && player.inventory[powerId] > 0)) {
                 player.equippedPower = (player.equippedPower === powerId) ? null : powerId;
@@ -90,7 +112,8 @@ io.on('connection', (socket) => {
     });
 
     socket.on('use_power', (powerId) => {
-        const player = players[socket.id];
+        const username = socketToUser[socket.id];
+        const player = players[username];
         if (player && player.inventory[powerId] && player.inventory[powerId] > 0) {
             player.inventory[powerId]--;
             if (player.inventory[powerId] <= 0) {
@@ -104,7 +127,8 @@ io.on('connection', (socket) => {
     });
 
     socket.on('claim_solo_reward', (score) => {
-        const player = players[socket.id];
+        const username = socketToUser[socket.id];
+        const player = players[username];
         if (player && typeof score === 'number' && score > 0) {
             const earnedCoins = Math.min(100, Math.floor(score / 3));
             player.coins += earnedCoins;
@@ -116,8 +140,9 @@ io.on('connection', (socket) => {
         let playersArray = Object.values(players);
         playersArray.sort((a, b) => b.points - a.points);
 
-        if (type === 'regional' && players[socket.id]) {
-            const userRegion = players[socket.id].region;
+        const username = socketToUser[socket.id];
+        if (type === 'regional' && username && players[username]) {
+            const userRegion = players[username].region;
             playersArray = playersArray.filter(p => p.region === userRegion);
         }
 
@@ -125,7 +150,8 @@ io.on('connection', (socket) => {
     });
 
     socket.on('win_tournament', () => {
-        const player = players[socket.id];
+        const username = socketToUser[socket.id];
+        const player = players[username];
         if (player) {
             player.points += 50;
             player.coins += 150;
@@ -137,6 +163,7 @@ io.on('connection', (socket) => {
 
     socket.on('create_room', (data) => {
         let roomCode = data?.code && data.code.trim() !== '' ? data.code.trim().toUpperCase() : '';
+        const username = socketToUser[socket.id] || data?.username || 'Hôte';
 
         if (roomCode !== '' && rooms[roomCode]) {
             socket.emit('room_error', "Ce nom de salon est déjà utilisé. Veuillez en choisir un autre.");
@@ -158,7 +185,7 @@ io.on('connection', (socket) => {
             code: roomCode,
             password: data?.password || '',
             host: socket.id,
-            players: [{ id: socket.id, username: data?.username || players[socket.id]?.username || 'Hôte' }],
+            players: [{ id: socket.id, username: username }],
             gameStarted: false,
             ended: false,
             timerInterval: null
@@ -178,7 +205,7 @@ io.on('connection', (socket) => {
                 socket.emit('room_error', "Mot de passe incorrect !");
                 return;
             }
-            const username = players[socket.id]?.username || 'Adversaire';
+            const username = socketToUser[socket.id] || 'Adversaire';
             room.players.push({ id: socket.id, username: username });
             socket.join(roomCode);
 
@@ -231,8 +258,8 @@ io.on('connection', (socket) => {
             rooms[roomName] = {
                 code: roomName,
                 players: [
-                    { id: p1, username: players[p1]?.username || 'Joueur 1' },
-                    { id: p2, username: players[p2]?.username || 'Joueur 2' }
+                    { id: p1, username: socketToUser[p1] || 'Joueur 1' },
+                    { id: p2, username: socketToUser[p2] || 'Joueur 2' }
                 ],
                 gameStarted: true,
                 ended: false,
@@ -288,7 +315,8 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         if (waitingPlayer === socket.id) waitingPlayer = null;
         cleanupPlayerFromRooms(socket.id, false);
-        delete players[socket.id];
+        delete socketToUser[socket.id];
+        // On ne supprime PAS le profil dans players[username] pour conserver la progression et l'inventaire !
     });
 });
 
@@ -366,6 +394,8 @@ function end1v1Game(roomCode, reason) {
     if (pIds.length >= 2) {
         let p1Id = pIds[0];
         let p2Id = pIds[1];
+        let u1 = socketToUser[p1Id];
+        let u2 = socketToUser[p2Id];
         let p1 = room.matchPlayers[p1Id];
         let p2 = room.matchPlayers[p2Id];
 
@@ -381,26 +411,29 @@ function end1v1Game(roomCode, reason) {
 
         if (winnerId) {
             let loserId = (winnerId === p1Id) ? p2Id : p1Id;
-            if (players[winnerId]) {
-                players[winnerId].points += 25;
+            let winningUser = socketToUser[winnerId];
+            let losingUser = socketToUser[loserId];
+
+            if (winningUser && players[winningUser]) {
+                players[winningUser].points += 25;
                 if (winnerId === p1Id) coinsGainedP1 = 30;
                 else coinsGainedP2 = 30;
             }
-            if (players[loserId]) {
-                players[loserId].points = Math.max(0, players[loserId].points - 15);
+            if (losingUser && players[losingUser]) {
+                players[losingUser].points = Math.max(0, players[losingUser].points - 15);
             }
         } else {
-            if (players[p1Id]) players[p1Id].points += 5;
-            if (players[p2Id]) players[p2Id].points += 5;
+            if (u1 && players[u1]) players[u1].points += 5;
+            if (u2 && players[u2]) players[u2].points += 5;
         }
 
-        if (players[p1Id]) {
-            players[p1Id].coins += coinsGainedP1;
-            io.to(p1Id).emit('player_registered', players[p1Id]);
+        if (u1 && players[u1]) {
+            players[u1].coins += coinsGainedP1;
+            io.to(p1Id).emit('player_registered', players[u1]);
         }
-        if (players[p2Id]) {
-            players[p2Id].coins += coinsGainedP2;
-            io.to(p2Id).emit('player_registered', players[p2Id]);
+        if (u2 && players[u2]) {
+            players[u2].coins += coinsGainedP2;
+            io.to(p2Id).emit('player_registered', players[u2]);
         }
 
         let formattedPlayers = {
