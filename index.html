@@ -53,6 +53,21 @@
             text-shadow: 0 1px 3px rgba(0,0,0,0.9);
         }
 
+        /* TOAST DE NOTIFICATION ADMIN NON BLOQUANT */
+        .admin-toast {
+            position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(45deg, #ff416c, #ff4b2b); color: #fff;
+            padding: 10px 16px; border-radius: 12px; font-weight: bold; font-size: 12px;
+            box-shadow: 0 4px 20px rgba(255, 65, 108, 0.5); z-index: 10000;
+            display: none; align-items: center; gap: 10px; max-width: 90%; text-align: left;
+            border: 1px solid rgba(255,255,255,0.3);
+            animation: slideDown 0.3s ease-out;
+        }
+        @keyframes slideDown {
+            from { transform: translate(-50%, -20px); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+
         /* BARRE DE STATS AGRANDIE POUR PLUS DE LISIBILITÉ */
         .user-stats {
             display: flex; justify-content: center; gap: 12px; max-width: 400px; margin: 0 auto 8px auto;
@@ -1411,7 +1426,7 @@
                             <!-- SECTION BROADCAST -->
                             <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
                                 <strong style="color:#38ef7d; display:block; margin-bottom:8px;">📢 ANNONCE GLOBALE (BROADCAST)</strong>
-                                <p style="color:#aaa; font-size:10px; margin:0 0 6px 0;">Envoie une pop-up d'alerte sur l'écran de tous les joueurs connectés.</p>
+                                <p style="color:#aaa; font-size:10px; margin:0 0 6px 0;">Envoie une notification non bloquante chez tous les joueurs connectés.</p>
                                 <input type="text" id="admin-broadcast-msg" placeholder="Message à afficher chez tous les joueurs..." style="width:100%; padding:6px; border-radius:6px; background:#0f051d; color:#fff; border:1px solid #38ef7d; margin-bottom:6px; outline:none;">
                                 <button class="power-btn buy" onclick="sendAdminBroadcast()" style="width:100%; padding:6px;">Envoyer l'annonce 🚀</button>
                             </div>
@@ -1485,9 +1500,27 @@
             alert("Cadeau envoyé avec succès !");
         }
 
+        // Réception des annonces globales sous forme de notification non bloquante (Toast)
         socket.on('global_announcement', (message) => {
-            alert(`📢 ANNONCE ADMIN :\n\n${message}`);
+            showAdminToast(message);
         });
+
+        function showAdminToast(message) {
+            let toast = document.getElementById('admin-broadcast-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'admin-broadcast-toast';
+                toast.className = 'admin-toast';
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = `<span>📢 <b>ADMIN :</b> ${message}</span> <button onclick="this.parentElement.style.display='none'" style="background:none;border:none;color:#fff;font-weight:bold;cursor:pointer;font-size:14px;margin-left:auto;">✕</button>`;
+            toast.style.display = 'flex';
+            
+            if (toast.hideTimeout) clearTimeout(toast.hideTimeout);
+            toast.hideTimeout = setTimeout(() => {
+                toast.style.display = 'none';
+            }, 8000);
+        }
 
         function hideAllScreens() {
             ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-avalanche-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room', 'modal-launch-ad', 'simulated-ad-overlay', 'modal-ranked-loadout'].forEach(id => {
