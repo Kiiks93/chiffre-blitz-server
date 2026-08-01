@@ -740,8 +740,10 @@
                 let doubled = currentGained * 2;
                 coinsDisplay.innerText = `+${doubled} (Doublé 🎁)`;
                 
-                myProfile.coins += currentGained;
-                updateEconomyUI();
+                // Envoi au serveur pour sauvegarde permanente !
+                if (socket.connected) {
+                    socket.emit('claim_ad_reward', currentGained);
+                }
                 
                 alert(currentLang === 'fr' ? "🎁 Publicité visionnée ! Vos pièces ont été doublées !" : "🎁 Ad watched! Your coins have been doubled!");
                 SoundEngine.startMusic('menu');
@@ -915,7 +917,8 @@
             document.getElementById('mute-btn').innerText = muted ? '🔇' : '🔊';
         }
 
-        const SERVER_URL = "https://chiffre-blitz-server.onrender.com";
+        // Remplace cette URL par celle de ton propre serveur Render !
+        const SERVER_URL = "https://chiffre-blitz-server.onrender.com"; 
         const socket = io(SERVER_URL, {
             reconnection: true,
             reconnectionAttempts: 10,
@@ -1024,14 +1027,7 @@
 
         socket.on('player_registered', (player) => {
             if (player) {
-                myProfile.username = player.username;
-                myProfile.region = player.region;
-                myProfile.points = player.points;
-                myProfile.coins = player.coins;
-                myProfile.trophies = player.trophies;
-                myProfile.inventory = player.inventory || {};
-                myProfile.equippedPower = player.equippedPower;
-                
+                myProfile = player; // Met à jour tout le profil depuis la vraie BDD du serveur
                 document.getElementById('user-name-display').innerText = player.username;
                 updateEconomyUI();
                 if (document.getElementById('modal-shop').style.display === 'flex') {
