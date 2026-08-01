@@ -1,6 +1,7 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const server = http.createServer(app);
@@ -11,22 +12,27 @@ const io = new Server(server, {
     }
 });
 
-// --- STOCKAGE EN MÉMOIRE ---
-const players = {}; // socket.id ou username -> données joueur
+// --- CONFIGURATION SUPABASE ---
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jjhoblvdpbstxwuelmoa.supabase.co'; // Remplace par ton URL Supabase si non hébergé en env
+const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqaG9ibHZkcGJzdHh3dWVsbW9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzNDMwNTksImV4cCI6MjEwMDkxOTA1OX0.BIIuE0e3WbpJ6asxPx7FpH01FESDHfqRUMBW54jfh4E'; // Remplace par ta clé Anon/Service Key
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// --- STOCKAGE EN MÉMOIRE (Sessions actives) ---
+const activePlayers = {}; // socket.id -> données de session du joueur
 const rooms = {};   // code du salon -> { code, password, players: [], hostId }
 const matchmakingQueue = [];
 const rankedQueue = [];
 
 // --- CONFIGURATION ADMIN & ÉVÉNEMENTS ---
-const ADMIN_PASSWORD = "*JE_SUIS_ADMIN1301*"; // 🔑 Modifie ton mot de passe admin ici
+const ADMIN_PASSWORD = "*JE_SUIS_ADMIN1301*";
 
 let globalEvents = {
-    coinRush: false,       // 1. Pièces x2
-    rankShield: false,     // 2. Zéro perte de points en classé
-    expressoMatch: false,  // 3. Matchs plus rapides (20s)
-    chaosMode: false,      // 4. Modificateurs aléatoires
-    jackpotEclair: false,  // 5. Coffres mystères de fin de match
-    saboteurMode: false,   // 6. Mode Exclusif Asymétrique BO3
+    coinRush: false,
+    rankShield: false,
+    expressoMatch: false,
+    chaosMode: false,
+    jackpotEclair: false,
+    saboteurMode: false,
     _isScheduledActive: false
 };
 
@@ -54,34 +60,115 @@ app.get('/', (req, res) => {
     res.send('Chiffre Blitz Server is running ⚡');
 });
 
+// Fonction utilitaire pour sauvegarder l'état d'un joueur dans Supabase
+async function savePlayerToSupabase(socketId) {
+    const p = activePlayers[socketId];
+    if (!p) return;
+    
+    await supabase
+        .from('players')
+        .update({
+            points: p.points,
+            coins: p.coins,
+            trophies: p.trophies,
+            wins: p.wins,
+            losses: p.losses,
+            inventory: p.inventory,
+            equipped_power: p.equippedPower,
+            region: p.region,
+            avatar: p.avatar,
+            flag: p.flag
+        })
+        .eq('username', p.username);
+}
+
 io.on('connection', (socket) => {
     console.log(`🔌 Un utilisateur s'est connecté : ${socket.id}`);
 
-    // Envoyer l'état actuel des événements au joueur qui se connecte
     socket.emit('events_state_update', globalEvents);
 
-    // --- ENREGISTREMENT / PROFIL ---
-    socket.on('register_player', (data) => {
-        players[socket.id] = {
-            id: socket.id,
-            username: data.username || "Joueur",
-            region: data.region || "Hauts-de-France",
-            avatar: data.avatar || 1,
-            flag: data.flag || "🇫🇷",
-            points: players[socket.id]?.points || 300, // Points de départ par défaut
-            coins: players[socket.id]?.coins || 100,   // Pièces de départ par défaut
-            trophies: players[socket.id]?.trophies || 0,
-            wins: players[socket.id]?.wins || 0,
-            losses: players[socket.id]?.losses || 0,
-            inventory: players[socket.id]?.inventory || { spotlight: 2, freeze: 1 },
-            equippedPower: players[socket.id]?.equippedPower || 'spotlight'
-        };
-        socket.emit('player_registered', players[socket.id]);
+    // --- ENREGISTREMENT / PROFIL (SYNCHRONISATION SUPABASE) ---
+    socket.on('register_player', async (data) => {
+        const username = data.username || "Joueur";
+        try {
+            // Chercher le joueur dans la table Supabase
+            let { data: dbPlayer, error } = await supabase
+                .from('players')
+                .select('*')
+                .eq('username', username)
+                .single();
+
+            let playerData;
+
+            if (error || !dbPlayer) {
+                // Si le joueur n'existe pas, on l'insère dans Supabase
+                const newRecord = {
+                    username: username,
+                    region: data.region || "Hauts-de-France",
+                    country: data.flag ? data.flag.replace(/['"]/g, '').trim() : "FR",
+                    avatar: data.avatar || 1,
+                    flag: data.flag || "🇫🇷",
+                    points: 0,
+                    coins: 100,
+                    trophies: 0,
+                    wins: 0,
+                    losses: 0,
+                    inventory: {},
+                    equipped_power: null
+                };
+
+                const { data: inserted, error: insertErr } = await supabase
+                    .from('players')
+                    .insert([newRecord])
+                    .select()
+                    .single();
+
+                if (!insertErr && inserted) {
+                    playerData = inserted;
+                } else {
+                    playerData = { ...newRecord, id: socket.id };
+                }
+            } else {
+                // S'il existe, on met à jour ses infos de base (région, avatar, flag) si modifiées
+                const { data: updated } = await supabase
+                    .from('players')
+                    .update({
+                        region: data.region || dbPlayer.region,
+                        avatar: data.avatar || dbPlayer.avatar,
+                        flag: data.flag || dbPlayer.flag
+                    })
+                    .eq('username', username)
+                    .select()
+                    .single();
+
+                playerData = updated || dbPlayer;
+            }
+
+            // Stockage en mémoire pour la session active du socket
+            activePlayers[socket.id] = {
+                id: playerData.id || socket.id,
+                username: playerData.username,
+                region: playerData.region,
+                avatar: playerData.avatar,
+                flag: playerData.flag,
+                points: playerData.points || 0,
+                coins: playerData.coins || 0,
+                trophies: playerData.trophies || 0,
+                wins: playerData.wins || 0,
+                losses: playerData.losses || 0,
+                inventory: playerData.inventory || {},
+                equippedPower: playerData.equipped_power || null
+            };
+
+            socket.emit('player_registered', activePlayers[socket.id]);
+        } catch (err) {
+            console.error("Erreur lors de l'enregistrement Supabase :", err);
+        }
     });
 
     // --- BOUTIQUE ---
-    socket.on('buy_power', (powerId) => {
-        const player = players[socket.id];
+    socket.on('buy_power', async (powerId) => {
+        const player = activePlayers[socket.id];
         if (!player) return;
         
         const prices = {
@@ -93,49 +180,58 @@ io.on('connection', (socket) => {
         if (cost && player.coins >= cost) {
             player.coins -= cost;
             player.inventory[powerId] = (player.inventory[powerId] || 0) + 1;
+            
+            await savePlayerToSupabase(socket.id);
             socket.emit('player_registered', player);
         }
     });
 
-    socket.on('equip_power', (powerId) => {
-        const player = players[socket.id];
+    socket.on('equip_power', async (powerId) => {
+        const player = activePlayers[socket.id];
         if (!player) return;
         if ((player.inventory[powerId] || 0) > 0) {
             player.equippedPower = powerId;
+            
+            await savePlayerToSupabase(socket.id);
             socket.emit('player_registered', player);
         }
     });
 
-    // --- CLASSEMENT ---
-    socket.on('get_leaderboard', (type) => {
-        const allPlayers = Object.values(players);
-        let sortedData = [...allPlayers];
+    // --- CLASSEMENT DIRECT DEPUIS SUPABASE ---
+    socket.on('get_leaderboard', async (type) => {
+        try {
+            const [category, scope] = type.split('_'); // ex: points_regional
+            let query = supabase.from('players').select('*');
 
-        const [category, scope] = type.split('_'); // ex: points_regional
+            // Filtrer par région si demandé
+            if (scope === 'regional' && activePlayers[socket.id]) {
+                const myReg = activePlayers[socket.id].region;
+                query = query.eq('region', myReg);
+            }
 
-        // Filtrage par région si demandé
-        if (scope === 'regional' && players[socket.id]) {
-            const myReg = players[socket.id].region;
-            sortedData = sortedData.filter(p => p.region === myReg);
+            // Trier selon la catégorie
+            if (category === 'points') {
+                query = query.order('points', { ascending: false });
+            } else if (category === 'trophies') {
+                query = query.order('trophies', { ascending: false });
+            } else if (category === 'coins') {
+                query = query.order('coins', { ascending: false });
+            } else if (category === 'combined') {
+                // Trophées prioritaires, départagés par les points
+                query = query.order('trophies', { ascending: false }).order('points', { ascending: false });
+            }
+
+            const { data: sortedData, error } = await query.limit(50);
+
+            if (!error && sortedData) {
+                socket.emit('leaderboard_data', { type, data: sortedData });
+            } else {
+                socket.emit('leaderboard_data', { type, data: [] });
+            }
+        } catch (err) {
+            console.error("Erreur récupération classement Supabase :", err);
+            socket.emit('leaderboard_data', { type, data: [] });
         }
-
-        // Tri selon la catégorie
-        if (category === 'points') {
-            sortedData.sort((a, b) => b.points - a.points);
-        } else if (category === 'trophies') {
-            sortedData.sort((a, b) => b.trophies - a.trophies);
-        } else if (category === 'coins') {
-            sortedData.sort((a, b) => b.coins - a.coins);
-        } else if (category === 'combined') {
-            // Trophées prioritaires, départagés par les points
-            sortedData.sort((a, b) => {
-                const diffTrophies = (b.trophies || 0) - (a.trophies || 0);
-                if (diffTrophies !== 0) return diffTrophies;
-                return (b.points || 0) - (a.points || 0);
-            });
-        }
-
-        socket.emit('leaderboard_data', { type, data: sortedData.slice(0, 50) });
     });
 
     // --- SALONS PRIVÉS ---
@@ -158,7 +254,7 @@ io.on('connection', (socket) => {
         rooms[code] = {
             code: code,
             password: data.password || '',
-            players: [players[socket.id] || { id: socket.id, username: data.username, avatar: data.avatar, flag: data.flag }],
+            players: [activePlayers[socket.id] || { id: socket.id, username: data.username, avatar: data.avatar, flag: data.flag }],
             hostId: socket.id
         };
 
@@ -181,14 +277,13 @@ io.on('connection', (socket) => {
             return;
         }
 
-        const currentPlayer = players[socket.id] || { id: socket.id, username: "Joueur", avatar: 1, flag: "🇫🇷" };
+        const currentPlayer = activePlayers[socket.id] || { id: socket.id, username: "Joueur", avatar: 1, flag: "🇫🇷" };
         room.players.push(currentPlayer);
         socket.join(room.code);
 
         socket.emit('room_joined_success', { code: room.code, players: room.players });
         io.to(room.code).emit('room_players_update', { players: room.players });
 
-        // Lancer la partie si 2 joueurs
         if (room.players.length === 2) {
             setTimeout(() => {
                 startMatchBetween(room.players[0].id, room.players[1].id);
@@ -211,8 +306,8 @@ io.on('connection', (socket) => {
     });
 
     socket.on('find_ranked_match', (data) => {
-        if (data && data.items) {
-            players[socket.id].equippedPower = data.items[0];
+        if (data && data.items && activePlayers[socket.id]) {
+            activePlayers[socket.id].equippedPower = data.items[0];
         }
         rankedQueue.push(socket.id);
         if (rankedQueue.length >= 2) {
@@ -222,17 +317,25 @@ io.on('connection', (socket) => {
         }
     });
 
+    // --- CLICS EN JEU 1v1 ---
+    socket.on('player_click_1v1', (num) => {
+        // Logique de gestion des clics 1v1
+        // (Tu gardes ou relies ici ta logique existante si gérée dans des fonctions globales)
+    });
+
     // --- RÉCOMPENSE SOLO ---
-    socket.on('claim_solo_reward', (score) => {
-        const player = players[socket.id];
+    socket.on('claim_solo_reward', async (score) => {
+        const player = activePlayers[socket.id];
         if (!player) return;
         let earnedCoins = Math.min(100, Math.floor(score / 3));
-        if (globalEvents.coinRush) earnedCoins *= 2; // Boost Coin Rush
+        if (globalEvents.coinRush) earnedCoins *= 2;
         player.coins += earnedCoins;
+
+        await savePlayerToSupabase(socket.id);
         socket.emit('player_registered', player);
     });
 
-    // --- SYSTÈME D'ADMINISTRATION (PANEL VISUEL) ---
+    // --- SYSTÈME D'ADMINISTRATION ---
     socket.on('admin_auth', (password) => {
         if (password === ADMIN_PASSWORD) {
             socket.isAdmin = true;
@@ -259,32 +362,39 @@ io.on('connection', (socket) => {
         io.emit('global_announcement', message);
     });
 
-    socket.on('admin_give_gift', (data) => {
+    socket.on('admin_give_gift', async (data) => {
         if (!socket.isAdmin) return;
-        const { targetUsername, currency, amount } = data; // currency: 'coins' ou 'points'
+        const { targetUsername, currency, amount } = data;
         
         if (!targetUsername || targetUsername.toUpperCase() === 'TOUS') {
-            Object.values(players).forEach(p => {
-                p[currency] = (p[currency] || 0) + amount;
-            });
+            for (let sId in activePlayers) {
+                activePlayers[sId][currency] = (activePlayers[sId][currency] || 0) + amount;
+                await savePlayerToSupabase(sId);
+                io.to(sId).emit('player_registered', activePlayers[sId]);
+            }
             io.emit('admin_gift_received', { currency, amount, message: "Cadeau Admin global !" });
         } else {
-            const target = Object.values(players).find(p => p.username.toLowerCase() === targetUsername.toLowerCase());
-            if (target) {
-                target[currency] = (target[currency] || 0) + amount;
-                io.to(target.id).emit('player_registered', target);
+            const targetEntry = Object.entries(activePlayers).find(([sId, p]) => p.username.toLowerCase() === targetUsername.toLowerCase());
+            if (targetEntry) {
+                const [targetSocketId, targetPlayer] = targetEntry;
+                targetPlayer[currency] = (targetPlayer[currency] || 0) + amount;
+                await savePlayerToSupabase(targetSocketId);
+                io.to(targetSocketId).emit('player_registered', targetPlayer);
             }
         }
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
         console.log(`🔌 Déconnexion : ${socket.id}`);
         leaveAllRooms(socket);
         const qIdx = matchmakingQueue.indexOf(socket.id);
         if (qIdx !== -1) matchmakingQueue.splice(qIdx, 1);
         const rIdx = rankedQueue.indexOf(socket.id);
         if (rIdx !== -1) rankedQueue.splice(rIdx, 1);
-        delete players[socket.id];
+
+        // Sauvegarder une dernière fois en quittant
+        await savePlayerToSupabase(socket.id);
+        delete activePlayers[socket.id];
     });
 });
 
@@ -302,11 +412,11 @@ function leaveAllRooms(socket) {
 }
 
 function startMatchBetween(id1, id2, isRanked = false) {
-    const p1 = players[id1] || { id: id1, username: "Joueur 1", avatar: 1, flag: "🇫🇷", points: 300 };
-    const p2 = players[id2] || { id: id2, username: "Joueur 2", avatar: 2, flag: "🇫🇷", points: 300 };
+    const p1 = activePlayers[id1] || { id: id1, username: "Joueur 1", avatar: 1, flag: "🇫🇷", points: 0 };
+    const p2 = activePlayers[id2] || { id: id2, username: "Joueur 2", avatar: 2, flag: "🇫🇷", points: 0 };
 
     const matchData = {
-        timeLeft: globalEvents.expressoMatch ? 20 : 30, // Expresso Match Boost
+        timeLeft: globalEvents.expressoMatch ? 20 : 30,
         players: {
             [id1]: { target: 1, score: 0, pool: generatePool(1) },
             [id2]: { target: 1, score: 0, pool: generatePool(1) }
@@ -316,7 +426,6 @@ function startMatchBetween(id1, id2, isRanked = false) {
     io.to(id1).emit('start_countdown', { opponent: p2, timeLeft: matchData.timeLeft, myTarget: 1, myPool: matchData.players[id1].pool });
     io.to(id2).emit('start_countdown', { opponent: p1, timeLeft: matchData.timeLeft, myTarget: 1, myPool: matchData.players[id2].pool });
 
-    // Boucle de jeu 1v1
     const gameInterval = setInterval(() => {
         matchData.timeLeft--;
         io.to(id1).emit('timer_update', matchData.timeLeft);
@@ -337,7 +446,7 @@ function generatePool(target) {
     return pool.concat(candidates.slice(0, 11)).sort(() => Math.random() - 0.5);
 }
 
-function endMatch(id1, id2, matchData, isRanked) {
+async function endMatch(id1, id2, matchData, isRanked) {
     const s1 = matchData.players[id1].score;
     const s2 = matchData.players[id2].score;
 
@@ -345,6 +454,38 @@ function endMatch(id1, id2, matchData, isRanked) {
     let reason = "Temps écoulé !";
     if (s1 > s2) winnerId = id1;
     else if (s2 > s1) winnerId = id2;
+
+    // Gestion des points / trophées / victoires / défaites en classé
+    if (isRanked) {
+        const p1 = activePlayers[id1];
+        const p2 = activePlayers[id2];
+
+        if (p1 && p2) {
+            if (winnerId === id1) {
+                p1.wins = (p1.wins || 0) + 1;
+                p1.points = (p1.points || 0) + 25;
+                p1.trophies = (p1.trophies || 0) + 1;
+
+                p2.losses = (p2.losses || 0) + 1;
+                if (!globalEvents.rankShield) {
+                    p2.points = Math.max(0, (p2.points || 0) - 15);
+                }
+            } else if (winnerId === id2) {
+                p2.wins = (p2.wins || 0) + 1;
+                p2.points = (p2.points || 0) + 25;
+                p2.trophies = (p2.trophies || 0) + 1;
+
+                p1.losses = (p1.losses || 0) + 1;
+                if (!globalEvents.rankShield) {
+                    p1.points = Math.max(0, (p1.points || 0) - 15);
+                }
+            }
+            await savePlayerToSupabase(id1);
+            await savePlayerToSupabase(id2);
+            io.to(id1).emit('player_registered', p1);
+            io.to(id2).emit('player_registered', p2);
+        }
+    }
 
     io.to(id1).emit('game_over_1v1', { winnerId, reason, players: matchData.players });
     io.to(id2).emit('game_over_1v1', { winnerId, reason, players: matchData.players });
