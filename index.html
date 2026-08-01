@@ -14,11 +14,45 @@
         
         .user-pill {
             background: rgba(255,255,255,0.08); border: 1px solid rgba(0,210,255,0.3);
-            border-radius: 20px; padding: 6px 10px; font-size: 11px; color: #00d2ff; font-weight: bold;
-            display: flex; align-items: center; gap: 4px; cursor: pointer; white-space: nowrap;
-            max-width: 160px; overflow: hidden; text-overflow: ellipsis;
+            border-radius: 20px; padding: 4px 10px; font-size: 11px; color: #00d2ff; font-weight: bold;
+            display: flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap;
+            max-width: 180px; overflow: hidden; text-overflow: ellipsis;
         }
         #user-name-display { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 70px; }
+
+        /* Style de la petite image avatar (Drapeau en fond + Nombre au-dessus) */
+        .avatar-flag-badge {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 210, 255, 0.25);
+            border: 1px solid rgba(0, 210, 255, 0.5);
+            border-radius: 8px;
+            padding: 2px 6px;
+            min-width: 36px;
+            height: 24px;
+            overflow: hidden;
+            vertical-align: middle;
+            flex-shrink: 0;
+        }
+        .avatar-flag-badge .flag-bg {
+            position: absolute;
+            font-size: 18px;
+            opacity: 0.35;
+            z-index: 1;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .avatar-flag-badge .avatar-num {
+            position: relative;
+            z-index: 2;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 900;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+        }
 
         .user-stats {
             display: flex; justify-content: center; gap: 15px; max-width: 400px; margin: 0 auto 15px auto;
@@ -49,7 +83,6 @@
         .btn-shop { background: linear-gradient(45deg, #11998e, #38ef7d); color: #000; box-shadow: 0 5px 20px rgba(56, 239, 125, 0.4); }
         .btn-avalanche-main { background: linear-gradient(45deg, #0072ff, #7b4397); box-shadow: 0 5px 20px rgba(123, 67, 151, 0.4); color: #fff; }
         
-        /* Boutons de difficultés Avalanche */
         .btn-avalanche-easy { background: linear-gradient(45deg, #11998e, #38ef7d); color: #000; box-shadow: 0 5px 20px rgba(56, 239, 125, 0.4); }
         .btn-avalanche-medium { background: linear-gradient(45deg, #f8b500, #fceabb); color: #222; box-shadow: 0 5px 20px rgba(248, 181, 0, 0.4); }
         .btn-avalanche-hard { background: linear-gradient(45deg, #ff416c, #ff4b2b); color: #fff; box-shadow: 0 5px 20px rgba(255, 65, 108, 0.4); }
@@ -87,7 +120,7 @@
             background: rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 10px; font-size: 14px;
         }
         .lb-rank { font-weight: 900; width: 25px; color: #00d2ff; }
-        .lb-name, .room-info { flex: 1; font-weight: bold; margin-left: 10px; }
+        .lb-name, .room-info { flex: 1; font-weight: bold; margin-left: 10px; display: flex; align-items: center; gap: 8px; }
         .lb-pts { font-weight: 900; color: #00ff88; }
 
         .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; overflow-y: auto; max-height: 55vh; margin: 10px 0; padding-right: 5px; }
@@ -154,7 +187,7 @@
     <div class="header-bar">
         <h1>Chiffre Blitz ⚡</h1>
         <div id="user-pill" class="user-pill" onclick="promptProfileChange()">
-            <span id="user-avatar-badge" style="background: rgba(0,210,255,0.2); padding: 2px 5px; border-radius: 6px; font-size: 10px;">🇫🇷 #1</span>
+            <div id="user-avatar-badge"></div>
             <span id="user-name-display">Définir pseudo</span>
         </div>
         <div class="header-btns">
@@ -166,15 +199,6 @@
     <div class="user-stats">
         <span>🪙 <strong id="user-coins-display">0</strong> <span data-i18n="coins">Pièces</span></span>
         <span>🏆 <strong id="user-trophies-display">0</strong> <span data-i18n="trophies">Trophées</span></span>
-    </div>
-
-    <!-- MODALE DE SOUTIEN (LANCEMENT) -->
-    <div id="modal-launch-ad" class="modal-overlay" style="display:none;">
-        <div class="modal-card" style="text-align:center;">
-            <h2 style="margin:0 0 10px 0; color:#00d2ff;" data-i18n="ad_title">Soutenir le Créateur</h2>
-            <p style="color:#ccc; font-size:14px; line-height:1.5; margin-bottom:20px;" data-i18n="ad_desc">Chiffre Blitz est 100% gratuit. Une publicité de soutien va se lancer. Merci ! ❤️</p>
-            <button class="btn-main btn-blue" onclick="playLaunchAd()" style="width:100%;" data-i18n="ad_btn">Lancer la partie ⚡</button>
-        </div>
     </div>
 
     <!-- SIMULATEUR DE PUBLICITE (SPONSORISÉE) -->
@@ -212,7 +236,7 @@
             </div>
         </div>
 
-        <button class="btn-main btn-blue" onclick="checkLaunchAdAndStart()" style="margin-top: 12px; width: 100%;" data-i18n="btn_play">JOUER ⚡</button>
+        <button class="btn-main btn-blue" onclick="showMainMenu()" style="margin-top: 12px; width: 100%;" data-i18n="btn_play">JOUER ⚡</button>
     </div>
 
     <!-- MENU PRINCIPAL -->
@@ -310,7 +334,7 @@
             </div>
 
             <p style="color:#aaa; font-size:14px; margin-bottom:10px;" data-i18n="players_in_room">Joueurs dans le salon :</p>
-            <div id="room-players-list" style="font-weight:bold; font-size:16px; color:#00ff88; margin-bottom:15px;">En attente...</div>
+            <div id="room-players-list" style="font-weight:bold; font-size:16px; color:#00ff88; margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:8px;">En attente...</div>
             <div class="matchmaking-loader" style="margin-top:10px;">
                 <div class="radar-box" style="width:60px; height:60px;">
                     <div class="radar-ring"></div>
@@ -451,7 +475,7 @@
             <div class="player-box opponent">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 11px;">
                     <span id="opp-profile-name" style="color: #ff007f; font-weight: bold;">Adversaire</span>
-                    <span id="opp-profile-badge" style="background: rgba(255,0,127,0.2); padding: 2px 6px; border-radius: 10px; color: #ff007f;">🇫🇷 #1</span>
+                    <div id="opp-profile-badge"></div>
                 </div>
                 <div data-i18n="hud_opp_target" style="font-size: 10px; color: #aaa;">CIBLE ADVERSAIRE</div>
                 <div style="font-size:26px; color:#ff007f; font-weight:bold;" id="opp-target">1</div>
@@ -511,9 +535,7 @@
                 <span id="recap-coins-gained" style="font-weight:bold;">+0</span>
             </div>
 
-            <!-- BOUTON DOUBLER LES GAINS (PUB) -->
             <button id="btn-double-reward" class="btn-main btn-reward" onclick="watchAdToDoubleReward()" data-i18n="double_reward">📺 Doubler mes gains (Pub)</button>
-
             <button class="btn-main" onclick="showMainMenu()" data-i18n="main_menu">MENU PRINCIPAL</button>
         </div>
     </div>
@@ -605,9 +627,6 @@
                 main_menu: "MENU PRINCIPAL",
                 no_rooms: "Aucun salon ouvert.",
                 no_players: "Aucun joueur.",
-                ad_title: "Soutenir le Créateur",
-                ad_desc: "Chiffre Blitz est 100% gratuit. Une publicité de soutien va se lancer. Merci ! ❤️",
-                ad_btn: "Lancer la partie ⚡",
                 ad_sponsored: "VIDÉO SPONSORISÉE...",
                 powers: {
                     spotlight: { name: '💡 Projecteur', desc: 'Illumine la bonne tuile (2s)' },
@@ -704,9 +723,6 @@
                 main_menu: "MAIN MENU",
                 no_rooms: "No open rooms.",
                 no_players: "No players.",
-                ad_title: "Support the Creator",
-                ad_desc: "Chiffre Blitz is 100% free. A support advertisement will play. Thank you! ❤️",
-                ad_btn: "Start Game ⚡",
                 ad_sponsored: "SPONSORED VIDEO...",
                 powers: {
                     spotlight: { name: '💡 Spotlight', desc: 'Highlights the correct tile (2s)' },
@@ -754,9 +770,7 @@
                     if (this.ctx.state === 'suspended') {
                         this.ctx.resume();
                     }
-                } catch(e) {
-                    console.log("Audio not supported or blocked", e);
-                }
+                } catch(e) {}
             },
             toggleMute() {
                 this.isMuted = !this.isMuted;
@@ -848,22 +862,6 @@
                     osc.start(t); osc.stop(t + 0.09);
                 }
 
-                if (step === 4 || step === 12 || step === 20 || step === 28 || step === 36 || step === 44 || step === 52 || step === 60) {
-                    const bufferSize = this.ctx.sampleRate * 0.07;
-                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-                    const data = buffer.getChannelData(0);
-                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-                    const noise = this.ctx.createBufferSource();
-                    noise.buffer = buffer;
-                    const filter = this.ctx.createBiquadFilter();
-                    filter.type = 'highpass'; filter.frequency.setValueAtTime(1400, t);
-                    const gain = this.ctx.createGain();
-                    gain.gain.setValueAtTime(0.1, t);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
-                    noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-                    noise.start(t);
-                }
-
                 if (step % 2 === 1 && mode !== 'menu') {
                     const bufferSize = this.ctx.sampleRate * 0.03;
                     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
@@ -907,27 +905,6 @@
 
                     osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
                     osc.start(t); osc.stop(t + 0.09);
-                } else {
-                    if (step % 2 === 0) {
-                        const menuBar = Math.floor(step / 16);
-                        const menuPatterns = [
-                            [0, 3, 5, 7],
-                            [2, 5, 7, 9],
-                            [3, 7, 8, 10],
-                            [5, 8, 10, 12]
-                        ];
-                        const chord = menuPatterns[menuBar];
-                        const freq = scale[chord[(step / 2) % chord.length]];
-                        
-                        const osc = this.ctx.createOscillator();
-                        const gain = this.ctx.createGain();
-                        osc.type = 'square';
-                        osc.frequency.setValueAtTime(freq, t);
-                        gain.gain.setValueAtTime(0.025, t);
-                        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
-                        osc.connect(gain); gain.connect(this.ctx.destination);
-                        osc.start(t); osc.stop(t + 0.15);
-                    }
                 }
             }
         };
@@ -937,9 +914,7 @@
             document.getElementById('mute-btn').innerText = muted ? '🔇' : '🔊';
         }
 
-        document.addEventListener('click', () => {
-            SoundEngine.init();
-        }, { once: true });
+        document.addEventListener('click', () => { SoundEngine.init(); }, { once: true });
 
         const SERVER_URL = "https://chiffre-blitz-server.onrender.com";
         const socket = io(SERVER_URL, {
@@ -948,18 +923,14 @@
             reconnectionDelay: 1000
         });
 
-        socket.on('disconnect', () => {
-            SoundEngine.stopMusic(true);
-        });
+        socket.on('disconnect', () => { SoundEngine.stopMusic(true); });
 
         socket.on('connect', () => {
             registerIfPossible();
             const urlParams = new URLSearchParams(window.location.search);
             const targetRoom = urlParams.get('room');
             if (targetRoom && isProfileValid()) {
-                setTimeout(() => {
-                    joinRoomDirect(targetRoom.toUpperCase(), '');
-                }, 500);
+                setTimeout(() => { joinRoomDirect(targetRoom.toUpperCase(), ''); }, 500);
             }
         });
 
@@ -968,14 +939,20 @@
             region: localStorage.getItem('cb_region') || "Hauts-de-France",
             avatar: parseInt(localStorage.getItem('cb_avatar')) || 1,
             flag: localStorage.getItem('cb_flag') || "🇫🇷",
-            points: 0,
-            coins: 0,
-            trophies: 0,
-            inventory: {},
-            equippedPower: null
+            points: 0, coins: 0, trophies: 0, inventory: {}, equippedPower: null
         };
 
         let cachedOpponent = null;
+
+        // Fonction pour générer le badge avatar (Drapeau en fond + Nombre au-dessus)
+        function getAvatarBadgeHTML(flag, avatarNum) {
+            return `
+                <div class="avatar-flag-badge">
+                    <span class="flag-bg">${flag || '🇫🇷'}</span>
+                    <span class="avatar-num">#${avatarNum || 1}</span>
+                </div>
+            `;
+        }
 
         function saveLocalPreferences() {
             localStorage.setItem('cb_username', myProfile.username);
@@ -987,9 +964,8 @@
         function updateEconomyUI() {
             document.getElementById('user-coins-display').innerText = myProfile.coins;
             document.getElementById('user-trophies-display').innerText = myProfile.trophies;
-            document.getElementById('user-pts-display').innerText = myProfile.points;
             document.getElementById('user-name-display').innerText = myProfile.username || "Définir pseudo";
-            document.getElementById('user-avatar-badge').innerText = `${myProfile.flag || '🇫🇷'} #${myProfile.avatar || 1}`;
+            document.getElementById('user-avatar-badge').innerHTML = getAvatarBadgeHTML(myProfile.flag, myProfile.avatar);
         }
 
         function isProfileValid() {
@@ -1033,12 +1009,8 @@
             registerIfPossible();
             SoundEngine.init();
 
-            // Transition automatique vers le menu ou l'écran principal
-            if (!hasShownLaunchAd) {
-                checkLaunchAdAndStart();
-            } else {
-                showMainMenu();
-            }
+            // Transition directe vers le menu principal
+            showMainMenu();
         }
 
         function promptProfileChange() {
@@ -1071,7 +1043,6 @@
                 myProfile.trophies = player.trophies || 0;
                 myProfile.inventory = player.inventory || {};
                 myProfile.equippedPower = player.equippedPower || null;
-                
                 updateEconomyUI();
                 if (document.getElementById('modal-shop').style.display === 'flex') {
                     switchShopTab(currentShopTab);
@@ -1094,16 +1065,9 @@
         let activeTrainingMode = 'classic';
         let soloTarget = 1, soloScore = 0, soloTimeLeft = 30, soloTimerInterval = null;
         let powerUsedInMatch = false, currentShopTab = 'bonus', isTimeFrozen = false;
-        let hasShownLaunchAd = false;
-        let adCallbackFunction = null;
-        let currentCoinsGained = 0;
-        let rewardDoubled = false;
+        let currentCoinsGained = 0, rewardDoubled = false;
 
-        let avalancheGridData = [];
-        let avalancheTarget = null;
-        let avalancheInterval = null;
-        let avalancheTimerInterval = null;
-        let avalancheTimeLeft = 30;
+        let avalancheGridData = [], avalancheTarget = null, avalancheInterval = null, avalancheTimerInterval = null, avalancheTimeLeft = 30;
 
         document.addEventListener("DOMContentLoaded", () => {
             applyTranslations();
@@ -1117,15 +1081,13 @@
             const targetRoom = urlParams.get('room');
             if (targetRoom) {
                 setTimeout(() => {
-                    if (isProfileValid()) {
-                        openJoinCustomScreen(targetRoom.toUpperCase());
-                    }
+                    if (isProfileValid()) { openJoinCustomScreen(targetRoom.toUpperCase()); }
                 }, 1000);
             }
         });
 
         function hideAllScreens() {
-            ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-avalanche-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room', 'modal-launch-ad', 'simulated-ad-overlay'].forEach(id => {
+            ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-avalanche-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room', 'simulated-ad-overlay'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
@@ -1163,21 +1125,6 @@
             SoundEngine.startMusic('menu');
         }
 
-        function checkLaunchAdAndStart() {
-            SoundEngine.init();
-            if (!hasShownLaunchAd) {
-                document.getElementById('modal-launch-ad').style.display = 'flex';
-            } else {
-                showMainMenu();
-            }
-        }
-
-        function playLaunchAd() {
-            document.getElementById('modal-launch-ad').style.display = 'none';
-            hasShownLaunchAd = true;
-            simulateAd(() => { showMainMenu(); });
-        }
-
         function simulateAd(callback) {
             SoundEngine.stopMusic(false);
             document.getElementById('recap-modal').style.display = 'none';
@@ -1202,6 +1149,7 @@
             }, 1000);
         }
 
+        let adCallbackFunction = null;
         function closeSimulatedAd() {
             document.getElementById('simulated-ad-overlay').style.display = 'none';
             SoundEngine.startMusic('menu');
@@ -1223,7 +1171,6 @@
                 doubleBtn.disabled = true;
                 doubleBtn.style.opacity = '0.5';
                 doubleBtn.innerText = currentLang === 'fr' ? '✅ Gains doublés !' : '✅ Rewards doubled!';
-                
                 document.getElementById('recap-modal').style.display = 'flex';
             });
         }
@@ -1252,20 +1199,13 @@
             document.getElementById('modal-create-room').style.display = 'flex';
         }
 
-        function closeCreateRoomModal() {
-            document.getElementById('modal-create-room').style.display = 'none';
-        }
+        function closeCreateRoomModal() { document.getElementById('modal-create-room').style.display = 'none'; }
 
         function submitCreateRoom() {
             const code = document.getElementById('custom-room-name').value.trim().toUpperCase();
             const password = document.getElementById('custom-room-pass').value.trim();
-            
-            if (code !== '' && code.length < 2) { 
-                alert("Le nom du salon personnalisé doit contenir au moins 2 caractères."); 
-                return; 
-            }
+            if (code !== '' && code.length < 2) { alert("Le nom du salon personnalisé doit contenir au moins 2 caractères."); return; }
             if (!socket.connected) { alert("Erreur : Non connecté au serveur."); return; }
-
             socket.emit('create_room', { code: code, password: password, username: myProfile.username, avatar: myProfile.avatar, flag: myProfile.flag });
             closeCreateRoomModal();
         }
@@ -1287,11 +1227,8 @@
         }
 
         function joinRoomFromList(code, hasPassword) {
-            if (hasPassword) {
-                openJoinCustomScreen(code);
-            } else {
-                joinRoomDirect(code, '');
-            }
+            if (hasPassword) openJoinCustomScreen(code);
+            else joinRoomDirect(code, '');
         }
 
         function joinRoomDirect(code, password) {
@@ -1308,22 +1245,14 @@
         function copyRoomLink() {
             const input = document.getElementById('room-share-link');
             input.select();
-            navigator.clipboard.writeText(input.value).then(() => {
-                alert(i18n[currentLang].link_copied);
-            });
+            navigator.clipboard.writeText(input.value).then(() => { alert(i18n[currentLang].link_copied); });
         }
 
         function shareRoomLink() {
             const input = document.getElementById('room-share-link');
             if (navigator.share) {
-                navigator.share({
-                    title: 'Chiffre Blitz ⚡',
-                    text: 'Viens m\'affronter en duel sur Chiffre Blitz !',
-                    url: input.value
-                }).catch(() => {});
-            } else {
-                copyRoomLink();
-            }
+                navigator.share({ title: 'Chiffre Blitz ⚡', text: 'Viens m\'affronter en duel sur Chiffre Blitz !', url: input.value }).catch(() => {});
+            } else { copyRoomLink(); }
         }
 
         socket.on('rooms_list_data', (rooms) => {
@@ -1337,7 +1266,6 @@
                 const row = document.createElement('div');
                 row.className = 'room-row';
                 const lockIcon = r.hasPassword ? ' 🔒' : '';
-                
                 row.innerHTML = `
                     <span class="room-info">Salon <b>${r.code}</b>${lockIcon} (${r.playersCount}/2)</span>
                     <button class="power-btn equip" onclick="joinRoomFromList('${r.code}', ${r.hasPassword})">${currentLang === 'fr' ? 'Rejoindre' : 'Join'}</button>
@@ -1356,16 +1284,12 @@
             updateRoomPlayers(data.players);
         });
 
-        socket.on('room_players_update', (data) => {
-            updateRoomPlayers(data.players);
-        });
+        socket.on('room_players_update', (data) => { updateRoomPlayers(data.players); });
 
         function updateRoomPlayers(players) {
             const playersListEl = document.getElementById('room-players-list');
             if (!players || players.length === 0) { playersListEl.innerText = i18n[currentLang].waiting_opponent; return; }
-            playersListEl.innerText = players.map(p => `${p.flag || '🇫🇷'} ${p.username} (#${p.avatar || 1})`).join(' vs ');
-            
-            // Mémoriser l'adversaire s'il est présent dans la room
+            playersListEl.innerHTML = players.map(p => `${getAvatarBadgeHTML(p.flag, p.avatar)} ${p.username}`).join(' <span style="color:#aaa; margin:0 5px;">vs</span> ');
             if (players && socket.id) {
                 const opp = players.find(p => p.id !== socket.id && p.socketId !== socket.id);
                 if (opp) cachedOpponent = opp;
@@ -1413,15 +1337,8 @@
             });
         }
 
-        function buyPower(id) {
-            if (!socket.connected) return;
-            socket.emit('buy_power', id);
-        }
-
-        function equipPower(id) {
-            if (!socket.connected) return;
-            socket.emit('equip_power', id);
-        }
+        function buyPower(id) { if (socket.connected) socket.emit('buy_power', id); }
+        function equipPower(id) { if (socket.connected) socket.emit('equip_power', id); }
 
         function preparePowerHUD() {
             const zone = document.getElementById('power-zone');
@@ -1445,7 +1362,6 @@
             if (stock <= 0) return;
             
             socket.emit('use_power', powerId);
-
             powerUsedInMatch = true;
             document.getElementById('btn-use-power').disabled = true;
 
@@ -1483,31 +1399,14 @@
         socket.on('receive_malus', (data) => {
             const grid = document.getElementById('grid');
             SoundEngine.playError();
-            if (data.type === 'quake') { 
-                grid.classList.add('effect-quake'); 
-                setTimeout(() => grid.classList.remove('effect-quake'), 2000); 
-            }
-            else if (data.type === 'micro') { 
-                grid.classList.add('effect-micro'); 
-                setTimeout(() => grid.classList.remove('effect-micro'), 2000); 
-            }
-            else if (data.type === 'eclipse') { 
-                grid.classList.add('effect-eclipse'); 
-                setTimeout(() => grid.classList.remove('effect-eclipse'), 1500); 
-            }
+            if (data.type === 'quake') { grid.classList.add('effect-quake'); setTimeout(() => grid.classList.remove('effect-quake'), 2000); }
+            else if (data.type === 'micro') { grid.classList.add('effect-micro'); setTimeout(() => grid.classList.remove('effect-micro'), 2000); }
+            else if (data.type === 'eclipse') { grid.classList.add('effect-eclipse'); setTimeout(() => grid.classList.remove('effect-eclipse'), 1500); }
             else if (data.type === 'chaos') { 
                 grid.classList.add('effect-quake');
-                setTimeout(() => {
-                    grid.classList.remove('effect-quake');
-                    grid.classList.add('effect-micro');
-                }, 1600);
-                setTimeout(() => {
-                    grid.classList.remove('effect-micro');
-                    grid.classList.add('effect-eclipse');
-                }, 3300);
-                setTimeout(() => {
-                    grid.classList.remove('effect-eclipse');
-                }, 5000);
+                setTimeout(() => { grid.classList.remove('effect-quake'); grid.classList.add('effect-micro'); }, 1600);
+                setTimeout(() => { grid.classList.remove('effect-micro'); grid.classList.add('effect-eclipse'); }, 3300);
+                setTimeout(() => { grid.classList.remove('effect-eclipse'); }, 5000);
             }
         });
 
@@ -1534,9 +1433,8 @@
             res.data.forEach((p, index) => {
                 const row = document.createElement('div');
                 row.className = 'lb-row';
-                const flagEmoji = p.flag || '🇫🇷';
-                const avatarNum = p.avatar ? `#${p.avatar}` : '';
-                row.innerHTML = `<span class="lb-rank">#${index + 1}</span><span class="lb-name">${flagEmoji} ${p.username} <span style="font-size:11px; opacity:0.7;">${avatarNum}</span></span><span class="lb-pts">${p.points} pts</span>`;
+                const badgeHtml = getAvatarBadgeHTML(p.flag, p.avatar);
+                row.innerHTML = `<span class="lb-rank">#${index + 1}</span><span class="lb-name">${badgeHtml} ${p.username}</span><span class="lb-pts">${p.points} pts</span>`;
                 container.appendChild(row);
             });
         });
@@ -1558,16 +1456,13 @@
             const flag = opp.flag || "🇫🇷";
             const avatar = opp.avatar !== undefined ? opp.avatar : 1;
             document.getElementById('opp-profile-name').innerText = name;
-            document.getElementById('opp-profile-badge').innerText = `${flag} #${avatar}`;
+            document.getElementById('opp-profile-badge').innerHTML = getAvatarBadgeHTML(flag, avatar);
         }
 
         socket.on('start_countdown', (data) => {
             if (radarInterval) clearInterval(radarInterval);
-            
             let oppData = (data && (data.opponent || data.opp || data.player2)) || cachedOpponent;
-            if (oppData) {
-                updateOpponentDisplay(oppData);
-            }
+            if (oppData) updateOpponentDisplay(oppData);
 
             ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-avalanche-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-room-waiting', 'screen-join-custom'].forEach(id => {
                 const el = document.getElementById(id);
@@ -1597,13 +1492,10 @@
         socket.on('game_started', (data) => {
             current1v1Time = data.timeLeft;
             document.getElementById('game-timer').innerText = Math.max(0, current1v1Time);
-            const targetVal = data.myTarget || 1;
-            document.getElementById('game-target-giant').innerText = targetVal;
+            document.getElementById('game-target-giant').innerText = data.myTarget || 1;
             
             let oppData = data.opponent || data.opp || data.player2 || cachedOpponent;
-            if (oppData) {
-                updateOpponentDisplay(oppData);
-            }
+            if (oppData) updateOpponentDisplay(oppData);
             
             renderGrid(data.myPool, handle1v1TileClick);
         });
@@ -1621,9 +1513,7 @@
 
         socket.on('opponent_progress', (data) => {
             document.getElementById('opp-target').innerText = data.target;
-            if (data.opponent) {
-                updateOpponentDisplay(data.opponent);
-            }
+            if (data.opponent) updateOpponentDisplay(data.opponent);
         });
 
         socket.on('game_over_1v1', (data) => {
@@ -1745,9 +1635,7 @@
             document.getElementById('hud-solo').style.display = 'grid';
             document.getElementById('hud-1v1').style.display = 'none';
 
-            soloScore = 0;
-            avalancheTimeLeft = 30;
-            isTimeFrozen = false;
+            soloScore = 0; avalancheTimeLeft = 30; isTimeFrozen = false;
             document.getElementById('solo-score').innerText = soloScore;
             document.getElementById('game-timer').innerText = avalancheTimeLeft;
 
@@ -1777,7 +1665,6 @@
                     let added = spawnAvalancheNumber();
                     updateAvalancheTarget();
                     renderAvalancheGrid();
-
                     if (!added) {
                         clearInterval(avalancheTimerInterval);
                         clearInterval(avalancheInterval);
@@ -1791,10 +1678,8 @@
             let emptyIndices = [];
             avalancheGridData.forEach((val, idx) => { if (val === null) emptyIndices.push(idx); });
             if (emptyIndices.length === 0) return false;
-
             let randomIdx = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
-            let randomNum = Math.floor(Math.random() * 50) + 1;
-            avalancheGridData[randomIdx] = randomNum;
+            avalancheGridData[randomIdx] = Math.floor(Math.random() * 50) + 1;
             return true;
         }
 
@@ -1835,15 +1720,12 @@
                 document.getElementById('solo-score').innerText = soloScore;
                 updateAvalancheTarget();
                 renderAvalancheGrid();
-            } else {
-                SoundEngine.playError();
-            }
+            } else { SoundEngine.playError(); }
         }
 
         function endSoloGame() {
             hideAllScreens();
             const modal = document.getElementById('recap-modal');
-            
             rewardDoubled = false;
             const doubleBtn = document.getElementById('btn-double-reward');
             doubleBtn.disabled = false;
@@ -1851,7 +1733,6 @@
             doubleBtn.innerText = currentLang === 'fr' ? '📺 Doubler mes gains (Pub)' : '📺 Double my rewards (Ad)';
 
             currentCoinsGained = Math.min(100, Math.floor(soloScore / 3));
-            
             socket.emit('claim_solo_reward', soloScore);
 
             document.getElementById('recap-banner').innerText = currentLang === 'fr' ? "🏋️ ENTRAÎNEMENT TERMINÉ" : "🏋️ TRAINING FINISHED";
