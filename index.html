@@ -358,6 +358,11 @@
             <span data-i18n="timer_label">Temps / Pression</span> : <span id="game-timer" style="color:#ff007f;">30</span>s
         </div>
 
+        <!-- BOUTON D'UTILISATION DU POUVOIR ÉQUIPÉ (1 UTILISATION MAX PAR PARTIE) -->
+        <div style="margin-bottom: 12px;">
+            <button id="btn-use-power" class="power-btn equip" style="display:none; padding: 10px 20px; font-size: 14px; background: linear-gradient(45deg, #11998e, #38ef7d); color: #000; margin: 0 auto;" onclick="useEquippedPower()">⚡ Pouvoir</button>
+        </div>
+
         <div id="grid" class="grid"></div>
     </div>
 
@@ -406,7 +411,6 @@
                 hud_my_target: "MA CIBLE", hud_opp_target: "ADVERSAIRE", hud_solo_target: "CIBLE À TROUVER", hud_score: "SCORE",
                 timer_label: "Temps / Pression", recap_score: "⭐ Mon Score :", recap_coins: "🪙 Pièces Gagnées :",
                 reward_ad: "🎁 Regarder une pub pour doubler (+🪙)", main_menu: "MENU PRINCIPAL",
-                // Boutique
                 p_spotlight_name: "💡 Projecteur", p_spotlight_desc: "Illumine la bonne tuile (2s)",
                 p_freeze_name: "⏳ Blocage du Temps", p_freeze_desc: "Gèle le chrono pendant 3s",
                 p_joker_name: "⚡ Joker Éclair", p_joker_desc: "Valide la cible actuelle",
@@ -437,9 +441,8 @@
                 searching: "Searching for opponent...", cancel: "❌ Cancel", rooms_title: "🏠 Private Rooms", create_room: "✨ Create a room", back: "⬅️ Back",
                 room_label: "Room", waiting: "Waiting...", quit: "❌ Quit", welcome: "WELCOME ⚡", pseudo_label: "PSEUDO",
                 hud_my_target: "MY TARGET", hud_opp_target: "OPPONENT", hud_solo_target: "TARGET TO FIND", hud_score: "SCORE",
-                timer_label: "Time / Pressure", recap_score: "⭐ My Score :", recap_coins: "🪙 Coins Earned :",
+                timer_label: "Time / Pressure", recap_score: "⭐ Mon Score :", recap_coins: "🪙 Coins Earned :",
                 reward_ad: "🎁 Watch an ad to double (+🪙)", main_menu: "MAIN MENU",
-                // Shop
                 p_spotlight_name: "💡 Spotlight", p_spotlight_desc: "Illuminates the correct tile (2s)",
                 p_freeze_name: "⏳ Time Freeze", p_freeze_desc: "Freezes the timer for 3s",
                 p_joker_name: "⚡ Lightning Joker", p_joker_desc: "Validates the current target",
@@ -468,7 +471,6 @@
                     el.innerHTML = translations[lang][key];
                 }
             });
-            // Actualiser la boutique si elle est ouverte pour appliquer la langue
             if (document.getElementById('modal-shop').style.display === 'flex') {
                 renderShopItems();
             }
@@ -478,6 +480,7 @@
         let hasWatchedAdThisGame = false;
         let activeTrainingMode = 'classic';
         let currentShopTab = 'bonus';
+        let hasUsedPowerThisGame = false; // Variable pour limiter à une seule utilisation par partie
 
         const powersData = {
             bonus: [
@@ -568,6 +571,85 @@
             myProfile.equippedPower = id;
             renderShopItems();
             socket.emit('equip_power', id);
+        }
+
+        function updateGamePowerButton() {
+            const btn = document.getElementById('btn-use-power');
+            let pId = myProfile.equippedPower;
+            // Affiche le bouton uniquement si équipé, qu'il en reste en stock, et qu'il n'a pas encore été utilisé dans cette partie
+            if (!hasUsedPowerThisGame && pId && myProfile.inventory && myProfile.inventory[pId] > 0) {
+                btn.style.display = 'inline-block';
+                let currentLang = localStorage.getItem('cb_lang') || 'fr';
+                let names = {
+                    spotlight: currentLang === 'fr' ? '💡 Projecteur' : '💡 Spotlight',
+                    freeze: currentLang === 'fr' ? '⏳ Gel du Temps' : '⏳ Time Freeze',
+                    joker: currentLang === 'fr' ? '⚡ Joker' : '⚡ Joker',
+                    nova: currentLang === 'fr' ? '🌟 Nova' : '🌟 Nova',
+                    quake: '📳 Séisme', micro: '🐜 Micro', eclipse: '🌑 Éclipse', chaos: '🌪️ Chaos'
+                };
+                btn.innerText = `${names[pId] || 'Pouvoir'} (x${myProfile.inventory[pId]})`;
+            } else {
+                btn.style.display = 'none';
+            }
+        }
+
+        function useEquippedPower() {
+            if (hasUsedPowerThisGame) return;
+            let pId = myProfile.equippedPower;
+            if (!pId || !myProfile.inventory || !myProfile.inventory[pId] || myProfile.inventory[pId] <= 0) return;
+
+            // Marquer comme utilisé pour cette partie et décrémenter du stock
+            hasUsedPowerThisGame = true;
+            myProfile.inventory[pId]--;
+            updateGamePowerButton();
+
+            // Effets des bonus en solo
+            if (pId === 'joker') {
+                if (activeTrainingMode === 'classic' || activeTrainingMode === 'random') {
+                    handleClassicOrRandomClick(soloTarget);
+                } else if (activeTrainingMode === 'avalanche') {
+                    if (avalancheTarget !== null) {
+                        let idx = avalancheGridData.indexOf(avalancheTarget);
+                        if (idx !== -1) handleAvalancheClick(avalancheTarget, idx);
+                    }
+                }
+            } else if (pId === 'freeze') {
+                if (activeTrainingMode === 'classic' || activeTrainingMode === 'random') {
+                    clearInterval(soloTimerInterval);
+                    setTimeout(() => {
+                        soloTimerInterval = setInterval(() => {
+                            soloTimeLeft--;
+                            document.getElementById('game-timer').innerText = Math.max(0, soloTimeLeft);
+                            if (soloTimeLeft <= 0) endSoloGame();
+                        }, 1000);
+                    }, 3000);
+                }
+            } else if (pId === 'spotlight') {
+                let targetNum = (activeTrainingMode === 'avalanche') ? avalancheTarget : soloTarget;
+                const tiles = document.querySelectorAll('#grid .tile');
+                tiles.forEach(tile => {
+                    if (parseInt(tile.innerText) === targetNum) {
+                        let origBg = tile.style.background;
+                        tile.style.background = '#38ef7d';
+                        tile.style.borderColor = '#fff';
+                        setTimeout(() => {
+                            tile.style.background = origBg;
+                            tile.style.borderColor = '';
+                        }, 2000);
+                    }
+                });
+            } else if (pId === 'nova') {
+                for(let i=0; i<3; i++) {
+                    if (activeTrainingMode === 'classic' || activeTrainingMode === 'random') {
+                        handleClassicOrRandomClick(soloTarget);
+                    } else if (activeTrainingMode === 'avalanche') {
+                        if (avalancheTarget !== null) {
+                            let idx = avalancheGridData.indexOf(avalancheTarget);
+                            if (idx !== -1) handleAvalancheClick(avalancheTarget, idx);
+                        }
+                    }
+                }
+            }
         }
 
         function simulateAd(type, callback) {
@@ -725,12 +807,15 @@
             activeTrainingMode = mode;
             avalancheSpawnSpeed = speed;
             hasWatchedAdThisGame = false;
+            hasUsedPowerThisGame = false; // Réinitialise l'utilisation unique pour chaque nouvelle partie
             document.getElementById('btn-reward-ad').style.display = 'block';
             hideAllScreens();
             
             document.getElementById('screen-game').style.display = 'block';
             document.getElementById('hud-solo').style.display = 'flex';
             document.getElementById('hud-1v1').style.display = 'none';
+
+            updateGamePowerButton();
 
             soloScore = 0;
             document.getElementById('solo-score').innerText = soloScore;
