@@ -257,21 +257,23 @@ io.on('connection', (socket) => {
         const roll = Math.random();
         let outcome = 'rien';
         let coinDelta = 0;
-        let targetAngle = 0;
+        let P = 0;
 
         if (roll < 0.33) {
             outcome = 'jackpot';
             coinDelta = 250;
-            targetAngle = 1800 + Math.floor(Math.random() * 80) + 20;
+            P = Math.floor(Math.random() * 80) + 20;
         } else if (roll < 0.66) {
             outcome = 'banqueroute';
             coinDelta = -150; 
-            targetAngle = 1800 + Math.floor(Math.random() * 80) + 140;
+            P = Math.floor(Math.random() * 80) + 140;
         } else {
             outcome = 'rien';
             coinDelta = 0;
-            targetAngle = 1800 + Math.floor(Math.random() * 80) + 260;
+            P = Math.floor(Math.random() * 80) + 260;
         }
+
+        const targetAngle = 1800 + ((360 - P) % 360);
 
         if (coinDelta < 0) {
             player.coins = Math.max(0, player.coins + coinDelta);
