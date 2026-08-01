@@ -1410,37 +1410,43 @@
                                     <span>🪙 Coin Rush (Pièces x2)</span>
                                     <input type="checkbox" id="chk-coinRush" onchange="sendAdminEventsUpdate()">
                                 </label>
-                                <p style="color:#aaa; font-size:10px; margin:2px 0 6px 0;">Double tous les gains de pièces (solo, 1v1, classé).</p>
+                                <p style="color:#aaa; font-size:10px; margin:2px 0 2px 0;">Double tous les gains de pièces.</p>
+                                <button class="power-btn equip" onclick="socket.emit('admin_test_coin_rush')" style="width:100%; padding:5px; font-size:10px; margin-bottom:6px;">🪙 Tester Coin Rush (+60 Pièces)</button>
 
                                 <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
                                     <span>🛡️ Rank Shield (Pas de perte de points)</span>
                                     <input type="checkbox" id="chk-rankShield" onchange="sendAdminEventsUpdate()">
                                 </label>
-                                <p style="color:#aaa; font-size:10px; margin:2px 0 6px 0;">Zéro perte de points en cas de défaite en match classé.</p>
+                                <p style="color:#aaa; font-size:10px; margin:2px 0 2px 0;">Zéro perte de points en classé.</p>
+                                <button class="power-btn equip" onclick="socket.emit('admin_test_shield')" style="width:100%; padding:5px; font-size:10px; margin-bottom:6px;">🛡️ Tester Rank Shield</button>
 
                                 <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
                                     <span>⚡ Expresso Match (Timer 20s)</span>
                                     <input type="checkbox" id="chk-expressoMatch" onchange="sendAdminEventsUpdate()">
                                 </label>
-                                <p style="color:#aaa; font-size:10px; margin:2px 0 6px 0;">Accélère les duels 1v1 (20 secondes au lieu de 30s).</p>
+                                <p style="color:#aaa; font-size:10px; margin:2px 0 2px 0;">Accélère les duels 1v1 (20s).</p>
+                                <button class="power-btn equip" onclick="socket.emit('admin_test_expresso')" style="width:100%; padding:5px; font-size:10px; margin-bottom:6px;">⚡ Tester Expresso Match</button>
 
                                 <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
                                     <span>🌪️ Chaos Mode (En Non Classé uniquement)</span>
                                     <input type="checkbox" id="chk-chaosMode" onchange="sendAdminEventsUpdate()">
                                 </label>
-                                <p style="color:#aaa; font-size:10px; margin:2px 0 6px 0;">Applique des modificateurs aléatoires uniquement en mode non classé.</p>
+                                <p style="color:#aaa; font-size:10px; margin:2px 0 2px 0;">Applique des modificateurs aléatoires.</p>
+                                <button class="power-btn equip" onclick="socket.emit('admin_test_chaos')" style="width:100%; padding:5px; font-size:10px; margin-bottom:6px;">🌪️ Tester un Malus Chaos</button>
 
                                 <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
                                     <span>🎁 Jackpot Éclair (Coffres mystères)</span>
                                     <input type="checkbox" id="chk-jackpotEclair" onchange="sendAdminEventsUpdate()">
                                 </label>
-                                <p style="color:#aaa; font-size:10px; margin:2px 0 6px 0;">Petite chance d'obtenir des pièces bonus surprises en fin de match.</p>
+                                <p style="color:#aaa; font-size:10px; margin:2px 0 2px 0;">Petite chance d'obtenir des pièces bonus.</p>
+                                <button class="btn-main btn-gold" onclick="socket.emit('admin_test_jackpot')" style="width:100%; padding:5px; font-size:10px; margin-bottom:6px;">🎲 Tester la Roue Jackpot</button>
 
                                 <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-                                    <span>🕵️‍♂️ Mode Saboteur vs Sprinteur (Menu Principal)</span>
+                                    <span>🕵️‍♂️ Mode Saboteur vs Sprinteur</span>
                                     <input type="checkbox" id="chk-saboteurMode" onchange="sendAdminEventsUpdate()">
                                 </label>
-                                <p style="color:#aaa; font-size:10px; margin:2px 0 0 0;">Affiche un bouton exclusif dans le menu principal pour ce mode.</p>
+                                <p style="color:#aaa; font-size:10px; margin:2px 0 2px 0;">Affiche le mode dans le menu.</p>
+                                <button class="power-btn equip" onclick="socket.emit('admin_test_saboteur')" style="width:100%; padding:5px; font-size:10px;">🕵️‍♂️ Tester Mode Saboteur</button>
                             </div>
 
                             <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
