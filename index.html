@@ -245,7 +245,7 @@
             </div>
         </div>
 
-        <button class="btn-main btn-blue" onclick="checkLaunchAdAndStart()" style="margin-top: 12px; width: 100%;" data-i18n="btn_play">JOUER ⚡</button>
+        <button class="btn-main btn-blue" onclick="openLaunchAdModal()" style="margin-top: 12px; width: 100%;" data-i18n="btn_play">JOUER ⚡</button>
     </div>
 
     <!-- MENU PRINCIPAL -->
@@ -995,7 +995,6 @@
         };
 
         let cachedOpponent = null;
-        let hasShownLaunchAd = false;
         let adCallbackFunction = null;
 
         // Fonction pour générer le badge avatar (Drapeau en fond + Nombre au-dessus)
@@ -1165,18 +1164,13 @@
             SoundEngine.startMusic('menu');
         }
 
-        function checkLaunchAdAndStart() {
+        function openLaunchAdModal() {
             SoundEngine.init();
-            if (!hasShownLaunchAd) {
-                document.getElementById('modal-launch-ad').style.display = 'flex';
-            } else {
-                showMainMenu();
-            }
+            document.getElementById('modal-launch-ad').style.display = 'flex';
         }
 
         function playLaunchAd() {
             document.getElementById('modal-launch-ad').style.display = 'none';
-            hasShownLaunchAd = true;
             simulateAd(() => { showMainMenu(); });
         }
 
