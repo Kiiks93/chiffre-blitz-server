@@ -311,6 +311,9 @@
 
         <button class="btn-main btn-blue" onclick="openSoloMenu()" data-i18n="menu_solo">🏋️ ENTRAÎNEMENT SOLO</button>
         <button class="btn-main" onclick="open1v1Hub()" data-i18n="menu_1v1">⚔️ DUEL 1v1 ONLINE</button>
+        <!-- BOUTON MODE SABOTEUR (Affiché uniquement si activé par l'Admin) -->
+        <button id="btn-saboteur-menu" class="btn-main" onclick="startSaboteurQueue()" style="display:none; background:linear-gradient(45deg, #ff007f, #7b4397); box-shadow: 0 4px 15px rgba(255,0,127,0.4);" data-i18n="menu_saboteur">🕵️‍♂️ Mode Saboteur vs Sprinteur</button>
+        
         <button class="btn-main btn-purple" onclick="openRoomsScreen()" data-i18n="menu_friends">👥 JOUER ENTRE AMIS</button>
         <button class="btn-main btn-shop" onclick="openShop()" data-i18n="menu_shop">🛍️ BOUTIQUE POUVOIRS</button>
         <button class="btn-main btn-gold" onclick="openLeaderboard()" data-i18n="menu_lb">🏆 CLASSEMENT</button>
@@ -639,6 +642,7 @@
                 btn_play: "JOUER ⚡",
                 menu_solo: "🏋️ ENTRAÎNEMENT SOLO",
                 menu_1v1: "⚔️ DUEL 1v1 ONLINE",
+                menu_saboteur: "🕵️‍♂️ Mode Saboteur vs Sprinteur",
                 menu_friends: "👥 JOUER ENTRE AMIS",
                 menu_shop: "🛍️ BOUTIQUE POUVOIRS",
                 menu_lb: "🏆 CLASSEMENT",
@@ -746,6 +750,7 @@
                 btn_play: "PLAY ⚡",
                 menu_solo: "🏋️ SOLO TRAINING",
                 menu_1v1: "⚔️ ONLINE 1v1 DUEL",
+                menu_saboteur: "🕵️‍♂️ Saboteur vs Sprinter Mode",
                 menu_friends: "👥 PLAY WITH FRIENDS",
                 menu_shop: "🛍️ POWERS SHOP",
                 menu_lb: "🏆 LEADERBOARD",
@@ -1258,15 +1263,21 @@
         socket.on('events_state_update', (events) => {
             latestGlobalEvents = events;
             const banner = document.getElementById('player-event-banner');
+            const saboteurBtn = document.getElementById('btn-saboteur-menu');
+            
+            if (saboteurBtn) {
+                saboteurBtn.style.display = events.saboteurMode ? 'flex' : 'none';
+            }
+
             if (!banner) return;
 
             let activeList = [];
             if (events.coinRush) activeList.push("🪙 <b>Coin Rush</b> (Pièces x2)");
             if (events.rankShield) activeList.push("🛡️ <b>Rank Shield</b> (Zéro perte de points en classé)");
             if (events.expressoMatch) activeList.push("⚡ <b>Expresso Match</b> (Parties rapides en 20s)");
-            if (events.chaosMode) activeList.push("🌪️ <b>Chaos Mode</b> (Modificateurs aléatoires)");
+            if (events.chaosMode) activeList.push("🌪️ <b>Chaos Mode</b> (Modificateurs aléatoires en non classé)");
             if (events.jackpotEclair) activeList.push("🎁 <b>Jackpot Éclair</b> (Coffres mystères)");
-            if (events.saboteurMode) activeList.push("🕵️‍♂️ <b>Mode Exclusif : Saboteur vs Sprinteur</b> (Mode asymétrique actif)");
+            if (events.saboteurMode) activeList.push("🕵️‍♂️ <b>Mode Exclusif : Saboteur vs Sprinteur</b>");
 
             if (activeList.length > 0) {
                 banner.innerHTML = `⚡ <b>ADMIN ABUSE EN COURS :</b><br>` + activeList.join("<br>");
@@ -1396,10 +1407,10 @@
                                 <p style="color:#aaa; font-size:10px; margin:2px 0 6px 0;">Accélère les duels 1v1 (20 secondes au lieu de 30s).</p>
 
                                 <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-                                    <span>🌪️ Chaos Mode (Modificateurs)</span>
+                                    <span>🌪️ Chaos Mode (En Non Classé uniquement)</span>
                                     <input type="checkbox" id="chk-chaosMode" onchange="sendAdminEventsUpdate()">
                                 </label>
-                                <p style="color:#aaa; font-size:10px; margin:2px 0 6px 0;">Applique des modificateurs aléatoires funs pendant les matchs.</p>
+                                <p style="color:#aaa; font-size:10px; margin:2px 0 6px 0;">Applique des modificateurs aléatoires uniquement en mode non classé.</p>
 
                                 <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
                                     <span>🎁 Jackpot Éclair (Coffres mystères)</span>
@@ -1408,10 +1419,10 @@
                                 <p style="color:#aaa; font-size:10px; margin:2px 0 6px 0;">Petite chance d'obtenir des pièces bonus surprises en fin de match.</p>
 
                                 <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-                                    <span>🕵️‍♂️ Mode Exclusif : Saboteur vs Sprinteur (BO3)</span>
+                                    <span>🕵️‍♂️ Mode Saboteur vs Sprinteur (Menu Principal)</span>
                                     <input type="checkbox" id="chk-saboteurMode" onchange="sendAdminEventsUpdate()">
                                 </label>
-                                <p style="color:#aaa; font-size:10px; margin:2px 0 0 0;">Mode asymétrique fun (un joueur piège, l'autre court en BO3).</p>
+                                <p style="color:#aaa; font-size:10px; margin:2px 0 0 0;">Affiche un bouton exclusif dans le menu principal pour ce mode.</p>
                             </div>
 
                             <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
@@ -1640,6 +1651,15 @@
             socket.emit('find_1v1_match');
         }
 
+        function startSaboteurQueue() {
+            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+            hideAllScreens();
+            document.getElementById('screen-1v1-lobby').style.display = 'flex';
+            let digit = 1;
+            radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById('radar-digit').innerText = digit; }, 70);
+            socket.emit('find_saboteur_match');
+        }
+
         function openRankedLoadoutModal() {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
             selectedRankedItems = [];
@@ -1710,7 +1730,7 @@
             socket.emit('find_ranked_match', { items: selectedRankedItems });
         }
 
-        function cancel1v1Search() { open1v1Hub(); }
+        function cancel1v1Search() { showMainMenu(); }
 
         function openRoomsScreen() {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
