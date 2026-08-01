@@ -40,7 +40,7 @@
             background: linear-gradient(45deg, #ff416c, #ff4b2b); color: white; border: none;
             padding: 14px 18px; font-size: 16px; font-weight: 800; border-radius: 16px; cursor: pointer;
             box-shadow: 0 5px 20px rgba(255, 65, 108, 0.4); transition: transform 0.1s;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
+            display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
         }
         .btn-main:active { transform: scale(0.96); }
         .btn-blue { background: linear-gradient(45deg, #00c6ff, #0072ff); box-shadow: 0 5px 20px rgba(0, 198, 255, 0.4); }
@@ -48,7 +48,7 @@
         .btn-purple { background: linear-gradient(45deg, #7b4397, #dc2430); box-shadow: 0 5px 20px rgba(123, 67, 151, 0.4); }
         .btn-shop { background: linear-gradient(45deg, #11998e, #38ef7d); color: #000; box-shadow: 0 5px 20px rgba(56, 239, 125, 0.4); }
         
-        /* Boutons Avalanche harmonisés */
+        /* Boutons de difficultés Avalanche harmonisés au format grand encadré */
         .btn-avalanche-easy { background: linear-gradient(45deg, #11998e, #38ef7d); color: #000; box-shadow: 0 5px 20px rgba(56, 239, 125, 0.4); }
         .btn-avalanche-medium { background: linear-gradient(45deg, #f8b500, #fceabb); color: #222; box-shadow: 0 5px 20px rgba(248, 181, 0, 0.4); }
         .btn-avalanche-hard { background: linear-gradient(45deg, #ff416c, #ff4b2b); color: #fff; box-shadow: 0 5px 20px rgba(255, 65, 108, 0.4); }
@@ -222,19 +222,17 @@
         <button class="btn-secondary" onclick="showTitleScreen()" style="margin-top:5px;" data-i18n="menu_info">ℹ️ Informations & Règles</button>
     </div>
 
-    <!-- MENU SOLO -->
+    <!-- MENU SOLO (Harmonisé avec les grands encadrés pour Facile, Moyen, Difficile) -->
     <div id="screen-solo-menu" class="menu-container" style="display:none;">
         <h2 style="color:#00d2ff; font-size:20px; margin-bottom:5px;" data-i18n="solo_menu_title">MODES D'ENTRAÎNEMENT</h2>
         <button class="btn-main btn-blue" onclick="startSoloTraining('classic')" data-i18n="solo_classic">⚡ Classique (Croissant)</button>
         <button class="btn-main btn-gold" onclick="startSoloTraining('random')" data-i18n="solo_random">🎲 Aléatoire (Cibles variées)</button>
         
-        <div style="margin-top:5px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
-            <p style="color:#00d2ff; font-size:12px; font-weight:bold; margin-bottom:6px;" data-i18n="solo_avalanche">🧊 AVALANCHE (Difficultés)</p>
-            <div style="display: flex; gap: 6px;">
-                <button class="btn-main btn-avalanche-easy" style="flex:1; padding:12px 6px; font-size:14px;" onclick="startAvalancheGame(1800, 4)" data-i18n="diff_easy">Facile</button>
-                <button class="btn-main btn-avalanche-medium" style="flex:1; padding:12px 6px; font-size:14px;" onclick="startAvalancheGame(1200, 3)" data-i18n="diff_medium">Moyen</button>
-                <button class="btn-main btn-avalanche-hard" style="flex:1; padding:12px 6px; font-size:14px;" onclick="startAvalancheGame(600, 1)" data-i18n="diff_hard">Difficile 💀</button>
-            </div>
+        <div style="margin-top:5px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px; display: flex; flex-direction: column; gap: 10px;">
+            <p style="color:#00d2ff; font-size:13px; font-weight:bold; margin: 0 0 2px 0; text-align: center;" data-i18n="solo_avalanche">🧊 AVALANCHE (Difficultés)</p>
+            <button class="btn-main btn-avalanche-easy" onclick="startAvalancheGame(1800, 4)" data-i18n="diff_easy">Facile</button>
+            <button class="btn-main btn-avalanche-medium" onclick="startAvalancheGame(1200, 3)" data-i18n="diff_medium">Moyen</button>
+            <button class="btn-main btn-avalanche-hard" onclick="startAvalancheGame(600, 1)" data-i18n="diff_hard">Difficile 💀</button>
         </div>
 
         <button class="btn-secondary" onclick="showMainMenu()" data-i18n="back_menu">⬅️ Retour Menu</button>
@@ -900,7 +898,6 @@
             document.getElementById('mute-btn').innerText = muted ? '🔇' : '🔊';
         }
 
-        // Déblocage automatique de l'audio au premier clic utilisateur (Politique Autoplay des navigateurs)
         document.addEventListener('click', () => {
             SoundEngine.init();
         }, { once: true });
@@ -927,7 +924,6 @@
             }
         });
 
-        // --- GESTION DU PROFIL (Serveur Autoritaire pour l'économie) ---
         let myProfile = {
             username: localStorage.getItem('cb_username') || "",
             region: localStorage.getItem('cb_region') || "Hauts-de-France",
@@ -996,7 +992,6 @@
             }
         }
 
-        // Le serveur est la seule source de vérité pour les pièces, trophées et inventaire !
         socket.on('player_registered', (player) => {
             if (player) {
                 myProfile.username = player.username;
@@ -1015,7 +1010,6 @@
             }
         });
 
-        // PRIX DE LA BOUTIQUE ORIGINAUX RESTAURÉS
         const POWERS_CATALOG = [
             { id: 'spotlight', price: 150, type: 'bonus' },
             { id: 'freeze', price: 350, type: 'bonus' },
@@ -1036,7 +1030,6 @@
         let currentCoinsGained = 0;
         let rewardDoubled = false;
 
-        // Variables pour mode Avalanche
         let avalancheGridData = [];
         let avalancheTarget = null;
         let avalancheInterval = null;
@@ -1093,7 +1086,6 @@
             SoundEngine.startMusic('menu');
         }
 
-        // --- GESTION PUBLICITÉ DE LANCEMENT ---
         function checkLaunchAdAndStart() {
             SoundEngine.init();
             if (!hasShownLaunchAd) {
@@ -1142,7 +1134,6 @@
             }
         }
 
-        // --- BOUTON DOUBLER LES GAINS (RÉCOMPENSE RECAP) ---
         function watchAdToDoubleReward() {
             if (rewardDoubled) return;
             simulateAd(() => {
@@ -1370,13 +1361,11 @@
             const stock = myProfile.inventory[powerId] || 0;
             if (stock <= 0) return;
             
-            // On notifie le serveur de décrémenter le stock dans la base de données autoritaire
             socket.emit('use_power', powerId);
 
             powerUsedInMatch = true;
             document.getElementById('btn-use-power').disabled = true;
 
-            const is1v1 = document.getElementById('hud-1v1').style.display !== 'none';
             const currentTarget = parseInt(document.getElementById('game-target-giant').innerText) || 1;
 
             if (powerId === 'spotlight') {
@@ -1569,7 +1558,6 @@
             socket.emit('player_click_1v1', num);
         }
 
-        // --- ENTRAÎNEMENT SOLO (CLASSIQUE, ALEATOIRE, AVALANCHE) ---
         function startSoloTraining(mode) {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
             activeTrainingMode = mode || 'classic';
@@ -1641,7 +1629,6 @@
             }
         }
 
-        // Mode Avalanche (Difficultés avec nombre initial de chiffres personnalisable)
         function startAvalancheGame(speed, initialCount) {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
             hideAllScreens();
@@ -1664,7 +1651,6 @@
             preparePowerHUD();
             SoundEngine.startMusic('solo');
 
-            // Timer de fin (décompte de 30s max)
             avalancheTimerInterval = setInterval(() => {
                 if (!isTimeFrozen) {
                     avalancheTimeLeft--;
@@ -1677,7 +1663,6 @@
                 }
             }, 1000);
 
-            // Intervalle d'apparition des chiffres en avalanche
             avalancheInterval = setInterval(() => {
                 if (!isTimeFrozen) {
                     let added = spawnAvalancheNumber();
