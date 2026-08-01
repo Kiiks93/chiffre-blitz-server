@@ -166,15 +166,19 @@
             <div style="overflow-y:auto; flex:1; font-size:13px; color:#ccc; display:flex; flex-direction:column; gap:12px; padding-right:5px;">
                 <div>
                     <strong style="color:#00d2ff;">⚡ Mode Classique (Solo) :</strong>
-                    <p style="margin:4px 0 0 0;">Cliquez le plus vite possible sur les tuiles dans l'ordre croissant exact pendant 30 secondes.</p>
+                    <p style="margin:4px 0 0 0;">Enchaînez le plus vite possible les chiffres dans l'ordre croissant exact de 1 à 50 pendant 30 secondes.</p>
                 </div>
                 <div>
                     <strong style="color:#f8b500;">🎲 Mode Aléatoire (Solo) :</strong>
                     <p style="margin:4px 0 0 0;">Un chiffre cible changeant s'affiche. Retrouvez-le et cliquez dessus le plus rapidement possible.</p>
                 </div>
                 <div>
+                    <strong style="color:#E94057;">🧊 Mode Avalanche (Style Tetris) :</strong>
+                    <p style="margin:4px 0 0 0;">Des chiffres s'empilent progressivement. Cliquez sur le chiffre cible affiché (présent dans la grille) pour libérer la case.</p>
+                </div>
+                <div>
                     <strong style="color:#00c6ff;">⚔️ Duel 1v1 Online :</strong>
-                    <p style="margin:4px 0 0 0;">Affrontez un adversaire en temps réel. Le premier à marquer le plus de points avant la fin du temps imparti gagne la partie.</p>
+                    <p style="margin:4px 0 0 0;">Affrontez un adversaire en temps réel. Le premier à atteindre les objectifs gagne la partie.</p>
                 </div>
             </div>
             <button class="btn-secondary" onclick="closeRulesModal()" style="margin-top:15px;">Fermer</button>
@@ -242,6 +246,16 @@
         <h2 style="color:#00d2ff; font-size:20px; margin-bottom:5px;">MODES D'ENTRAÎNEMENT</h2>
         <button class="btn-main btn-blue" onclick="startSoloTraining('classic')">⚡ Classique (Croissant)</button>
         <button class="btn-main btn-gold" onclick="startSoloTraining('random')">🎲 Aléatoire (Cibles variées)</button>
+        
+        <div style="margin-top:5px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
+            <p style="color:#E94057; font-size:12px; font-weight:bold; margin-bottom:6px;">🧊 AVALANCHE (Difficultés)</p>
+            <div style="display: flex; gap: 6px;">
+                <button class="power-btn equip" style="flex:1; padding:10px; background:#38ef7d; color:#000;" onclick="startAvalancheGame(1800)">Facile</button>
+                <button class="power-btn equip" style="flex:1; padding:10px; background:#f8b500; color:#000;" onclick="startAvalancheGame(1000)">Moyen</button>
+                <button class="power-btn equip" style="flex:1; padding:10px; background:#ff4b2b; color:#fff;" onclick="startAvalancheGame(500)">Difficile 💀</button>
+            </div>
+        </div>
+
         <button class="btn-secondary" onclick="showMainMenu()">⬅️ Retour Menu</button>
     </div>
 
@@ -362,6 +376,7 @@
         let hasWatchedAdThisGame = false;
         let adCallbackFunction = null;
 
+        // Prix exacts synchronisés avec server.js
         const powersData = {
             bonus: [
                 { id: 'spotlight', name: '💡 Projecteur', desc: 'Illumine la bonne tuile', price: 30 },
@@ -377,6 +392,11 @@
             ]
         };
         let currentShopTab = 'bonus';
+
+        // Variables Avalanche
+        let avalancheGridData = [];
+        let avalancheTarget = null;
+        let avalancheInterval = null;
 
         document.addEventListener("DOMContentLoaded", () => {
             showTitleScreen();
@@ -427,6 +447,7 @@
                 if (el) el.style.display = 'none';
             });
             if (soloTimerInterval) clearInterval(soloTimerInterval);
+            if (avalancheInterval) clearInterval(avalancheInterval);
         }
 
         function showTitleScreen() { hideAllScreens(); document.getElementById('screen-title').style.display = 'block'; }
@@ -479,7 +500,7 @@
                 let currentCoins = parseInt(coinsDisplay.innerText.replace('+', '')) || 0;
                 let doubled = currentCoins * 2;
                 coinsDisplay.innerText = `+${doubled} (Doublé 🎁)`;
-                myProfile.coins += currentCoins; // Ajout du bonus
+                myProfile.coins += currentCoins;
                 document.getElementById('user-coins-display').innerText = myProfile.coins;
             });
         }
@@ -689,6 +710,93 @@
                     }
                 }
             });
+        }
+
+        // Mode Avalanche
+        function startAvalancheGame(speed) {
+            is1v1Active = false;
+            hasWatchedAdThisGame = false;
+            document.getElementById('btn-reward-ad').style.display = 'block';
+            hideAllScreens();
+
+            document.getElementById('screen-game').style.display = 'block';
+            document.getElementById('hud-solo').style.display = 'flex';
+            document.getElementById('hud-1v1').style.display = 'none';
+
+            soloScore = 0;
+            document.getElementById('solo-score').innerText = soloScore;
+
+            avalancheGridData = Array(16).fill(null);
+            avalancheTarget = null;
+            for(let i=0; i<4; i++) spawnAvalancheNumber();
+            updateAvalancheTarget();
+            renderAvalancheGrid();
+
+            let pressureTimer = 0;
+            document.getElementById('game-timer').innerText = pressureTimer + 's';
+
+            avalancheInterval = setInterval(() => {
+                pressureTimer++;
+                document.getElementById('game-timer').innerText = pressureTimer + 's';
+                
+                let added = spawnAvalancheNumber();
+                updateAvalancheTarget();
+                renderAvalancheGrid();
+
+                if (!added) {
+                    clearInterval(avalancheInterval);
+                    endSoloGame();
+                }
+            }, speed);
+        }
+
+        function spawnAvalancheNumber() {
+            let emptyIndices = [];
+            avalancheGridData.forEach((val, idx) => { if (val === null) emptyIndices.push(idx); });
+            if (emptyIndices.length === 0) return false;
+
+            let randomIdx = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+            let randomNum = Math.floor(Math.random() * 50) + 1;
+            avalancheGridData[randomIdx] = randomNum;
+            return true;
+        }
+
+        function updateAvalancheTarget() {
+            let activeNumbers = avalancheGridData.filter(v => v !== null);
+            if (activeNumbers.length > 0) {
+                avalancheTarget = activeNumbers[Math.floor(Math.random() * activeNumbers.length)];
+                document.getElementById('solo-target').innerText = avalancheTarget;
+            } else {
+                avalancheTarget = null;
+                document.getElementById('solo-target').innerText = '-';
+            }
+        }
+
+        function renderAvalancheGrid() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            avalancheGridData.forEach((val, idx) => {
+                const tile = document.createElement('div');
+                if (val !== null) {
+                    tile.className = 'tile';
+                    tile.innerText = val;
+                    tile.onclick = () => handleAvalancheClick(val, idx);
+                } else {
+                    tile.className = 'tile empty';
+                    tile.innerText = '';
+                }
+                grid.appendChild(tile);
+            });
+        }
+
+        function handleAvalancheClick(val, idx) {
+            if (val === avalancheTarget) {
+                avalancheGridData[idx] = null;
+                soloScore += 20;
+                document.getElementById('solo-score').innerText = soloScore;
+                updateAvalancheTarget();
+                renderAvalancheGrid();
+            }
         }
 
         function renderTileGrid(pool, clickHandler) {
