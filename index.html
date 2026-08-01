@@ -496,7 +496,11 @@
     <!-- MODAL BOUTIQUE -->
     <div id="modal-shop" class="modal-overlay" style="display:none;">
         <div class="modal-card">
-            <h2 style="margin:0 0 8px 0; color:#38ef7d; font-size:18px;" data-i18n="shop_title">🛍️ BOUTIQUE</h2>
+            <h2 style="margin:0 0 4px 0; color:#38ef7d; font-size:18px;" data-i18n="shop_title">🛍️ BOUTIQUE</h2>
+            <!-- Affichage de l'argent dans la boutique -->
+            <div style="font-size: 13px; color: #f8b500; font-weight: bold; margin-bottom: 8px;">
+                🪙 <span data-i18n="coins">Pièces</span> : <span id="shop-coins-val">0</span>
+            </div>
             <div class="tabs">
                 <button id="shop-tab-bonus" class="tab-btn active" onclick="switchShopTab('bonus')" data-i18n="shop_tab_bonus">🟢 Bonus (pour soi)</button>
                 <button id="shop-tab-malus" class="tab-btn" onclick="switchShopTab('malus')" data-i18n="shop_tab_malus">🔴 Malus (adversaire)</button>
@@ -709,6 +713,7 @@
                 ad_desc: "Chiffre Blitz est 100% gratuit. Une publicité de soutien va se lancer. Merci ! ❤️",
                 ad_btn: "Lancer la partie ⚡",
                 ad_sponsored: "VIDÉO SPONSORISÉE...",
+                not_enough_coins: "Tu n'as pas assez de pièces pour acheter cet objet !",
                 powers: {
                     spotlight: { name: '💡 Projecteur', desc: 'Illumine la bonne tuile (2s)' },
                     freeze: { name: '⏳ Blocage du Temps', desc: 'Gèle le chrono pendant 3s' },
@@ -815,6 +820,7 @@
                 ad_desc: "Chiffre Blitz is 100% free. A support advertisement will play. Thank you! ❤️",
                 ad_btn: "Start Game ⚡",
                 ad_sponsored: "SPONSORED VIDEO...",
+                not_enough_coins: "You don't have enough coins to buy this item!",
                 powers: {
                     spotlight: { name: '💡 Spotlight', desc: 'Highlights the correct tile (2s)' },
                     freeze: { name: '⏳ Time Freeze', desc: 'Freezes the timer for 3s' },
@@ -1111,6 +1117,12 @@
             document.getElementById('user-points-display').innerText = myProfile.points;
             document.getElementById('user-name-display').innerText = myProfile.username || "Définir pseudo";
             document.getElementById('user-avatar-badge').innerHTML = getAvatarBadgeHTML(myProfile.flag, myProfile.avatar);
+            updateShopCoinsDisplay();
+        }
+
+        function updateShopCoinsDisplay() {
+            const valEl = document.getElementById('shop-coins-val');
+            if (valEl) valEl.innerText = myProfile.coins;
         }
 
         function isProfileValid() {
@@ -1538,6 +1550,7 @@
 
         function openShop() {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+            updateShopCoinsDisplay();
             document.getElementById('modal-shop').style.display = 'flex';
             switchShopTab(currentShopTab);
         }
@@ -1545,6 +1558,7 @@
 
         function switchShopTab(type) {
             currentShopTab = type;
+            updateShopCoinsDisplay();
             document.getElementById('shop-tab-bonus').classList.toggle('active', type === 'bonus');
             document.getElementById('shop-tab-malus').classList.toggle('active', type === 'malus');
             const container = document.getElementById('shop-container');
@@ -1569,7 +1583,15 @@
             });
         }
 
-        function buyPower(id) { if (socket.connected) socket.emit('buy_power', id); }
+        function buyPower(id) {
+            const power = POWERS_CATALOG.find(p => p.id === id);
+            if (power && myProfile.coins < power.price) {
+                alert(i18n[currentLang].not_enough_coins);
+                return;
+            }
+            if (socket.connected) socket.emit('buy_power', id);
+        }
+
         function equipPower(id) { if (socket.connected) socket.emit('equip_power', id); }
 
         function preparePowerHUD() {
