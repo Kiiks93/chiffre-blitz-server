@@ -2216,34 +2216,34 @@
 
         function spinJackpotWheel() {
             const spinBtn = document.getElementById('btn-spin-wheel');
-            const wheelEl = document.getElementById('wheel-element');
             spinBtn.disabled = true;
             spinBtn.style.opacity = '0.5';
-
-            const randomRotation = 1800 + Math.floor(Math.random() * 360);
-            wheelEl.style.transition = 'transform 3.5s cubic-bezier(0.15, 0.75, 0.1, 1)';
-            wheelEl.style.transform = `rotate(${randomRotation}deg)`;
-
-            setTimeout(() => {
-                socket.emit('spin_jackpot_wheel');
-            }, 3600);
+            document.getElementById('wheel-result-text').innerText = '';
+            socket.emit('spin_jackpot_wheel');
         }
 
         socket.on('jackpot_wheel_result', (data) => {
+            const wheelEl = document.getElementById('wheel-element');
             const resultText = document.getElementById('wheel-result-text');
-            if (data.outcome === 'jackpot') {
-                resultText.innerHTML = `🎉 <span style="color:#38ef7d;">JACKPOT ! +${data.coinDelta} Pièces 🪙</span>`;
-                SoundEngine.playVictory();
-            } else if (data.outcome === 'banqueroute') {
-                resultText.innerHTML = `💀 <span style="color:#ff4b2b;">BANQUEROUTE ! ${data.coinDelta} Pièces 🪙</span>`;
-                SoundEngine.playError();
-            } else {
-                resultText.innerHTML = `❌ <span style="color:#aaa;">Rien du tout ! Retente ta chance.</span>`;
-            }
+            
+            wheelEl.style.transition = 'transform 3.5s cubic-bezier(0.15, 0.75, 0.1, 1)';
+            wheelEl.style.transform = `rotate(${data.targetAngle}deg)`;
 
             setTimeout(() => {
-                document.getElementById('modal-jackpot-wheel').style.display = 'none';
-            }, 3500);
+                if (data.outcome === 'jackpot') {
+                    resultText.innerHTML = `🎉 <span style="color:#f8b500;">JACKPOT ! +${data.coinDelta} Pièces 🪙</span>`;
+                    SoundEngine.playVictory();
+                } else if (data.outcome === 'banqueroute') {
+                    resultText.innerHTML = `💀 <span style="color:#ff4b2b;">BANQUEROUTE ! ${data.coinDelta} Pièces 🪙</span>`;
+                    SoundEngine.playError();
+                } else {
+                    resultText.innerHTML = `❌ <span style="color:#38ef7d;">RIEN ! Retente ta chance.</span>`;
+                }
+
+                setTimeout(() => {
+                    document.getElementById('modal-jackpot-wheel').style.display = 'none';
+                }, 2500);
+            }, 3600);
         });
 
         socket.on('game_over_1v1', (data) => {
