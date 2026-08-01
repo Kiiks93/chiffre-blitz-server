@@ -1,36 +1,40 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const path = require('path');
+const cors = require('cors');
 
 const app = express();
+app.use(cors());
+
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: { origin: "*" },
-    pingTimeout: 60000,
-    pingInterval: 25000
+    cors: {
+        origin: "*", 
+        methods: ["GET", "POST"]
+    }
 });
 
-app.use(express.static(__dirname));
+// BASE DE DONNÉES EN MÉMOIRE (sauvegarde persistante tant que le serveur tourne)
+const playersDB = {};
 
+// SESSIONS TEMPORAIRES (Sockets & Matchmaking)
 let players = {};
-let waitingPlayer = null;
-let rooms = {};
-let pendingRoomDeletions = {};
+let waitingPlayerId = null;
+let activeMatches = {};
+let customRooms = {};
 
-// Grille de prix équilibrée par rapport au nouveau plafond solo (100 pièces max)
-const POWERS_PRICES = {
-    'spotlight': 30,
-    'freeze': 60,
-    'joker': 150,
-    'nova': 400,
-    'quake': 40,
-    'micro': 80,
-    'eclipse': 200,
-    'chaos': 500
+const POWERS_CATALOG = {
+    'spotlight': { price: 40, type: 'bonus' },
+    'freeze': { price: 80, type: 'bonus' },
+    'joker': { price: 180, type: 'bonus' },
+    'nova': { price: 450, type: 'bonus' },
+    'quake': { price: 50, type: 'malus' },
+    'micro': { price: 100, type: 'malus' },
+    'eclipse': { price: 220, type: 'malus' },
+    'chaos': { price: 600, type: 'malus' }
 };
 
-function generateRandomPool(target) {
+function generateGridPool(target) {
     let pool = [target];
     let candidates = [];
     for (let i = 1; i <= 50; i++) {
@@ -42,366 +46,328 @@ function generateRandomPool(target) {
 }
 
 io.on('connection', (socket) => {
-    console.log(`Un joueur s'est connecté : ${socket.id}`);
-
-    socket.on('register_player', (profile) => {
-        if (!players[socket.id]) {
-            players[socket.id] = {
-                id: socket.id,
-                username: profile.username || 'Joueur',
-                region: profile.region || 'Hauts-de-France',
+    
+    // ENREGISTREMENT ET RÉCUPÉRATION DU COMPTE
+    socket.on('register_player', (data) => {
+        const username = data.username;
+        
+        // Création du joueur dans la BDD s'il n'existe pas
+        if (!playersDB[username]) {
+            playersDB[username] = {
+                username: username,
+                region: data.region || 'Unknown',
                 points: 0,
                 coins: 0,
                 trophies: 0,
                 inventory: {},
                 equippedPower: null
             };
-        } else {
-            players[socket.id].username = profile.username || players[socket.id].username;
-            players[socket.id].region = profile.region || players[socket.id].region;
         }
-        socket.emit('player_registered', players[socket.id]);
+        
+        socket.username = username;
+        
+        // On lie le socket id au joueur temporaire pour le matchmaking
+        players[socket.id] = {
+            id: socket.id,
+            username: username,
+            region: data.region || 'Unknown',
+            inGame: false
+        };
+
+        // On renvoie les vraies données sauvegardées de la BDD
+        socket.emit('player_registered', playersDB[username]);
     });
 
-    socket.on('buy_power', (powerId) => {
-        const player = players[socket.id];
-        if (!player) return;
-
-        const price = POWERS_PRICES[powerId];
-        if (price !== undefined && player.coins >= price) {
-            player.coins -= price;
-            player.inventory[powerId] = (player.inventory[powerId] || 0) + 1;
-            if (!player.equippedPower) player.equippedPower = powerId;
-
-            socket.emit('player_registered', player);
-            socket.emit('purchase_success');
-        } else {
-            socket.emit('room_error', "Fonds insuffisants ou pouvoir invalide !");
-        }
-    });
-
-    socket.on('equip_power', (powerId) => {
-        const player = players[socket.id];
-        if (player) {
-            if (powerId === null || (player.inventory[powerId] && player.inventory[powerId] > 0)) {
-                player.equippedPower = (player.equippedPower === powerId) ? null : powerId;
-                socket.emit('player_registered', player);
-            }
-        }
-    });
-
-    // Récompense solo : Plafonnée à 100 pièces max (30 cases en 30s = score de 300 = 100 pièces)
+    // RECOMPENSES SOLO (Sauvegarde en BDD)
     socket.on('claim_solo_reward', (score) => {
-        const player = players[socket.id];
-        if (player && typeof score === 'number' && score > 0) {
-            const earnedCoins = Math.min(100, Math.floor(score / 3));
-            player.coins += earnedCoins;
-            socket.emit('player_registered', player);
+        if (socket.username && playersDB[socket.username]) {
+            const baseCoins = Math.floor(score / 3);
+            const bonusCoins = score >= 300 ? 100 : 0;
+            const totalCoins = baseCoins + bonusCoins;
+            
+            playersDB[socket.username].coins += totalCoins;
+            socket.emit('player_registered', playersDB[socket.username]);
         }
     });
 
+    // RECOMPENSES PUBLICITE (Sauvegarde en BDD)
+    socket.on('claim_ad_reward', (bonusCoins) => {
+        if (socket.username && playersDB[socket.username]) {
+            playersDB[socket.username].coins += bonusCoins;
+            socket.emit('player_registered', playersDB[socket.username]);
+        }
+    });
+
+    // ACHAT BOUTIQUE (Sauvegarde en BDD)
+    socket.on('buy_power', (powerId) => {
+        if (!socket.username || !playersDB[socket.username]) return;
+        const playerProfile = playersDB[socket.username];
+        const power = POWERS_CATALOG[powerId];
+        
+        if (power && playerProfile.coins >= power.price) {
+            playerProfile.coins -= power.price;
+            playerProfile.inventory[powerId] = (playerProfile.inventory[powerId] || 0) + 1;
+            socket.emit('player_registered', playerProfile);
+        }
+    });
+
+    // EQUIPER UN POUVOIR
+    socket.on('equip_power', (powerId) => {
+        if (!socket.username || !playersDB[socket.username]) return;
+        const playerProfile = playersDB[socket.username];
+        
+        if (playerProfile.inventory[powerId] && playerProfile.inventory[powerId] > 0) {
+            playerProfile.equippedPower = powerId;
+            socket.emit('player_registered', playerProfile);
+        }
+    });
+
+    // MALUS ENVOYÉ À L'ADVERSAIRE
+    socket.on('send_malus', (data) => {
+        const matchId = players[socket.id]?.matchId;
+        if (!matchId || !activeMatches[matchId]) return;
+        
+        const match = activeMatches[matchId];
+        const opponentId = Object.keys(match.players).find(id => id !== socket.id);
+        if (opponentId) {
+            io.to(opponentId).emit('receive_malus', { type: data.type });
+        }
+    });
+
+    // LEADERBOARD (Trie la BDD en direct)
     socket.on('get_leaderboard', (type) => {
-        let playersArray = Object.values(players);
-        playersArray.sort((a, b) => b.points - a.points);
-
-        if (type === 'regional' && players[socket.id]) {
-            const userRegion = players[socket.id].region;
-            playersArray = playersArray.filter(p => p.region === userRegion);
+        const allPlayers = Object.values(playersDB);
+        let sorted = [];
+        
+        if (type === 'regional' && socket.username && playersDB[socket.username]) {
+            const myRegion = playersDB[socket.username].region;
+            sorted = allPlayers.filter(p => p.region === myRegion);
+        } else {
+            sorted = allPlayers; 
         }
 
-        socket.emit('leaderboard_data', { data: playersArray.slice(0, 20) });
+        sorted.sort((a, b) => b.points - a.points);
+        socket.emit('leaderboard_data', { data: sorted.slice(0, 50) });
     });
 
-    socket.on('win_tournament', () => {
-        const player = players[socket.id];
-        if (player) {
-            player.points += 50;
-            player.coins += 150;
-            player.trophies += 1;
-            socket.emit('player_registered', player);
-            socket.emit('tournament_reward_success', { pointsGained: 50, coinsGained: 150, trophiesGained: 1 });
-        }
+    // GESTION DES SALONS PRIVES
+    socket.on('get_rooms_list', () => {
+        const list = Object.values(customRooms).map(r => ({
+            code: r.code,
+            hasPassword: r.password.length > 0,
+            playersCount: r.players.length
+        }));
+        socket.emit('rooms_list_data', list);
     });
 
     socket.on('create_room', (data) => {
-        let roomCode = data?.code && data.code.trim() !== '' ? data.code.trim().toUpperCase() : '';
-
-        if (roomCode !== '' && rooms[roomCode]) {
-            socket.emit('room_error', "Ce nom de salon est déjà utilisé. Veuillez en choisir un autre.");
+        const code = data.code || Math.random().toString(36).substring(2, 6).toUpperCase();
+        if (customRooms[code]) {
+            socket.emit('room_error', "Ce salon existe déjà.");
             return;
         }
-
-        if (roomCode === '') {
-            do {
-                roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
-            } while (rooms[roomCode]);
-        }
-
-        if (pendingRoomDeletions[roomCode]) {
-            clearTimeout(pendingRoomDeletions[roomCode]);
-            delete pendingRoomDeletions[roomCode];
-        }
-
-        rooms[roomCode] = {
-            code: roomCode,
-            password: data?.password || '',
-            host: socket.id,
-            players: [{ id: socket.id, username: data?.username || players[socket.id]?.username || 'Hôte' }],
-            gameStarted: false,
-            ended: false,
-            timerInterval: null
+        
+        customRooms[code] = {
+            code: code,
+            password: data.password || '',
+            players: [socket.id]
         };
-
-        socket.join(roomCode);
-        socket.emit('room_joined_success', { code: roomCode, players: rooms[roomCode].players });
+        
+        socket.join(code);
+        players[socket.id].currentRoom = code;
+        
+        socket.emit('room_joined_success', { code: code, players: [{ id: socket.id, username: data.username }] });
+        io.emit('rooms_list_data', Object.values(customRooms).map(r => ({ code: r.code, hasPassword: r.password.length > 0, playersCount: r.players.length })));
     });
 
     socket.on('join_room', (data) => {
-        const roomCode = data?.code ? data.code.toUpperCase() : '';
-        const passwordInput = (typeof data?.password === 'string') ? data.password : '';
-        const room = rooms[roomCode];
+        const room = customRooms[data.code];
+        if (!room) {
+            socket.emit('room_error', "Salon introuvable.");
+            return;
+        }
+        if (room.password && room.password !== data.password) {
+            socket.emit('room_error', "Mot de passe incorrect.");
+            return;
+        }
+        if (room.players.length >= 2) {
+            socket.emit('room_error', "Ce salon est plein.");
+            return;
+        }
 
-        if (room && !room.gameStarted && room.players.length < 2) {
-            if (room.password && room.password !== passwordInput) {
-                socket.emit('room_error', "Mot de passe incorrect !");
-                return;
-            }
-            const username = players[socket.id]?.username || 'Adversaire';
-            room.players.push({ id: socket.id, username: username });
-            socket.join(roomCode);
+        room.players.push(socket.id);
+        socket.join(data.code);
+        players[socket.id].currentRoom = data.code;
 
-            io.to(roomCode).emit('room_players_update', { players: room.players });
-            socket.emit('room_joined_success', { code: roomCode, players: room.players });
+        const playersData = room.players.map(pid => ({ id: pid, username: players[pid]?.username || 'Joueur' }));
+        io.to(data.code).emit('room_joined_success', { code: data.code, players: playersData });
+        io.emit('rooms_list_data', Object.values(customRooms).map(r => ({ code: r.code, hasPassword: r.password.length > 0, playersCount: r.players.length })));
 
-            if (room.players.length === 2) {
-                room.gameStarted = true;
-                room.timeLeft = 30;
-                room.matchPlayers = {
-                    [room.players[0].id]: { target: 1, score: 0, pool: generateRandomPool(1) },
-                    [room.players[1].id]: { target: 1, score: 0, pool: generateRandomPool(1) }
-                };
-                io.to(roomCode).emit('start_countdown');
-                setTimeout(() => start1v1GameLoop(roomCode), 3000);
-            }
-        } else {
-            socket.emit('room_error', "Salon introuvable, complet ou partie déjà commencée !");
+        if (room.players.length === 2) {
+            startMatch1v1(room.players[0], room.players[1]);
+            delete customRooms[data.code];
+            io.emit('rooms_list_data', Object.values(customRooms).map(r => ({ code: r.code, hasPassword: r.password.length > 0, playersCount: r.players.length })));
         }
     });
 
     socket.on('leave_room', () => {
-        cleanupPlayerFromRooms(socket.id, true);
-    });
-
-    socket.on('get_rooms_list', () => {
-        const openRooms = Object.values(rooms)
-            .filter(r => r.players.length < 2 && !r.gameStarted)
-            .map(r => ({ 
-                code: r.code, 
-                playersCount: r.players.length,
-                hasPassword: r.password !== '' 
-            }));
-        socket.emit('rooms_list_data', openRooms);
-    });
-
-    socket.on('find_1v1_match', () => {
-        if (waitingPlayer && waitingPlayer !== socket.id) {
-            const p1 = waitingPlayer;
-            const p2 = socket.id;
-            waitingPlayer = null;
-
-            const roomName = `match_${p1}_${p2}`;
-            const s1 = io.sockets.sockets.get(p1);
-            const s2 = io.sockets.sockets.get(p2);
+        const roomId = players[socket.id]?.currentRoom;
+        if (roomId && customRooms[roomId]) {
+            customRooms[roomId].players = customRooms[roomId].players.filter(p => p !== socket.id);
+            socket.leave(roomId);
+            players[socket.id].currentRoom = null;
             
-            if (s1) s1.join(roomName);
-            if (s2) s2.join(roomName);
+            if (customRooms[roomId].players.length === 0) {
+                delete customRooms[roomId];
+            } else {
+                const playersData = customRooms[roomId].players.map(pid => ({ id: pid, username: players[pid]?.username || 'Joueur' }));
+                io.to(roomId).emit('room_players_update', { players: playersData });
+            }
+            io.emit('rooms_list_data', Object.values(customRooms).map(r => ({ code: r.code, hasPassword: r.password.length > 0, playersCount: r.players.length })));
+        }
+    });
 
-            rooms[roomName] = {
-                code: roomName,
-                players: [
-                    { id: p1, username: players[p1]?.username || 'Joueur 1' },
-                    { id: p2, username: players[p2]?.username || 'Joueur 2' }
-                ],
-                gameStarted: true,
-                ended: false,
-                timeLeft: 30,
-                timerInterval: null,
-                matchPlayers: {
-                    [p1]: { target: 1, score: 0, pool: generateRandomPool(1) },
-                    [p2]: { target: 1, score: 0, pool: generateRandomPool(1) }
+    // MATCHMAKING ALÉATOIRE
+    socket.on('find_1v1_match', () => {
+        if (waitingPlayerId && waitingPlayerId !== socket.id && players[waitingPlayerId]) {
+            startMatch1v1(waitingPlayerId, socket.id);
+            waitingPlayerId = null;
+        } else {
+            waitingPlayerId = socket.id;
+        }
+    });
+
+    // DÉMARRAGE DU MATCH 1v1
+    function startMatch1v1(p1_id, p2_id) {
+        const matchId = `match_${p1_id}_${p2_id}`;
+        
+        activeMatches[matchId] = {
+            id: matchId,
+            timeLeft: 30,
+            timer: null,
+            players: {
+                [p1_id]: { target: 1, score: 0 },
+                [p2_id]: { target: 1, score: 0 }
+            }
+        };
+
+        if (players[p1_id]) { players[p1_id].inGame = true; players[p1_id].matchId = matchId; }
+        if (players[p2_id]) { players[p2_id].inGame = true; players[p2_id].matchId = matchId; }
+
+        io.to(p1_id).emit('start_countdown');
+        io.to(p2_id).emit('start_countdown');
+
+        setTimeout(() => {
+            const p1Pool = generateGridPool(1);
+            const p2Pool = generateGridPool(1);
+
+            io.to(p1_id).emit('game_started', { timeLeft: 30, myTarget: 1, myPool: p1Pool });
+            io.to(p2_id).emit('game_started', { timeLeft: 30, myTarget: 1, myPool: p2Pool });
+
+            activeMatches[matchId].timer = setInterval(() => {
+                if (!activeMatches[matchId]) return;
+                activeMatches[matchId].timeLeft--;
+                io.to(p1_id).emit('timer_update', activeMatches[matchId].timeLeft);
+                io.to(p2_id).emit('timer_update', activeMatches[matchId].timeLeft);
+                
+                if (activeMatches[matchId].timeLeft <= 0) {
+                    endMatch(matchId, "Le temps est écoulé !");
                 }
-            };
+            }, 1000);
+        }, 3000);
+    }
 
-            io.to(roomName).emit('start_countdown');
-            setTimeout(() => start1v1GameLoop(roomName), 3000);
-        } else {
-            waitingPlayer = socket.id;
-        }
-    });
-
+    // CLIC EN MATCH 1v1 (Sécurisé côté serveur)
     socket.on('player_click_1v1', (num) => {
-        let roomCode = null;
-        for (const code in rooms) {
-            if (rooms[code].matchPlayers && rooms[code].matchPlayers[socket.id]) {
-                roomCode = code;
-                break;
+        const pInfo = players[socket.id];
+        if (!pInfo || !pInfo.matchId || !activeMatches[pInfo.matchId]) return;
+
+        const match = activeMatches[pInfo.matchId];
+        const matchPlayer = match.players[socket.id];
+        const opponentId = Object.keys(match.players).find(id => id !== socket.id);
+
+        if (num === matchPlayer.target) {
+            matchPlayer.target++;
+            matchPlayer.score += 10;
+            const newPool = generateGridPool(matchPlayer.target);
+            socket.emit('my_grid_updated', { success: true, target: matchPlayer.target, newPool: newPool });
+            if (opponentId) {
+                io.to(opponentId).emit('opponent_progress', { target: matchPlayer.target });
             }
-        }
-        if (!roomCode) return;
-
-        let room = rooms[roomCode];
-        if (!room || room.ended || room.timeLeft <= 0) return;
-
-        let pData = room.matchPlayers[socket.id];
-        if (num === pData.target) {
-            pData.score += 10;
-            pData.target++;
-            pData.pool = generateRandomPool(pData.target);
-            socket.emit('my_grid_updated', { target: pData.target, newPool: pData.pool, success: true });
-            socket.to(roomCode).emit('opponent_progress', { target: pData.target, score: pData.score });
+            if (matchPlayer.target > 30) {
+                endMatch(pInfo.matchId, `${pInfo.username} a atteint 30 en premier !`);
+            }
         } else {
-            socket.emit('my_grid_updated', { target: pData.target, newPool: pData.pool, success: false });
-        }
-    });
-
-    socket.on('send_malus', (data) => {
-        for (const code in rooms) {
-            if (rooms[code].matchPlayers && rooms[code].matchPlayers[socket.id]) {
-                socket.to(code).emit('receive_malus', data);
-                break;
+            match.timeLeft = Math.max(0, match.timeLeft - 1);
+            socket.emit('my_grid_updated', { success: false, target: matchPlayer.target, newPool: generateGridPool(matchPlayer.target) });
+            io.to(socket.id).emit('timer_update', match.timeLeft);
+            if (opponentId) io.to(opponentId).emit('timer_update', match.timeLeft);
+            if (match.timeLeft <= 0) {
+                endMatch(pInfo.matchId, "Erreur fatale : Temps écoulé !");
             }
         }
     });
 
+    // FIN DE MATCH 1v1
+    function endMatch(matchId, reason) {
+        const match = activeMatches[matchId];
+        if (!match) return;
+
+        clearInterval(match.timer);
+        
+        const playerIds = Object.keys(match.players);
+        const p1_id = playerIds[0];
+        const p2_id = playerIds[1];
+        
+        let winnerId = null;
+        if (match.players[p1_id].target > match.players[p2_id].target) winnerId = p1_id;
+        else if (match.players[p2_id].target > match.players[p1_id].target) winnerId = p2_id;
+        
+        // Distribution des récompenses pour les deux
+        playerIds.forEach(id => {
+            if (players[id]) {
+                const username = players[id].username;
+                const isWinner = (id === winnerId);
+                const gainedCoins = isWinner ? 40 : 15;
+                const gainedPts = isWinner ? 20 : (winnerId ? -10 : 5);
+                
+                if (username && playersDB[username]) {
+                    playersDB[username].coins += gainedCoins;
+                    playersDB[username].points = Math.max(0, playersDB[username].points + gainedPts);
+                    if (isWinner) playersDB[username].trophies += 1;
+                    
+                    io.to(id).emit('player_registered', playersDB[username]);
+                }
+                players[id].inGame = false;
+                players[id].matchId = null;
+            }
+        });
+
+        io.to(p1_id).emit('game_over_1v1', { players: match.players, winnerId: winnerId, reason: reason });
+        if (p2_id) io.to(p2_id).emit('game_over_1v1', { players: match.players, winnerId: winnerId, reason: reason });
+        
+        delete activeMatches[matchId];
+    }
+
+    // DÉCONNEXION DU JOUEUR
     socket.on('disconnect', () => {
-        if (waitingPlayer === socket.id) waitingPlayer = null;
-        cleanupPlayerFromRooms(socket.id, false);
+        if (waitingPlayerId === socket.id) waitingPlayerId = null;
+        
+        const pInfo = players[socket.id];
+        if (pInfo) {
+            if (pInfo.currentRoom && customRooms[pInfo.currentRoom]) {
+                customRooms[pInfo.currentRoom].players = customRooms[pInfo.currentRoom].players.filter(p => p !== socket.id);
+                if (customRooms[pInfo.currentRoom].players.length === 0) delete customRooms[pInfo.currentRoom];
+            }
+            if (pInfo.inGame && pInfo.matchId) {
+                endMatch(pInfo.matchId, "L'adversaire s'est déconnecté.");
+            }
+        }
         delete players[socket.id];
     });
 });
 
-function cleanupPlayerFromRooms(socketId, explicitLeave = false) {
-    for (const code in rooms) {
-        const room = rooms[code];
-        const wasInMatch = room.matchPlayers && room.matchPlayers[socketId];
-        room.players = room.players.filter(p => p.id !== socketId);
-        
-        if (wasInMatch) {
-            if (!room.ended) {
-                room.ended = true;
-                if (room.timerInterval) clearInterval(room.timerInterval);
-                io.to(code).emit('room_error', "L'adversaire s'est déconnecté.");
-            }
-            delete rooms[code];
-        } else if (room.players.length === 0) {
-            if (explicitLeave) {
-                if (room.timerInterval) clearInterval(room.timerInterval);
-                delete rooms[code];
-            } else {
-                if (!pendingRoomDeletions[code]) {
-                    pendingRoomDeletions[code] = setTimeout(() => {
-                        if (rooms[code] && rooms[code].players.length === 0) {
-                            if (rooms[code].timerInterval) clearInterval(rooms[code].timerInterval);
-                            delete rooms[code];
-                        }
-                        delete pendingRoomDeletions[code];
-                    }, 15000);
-                }
-            }
-        } else {
-            io.to(code).emit('room_players_update', { players: room.players });
-        }
-    }
-}
-
-function start1v1GameLoop(roomCode) {
-    let room = rooms[roomCode];
-    if (!room || room.ended) return;
-
-    if (room.timerInterval) clearInterval(room.timerInterval);
-
-    for (let pId in room.matchPlayers) {
-        io.to(pId).emit('game_started', {
-            timeLeft: room.timeLeft,
-            myTarget: room.matchPlayers[pId].target,
-            myPool: room.matchPlayers[pId].pool
-        });
-    }
-
-    room.timerInterval = setInterval(() => {
-        if (!rooms[roomCode] || rooms[roomCode].ended) {
-            clearInterval(room.timerInterval);
-            return;
-        }
-        room.timeLeft--;
-        io.to(roomCode).emit('timer_update', room.timeLeft);
-
-        if (room.timeLeft <= 0) {
-            clearInterval(room.timerInterval);
-            end1v1Game(roomCode, "Temps écoulé !");
-        }
-    }, 1000);
-}
-
-function end1v1Game(roomCode, reason) {
-    let room = rooms[roomCode];
-    if (!room || room.ended) return;
-
-    room.ended = true;
-    if (room.timerInterval) clearInterval(room.timerInterval);
-
-    let pIds = Object.keys(room.matchPlayers || {});
-    if (pIds.length >= 2) {
-        let p1Id = pIds[0];
-        let p2Id = pIds[1];
-        let p1 = room.matchPlayers[p1Id];
-        let p2 = room.matchPlayers[p2Id];
-
-        let winnerId = null;
-        if (p1.score > p2.score) {
-            winnerId = p1Id;
-        } else if (p2.score > p1.score) {
-            winnerId = p2Id;
-        }
-
-        let coinsGainedP1 = 10;
-        let coinsGainedP2 = 10;
-
-        if (winnerId) {
-            let loserId = (winnerId === p1Id) ? p2Id : p1Id;
-            if (players[winnerId]) {
-                players[winnerId].points += 25;
-                if (winnerId === p1Id) coinsGainedP1 = 30;
-                else coinsGainedP2 = 30;
-            }
-            if (players[loserId]) {
-                players[loserId].points = Math.max(0, players[loserId].points - 15);
-            }
-        } else {
-            if (players[p1Id]) players[p1Id].points += 5;
-            if (players[p2Id]) players[p2Id].points += 5;
-        }
-
-        if (players[p1Id]) {
-            players[p1Id].coins += coinsGainedP1;
-            io.to(p1Id).emit('player_registered', players[p1Id]);
-        }
-        if (players[p2Id]) {
-            players[p2Id].coins += coinsGainedP2;
-            io.to(p2Id).emit('player_registered', players[p2Id]);
-        }
-
-        let formattedPlayers = {
-            [p1Id]: { target: p1.target, score: p1.score },
-            [p2Id]: { target: p2.target, score: p2.score }
-        };
-
-        io.to(roomCode).emit('game_over_1v1', { reason: reason, winnerId: winnerId, players: formattedPlayers });
-    }
-    delete rooms[roomCode];
-}
-
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Serveur actif sur le port ${PORT}`);
+    console.log(`Serveur Chiffre Blitz démarré sur le port ${PORT}`);
 });
