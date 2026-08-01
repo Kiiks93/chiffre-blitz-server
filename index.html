@@ -731,18 +731,20 @@
         function watchRewardedAd() {
             if (hasWatchedAdThisGame) return;
 
+            const coinsDisplay = document.getElementById('recap-coins-gained');
+            let rawText = coinsDisplay.innerText.replace('+', '').split(' ')[0];
+            let baseGained = parseInt(rawText) || 0;
+
             simulateAd('reward', () => {
                 hasWatchedAdThisGame = true;
                 document.getElementById('btn-reward-ad').style.display = 'none'; // Verrouille le bouton
                 
-                const coinsDisplay = document.getElementById('recap-coins-gained');
-                let currentGained = parseInt(coinsDisplay.innerText.replace('+', '')) || 0;
-                let doubled = currentGained * 2;
+                let doubled = baseGained * 2;
                 coinsDisplay.innerText = `+${doubled} (Doublé 🎁)`;
                 
-                // Envoi au serveur pour sauvegarde permanente !
+                // Envoi sécurisé au serveur pour enregistrer le bonus de la pub
                 if (socket.connected) {
-                    socket.emit('claim_ad_reward', currentGained);
+                    socket.emit('claim_ad_reward', baseGained);
                 }
                 
                 alert(currentLang === 'fr' ? "🎁 Publicité visionnée ! Vos pièces ont été doublées !" : "🎁 Ad watched! Your coins have been doubled!");
@@ -917,8 +919,7 @@
             document.getElementById('mute-btn').innerText = muted ? '🔇' : '🔊';
         }
 
-        // Remplace cette URL par celle de ton propre serveur Render !
-        const SERVER_URL = "https://chiffre-blitz-server.onrender.com"; 
+        const SERVER_URL = "https://chiffre-blitz-server.onrender.com";
         const socket = io(SERVER_URL, {
             reconnection: true,
             reconnectionAttempts: 10,
@@ -1027,7 +1028,7 @@
 
         socket.on('player_registered', (player) => {
             if (player) {
-                myProfile = player; // Met à jour tout le profil depuis la vraie BDD du serveur
+                myProfile = player;
                 document.getElementById('user-name-display').innerText = player.username;
                 updateEconomyUI();
                 if (document.getElementById('modal-shop').style.display === 'flex') {
@@ -1363,7 +1364,6 @@
         function startRandom1v1() {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
             
-            // On réinitialise la sécurité des pubs à chaque nouveau match
             hasWatchedAdThisGame = false;
             document.getElementById('btn-reward-ad').style.display = 'block';
 
@@ -1463,7 +1463,6 @@
         function startSoloTraining() {
             if (!isProfileValid()) { checkAndShowProfileModal(); return; }
             
-            // On réinitialise la sécurité des pubs à chaque nouveau match
             hasWatchedAdThisGame = false;
             document.getElementById('btn-reward-ad').style.display = 'block';
 
