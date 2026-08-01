@@ -14,7 +14,7 @@ const io = new Server(server, {
     }
 });
 
-// BASE DE DONNÉES EN MÉMOIRE (sauvegarde persistante tant que le serveur tourne)
+// BASE DE DONNÉES EN MÉMOIRE
 const playersDB = {};
 
 // SESSIONS TEMPORAIRES (Sockets & Matchmaking)
@@ -51,7 +51,6 @@ io.on('connection', (socket) => {
     socket.on('register_player', (data) => {
         const username = data.username;
         
-        // Création du joueur dans la BDD s'il n'existe pas
         if (!playersDB[username]) {
             playersDB[username] = {
                 username: username,
@@ -66,7 +65,6 @@ io.on('connection', (socket) => {
         
         socket.username = username;
         
-        // On lie le socket id au joueur temporaire pour le matchmaking
         players[socket.id] = {
             id: socket.id,
             username: username,
@@ -74,34 +72,37 @@ io.on('connection', (socket) => {
             inGame: false
         };
 
-        // On renvoie les vraies données sauvegardées de la BDD
         socket.emit('player_registered', playersDB[username]);
     });
 
-    // RECOMPENSES SOLO (Sauvegarde en BDD)
+    // RECOMPENSES SOLO
     socket.on('claim_solo_reward', (score) => {
-        if (socket.username && playersDB[socket.username]) {
+        const username = socket.username || (players[socket.id] ? players[socket.id].username : null);
+        if (username && playersDB[username]) {
             const baseCoins = Math.floor(score / 3);
             const bonusCoins = score >= 300 ? 100 : 0;
             const totalCoins = baseCoins + bonusCoins;
             
-            playersDB[socket.username].coins += totalCoins;
-            socket.emit('player_registered', playersDB[socket.username]);
+            playersDB[username].coins += totalCoins;
+            socket.emit('player_registered', playersDB[username]);
         }
     });
 
-    // RECOMPENSES PUBLICITE (Sauvegarde en BDD)
+    // RECOMPENSES PUBLICITE (Corrigé et sécurisé)
     socket.on('claim_ad_reward', (bonusCoins) => {
-        if (socket.username && playersDB[socket.username]) {
-            playersDB[socket.username].coins += bonusCoins;
-            socket.emit('player_registered', playersDB[socket.username]);
+        const username = socket.username || (players[socket.id] ? players[socket.id].username : null);
+        
+        if (username && playersDB[username]) {
+            playersDB[username].coins += Number(bonusCoins) || 0;
+            socket.emit('player_registered', playersDB[username]);
         }
     });
 
-    // ACHAT BOUTIQUE (Sauvegarde en BDD)
+    // ACHAT BOUTIQUE
     socket.on('buy_power', (powerId) => {
-        if (!socket.username || !playersDB[socket.username]) return;
-        const playerProfile = playersDB[socket.username];
+        const username = socket.username || (players[socket.id] ? players[socket.id].username : null);
+        if (!username || !playersDB[username]) return;
+        const playerProfile = playersDB[username];
         const power = POWERS_CATALOG[powerId];
         
         if (power && playerProfile.coins >= power.price) {
@@ -113,8 +114,9 @@ io.on('connection', (socket) => {
 
     // EQUIPER UN POUVOIR
     socket.on('equip_power', (powerId) => {
-        if (!socket.username || !playersDB[socket.username]) return;
-        const playerProfile = playersDB[socket.username];
+        const username = socket.username || (players[socket.id] ? players[socket.id].username : null);
+        if (!username || !playersDB[username]) return;
+        const playerProfile = playersDB[username];
         
         if (playerProfile.inventory[powerId] && playerProfile.inventory[powerId] > 0) {
             playerProfile.equippedPower = powerId;
@@ -134,13 +136,14 @@ io.on('connection', (socket) => {
         }
     });
 
-    // LEADERBOARD (Trie la BDD en direct)
+    // LEADERBOARD
     socket.on('get_leaderboard', (type) => {
         const allPlayers = Object.values(playersDB);
         let sorted = [];
         
-        if (type === 'regional' && socket.username && playersDB[socket.username]) {
-            const myRegion = playersDB[socket.username].region;
+        const username = socket.username || (players[socket.id] ? players[socket.id].username : null);
+        if (type === 'regional' && username && playersDB[username]) {
+            const myRegion = playersDB[username].region;
             sorted = allPlayers.filter(p => p.region === myRegion);
         } else {
             sorted = allPlayers; 
@@ -174,7 +177,7 @@ io.on('connection', (socket) => {
         };
         
         socket.join(code);
-        players[socket.id].currentRoom = code;
+        if (players[socket.id]) players[socket.id].currentRoom = code;
         
         socket.emit('room_joined_success', { code: code, players: [{ id: socket.id, username: data.username }] });
         io.emit('rooms_list_data', Object.values(customRooms).map(r => ({ code: r.code, hasPassword: r.password.length > 0, playersCount: r.players.length })));
@@ -197,7 +200,7 @@ io.on('connection', (socket) => {
 
         room.players.push(socket.id);
         socket.join(data.code);
-        players[socket.id].currentRoom = data.code;
+        if (players[socket.id]) players[socket.id].currentRoom = data.code;
 
         const playersData = room.players.map(pid => ({ id: pid, username: players[pid]?.username || 'Joueur' }));
         io.to(data.code).emit('room_joined_success', { code: data.code, players: playersData });
@@ -215,7 +218,7 @@ io.on('connection', (socket) => {
         if (roomId && customRooms[roomId]) {
             customRooms[roomId].players = customRooms[roomId].players.filter(p => p !== socket.id);
             socket.leave(roomId);
-            players[socket.id].currentRoom = null;
+            if (players[socket.id]) players[socket.id].currentRoom = null;
             
             if (customRooms[roomId].players.length === 0) {
                 delete customRooms[roomId];
@@ -237,7 +240,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // DÉMARRAGE DU MATCH 1v1
     function startMatch1v1(p1_id, p2_id) {
         const matchId = `match_${p1_id}_${p2_id}`;
         
@@ -277,7 +279,6 @@ io.on('connection', (socket) => {
         }, 3000);
     }
 
-    // CLIC EN MATCH 1v1 (Sécurisé côté serveur)
     socket.on('player_click_1v1', (num) => {
         const pInfo = players[socket.id];
         if (!pInfo || !pInfo.matchId || !activeMatches[pInfo.matchId]) return;
@@ -308,7 +309,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // FIN DE MATCH 1v1
     function endMatch(matchId, reason) {
         const match = activeMatches[matchId];
         if (!match) return;
@@ -323,7 +323,6 @@ io.on('connection', (socket) => {
         if (match.players[p1_id].target > match.players[p2_id].target) winnerId = p1_id;
         else if (match.players[p2_id].target > match.players[p1_id].target) winnerId = p2_id;
         
-        // Distribution des récompenses pour les deux
         playerIds.forEach(id => {
             if (players[id]) {
                 const username = players[id].username;
@@ -349,7 +348,6 @@ io.on('connection', (socket) => {
         delete activeMatches[matchId];
     }
 
-    // DÉCONNEXION DU JOUEUR
     socket.on('disconnect', () => {
         if (waitingPlayerId === socket.id) waitingPlayerId = null;
         
