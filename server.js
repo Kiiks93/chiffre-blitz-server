@@ -226,6 +226,25 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('equip_cosmetic', async (itemId) => {
+        const player = activePlayers[socket.id];
+        if (!player) return;
+        
+        if (player.unlocked_items && player.unlocked_items.includes(itemId)) {
+            if (!player.inventory) player.inventory = {};
+            if (!player.inventory.__equipped) player.inventory.__equipped = {};
+            
+            let category = 'theme';
+            if (itemId.startsWith('avatar_')) category = 'avatar';
+            else if (itemId === 'frame_gold' || itemId.startsWith('frame_')) category = 'frame';
+            else if (itemId === 'theme_alt') category = 'theme';
+            
+            player.inventory.__equipped[category] = itemId;
+            await savePlayerToSupabase(socket.id);
+            socket.emit('player_registered', player);
+        }
+    });
+
     socket.on('use_power', async (powerId) => {
         const player = activePlayers[socket.id];
         if (!player) return;
