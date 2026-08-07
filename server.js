@@ -95,7 +95,8 @@ async function savePlayerToSupabase(socketId) {
             equipped_power: p.equippedPower,
             region: p.region,
             avatar: p.avatar,
-            flag: p.flag
+            flag: p.flag,
+            unlocked_items: p.unlocked_items
         })
         .eq('id', p.dbId);
 }
@@ -129,7 +130,8 @@ io.on('connection', (socket) => {
                     wins: 0,
                     losses: 0,
                     inventory: {},
-                    equipped_power: null
+                    equipped_power: null,
+                    unlocked_items: []
                 };
 
                 const { data: inserted, error: insertErr } = await supabase
@@ -173,7 +175,8 @@ io.on('connection', (socket) => {
                 wins: playerData.wins || 0,
                 losses: playerData.losses || 0,
                 inventory: playerData.inventory || {},
-                equippedPower: playerData.equipped_power || null
+                equippedPower: playerData.equipped_power || null,
+                unlocked_items: playerData.unlocked_items || []
             };
 
             socket.emit('player_registered', activePlayers[socket.id]);
@@ -182,20 +185,32 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('buy_power', async (powerId) => {
+    const SHOP_PRICES = {
+        spotlight: 300, freeze: 700, joker: 1200, nova: 2500,
+        quake: 400, micro: 800, eclipse: 1500, chaos: 4000,
+        theme_alt: 1500, avatar_legend: 2500, frame_gold: 5000
+    };
+
+    socket.on('buy_item', async (itemId) => {
         const player = activePlayers[socket.id];
         if (!player) return;
         
-        const prices = {
-            spotlight: 150, freeze: 350, joker: 600, nova: 1200,
-            quake: 200, micro: 400, eclipse: 800, chaos: 2000
-        };
+        const cost = SHOP_PRICES[itemId];
+        if (!cost || player.coins < cost) return;
 
-        const cost = prices[powerId];
-        if (cost && player.coins >= cost) {
+        const permanents = ['theme_alt', 'avatar_legend', 'frame_gold'];
+
+        if (permanents.includes(itemId)) {
+            if (!player.unlocked_items) player.unlocked_items = [];
+            if (!player.unlocked_items.includes(itemId)) {
+                player.coins -= cost;
+                player.unlocked_items.push(itemId);
+                await savePlayerToSupabase(socket.id);
+                socket.emit('player_registered', player);
+            }
+        } else {
             player.coins -= cost;
-            player.inventory[powerId] = (player.inventory[powerId] || 0) + 1;
-            
+            player.inventory[itemId] = (player.inventory[itemId] || 0) + 1;
             await savePlayerToSupabase(socket.id);
             socket.emit('player_registered', player);
         }
