@@ -492,6 +492,7 @@ let pendingGameOverData = null;
 let activeAvatarChoice = 'standard';
 let currentFriendFilter = 'all';
 let myGameInvites = [];
+window.lastRequestsCount = 0;
 
 function getFlagEmoji(flag) {
     if (!flag) return '🇫🇷';
@@ -549,7 +550,7 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
 
     return `
         <div class="tft-avatar-container ${isGoldFrame ? 'gold-frame' : ''}" title="${avatarTitle}">
-            <span class="tft-avatar-icon" style="${typeof avatarContent === 'number' ? 'font-size: 15px;' : 'font-size: 18px;'}">${avatarContent}</span>
+            <span class="tft-avatar-icon" style="${typeof avatarContent === 'number' ? 'font-size: 13px;' : 'font-size: 15px;'}">${avatarContent}</span>
             <span class="tft-flag-overlay">${flag || '🇫🇷'}</span>
         </div>
     `;
@@ -589,17 +590,16 @@ function renderProfileAvatarSelector() {
 
     const isStandardActive = (activeAvatarChoice === 'standard' || !activeAvatarChoice);
     const stdCard = document.createElement('div');
-    stdCard.style.cssText = `flex: 1; min-width: 120px; background: ${isStandardActive ? 'rgba(0,210,255,0.2)' : 'rgba(255,255,255,0.05)'}; border: 2px solid ${isStandardActive ? '#00d2ff' : 'rgba(255,255,255,0.1)'}; border-radius: 10px; padding: 6px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;`;
+    stdCard.style.cssText = `flex: 1; min-width: 100px; background: ${isStandardActive ? 'rgba(0,210,255,0.2)' : 'rgba(255,255,255,0.05)'}; border: 2px solid ${isStandardActive ? '#00d2ff' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 4px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;`;
     stdCard.onclick = () => {
         activeAvatarChoice = 'standard';
         renderProfileAvatarSelector();
         updateProfilePreview();
     };
     stdCard.innerHTML = `
-        <span style="font-size: 16px;">🔢</span>
+        <span style="font-size: 14px;">🔢</span>
         <div style="text-align: left;">
-            <div style="font-size: 10px; font-weight: bold; color: #fff;">Standard</div>
-            <div style="font-size: 9px; color: #aaa;">Chiffre & Drapeau</div>
+            <div style="font-size: 9px; font-weight: bold; color: #fff;">Standard</div>
         </div>
     `;
     container.appendChild(stdCard);
@@ -610,17 +610,16 @@ function renderProfileAvatarSelector() {
     if (hasRobot) {
         const isRobotActive = (activeAvatarChoice === 'avatar_legend');
         const robotCard = document.createElement('div');
-        robotCard.style.cssText = `flex: 1; min-width: 120px; background: ${isRobotActive ? 'rgba(0,210,255,0.2)' : 'rgba(255,255,255,0.05)'}; border: 2px solid ${isRobotActive ? '#00d2ff' : 'rgba(255,255,255,0.1)'}; border-radius: 10px; padding: 6px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;`;
+        robotCard.style.cssText = `flex: 1; min-width: 100px; background: ${isRobotActive ? 'rgba(0,210,255,0.2)' : 'rgba(255,255,255,0.05)'}; border: 2px solid ${isRobotActive ? '#00d2ff' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 4px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;`;
         robotCard.onclick = () => {
             activeAvatarChoice = 'avatar_legend';
             renderProfileAvatarSelector();
             updateProfilePreview();
         };
         robotCard.innerHTML = `
-            <span style="font-size: 16px;">🤖</span>
+            <span style="font-size: 14px;">🤖</span>
             <div style="text-align: left;">
-                <div style="font-size: 10px; font-weight: bold; color: #fff;">Robot</div>
-                <div style="font-size: 9px; color: #aaa;">Spécial Shop</div>
+                <div style="font-size: 9px; font-weight: bold; color: #fff;">Robot</div>
             </div>
         `;
         container.appendChild(robotCard);
@@ -949,6 +948,20 @@ function closeFriendsModal() {
     document.getElementById('modal-friends').style.display = 'none';
 }
 
+function updateBadges(reqCount, invCount) {
+    const reqBadge = document.getElementById('badge-requests');
+    const invBadge = document.getElementById('badge-invites');
+    
+    if (reqBadge) {
+        reqBadge.innerText = reqCount;
+        reqBadge.style.display = reqCount > 0 ? 'inline-block' : 'none';
+    }
+    if (invBadge) {
+        invBadge.innerText = invCount;
+        invBadge.style.display = invCount > 0 ? 'inline-block' : 'none';
+    }
+}
+
 function switchFriendTab(tab) {
     currentFriendFilter = tab;
     document.getElementById('friend-tab-all').classList.toggle('active', tab === 'all');
@@ -998,6 +1011,8 @@ socket.on('receive_game_invite', (data) => {
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     });
     
+    updateBadges(window.lastRequestsCount, myGameInvites.length);
+
     if (currentFriendFilter === 'invites' && document.getElementById('modal-friends').style.display === 'flex') {
         renderGameInvitesList();
     }
@@ -1021,6 +1036,7 @@ function renderGameInvitesList() {
     myGameInvites.forEach((inv, index) => {
         const row = document.createElement('div');
         row.className = 'friend-card';
+        row.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:8px 10px; border-radius:8px;";
         row.innerHTML = `
             <div style="text-align:left;">
                 <div style="font-weight:bold; color:#fff; font-size:13px;">${inv.from}</div>
@@ -1028,7 +1044,7 @@ function renderGameInvitesList() {
             </div>
             <div style="display:flex; gap:6px; align-items:center;">
                 <button class="power-btn equip" onclick="closeFriendsModal(); joinRoomDirect('${inv.roomCode}', '')" style="font-size:10px; padding:6px 10px;">Rejoindre ⚡</button>
-                <button class="power-btn" onclick="removeGameInvite(${index})" style="font-size:10px; padding:6px; background:rgba(255,75,43,0.2); color:#ff4b2b; border:1px solid #ff4b2b;">✕</button>
+                <button class="power-btn" onclick="removeGameInvite(${index})" style="font-size:10px; padding:6px 8px; background:rgba(255,75,43,0.2); color:#ff4b2b; border:1px solid #ff4b2b;">✕</button>
             </div>
         `;
         container.appendChild(row);
@@ -1037,6 +1053,7 @@ function renderGameInvitesList() {
 
 function removeGameInvite(index) {
     myGameInvites.splice(index, 1);
+    updateBadges(window.lastRequestsCount, myGameInvites.length);
     renderGameInvitesList();
 }
 
@@ -1045,9 +1062,16 @@ socket.on('friends_list_data', (friends) => {
     const container = document.getElementById('friends-list-container');
     container.innerHTML = '';
     
-    let filtered = friends || [];
-    if (currentFriendFilter === 'requests') {
-        filtered = filtered.filter(f => f.status === 'pending' && !f.isRequester);
+    let allFriends = friends || [];
+    const incomingRequests = allFriends.filter(f => f.status === 'pending' && !f.isRequester);
+    window.lastRequestsCount = incomingRequests.length;
+    updateBadges(window.lastRequestsCount, myGameInvites.length);
+
+    let filtered = allFriends;
+    if (currentFriendFilter === 'all') {
+        filtered = allFriends.filter(f => f.status === 'accepted');
+    } else if (currentFriendFilter === 'requests') {
+        filtered = incomingRequests;
     }
 
     if (!filtered || filtered.length === 0) {
@@ -1058,6 +1082,7 @@ socket.on('friends_list_data', (friends) => {
     filtered.forEach(f => {
         const row = document.createElement('div');
         row.className = 'friend-card';
+        row.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:8px 10px; border-radius:8px;";
         const dotColor = f.isOnline ? '#38ef7d' : '#aaa';
         const statusText = f.isOnline ? (currentLang === 'fr' ? 'En ligne' : 'Online') : (currentLang === 'fr' ? 'Hors-ligne' : 'Offline');
         
@@ -1101,9 +1126,6 @@ socket.on('friend_success', (msg) => {
 });
 socket.on('friend_updated', () => {
     socket.emit('get_friends_list');
-});
-socket.on('receive_game_invite', (data) => {
-    showNotificationToast(`📩 Invitation reçue de <b>${data.from}</b> !`, 'gift');
 });
 
 function requestRematch() {
