@@ -22,7 +22,7 @@ const activePlayers = {};
 const rooms = {};    
 const matchmakingQueue = [];
 const rankedQueue = [];
-let saboteurQueue = [];
+let tugOfWarQueue = [];
 const activeMatches = {}; 
 const lastMatchEarnings = {};
 
@@ -35,7 +35,7 @@ let globalEvents = {
     expressoMatch: false,
     chaosMode: false,
     jackpotEclair: false,
-    saboteurMode: false,
+    tugOfWarMode: false,
     _isScheduledActive: false
 };
 
@@ -81,15 +81,6 @@ async function savePlayerToSupabase(socketId) {
             flag: p.flag
         })
         .eq('id', p.dbId);
-}
-
-function generateRandomTraps(count) {
-    let traps = [];
-    while (traps.length < count) {
-        let randomTile = Math.floor(Math.random() * 12);
-        if (!traps.includes(randomTile)) traps.push(randomTile);
-    }
-    return traps;
 }
 
 io.on('connection', (socket) => {
@@ -350,7 +341,7 @@ io.on('connection', (socket) => {
             setTimeout(() => {
                 const p1SocketId = room.players[0].socketId || room.players[0].id;
                 const p2SocketId = room.players[1].socketId || room.players[1].id;
-                startMatchBetween(p1SocketId, p2SocketId);
+                startMatchBetween(p1SocketId, p2SocketId, false, false, false); // Custom room: pas d'Expresso Match
             }, 1000);
         }
     });
@@ -364,7 +355,7 @@ io.on('connection', (socket) => {
         if (matchmakingQueue.length >= 2) {
             const p1 = matchmakingQueue.shift();
             const p2 = matchmakingQueue.shift();
-            startMatchBetween(p1, p2);
+            startMatchBetween(p1, p2, false, true, false); // 1v1 Online Matchmaking
         }
     });
 
@@ -377,22 +368,19 @@ io.on('connection', (socket) => {
         if (rankedQueue.length >= 2) {
             const p1 = rankedQueue.shift();
             const p2 = rankedQueue.shift();
-            startMatchBetween(p1, p2, true);
+            startMatchBetween(p1, p2, true, true, false); // Ranked Online Matchmaking
         }
     });
 
-    socket.on('find_saboteur_match', (data) => {
-        if (!globalEvents.saboteurMode) return;
-        const chosenMalus = data && data.chosenMalus ? data.chosenMalus.slice(0, 2) : ['inversion'];
-        const trappedTiles = data && Array.isArray(data.trappedTiles) ? data.trappedTiles.slice(0, 2) : generateRandomTraps(2);
+    socket.on('find_tug_of_war_match', () => {
+        if (!globalEvents.tugOfWarMode) return;
+        tugOfWarQueue = tugOfWarQueue.filter(sId => sId !== socket.id);
+        tugOfWarQueue.push(socket.id);
 
-        saboteurQueue = saboteurQueue.filter(item => (item.socketId || item) !== socket.id);
-        saboteurQueue.push({ socketId: socket.id, chosenMalus, trappedTiles });
-
-        if (saboteurQueue.length >= 2) {
-            const item1 = saboteurQueue.shift();
-            const item2 = saboteurQueue.shift();
-            startSaboteurMatchBetween(item1.socketId, item2.socketId, item1, item2);
+        if (tugOfWarQueue.length >= 2) {
+            const p1 = tugOfWarQueue.shift();
+            const p2 = tugOfWarQueue.shift();
+            startMatchBetween(p1, p2, false, true, true); // Tug of War Online Match
         }
     });
 
@@ -409,25 +397,31 @@ io.on('connection', (socket) => {
 
         const num = pData.pool[clickedIndex];
 
-        if (match.isSaboteur) {
-            const oppData = match.players[oppId];
-            if (oppData && oppData.traps && oppData.traps.includes(clickedIndex)) {
-                oppData.traps = oppData.traps.filter(t => t !== clickedIndex);
-
-                const triggeredMalus = oppData.chosenMalus[Math.floor(Math.random() * oppData.chosenMalus.length)];
-                
-                if (triggeredMalus === 'inversion') {
-                    pData.pool.sort(() => Math.random() - 0.5);
-                }
-                
-                socket.emit('receive_malus', { type: triggeredMalus });
-            }
-        }
-
         if (num === pData.target) {
             pData.score += 10;
             pData.target++;
             pData.pool = generatePool(pData.target);
+
+            if (match.isTugOfWar) {
+                if (socket.id === match.id1) {
+                    match.ropePosition++;
+                } else {
+                    match.ropePosition--;
+                }
+
+                io.to(match.id1).emit('tug_of_war_update', { ropePosition: match.ropePosition });
+                io.to(match.id2).emit('tug_of_war_update', { ropePosition: match.ropePosition });
+
+                if (match.ropePosition >= 6) {
+                    match.ended = true;
+                    endMatch(match.id1, match.id2, match, false);
+                    return;
+                } else if (match.ropePosition <= -6) {
+                    match.ended = true;
+                    endMatch(match.id1, match.id2, match, false);
+                    return;
+                }
+            }
             
             socket.emit('my_grid_updated', {
                 target: pData.target,
@@ -566,7 +560,7 @@ io.on('connection', (socket) => {
         const rIdx = rankedQueue.indexOf(socket.id);
         if (rIdx !== -1) rankedQueue.splice(rIdx, 1);
         
-        saboteurQueue = saboteurQueue.filter(item => (typeof item === 'string' ? item : item.socketId) !== socket.id);
+        tugOfWarQueue = tugOfWarQueue.filter(id => id !== socket.id);
 
         delete activeMatches[socket.id];
         delete lastMatchEarnings[socket.id];
@@ -589,20 +583,21 @@ function leaveAllRooms(socket) {
     }
 }
 
-function startMatchBetween(id1, id2, isRanked = false) {
+function startMatchBetween(id1, id2, isRanked = false, isOnline = true, isTugOfWar = false) {
     const p1 = activePlayers[id1] || { socketId: id1, username: "Joueur 1", avatar: 1, flag: "🇫🇷", points: 0 };
     const p2 = activePlayers[id2] || { socketId: id2, username: "Joueur 2", avatar: 2, flag: "🇫🇷", points: 0 };
 
     const match = {
         id1,
         id2,
-        timeLeft: globalEvents.expressoMatch ? 20 : 30,
+        timeLeft: (globalEvents.expressoMatch && isOnline) ? 20 : 30,
         players: {
             [id1]: { target: 1, score: 0, pool: generatePool(1) },
             [id2]: { target: 1, score: 0, pool: generatePool(1) }
         },
         isRanked,
-        isSaboteur: false,
+        isTugOfWar,
+        ropePosition: 0,
         ended: false
     };
 
@@ -614,7 +609,7 @@ function startMatchBetween(id1, id2, isRanked = false) {
         timeLeft: match.timeLeft, 
         myTarget: 1, 
         myPool: match.players[id1].pool,
-        role: null
+        isTugOfWar
     });
     
     io.to(id2).emit('start_countdown', { 
@@ -622,7 +617,7 @@ function startMatchBetween(id1, id2, isRanked = false) {
         timeLeft: match.timeLeft, 
         myTarget: 1, 
         myPool: match.players[id2].pool,
-        role: null
+        isTugOfWar
     });
 
     let chaosTimer = 0;
@@ -632,7 +627,7 @@ function startMatchBetween(id1, id2, isRanked = false) {
         io.to(id1).emit('timer_update', match.timeLeft);
         io.to(id2).emit('timer_update', match.timeLeft);
 
-        if (globalEvents.chaosMode && !isRanked) {
+        if (globalEvents.chaosMode && !isRanked && isOnline) {
             chaosTimer++;
             if (chaosTimer >= 8) {
                 chaosTimer = 0;
@@ -653,69 +648,6 @@ function startMatchBetween(id1, id2, isRanked = false) {
     }, 1000);
 }
 
-function startSaboteurMatchBetween(id1, id2, item1, item2) {
-    const p1 = activePlayers[id1] || { socketId: id1, username: "Joueur 1", avatar: 1, flag: "🇫🇷", points: 0 };
-    const p2 = activePlayers[id2] || { socketId: id2, username: "Joueur 2", avatar: 2, flag: "🇫🇷", points: 0 };
-
-    const match = {
-        id1,
-        id2,
-        timeLeft: globalEvents.expressoMatch ? 20 : 30,
-        players: {
-            [id1]: { 
-                target: 1, 
-                score: 0, 
-                pool: generatePool(1),
-                chosenMalus: item1.chosenMalus || ['inversion'],
-                traps: item1.trappedTiles || generateRandomTraps(2)
-            },
-            [id2]: { 
-                target: 1, 
-                score: 0, 
-                pool: generatePool(1),
-                chosenMalus: item2.chosenMalus || ['inversion'],
-                traps: item2.trappedTiles || generateRandomTraps(2)
-            }
-        },
-        isRanked: false,
-        isSaboteur: true,
-        ended: false
-    };
-
-    activeMatches[id1] = match;
-    activeMatches[id2] = match;
-
-    io.to(id1).emit('start_countdown', { 
-        opponent: p2, 
-        timeLeft: match.timeLeft, 
-        myTarget: 1, 
-        myPool: match.players[id1].pool,
-        role: null
-    });
-    
-    io.to(id2).emit('start_countdown', { 
-        opponent: p1, 
-        timeLeft: match.timeLeft, 
-        myTarget: 1, 
-        myPool: match.players[id2].pool,
-        role: null
-    });
-
-    const gameInterval = setInterval(() => {
-        match.timeLeft--;
-        io.to(id1).emit('timer_update', match.timeLeft);
-        io.to(id2).emit('timer_update', match.timeLeft);
-
-        if (match.timeLeft <= 0 || match.ended) {
-            clearInterval(gameInterval);
-            if (!match.ended) {
-                match.ended = true;
-                endMatch(id1, id2, match, false);
-            }
-        }
-    }, 1000);
-}
-
 function generatePool(target) {
     let pool = [target];
     let candidates = [];
@@ -728,13 +660,20 @@ async function endMatch(id1, id2, matchData, isRanked) {
     delete activeMatches[id1];
     delete activeMatches[id2];
 
-    const s1 = matchData.players[id1] ? matchData.players[id1].score : 0;
-    const s2 = matchData.players[id2] ? matchData.players[id2].score : 0;
-
     let winnerId = null;
     let reason = "Temps écoulé !";
-    if (s1 > s2) winnerId = id1;
-    else if (s2 > s1) winnerId = id2;
+
+    if (matchData.isTugOfWar) {
+        if (matchData.ropePosition > 0) winnerId = id1;
+        else if (matchData.ropePosition < 0) winnerId = id2;
+        if (matchData.ropePosition >= 6) reason = "Corde tirée entièrement ! KO 🪢";
+        else if (matchData.ropePosition <= -6) reason = "Corde tirée entièrement ! KO 🪢";
+    } else {
+        const s1 = matchData.players[id1] ? matchData.players[id1].score : 0;
+        const s2 = matchData.players[id2] ? matchData.players[id2].score : 0;
+        if (s1 > s2) winnerId = id1;
+        else if (s2 > s1) winnerId = id2;
+    }
 
     const matchRewards = {};
 
@@ -756,7 +695,7 @@ async function endMatch(id1, id2, matchData, isRanked) {
         }
     }
 
-    if (isRanked && !matchData.isSaboteur) {
+    if (isRanked && !matchData.isTugOfWar) {
         const p1 = activePlayers[id1];
         const p2 = activePlayers[id2];
 
