@@ -556,7 +556,7 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
 
     return `
         <div class="tft-avatar-container ${isGoldFrame ? 'gold-frame' : ''}" title="${avatarTitle}">
-            <span class="tft-avatar-icon" style="${typeof avatarContent === 'number' ? 'font-size: 13px;' : 'font-size: 15px;'}">${avatarContent}</span>
+            <span class="tft-avatar-icon" style="${typeof avatarContent === 'number' ? 'font-size: 14px;' : 'font-size: 16px;'}">${avatarContent}</span>
             <span class="tft-flag-overlay">${flag || '🇫🇷'}</span>
         </div>
     `;
@@ -573,7 +573,7 @@ function getLargeAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
 
     return `
         <div class="tft-avatar-large ${isGoldFrame ? 'gold-frame' : ''}">
-            <span class="tft-avatar-large-icon" style="${typeof avatarContent === 'number' ? 'font-size: 22px;' : 'font-size: 28px;'}">${avatarContent}</span>
+            <span class="tft-avatar-large-icon" style="${typeof avatarContent === 'number' ? 'font-size: 24px;' : 'font-size: 30px;'}">${avatarContent}</span>
             <span class="tft-flag-large-overlay">${flag || '🇫🇷'}</span>
         </div>
     `;
@@ -596,18 +596,13 @@ function renderProfileAvatarSelector() {
 
     const isStandardActive = (activeAvatarChoice === 'standard' || !activeAvatarChoice);
     const stdCard = document.createElement('div');
-    stdCard.style.cssText = `flex: 1; min-width: 100px; background: ${isStandardActive ? 'rgba(0,210,255,0.2)' : 'rgba(255,255,255,0.05)'}; border: 2px solid ${isStandardActive ? '#00d2ff' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 4px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;`;
+    stdCard.style.cssText = `flex: 1; min-width: 90px; background: ${isStandardActive ? 'rgba(0,210,255,0.2)' : 'rgba(255,255,255,0.05)'}; border: 2px solid ${isStandardActive ? '#00d2ff' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 4px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;`;
     stdCard.onclick = () => {
         activeAvatarChoice = 'standard';
         renderProfileAvatarSelector();
         updateProfilePreview();
     };
-    stdCard.innerHTML = `
-        <span style="font-size: 14px;">🔢</span>
-        <div style="text-align: left;">
-            <div style="font-size: 9px; font-weight: bold; color: #fff;">Standard</div>
-        </div>
-    `;
+    stdCard.innerHTML = `<span style="font-size: 13px;">🔢</span><div style="font-size: 9px; font-weight: bold; color: #fff;">Standard</div>`;
     container.appendChild(stdCard);
 
     const unlockedItems = myProfile.unlocked_items || [];
@@ -616,18 +611,13 @@ function renderProfileAvatarSelector() {
     if (hasRobot) {
         const isRobotActive = (activeAvatarChoice === 'avatar_legend');
         const robotCard = document.createElement('div');
-        robotCard.style.cssText = `flex: 1; min-width: 100px; background: ${isRobotActive ? 'rgba(0,210,255,0.2)' : 'rgba(255,255,255,0.05)'}; border: 2px solid ${isRobotActive ? '#00d2ff' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 4px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;`;
+        robotCard.style.cssText = `flex: 1; min-width: 90px; background: ${isRobotActive ? 'rgba(0,210,255,0.2)' : 'rgba(255,255,255,0.05)'}; border: 2px solid ${isRobotActive ? '#00d2ff' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 4px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;`;
         robotCard.onclick = () => {
             activeAvatarChoice = 'avatar_legend';
             renderProfileAvatarSelector();
             updateProfilePreview();
         };
-        robotCard.innerHTML = `
-            <span style="font-size: 14px;">🤖</span>
-            <div style="text-align: left;">
-                <div style="font-size: 9px; font-weight: bold; color: #fff;">Robot</div>
-            </div>
-        `;
+        robotCard.innerHTML = `<span style="font-size: 13px;">🤖</span><div style="font-size: 9px; font-weight: bold; color: #fff;">Robot</div>`;
         container.appendChild(robotCard);
     }
 }
@@ -670,7 +660,7 @@ function updateEconomyUI() {
     document.getElementById('user-trophies-display').innerText = myProfile.trophies;
     document.getElementById('user-rank-display').innerText = getRankName(myProfile.points);
     document.getElementById('user-points-display').innerText = myProfile.points;
-    document.getElementById('user-name-display').innerText = myProfile.username || "Définir pseudo";
+    document.getElementById('user-name-display').innerText = myProfile.username || "Définir";
 
     const equippedTitle = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.title;
     const titleEl = document.getElementById('user-title-display');
@@ -899,7 +889,7 @@ function showNotificationToast(message, type = 'info') {
         border = '#ff4b2b';
         color = '#fff';
     }
-    toast.style.cssText = `background: ${bg}; border: 2px solid ${border}; color: ${color}; padding: 12px 16px; border-radius: 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.5); pointer-events: auto; animation: toastFade 4.5s ease forwards;`;
+    toast.style.cssText = `background: ${bg}; border: 2px solid ${border}; color: ${color}; padding: 10px 14px; border-radius: 12px; font-weight: bold; font-size: 12px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.5); pointer-events: auto; animation: toastFade 4.5s ease forwards;`;
     toast.innerHTML = message;
     container.appendChild(toast);
     setTimeout(() => { toast.remove(); }, 4500);
@@ -1046,17 +1036,8 @@ function removeFriend(id) { socket.emit('remove_friend', id); }
 
 function inviteFriend(targetSocketId) {
     const randomRoomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
-    
-    socket.emit('create_room', { 
-        code: randomRoomCode, 
-        password: '', 
-        username: myProfile.username, 
-        avatar: myProfile.avatar, 
-        flag: myProfile.flag 
-    });
-    
+    socket.emit('create_room', { code: randomRoomCode, password: '', username: myProfile.username, avatar: myProfile.avatar, flag: myProfile.flag });
     socket.emit('invite_friend_to_game', { targetSocketId, roomCode: randomRoomCode });
-    
     closeFriendsModal();
     showNotificationToast("📤 Salon créé et invitation envoyée !", "gift");
 }
@@ -1067,7 +1048,6 @@ socket.on('receive_game_invite', (data) => {
         roomCode: data.roomCode,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     });
-    
     updateBadges(window.lastRequestsCount, myGameInvites.length);
 
     if (currentFriendFilter === 'invites' && document.getElementById('modal-friends').style.display === 'flex') {
@@ -1084,24 +1064,21 @@ socket.on('receive_game_invite', (data) => {
 function renderGameInvitesList() {
     const container = document.getElementById('friends-list-container');
     container.innerHTML = '';
-    
     if (myGameInvites.length === 0) {
-        container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:20px; font-size:12px;">${currentLang === 'fr' ? 'Aucune invitation en attente.' : 'No pending invitations.'}</div>`;
+        container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">${currentLang === 'fr' ? 'Aucune invitation en attente.' : 'No pending invitations.'}</div>`;
         return;
     }
-
     myGameInvites.forEach((inv, index) => {
         const row = document.createElement('div');
         row.className = 'friend-card';
-        row.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:8px 10px; border-radius:8px;";
         row.innerHTML = `
             <div style="text-align:left;">
-                <div style="font-weight:bold; color:#fff; font-size:13px;">${inv.from}</div>
+                <div style="font-weight:bold; color:#fff; font-size:12px;">${inv.from}</div>
                 <div style="font-size:10px; color:#00d2ff;">Salon : ${inv.roomCode} (${inv.time})</div>
             </div>
-            <div style="display:flex; gap:6px; align-items:center;">
-                <button class="power-btn equip" onclick="closeFriendsModal(); joinRoomDirect('${inv.roomCode}', '')" style="font-size:10px; padding:6px 10px;">Rejoindre ⚡</button>
-                <button class="power-btn" onclick="removeGameInvite(${index})" style="font-size:10px; padding:6px 8px; background:rgba(255,75,43,0.2); color:#ff4b2b; border:1px solid #ff4b2b;">✕</button>
+            <div style="display:flex; gap:4px; align-items:center;">
+                <button class="power-btn equip" onclick="closeFriendsModal(); joinRoomDirect('${inv.roomCode}', '')" style="font-size:10px; padding:4px 8px;">Rejoindre ⚡</button>
+                <button class="power-btn" onclick="removeGameInvite(${index})" style="font-size:10px; padding:4px 6px; background:rgba(255,75,43,0.2); color:#ff4b2b; border:1px solid #ff4b2b;">✕</button>
             </div>
         `;
         container.appendChild(row);
@@ -1132,63 +1109,51 @@ socket.on('friends_list_data', (friends) => {
     }
 
     if (!filtered || filtered.length === 0) {
-        container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:20px; font-size:12px;">${currentLang === 'fr' ? 'Aucun ami pour le moment.' : 'No friends yet.'}</div>`;
+        container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">${currentLang === 'fr' ? 'Aucun ami pour le moment.' : 'No friends yet.'}</div>`;
         return;
     }
     
     filtered.forEach(f => {
         const row = document.createElement('div');
         row.className = 'friend-card';
-        row.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:8px 10px; border-radius:8px;";
         const dotColor = f.isOnline ? '#38ef7d' : '#aaa';
         const statusText = f.isOnline ? (currentLang === 'fr' ? 'En ligne' : 'Online') : (currentLang === 'fr' ? 'Hors-ligne' : 'Offline');
         
         let actionsHtml = '';
         if (f.status === 'pending') {
             if (!f.isRequester) {
-                actionsHtml += `<button class="power-btn equip" onclick="acceptFriend('${f.id}')" style="font-size:10px; padding:4px 8px;">Accepter</button>`;
+                actionsHtml += `<button class="power-btn equip" onclick="acceptFriend('${f.id}')" style="font-size:10px; padding:4px 6px;">Accepter</button>`;
             } else {
                 actionsHtml += `<span style="font-size:10px; color:#f8b500;">En attente</span>`;
             }
         } else if (f.status === 'accepted') {
             if (f.isOnline && f.targetSocketId) {
-                actionsHtml += `<button class="power-btn buy" onclick="inviteFriend('${f.targetSocketId}')" style="font-size:10px; padding:4px 8px;">Inviter</button>`;
+                actionsHtml += `<button class="power-btn buy" onclick="inviteFriend('${f.targetSocketId}')" style="font-size:10px; padding:4px 6px;">Inviter</button>`;
             }
         }
-        actionsHtml += `<button class="power-btn" onclick="removeFriend('${f.id}')" style="font-size:10px; padding:4px 8px; background:rgba(255,75,43,0.2); color:#ff4b2b; border:1px solid #ff4b2b;">Supprimer</button>`;
+        actionsHtml += `<button class="power-btn" onclick="removeFriend('${f.id}')" style="font-size:10px; padding:4px 6px; background:rgba(255,75,43,0.2); color:#ff4b2b; border:1px solid #ff4b2b;">Supprimer</button>`;
 
         row.innerHTML = `
-            <div style="display:flex; align-items:center; gap:8px;">
-                <span style="width:8px; height:8px; border-radius:50%; background:${dotColor}; box-shadow:0 0 6px ${dotColor};"></span>
+            <div style="display:flex; align-items:center; gap:6px;">
+                <span style="width:7px; height:7px; border-radius:50%; background:${dotColor}; box-shadow:0 0 5px ${dotColor};"></span>
                 <div style="text-align:left;">
-                    <div style="font-weight:bold; color:#fff; font-size:13px;">${f.username}</div>
-                    <div style="font-size:10px; color:${dotColor};">${statusText}</div>
+                    <div style="font-weight:bold; color:#fff; font-size:12px;">${f.username}</div>
+                    <div style="font-size:9px; color:${dotColor};">${statusText}</div>
                 </div>
             </div>
-            <div style="display:flex; gap:4px; align-items:center;">
-                ${actionsHtml}
-            </div>
+            <div style="display:flex; gap:4px; align-items:center;">${actionsHtml}</div>
         `;
         container.appendChild(row);
     });
 });
 
-socket.on('friend_error', (msg) => {
-    showNotificationToast("❌ " + msg, 'announcement');
-});
-socket.on('friend_success', (msg) => {
-    showNotificationToast("✅ " + msg, 'gift');
-    document.getElementById('input-add-friend').value = '';
-    socket.emit('get_friends_list');
-});
-socket.on('friend_updated', () => {
-    socket.emit('get_friends_list');
-});
+socket.on('friend_error', (msg) => { showNotificationToast("❌ " + msg, 'announcement'); });
+socket.on('friend_success', (msg) => { showNotificationToast("✅ " + msg, 'gift'); document.getElementById('input-add-friend').value = ''; socket.emit('get_friends_list'); });
+socket.on('friend_updated', () => { socket.emit('get_friends_list'); });
 
 function requestRematch() {
     socket.emit('request_rematch');
     document.getElementById('recap-modal').style.display = 'none';
-    
     const roomCodeText = document.getElementById('current-room-code').innerText;
     if (roomCodeText && roomCodeText !== '----') {
         document.getElementById('screen-room-waiting').style.display = 'block';
@@ -1212,13 +1177,13 @@ function openAdminLoginModal() {
         div.className = 'modal-overlay';
         div.innerHTML = `
             <div class="modal-card" style="text-align:center;">
-                <h2 style="color:#ff4b2b; margin-top:0;">🛡️ ACCÈS ADMINISTRATEUR</h2>
-                <p style="color:#aaa; font-size:12px;">Entrez le mot de passe secret :</p>
+                <h2 style="color:#ff4b2b; margin-top:0; font-size:16px;">🛡️ ACCÈS ADMINISTRATEUR</h2>
+                <p style="color:#aaa; font-size:11px;">Entrez le mot de passe secret :</p>
                 <input type="password" id="admin-pass-input" placeholder="Mot de passe" 
-                       style="width:100%; padding:10px; border-radius:8px; border:2px solid #ff4b2b; background:#0f051d; color:#fff; font-size:15px; text-align:center; margin-bottom:15px; outline:none;">
-                <div style="display:flex; gap:8px;">
+                       style="width:100%; padding:9px; border-radius:8px; border:2px solid #ff4b2b; background:#0f051d; color:#fff; font-size:14px; text-align:center; margin-bottom:12px; outline:none;">
+                <div style="display:flex; gap:6px;">
                     <button class="btn-secondary" onclick="document.getElementById('modal-admin-login').style.display='none'">Fermer</button>
-                    <button class="btn-main" onclick="submitAdminLogin()" style="flex:1; background:linear-gradient(45deg, #ff416c, #ff4b2b);">Connexion ⚡</button>
+                    <button class="btn-main" onclick="submitAdminLogin()" style="flex:1; background:linear-gradient(45deg, #ff416c, #ff4b2b); margin-top:0;">Connexion ⚡</button>
                 </div>
             </div>
         `;
@@ -1234,7 +1199,6 @@ function submitAdminLogin() {
 }
 
 socket.on('admin_auth_fail', (msg) => { alert(msg); });
-
 socket.on('admin_auth_success', (data) => {
     document.getElementById('modal-admin-login').style.display = 'none';
     openAdminDashboard(data);
@@ -1250,46 +1214,39 @@ function openAdminDashboard(data) {
         div.id = 'modal-admin-dashboard';
         div.className = 'modal-overlay';
         div.innerHTML = `
-            <div class="modal-card" style="max-width:460px; text-align:left;">
-                <h2 style="color:#00d2ff; margin-top:0; text-align:center;">🎛️ PANEL ADMIN - ÉVÉNEMENTS</h2>
-                
-                <div style="max-height:70vh; overflow-y:auto; padding-right:6px; display:flex; flex-direction:column; gap:10px; font-size:12px;">
-                    
-                    <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <strong style="color:#ff8a00;">⚡ GESTION DES ÉVÉNEMENTS & PROGRAMMATIONS</strong>
+            <div class="modal-card" style="max-width:420px; text-align:left;">
+                <h2 style="color:#00d2ff; margin-top:0; text-align:center; font-size:16px;">🎛️ PANEL ADMIN - ÉVÉNEMENTS</h2>
+                <div style="max-height:68vh; overflow-y:auto; padding-right:4px; display:flex; flex-direction:column; gap:8px; font-size:11px;">
+                    <div style="background:rgba(255,255,255,0.04); padding:8px; border-radius:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <strong style="color:#ff8a00;">⚡ ÉVÉNEMENTS & PROGRAMMATIONS</strong>
                             <div style="display:flex; gap:4px;">
-                                <button class="btn-secondary" onclick="toggleSelectAllManual(true)" style="padding:4px 8px; font-size:10px; margin-top:0;">Tout cocher</button>
-                                <button class="btn-secondary" onclick="toggleSelectAllManual(false)" style="padding:4px 8px; font-size:10px; margin-top:0;">Tout décocher</button>
+                                <button class="btn-secondary" onclick="toggleSelectAllManual(true)" style="padding:3px 6px; font-size:9px; margin-top:0; width:auto;">Tout cocher</button>
+                                <button class="btn-secondary" onclick="toggleSelectAllManual(false)" style="padding:3px 6px; font-size:9px; margin-top:0; width:auto;">Tout décocher</button>
                             </div>
                         </div>
-                        <div id="admin-events-config-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+                        <div id="admin-events-config-list" style="display:flex; flex-direction:column; gap:6px;"></div>
                     </div>
-
-                    <button class="btn-main btn-blue" onclick="saveAdminSchedule()" style="padding:10px; font-size:13px; width:100%;">Enregistrer toutes les modifications 💾</button>
-
-                    <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
-                        <strong style="color:#f8b500; display:block; margin-bottom:6px;">🎁 CADEAUX / DON DE MONNAIE</strong>
-                        <input type="text" id="admin-gift-target" placeholder="Pseudo (laisser vide ou 'TOUS')" style="width:100%; padding:6px; border-radius:6px; border:1px solid #f8b500; background:#0f051d; color:#fff; margin-bottom:6px; outline:none; font-size:11px;">
-                        <div style="display:flex; gap:6px; margin-bottom:6px;">
-                            <select id="admin-gift-currency" style="flex:1; padding:6px; border-radius:6px; border:1px solid #f8b500; background:#0f051d; color:#fff; font-size:11px; outline:none;">
+                    <button class="btn-main btn-blue" onclick="saveAdminSchedule()" style="padding:8px; font-size:12px; width:100%; margin-top:0;">Enregistrer les modifications 💾</button>
+                    <div style="background:rgba(255,255,255,0.04); padding:8px; border-radius:8px;">
+                        <strong style="color:#f8b500; display:block; margin-bottom:4px;">🎁 CADEAUX / MONNAIE</strong>
+                        <input type="text" id="admin-gift-target" placeholder="Pseudo (ou vide pour TOUS)" style="width:100%; padding:5px; border-radius:6px; border:1px solid #f8b500; background:#0f051d; color:#fff; margin-bottom:4px; outline:none; font-size:10px;">
+                        <div style="display:flex; gap:4px; margin-bottom:4px;">
+                            <select id="admin-gift-currency" style="flex:1; padding:5px; border-radius:6px; border:1px solid #f8b500; background:#0f051d; color:#fff; font-size:10px; outline:none;">
                                 <option value="coins">Pièces 🪙</option>
                                 <option value="points">Points 🏅</option>
                             </select>
-                            <input type="number" id="admin-gift-amount" placeholder="Montant" value="100" style="flex:1; padding:6px; border-radius:6px; border:1px solid #f8b500; background:#0f051d; color:#fff; font-size:11px; outline:none; text-align:center;">
+                            <input type="number" id="admin-gift-amount" placeholder="Montant" value="100" style="flex:1; padding:5px; border-radius:6px; border:1px solid #f8b500; background:#0f051d; color:#fff; font-size:10px; outline:none; text-align:center;">
                         </div>
-                        <button class="btn-main btn-gold" onclick="sendAdminGift()" style="padding:8px; font-size:12px; width:100%;">Envoyer le Cadeau 🎁</button>
+                        <button class="btn-main btn-gold" onclick="sendAdminGift()" style="padding:6px; font-size:11px; width:100%; margin-top:0;">Envoyer le Cadeau 🎁</button>
                     </div>
-
-                    <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
-                        <strong style="color:#00d2ff; display:block; margin-bottom:6px;">📢 ANNONCE / MESSAGE GLOBAL</strong>
-                        <input type="text" id="admin-broadcast-input" placeholder="Message à diffuser à tous..." style="width:100%; padding:6px; border-radius:6px; border:1px solid #00d2ff; background:#0f051d; color:#fff; margin-bottom:6px; outline:none; font-size:11px;">
-                        <button class="btn-main btn-blue" onclick="sendAdminBroadcast()" style="padding:8px; font-size:12px; width:100%;">Diffuser l'Annonce ⚡</button>
+                    <div style="background:rgba(255,255,255,0.04); padding:8px; border-radius:8px;">
+                        <strong style="color:#00d2ff; display:block; margin-bottom:4px;">📢 ANNONCE GLOBALE</strong>
+                        <input type="text" id="admin-broadcast-input" placeholder="Message..." style="width:100%; padding:5px; border-radius:6px; border:1px solid #00d2ff; background:#0f051d; color:#fff; margin-bottom:4px; outline:none; font-size:10px;">
+                        <button class="btn-main btn-blue" onclick="sendAdminBroadcast()" style="padding:6px; font-size:11px; width:100%; margin-top:0;">Diffuser ⚡</button>
                     </div>
-
                 </div>
-
-                <button class="btn-secondary" onclick="document.getElementById('modal-admin-dashboard').style.display='none'" style="margin-top:10px;">Fermer le Panel</button>
+                <button class="btn-secondary" onclick="document.getElementById('modal-admin-dashboard').style.display='none'" style="margin-top:8px;">Fermer</button>
             </div>
         `;
         document.body.appendChild(div);
@@ -1307,12 +1264,10 @@ function openAdminDashboard(data) {
 
     const listContainer = document.getElementById('admin-events-config-list');
     listContainer.innerHTML = '';
-
     const schedules = data.schedules || {};
 
     eventMeta.forEach(ev => {
         const evData = schedules[ev.id] || { manual: false, start: null, end: null };
-        
         const formatLocalDateTime = (ts) => {
             if (!ts) return '';
             const d = new Date(ts);
@@ -1321,23 +1276,17 @@ function openAdminDashboard(data) {
         };
 
         const row = document.createElement('div');
-        row.style.cssText = "background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:8px; border-radius:8px; display:flex; flex-direction:column; gap:6px;";
+        row.style.cssText = "background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); padding:6px; border-radius:6px; display:flex; flex-direction:column; gap:4px;";
         row.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-weight:bold; color:#fff;">${ev.label}</span>
                 <label style="display:flex; align-items:center; gap:4px; cursor:pointer; color:#00ff88; font-weight:bold;">
-                    Activer direct <input type="checkbox" id="chk-manual-${ev.id}" ${evData.manual ? 'checked' : ''}>
+                    Direct <input type="checkbox" id="chk-manual-${ev.id}" ${evData.manual ? 'checked' : ''}>
                 </label>
             </div>
             <div style="display:flex; gap:4px;">
-                <div style="flex:1;">
-                    <span style="font-size:9px; color:#aaa;">Début (optionnel) :</span>
-                    <input type="datetime-local" id="sched-start-${ev.id}" value="${formatLocalDateTime(evData.start)}" style="width:100%; padding:4px; border-radius:4px; border:1px solid #00d2ff; background:#0f051d; color:#fff; font-size:10px; outline:none;">
-                </div>
-                <div style="flex:1;">
-                    <span style="font-size:9px; color:#aaa;">Fin (optionnel) :</span>
-                    <input type="datetime-local" id="sched-end-${ev.id}" value="${formatLocalDateTime(evData.end)}" style="width:100%; padding:4px; border-radius:4px; border:1px solid #00d2ff; background:#0f051d; color:#fff; font-size:10px; outline:none;">
-                </div>
+                <div style="flex:1;"><input type="datetime-local" id="sched-start-${ev.id}" value="${formatLocalDateTime(evData.start)}" style="width:100%; padding:3px; border-radius:4px; border:1px solid #00d2ff; background:#0f051d; color:#fff; font-size:9px; outline:none;"></div>
+                <div style="flex:1;"><input type="datetime-local" id="sched-end-${ev.id}" value="${formatLocalDateTime(evData.end)}" style="width:100%; padding:3px; border-radius:4px; border:1px solid #00d2ff; background:#0f051d; color:#fff; font-size:9px; outline:none;"></div>
             </div>
         `;
         listContainer.appendChild(row);
@@ -1359,16 +1308,14 @@ function saveAdminSchedule() {
         const manual = document.getElementById(`chk-manual-${key}`).checked;
         const startVal = document.getElementById(`sched-start-${key}`).value;
         const endVal = document.getElementById(`sched-end-${key}`).value;
-
         schedulesData[key] = {
             manual: manual,
             start: startVal ? new Date(startVal).getTime() : null,
             end: endVal ? new Date(endVal).getTime() : null
         };
     });
-
     socket.emit('admin_update_schedule', schedulesData);
-    showNotificationToast("⏰ Programmation par événement enregistrée !", "gift");
+    showNotificationToast("⏰ Programmation enregistrée !", "gift");
 }
 
 function sendAdminGift() {
@@ -1377,7 +1324,7 @@ function sendAdminGift() {
     const amount = parseInt(document.getElementById('admin-gift-amount').value) || 0;
     if (amount <= 0) { alert("Montant invalide !"); return; }
     socket.emit('admin_give_gift', { targetUsername, currency, amount });
-    showNotificationToast("🎁 Cadeau envoyé avec succès !", "gift");
+    showNotificationToast("🎁 Cadeau envoyé !", "gift");
 }
 
 function sendAdminBroadcast() {
@@ -1449,7 +1396,6 @@ function startTugOfWarQueue() {
 function simulateAd(callback) {
     SoundEngine.stopMusic(false);
     document.getElementById('recap-modal').style.display = 'none';
-    
     const overlay = document.getElementById('simulated-ad-overlay');
     const timerEl = document.getElementById('ad-timer');
     const closeBtn = document.getElementById('ad-close-btn');
@@ -1457,7 +1403,6 @@ function simulateAd(callback) {
     closeBtn.style.display = 'none';
     let timeLeft = 5;
     timerEl.innerText = timeLeft;
-    
     const interval = setInterval(() => {
         timeLeft--;
         timerEl.innerText = timeLeft;
@@ -1528,7 +1473,7 @@ function renderRankedLoadoutItems() {
     const ownedPowers = POWERS_CATALOG.filter(p => p.type !== 'cosmetics' && (myProfile.inventory[p.id] || 0) > 0);
     
     if (ownedPowers.length === 0) {
-        container.innerHTML = `<div style="grid-column: span 2; text-align:center; color:#aaa; padding:15px; font-size:12px;">${currentLang === 'fr' ? 'Ton inventaire est vide ! Achète des objets dans la boutique.' : 'Your inventory is empty! Buy items in the shop.'}</div>`;
+        container.innerHTML = `<div style="grid-column: span 2; text-align:center; color:#aaa; padding:12px; font-size:11px;">${currentLang === 'fr' ? 'Inventaire vide !' : 'Empty inventory!'}</div>`;
         return;
     }
 
@@ -1544,8 +1489,8 @@ function renderRankedLoadoutItems() {
             <h4>${powerInfo.name}</h4>
             <p>${powerInfo.desc}</p>
             <div class="stock-badge">Stock : ${qty}</div>
-            <div style="font-weight:bold; margin-top:2px; font-size:11px; color:${isSelected ? '#00ff88' : '#f8b500'};">
-                ${isSelected ? (currentLang === 'fr' ? 'Sélectionné ✅' : 'Selected ✅') : (currentLang === 'fr' ? 'Sélectionner' : 'Select')}
+            <div style="font-weight:bold; font-size:10px; color:${isSelected ? '#00ff88' : '#f8b500'};">
+                ${isSelected ? 'Sélectionné ✅' : 'Sélectionner'}
             </div>
         `;
         container.appendChild(card);
@@ -1557,7 +1502,7 @@ function toggleRankedItem(id) {
         selectedRankedItems = selectedRankedItems.filter(item => item !== id);
     } else {
         if (selectedRankedItems.length >= 2) {
-            alert(currentLang === 'fr' ? 'Tu peux sélectionner 2 objets maximum pour le mode classé.' : 'You can select a maximum of 2 items for ranked mode.');
+            alert(currentLang === 'fr' ? 'Maximum 2 objets pour le classé.' : 'Maximum 2 items for ranked.');
             return;
         }
         selectedRankedItems.push(id);
@@ -1567,7 +1512,7 @@ function toggleRankedItem(id) {
 
 function startRankedMatch() {
     if (selectedRankedItems.length === 0) {
-        alert(currentLang === 'fr' ? 'Veuillez sélectionner au moins un objet pour le match classé.' : 'Please select at least one item for the ranked match.');
+        alert(currentLang === 'fr' ? 'Sélectionne au moins un objet.' : 'Select at least one item.');
         return;
     }
     closeRankedLoadoutModal();
@@ -1575,7 +1520,6 @@ function startRankedMatch() {
     document.getElementById('screen-1v1-lobby').style.display = 'flex';
     let digit = 1;
     radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById('radar-digit').innerText = digit; }, 70);
-    
     myProfile.equippedPowers = selectedRankedItems;
     socket.emit('find_ranked_match', { items: selectedRankedItems });
 }
@@ -1586,7 +1530,7 @@ function openRoomsScreen() {
     if (!isProfileValid()) { checkAndShowProfileModal(); return; }
     hideAllScreens();
     window.history.replaceState({}, '', window.location.pathname);
-    document.getElementById('screen-rooms').style.display = 'block';
+    document.getElementById('screen-rooms').style.display = 'flex';
     fetchRoomsList();
 }
 
@@ -1604,8 +1548,8 @@ function closeCreateRoomModal() { document.getElementById('modal-create-room').s
 function submitCreateRoom() {
     const code = document.getElementById('custom-room-name').value.trim().toUpperCase();
     const password = document.getElementById('custom-room-pass').value.trim();
-    if (code !== '' && code.length < 2) { alert("Le nom du salon personnalisé doit contenir au moins 2 caractères."); return; }
-    if (!socket.connected) { alert("Erreur : Non connecté au serveur."); return; }
+    if (code !== '' && code.length < 2) { alert("Nom de salon trop court."); return; }
+    if (!socket.connected) { alert("Non connecté au serveur."); return; }
     socket.emit('create_room', { code: code, password: password, username: myProfile.username, avatar: myProfile.avatar, flag: myProfile.flag });
     closeCreateRoomModal();
 }
@@ -1621,8 +1565,8 @@ function openJoinCustomScreen(prefilledCode = '') {
 function submitJoinCustomRoom() {
     const roomCode = document.getElementById('join-room-code-input').value.trim().toUpperCase();
     const password = document.getElementById('join-room-pass-input').value.trim();
-    if (!roomCode) { alert("Veuillez entrer un code de salon valide."); return; }
-    if (!socket.connected) { alert("Erreur : Non connecté au serveur."); return; }
+    if (!roomCode) { alert("Entrer un code valide."); return; }
+    if (!socket.connected) { alert("Non connecté."); return; }
     socket.emit('join_room', { code: roomCode, password: password });
 }
 
@@ -1632,7 +1576,7 @@ function joinRoomFromList(code, hasPassword) {
 }
 
 function joinRoomDirect(code, password) {
-    if (!socket.connected) { alert("Erreur : Non connecté au serveur."); return; }
+    if (!socket.connected) { alert("Non connecté."); return; }
     socket.emit('join_room', { code: code.toUpperCase(), password: password });
 }
 
@@ -1651,7 +1595,7 @@ function copyRoomLink() {
 function shareRoomLink() {
     const input = document.getElementById('room-share-link');
     if (navigator.share) {
-        navigator.share({ title: 'Chiffre Blitz ⚡', text: 'Viens m\'affronter en duel sur Chiffre Blitz !', url: input.value }).catch(() => {});
+        navigator.share({ title: 'Chiffre Blitz ⚡', text: 'Viens m\'affronter !', url: input.value }).catch(() => {});
     } else { copyRoomLink(); }
 }
 
@@ -1659,7 +1603,7 @@ socket.on('rooms_list_data', (rooms) => {
     const listEl = document.getElementById('rooms-list');
     listEl.innerHTML = '';
     if (!rooms || rooms.length === 0) {
-        listEl.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:8px; font-size:12px;">${i18n[currentLang].no_rooms}</div>`;
+        listEl.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:8px; font-size:11px;">${i18n[currentLang].no_rooms}</div>`;
         return;
     }
     rooms.forEach(r => {
@@ -1668,7 +1612,7 @@ socket.on('rooms_list_data', (rooms) => {
         const lockIcon = r.hasPassword ? ' 🔒' : '';
         row.innerHTML = `
             <span class="room-info">Salon <b>${r.code}</b>${lockIcon} (${r.playersCount}/2)</span>
-            <button class="power-btn equip" onclick="joinRoomFromList('${r.code}', ${r.hasPassword})">${currentLang === 'fr' ? 'Rejoindre' : 'Join'}</button>
+            <button class="power-btn equip" onclick="joinRoomFromList('${r.code}', ${r.hasPassword})">Rejoindre</button>
         `;
         listEl.appendChild(row);
     });
@@ -1676,7 +1620,7 @@ socket.on('rooms_list_data', (rooms) => {
 
 socket.on('room_joined_success', (data) => {
     hideAllScreens();
-    document.getElementById('screen-room-waiting').style.display = 'block';
+    document.getElementById('screen-room-waiting').style.display = 'flex';
     document.getElementById('current-room-code').innerText = data.code;
     const shareUrl = `${window.location.origin}${window.location.pathname}?room=${data.code}`;
     window.history.replaceState({}, '', `?room=${data.code}`);
@@ -1692,7 +1636,7 @@ function updateRoomPlayers(players) {
     playersListEl.innerHTML = players.map(rawData => {
         const p = parsePlayer(rawData);
         const title = p.inventory && p.inventory.__equipped && p.inventory.__equipped.title;
-        const titleHtml = title ? `<span style="font-size: 9px; color: #f8b500; margin-left: 3px;">[${title}]</span>` : '';
+        const titleHtml = title ? `<span style="font-size: 8px; color: #f8b500; margin-left: 3px;">[${title}]</span>` : '';
         return `<div style="display:inline-flex; align-items:center; gap:4px;">${getAvatarBadgeHTML(p.flag, p.avatar)} <span>${p.username}</span> ${titleHtml}</div>`;
     }).join(' <span style="color:#aaa; margin:0 4px;">vs</span> ');
     if (players && socket.id) {
@@ -1736,9 +1680,7 @@ function openBlitzPass() {
     renderBlitzPass();
 }
 
-function closeBlitzPass() {
-    document.getElementById('modal-blitz-pass').style.display = 'none';
-}
+function closeBlitzPass() { document.getElementById('modal-blitz-pass').style.display = 'none'; }
 
 function renderBlitzPass() {
     const container = document.getElementById('blitz-pass-container');
@@ -1747,18 +1689,14 @@ function renderBlitzPass() {
 
     container.innerHTML = `
         <div class="bp-header-banner">
-            <div style="font-size: 14px; font-weight: 900; color: #f8b500; margin-bottom: 2px;">🌟 SAISON 1 : PLASMA DORÉ</div>
-            <div style="font-size: 11px; color: #ccc; margin-bottom: 8px;">${isPremium ? '✨ Passe Premium Actif !' : 'Débloque le Passe Premium pour 1000 🪙'}</div>
-            ${!isPremium ? `
-                <button class="btn-main btn-gold" onclick="buyBlitzPassPremium()" style="padding: 8px; font-size: 12px; margin: 0 auto;">Acheter le Passe Premium (1000 🪙) ⭐</button>
-            ` : `
-                <div style="color: #00ff88; font-weight: bold; font-size: 11px;">Statut : VIP / Premium</div>
-            `}
+            <div style="font-size: 13px; font-weight: 900; color: #f8b500; margin-bottom: 2px;">🌟 SAISON 1 : PLASMA DORÉ</div>
+            <div style="font-size: 10px; color: #ccc; margin-bottom: 6px;">${isPremium ? '✨ Passe Premium Actif !' : 'Débloque le Passe Premium pour 1000 🪙'}</div>
+            ${!isPremium ? `<button class="btn-main btn-gold" onclick="buyBlitzPassPremium()" style="padding: 6px 10px; font-size: 11px; margin: 0 auto; width: auto;">Acheter le Passe Premium (1000 🪙) ⭐</button>` : `<div style="color: #00ff88; font-weight: bold; font-size: 10px;">Statut : VIP / Premium</div>`}
         </div>
     `;
     
     const listDiv = document.createElement('div');
-    listDiv.style.cssText = "display: flex; flex-direction: column; gap: 8px; margin-top: 4px;";
+    listDiv.style.cssText = "display: flex; flex-direction: column; gap: 6px;";
     
     BLITZ_PASS_TIERS.forEach(t => {
         const isUnlocked = t.tier === 1;
@@ -1770,27 +1708,27 @@ function renderBlitzPass() {
         const card = document.createElement('div');
         card.className = `bp-tier-card ${isUnlocked ? 'unlocked' : ''}`;
         card.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px;">
-                <span style="font-weight: 900; color: #f8b500; font-size: 12px;">PALIER ${t.tier}</span>
-                <span style="font-size: 10px; font-weight: bold; color: ${isUnlocked ? '#00ff88' : '#aaa'};">${isUnlocked ? 'Disponible ✅' : '🔒 Verrouillé'}</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 3px;">
+                <span style="font-weight: 900; color: #f8b500; font-size: 11px;">PALIER ${t.tier}</span>
+                <span style="font-size: 9px; font-weight: bold; color: ${isUnlocked ? '#00ff88' : '#aaa'};">${isUnlocked ? 'Disponible ✅' : '🔒'}</span>
             </div>
             <div class="bp-tracks-grid">
-                <div class="bp-track-box free">
+                <div class="bp-track-box">
                     <div><span style="color:#38ef7d; font-weight:bold;">🟢 Gratuit :</span><br>${t.free}</div>
                     <button class="power-btn ${isFreeClaimed ? 'active' : (isUnlocked ? 'equip' : 'buy')}" 
-                            style="margin-top:6px; font-size:9px; padding:3px;" 
+                            style="margin-top:4px; font-size:9px; padding:3px;" 
                             ${(!isUnlocked || isFreeClaimed) ? 'disabled style="opacity:0.5;"' : ''} 
                             onclick="claimPassReward(${t.tier}, 'free')">
-                        ${isFreeClaimed ? 'Récupéré ✅' : (isUnlocked ? 'Récupérer' : 'Bloqué')}
+                        ${isFreeClaimed ? 'Récupéré' : 'Récupérer'}
                     </button>
                 </div>
-                <div class="bp-track-box premium">
+                <div class="bp-track-box">
                     <div><span style="color:#00d2ff; font-weight:bold;">⭐ Premium :</span><br>${t.premium}</div>
                     <button class="power-btn ${isPremClaimed ? 'active' : (isUnlocked && isPremium ? 'equip' : 'buy')}" 
-                            style="margin-top:6px; font-size:9px; padding:3px;" 
+                            style="margin-top:4px; font-size:9px; padding:3px;" 
                             ${(!isUnlocked || !isPremium || isPremClaimed) ? 'disabled style="opacity:0.5;"' : ''} 
                             onclick="claimPassReward(${t.tier}, 'premium')">
-                        ${isPremClaimed ? 'Récupéré ✅' : (isUnlocked && isPremium ? 'Récupérer' : (isPremium ? 'Bloqué' : 'Requiert Premium'))}
+                        ${isPremClaimed ? 'Récupéré' : 'Récupérer'}
                     </button>
                 </div>
             </div>
@@ -1801,17 +1739,14 @@ function renderBlitzPass() {
 }
 
 function buyBlitzPassPremium() {
-    const cost = 1000;
-    if (myProfile.coins < cost) {
+    if (myProfile.coins < 1000) {
         showNotificationToast(i18n[currentLang].not_enough_coins, 'announcement');
         return;
     }
     socket.emit('buy_blitz_pass');
 }
 
-function claimPassReward(tier, track) {
-    socket.emit('claim_pass_tier', { tier, track });
-}
+function claimPassReward(tier, track) { socket.emit('claim_pass_tier', { tier, track }); }
 
 function switchShopTab(type) {
     currentShopTab = type;
@@ -1827,7 +1762,7 @@ function switchShopTab(type) {
     const powersDict = i18n[currentLang].powers;
     const cosmeticsDict = {
         theme_alt: { name: '🎨 Thème Rétro', desc: 'Grille visuelle alternative' },
-        avatar_legend: { name: '🤖 Avatar Robot', desc: 'Avatar exclusif robot mathématicien' },
+        avatar_legend: { name: '🤖 Avatar Robot', desc: 'Avatar exclusif robot' },
         frame_gold: { name: '👑 Cadre Or Massif', desc: 'Bordure dorée prestigieuse' }
     };
 
@@ -1836,19 +1771,14 @@ function switchShopTab(type) {
         if (type === 'cosmetics') {
             const info = cosmeticsDict[p.id];
             const unlocked = myProfile.unlocked_items && myProfile.unlocked_items.includes(p.id);
-            const equipped = myProfile.inventory && myProfile.inventory.__equipped && 
-                             Object.values(myProfile.inventory.__equipped).includes(p.id);
+            const equipped = myProfile.inventory && myProfile.inventory.__equipped && Object.values(myProfile.inventory.__equipped).includes(p.id);
 
             card.className = `power-card ${equipped ? 'equipped' : ''}`;
             card.innerHTML = `
                 <h4>${info.name}</h4>
                 <p>${info.desc}</p>
-                <div style="font-weight:bold; margin-bottom:6px; font-size:11px; color:#f8b500;">${p.price} 🪙</div>
-                ${unlocked ? `
-                    <button class="power-btn ${equipped ? 'active' : 'equip'}" onclick="equipCosmetic('${p.id}')">
-                        ${equipped ? 'Équipé ✅' : 'Équiper'}
-                    </button>
-                ` : `<button class="power-btn buy" onclick="buyItem('${p.id}')">Acheter</button>`}
+                <div style="font-weight:bold; margin-bottom:4px; font-size:10px; color:#f8b500;">${p.price} 🪙</div>
+                ${unlocked ? `<button class="power-btn ${equipped ? 'active' : 'equip'}" onclick="equipCosmetic('${p.id}')">${equipped ? 'Équipé ✅' : 'Équiper'}</button>` : `<button class="power-btn buy" onclick="buyItem('${p.id}')">Acheter</button>`}
             `;
         } else {
             const powerInfo = powersDict[p.id];
@@ -1859,7 +1789,7 @@ function switchShopTab(type) {
                 <h4>${powerInfo.name}</h4>
                 <p>${powerInfo.desc}</p>
                 <div class="stock-badge">Stock : ${qty}</div>
-                <div style="font-weight:bold; margin-bottom:6px; font-size:11px; color:#f8b500;">${p.price} 🪙</div>
+                <div style="font-weight:bold; margin-bottom:4px; font-size:10px; color:#f8b500;">${p.price} 🪙</div>
                 <button class="power-btn buy" onclick="buyItem('${p.id}')">Acheter (+1)</button>
                 ${qty > 0 ? `<button class="power-btn ${isEquipped ? 'active' : 'equip'}" onclick="equipPower('${p.id}')">${isEquipped ? 'Équipé ✅' : 'Équiper'}</button>` : ''}
             `;
@@ -1878,22 +1808,13 @@ function buyItem(id) {
     if (socket.connected) socket.emit('buy_item', id);
 }
 
-function equipCosmetic(id) {
-    if (socket.connected) socket.emit('equip_cosmetic', id);
-}
-
+function equipCosmetic(id) { if (socket.connected) socket.emit('equip_cosmetic', id); }
 function equipPower(id) { if (socket.connected) socket.emit('equip_power', id); }
 
 function preparePowerHUD() {
     const zone = document.getElementById('power-zone');
     zone.innerHTML = '';
-    
-    let powers = [];
-    if (myProfile.equippedPowers && myProfile.equippedPowers.length > 0) {
-        powers = myProfile.equippedPowers;
-    } else if (myProfile.equippedPower) {
-        powers = [myProfile.equippedPower];
-    }
+    let powers = (myProfile.equippedPowers && myProfile.equippedPowers.length > 0) ? myProfile.equippedPowers : (myProfile.equippedPower ? [myProfile.equippedPower] : []);
     let usableCount = 0;
 
     powers.forEach(powerId => {
@@ -1903,27 +1824,23 @@ function preparePowerHUD() {
             const powerInfo = i18n[currentLang].powers[powerId];
             const btn = document.createElement('button');
             btn.className = 'btn-power-hud';
-            btn.style.marginRight = '4px';
             btn.innerHTML = `⚡ ${powerInfo ? powerInfo.name : powerId} (${stock})`;
             btn.onclick = () => triggerSpecificPower(powerId, btn);
             zone.appendChild(btn);
         }
     });
-
     zone.style.display = usableCount > 0 ? 'block' : 'none';
 }
 
 function triggerSpecificPower(powerId, btnEl) {
     const stock = myProfile.inventory[powerId] || 0;
     if (stock <= 0) return;
-    
     socket.emit('use_power', powerId);
     myProfile.inventory[powerId]--;
     btnEl.disabled = true;
     btnEl.style.opacity = '0.5';
 
     const currentTarget = parseInt(document.getElementById('game-target-giant').innerText) || 1;
-
     if (powerId === 'spotlight') {
         document.querySelectorAll('.tile').forEach(t => {
             if (parseInt(t.innerText) === currentTarget) {
@@ -1945,7 +1862,6 @@ function triggerSpecificPower(powerId, btnEl) {
     } else {
         socket.emit('send_malus', { type: powerId });
     }
-
     setTimeout(() => preparePowerHUD(), 100);
 }
 
@@ -1953,11 +1869,8 @@ function autoValidateTarget() {
     const is1v1 = document.getElementById('hud-1v1').style.display !== 'none';
     if (is1v1) {
         const targetVal = parseInt(document.getElementById('game-target-giant').innerText) || 1;
-        const tiles = document.querySelectorAll('#grid .tile');
-        tiles.forEach((t, idx) => {
-            if (parseInt(t.innerText) === targetVal) {
-                handle1v1TileClick(targetVal, idx);
-            }
+        document.querySelectorAll('#grid .tile').forEach((t, idx) => {
+            if (parseInt(t.innerText) === targetVal) handle1v1TileClick(targetVal, idx);
         });
     } else {
         handleSoloTileClick(soloTarget);
@@ -1967,15 +1880,15 @@ function autoValidateTarget() {
 socket.on('receive_malus', (data) => {
     const grid = document.getElementById('grid');
     SoundEngine.playError();
-    showNotificationToast(`💥 PIÈGE ADVERSAIRE DÉCLENCHÉ ! Malus reçu !`, 'announcement');
+    showNotificationToast(`💥 PIÈGE ADVERSAIRE REÇU !`, 'announcement');
     if (data.type === 'quake') { grid.classList.add('effect-quake'); setTimeout(() => grid.classList.remove('effect-quake'), 2000); }
     else if (data.type === 'micro') { grid.classList.add('effect-micro'); setTimeout(() => grid.classList.remove('effect-micro'), 2000); }
     else if (data.type === 'eclipse') { grid.classList.add('effect-eclipse'); setTimeout(() => grid.classList.remove('effect-eclipse'), 1500); }
     else if (data.type === 'chaos') { 
         grid.classList.add('effect-quake');
-        setTimeout(() => { grid.classList.remove('effect-quake'); grid.classList.add('effect-micro'); }, 1600);
-        setTimeout(() => { grid.classList.remove('effect-micro'); grid.classList.add('effect-eclipse'); }, 3300);
-        setTimeout(() => { grid.classList.remove('effect-eclipse'); }, 5000);
+        setTimeout(() => { grid.classList.remove('effect-quake'); grid.classList.add('effect-micro'); }, 1500);
+        setTimeout(() => { grid.classList.remove('effect-micro'); grid.classList.add('effect-eclipse'); }, 3000);
+        setTimeout(() => { grid.classList.remove('effect-eclipse'); }, 4500);
     }
 });
 
@@ -1989,9 +1902,7 @@ function openLeaderboard() {
     fetchLeaderboard();
 }
 
-function closeLeaderboard() { 
-    document.getElementById('modal-leaderboard').style.display = 'none'; 
-}
+function closeLeaderboard() { document.getElementById('modal-leaderboard').style.display = 'none'; }
 
 function setLbCategory(cat) {
     currentLbCategory = cat;
@@ -2005,9 +1916,7 @@ function setLbCategory(cat) {
 
 function updateCombinedExplanationVisibility() {
     const explEl = document.getElementById('lb-combined-explanation');
-    if (explEl) {
-        explEl.style.display = (currentLbCategory === 'combined') ? 'block' : 'none';
-    }
+    if (explEl) explEl.style.display = (currentLbCategory === 'combined') ? 'block' : 'none';
 }
 
 function setLbScope(scope) {
@@ -2021,7 +1930,7 @@ function setLbScope(scope) {
 
 function fetchLeaderboard() {
     const type = `${currentLbCategory}_${currentLbScope}`;
-    document.getElementById('lb-list').innerHTML = `<div style="text-align:center; color:#aaa; margin-top:20px; font-size:12px;" data-i18n="loading">Chargement...</div>`;
+    document.getElementById('lb-list').innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;" data-i18n="loading">Chargement...</div>`;
     socket.emit('get_leaderboard', type);
 }
 
@@ -2029,7 +1938,7 @@ socket.on('leaderboard_data', (res) => {
     const container = document.getElementById('lb-list');
     container.innerHTML = '';
     if (!res.data || res.data.length === 0) { 
-        container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:20px; font-size:12px;">Aucun joueur.</div>`; 
+        container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">Aucun joueur.</div>`; 
         return; 
     }
     
@@ -2037,29 +1946,20 @@ socket.on('leaderboard_data', (res) => {
     const parsedList = res.data.map(p => parsePlayer(p));
 
     if (category === 'combined') {
-        parsedList.sort((a, b) => {
-            const diffTrophies = b.trophies - a.trophies;
-            if (diffTrophies !== 0) return diffTrophies;
-            return b.points - a.points;
-        });
+        parsedList.sort((a, b) => (b.trophies - a.trophies) !== 0 ? (b.trophies - a.trophies) : (b.points - a.points));
     }
 
     parsedList.forEach((p, index) => {
         const row = document.createElement('div');
         row.className = 'lb-row';
         const badgeHtml = getAvatarBadgeHTML(p.flag, p.avatar);
-        
         const equippedTitle = p.inventory && p.inventory.__equipped && p.inventory.__equipped.title;
-        const titleHtml = equippedTitle ? `<span style="font-size: 9px; color: #f8b500; font-weight: bold; margin-left: 6px;">[ ${equippedTitle} ]</span>` : '';
+        const titleHtml = equippedTitle ? `<span style="font-size: 8px; color: #f8b500; font-weight: bold; margin-left: 4px;">[${equippedTitle}]</span>` : '';
         
-        let rightBadge = `<span class="lb-pts" style="color:#00ff88; font-size:14px;">${p.points} pts</span>`;
-        if (category === 'coins') {
-            rightBadge = `<span class="lb-pts" style="color:#f8b500; font-size:14px;">${p.coins} 🪙</span>`;
-        } else if (category === 'trophies') {
-            rightBadge = `<span class="lb-pts" style="color:#fceabb; font-size:14px;">${p.trophies} 🏆</span>`;
-        } else if (category === 'combined') {
-            rightBadge = `<span class="lb-pts" style="color:#00d2ff; font-size:13px;">🏆${p.trophies} | ${p.points}pts</span>`;
-        }
+        let rightBadge = `<span class="lb-pts" style="color:#00ff88;">${p.points} pts</span>`;
+        if (category === 'coins') rightBadge = `<span class="lb-pts" style="color:#f8b500;">${p.coins} 🪙</span>`;
+        else if (category === 'trophies') rightBadge = `<span class="lb-pts" style="color:#fceabb;">${p.trophies} 🏆</span>`;
+        else if (category === 'combined') rightBadge = `<span class="lb-pts" style="color:#00d2ff; font-size:11px;">🏆${p.trophies} | ${p.points}pts</span>`;
 
         let rankDisplay = `#${index + 1}`;
         let rankColor = '#00d2ff';
@@ -2070,13 +1970,11 @@ socket.on('leaderboard_data', (res) => {
         row.innerHTML = `
             <span class="lb-rank" style="color: ${rankColor};">${rankDisplay}</span>
             <div class="lb-user-info">
-                <div class="lb-name-row" style="display:flex; align-items:center; flex-wrap:wrap;">
-                    ${badgeHtml} <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; margin-left: 4px;">${p.username}</span> ${titleHtml}
-                </div>
+                <div class="lb-name-row">${badgeHtml} <span>${p.username}</span> ${titleHtml}</div>
                 <div class="lb-sub-details">
                     <span>🏆 ${p.trophies}</span>
                     <span>🪙 ${p.coins}</span>
-                    <span>⚔️ V:${p.wins} / D:${p.losses}</span>
+                    <span>⚔️ V:${p.wins}/D:${p.losses}</span>
                 </div>
             </div>
             ${rightBadge}
@@ -2087,14 +1985,10 @@ socket.on('leaderboard_data', (res) => {
 
 function extractOpponentInfo(data) {
     if (!data) return cachedOpponent;
-    let rawOpp = null;
-    if (data.opponent) rawOpp = data.opponent;
-    else if (data.player2) rawOpp = data.player2;
-    else if (data.opp) rawOpp = data.opp;
-    else if (data.players) {
-        if (Array.isArray(data.players)) {
-            rawOpp = data.players.find(p => (p.socketId || p.id) !== socket.id);
-        } else if (typeof data.players === 'object') {
+    let rawOpp = data.opponent || data.player2 || data.opp;
+    if (!rawOpp && data.players) {
+        if (Array.isArray(data.players)) rawOpp = data.players.find(p => (p.socketId || p.id) !== socket.id);
+        else if (typeof data.players === 'object') {
             const oppId = Object.keys(data.players).find(id => id !== socket.id);
             if (oppId) rawOpp = data.players[oppId];
         }
@@ -2107,12 +2001,9 @@ function updateOpponentDisplay(opp) {
     cachedOpponent = parsePlayer(opp);
     document.getElementById('opp-profile-name').innerText = cachedOpponent.username;
     document.getElementById('opp-profile-badge').innerHTML = getAvatarBadgeHTML(cachedOpponent.flag, cachedOpponent.avatar);
-    
     const oppTitle = cachedOpponent.inventory && cachedOpponent.inventory.__equipped && cachedOpponent.inventory.__equipped.title;
     const oppTitleEl = document.getElementById('opp-profile-title');
-    if (oppTitleEl) {
-        oppTitleEl.innerText = oppTitle ? `[ ${oppTitle} ]` : "";
-    }
+    if (oppTitleEl) oppTitleEl.innerText = oppTitle ? `[ ${oppTitle} ]` : "";
 }
 
 socket.on('start_countdown', (data) => {
@@ -2122,7 +2013,6 @@ socket.on('start_countdown', (data) => {
     if (oppData) updateOpponentDisplay(oppData);
 
     hideAllScreens();
-
     document.getElementById('countdown-overlay').style.display = 'flex';
     let count = 3;
     document.getElementById('countdown-number').innerText = count;
@@ -2162,26 +2052,20 @@ socket.on('timer_update', (time) => {
     if (!isTimeFrozen) { current1v1Time = time; document.getElementById('game-timer').innerText = Math.max(0, time); }
 });
 
-socket.on('tug_of_war_update', (data) => {
-    updateTugOfWarGauge(data.ropePosition);
-});
+socket.on('tug_of_war_update', (data) => { updateTugOfWarGauge(data.ropePosition); });
 
 function updateTugOfWarGauge(pos) {
     const indicator = document.getElementById('tow-indicator');
     if (!indicator) return;
     let percent = 50 + (pos / 6) * 45;
-    percent = Math.max(5, Math.min(95, percent));
-    indicator.style.left = `${percent}%`;
+    indicator.style.left = `${Math.max(5, Math.min(95, percent))}%`;
 }
 
 socket.on('my_grid_updated', (data) => {
     document.getElementById('game-target-giant').innerText = data.target;
     renderGrid(data.newPool, handle1v1TileClick);
-    if (data.success) {
-        SoundEngine.playClick();
-    } else {
-        SoundEngine.playError();
-    }
+    if (data.success) SoundEngine.playClick();
+    else SoundEngine.playError();
 });
 
 socket.on('opponent_progress', (data) => {
@@ -2194,14 +2078,12 @@ socket.on('trigger_jackpot_wheel', () => {
     document.getElementById('recap-modal').style.display = 'none';
     const wheelModal = document.getElementById('modal-jackpot-wheel');
     const spinBtn = document.getElementById('btn-spin-wheel');
-    const resultText = document.getElementById('wheel-result-text');
     const wheelEl = document.getElementById('wheel-element');
-    
     wheelEl.style.transition = 'none';
     wheelEl.style.transform = 'rotate(0deg)';
     spinBtn.disabled = false;
     spinBtn.style.opacity = '1';
-    resultText.innerText = '';
+    document.getElementById('wheel-result-text').innerText = '';
     wheelModal.style.display = 'flex';
 });
 
@@ -2216,7 +2098,6 @@ function spinJackpotWheel() {
 socket.on('jackpot_wheel_result', (data) => {
     const wheelEl = document.getElementById('wheel-element');
     const resultText = document.getElementById('wheel-result-text');
-    
     wheelEl.style.transition = 'transform 3.5s cubic-bezier(0.15, 0.75, 0.1, 1)';
     wheelEl.style.transform = `rotate(${data.targetAngle || 135}deg)`;
 
@@ -2240,7 +2121,7 @@ socket.on('jackpot_wheel_result', (data) => {
                 showGameOverRecap(pendingGameOverData);
                 pendingGameOverData = null;
             }
-        }, 2500);
+        }, 2200);
     }, 3600);
 });
 
@@ -2260,7 +2141,6 @@ function getWinnerAvatarShowcaseHTML(playerObj) {
     
     let iconContent = playerObj.avatar || 1;
     let isRobot = false;
-
     if (equippedAvatar === 'avatar_legend' || playerObj.avatar === 'avatar_legend') {
         iconContent = '🤖';
         isRobot = true;
@@ -2269,10 +2149,10 @@ function getWinnerAvatarShowcaseHTML(playerObj) {
     return `
         <div class="victory-avatar-showcase">
             <div class="victory-badge-large ${isGoldFrame ? 'gold' : ''} ${isRobot ? 'robot-dancing' : ''}">
-                <span style="font-size: ${isRobot ? '42px' : '30px'}; font-weight: 900; color: #fff; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.7));">${iconContent}</span>
-                <span style="position: absolute; bottom: -2px; right: -2px; font-size: 18px; background: #0f051d; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; z-index:3;">${playerObj.flag || '🇫🇷'}</span>
+                <span style="font-size: ${isRobot ? '36px' : '26px'}; font-weight: 900; color: #fff;">${iconContent}</span>
+                <span style="position: absolute; bottom: -2px; right: -2px; font-size: 14px; background: #0f051d; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; z-index:3;">${playerObj.flag || '🇫🇷'}</span>
             </div>
-            <div style="font-size: 14px; font-weight: 900; color: #f8b500; text-shadow: 0 0 10px rgba(248,181,0,0.6); margin-top: 4px;">${playerObj.username || 'Joueur'} TRIOMPHE !</div>
+            <div style="font-size: 13px; font-weight: 900; color: #f8b500; margin-top: 4px;">${playerObj.username || 'Joueur'} TRIOMPHE !</div>
         </div>
     `;
 }
@@ -2307,19 +2187,12 @@ function showGameOverRecap(data) {
 
     const winnerId = data.winnerId;
     const isWinner = (winnerId === myId);
-    
     const cinematicContainer = document.getElementById('winner-cinematic-container');
     
     let winnerObj = null;
     if (winnerId) {
         if (winnerId === myId) {
-            winnerObj = {
-                username: myProfile.username,
-                avatar: myProfile.avatar,
-                flag: myProfile.flag,
-                inventory: myProfile.inventory,
-                unlocked_items: myProfile.unlocked_items
-            };
+            winnerObj = { username: myProfile.username, avatar: myProfile.avatar, flag: myProfile.flag, inventory: myProfile.inventory, unlocked_items: myProfile.unlocked_items };
         } else if (cachedOpponent && (winnerId === cachedOpponent.id || winnerId === cachedOpponent.socketId)) {
             winnerObj = cachedOpponent;
         } else if (data.players[winnerId]) {
@@ -2333,12 +2206,7 @@ function showGameOverRecap(data) {
     if (winnerObj) {
         cinematicContainer.innerHTML = getWinnerAvatarShowcaseHTML(winnerObj);
     } else {
-        cinematicContainer.innerHTML = `
-            <div class="victory-avatar-showcase">
-                <div style="font-size: 36px; margin-bottom: 4px;">🤝</div>
-                <div style="font-size: 14px; font-weight: 900; color: #00d2ff;">ÉGALITÉ PARFAITE !</div>
-            </div>
-        `;
+        cinematicContainer.innerHTML = `<div class="victory-avatar-showcase"><div style="font-size: 28px; margin-bottom: 4px;">🤝</div><div style="font-size: 13px; font-weight: 900; color: #00d2ff;">ÉGALITÉ !</div></div>`;
     }
 
     if (isWinner) {
@@ -2379,7 +2247,7 @@ socket.on('solo_reward_result', (data) => {
             document.getElementById('btn-spin-wheel').disabled = false;
             document.getElementById('btn-spin-wheel').style.opacity = '1';
             document.getElementById('wheel-result-text').innerText = '';
-        }, 1000);
+        }, 800);
     }
 });
 
@@ -2472,7 +2340,7 @@ function startAvalancheGame(speed, initialCount) {
     document.getElementById('solo-score').innerText = soloScore;
     document.getElementById('game-timer').innerText = avalancheTimeLeft;
 
-    avalancheGridData = Array(12).fill(null);
+    avalancheGridData = Array(16).fill(null);
     avalancheTarget = null;
     for(let i=0; i<initialCount; i++) spawnAvalancheNumber();
     updateAvalancheTarget();
@@ -2512,10 +2380,7 @@ function spawnAvalancheNumber() {
     if (emptyIndices.length === 0) return false;
     let randomIdx = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
     avalancheGridData[randomIdx] = Math.floor(Math.random() * 50) + 1;
-    
-    if (avalancheTarget === null) {
-        updateAvalancheTarget();
-    }
+    if (avalancheTarget === null) updateAvalancheTarget();
     return true;
 }
 
@@ -2576,16 +2441,14 @@ function endSoloGame() {
 
     document.getElementById('winner-cinematic-container').innerHTML = `
         <div class="victory-avatar-showcase">
-            <div class="victory-badge-large">
-                <span style="font-size: 32px;">🏋️</span>
-            </div>
+            <div class="victory-badge-large"><span style="font-size: 28px;">🏋️</span></div>
         </div>
     `;
 
     document.getElementById('recap-banner').innerText = currentLang === 'fr' ? "🏋️ ENTRAÎNEMENT TERMINÉ" : "🏋️ TRAINING FINISHED";
     document.getElementById('recap-banner').style.color = "#00d2ff";
     document.getElementById('recap-1v1-rows').style.display = 'none';
-    document.getElementById('recap-reason').innerText = `${currentLang === 'fr' ? 'Score' : 'Score'} : ${soloScore}`;
+    document.getElementById('recap-reason').innerText = `Score : ${soloScore}`;
     document.getElementById('recap-my-score').innerText = soloScore;
 
     SoundEngine.playVictory();
