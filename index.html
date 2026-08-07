@@ -62,6 +62,46 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
 
+        /* Grand Avatar TFT pour la modale de Profil */
+        .tft-avatar-large {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e1035, #3c1e69);
+            border: 3px solid #00d2ff;
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.5);
+            margin: 0 auto 8px auto;
+        }
+        .tft-avatar-large.gold-frame {
+            border-color: #f8b500;
+            box-shadow: 0 0 25px rgba(248, 181, 0, 0.8);
+            background: linear-gradient(135deg, #3a2500, #694b00);
+        }
+        .tft-avatar-large-icon {
+            font-size: 38px;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.7));
+        }
+        .tft-flag-large-overlay {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            font-size: 16px;
+            background: #0f051d;
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255,255,255,0.4);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.8);
+            z-index: 3;
+        }
+
         /* Animation des émotes style TFT (Non bloquant) */
         .emote-bubble {
             position: absolute;
@@ -548,23 +588,26 @@
     </div>
 
     <div id="modal-username" class="modal-overlay" style="display:none;">
-        <div class="modal-card" style="text-align:center;">
-            <h2 style="margin:0 0 8px 0; color:#00d2ff; font-size:18px;" data-i18n="welcome_title">⚡ BIENVENUE ⚡</h2>
-            <p style="color:#aaa; font-size:12px; margin-bottom:12px;" data-i18n="welcome_sub">Configure ton profil pour jouer :</p>
+        <div class="modal-card" style="text-align:center; max-width: 390px;">
+            <!-- Aperçu Avatar TFT Grand Format -->
+            <div id="modal-avatar-preview"></div>
+            
+            <h2 style="margin:2px 0 2px 0; color:#00d2ff; font-size:18px;" data-i18n="welcome_title">⚡ IDENTITÉ BLITZ ⚡</h2>
+            <p style="color:#aaa; font-size:11px; margin-bottom:10px;" data-i18n="welcome_sub">Personnalise ton profil compétitif :</p>
             
             <label style="display:block; text-align:left; font-size:11px; color:#aaa; margin-bottom:4px; font-weight:bold;" data-i18n="pseudo_label">PSEUDO</label>
             <input type="text" id="username-input" placeholder="Ex: Kiiks" maxlength="15" 
-                   style="width:100%; padding:10px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:15px; font-weight:bold; text-align:center; margin-bottom:10px; outline:none;">
+                   style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:14px; font-weight:bold; text-align:center; margin-bottom:8px; outline:none;">
             
-            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
                 <div style="flex: 1; text-align: left;">
                     <label style="display:block; font-size:11px; color:#aaa; margin-bottom:4px; font-weight:bold;" data-i18n="avatar_num_label">AVATAR (1-999)</label>
-                    <input type="number" id="avatar-input" min="1" max="999" value="1" 
-                           style="width:100%; padding:10px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:15px; font-weight:bold; text-align:center; outline:none;">
+                    <input type="number" id="avatar-input" min="1" max="999" value="1" oninput="updateProfilePreview()"
+                           style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:14px; font-weight:bold; text-align:center; outline:none;">
                 </div>
                 <div style="flex: 1; text-align: left;">
                     <label style="display:block; font-size:11px; color:#aaa; margin-bottom:4px; font-weight:bold;" data-i18n="flag_label">DRAPEAU</label>
-                    <select id="flag-input" style="width:100%; padding:10px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:14px; font-weight:bold; outline:none; height: 46px;">
+                    <select id="flag-input" onchange="updateProfilePreview()" style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:13px; font-weight:bold; outline:none; height: 42px;">
                         <option value="🇫🇷">🇫🇷 France</option>
                         <option value="🇧🇪">🇧🇪 Belgique</option>
                         <option value="🇨🇦">🇨🇦 Canada</option>
@@ -582,7 +625,7 @@
             </div>
 
             <label style="display:block; text-align:left; font-size:11px; color:#aaa; margin-bottom:4px; font-weight:bold;" data-i18n="region_label">RÉGION</label>
-            <select id="region-input" style="width:100%; padding:10px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:14px; font-weight:bold; margin-bottom:15px; outline:none;">
+            <select id="region-input" style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:13px; font-weight:bold; margin-bottom:12px; outline:none;">
                 <option value="Hauts-de-France">Hauts-de-France</option>
                 <option value="Île-de-France">Île-de-France</option>
                 <option value="Auvergne-Rhône-Alpes">Auvergne-Rhône-Alpes</option>
@@ -599,7 +642,7 @@
                 <option value="DOM-TOM / Autre">DOM-TOM / Autre</option>
             </select>
             
-            <button class="btn-main" onclick="saveProfileFromModal()" data-i18n="btn_play">JOUER ⚡</button>
+            <button class="btn-main btn-blue" onclick="saveProfileFromModal()" data-i18n="btn_play">VALIDER & JOUER ⚡</button>
         </div>
     </div>
 
@@ -845,8 +888,8 @@
                 tourney_teaser_title: "Bientôt disponible !",
                 tourney_teaser_desc: "Ce mode est actuellement en cours de réflexion et de développement. Prépare-toi à affronter l'élite dans des tournois épiques très bientôt...",
                 tourney_rewards: "Récompenses : 200 🪙 + 1 🏆 + 50 ⭐",
-                welcome_title: "⚡ BIENVENUE ⚡",
-                welcome_sub: "Configure ton profil pour jouer :",
+                welcome_title: "⚡ IDENTITÉ BLITZ ⚡",
+                welcome_sub: "Personnalise ton profil compétitif :",
                 pseudo_label: "PSEUDO",
                 avatar_num_label: "AVATAR (1-999)",
                 flag_label: "DRAPEAU",
@@ -954,8 +997,8 @@
                 tourney_teaser_title: "Coming soon!",
                 tourney_teaser_desc: "This mode is currently under consideration and development. Get ready to face the elite in epic tournaments very soon...",
                 tourney_rewards: "Rewards: 200 🪙 + 1 🏆 + 50 ⭐",
-                welcome_title: "⚡ WELCOME ⚡",
-                welcome_sub: "Set up your profile to play:",
+                welcome_title: "⚡ BLITZ IDENTITY ⚡",
+                welcome_sub: "Customize your competitive profile:",
                 pseudo_label: "PSEUDO",
                 avatar_num_label: "AVATAR (1-999)",
                 flag_label: "FLAG",
@@ -1302,7 +1345,7 @@
             return currentLang === 'fr' ? 'Novice 🌱' : 'Novice 🌱';
         }
 
-        // Style TFT - Avatar circulaire néon avec icône et drapeau incrusté
+        // Style TFT - Avatar circulaire néon avec icône et drapeau incrusté (Header / Classement)
         function getAvatarBadgeHTML(flag, avatarNum) {
             const equippedAvatar = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar;
             const isGoldFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame === 'frame_gold';
@@ -1327,6 +1370,40 @@
                     <span class="tft-flag-overlay">${flag || '🇫🇷'}</span>
                 </div>
             `;
+        }
+
+        // Grand Avatar TFT interactif pour la modale de Profil
+        function getLargeAvatarBadgeHTML(flag, avatarNum) {
+            const equippedAvatar = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar;
+            const isGoldFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame === 'frame_gold';
+            
+            let avatarIcon = '🧠'; 
+            if (equippedAvatar === 'avatar_legend') {
+                avatarIcon = '🤖'; 
+            } else if (avatarNum > 700) {
+                avatarIcon = '⚡';
+            } else if (avatarNum > 400) {
+                avatarIcon = '🔥';
+            } else if (avatarNum > 200) {
+                avatarIcon = '💎';
+            }
+
+            return `
+                <div class="tft-avatar-large ${isGoldFrame ? 'gold-frame' : ''}">
+                    <span class="tft-avatar-large-icon">${avatarIcon}</span>
+                    <span class="tft-flag-large-overlay">${flag || '🇫🇷'}</span>
+                </div>
+            `;
+        }
+
+        function updateProfilePreview() {
+            const avatarNum = parseInt(document.getElementById('avatar-input').value) || 1;
+            const rawFlag = document.getElementById('flag-input').value;
+            const flag = getFlagEmoji(rawFlag);
+            const previewContainer = document.getElementById('modal-avatar-preview');
+            if (previewContainer) {
+                previewContainer.innerHTML = getLargeAvatarBadgeHTML(flag, avatarNum);
+            }
         }
 
         // Gestion des émotes style TFT en temps réel
@@ -1381,7 +1458,7 @@
 
         function checkAndShowProfileModal() {
             if (!isProfileValid()) {
-                document.getElementById('modal-username').style.display = 'flex';
+                promptProfileChange();
             } else {
                 myProfile.username = localStorage.getItem('cb_username');
                 myProfile.region = localStorage.getItem('cb_region');
@@ -1423,6 +1500,7 @@
             if (myProfile.region) document.getElementById('region-input').value = myProfile.region;
             document.getElementById('avatar-input').value = myProfile.avatar || 1;
             document.getElementById('flag-input').value = myProfile.flag || "🇫🇷";
+            updateProfilePreview();
             document.getElementById('modal-username').style.display = 'flex';
         }
 
@@ -1678,7 +1756,7 @@
                 { id: 'expressoMatch', label: '⚡ Expresso Match (Timer 20s)' },
                 { id: 'chaosMode', label: '🌪️ Chaos Mode (Malus aléatoires)' },
                 { id: 'jackpotEclair', label: '🎁 Jackpot Éclair (Coffres mystères)' },
-                { id: 'tugOfWarMode', label: '🪢 Mode Corde Raide (Tug-of-War)' }
+                { id: 'tugOfWarMode', label: '🪢 Mode Exclusif : Corde Raide (Tug-of-War)' }
             ];
 
             const listContainer = document.getElementById('admin-events-config-list');
