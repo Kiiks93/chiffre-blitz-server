@@ -478,7 +478,13 @@ let myProfile = {
     region: localStorage.getItem('cb_region') || "Hauts-de-France",
     avatar: parseInt(localStorage.getItem('cb_avatar')) || 1,
     flag: localStorage.getItem('cb_flag') || "🇫🇷",
-    points: 0, coins: 0, trophies: 0, wins: 0, losses: 0, inventory: {}, unlocked_items: [], equippedPower: null, equippedPowers: [],
+    points: 0, coins: 0, trophies: 0, wins: 0, losses: 0, 
+    inventory: {
+        __equipped: {
+            title: localStorage.getItem('cb_equipped_title') || ""
+        }
+    }, 
+    unlocked_items: [], equippedPower: null, equippedPowers: [],
     blitzPassPremium: false,
     claimedPassTiers: {}
 };
@@ -695,6 +701,14 @@ function checkAndShowProfileModal() {
         myProfile.region = localStorage.getItem('cb_region');
         myProfile.avatar = parseInt(localStorage.getItem('cb_avatar')) || 1;
         myProfile.flag = getFlagEmoji(localStorage.getItem('cb_flag') || "🇫🇷");
+        
+        const savedTitle = localStorage.getItem('cb_equipped_title');
+        if (savedTitle) {
+            if (!myProfile.inventory) myProfile.inventory = {};
+            if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
+            myProfile.inventory.__equipped.title = savedTitle;
+        }
+
         updateEconomyUI();
         document.getElementById('modal-username').style.display = 'none';
         registerIfPossible();
@@ -723,8 +737,10 @@ function saveProfileFromModal() {
     
     if (titleInput) {
         myProfile.inventory.__equipped.title = titleInput;
+        localStorage.setItem('cb_equipped_title', titleInput);
     } else {
         delete myProfile.inventory.__equipped.title;
+        localStorage.removeItem('cb_equipped_title');
     }
 
     if (activeAvatarChoice === 'avatar_legend') {
@@ -760,8 +776,10 @@ function saveAvatarChoiceOnly() {
 
     if (titleInput) {
         myProfile.inventory.__equipped.title = titleInput;
+        localStorage.setItem('cb_equipped_title', titleInput);
     } else {
         delete myProfile.inventory.__equipped.title;
+        localStorage.removeItem('cb_equipped_title');
     }
 
     if (activeAvatarChoice === 'avatar_legend') {
@@ -822,7 +840,19 @@ socket.on('player_registered', (rawData) => {
         myProfile.trophies = player.trophies;
         myProfile.wins = player.wins;
         myProfile.losses = player.losses;
-        myProfile.inventory = player.inventory;
+        
+        // Préserve le titre local en cas d'écrasement par le serveur
+        const localEquipped = myProfile.inventory && myProfile.inventory.__equipped ? {...myProfile.inventory.__equipped} : {};
+        const savedTitle = localStorage.getItem('cb_equipped_title');
+        if (savedTitle && !localEquipped.title) localEquipped.title = savedTitle;
+
+        myProfile.inventory = player.inventory || {};
+        if (!myProfile.inventory.__equipped) {
+            myProfile.inventory.__equipped = localEquipped;
+        } else if (!myProfile.inventory.__equipped.title && localEquipped.title) {
+            myProfile.inventory.__equipped.title = localEquipped.title;
+        }
+
         myProfile.unlocked_items = player.unlocked_items;
         myProfile.equippedPower = player.equippedPower;
         myProfile.blitzPassPremium = player.blitzPassPremium;
