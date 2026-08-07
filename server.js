@@ -341,7 +341,7 @@ io.on('connection', (socket) => {
             setTimeout(() => {
                 const p1SocketId = room.players[0].socketId || room.players[0].id;
                 const p2SocketId = room.players[1].socketId || room.players[1].id;
-                startMatchBetween(p1SocketId, p2SocketId, false, false, false); // Custom room: pas d'Expresso Match
+                startMatchBetween(p1SocketId, p2SocketId, false, false, false); 
             }, 1000);
         }
     });
@@ -355,7 +355,7 @@ io.on('connection', (socket) => {
         if (matchmakingQueue.length >= 2) {
             const p1 = matchmakingQueue.shift();
             const p2 = matchmakingQueue.shift();
-            startMatchBetween(p1, p2, false, true, false); // 1v1 Online Matchmaking
+            startMatchBetween(p1, p2, false, true, false); // 1v1 Online Unranked (ici le mode Expresso s'applique si activé)
         }
     });
 
@@ -368,7 +368,7 @@ io.on('connection', (socket) => {
         if (rankedQueue.length >= 2) {
             const p1 = rankedQueue.shift();
             const p2 = rankedQueue.shift();
-            startMatchBetween(p1, p2, true, true, false); // Ranked Online Matchmaking
+            startMatchBetween(p1, p2, true, true, false); // Ranked Online Matchmaking (Pas d'Expresso)
         }
     });
 
@@ -380,7 +380,7 @@ io.on('connection', (socket) => {
         if (tugOfWarQueue.length >= 2) {
             const p1 = tugOfWarQueue.shift();
             const p2 = tugOfWarQueue.shift();
-            startMatchBetween(p1, p2, false, true, true); // Tug of War Online Match
+            startMatchBetween(p1, p2, false, true, true); // Tug of War Online Match (Pas d'Expresso)
         }
     });
 
@@ -587,10 +587,13 @@ function startMatchBetween(id1, id2, isRanked = false, isOnline = true, isTugOfW
     const p1 = activePlayers[id1] || { socketId: id1, username: "Joueur 1", avatar: 1, flag: "🇫🇷", points: 0 };
     const p2 = activePlayers[id2] || { socketId: id2, username: "Joueur 2", avatar: 2, flag: "🇫🇷", points: 0 };
 
+    // Le mode Expresso (20s) est STRICTEMENT réservé au 1v1 online non classé (isOnline && !isRanked && !isTugOfWar)
+    const isExpressoActive = globalEvents.expressoMatch && isOnline && !isRanked && !isTugOfWar;
+
     const match = {
         id1,
         id2,
-        timeLeft: (globalEvents.expressoMatch && isOnline) ? 20 : 30,
+        timeLeft: isExpressoActive ? 20 : 30,
         players: {
             [id1]: { target: 1, score: 0, pool: generatePool(1) },
             [id2]: { target: 1, score: 0, pool: generatePool(1) }
