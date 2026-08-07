@@ -1569,7 +1569,7 @@
                 socket.emit('equip_cosmetic', 'avatar_legend');
             } else {
                 delete myProfile.inventory.__equipped.avatar;
-                socket.emit('equip_cosmetic', 'standard');
+                socket.emit('equip_cosmetic', 'none');
             }
 
             saveLocalPreferences();
@@ -1581,7 +1581,6 @@
             showTitleScreen();
         }
 
-        // Fonction corrigée pour enregistrer instantanément le choix de l'avatar et du style
         function saveAvatarChoiceOnly() {
             let avatarVal = parseInt(document.getElementById('avatar-input').value);
             const flagVal = document.getElementById('flag-input').value;
@@ -1592,14 +1591,15 @@
             myProfile.avatar = avatarVal;
             myProfile.flag = getFlagEmoji(flagVal);
 
-            // Mise à jour immédiate de l'état local pour rafraîchir l'interface instantanément
+            if (!myProfile.inventory) myProfile.inventory = {};
             if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
+
             if (activeAvatarChoice === 'avatar_legend') {
                 myProfile.inventory.__equipped.avatar = 'avatar_legend';
                 socket.emit('equip_cosmetic', 'avatar_legend');
             } else {
                 delete myProfile.inventory.__equipped.avatar;
-                socket.emit('equip_cosmetic', 'standard');
+                socket.emit('equip_cosmetic', 'none');
             }
 
             saveLocalPreferences();
