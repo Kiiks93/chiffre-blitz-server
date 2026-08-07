@@ -92,9 +92,21 @@
         <button class="btn-main btn-blue" onclick="openLaunchAdModal()" style="margin-top: 12px; width: 100%; font-size: 16px; padding: 14px;" data-i18n="btn_play">JOUER ⚡</button>
     </div>
 
-    <!-- MENU PRINCIPAL - TOUS LES MODES EMPILÉS VERTICALEMENT -->
+    <!-- MENU PRINCIPAL - MIS EN PAGE VERTICAL ET ÉPURÉ -->
     <div id="screen-menu" class="menu-container" style="display:none; width: 92%; max-width: 440px; margin: auto; min-height: 85vh; display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: 24px 0;">
         <div id="player-event-banner" class="event-banner"></div>
+
+        <!-- 🎫 PASSE DE COMBAT (MIS EN AVANT & LÉGÈREMENT DÉTACHÉ) -->
+        <div onclick="openBlitzPass()" style="background: linear-gradient(135deg, rgba(248,181,0,0.18), rgba(255,65,108,0.18)); border: 2px solid #f8b500; border-radius: 16px; padding: 14px 16px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 18px rgba(248,181,0,0.25); transition: transform 0.2s;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 28px;">🎫</span>
+                <div style="text-align: left;">
+                    <div style="font-size: 13px; font-weight: 900; color: #f8b500; letter-spacing: 0.5px;">PASSE DE COMBAT • SAISON 1</div>
+                    <div style="font-size: 10px; color: #ddd;">Récompenses exclusives & Gratuites 🌟</div>
+                </div>
+            </div>
+            <span style="font-size: 11px; background: linear-gradient(45deg, #f8b500, #ff416c); color: #fff; font-weight: 900; padding: 6px 12px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">Voir ⚡</span>
+        </div>
 
         <!-- 🏋️ ENTRAÎNEMENT SOLO -->
         <button class="btn-main" onclick="openSoloMenu()" style="width: 100%; padding: 18px 16px; font-size: 15px; font-weight: 900; background: linear-gradient(135deg, #7b4397, #dc2430); box-shadow: 0 6px 22px rgba(123,67,151,0.5); border: 1.5px solid rgba(255,255,255,0.2); border-radius: 16px; display: flex; align-items: center; justify-content: center; gap: 10px;" data-i18n="menu_solo">
@@ -119,11 +131,6 @@
         <!-- 🛍️ BOUTIQUE -->
         <button class="btn-main btn-shop" onclick="openShop()" style="width: 100%; padding: 16px; font-size: 14px; font-weight: bold; background: linear-gradient(135deg, #11998e, #38ef7d); box-shadow: 0 4px 16px rgba(56,239,125,0.35); border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 10px;" data-i18n="menu_shop">
             <span style="font-size: 20px;">🛍️</span> BOUTIQUE
-        </button>
-
-        <!-- 🎫 PASS DE COMBAT -->
-        <button class="btn-main" onclick="openBlitzPass()" style="width: 100%; background:linear-gradient(135deg, #f8b500, #ff416c); box-shadow: 0 4px 16px rgba(248,181,0,0.35); padding: 16px; font-size: 14px; font-weight: bold; border: 1.5px solid rgba(255,255,255,0.2); border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 10px;">
-            <span style="font-size: 20px;">🎫</span> Blitz Pass (Saison 1)
         </button>
         
         <!-- 🏆 CLASSEMENT -->
