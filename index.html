@@ -44,53 +44,71 @@
         </div>
     </div>
 
-    <div id="screen-title" class="menu-container" style="max-width:380px; margin: 5px auto; text-align: left;">
-        <div style="text-align: center; margin-bottom: 8px;">
-            <h2 style="font-size: 22px; color: #00d2ff; margin: 0; text-shadow: 0 0 12px rgba(0,210,255,0.4);">CHIFFRE BLITZ ⚡</h2>
+    <!-- ÉCRAN D'ACCUEIL / RÈGLES -->
+    <div id="screen-title" class="menu-container" style="max-width:380px; margin: 10px auto; text-align: left;">
+        <div style="text-align: center; margin-bottom: 12px;">
+            <h2 style="font-size: 24px; color: #00d2ff; margin: 0; text-shadow: 0 0 15px rgba(0,210,255,0.5); letter-spacing: 1px;">CHIFFRE BLITZ ⚡</h2>
             <p style="color: #aaa; font-size: 11px; margin: 4px 0 0 0;" data-i18n="subtitle">Le duel de calcul et de réflexes ultime</p>
         </div>
 
-        <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 14px; font-size: 11px; color: #ccc; max-height: 42vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
-            <div>
-                <strong style="color:#00d2ff; font-size:12px;" data-i18n="rule1_title">⚡ Principe du jeu</strong>
-                <p style="margin:3px 0 0 0;" data-i18n="rule1_desc">Clique le plus vite possible sur les tuiles de la grille dans l'ordre croissant exact (1, puis 2, 3, etc.).</p>
+        <div style="background: rgba(30,16,53,0.7); border: 2px solid rgba(0,210,255,0.25); padding: 14px; border-radius: 16px; font-size: 11px; color: #ccc; max-height: 40vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);">
+            <div style="display:flex; gap:8px; align-items:start;">
+                <span style="font-size:16px;">⚡</span>
+                <div>
+                    <strong style="color:#00d2ff; font-size:12px;" data-i18n="rule1_title">Principe du jeu</strong>
+                    <p style="margin:2px 0 0 0; color:#bbb;" data-i18n="rule1_desc">Clique le plus vite possible sur les tuiles de la grille dans l'ordre croissant exact (1, puis 2, 3...).</p>
+                </div>
             </div>
-            <div>
-                <strong style="color:#ff4b2b; font-size:12px;" data-i18n="rule2_title">🏋️ Entraînement Solo</strong>
-                <p style="margin:3px 0 0 0;" data-i18n="rule2_desc">Modes Classique, Aléatoire ou Avalanche pour enchaîner les chiffres et gagner des pièces (🪙).</p>
+            <div style="display:flex; gap:8px; align-items:start;">
+                <span style="font-size:16px;">⚔️</span>
+                <div>
+                    <strong style="color:#ff4b2b; font-size:12px;" data-i18n="rule3_title">Duel 1v1 Online</strong>
+                    <p style="margin:2px 0 0 0; color:#bbb;" data-i18n="rule3_desc">Affronte un adversaire en temps réel avec matchmaking classé SBMM ou en salons privés.</p>
+                </div>
             </div>
-            <div>
-                <strong style="color:#00c6ff; font-size:12px;" data-i18n="rule3_title">⚔️ Duel 1v1 Online</strong>
-                <p style="margin:3px 0 0 0;" data-i18n="rule3_desc">Affronte un adversaire en temps réel (matchmaking non classé, classé SBMM ou salons privés).</p>
-            </div>
-            <div>
-                <strong style="color:#f8b500; font-size:12px;" data-i18n="rule5_title">🏆 Système de Rangs</strong>
-                <p style="margin:3px 0 0 0;" data-i18n="rule5_desc">Monte en points en match classé à travers 4 paliers : Novice 🌱, Chiffre 🔢, Expert 🧠 et Calculateur ⚡ !</p>
-            </div>
-            <div>
-                <strong style="color:#7b4397; font-size:12px;" data-i18n="rule4_title">🎯 Mode Tournoi</strong>
-                <p style="margin:3px 0 0 0;" data-i18n="rule4_desc">Bientôt disponible ! Affrontez les meilleurs joueurs dans un tournoi épique (en cours de réflexion).</p>
+            <div style="display:flex; gap:8px; align-items:start;">
+                <span style="font-size:16px;">🏆</span>
+                <div>
+                    <strong style="color:#f8b500; font-size:12px;" data-i18n="rule5_title">Système de Rangs</strong>
+                    <p style="margin:2px 0 0 0; color:#bbb;" data-i18n="rule5_desc">Monte à travers 4 paliers : Novice 🌱, Chiffre 🔢, Expert 🧠 et Calculateur ⚡ !</p>
+                </div>
             </div>
         </div>
 
-        <button class="btn-main btn-blue" onclick="openLaunchAdModal()" style="margin-top: 10px; width: 100%;" data-i18n="btn_play">JOUER ⚡</button>
+        <button class="btn-main btn-blue" onclick="openLaunchAdModal()" style="margin-top: 12px; width: 100%; font-size: 16px; padding: 14px;" data-i18n="btn_play">JOUER ⚡</button>
     </div>
 
-    <div id="screen-menu" class="menu-container" style="display:none;">
+    <!-- MENU PRINCIPAL RESTRUCTURÉ -->
+    <div id="screen-menu" class="menu-container" style="display:none; max-width: 380px;">
         <div id="player-event-banner" class="event-banner"></div>
 
-        <button class="btn-main btn-blue" onclick="openSoloMenu()" data-i18n="menu_solo">🏋️ ENTRAÎNEMENT SOLO</button>
-        <button class="btn-main" onclick="open1v1Hub()" data-i18n="menu_1v1">⚔️ DUEL 1v1 ONLINE</button>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <button class="btn-main btn-blue" onclick="open1v1Hub()" style="flex-direction: column; padding: 14px 8px; gap: 4px; font-size: 13px;" data-i18n="menu_1v1">
+                <span style="font-size: 22px;">⚔️</span> DUEL 1v1
+            </button>
+            <button class="btn-main" onclick="openSoloMenu()" style="flex-direction: column; padding: 14px 8px; gap: 4px; font-size: 13px; background: linear-gradient(45deg, #7b4397, #dc2430);" data-i18n="menu_solo">
+                <span style="font-size: 22px;">🏋️</span> SOLO
+            </button>
+        </div>
+
         <button id="btn-tow-menu" class="btn-main" onclick="startTugOfWarQueue()" style="display:none; background:linear-gradient(45deg, #ff007f, #ff8a00); box-shadow: 0 4px 15px rgba(255,0,127,0.4);" data-i18n="menu_tow">🪢 Mode Corde Raide (Tug-of-War)</button>
         
-        <button class="btn-main btn-purple" onclick="openRoomsScreen()" data-i18n="menu_friends">👥 JOUER ENTRE AMIS</button>
-        <button class="btn-main btn-shop" onclick="openShop()" data-i18n="menu_shop">🛍️ BOUTIQUE POUVOIRS</button>
-        <button class="btn-main" onclick="openBlitzPass()" style="background:linear-gradient(45deg, #f8b500, #ff416c); box-shadow: 0 4px 15px rgba(248,181,0,0.3);">🎫 Blitz Pass (Saison 1)</button>
-        <button class="btn-main btn-gold" onclick="openLeaderboard()" data-i18n="menu_lb">🏆 CLASSEMENT</button>
-        <button class="btn-main btn-purple" onclick="openTournamentScreen()" data-i18n="menu_tourney">🎯 MODE TOURNOI</button>
-        <button class="btn-secondary" onclick="showTitleScreen()" style="margin-top:4px;" data-i18n="menu_info">ℹ️ Informations & Règles</button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <button class="btn-main btn-purple" onclick="openRoomsScreen()" style="padding: 10px; font-size: 12px;" data-i18n="menu_friends">👥 SALONS</button>
+            <button class="btn-main btn-shop" onclick="openShop()" style="padding: 10px; font-size: 12px;" data-i18n="menu_shop">🛍️ BOUTIQUE</button>
+        </div>
+
+        <button class="btn-main" onclick="openBlitzPass()" style="background:linear-gradient(45deg, #f8b500, #ff416c); box-shadow: 0 4px 15px rgba(248,181,0,0.3); padding: 11px; font-size: 13px;">🎫 Blitz Pass (Saison 1)</button>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <button class="btn-main btn-gold" onclick="openLeaderboard()" style="padding: 10px; font-size: 12px;" data-i18n="menu_lb">🏆 CLASSEMENT</button>
+            <button class="btn-main btn-purple" onclick="openTournamentScreen()" style="padding: 10px; font-size: 12px;" data-i18n="menu_tourney">🎯 TOURNOIS</button>
+        </div>
+
+        <button class="btn-secondary" onclick="showTitleScreen()" style="margin-top:2px; font-size: 12px;" data-i18n="menu_info">ℹ️ Informations & Règles</button>
     </div>
 
+    <!-- SOUS-MENUS ET MODALES -->
     <div id="screen-solo-menu" class="menu-container" style="display:none;">
         <h2 style="color:#00d2ff; font-size:18px; margin-bottom:4px;" data-i18n="solo_menu_title">MODES D'ENTRAÎNEMENT</h2>
         <button class="btn-main btn-blue" onclick="startSoloTraining('classic')" data-i18n="solo_classic">⚡ Classique (Croissant)</button>
@@ -222,19 +240,31 @@
         </div>
     </div>
 
+    <!-- NOUVELLE MODALE AMIS -->
     <div id="modal-friends" class="modal-overlay" style="display:none;">
-        <div class="modal-card" style="max-width: 400px; max-height: 80vh;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h2 style="margin:0; color:#00d2ff; font-size:18px;" data-i18n="friends_title">👥 Liste d'Amis</h2>
-                <button class="icon-btn" onclick="closeFriendsModal()" style="width:28px; height:28px;">✕</button>
+        <div class="modal-card" style="max-width: 420px; max-height: 82vh;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:20px;">👥</span>
+                    <h2 style="margin:0; color:#00d2ff; font-size:18px;">Centre d'Amis</h2>
+                </div>
+                <button class="icon-btn" onclick="closeFriendsModal()" style="width:30px; height:30px;">✕</button>
             </div>
-            <div style="display:flex; gap:6px; margin-bottom:10px;">
-                <input type="text" id="input-add-friend" placeholder="Pseudo de l'ami..." maxlength="15" 
-                       style="flex:1; padding:8px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:13px; outline:none;">
-                <button class="btn-main btn-blue" onclick="sendFriendRequest()" style="padding:8px 12px; font-size:12px; margin-top:0;" data-i18n="add_btn">Ajouter</button>
+
+            <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(0,210,255,0.2); padding:10px; border-radius:12px; margin-bottom:12px; display:flex; gap:6px;">
+                <input type="text" id="input-add-friend" placeholder="Entrer le pseudo exact..." maxlength="15" 
+                       style="flex:1; padding:9px 12px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:13px; outline:none;">
+                <button class="btn-main btn-blue" onclick="sendFriendRequest()" style="padding:9px 14px; font-size:12px; margin-top:0; width:auto;" data-i18n="add_btn">Ajouter</button>
             </div>
-            <div id="friends-list-container" style="overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:6px; max-height: 45vh; padding-right:2px;"></div>
-            <button class="btn-secondary" onclick="closeFriendsModal()" style="margin-top:10px;" data-i18n="close">Fermer</button>
+
+            <div class="tabs" style="margin-bottom:10px;">
+                <button id="friend-tab-all" class="tab-btn active" onclick="switchFriendTab('all')">Mes Amis</button>
+                <button id="friend-tab-requests" class="tab-btn" onclick="switchFriendTab('requests')">Demandes 📬</button>
+            </div>
+
+            <div id="friends-list-container" style="overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:8px; max-height: 42vh; padding-right:2px;"></div>
+            
+            <button class="btn-secondary" onclick="closeFriendsModal()" style="margin-top:12px;" data-i18n="close">Fermer</button>
         </div>
     </div>
 
