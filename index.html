@@ -10,25 +10,25 @@
 <body>
 
     <div class="header-bar">
-        <h1>Chiffre Blitz ⚡</h1>
-        <div id="user-pill" class="user-pill" onclick="promptProfileChange()" style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; cursor: pointer; background: rgba(30,16,53,0.8); border: 2px solid rgba(0,210,255,0.3); border-radius: 20px;">
+        <h1 onclick="openAdminLoginModal()">Chiffre Blitz ⚡</h1>
+        <div id="user-pill" class="user-pill" onclick="promptProfileChange()">
             <div id="user-avatar-badge"></div>
-            <div style="display: flex; flex-direction: column; overflow: hidden; text-align: left; max-width: 110px;">
-                <span id="user-name-display" style="font-weight: bold; font-size: 13px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Définir pseudo</span>
-                <span id="user-title-display" style="font-size: 9px; color: #f8b500; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;"></span>
+            <div style="display: flex; flex-direction: column; overflow: hidden; text-align: left;">
+                <span id="user-name-display">Définir pseudo</span>
+                <span id="user-title-display" style="font-size: 8px; color: #f8b500; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></span>
             </div>
         </div>
         <div class="header-btns">
-            <button onclick="openFriendsModal()" class="icon-btn" style="background: rgba(0, 210, 255, 0.15); border-color: #00d2ff; padding: 0 10px; gap: 4px; width: auto;" data-i18n="friends_btn">👥 Amis</button>
+            <button onclick="openFriendsModal()" class="icon-btn" style="padding: 0 6px;" title="Amis">👥</button>
             <button id="lang-btn" class="icon-btn" onclick="toggleLanguage()">ENG</button>
             <button id="mute-btn" class="icon-btn" onclick="toggleMute()">🔊</button>
         </div>
     </div>
 
     <div class="user-stats">
-        <span>🪙 <strong id="user-coins-display" style="font-size: 14px;">0</strong></span>
-        <span>🏆 <strong id="user-trophies-display" style="font-size: 14px;">0</strong></span>
-        <span>🏅 <strong id="user-rank-display" style="color:#00d2ff; font-size: 14px;">Novice</strong> (<span id="user-points-display" style="font-size: 13px;">0</span> pts)</span>
+        <span>🪙 <strong id="user-coins-display">0</strong></span>
+        <span>🏆 <strong id="user-trophies-display">0</strong></span>
+        <span>🏅 <strong id="user-rank-display" style="color:#00d2ff;">Novice</strong> (<span id="user-points-display">0</span> pts)</span>
     </div>
 
     <div id="modal-launch-ad" class="modal-overlay" style="display:none;">
@@ -47,102 +47,60 @@
         </div>
     </div>
 
-    <div id="screen-title" class="menu-container" style="max-width:380px; margin: 10px auto; text-align: left;">
-        <div style="text-align: center; margin-bottom: 12px;">
-            <h2 style="font-size: 24px; color: #00d2ff; margin: 0; text-shadow: 0 0 15px rgba(0,210,255,0.5); letter-spacing: 1px;">CHIFFRE BLITZ ⚡</h2>
+    <div id="screen-title" class="menu-container" style="max-width:380px; text-align: left;">
+        <div style="text-align: center; margin-bottom: 10px;">
+            <h2 style="font-size: 22px; color: #00d2ff; margin: 0; text-shadow: 0 0 15px rgba(0,210,255,0.5);">CHIFFRE BLITZ ⚡</h2>
             <p style="color: #aaa; font-size: 11px; margin: 4px 0 0 0;" data-i18n="subtitle">Le duel de calcul et de réflexes ultime</p>
         </div>
 
-        <div style="background: rgba(30,16,53,0.7); border: 2px solid rgba(0,210,255,0.25); padding: 12px; border-radius: 16px; font-size: 11px; color: #ccc; max-height: 40vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);">
-            <div style="display:flex; gap:8px; align-items:start;">
-                <span style="font-size:16px;">⚡</span>
-                <div>
-                    <strong style="color:#00d2ff; font-size:12px;" data-i18n="rule1_title">⚡ Principe du jeu</strong>
-                    <p style="margin:2px 0 0 0; color:#bbb;" data-i18n="rule1_desc">Clique le plus vite possible sur les tuiles de la grille dans l'ordre croissant exact (1, puis 2, 3, etc.).</p>
-                </div>
+        <div style="background: rgba(30,16,53,0.7); border: 2px solid rgba(0,210,255,0.25); padding: 10px; border-radius: 14px; font-size: 11px; color: #ccc; max-height: 38vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display:flex; gap:6px; align-items:start;">
+                <span style="font-size:14px;">⚡</span>
+                <div><strong style="color:#00d2ff;" data-i18n="rule1_title">⚡ Principe du jeu</strong><p style="margin:2px 0 0 0;" data-i18n="rule1_desc">Clique le plus vite possible sur les tuiles de la grille dans l'ordre croissant exact.</p></div>
             </div>
-            <div style="display:flex; gap:8px; align-items:start;">
-                <span style="font-size:16px;">🏋️</span>
-                <div>
-                    <strong style="color:#ff4b2b; font-size:12px;" data-i18n="rule2_title">🏋️ Entraînement Solo</strong>
-                    <p style="margin:2px 0 0 0; color:#bbb;" data-i18n="rule2_desc">Modes Classique, Aléatoire ou Avalanche pour enchaîner les chiffres et gagner des pièces (🪙).</p>
-                </div>
+            <div style="display:flex; gap:6px; align-items:start;">
+                <span style="font-size:14px;">🏋️</span>
+                <div><strong style="color:#ff4b2b;" data-i18n="rule2_title">🏋️ Entraînement Solo</strong><p style="margin:2px 0 0 0;" data-i18n="rule2_desc">Modes Classique, Aléatoire ou Avalanche pour gagner des pièces (🪙).</p></div>
             </div>
-            <div style="display:flex; gap:8px; align-items:start;">
-                <span style="font-size:16px;">⚔️</span>
-                <div>
-                    <strong style="color:#00c6ff; font-size:12px;" data-i18n="rule3_title">⚔️ Duel 1v1 Online</strong>
-                    <p style="margin:2px 0 0 0; color:#bbb;" data-i18n="rule3_desc">Affronte un adversaire en temps réel (matchmaking non classé, classé SBMM ou salons privés).</p>
-                </div>
+            <div style="display:flex; gap:6px; align-items:start;">
+                <span style="font-size:14px;">⚔️</span>
+                <div><strong style="color:#00c6ff;" data-i18n="rule3_title">⚔️ Duel 1v1 Online</strong><p style="margin:2px 0 0 0;" data-i18n="rule3_desc">Affronte un adversaire en temps réel (matchmaking, classé SBMM, salons privés).</p></div>
             </div>
-            <div style="display:flex; gap:8px; align-items:start;">
-                <span style="font-size:16px;">🏆</span>
-                <div>
-                    <strong style="color:#f8b500; font-size:12px;" data-i18n="rule5_title">🏆 Système de Rangs</strong>
-                    <p style="margin:2px 0 0 0; color:#bbb;" data-i18n="rule5_desc">Monte en points en match classé à travers 4 paliers : Novice 🌱, Chiffre 🔢, Expert 🧠 et Calculateur ⚡ !</p>
-                </div>
-            </div>
-            <div style="display:flex; gap:8px; align-items:start;">
-                <span style="font-size:16px;">🎯</span>
-                <div>
-                    <strong style="color:#7b4397; font-size:12px;" data-i18n="rule4_title">🎯 Mode Tournoi</strong>
-                    <p style="margin:2px 0 0 0; color:#bbb;" data-i18n="rule4_desc">Bientôt disponible ! Affrontez les meilleurs joueurs dans un tournoi épique (en cours de réflexion).</p>
-                </div>
+            <div style="display:flex; gap:6px; align-items:start;">
+                <span style="font-size:14px;">🏆</span>
+                <div><strong style="color:#f8b500;" data-i18n="rule5_title">🏆 Système de Rangs</strong><p style="margin:2px 0 0 0;" data-i18n="rule5_desc">Novice 🌱, Chiffre 🔢, Expert 🧠 et Calculateur ⚡ !</p></div>
             </div>
         </div>
 
-        <button class="btn-main btn-blue" onclick="openLaunchAdModal()" style="margin-top: 12px; width: 100%; font-size: 16px; padding: 14px;" data-i18n="btn_play">JOUER ⚡</button>
+        <button class="btn-main btn-blue" onclick="openLaunchAdModal()" style="margin-top: 10px; width: 100%; font-size: 15px; padding: 12px;" data-i18n="btn_play">JOUER ⚡</button>
     </div>
 
-    <div id="screen-menu" class="menu-container" style="display:none; width: 92%; max-width: 440px; margin: auto; min-height: 85vh; display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: 24px 0;">
+    <div id="screen-menu" class="menu-container" style="display:none; max-width: 380px;">
         <div id="player-event-banner" class="event-banner"></div>
 
-        <div onclick="openBlitzPass()" style="background: linear-gradient(135deg, rgba(248,181,0,0.18), rgba(255,65,108,0.18)); border: 2px solid #f8b500; border-radius: 16px; padding: 14px 16px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 18px rgba(248,181,0,0.25); transition: transform 0.2s;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <span style="font-size: 28px;">🎫</span>
+        <div onclick="openBlitzPass()" style="background: linear-gradient(135deg, rgba(248,181,0,0.18), rgba(255,65,108,0.18)); border: 2px solid #f8b500; border-radius: 14px; padding: 10px 14px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 24px;">🎫</span>
                 <div style="text-align: left;">
-                    <div style="font-size: 13px; font-weight: 900; color: #f8b500; letter-spacing: 0.5px;">PASSE DE COMBAT • SAISON 1</div>
-                    <div style="font-size: 10px; color: #ddd;">Récompenses exclusives & Gratuites 🌟</div>
+                    <div style="font-size: 12px; font-weight: 900; color: #f8b500;">PASSE DE COMBAT • SAISON 1</div>
+                    <div style="font-size: 9px; color: #ddd;">Récompenses exclusives & Gratuites 🌟</div>
                 </div>
             </div>
-            <span style="font-size: 11px; background: linear-gradient(45deg, #f8b500, #ff416c); color: #fff; font-weight: 900; padding: 6px 12px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">Voir ⚡</span>
+            <span style="font-size: 10px; background: linear-gradient(45deg, #f8b500, #ff416c); color: #fff; font-weight: 900; padding: 5px 10px; border-radius: 8px;">Voir ⚡</span>
         </div>
 
-        <button class="btn-main" onclick="openSoloMenu()" style="width: 100%; padding: 18px 16px; font-size: 15px; font-weight: 900; background: linear-gradient(135deg, #7b4397, #dc2430); box-shadow: 0 6px 22px rgba(123,67,151,0.5); border: 1.5px solid rgba(255,255,255,0.2); border-radius: 16px; display: flex; align-items: center; justify-content: center; gap: 10px;" data-i18n="menu_solo">
-            <span style="font-size: 24px;">🏋️</span> ENTRAÎNEMENT SOLO
-        </button>
-
-        <button class="btn-main btn-blue" onclick="open1v1Hub()" style="width: 100%; padding: 18px 16px; font-size: 15px; font-weight: 900; background: linear-gradient(135deg, #00c6ff, #0072ff); box-shadow: 0 6px 22px rgba(0,210,255,0.4); border: 1.5px solid rgba(255,255,255,0.2); border-radius: 16px; display: flex; align-items: center; justify-content: center; gap: 10px;" data-i18n="menu_1v1">
-            <span style="font-size: 24px;">⚔️</span> DUEL 1v1 ONLINE
-        </button>
-
-        <button id="btn-tow-menu" class="btn-main" onclick="startTugOfWarQueue()" style="display:none; width: 100%; background:linear-gradient(135deg, #ff007f, #ff8a00); box-shadow: 0 6px 20px rgba(255,0,127,0.4); border: 1.5px solid rgba(255,255,255,0.2); padding: 16px; font-size: 14px; font-weight: bold; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 10px;" data-i18n="menu_tow">
-            <span style="font-size: 20px;">🪢</span> Mode Corde Raide (Tug-of-War)
-        </button>
-        
-        <button class="btn-main btn-purple" onclick="openRoomsScreen()" style="width: 100%; padding: 16px; font-size: 14px; font-weight: bold; background: linear-gradient(135deg, #4a00e0, #8e2de2); box-shadow: 0 4px 16px rgba(74,0,224,0.35); border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 10px;" data-i18n="menu_friends">
-            <span style="font-size: 20px;">👥</span> SALONS & AMIS
-        </button>
-
-        <button class="btn-main btn-shop" onclick="openShop()" style="width: 100%; padding: 16px; font-size: 14px; font-weight: bold; background: linear-gradient(135deg, #11998e, #38ef7d); box-shadow: 0 4px 16px rgba(56,239,125,0.35); border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 10px;" data-i18n="menu_shop">
-            <span style="font-size: 20px;">🛍️</span> BOUTIQUE
-        </button>
-        
-        <button class="btn-main btn-gold" onclick="openLeaderboard()" style="width: 100%; padding: 16px; font-size: 14px; font-weight: bold; background: linear-gradient(135deg, #f2994a, #f2c94c); box-shadow: 0 4px 16px rgba(242,153,74,0.35); border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 10px;" data-i18n="menu_lb">
-            <span style="font-size: 20px;">🏆</span> CLASSEMENT
-        </button>
-
-        <button class="btn-main btn-purple" onclick="openTournamentScreen()" style="width: 100%; padding: 16px; font-size: 14px; font-weight: bold; background: linear-gradient(135deg, #3a1c71, #d76d77); box-shadow: 0 4px 16px rgba(215,109,119,0.35); border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 10px;" data-i18n="menu_tourney">
-            <span style="font-size: 20px;">🎯</span> TOURNOIS
-        </button>
-
-        <button class="btn-secondary" onclick="showTitleScreen()" style="width: 100%; margin-top: 4px; font-size: 13px; padding: 14px; border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;" data-i18n="menu_info">
-            ℹ️ Informations & Règles
-        </button>
+        <button class="btn-main btn-purple" onclick="openSoloMenu()" data-i18n="menu_solo">🏋️ ENTRAÎNEMENT SOLO</button>
+        <button class="btn-main btn-blue" onclick="open1v1Hub()" data-i18n="menu_1v1">⚔️ DUEL 1v1 ONLINE</button>
+        <button id="btn-tow-menu" class="btn-main" onclick="startTugOfWarQueue()" style="display:none; background:linear-gradient(45deg, #ff007f, #ff8a00);" data-i18n="menu_tow">🪢 Mode Corde Raide (Tug-of-War)</button>
+        <button class="btn-main btn-shop" onclick="openRoomsScreen()" data-i18n="menu_friends">👥 SALONS & AMIS</button>
+        <button class="btn-main btn-shop" onclick="openShop()" data-i18n="menu_shop">🛍️ BOUTIQUE</button>
+        <button class="btn-main btn-gold" onclick="openLeaderboard()" data-i18n="menu_lb">🏆 CLASSEMENT</button>
+        <button class="btn-main" onclick="openTournamentScreen()" style="background:linear-gradient(45deg, #3a1c71, #d76d77);" data-i18n="menu_tourney">🎯 TOURNOIS</button>
+        <button class="btn-secondary" onclick="showTitleScreen()" data-i18n="menu_info">ℹ️ Informations & Règles</button>
     </div>
 
     <div id="screen-solo-menu" class="menu-container" style="display:none;">
-        <h2 style="color:#00d2ff; font-size:18px; margin-bottom:4px;" data-i18n="solo_menu_title">MODES D'ENTRAÎNEMENT</h2>
+        <h2 style="color:#00d2ff; font-size:16px; margin-bottom:4px;" data-i18n="solo_menu_title">MODES D'ENTRAÎNEMENT</h2>
         <button class="btn-main btn-blue" onclick="startSoloTraining('classic')" data-i18n="solo_classic">⚡ Classique (Croissant)</button>
         <button class="btn-main btn-gold" onclick="startSoloTraining('random')" data-i18n="solo_random">🎲 Aléatoire (Cibles variées)</button>
         <button class="btn-main btn-avalanche-main" onclick="openAvalancheDifficulties()" data-i18n="solo_avalanche_btn">🧊 Avalanche (Difficultés)</button>
@@ -150,16 +108,16 @@
     </div>
 
     <div id="screen-avalanche-menu" class="menu-container" style="display:none;">
-        <h2 style="color:#00d2ff; font-size:18px; margin-bottom:4px;" data-i18n="avalanche_menu_title">🧊 AVALANCHE (Difficultés)</h2>
+        <h2 style="color:#00d2ff; font-size:16px; margin-bottom:4px;" data-i18n="avalanche_menu_title">🧊 AVALANCHE (Difficultés)</h2>
         <button class="btn-main btn-avalanche-easy" onclick="startAvalancheGame(1100, 4)" data-i18n="diff_easy">Facile</button>
         <button class="btn-main btn-avalanche-medium" onclick="startAvalancheGame(750, 3)" data-i18n="diff_medium">Moyen</button>
         <button class="btn-main btn-avalanche-hard" onclick="startAvalancheGame(450, 4)" data-i18n="diff_hard">Difficile 💀</button>
         <button class="btn-secondary" onclick="openSoloMenu()" data-i18n="back">⬅️ Retour</button>
     </div>
 
-    <div id="screen-1v1-hub" style="display:none; max-width:350px; margin:10px auto;" class="menu-container">
-        <h2 data-i18n="hub_title" style="font-size: 18px; margin-bottom: 4px;">⚔️ DUEL 1v1 ONLINE</h2>
-        <p style="color:#aaa; font-size:12px; margin-bottom:8px;" data-i18n="hub_subtitle">Choisis ton mode de jeu :</p>
+    <div id="screen-1v1-hub" style="display:none;" class="menu-container">
+        <h2 data-i18n="hub_title" style="font-size: 16px; margin-bottom: 4px;">⚔️ DUEL 1v1 ONLINE</h2>
+        <p style="color:#aaa; font-size:11px; margin-bottom:6px;" data-i18n="hub_subtitle">Choisis ton mode de jeu :</p>
         <button class="btn-main btn-blue" onclick="startRandom1v1()" data-i18n="hub_random">🎲 Matchmaking non classé</button>
         <button class="btn-main btn-gold" onclick="openRankedLoadoutModal()" data-i18n="hub_ranked">⚔️ Matchmaking Classé (SBMM)</button>
         <button class="btn-secondary" onclick="showMainMenu()" data-i18n="back_menu">⬅️ Retour Menu</button>
@@ -167,12 +125,12 @@
 
     <div id="modal-ranked-loadout" class="modal-overlay" style="display:none;">
         <div class="modal-card">
-            <h2 style="margin:0 0 8px 0; color:#f8b500; font-size:18px;" data-i18n="ranked_modal_title">⚔️ PRÉPARATION CLASSÉE</h2>
-            <p style="color:#aaa; font-size:12px; margin-bottom:10px;" data-i18n="ranked_modal_sub">Choisis 2 objets de ton inventaire pour le match classé :</p>
+            <h2 style="margin:0 0 6px 0; color:#f8b500; font-size:16px;" data-i18n="ranked_modal_title">⚔️ PRÉPARATION CLASSÉE</h2>
+            <p style="color:#aaa; font-size:11px; margin-bottom:8px;" data-i18n="ranked_modal_sub">Choisis 2 objets de ton inventaire :</p>
             <div id="ranked-items-container" class="shop-grid" style="max-height: 45vh;"></div>
-            <div style="margin-top: 12px; display: flex; gap: 8px;">
+            <div style="margin-top: 10px; display: flex; gap: 6px;">
                 <button class="btn-secondary" onclick="closeRankedLoadoutModal()" style="margin-top:0;" data-i18n="cancel">Annuler</button>
-                <button class="btn-main btn-gold" onclick="startRankedMatch()" style="margin-top:0; flex:1;" data-i18n="ranked_start_btn">Lancer le Classé ⚡</button>
+                <button class="btn-main btn-gold" onclick="startRankedMatch()" style="margin-top:0; flex:1;" data-i18n="ranked_start_btn">Lancer ⚡</button>
             </div>
         </div>
     </div>
@@ -183,57 +141,54 @@
                 <div class="radar-ring"></div>
                 <div id="radar-digit" class="radar-num">1</div>
             </div>
-            <div style="margin-top:15px; font-size:16px; font-weight:bold; color:#00d2ff;" data-i18n="searching">Recherche d'adversaire...</div>
+            <div style="margin-top:12px; font-size:14px; font-weight:bold; color:#00d2ff;" data-i18n="searching">Recherche d'adversaire...</div>
         </div>
-        <button class="btn-secondary" onclick="cancel1v1Search()" style="max-width:180px; margin-top:20px;" data-i18n="cancel">❌ Annuler</button>
+        <button class="btn-secondary" onclick="cancel1v1Search()" style="max-width:160px; margin:20px auto 0 auto;" data-i18n="cancel">❌ Annuler</button>
     </div>
 
-    <div id="screen-rooms" style="display:none; max-width:400px; margin:0 auto;">
-        <h2 data-i18n="rooms_title" style="font-size:18px; margin-bottom:8px;">👥 Jouer entre amis</h2>
-        <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:14px; margin:10px 0; display:flex; flex-direction:column; gap:8px;">
-            <button class="btn-main btn-blue" onclick="openCreateRoomModal()" style="width:100%;" data-i18n="rooms_create">✨ Créer un salon personnalisé</button>
-            <button class="btn-main btn-gold" onclick="openJoinCustomScreen()" style="width:100%;" data-i18n="rooms_join_code">🔑 Rejoindre avec un code</button>
+    <div id="screen-rooms" style="display:none;" class="menu-container">
+        <h2 data-i18n="rooms_title" style="font-size:16px; margin-bottom:6px;">👥 Jouer entre amis</h2>
+        <div style="background:rgba(255,255,255,0.04); padding:10px; border-radius:12px; margin:6px 0; display:flex; flex-direction:column; gap:6px;">
+            <button class="btn-main btn-blue" onclick="openCreateRoomModal()" style="width:100%; margin-top:0;" data-i18n="rooms_create">✨ Créer un salon personnalisé</button>
+            <button class="btn-main btn-gold" onclick="openJoinCustomScreen()" style="width:100%; margin-top:0;" data-i18n="rooms_join_code">🔑 Rejoindre avec un code</button>
         </div>
-        <h3 style="font-size:13px; text-align:left; color:#aaa; margin-top:10px;" data-i18n="rooms_open_list">Salons ouverts :</h3>
-        <div id="rooms-list" class="rooms-list" style="max-height: 30vh; margin-bottom:10px;">
-            <div style="text-align:center; color:#aaa; margin-top:8px;" data-i18n="loading">Chargement des salons...</div>
+        <h3 style="font-size:12px; text-align:left; color:#aaa; margin-top:6px;" data-i18n="rooms_open_list">Salons ouverts :</h3>
+        <div id="rooms-list" class="rooms-list" style="max-height: 28vh; margin-bottom:8px;">
+            <div style="text-align:center; color:#aaa; margin-top:8px;" data-i18n="loading">Chargement...</div>
         </div>
         <button class="btn-secondary" onclick="showMainMenu()" data-i18n="back_menu">⬅️ Retour Menu</button>
     </div>
 
-    <div id="screen-join-custom" style="display:none; max-width:400px; margin:0 auto;" class="menu-container">
-        <h2 data-i18n="join_title" style="font-size:18px;">🔑 Rejoindre un Salon</h2>
-        <p style="color:#aaa; font-size:12px; margin-bottom:8px;" data-i18n="join_subtitle">Entre le code et le mot de passe (si requis) :</p>
+    <div id="screen-join-custom" style="display:none;" class="menu-container">
+        <h2 data-i18n="join_title" style="font-size:16px;">🔑 Rejoindre un Salon</h2>
+        <p style="color:#aaa; font-size:11px; margin-bottom:6px;" data-i18n="join_subtitle">Entre le code et le mot de passe :</p>
         
-        <label style="display:block; text-align:left; font-size:11px; color:#aaa; margin-bottom:4px; font-weight:bold;" data-i18n="room_code_label">CODE DU SALON</label>
-        <input type="text" id="join-room-code-input" placeholder="Ex: AB12" maxlength="10" 
-               style="width:100%; padding:10px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:15px; font-weight:bold; text-align:center; margin-bottom:12px; outline:none; text-transform: uppercase;">
+        <input type="text" id="join-room-code-input" placeholder="CODE DU SALON" maxlength="10" 
+               style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:14px; font-weight:bold; text-align:center; margin-bottom:8px; outline:none; text-transform: uppercase;">
         
-        <label style="display:block; text-align:left; font-size:11px; color:#aaa; margin-bottom:4px; font-weight:bold;" data-i18n="room_pass_label">MOT DE PASSE (Optionnel)</label>
-        <input type="text" id="join-room-pass-input" placeholder="Laisser vide si public" maxlength="15" 
-               style="width:100%; padding:10px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:15px; font-weight:bold; text-align:center; margin-bottom:15px; outline:none;">
+        <input type="text" id="join-room-pass-input" placeholder="MOT DE PASSE (Optionnel)" maxlength="15" 
+               style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:14px; font-weight:bold; text-align:center; margin-bottom:10px; outline:none;">
         
-        <button class="btn-main btn-blue" onclick="submitJoinCustomRoom()" data-i18n="join_btn">Rejoindre ⚡</button>
-        <button class="btn-secondary" onclick="openRoomsScreen()" style="margin-top:0;" data-i18n="back">⬅️ Retour</button>
+        <button class="btn-main btn-blue" onclick="submitJoinCustomRoom()" data-i18n="join_btn" style="margin-top:0;">Rejoindre ⚡</button>
+        <button class="btn-secondary" onclick="openRoomsScreen()" data-i18n="back">⬅️ Retour</button>
     </div>
 
-    <div id="screen-room-waiting" style="display:none; max-width:400px; margin:0 auto;">
-        <h2 style="font-size:18px;">⚡ <span data-i18n="room_header">Salon</span> : <span id="current-room-code" style="color:#00d2ff;">----</span></h2>
-        <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:14px; margin:15px 0;">
-            
-            <div style="margin-bottom: 12px; text-align: left;">
-                <label style="font-size: 11px; color: #aaa; font-weight: bold;" data-i18n="share_label">INVITATION RAPIDE (SMS / WhatsApp) :</label>
+    <div id="screen-room-waiting" style="display:none;" class="menu-container">
+        <h2 style="font-size:16px;">⚡ <span data-i18n="room_header">Salon</span> : <span id="current-room-code" style="color:#00d2ff;">----</span></h2>
+        <div style="background:rgba(255,255,255,0.04); padding:10px; border-radius:12px; margin:8px 0;">
+            <div style="margin-bottom: 10px; text-align: left;">
+                <label style="font-size: 10px; color: #aaa; font-weight: bold;" data-i18n="share_label">INVITATION RAPIDE :</label>
                 <div style="display: flex; gap: 6px; margin-top: 4px;">
-                    <button class="btn-main btn-blue" onclick="shareRoomLink()" style="flex:1; padding:8px; font-size:13px;" data-i18n="share_btn">📤 Partager</button>
-                    <button class="power-btn equip" onclick="copyRoomLink()" style="padding: 8px 12px;" data-i18n="copy_btn">Copier 📋</button>
+                    <button class="btn-main btn-blue" onclick="shareRoomLink()" style="flex:1; padding:6px; font-size:12px; margin-top:0;" data-i18n="share_btn">📤 Partager</button>
+                    <button class="power-btn equip" onclick="copyRoomLink()" style="padding: 6px 10px;" data-i18n="copy_btn">Copier 📋</button>
                 </div>
                 <input type="text" id="room-share-link" style="position: absolute; left: -9999px;" readonly>
             </div>
 
-            <p style="color:#aaa; font-size:13px; margin-bottom:8px;" data-i18n="players_in_room">Joueurs dans le salon :</p>
-            <div id="room-players-list" style="font-weight:bold; font-size:15px; color:#00ff88; margin-bottom:12px; display:flex; align-items:center; justify-content:center; gap:6px;">En attente...</div>
+            <p style="color:#aaa; font-size:12px; margin-bottom:6px;" data-i18n="players_in_room">Joueurs :</p>
+            <div id="room-players-list" style="font-weight:bold; font-size:14px; color:#00ff88; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:6px;">En attente...</div>
             
-            <div class="emote-bar">
+            <div class="emote-bar" style="margin: 6px auto;">
                 <button class="emote-btn" onclick="sendEmote('🔥')">🔥</button>
                 <button class="emote-btn" onclick="sendEmote('⚡')">⚡</button>
                 <button class="emote-btn" onclick="sendEmote('🤖')">🤖</button>
@@ -241,128 +196,94 @@
                 <button class="emote-btn" onclick="sendEmote('😂')">😂</button>
                 <button class="emote-btn" onclick="sendEmote('👑')">👑</button>
             </div>
-
-            <div class="matchmaking-loader" style="margin-top:5px;">
-                <div class="radar-box" style="width:50px; height:50px;">
-                    <div class="radar-ring"></div>
-                </div>
-                <div style="margin-top:8px; font-size:13px; color:#aaa;" data-i18n="waiting_opponent">En attente d'un adversaire...</div>
-            </div>
         </div>
         <button class="btn-secondary" onclick="leaveCustomRoom()" data-i18n="leave_room">❌ Quitter le salon</button>
     </div>
 
     <div id="modal-create-room" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:center;">
-            <h2 style="margin:0 0 8px 0; color:#00d2ff; font-size:18px;" data-i18n="create_modal_title">✨ CRÉER UN SALON</h2>
-            <p style="color:#aaa; font-size:12px; margin-bottom:12px;" data-i18n="create_modal_sub">Personnalise ton salon privé :</p>
-            
-            <label style="display:block; text-align:left; font-size:11px; color:#aaa; margin-bottom:4px; font-weight:bold;" data-i18n="room_code_label">NOM / CODE DU SALON</label>
-            <input type="text" id="custom-room-name" placeholder="Laisser vide pour code aléatoire" maxlength="10" 
-                   style="width:100%; padding:10px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:15px; font-weight:bold; text-align:center; margin-bottom:12px; outline:none; text-transform: uppercase;">
-            
-            <label style="display:block; text-align:left; font-size:11px; color:#aaa; margin-bottom:4px; font-weight:bold;" data-i18n="room_pass_label">MOT DE PASSE (Optionnel)</label>
-            <input type="text" id="custom-room-pass" placeholder="Laisser vide si public" maxlength="15" 
-                   style="width:100%; padding:10px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:15px; font-weight:bold; text-align:center; margin-bottom:15px; outline:none;">
-            
-            <div style="display:flex; gap:8px;">
+            <h2 style="margin:0 0 6px 0; color:#00d2ff; font-size:16px;" data-i18n="create_modal_title">✨ CRÉER UN SALON</h2>
+            <input type="text" id="custom-room-name" placeholder="NOM DU SALON" maxlength="10" 
+                   style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:14px; font-weight:bold; text-align:center; margin-bottom:8px; outline:none; text-transform: uppercase;">
+            <input type="text" id="custom-room-pass" placeholder="MOT DE PASSE (Optionnel)" maxlength="15" 
+                   style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:14px; font-weight:bold; text-align:center; margin-bottom:10px; outline:none;">
+            <div style="display:flex; gap:6px;">
                 <button class="btn-secondary" onclick="closeCreateRoomModal()" style="margin-top:0;" data-i18n="cancel">Annuler</button>
-                <button class="btn-main" onclick="submitCreateRoom()" style="margin-top:0; flex:1;" data-i18n="create_btn">Créer ⚡</button>
+                <button class="btn-main btn-blue" onclick="submitCreateRoom()" style="margin-top:0; flex:1;" data-i18n="create_btn">Créer ⚡</button>
             </div>
         </div>
     </div>
 
     <div id="modal-friends" class="modal-overlay" style="display:none;">
-        <div class="modal-card" style="max-width: 420px; max-height: 82vh;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:20px;">👥</span>
-                    <h2 style="margin:0; color:#00d2ff; font-size:18px;">Centre d'Amis</h2>
-                </div>
-                <button class="icon-btn" onclick="closeFriendsModal()" style="width:30px; height:30px;">✕</button>
+        <div class="modal-card" style="max-width: 390px; max-height: 80vh;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h2 style="margin:0; color:#00d2ff; font-size:16px;">👥 Centre d'Amis</h2>
+                <button class="icon-btn" onclick="closeFriendsModal()" style="width:28px; height:28px;">✕</button>
             </div>
-
-            <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(0,210,255,0.2); padding:10px; border-radius:12px; margin-bottom:12px; display:flex; gap:6px;">
-                <input type="text" id="input-add-friend" placeholder="Entrer le pseudo exact..." maxlength="15" 
-                       style="flex:1; padding:9px 12px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:13px; outline:none;">
-                <button class="btn-main btn-blue" onclick="sendFriendRequest()" style="padding:9px 14px; font-size:12px; margin-top:0; width:auto;" data-i18n="add_btn">Ajouter</button>
+            <div style="background:rgba(0,0,0,0.2); border:1px solid rgba(0,210,255,0.2); padding:8px; border-radius:10px; margin-bottom:10px; display:flex; gap:6px;">
+                <input type="text" id="input-add-friend" placeholder="Pseudo exact..." maxlength="15" 
+                       style="flex:1; padding:8px; border-radius:8px; border:1px solid #00d2ff; background:#0f051d; color:#fff; font-size:12px; outline:none;">
+                <button class="btn-main btn-blue" onclick="sendFriendRequest()" style="padding:8px 12px; font-size:11px; margin-top:0; width:auto;" data-i18n="add_btn">Ajouter</button>
             </div>
-
-            <div class="tabs" style="margin-bottom:10px;">
-                <button id="friend-tab-all" class="tab-btn active" onclick="switchFriendTab('all')">Mes Amis</button>
-                <button id="friend-tab-requests" class="tab-btn" onclick="switchFriendTab('requests')">Demandes 📬 <span id="badge-requests" style="background:#ff4b2b; color:#fff; border-radius:10px; padding:1px 5px; font-size:10px; display:none; margin-left:3px;">0</span></button>
-                <button id="friend-tab-invites" class="tab-btn" onclick="switchFriendTab('invites')">Invitations 🎮 <span id="badge-invites" style="background:#ff4b2b; color:#fff; border-radius:10px; padding:1px 5px; font-size:10px; display:none; margin-left:3px;">0</span></button>
+            <div class="tabs" style="margin-bottom:8px;">
+                <button id="friend-tab-all" class="tab-btn active" onclick="switchFriendTab('all')">Amis</button>
+                <button id="friend-tab-requests" class="tab-btn" onclick="switchFriendTab('requests')">Demandes <span id="badge-requests" style="background:#ff4b2b; color:#fff; border-radius:8px; padding:1px 4px; font-size:9px; display:none;">0</span></button>
+                <button id="friend-tab-invites" class="tab-btn" onclick="switchFriendTab('invites')">Invitations <span id="badge-invites" style="background:#ff4b2b; color:#fff; border-radius:8px; padding:1px 4px; font-size:9px; display:none;">0</span></button>
             </div>
-
-            <div id="friends-list-container" style="overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:8px; max-height: 42vh; padding-right:2px;"></div>
-            
-            <button class="btn-secondary" onclick="closeFriendsModal()" style="margin-top:12px;" data-i18n="close">Fermer</button>
+            <div id="friends-list-container" style="overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:6px; max-height: 40vh;"></div>
+            <button class="btn-secondary" onclick="closeFriendsModal()" data-i18n="close">Fermer</button>
         </div>
     </div>
 
-    <div id="screen-tournament" style="display:none; max-width:400px; margin:0 auto;" class="menu-container">
-        <h2 data-i18n="tourney_screen_title" style="color:#00d2ff; font-size:18px;">🎯 Tournoi Blitz</h2>
-        <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:14px; margin:10px 0; text-align:center;">
-            <div style="font-size:36px; margin-bottom:12px;">🚀</div>
-            <h3 style="color:#f8b500; margin:0 0 8px 0; font-size:16px;" data-i18n="tourney_teaser_title">Bientôt disponible !</h3>
-            <p style="color:#aaa; font-size:12px; line-height:1.5; margin:0;" data-i18n="tourney_teaser_desc">Ce mode est actuellement en cours de réflexion et de développement. Prépare-toi à affronter l'élite dans des tournois épiques très bientôt...</p>
+    <div id="screen-tournament" style="display:none;" class="menu-container">
+        <h2 data-i18n="tourney_screen_title" style="color:#00d2ff; font-size:16px;">🎯 Tournoi Blitz</h2>
+        <div style="background:rgba(255,255,255,0.04); padding:16px; border-radius:12px; margin:8px 0; text-align:center;">
+            <div style="font-size:30px; margin-bottom:8px;">🚀</div>
+            <h3 style="color:#f8b500; margin:0 0 6px 0; font-size:14px;" data-i18n="tourney_teaser_title">Bientôt disponible !</h3>
+            <p style="color:#aaa; font-size:11px; margin:0;" data-i18n="tourney_teaser_desc">En cours de réflexion et de développement...</p>
         </div>
         <button class="btn-secondary" onclick="showMainMenu()" data-i18n="back">⬅️ Retour Menu</button>
     </div>
 
     <div id="modal-username" class="modal-overlay" style="display:none;">
-        <div class="modal-card" style="text-align:center; max-width: 390px;">
+        <div class="modal-card" style="text-align:center; max-width: 380px;">
             <div id="modal-avatar-preview"></div>
             
-            <h2 style="margin:2px 0 2px 0; color:#00d2ff; font-size:18px;" data-i18n="welcome_title">⚡ IDENTITÉ BLITZ ⚡</h2>
-            <p style="color:#aaa; font-size:11px; margin-bottom:10px;" data-i18n="welcome_sub">Personnalise ton profil compétitif :</p>
+            <h2 style="margin:2px 0; color:#00d2ff; font-size:16px;" data-i18n="welcome_title">⚡ IDENTITÉ BLITZ ⚡</h2>
+            <p style="color:#aaa; font-size:10px; margin-bottom:8px;" data-i18n="welcome_sub">Personnalise ton profil :</p>
             
-            <label style="display:block; text-align:left; font-size:11px; color:#aaa; margin-bottom:4px; font-weight:bold;" data-i18n="pseudo_label">PSEUDO</label>
-            <input type="text" id="username-input" placeholder="Ex: Kiiks" maxlength="15" 
-                   style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:14px; font-weight:bold; text-align:center; margin-bottom:8px; outline:none;">
+            <input type="text" id="username-input" placeholder="PSEUDO" maxlength="15" 
+                   style="width:100%; padding:8px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:13px; font-weight:bold; text-align:center; margin-bottom:6px; outline:none;">
             
-            <div style="margin-bottom: 8px; text-align: left;">
-                <label style="display:block; font-size:11px; color:#aaa; margin-bottom:4px; font-weight:bold;">TITRE ACTIF</label>
-                <select id="title-input" style="width:100%; padding:9px; border-radius:8px; border:2px solid #f8b500; background:#0f051d; color:#f8b500; font-size:13px; font-weight:bold; outline:none;">
-                    <option value="">Aucun titre</option>
-                    <option value="Initié du Plasma">⚡ Initié du Plasma</option>
+            <select id="title-input" style="width:100%; padding:8px; border-radius:8px; border:2px solid #f8b500; background:#0f051d; color:#f8b500; font-size:12px; font-weight:bold; margin-bottom:6px; outline:none;">
+                <option value="">Aucun titre actif</option>
+                <option value="Initié du Plasma">⚡ Initié du Plasma</option>
+            </select>
+
+            <div id="profile-avatar-selector" style="display: flex; gap: 6px; overflow-x: auto; margin-bottom: 6px;"></div>
+
+            <div style="display: flex; gap: 6px; margin-bottom: 6px;">
+                <input type="number" id="avatar-input" min="1" max="999" value="1" oninput="updateProfilePreview()" placeholder="AVATAR (1-999)"
+                       style="flex:1; padding:8px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:13px; font-weight:bold; text-align:center; outline:none;">
+                <select id="flag-input" onchange="updateProfilePreview()" style="flex:1; padding:8px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:12px; font-weight:bold; outline:none;">
+                    <option value="🇫🇷">🇫🇷 France</option>
+                    <option value="🇧🇪">🇧🇪 Belgique</option>
+                    <option value="🇨🇦">🇨🇦 Canada</option>
+                    <option value="🇨🇭">🇨🇭 Suisse</option>
+                    <option value="🇪🇸">🇪🇸 Espagne</option>
+                    <option value="🇮🇹">🇮🇹 Italie</option>
+                    <option value="🇩🇪">🇩🇪 Allemagne</option>
+                    <option value="🇬🇧">🇬🇧 UK</option>
+                    <option value="🇲🇦">🇲🇦 Maroc</option>
+                    <option value="🇩🇿">🇩🇿 Algérie</option>
+                    <option value="🇹🇳">🇹🇳 Tunisie</option>
+                    <option value="🌍">🌍 Autre</option>
                 </select>
             </div>
 
-            <div style="margin-bottom: 8px; text-align: left;">
-                <label style="display:block; font-size:11px; color:#aaa; margin-bottom:4px; font-weight:bold;">STYLE D'AVATAR</label>
-                <div id="profile-avatar-selector" style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;"></div>
-            </div>
+            <button class="btn-secondary" onclick="saveAvatarChoiceOnly()" style="margin: 0 0 6px 0; font-size: 11px; background: rgba(0,210,255,0.15); border-color: #00d2ff; color: #00d2ff;">💾 Enregistrer l'avatar uniquement</button>
 
-            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                <div style="flex: 1; text-align: left;">
-                    <label style="display:block; font-size:11px; color:#aaa; margin-bottom:4px; font-weight:bold;" data-i18n="avatar_num_label">NUMÉRO (1-999)</label>
-                    <input type="number" id="avatar-input" min="1" max="999" value="1" oninput="updateProfilePreview()"
-                           style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:14px; font-weight:bold; text-align:center; outline:none;">
-                </div>
-                <div style="flex: 1; text-align: left;">
-                    <label style="display:block; font-size:11px; color:#aaa; margin-bottom:4px; font-weight:bold;" data-i18n="flag_label">DRAPEAU</label>
-                    <select id="flag-input" onchange="updateProfilePreview()" style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:13px; font-weight:bold; outline:none; height: 42px;">
-                        <option value="🇫🇷">🇫🇷 France</option>
-                        <option value="🇧🇪">🇧🇪 Belgique</option>
-                        <option value="🇨🇦">🇨🇦 Canada</option>
-                        <option value="🇨🇭">🇨🇭 Suisse</option>
-                        <option value="🇪🇸">🇪🇸 Espagne</option>
-                        <option value="🇮🇹">🇮🇹 Italie</option>
-                        <option value="🇩🇪">🇩🇪 Allemagne</option>
-                        <option value="🇬🇧">🇬🇧 Royaume-Uni</option>
-                        <option value="🇲🇦">🇲🇦 Maroc</option>
-                        <option value="🇩🇿">🇩🇿 Algérie</option>
-                        <option value="🇹🇳">🇹🇳 Tunisie</option>
-                        <option value="🌍">🌍 Autre</option>
-                    </select>
-                </div>
-            </div>
-
-            <button class="btn-secondary" onclick="saveAvatarChoiceOnly()" style="margin-top: 2px; margin-bottom: 8px; width: 100%; font-size: 11px; background: rgba(0,210,255,0.15); border-color: #00d2ff; color: #00d2ff; font-weight: bold;">💾 Enregistrer ce choix d'avatar</button>
-
-            <label style="display:block; text-align:left; font-size:11px; color:#aaa; margin-bottom:4px; font-weight:bold;" data-i18n="region_label">RÉGION</label>
-            <select id="region-input" style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:13px; font-weight:bold; margin-bottom:12px; outline:none;">
+            <select id="region-input" style="width:100%; padding:8px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:12px; font-weight:bold; margin-bottom:10px; outline:none;">
                 <option value="Hauts-de-France">Hauts-de-France</option>
                 <option value="Île-de-France">Île-de-France</option>
                 <option value="Auvergne-Rhône-Alpes">Auvergne-Rhône-Alpes</option>
@@ -379,19 +300,17 @@
                 <option value="DOM-TOM / Autre">DOM-TOM / Autre</option>
             </select>
             
-            <button class="btn-main btn-blue" onclick="saveProfileFromModal()" data-i18n="btn_play">VALIDER & JOUER ⚡</button>
+            <button class="btn-main btn-blue" onclick="saveProfileFromModal()" data-i18n="btn_play" style="margin-top:0;">VALIDER & JOUER ⚡</button>
         </div>
     </div>
 
     <div id="modal-shop" class="modal-overlay" style="display:none;">
         <div class="modal-card">
-            <h2 style="margin:0 0 4px 0; color:#38ef7d; font-size:18px;" data-i18n="shop_title">🛍️ BOUTIQUE</h2>
-            <div style="font-size: 13px; color: #f8b500; font-weight: bold; margin-bottom: 8px;">
-                🪙 <span data-i18n="coins">Pièces</span> : <span id="shop-coins-val">0</span>
-            </div>
+            <h2 style="margin:0 0 4px 0; color:#38ef7d; font-size:16px;" data-i18n="shop_title">🛍️ BOUTIQUE</h2>
+            <div style="font-size: 12px; color: #f8b500; font-weight: bold; margin-bottom: 6px;">🪙 <span data-i18n="coins">Pièces</span> : <span id="shop-coins-val">0</span></div>
             <div class="tabs">
-                <button id="shop-tab-bonus" class="tab-btn active" onclick="switchShopTab('bonus')" data-i18n="shop_tab_bonus">🟢 Bonus (pour soi)</button>
-                <button id="shop-tab-malus" class="tab-btn" onclick="switchShopTab('malus')" data-i18n="shop_tab_malus">🔴 Malus (adversaire)</button>
+                <button id="shop-tab-bonus" class="tab-btn active" onclick="switchShopTab('bonus')" data-i18n="shop_tab_bonus">🟢 Bonus</button>
+                <button id="shop-tab-malus" class="tab-btn" onclick="switchShopTab('malus')" data-i18n="shop_tab_malus">🔴 Malus</button>
                 <button id="shop-tab-cosmetics" class="tab-btn" onclick="switchShopTab('cosmetics')">✨ Style</button>
             </div>
             <div id="shop-container" class="shop-grid"></div>
@@ -400,20 +319,19 @@
     </div>
 
     <div id="modal-blitz-pass" class="modal-overlay" style="display:none;">
-        <div class="modal-card" style="max-width: 440px;">
+        <div class="modal-card" style="max-width: 410px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                <h2 style="margin:0; color:#f8b500; font-size:18px;">🎫 PASSE DE COMBAT</h2>
-                <span style="font-size:11px; background:rgba(248,181,0,0.2); border:1px solid #f8b500; color:#f8b500; padding:2px 8px; border-radius:10px; font-weight:bold;">Saison 1</span>
+                <h2 style="margin:0; color:#f8b500; font-size:16px;">🎫 PASSE DE COMBAT</h2>
+                <span style="font-size:10px; background:rgba(248,181,0,0.2); border:1px solid #f8b500; color:#f8b500; padding:2px 6px; border-radius:8px; font-weight:bold;">Saison 1</span>
             </div>
-            <div id="blitz-pass-container" style="overflow-y: auto; max-height: 55vh; display: flex; flex-direction: column; gap: 8px; padding-right: 4px;"></div>
-            <button class="btn-secondary" onclick="closeBlitzPass()" style="margin-top:10px;">Fermer</button>
+            <div id="blitz-pass-container" style="overflow-y: auto; max-height: 52vh; display: flex; flex-direction: column; gap: 6px;"></div>
+            <button class="btn-secondary" onclick="closeBlitzPass()" style="margin-top:8px;">Fermer</button>
         </div>
     </div>
 
     <div id="modal-leaderboard" class="modal-overlay" style="display:none;">
-        <div class="modal-card" style="max-width: 440px;">
-            <h2 style="margin:0 0 10px 0; color:#00d2ff; font-size:18px; letter-spacing:0.5px;" data-i18n="lb_title">🏆 CLASSEMENT</h2>
-            
+        <div class="modal-card" style="max-width: 410px;">
+            <h2 style="margin:0 0 8px 0; color:#00d2ff; font-size:16px;" data-i18n="lb_title">🏆 CLASSEMENT</h2>
             <div class="lb-filters-container">
                 <div class="tabs">
                     <button id="lb-cat-points" class="tab-btn active" onclick="setLbCategory('points')">🏅 Points</button>
@@ -426,53 +344,40 @@
                     <button id="lb-scope-national" class="tab-btn" onclick="setLbScope('national')" data-i18n="lb_nat">🇫🇷 France</button>
                     <button id="lb-scope-global" class="tab-btn" onclick="setLbScope('global')" data-i18n="lb_glb">🌍 Monde</button>
                 </div>
-                <div id="lb-combined-explanation" style="font-size: 11px; color: #00d2ff; text-align: center; margin-top: 2px; font-weight: 600; display: none;" data-i18n="lb_combined_desc">
-                    💡 Combiné : Trophées prioritaires, départagés par les points
-                </div>
+                <div id="lb-combined-explanation" style="font-size: 10px; color: #00d2ff; text-align: center; display: none;" data-i18n="lb_combined_desc">💡 Combiné : Trophées prioritaires, départagés par les points</div>
             </div>
-
-            <div id="lb-list" class="leaderboard-list" style="max-height: 45vh;">
-                <div style="text-align:center; color:#aaa; margin-top:20px;" data-i18n="loading">Chargement...</div>
+            <div id="lb-list" class="leaderboard-list" style="max-height: 40vh;">
+                <div style="text-align:center; color:#aaa; margin-top:15px;" data-i18n="loading">Chargement...</div>
             </div>
-            <button class="btn-secondary" onclick="closeLeaderboard()" style="margin-top:10px;" data-i18n="close">Fermer</button>
+            <button class="btn-secondary" onclick="closeLeaderboard()" style="margin-top:8px;" data-i18n="close">Fermer</button>
         </div>
     </div>
 
     <div id="modal-jackpot-wheel" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:center; align-items:center;">
-            <h2 style="color:#f8b500; margin:0 0 4px 0;">🎰 ROUE JACKPOT ÉCLAIR 🎰</h2>
-            <p style="color:#aaa; font-size:12px; margin-bottom:15px;">Tu as eu la chance de déclencher le Jackpot ! Lance la roue :</p>
-            
-            <div style="position:relative; width:160px; height:160px; margin:10px auto 20px auto;">
-                <div style="position:absolute; top:-12px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:10px solid transparent; border-right:10px solid transparent; border-bottom:15px solid #ff4b2b; z-index:10;"></div>
-                
-                <div id="wheel-element" style="position:relative; width:100%; height:100%; border-radius:50%; border:4px solid #f8b500; background:conic-gradient(#c68a00 0deg 90deg, #00c6ff 90deg 180deg, #38ef7d 180deg 270deg, #ff4b2b 270deg 360deg); display:flex; align-items:center; justify-content:center; overflow:hidden; transition: transform 3.5s cubic-bezier(0.15, 0.75, 0.1, 1);">
-                    
-                    <span style="position:absolute; top:50%; left:50%; transform: translate(-50%, -50%) rotate(45deg) translateY(-42px); font-size:8px; font-weight:900; color:#fff; text-shadow:0 0 2px #000; pointer-events:none;">JACKPOT</span>
-                    <span style="position:absolute; top:50%; left:50%; transform: translate(-50%, -50%) rotate(135deg) translateY(-42px); font-size:8px; font-weight:900; color:#000; text-shadow:0 0 2px #fff; pointer-events:none;">OBJET</span>
-                    <span style="position:absolute; top:50%; left:50%; transform: translate(-50%, -50%) rotate(225deg) translateY(-42px); font-size:8px; font-weight:900; color:#000; text-shadow:0 0 2px #fff; pointer-events:none;">RIEN</span>
-                    <span style="position:absolute; top:50%; left:50%; transform: translate(-50%, -50%) rotate(315deg) translateY(-42px); font-size:8px; font-weight:900; color:#fff; text-shadow:0 0 2px #000; pointer-events:none;">PERDU</span>
-
-                    <div style="background:#1e1035; width:45px; height:45px; border-radius:50%; border:2px solid #f8b500; display:flex; align-items:center; justify-content:center; font-size:16px; z-index:2;">⚡</div>
+            <h2 style="color:#f8b500; margin:0 0 4px 0; font-size:16px;">🎰 ROUE JACKPOT ÉCLAIR 🎰</h2>
+            <p style="color:#aaa; font-size:11px; margin-bottom:10px;">Lance la roue mystère :</p>
+            <div style="position:relative; width:140px; height:140px; margin:10px auto;">
+                <div style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-bottom:12px solid #ff4b2b; z-index:10;"></div>
+                <div id="wheel-element" style="position:relative; width:100%; height:100%; border-radius:50%; border:3px solid #f8b500; background:conic-gradient(#c68a00 0deg 90deg, #00c6ff 90deg 180deg, #38ef7d 180deg 270deg, #ff4b2b 270deg 360deg); display:flex; align-items:center; justify-content:center; overflow:hidden; transition: transform 3.5s cubic-bezier(0.15, 0.75, 0.1, 1);">
+                    <div style="background:#1e1035; width:35px; height:35px; border-radius:50%; border:2px solid #f8b500; display:flex; align-items:center; justify-content:center; font-size:14px; z-index:2;">⚡</div>
                 </div>
             </div>
-
-            <div id="wheel-result-text" style="font-size:15px; font-weight:bold; color:#fff; min-height:24px; margin-bottom:12px;"></div>
-            
+            <div id="wheel-result-text" style="font-size:14px; font-weight:bold; color:#fff; min-height:22px; margin:8px 0;"></div>
             <button id="btn-spin-wheel" class="btn-main btn-gold" onclick="spinJackpotWheel()" style="width:100%;">Lancer la Roue 🎡</button>
         </div>
     </div>
 
     <div id="countdown-overlay" style="display:none;">
-        <div style="font-size:20px; color:#aaa; margin-bottom:8px;" data-i18n="get_ready">PRÉPAREZ-VOUS !</div>
+        <div style="font-size:16px; color:#aaa; margin-bottom:6px;" data-i18n="get_ready">PRÉPAREZ-VOUS !</div>
         <div id="countdown-number" class="countdown-num">3</div>
     </div>
 
-    <div id="screen-game" style="display:none;">
-        <div id="hud-tow" style="display:none; max-width:400px; margin: 0 auto 8px auto; background:rgba(255,255,255,0.06); padding:8px; border-radius:10px;">
-            <div style="font-size:11px; font-weight:bold; color:#ff007f; margin-bottom:4px;" data-i18n="tow_title">🪢 CORDE RAIDE (TUG-OF-WAR)</div>
-            <div style="position:relative; background:#2a1845; height:16px; border-radius:8px; overflow:hidden; border:1px solid #522d80;">
-                <div id="tow-indicator" style="position:absolute; top:0; left:50%; width:12px; height:100%; background:#00d2ff; transform:translateX(-50%); border-radius:4px; transition:left 0.2s;"></div>
+    <div id="screen-game" style="display:none; max-width:400px; margin:0 auto;">
+        <div id="hud-tow" style="display:none; max-width:400px; margin: 0 auto 6px auto; background:rgba(255,255,255,0.05); padding:6px; border-radius:8px;">
+            <div style="font-size:10px; font-weight:bold; color:#ff007f; margin-bottom:3px;" data-i18n="tow_title">🪢 CORDE RAIDE (TUG-OF-WAR)</div>
+            <div style="position:relative; background:#2a1845; height:12px; border-radius:6px; overflow:hidden; border:1px solid #522d80;">
+                <div id="tow-indicator" style="position:absolute; top:0; left:50%; width:10px; height:100%; background:#00d2ff; transform:translateX(-50%); border-radius:3px; transition:left 0.2s;"></div>
             </div>
         </div>
 
@@ -486,24 +391,24 @@
                     <div id="opp-profile-badge"></div>
                 </div>
                 <div data-i18n="hud_opp_target" style="font-size: 9px; color: #aaa;">CIBLE ADVERSAIRE</div>
-                <div style="font-size:20px; color:#ff007f; font-weight:bold;" id="opp-target">1</div>
+                <div style="font-size:18px; color:#ff007f; font-weight:bold;" id="opp-target">1</div>
             </div>
         </div>
 
         <div id="hud-solo" class="hud" style="display:none;">
             <div class="player-box me">
-                <div data-i18n="hud_solo_score" style="font-size: 10px;">SCORE</div>
-                <div style="font-size:20px; color:#00ff88; font-weight:bold;" id="solo-score">0</div>
+                <div data-i18n="hud_solo_score" style="font-size: 9px; color: #aaa;">SCORE</div>
+                <div style="font-size:18px; color:#00ff88; font-weight:bold;" id="solo-score">0</div>
             </div>
         </div>
         
-        <div style="font-size:15px; margin-bottom:4px; font-weight:bold;">
+        <div style="font-size:13px; margin-bottom:4px; font-weight:bold;">
             <span data-i18n="timer_label">Temps</span> : <span id="game-timer" style="color:#ff007f;">30</span>s
         </div>
 
-        <div style="background: rgba(0, 210, 255, 0.12); border: 2px solid #00d2ff; border-radius: 10px; padding: 4px 10px; margin: 0 auto 6px auto; max-width: 400px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 0 12px rgba(0,210,255,0.2);">
-            <span style="font-size: 11px; font-weight: bold; color: #aaa; letter-spacing: 0.5px;" data-i18n="target_label">CIBLE :</span>
-            <span id="game-target-giant" style="font-size: 28px; font-weight: 900; color: #00d2ff; text-shadow: 0 0 10px rgba(0,210,255,0.6);">1</span>
+        <div style="background: rgba(0, 210, 255, 0.1); border: 2px solid #00d2ff; border-radius: 10px; padding: 4px 10px; margin: 0 auto 6px auto; max-width: 400px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <span style="font-size: 10px; font-weight: bold; color: #aaa;" data-i18n="target_label">CIBLE :</span>
+            <span id="game-target-giant" style="font-size: 24px; font-weight: 900; color: #00d2ff;">1</span>
         </div>
 
         <div id="power-zone" style="display:none;"></div>
@@ -523,32 +428,31 @@
     <div id="recap-modal" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:center;">
             <div id="winner-cinematic-container"></div>
-
-            <div id="recap-banner" style="font-size:22px; font-weight:900; margin-bottom:8px;">RÉSULTAT</div>
-            <div id="recap-reason" style="color:#aaa; margin-bottom:12px; font-size:13px;"></div>
+            <div id="recap-banner" style="font-size:20px; font-weight:900; margin-bottom:6px;">RÉSULTAT</div>
+            <div id="recap-reason" style="color:#aaa; margin-bottom:10px; font-size:12px;"></div>
             
             <div id="recap-1v1-rows">
-                <div style="display:flex; justify-content:space-between; margin:6px 0; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:4px; font-size:13px;">
+                <div style="display:flex; justify-content:space-between; margin:4px 0; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:3px; font-size:12px;">
                     <span data-i18n="recap_my_target">🎯 Ma Cible :</span>
                     <span id="recap-my-target" style="color:#00d2ff; font-weight:bold;">-</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; margin:6px 0; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:4px; font-size:13px;">
+                <div style="display:flex; justify-content:space-between; margin:4px 0; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:3px; font-size:12px;">
                     <span data-i18n="recap_opp_target">🎯 Cible Adversaire :</span>
                     <span id="recap-opp-target" style="color:#ff007f; font-weight:bold;">-</span>
                 </div>
             </div>
 
-            <div style="display:flex; justify-content:space-between; margin:6px 0; font-size:13px;">
+            <div style="display:flex; justify-content:space-between; margin:4px 0; font-size:12px;">
                 <span data-i18n="recap_my_score">⭐ Mon Score :</span>
                 <span id="recap-my-score" style="font-weight:bold;">-</span>
             </div>
 
-            <div style="display:flex; justify-content:space-between; margin:6px 0 12px 0; color:#f8b500; font-size:13px;">
+            <div style="display:flex; justify-content:space-between; margin:4px 0 10px 0; color:#f8b500; font-size:12px;">
                 <span data-i18n="recap_coins">🪙 Pièces Gagnées :</span>
                 <span id="recap-coins-gained" style="font-weight:bold;">+0</span>
             </div>
 
-            <div class="emote-bar" style="margin-bottom: 12px;">
+            <div class="emote-bar" style="margin-bottom: 10px;">
                 <button class="emote-btn" onclick="sendEmote('🔥')">🔥</button>
                 <button class="emote-btn" onclick="sendEmote('⚡')">⚡</button>
                 <button class="emote-btn" onclick="sendEmote('🤖')">🤖</button>
@@ -557,7 +461,7 @@
                 <button class="emote-btn" onclick="sendEmote('👑')">👑</button>
             </div>
 
-            <button id="btn-rematch" class="btn-main btn-blue" onclick="requestRematch()" style="margin-bottom: 8px; display: none;" data-i18n="rematch_btn">Revanche ⚔️</button>
+            <button id="btn-rematch" class="btn-main btn-blue" onclick="requestRematch()" style="margin-bottom: 6px; display: none;" data-i18n="rematch_btn">Revanche ⚔️</button>
             <button id="btn-double-reward" class="btn-main btn-reward" onclick="watchAdToDoubleReward()" data-i18n="double_reward">📺 Doubler mes gains (Pub)</button>
             <button class="btn-main" onclick="showMainMenu()" data-i18n="main_menu">MENU PRINCIPAL</button>
         </div>
