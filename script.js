@@ -521,7 +521,9 @@ function parsePlayer(p) {
         flag: getFlagEmoji(p.flag),
         inventory: p.inventory || {},
         unlocked_items: p.unlocked_items || [],
-        equippedPower: p.equippedPower || p.equipped_power || null
+        equippedPower: p.equippedPower || p.equipped_power || null,
+        blitzPassPremium: p.blitzPassPremium || false,
+        claimedPassTiers: p.claimedPassTiers || {}
     };
 }
 
@@ -795,6 +797,8 @@ socket.on('player_registered', (rawData) => {
         myProfile.inventory = player.inventory;
         myProfile.unlocked_items = player.unlocked_items;
         myProfile.equippedPower = player.equippedPower;
+        myProfile.blitzPassPremium = player.blitzPassPremium;
+        myProfile.claimedPassTiers = player.claimedPassTiers;
         
         updateEconomyUI();
         if (document.getElementById('modal-shop').style.display === 'flex') {
@@ -804,6 +808,18 @@ socket.on('player_registered', (rawData) => {
             renderBlitzPass();
         }
     }
+});
+
+// Écouteurs pour synchroniser les actions du Passe de Combat en temps réel
+socket.on('blitz_pass_updated', (data) => {
+    if (data.coins !== undefined) myProfile.coins = data.coins;
+    if (data.blitzPassPremium !== undefined) myProfile.blitzPassPremium = data.blitzPassPremium;
+    if (data.claimedPassTiers) myProfile.claimedPassTiers = data.claimedPassTiers;
+    updateEconomyUI();
+    if (document.getElementById('modal-blitz-pass').style.display === 'flex') {
+        renderBlitzPass();
+    }
+    showNotificationToast("✨ Passe de combat mis à jour avec succès !", "gift");
 });
 
 function showNotificationToast(message, type = 'info') {
