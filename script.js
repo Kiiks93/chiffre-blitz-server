@@ -13,10 +13,10 @@ const i18n = {
         rule4_title: "🎯 Mode Tournoi",
         rule4_desc: "Bientôt disponible ! Affrontez les meilleurs joueurs dans un tournoi épique (en cours de réflexion).",
         btn_play: "JOUER ⚡",
-        menu_solo: "🏋️ ENTRAÎNEMENT",
-        menu_1v1: "⚔️ DUEL 1v1",
+        menu_solo: "🏋️ ENTRAÎNEMENT SOLO",
+        menu_1v1: "⚔️ DUEL 1v1 ONLINE",
         menu_tow: "🪢 Mode Corde Raide (Tug-of-War)",
-        menu_friends: "👥 SALONS",
+        menu_friends: "👥 SALONS & AMIS",
         menu_shop: "🛍️ BOUTIQUE",
         menu_lb: "🏆 CLASSEMENT",
         menu_tourney: "🎯 TOURNOIS",
@@ -1132,7 +1132,6 @@ function requestRematch() {
     socket.emit('request_rematch');
     document.getElementById('recap-modal').style.display = 'none';
     
-    // Si on est dans un salon, on retourne au salon d'attente, sinon écran de recherche/lobby
     const roomCodeText = document.getElementById('current-room-code').innerText;
     if (roomCodeText && roomCodeText !== '----') {
         document.getElementById('screen-room-waiting').style.display = 'block';
@@ -1577,7 +1576,7 @@ function joinRoomFromList(code, hasPassword) {
 
 function joinRoomDirect(code, password) {
     if (!socket.connected) { alert("Erreur : Non connecté au serveur."); return; }
-    socket.emit('join_room', { code: code, password: password });
+    socket.emit('join_room', { code: code.toUpperCase(), password: password });
 }
 
 function leaveCustomRoom() {
