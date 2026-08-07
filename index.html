@@ -299,6 +299,7 @@
         
         <button class="btn-main btn-purple" onclick="openRoomsScreen()" data-i18n="menu_friends">👥 JOUER ENTRE AMIS</button>
         <button class="btn-main btn-shop" onclick="openShop()" data-i18n="menu_shop">🛍️ BOUTIQUE POUVOIRS</button>
+        <button class="btn-main" onclick="openBlitzPass()" style="background:linear-gradient(45deg, #f8b500, #ff416c); box-shadow: 0 4px 15px rgba(248,181,0,0.3);">🎫 Blitz Pass (Saison 1)</button>
         <button class="btn-main btn-gold" onclick="openLeaderboard()" data-i18n="menu_lb">🏆 CLASSEMENT</button>
         <button class="btn-main btn-purple" onclick="openTournamentScreen()" data-i18n="menu_tourney">🎯 MODE TOURNOI</button>
         <button class="btn-secondary" onclick="showTitleScreen()" style="margin-top:4px;" data-i18n="menu_info">ℹ️ Informations & Règles</button>
@@ -504,6 +505,15 @@
             </div>
             <div id="shop-container" class="shop-grid"></div>
             <button class="btn-secondary" onclick="closeShop()" data-i18n="close">Fermer</button>
+        </div>
+    </div>
+
+    <div id="modal-blitz-pass" class="modal-overlay" style="display:none;">
+        <div class="modal-card" style="max-width: 440px;">
+            <h2 style="margin:0 0 4px 0; color:#f8b500; font-size:18px;">🎫 BLITZ PASS - SAISON 1</h2>
+            <p style="color:#aaa; font-size:11px; margin-bottom:8px;">Thème : Plasma Doré ✨</p>
+            <div id="blitz-pass-container" style="overflow-y: auto; max-height: 50vh; display: flex; flex-direction: column; gap: 6px; text-align: left; padding-right: 4px;"></div>
+            <button class="btn-secondary" onclick="closeBlitzPass()">Fermer</button>
         </div>
     </div>
 
@@ -1155,8 +1165,10 @@
         }
 
         function getAvatarBadgeHTML(flag, avatarNum) {
+            const isGoldFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame === 'frame_gold';
+            const customStyle = isGoldFrame ? 'border: 2px solid #f8b500; box-shadow: 0 0 10px rgba(248,181,0,0.7);' : '';
             return `
-                <div class="avatar-flag-badge">
+                <div class="avatar-flag-badge" style="${customStyle}">
                     <span class="flag-bg">${flag || '🇫🇷'}</span>
                     <span class="avatar-num">#${avatarNum || 1}</span>
                 </div>
@@ -1573,7 +1585,7 @@
         }
 
         function hideAllScreens() {
-            ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-avalanche-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'countdown-overlay', 'modal-create-room', 'modal-launch-ad', 'simulated-ad-overlay', 'modal-ranked-loadout', 'modal-jackpot-wheel'].forEach(id => {
+            ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-avalanche-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'modal-blitz-pass', 'countdown-overlay', 'modal-create-room', 'modal-launch-ad', 'simulated-ad-overlay', 'modal-ranked-loadout', 'modal-jackpot-wheel'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
@@ -1900,6 +1912,64 @@
         }
         function closeShop() { document.getElementById('modal-shop').style.display = 'none'; }
 
+        const BLITZ_PASS_TIERS = [
+            { tier: 1, free: "50 Pièces (🪙)", premium: "Titre « Initié du Plasma » + 100 Pièces" },
+            { tier: 2, free: "1 Projecteur", premium: "150 Pièces" },
+            { tier: 3, free: "50 Pièces", premium: "1 Gel du temps" },
+            { tier: 4, free: "1 Gel du temps", premium: "200 Pièces" },
+            { tier: 5, free: "100 Pièces", premium: "Bordure Cristal & Or" },
+            { tier: 6, free: "1 Joker", premium: "150 Pièces" },
+            { tier: 7, free: "50 Pièces", premium: "2 Novas" },
+            { tier: 8, free: "1 Projecteur", premium: "250 Pièces" },
+            { tier: 9, free: "100 Pièces", premium: "Thème de tuiles épuré" },
+            { tier: 10, free: "Titre « Apprenti » + 150 Pièces", premium: "Bordure profil + 500 Pièces" },
+            { tier: 11, free: "100 Pièces", premium: "200 Pièces" },
+            { tier: 12, free: "1 Gel du temps", premium: "1 Joker" },
+            { tier: 13, free: "50 Pièces", premium: "300 Pièces" },
+            { tier: 14, free: "1 Projecteur", premium: "2 Novas" },
+            { tier: 15, free: "150 Pièces", premium: "Effet sonore : Clic de Cristal 🎧" },
+            { tier: 16, free: "1 Joker", premium: "300 Pièces" },
+            { tier: 17, free: "100 Pièces", premium: "1 Gel du temps" },
+            { tier: 18, free: "150 Pièces", premium: "400 Pièces" },
+            { tier: 19, free: "1 Nova", premium: "Effet : Étincelles de Plasma ✨" },
+            { tier: 20, free: "Titre « Calculateur » + 200 Pièces", premium: "Animation de victoire 1v1 🔥" },
+            { tier: 21, free: "150 Pièces", premium: "300 Pièces" },
+            { tier: 22, free: "1 Gel du temps", premium: "2 Jokers" },
+            { tier: 23, free: "200 Pièces", premium: "400 Pièces" },
+            { tier: 24, free: "1 Projecteur", premium: "3 Novas" },
+            { tier: 25, free: "250 Pièces", premium: "Incrustations de Plasma Doré" },
+            { tier: 26, free: "1 Joker", premium: "500 Pièces" },
+            { tier: 27, free: "200 Pièces", premium: "Gel + Projecteur" },
+            { tier: 28, free: "250 Pièces", premium: "600 Pièces" },
+            { tier: 29, free: "1 Nova", premium: "Cadre de profil animé ⚡" },
+            { tier: 30, free: "Titre « Éclair » + 500 Pièces", premium: "Skin « Plasma Doré » (Légendaire) 👑" }
+        ];
+
+        function openBlitzPass() {
+            if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+            document.getElementById('modal-blitz-pass').style.display = 'flex';
+            renderBlitzPass();
+        }
+
+        function closeBlitzPass() {
+            document.getElementById('modal-blitz-pass').style.display = 'none';
+        }
+
+        function renderBlitzPass() {
+            const container = document.getElementById('blitz-pass-container');
+            container.innerHTML = '';
+            BLITZ_PASS_TIERS.forEach(t => {
+                const row = document.createElement('div');
+                row.style.cssText = "background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); padding: 8px 10px; border-radius: 8px; font-size: 11px;";
+                row.innerHTML = `
+                    <div style="color: #f8b500; font-weight: bold; margin-bottom: 2px;">Palier ${t.tier}</div>
+                    <div style="color: #ccc;">🟢 Gratuit : ${t.free}</div>
+                    <div style="color: #00d2ff;">⭐ Premium (3€) : ${t.premium}</div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
         function switchShopTab(type) {
             currentShopTab = type;
             updateShopCoinsDisplay();
@@ -1923,12 +1993,19 @@
                 if (type === 'cosmetics') {
                     const info = cosmeticsDict[p.id];
                     const unlocked = myProfile.unlocked_items && myProfile.unlocked_items.includes(p.id);
-                    card.className = `power-card ${unlocked ? 'equipped' : ''}`;
+                    const equipped = myProfile.inventory && myProfile.inventory.__equipped && 
+                                     Object.values(myProfile.inventory.__equipped).includes(p.id);
+
+                    card.className = `power-card ${equipped ? 'equipped' : ''}`;
                     card.innerHTML = `
                         <h4>${info.name}</h4>
                         <p>${info.desc}</p>
                         <div style="font-weight:bold; margin-bottom:6px; font-size:11px; color:#f8b500;">${p.price} 🪙</div>
-                        ${unlocked ? '<div style="color:#00ff88; font-weight:bold; font-size:11px;">Possédé ✅</div>' : `<button class="power-btn buy" onclick="buyItem('${p.id}')">Acheter</button>`}
+                        ${unlocked ? `
+                            <button class="power-btn ${equipped ? 'active' : 'equip'}" onclick="equipCosmetic('${p.id}')">
+                                ${equipped ? 'Équipé ✅' : 'Équiper'}
+                            </button>
+                        ` : `<button class="power-btn buy" onclick="buyItem('${p.id}')">Acheter</button>`}
                     `;
                 } else {
                     const powerInfo = powersDict[p.id];
@@ -1950,6 +2027,10 @@
 
         function buyItem(id) {
             if (socket.connected) socket.emit('buy_item', id);
+        }
+
+        function equipCosmetic(id) {
+            if (socket.connected) socket.emit('equip_cosmetic', id);
         }
 
         function equipPower(id) { if (socket.connected) socket.emit('equip_power', id); }
