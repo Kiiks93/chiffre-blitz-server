@@ -841,7 +841,6 @@ socket.on('player_registered', (rawData) => {
         myProfile.wins = player.wins;
         myProfile.losses = player.losses;
         
-        // Préserve le titre local en cas d'écrasement par le serveur
         const localEquipped = myProfile.inventory && myProfile.inventory.__equipped ? {...myProfile.inventory.__equipped} : {};
         const savedTitle = localStorage.getItem('cb_equipped_title');
         if (savedTitle && !localEquipped.title) localEquipped.title = savedTitle;
