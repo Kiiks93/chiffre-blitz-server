@@ -173,11 +173,20 @@
         .power-btn.equip { background: #00d2ff; color: #000; }
         .power-btn.active { background: #00ff88; color: #000; }
 
+        /* Styles améliorés pour le Passe de Combat (Style TFT / Fortnite) */
+        .bp-header-banner {
+            background: linear-gradient(135deg, rgba(248,181,0,0.2), rgba(0,210,255,0.2));
+            border: 2px solid #f8b500;
+            border-radius: 14px;
+            padding: 12px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
         .bp-tier-card {
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 12px;
-            padding: 10px;
+            padding: 8px 10px;
             display: flex;
             flex-direction: column;
             gap: 6px;
@@ -187,15 +196,24 @@
             border-color: #f8b500;
             background: rgba(248, 181, 0, 0.06);
         }
-        .bp-track {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 11px;
-            padding: 5px 8px;
-            border-radius: 6px;
-            background: rgba(0,0,0,0.25);
+        .bp-tracks-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
         }
+        .bp-track-box {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 10px;
+            padding: 6px 8px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.06);
+            gap: 4px;
+        }
+        .bp-track-box.free { border-left: 3px solid #38ef7d; }
+        .bp-track-box.premium { border-left: 3px solid #00d2ff; background: rgba(0, 210, 255, 0.04); }
 
         .hud { display: grid; grid-template-columns: 1fr; gap: 6px; background: rgba(255,255,255,0.06); padding: 6px 10px; border-radius: 10px; margin-bottom: 6px; max-width: 400px; margin-left: auto; margin-right: auto; }
         .player-box { padding: 4px 8px; border-radius: 8px; background: rgba(0,0,0,0.3); }
@@ -539,6 +557,7 @@
         </div>
     </div>
 
+    <!-- Modale Passe de Combat Repensée (Fortnite / TFT Style) -->
     <div id="modal-blitz-pass" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="max-width: 440px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
@@ -778,7 +797,7 @@
                 ad_desc: "Chiffre Blitz est 100% gratuit. Une publicité de soutien va se lancer. Merci ! ❤️",
                 ad_btn: "Lancer la partie ⚡",
                 ad_sponsored: "VIDÉO SPONSORISÉE...",
-                not_enough_coins: "Tu n'as pas assez de pièces pour acheter cet objet !",
+                not_enough_coins: "Tu n'as pas assez de pièces 🪙 pour acheter cet objet !",
                 powers: {
                     spotlight: { name: '💡 Projecteur', desc: 'Illumine la bonne tuile (2s)' },
                     freeze: { name: '⏳ Blocage du Temps', desc: 'Gèle le chrono pendant 3s' },
@@ -887,7 +906,7 @@
                 ad_desc: "Chiffre Blitz is 100% free. A support advertisement will play. Thank you! ❤️",
                 ad_btn: "Start Game ⚡",
                 ad_sponsored: "SPONSORED VIDEO...",
-                not_enough_coins: "You don't have enough coins to buy this item!",
+                not_enough_coins: "You don't have enough coins 🪙 to buy this item!",
                 powers: {
                     spotlight: { name: '💡 Spotlight', desc: 'Highlights the correct tile (2s)' },
                     freeze: { name: '⏳ Time Freeze', desc: 'Freezes the timer for 3s' },
@@ -912,6 +931,9 @@
             }
             if (document.getElementById('modal-ranked-loadout').style.display === 'flex') {
                 renderRankedLoadoutItems();
+            }
+            if (document.getElementById('modal-blitz-pass').style.display === 'flex') {
+                renderBlitzPass();
             }
             updateCombinedExplanationVisibility();
         }
@@ -1147,7 +1169,8 @@
             region: localStorage.getItem('cb_region') || "Hauts-de-France",
             avatar: parseInt(localStorage.getItem('cb_avatar')) || 1,
             flag: localStorage.getItem('cb_flag') || "🇫🇷",
-            points: 0, coins: 0, trophies: 0, wins: 0, losses: 0, inventory: {}, unlocked_items: [], equippedPower: null, equippedPowers: []
+            points: 0, coins: 0, trophies: 0, wins: 0, losses: 0, inventory: {}, unlocked_items: [], equippedPower: null, equippedPowers: [],
+            blitzPassPremium: false
         };
 
         let cachedOpponent = null;
@@ -1313,6 +1336,9 @@
                 updateEconomyUI();
                 if (document.getElementById('modal-shop').style.display === 'flex') {
                     switchShopTab(currentShopTab);
+                }
+                if (document.getElementById('modal-blitz-pass').style.display === 'flex') {
+                    renderBlitzPass();
                 }
             }
         });
@@ -1955,27 +1981,7 @@
             { tier: 7, free: "50 Pièces", premium: "2 Novas" },
             { tier: 8, free: "1 Projecteur", premium: "250 Pièces" },
             { tier: 9, free: "100 Pièces", premium: "Thème de tuiles épuré" },
-            { tier: 10, free: "Titre « Apprenti » + 150 Pièces", premium: "Bordure profil + 500 Pièces" },
-            { tier: 11, free: "100 Pièces", premium: "200 Pièces" },
-            { tier: 12, free: "1 Gel du temps", premium: "1 Joker" },
-            { tier: 13, free: "50 Pièces", premium: "300 Pièces" },
-            { tier: 14, free: "1 Projecteur", premium: "2 Novas" },
-            { tier: 15, free: "150 Pièces", premium: "Effet sonore : Clic de Cristal 🎧" },
-            { tier: 16, free: "1 Joker", premium: "300 Pièces" },
-            { tier: 17, free: "100 Pièces", premium: "1 Gel du temps" },
-            { tier: 18, free: "150 Pièces", premium: "400 Pièces" },
-            { tier: 19, free: "1 Nova", premium: "Effet : Étincelles de Plasma ✨" },
-            { tier: 20, free: "Titre « Calculateur » + 200 Pièces", premium: "Animation de victoire 1v1 🔥" },
-            { tier: 21, free: "150 Pièces", premium: "300 Pièces" },
-            { tier: 22, free: "1 Gel du temps", premium: "2 Jokers" },
-            { tier: 23, free: "200 Pièces", premium: "400 Pièces" },
-            { tier: 24, free: "1 Projecteur", premium: "3 Novas" },
-            { tier: 25, free: "250 Pièces", premium: "Incrustations de Plasma Doré" },
-            { tier: 26, free: "1 Joker", premium: "500 Pièces" },
-            { tier: 27, free: "200 Pièces", premium: "Gel + Projecteur" },
-            { tier: 28, free: "250 Pièces", premium: "600 Pièces" },
-            { tier: 29, free: "1 Nova", premium: "Cadre de profil animé ⚡" },
-            { tier: 30, free: "Titre « Éclair » + 500 Pièces", premium: "Skin « Plasma Doré » (Légendaire) 👑" }
+            { tier: 10, free: "Titre « Apprenti » + 150 Pièces", premium: "Bordure profil + 500 Pièces" }
         ];
 
         function openBlitzPass() {
@@ -1988,39 +1994,70 @@
             document.getElementById('modal-blitz-pass').style.display = 'none';
         }
 
+        // Affichage Passe de Combat interactif et visuel (Style TFT / Fortnite)
         function renderBlitzPass() {
             const container = document.getElementById('blitz-pass-container');
+            const isPremium = myProfile.blitzPassPremium;
+
             container.innerHTML = `
-                <div style="background: linear-gradient(135deg, rgba(248,181,0,0.15), rgba(0,210,255,0.15)); border: 1px solid #f8b500; border-radius: 12px; padding: 10px 12px; text-align: center;">
-                    <div style="font-size: 13px; font-weight: bold; color: #f8b500; margin-bottom: 2px;">🌟 SAISON 1 : PLASMA DORÉ</div>
-                    <div style="font-size: 11px; color: #ccc; margin-bottom: 6px;">Niveau du Passe : Palier 1 / 30</div>
-                    <div style="background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden; width: 100%;">
-                        <div style="background: linear-gradient(90deg, #f8b500, #ff4b2b); width: 15%; height: 100%;"></div>
-                    </div>
+                <div class="bp-header-banner">
+                    <div style="font-size: 14px; font-weight: 900; color: #f8b500; margin-bottom: 2px;">🌟 SAISON 1 : PLASMA DORÉ</div>
+                    <div style="font-size: 11px; color: #ccc; margin-bottom: 8px;">${isPremium ? '✨ Passe Premium Actif !' : 'Débloque le Passe Premium pour 1000 🪙'}</div>
+                    ${!isPremium ? `
+                        <button class="btn-main btn-gold" onclick="buyBlitzPassPremium()" style="padding: 8px; font-size: 12px; margin: 0 auto;">Acheter le Passe Premium (1000 🪙) ⭐</button>
+                    ` : `
+                        <div style="color: #00ff88; font-weight: bold; font-size: 11px;">Statut : VIP / Premium</div>
+                    `}
                 </div>
             `;
             
             const listDiv = document.createElement('div');
-            listDiv.style.cssText = "display: flex; flex-direction: column; gap: 8px; margin-top: 6px;";
+            listDiv.style.cssText = "display: flex; flex-direction: column; gap: 8px; margin-top: 4px;";
             
             BLITZ_PASS_TIERS.forEach(t => {
+                const isUnlocked = t.tier === 1; // Le palier 1 est débloqué par défaut
                 const card = document.createElement('div');
-                card.className = `bp-tier-card ${t.tier === 1 ? 'unlocked' : ''}`;
+                card.className = `bp-tier-card ${isUnlocked ? 'unlocked' : ''}`;
                 card.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px;">
                         <span style="font-weight: 900; color: #f8b500; font-size: 12px;">PALIER ${t.tier}</span>
-                        <span style="font-size: 10px; font-weight: bold; color: ${t.tier === 1 ? '#00ff88' : '#aaa'};">${t.tier === 1 ? 'Récupéré ✅' : '🔒 Bloqué'}</span>
+                        <span style="font-size: 10px; font-weight: bold; color: ${isUnlocked ? '#00ff88' : '#aaa'};">${isUnlocked ? 'Disponible ✅' : '🔒 Verrouillé'}</span>
                     </div>
-                    <div class="bp-track" style="border-left: 3px solid #38ef7d;">
-                        <span>🟢 <b>Gratuit :</b> ${t.free}</span>
-                    </div>
-                    <div class="bp-track" style="border-left: 3px solid #00d2ff; background: rgba(0, 210, 255, 0.05);">
-                        <span>⭐ <b>Premium :</b> ${t.premium}</span>
+                    <div class="bp-tracks-grid">
+                        <div class="bp-track-box free">
+                            <div><span style="color:#38ef7d; font-weight:bold;">🟢 Gratuit :</span><br>${t.free}</div>
+                            <button class="power-btn ${isUnlocked ? 'equip' : 'buy'}" style="margin-top:6px; font-size:9px; padding:3px;" ${!isUnlocked ? 'disabled style="opacity:0.5;"' : ''} onclick="claimPassReward(${t.tier}, 'free')">
+                                ${isUnlocked ? 'Récupérer' : 'Bloqué'}
+                            </button>
+                        </div>
+                        <div class="bp-track-box premium">
+                            <div><span style="color:#00d2ff; font-weight:bold;">⭐ Premium :</span><br>${t.premium}</div>
+                            <button class="power-btn ${isUnlocked && isPremium ? 'equip' : 'buy'}" style="margin-top:6px; font-size:9px; padding:3px;" ${(!isUnlocked || !isPremium) ? 'disabled style="opacity:0.5;"' : ''} onclick="claimPassReward(${t.tier}, 'premium')">
+                                ${isUnlocked && isPremium ? 'Récupérer' : (isPremium ? 'Bloqué' : 'Requiert Premium')}
+                            </button>
+                        </div>
                     </div>
                 `;
                 listDiv.appendChild(card);
             });
             container.appendChild(listDiv);
+        }
+
+        function buyBlitzPassPremium() {
+            const cost = 1000;
+            if (myProfile.coins < cost) {
+                showNotificationToast(i18n[currentLang].not_enough_coins, 'announcement');
+                return;
+            }
+            myProfile.coins -= cost;
+            myProfile.blitzPassPremium = true;
+            updateEconomyUI();
+            renderBlitzPass();
+            showNotificationToast("🎉 Félicitations ! Passe de Combat Premium débloqué !", "gift");
+        }
+
+        function claimPassReward(tier, track) {
+            showNotificationToast(`🎁 Récompense du Palier ${tier} (${track}) récupérée avec succès !`, "gift");
         }
 
         function switchShopTab(type) {
@@ -2078,7 +2115,14 @@
             });
         }
 
+        // Vérification locale et notification si l'argent est insuffisant
         function buyItem(id) {
+            const itemObj = POWERS_CATALOG.find(p => p.id === id);
+            if (itemObj && myProfile.coins < itemObj.price) {
+                SoundEngine.playError();
+                showNotificationToast(i18n[currentLang].not_enough_coins, 'announcement');
+                return;
+            }
             if (socket.connected) socket.emit('buy_item', id);
         }
 
