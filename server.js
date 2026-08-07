@@ -271,7 +271,6 @@ io.on('connection', (socket) => {
         if (!player.inventory) player.inventory = {};
         if (!player.inventory.__equipped) player.inventory.__equipped = {};
 
-        // Si le joueur choisit "Standard", "none" ou ne passe rien, on retire l'avatar spécial
         if (itemId === 'none' || itemId === 'standard' || !itemId) {
             delete player.inventory.__equipped.avatar;
             await savePlayerToSupabase(socket.id);
@@ -809,8 +808,8 @@ function applyPassReward(p, tier, track) {
 }
 
 async function endMatch(id1, id2, matchData, isRanked) {
-    delete activeMatches[id1];
-    delete activeMatches[id2];
+    // Les références dans activeMatches ne sont plus supprimées immédiatement ici 
+    // pour permettre aux joueurs d'envoyer des émotes sur l'écran de fin de match.
 
     let winnerId = null;
     let reason = "Temps écoulé !";
