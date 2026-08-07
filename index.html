@@ -198,6 +198,20 @@
             100% { box-shadow: 0 0 35px rgba(0, 210, 255, 1), 0 0 15px rgba(255,255,255,0.8); }
         }
 
+        /* Animation spécifique Robot qui danse 🤖✨ */
+        @keyframes robotDance {
+            0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+            20% { transform: translateY(-10px) rotate(-8deg) scale(1.08); }
+            40% { transform: translateY(0) rotate(0deg) scale(1); }
+            60% { transform: translateY(-10px) rotate(8deg) scale(1.08); }
+            80% { transform: translateY(-4px) rotate(-3deg) scale(1.02); }
+        }
+        .victory-badge-large.robot-dancing {
+            animation: robotDance 0.8s infinite ease-in-out, badgeGlowPulse 2s infinite alternate;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            border-color: #00d2ff;
+        }
+
         .user-stats {
             display: flex; justify-content: center; gap: 12px; max-width: 400px; margin: 0 auto 8px auto;
             font-size: 13px; font-weight: bold; background: rgba(255,255,255,0.05); padding: 7px 12px; border-radius: 16px;
@@ -802,7 +816,7 @@
 
     <div id="recap-modal" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:center;">
-            <!-- Zone cinématique du vainqueur avec affichage de l'avatar et effets de style -->
+            <!-- Zone cinématique du vainqueur avec affichage de l'avatar et animation adaptée -->
             <div id="winner-cinematic-container"></div>
 
             <div id="recap-banner" style="font-size:22px; font-weight:900; margin-bottom:8px;">RÉSULTAT</div>
@@ -913,7 +927,7 @@
                 welcome_title: "⚡ IDENTITÉ BLITZ ⚡",
                 welcome_sub: "Personnalise ton profil compétitif :",
                 pseudo_label: "PSEUDO",
-                avatar_num_label: "AVATAR (1-999)",
+                avatar_num_label: "NUMÉRO (1-999)",
                 flag_label: "DRAPEAU",
                 region_label: "RÉGION",
                 shop_title: "🛍️ BOUTIQUE",
@@ -1326,7 +1340,7 @@
         let latestGlobalEvents = {};
         let latest1v1StartData = null;
         let pendingGameOverData = null;
-        let activeAvatarChoice = 'standard'; // 'standard' ou 'avatar_legend'
+        let activeAvatarChoice = 'standard';
 
         function getFlagEmoji(flag) {
             if (!flag) return '🇫🇷';
@@ -1422,7 +1436,6 @@
             if (!container) return;
             container.innerHTML = '';
 
-            // 1. Avatar Standard (Chiffre & Drapeau)
             const isStandardActive = (activeAvatarChoice === 'standard' || !activeAvatarChoice);
             const stdCard = document.createElement('div');
             stdCard.style.cssText = `flex: 1; min-width: 120px; background: ${isStandardActive ? 'rgba(0,210,255,0.2)' : 'rgba(255,255,255,0.05)'}; border: 2px solid ${isStandardActive ? '#00d2ff' : 'rgba(255,255,255,0.1)'}; border-radius: 10px; padding: 6px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;`;
@@ -1440,7 +1453,6 @@
             `;
             container.appendChild(stdCard);
 
-            // 2. Avatars Spéciaux Débloqués (ex: Robot avatar_legend)
             const unlockedItems = myProfile.unlocked_items || [];
             const hasRobot = unlockedItems.includes('avatar_legend') || (myProfile.inventory && myProfile.inventory['avatar_legend'] > 0);
             
@@ -1464,7 +1476,6 @@
             }
         }
 
-        // Gestion des émotes style TFT sur les côtés avec anti-spam (cooldown 300ms)
         let lastEmoteTime = 0;
         function sendEmote(emoji) {
             const now = Date.now();
@@ -1554,7 +1565,6 @@
             document.getElementById('modal-username').style.display = 'none';
             registerIfPossible();
 
-            // Enregistrer l'avatar choisi (standard ou spécial)
             if (activeAvatarChoice === 'avatar_legend') {
                 socket.emit('equip_cosmetic', 'avatar_legend');
             } else {
@@ -2773,6 +2783,31 @@
             showGameOverRecap(data);
         });
 
+        // Fonction pour récupérer et afficher l'avatar exact du vainqueur avec animation adaptée (ex: Robot dansant 🤖)
+        function getWinnerAvatarShowcaseHTML(playerObj) {
+            if (!playerObj) return '';
+            const equippedAvatar = playerObj.inventory && playerObj.inventory.__equipped && playerObj.inventory.__equipped.avatar;
+            const isGoldFrame = playerObj.inventory && playerObj.inventory.__equipped && playerObj.inventory.__equipped.frame === 'frame_gold';
+            
+            let iconContent = playerObj.avatar || 1;
+            let isRobot = false;
+
+            if (equippedAvatar === 'avatar_legend') {
+                iconContent = '🤖';
+                isRobot = true;
+            }
+
+            return `
+                <div class="victory-avatar-showcase">
+                    <div class="victory-badge-large ${isGoldFrame ? 'gold' : ''} ${isRobot ? 'robot-dancing' : ''}">
+                        <span style="font-size: ${isRobot ? '42px' : '30px'}; font-weight: 900; color: #fff; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.7));">${iconContent}</span>
+                        <span style="position: absolute; bottom: -2px; right: -2px; font-size: 18px; background: #0f051d; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; z-index:3;">${playerObj.flag || '🇫🇷'}</span>
+                    </div>
+                    <div style="font-size: 14px; font-weight: 900; color: #f8b500; text-shadow: 0 0 10px rgba(248,181,0,0.6); margin-top: 4px;">${playerObj.username} TRIOMPHE !</div>
+                </div>
+            `;
+        }
+
         function showGameOverRecap(data) {
             hideAllScreens();
             window.history.replaceState({}, '', window.location.pathname);
@@ -2796,20 +2831,10 @@
             const winnerId = data.winnerId;
             const isWinner = (winnerId === myId);
             
-            // Affichage de la cinématique de fin de manche avec avatar du vainqueur
             const cinematicContainer = document.getElementById('winner-cinematic-container');
             if (winnerId && data.players[winnerId]) {
                 const winnerObj = parsePlayer(data.players[winnerId]);
-                const isGold = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame === 'frame_gold';
-                cinematicContainer.innerHTML = `
-                    <div class="victory-avatar-showcase">
-                        <div class="victory-badge-large ${isGold ? 'gold' : ''}">
-                            <span style="font-size: 46px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.7));">👑</span>
-                            <span style="position: absolute; bottom: -2px; right: -2px; font-size: 18px; background: #0f051d; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #fff;">${winnerObj.flag}</span>
-                        </div>
-                        <div style="font-size: 14px; font-weight: 900; color: #f8b500; text-shadow: 0 0 10px rgba(248,181,0,0.6);">${winnerObj.username} TRIOMPHE !</div>
-                    </div>
-                `;
+                cinematicContainer.innerHTML = getWinnerAvatarShowcaseHTML(winnerObj);
             } else {
                 cinematicContainer.innerHTML = `
                     <div class="victory-avatar-showcase">
@@ -3052,7 +3077,7 @@
             document.getElementById('winner-cinematic-container').innerHTML = `
                 <div class="victory-avatar-showcase">
                     <div class="victory-badge-large">
-                        <span style="font-size: 40px;">🏋️</span>
+                        <span style="font-size: 32px;">🏋️</span>
                     </div>
                 </div>
             `;
