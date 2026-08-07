@@ -92,35 +92,40 @@
         <button class="btn-main btn-blue" onclick="openLaunchAdModal()" style="margin-top: 12px; width: 100%; font-size: 16px; padding: 14px;" data-i18n="btn_play">JOUER ⚡</button>
     </div>
 
-    <!-- MENU PRINCIPAL RESTRUCTURÉ & CENTRÉ -->
-    <div id="screen-menu" class="menu-container" style="display:none; max-width: 400px; width: 92%; margin: auto auto; min-height: 78vh; display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 15px 0;">
+    <!-- MENU PRINCIPAL - OPTIMISÉ PC 2K & MOBILE -->
+    <div id="screen-menu" class="menu-container" style="display:none; width: 92%; max-width: 480px; margin: auto; min-height: 85vh; display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: 24px 0;">
         <div id="player-event-banner" class="event-banner"></div>
 
-        <!-- Duo Principal : Entraînement Solo (1er) + Duel 1v1 -->
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <button class="btn-main" onclick="openSoloMenu()" style="flex-direction: column; padding: 16px 10px; gap: 6px; font-size: 13px; background: linear-gradient(135deg, #7b4397, #dc2430); box-shadow: 0 4px 20px rgba(123,67,151,0.4); border: 1px solid rgba(255,255,255,0.15);" data-i18n="menu_solo">
-                <span style="font-size: 26px;">🏋️</span> ENTRAÎNEMENT
+        <!-- 🚀 SECTION PRINCIPALE : Entraînement Solo (1er) & Duel 1v1 -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <button class="btn-main" onclick="openSoloMenu()" style="flex-direction: column; padding: 20px 10px; gap: 8px; font-size: 13px; font-weight: 900; background: linear-gradient(135deg, #7b4397, #dc2430); box-shadow: 0 6px 22px rgba(123,67,151,0.5); border: 1.5px solid rgba(255,255,255,0.2); border-radius: 16px;" data-i18n="menu_solo">
+                <span style="font-size: 30px;">🏋️</span> ENTRAÎNEMENT
             </button>
-            <button class="btn-main btn-blue" onclick="open1v1Hub()" style="flex-direction: column; padding: 16px 10px; gap: 6px; font-size: 13px; background: linear-gradient(135deg, #00c6ff, #0072ff); box-shadow: 0 4px 20px rgba(0,210,255,0.3); border: 1px solid rgba(255,255,255,0.15);" data-i18n="menu_1v1">
-                <span style="font-size: 26px;">⚔️</span> DUEL 1v1
+            <button class="btn-main btn-blue" onclick="open1v1Hub()" style="flex-direction: column; padding: 20px 10px; gap: 8px; font-size: 13px; font-weight: 900; background: linear-gradient(135deg, #00c6ff, #0072ff); box-shadow: 0 6px 22px rgba(0,210,255,0.4); border: 1.5px solid rgba(255,255,255,0.2); border-radius: 16px;" data-i18n="menu_1v1">
+                <span style="font-size: 30px;">⚔️</span> DUEL 1v1
             </button>
         </div>
 
-        <button id="btn-tow-menu" class="btn-main" onclick="startTugOfWarQueue()" style="display:none; background:linear-gradient(135deg, #ff007f, #ff8a00); box-shadow: 0 4px 15px rgba(255,0,127,0.4); border: 1px solid rgba(255,255,255,0.15);" data-i18n="menu_tow">🪢 Mode Corde Raide (Tug-of-War)</button>
+        <!-- Mode Corde Raide (Conditionnel) -->
+        <button id="btn-tow-menu" class="btn-main" onclick="startTugOfWarQueue()" style="display:none; background:linear-gradient(135deg, #ff007f, #ff8a00); box-shadow: 0 6px 20px rgba(255,0,127,0.4); border: 1.5px solid rgba(255,255,255,0.2); padding: 14px; font-size: 13px; font-weight: bold; border-radius: 14px;" data-i18n="menu_tow">🪢 Mode Corde Raide (Tug-of-War)</button>
         
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <button class="btn-main btn-purple" onclick="openRoomsScreen()" style="padding: 12px; font-size: 12px; background: linear-gradient(135deg, #4a00e0, #8e2de2); box-shadow: 0 4px 15px rgba(74,0,224,0.3);" data-i18n="menu_friends">👥 SALONS</button>
-            <button class="btn-main btn-shop" onclick="openShop()" style="padding: 12px; font-size: 12px; background: linear-gradient(135deg, #11998e, #38ef7d); box-shadow: 0 4px 15px rgba(56,239,125,0.3);" data-i18n="menu_shop">🛍️ BOUTIQUE</button>
+        <!-- 👥 SECTION SECONDAIRE : Salons & Boutique -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <button class="btn-main btn-purple" onclick="openRoomsScreen()" style="padding: 14px; font-size: 12px; font-weight: bold; background: linear-gradient(135deg, #4a00e0, #8e2de2); box-shadow: 0 4px 16px rgba(74,0,224,0.35); border-radius: 14px;" data-i18n="menu_friends">👥 SALONS</button>
+            <button class="btn-main btn-shop" onclick="openShop()" style="padding: 14px; font-size: 12px; font-weight: bold; background: linear-gradient(135deg, #11998e, #38ef7d); box-shadow: 0 4px 16px rgba(56,239,125,0.35); border-radius: 14px;" data-i18n="menu_shop">🛍️ BOUTIQUE</button>
         </div>
 
-        <button class="btn-main" onclick="openBlitzPass()" style="background:linear-gradient(135deg, #f8b500, #ff416c); box-shadow: 0 4px 15px rgba(248,181,0,0.3); padding: 12px; font-size: 13px; border: 1px solid rgba(255,255,255,0.15);">🎫 Blitz Pass (Saison 1)</button>
+        <!-- 🎫 PASS DE COMBAT -->
+        <button class="btn-main" onclick="openBlitzPass()" style="background:linear-gradient(135deg, #f8b500, #ff416c); box-shadow: 0 4px 16px rgba(248,181,0,0.35); padding: 14px; font-size: 13px; font-weight: bold; border: 1.5px solid rgba(255,255,255,0.2); border-radius: 14px;">🎫 Blitz Pass (Saison 1)</button>
         
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <button class="btn-main btn-gold" onclick="openLeaderboard()" style="padding: 12px; font-size: 12px; background: linear-gradient(135deg, #f2994a, #f2c94c); box-shadow: 0 4px 15px rgba(242,153,74,0.3);" data-i18n="menu_lb">🏆 CLASSEMENT</button>
-            <button class="btn-main btn-purple" onclick="openTournamentScreen()" style="padding: 12px; font-size: 12px; background: linear-gradient(135deg, #3a1c71, #d76d77); box-shadow: 0 4px 15px rgba(215,109,119,0.3);" data-i18n="menu_tourney">🎯 TOURNOIS</button>
+        <!-- 🏆 SECTION CLASSEMENT & TOURNOIS -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <button class="btn-main btn-gold" onclick="openLeaderboard()" style="padding: 14px; font-size: 12px; font-weight: bold; background: linear-gradient(135deg, #f2994a, #f2c94c); box-shadow: 0 4px 16px rgba(242,153,74,0.35); border-radius: 14px;" data-i18n="menu_lb">🏆 CLASSEMENT</button>
+            <button class="btn-main btn-purple" onclick="openTournamentScreen()" style="padding: 14px; font-size: 12px; font-weight: bold; background: linear-gradient(135deg, #3a1c71, #d76d77); box-shadow: 0 4px 16px rgba(215,109,119,0.35); border-radius: 14px;" data-i18n="menu_tourney">🎯 TOURNOIS</button>
         </div>
 
-        <button class="btn-secondary" onclick="showTitleScreen()" style="margin-top: 4px; font-size: 12px; border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.04);" data-i18n="menu_info">ℹ️ Informations & Règles</button>
+        <!-- ℹ️ RÈGLES -->
+        <button class="btn-secondary" onclick="showTitleScreen()" style="margin-top: 4px; font-size: 12px; padding: 12px; border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); border-radius: 12px;" data-i18n="menu_info">ℹ️ Informations & Règles</button>
     </div>
 
     <!-- SOUS-MENUS ET MODALES -->
