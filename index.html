@@ -998,7 +998,7 @@
                 solo_classic: "⚡ Classic (Ascending)",
                 solo_random: "🎲 Random (Varied targets)",
                 solo_avalanche_btn: "🧊 Avalanche (Difficulties)",
-                avalanche_menu_title: "🧊 AVALANCHE (Difficulties)",
+                avalanche_menu_title: "🧊 Avalanche (Difficulties)",
                 diff_easy: "Easy", diff_medium: "Medium", diff_hard: "Hard 💀",
                 back_menu: "⬅️ Back to Menu",
                 hub_title: "⚔️ ONLINE 1v1 DUEL",
@@ -1563,22 +1563,25 @@
             myProfile.avatar = avatarVal;
             myProfile.flag = getFlagEmoji(flagVal);
 
+            if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
+            if (activeAvatarChoice === 'avatar_legend') {
+                myProfile.inventory.__equipped.avatar = 'avatar_legend';
+                socket.emit('equip_cosmetic', 'avatar_legend');
+            } else {
+                delete myProfile.inventory.__equipped.avatar;
+                socket.emit('equip_cosmetic', 'standard');
+            }
+
             saveLocalPreferences();
             updateEconomyUI();
             document.getElementById('modal-username').style.display = 'none';
             registerIfPossible();
 
-            if (activeAvatarChoice === 'avatar_legend') {
-                socket.emit('equip_cosmetic', 'avatar_legend');
-            } else {
-                socket.emit('equip_cosmetic', 'standard');
-            }
-
             SoundEngine.init();
             showTitleScreen();
         }
 
-        // Nouvelle fonction pour enregistrer uniquement le choix de l'avatar et du style instantanément
+        // Fonction corrigée pour enregistrer instantanément le choix de l'avatar et du style
         function saveAvatarChoiceOnly() {
             let avatarVal = parseInt(document.getElementById('avatar-input').value);
             const flagVal = document.getElementById('flag-input').value;
@@ -1589,14 +1592,18 @@
             myProfile.avatar = avatarVal;
             myProfile.flag = getFlagEmoji(flagVal);
 
-            saveLocalPreferences();
-            updateEconomyUI();
-
+            // Mise à jour immédiate de l'état local pour rafraîchir l'interface instantanément
+            if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
             if (activeAvatarChoice === 'avatar_legend') {
+                myProfile.inventory.__equipped.avatar = 'avatar_legend';
                 socket.emit('equip_cosmetic', 'avatar_legend');
             } else {
+                delete myProfile.inventory.__equipped.avatar;
                 socket.emit('equip_cosmetic', 'standard');
             }
+
+            saveLocalPreferences();
+            updateEconomyUI();
 
             document.getElementById('modal-username').style.display = 'none';
             showNotificationToast("✅ Choix d'avatar enregistré avec succès !", "gift");
@@ -2811,7 +2818,6 @@
             showGameOverRecap(data);
         });
 
-        // Fonction corrigée pour récupérer et afficher l'avatar exact du vainqueur avec animation adaptée
         function getWinnerAvatarShowcaseHTML(playerObj) {
             if (!playerObj) return '';
             const equippedAvatar = playerObj.inventory && playerObj.inventory.__equipped && playerObj.inventory.__equipped.avatar;
@@ -2861,7 +2867,6 @@
             
             const cinematicContainer = document.getElementById('winner-cinematic-container');
             
-            // Logique robuste de récupération des informations du vainqueur
             let winnerObj = null;
             if (winnerId) {
                 if (winnerId === myId) {
