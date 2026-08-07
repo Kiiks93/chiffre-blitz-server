@@ -1419,7 +1419,10 @@
             openAdminDashboard(data);
         });
 
+        let cachedAdminData = null;
+
         function openAdminDashboard(data) {
+            cachedAdminData = data;
             let dash = document.getElementById('modal-admin-dashboard');
             if (!dash) {
                 const div = document.createElement('div');
@@ -1434,6 +1437,11 @@
                             <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
                                 <strong style="color:#ff8a00; display:block; margin-bottom:6px;">⚡ BOOSTS & ÉVÉNEMENTS (ADMIN ABUSE)</strong>
                                 
+                                <div style="display:flex; gap:6px; margin-bottom:8px;">
+                                    <button class="btn-secondary" onclick="toggleSelectAllAdminEvents(true)" style="flex:1; padding:6px; font-size:11px; margin-top:0;">Tout cocher ✓</button>
+                                    <button class="btn-secondary" onclick="toggleSelectAllAdminEvents(false)" style="flex:1; padding:6px; font-size:11px; margin-top:0;">Tout décocher ✗</button>
+                                </div>
+
                                 <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
                                     <span>🪙 Coin Rush (Pièces x2)</span>
                                     <input type="checkbox" id="chk-coinRush" onchange="sendAdminEventsUpdate()">
@@ -1463,6 +1471,21 @@
                                     <span>🪢 Mode Corde Raide (Tug-of-War)</span>
                                     <input type="checkbox" id="chk-tugOfWarMode" onchange="sendAdminEventsUpdate()">
                                 </label>
+                            </div>
+
+                            <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
+                                <strong style="color:#00ff88; display:block; margin-bottom:6px;">⏰ PROGRAMMATION PAR DATE & HEURE</strong>
+                                <div style="display:flex; gap:6px; margin-bottom:6px;">
+                                    <div style="flex:1;">
+                                        <label style="font-size:10px; color:#aaa; display:block;">Date de début :</label>
+                                        <input type="datetime-local" id="admin-sched-start" style="width:100%; padding:6px; border-radius:6px; border:1px solid #00ff88; background:#0f051d; color:#fff; font-size:11px; outline:none;">
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label style="font-size:10px; color:#aaa; display:block;">Date de fin :</label>
+                                        <input type="datetime-local" id="admin-sched-end" style="width:100%; padding:6px; border-radius:6px; border:1px solid #00ff88; background:#0f051d; color:#fff; font-size:11px; outline:none;">
+                                    </div>
+                                </div>
+                                <button class="btn-main btn-blue" onclick="saveAdminSchedule()" style="padding:8px; font-size:12px; width:100%;">Enregistrer la programmation ⏰</button>
                             </div>
 
                             <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
@@ -1499,7 +1522,19 @@
                     if (chk) chk.checked = data.events[key];
                 }
             }
+            if (data.schedule) {
+                if (data.schedule.startDate) document.getElementById('admin-sched-start').value = data.schedule.startDate;
+                if (data.schedule.endDate) document.getElementById('admin-sched-end').value = data.schedule.endDate;
+            }
             dash.style.display = 'flex';
+        }
+
+        function toggleSelectAllAdminEvents(status) {
+            ['coinRush', 'rankShield', 'expressoMatch', 'chaosMode', 'jackpotEclair', 'tugOfWarMode'].forEach(key => {
+                const chk = document.getElementById(`chk-${key}`);
+                if (chk) chk.checked = status;
+            });
+            sendAdminEventsUpdate();
         }
 
         function sendAdminEventsUpdate() {
@@ -1513,6 +1548,31 @@
             };
             socket.emit('admin_update_events', updatedEvents);
         }
+
+        function saveAdminSchedule() {
+            const startDate = document.getElementById('admin-sched-start').value;
+            const endDate = document.getElementById('admin-sched-end').value;
+            const activeEvents = {
+                coinRush: document.getElementById('chk-coinRush').checked,
+                rankShield: document.getElementById('chk-rankShield').checked,
+                expressoMatch: document.getElementById('chk-expressoMatch').checked,
+                chaosMode: document.getElementById('chk-chaosMode').checked,
+                jackpotEclair: document.getElementById('chk-jackpotEclair').checked,
+                tugOfWarMode: document.getElementById('chk-tugOfWarMode').checked
+            };
+
+            if (!startDate || !endDate) {
+                alert("Veuillez renseigner une date de début et une date de fin !");
+                return;
+            }
+
+            socket.emit('admin_update_schedule', { startDate, endDate, activeEvents });
+            showNotificationToast("⏰ Programmation enregistrée avec succès !", "gift");
+        }
+
+        socket.on('admin_schedule_saved', (sched) => {
+            console.log("Schedule saved:", sched);
+        });
 
         function sendAdminGift() {
             const targetUsername = document.getElementById('admin-gift-target').value;
@@ -1964,7 +2024,6 @@
         function autoValidateTarget() {
             const is1v1 = document.getElementById('hud-1v1').style.display !== 'none';
             if (is1v1) {
-                // Trouver l'index de la tuile correspondant à la cible actuelle
                 const targetVal = parseInt(document.getElementById('game-target-giant').innerText) || 1;
                 const tiles = document.querySelectorAll('#grid .tile');
                 tiles.forEach((t, idx) => {
@@ -2321,7 +2380,6 @@
             }
         });
 
-        // CORRECTION : Transmission correcte de l'index de la tuile cliquée pour les modes 1v1 / Amis / Tug-of-War
         function handle1v1TileClick(num, index) {
             if (current1v1Time <= 0) return;
             socket.emit('player_click_1v1', index);
@@ -2519,7 +2577,6 @@
             modal.style.display = 'flex';
         }
 
-        // CORRECTION : Transmission de l'index (en plus de la valeur) lors de la génération de la grille multijoueur
         function renderGrid(pool, handler) {
             const grid = document.getElementById('grid');
             if (!grid) return;
