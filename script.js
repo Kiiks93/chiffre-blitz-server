@@ -488,6 +488,7 @@ let latestGlobalEvents = {};
 let latest1v1StartData = null;
 let pendingGameOverData = null;
 let activeAvatarChoice = 'standard';
+let currentFriendFilter = 'all';
 
 function getFlagEmoji(flag) {
     if (!flag) return '🇫🇷';
@@ -930,6 +931,13 @@ function closeFriendsModal() {
     document.getElementById('modal-friends').style.display = 'none';
 }
 
+function switchFriendTab(tab) {
+    currentFriendFilter = tab;
+    document.getElementById('friend-tab-all').classList.toggle('active', tab === 'all');
+    document.getElementById('friend-tab-requests').classList.toggle('active', tab === 'requests');
+    socket.emit('get_friends_list');
+}
+
 function sendFriendRequest() {
     const target = document.getElementById('input-add-friend').value.trim();
     if (target) {
@@ -948,13 +956,20 @@ function inviteFriend(targetSocketId) {
 socket.on('friends_list_data', (friends) => {
     const container = document.getElementById('friends-list-container');
     container.innerHTML = '';
-    if (!friends || friends.length === 0) {
-        container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:20px; font-size:12px;" data-i18n="no_friends">Aucun ami pour le moment.</div>`;
+    
+    let filtered = friends || [];
+    if (currentFriendFilter === 'requests') {
+        filtered = filtered.filter(f => f.status === 'pending' && !f.isRequester);
+    }
+
+    if (!filtered || filtered.length === 0) {
+        container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:20px; font-size:12px;">${currentLang === 'fr' ? 'Aucun ami pour le moment.' : 'No friends yet.'}</div>`;
         return;
     }
-    friends.forEach(f => {
+    
+    filtered.forEach(f => {
         const row = document.createElement('div');
-        row.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:8px 10px; border-radius:10px; font-size:12px;";
+        row.className = 'friend-card';
         const dotColor = f.isOnline ? '#38ef7d' : '#aaa';
         const statusText = f.isOnline ? (currentLang === 'fr' ? 'En ligne' : 'Online') : (currentLang === 'fr' ? 'Hors-ligne' : 'Offline');
         
@@ -976,7 +991,7 @@ socket.on('friends_list_data', (friends) => {
             <div style="display:flex; align-items:center; gap:8px;">
                 <span style="width:8px; height:8px; border-radius:50%; background:${dotColor}; box-shadow:0 0 6px ${dotColor};"></span>
                 <div style="text-align:left;">
-                    <div style="font-weight:bold; color:#fff;">${f.username}</div>
+                    <div style="font-weight:bold; color:#fff; font-size:13px;">${f.username}</div>
                     <div style="font-size:10px; color:${dotColor};">${statusText}</div>
                 </div>
             </div>
