@@ -319,6 +319,56 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
 .power-btn.equip { background: #00d2ff; color: #000; }
 .power-btn.active { background: #00ff88; color: #000; }
 
+.friend-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 8px 12px;
+    border-radius: 12px;
+    transition: background 0.2s;
+}
+.friend-card:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(0, 210, 255, 0.3);
+}
+
+.bp-tier-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 10px;
+}
+.bp-tier-card.unlocked {
+    border-color: rgba(0,210,255,0.4);
+    background: rgba(0,210,255,0.04);
+}
+.bp-tracks-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+}
+.bp-track-box {
+    background: rgba(0,0,0,0.25);
+    border-radius: 8px;
+    padding: 8px;
+    font-size: 11px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: left;
+}
+.bp-header-banner {
+    background: linear-gradient(135deg, rgba(248,181,0,0.15), rgba(255,65,108,0.15));
+    border: 1px solid #f8b500;
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
 .hud { display: grid; grid-template-columns: 1fr; gap: 6px; background: rgba(255,255,255,0.06); padding: 6px 10px; border-radius: 10px; margin-bottom: 6px; max-width: 400px; margin-left: auto; margin-right: auto; }
 .player-box { padding: 4px 8px; border-radius: 8px; background: rgba(0,0,0,0.3); }
 .player-box.me { border: 2px solid #00d2ff; }
