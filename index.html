@@ -173,6 +173,30 @@
         .power-btn.equip { background: #00d2ff; color: #000; }
         .power-btn.active { background: #00ff88; color: #000; }
 
+        .bp-tier-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            text-align: left;
+        }
+        .bp-tier-card.unlocked {
+            border-color: #f8b500;
+            background: rgba(248, 181, 0, 0.06);
+        }
+        .bp-track {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            padding: 5px 8px;
+            border-radius: 6px;
+            background: rgba(0,0,0,0.25);
+        }
+
         .hud { display: grid; grid-template-columns: 1fr; gap: 6px; background: rgba(255,255,255,0.06); padding: 6px 10px; border-radius: 10px; margin-bottom: 6px; max-width: 400px; margin-left: auto; margin-right: auto; }
         .player-box { padding: 4px 8px; border-radius: 8px; background: rgba(0,0,0,0.3); }
         .player-box.me { border: 2px solid #00d2ff; }
@@ -194,6 +218,13 @@
         }
         .tile:active { transform: scale(0.92); background: #3c1e69; }
         .tile.empty { background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.05); cursor: default; }
+
+        .tile.alt-theme {
+            background: linear-gradient(135deg, #f8b500, #ff8a00) !important;
+            border-color: #ffe600 !important;
+            color: #111 !important;
+            box-shadow: 0 0 12px rgba(248,181,0,0.6);
+        }
 
         .tile.highlight-target { border-color: #00ff88 !important; background: #00ff88 !important; color: #000 !important; box-shadow: 0 0 15px #00ff88; }
         .grid.effect-quake { animation: quake 0.15s infinite; }
@@ -510,10 +541,12 @@
 
     <div id="modal-blitz-pass" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="max-width: 440px;">
-            <h2 style="margin:0 0 4px 0; color:#f8b500; font-size:18px;">🎫 BLITZ PASS - SAISON 1</h2>
-            <p style="color:#aaa; font-size:11px; margin-bottom:8px;">Thème : Plasma Doré ✨</p>
-            <div id="blitz-pass-container" style="overflow-y: auto; max-height: 50vh; display: flex; flex-direction: column; gap: 6px; text-align: left; padding-right: 4px;"></div>
-            <button class="btn-secondary" onclick="closeBlitzPass()">Fermer</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <h2 style="margin:0; color:#f8b500; font-size:18px;">🎫 PASSE DE COMBAT</h2>
+                <span style="font-size:11px; background:rgba(248,181,0,0.2); border:1px solid #f8b500; color:#f8b500; padding:2px 8px; border-radius:10px; font-weight:bold;">Saison 1</span>
+            </div>
+            <div id="blitz-pass-container" style="overflow-y: auto; max-height: 55vh; display: flex; flex-direction: column; gap: 8px; padding-right: 4px;"></div>
+            <button class="btn-secondary" onclick="closeBlitzPass()" style="margin-top:10px;">Fermer</button>
         </div>
     </div>
 
@@ -1957,17 +1990,37 @@
 
         function renderBlitzPass() {
             const container = document.getElementById('blitz-pass-container');
-            container.innerHTML = '';
+            container.innerHTML = `
+                <div style="background: linear-gradient(135deg, rgba(248,181,0,0.15), rgba(0,210,255,0.15)); border: 1px solid #f8b500; border-radius: 12px; padding: 10px 12px; text-align: center;">
+                    <div style="font-size: 13px; font-weight: bold; color: #f8b500; margin-bottom: 2px;">🌟 SAISON 1 : PLASMA DORÉ</div>
+                    <div style="font-size: 11px; color: #ccc; margin-bottom: 6px;">Niveau du Passe : Palier 1 / 30</div>
+                    <div style="background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden; width: 100%;">
+                        <div style="background: linear-gradient(90deg, #f8b500, #ff4b2b); width: 15%; height: 100%;"></div>
+                    </div>
+                </div>
+            `;
+            
+            const listDiv = document.createElement('div');
+            listDiv.style.cssText = "display: flex; flex-direction: column; gap: 8px; margin-top: 6px;";
+            
             BLITZ_PASS_TIERS.forEach(t => {
-                const row = document.createElement('div');
-                row.style.cssText = "background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); padding: 8px 10px; border-radius: 8px; font-size: 11px;";
-                row.innerHTML = `
-                    <div style="color: #f8b500; font-weight: bold; margin-bottom: 2px;">Palier ${t.tier}</div>
-                    <div style="color: #ccc;">🟢 Gratuit : ${t.free}</div>
-                    <div style="color: #00d2ff;">⭐ Premium (3€) : ${t.premium}</div>
+                const card = document.createElement('div');
+                card.className = `bp-tier-card ${t.tier === 1 ? 'unlocked' : ''}`;
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px;">
+                        <span style="font-weight: 900; color: #f8b500; font-size: 12px;">PALIER ${t.tier}</span>
+                        <span style="font-size: 10px; font-weight: bold; color: ${t.tier === 1 ? '#00ff88' : '#aaa'};">${t.tier === 1 ? 'Récupéré ✅' : '🔒 Bloqué'}</span>
+                    </div>
+                    <div class="bp-track" style="border-left: 3px solid #38ef7d;">
+                        <span>🟢 <b>Gratuit :</b> ${t.free}</span>
+                    </div>
+                    <div class="bp-track" style="border-left: 3px solid #00d2ff; background: rgba(0, 210, 255, 0.05);">
+                        <span>⭐ <b>Premium :</b> ${t.premium}</span>
+                    </div>
                 `;
-                container.appendChild(row);
+                listDiv.appendChild(card);
             });
+            container.appendChild(listDiv);
         }
 
         function switchShopTab(type) {
@@ -2610,10 +2663,11 @@
             const grid = document.getElementById('grid');
             if (!grid) return;
             grid.innerHTML = '';
+            const isAltTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme === 'theme_alt';
             avalancheGridData.forEach((val, idx) => {
                 const tile = document.createElement('div');
                 if (val !== null) {
-                    tile.className = 'tile';
+                    tile.className = `tile ${isAltTheme ? 'alt-theme' : ''}`;
                     tile.innerText = val;
                     tile.onclick = () => handleAvalancheClick(val, idx);
                 } else {
@@ -2661,9 +2715,10 @@
             if (!grid) return;
             grid.innerHTML = '';
             if (!pool) return;
+            const isAltTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme === 'theme_alt';
             pool.forEach((num, index) => {
                 const tile = document.createElement('div');
-                tile.className = 'tile';
+                tile.className = `tile ${isAltTheme ? 'alt-theme' : ''}`;
                 tile.innerText = num;
                 tile.onclick = () => handler(num, index);
                 grid.appendChild(tile);
