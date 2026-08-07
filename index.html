@@ -20,7 +20,7 @@
         }
         #user-name-display { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60px; }
 
-        /* Style Avatar TFT / Compétitif dynamique */
+        /* Style Avatar TFT / Compétitif avec Effets Avancés & Lueurs */
         .tft-avatar-container {
             position: relative;
             display: inline-flex;
@@ -31,15 +31,26 @@
             border-radius: 50%;
             background: linear-gradient(135deg, #1e1035, #3c1e69);
             border: 2px solid #00d2ff;
-            box-shadow: 0 0 10px rgba(0, 210, 255, 0.4);
+            box-shadow: 0 0 12px rgba(0, 210, 255, 0.5), inset 0 0 6px rgba(0, 210, 255, 0.3);
             overflow: visible;
             flex-shrink: 0;
+            animation: avatarPulseAura 3s infinite ease-in-out;
         }
         .tft-avatar-container.gold-frame {
             border-color: #f8b500;
-            box-shadow: 0 0 14px rgba(248, 181, 0, 0.7);
+            box-shadow: 0 0 16px rgba(248, 181, 0, 0.8), inset 0 0 8px rgba(248, 181, 0, 0.5);
             background: linear-gradient(135deg, #3a2500, #694b00);
+            animation: goldPulseAura 2.5s infinite ease-in-out;
         }
+        @keyframes avatarPulseAura {
+            0%, 100% { box-shadow: 0 0 10px rgba(0, 210, 255, 0.4), inset 0 0 6px rgba(0, 210, 255, 0.3); }
+            50% { box-shadow: 0 0 18px rgba(0, 210, 255, 0.8), inset 0 0 10px rgba(0, 210, 255, 0.6); }
+        }
+        @keyframes goldPulseAura {
+            0%, 100% { box-shadow: 0 0 14px rgba(248, 181, 0, 0.6), inset 0 0 6px rgba(248, 181, 0, 0.4); }
+            50% { box-shadow: 0 0 24px rgba(248, 181, 0, 1), inset 0 0 12px rgba(248, 181, 0, 0.8); }
+        }
+
         .tft-avatar-icon {
             font-size: 20px;
             z-index: 2;
@@ -73,12 +84,12 @@
             border-radius: 50%;
             background: linear-gradient(135deg, #1e1035, #3c1e69);
             border: 3px solid #00d2ff;
-            box-shadow: 0 0 20px rgba(0, 210, 255, 0.5);
+            box-shadow: 0 0 22px rgba(0, 210, 255, 0.6);
             margin: 0 auto 8px auto;
         }
         .tft-avatar-large.gold-frame {
             border-color: #f8b500;
-            box-shadow: 0 0 25px rgba(248, 181, 0, 0.8);
+            box-shadow: 0 0 28px rgba(248, 181, 0, 0.9);
             background: linear-gradient(135deg, #3a2500, #694b00);
         }
         .tft-avatar-large-icon {
@@ -102,7 +113,7 @@
             z-index: 3;
         }
 
-        /* Animation des émotes style TFT sur les côtés (Non bloquant) */
+        /* Animation des émotes style TFT sur les côtés (Anti-spam) */
         .emote-bubble {
             position: absolute;
             font-size: 30px;
@@ -143,6 +154,44 @@
         .emote-btn:active {
             transform: scale(1.25);
             background: rgba(0, 210, 255, 0.3);
+        }
+
+        /* Cinématique et animations de victoire / entrée */
+        .victory-avatar-showcase {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 15px 0;
+            animation: victoryScalePop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes victoryScalePop {
+            0% { transform: scale(0.2); opacity: 0; filter: brightness(3); }
+            70% { transform: scale(1.1); opacity: 1; filter: brightness(1.2); }
+            100% { transform: scale(1); opacity: 1; filter: brightness(1); }
+        }
+        .victory-badge-large {
+            position: relative;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e1035, #00d2ff);
+            border: 4px solid #00d2ff;
+            box-shadow: 0 0 35px rgba(0, 210, 255, 0.8), 0 0 15px #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            animation: badgeGlowPulse 2s infinite alternate;
+        }
+        .victory-badge-large.gold {
+            background: linear-gradient(135deg, #3a2500, #f8b500);
+            border-color: #f8b500;
+            box-shadow: 0 0 40px rgba(248, 181, 0, 0.9), 0 0 20px #fff;
+        }
+        @keyframes badgeGlowPulse {
+            0% { box-shadow: 0 0 20px rgba(0, 210, 255, 0.6); }
+            100% { box-shadow: 0 0 35px rgba(0, 210, 255, 1), 0 0 15px rgba(255,255,255,0.8); }
         }
 
         .user-stats {
@@ -348,7 +397,8 @@
         .radar-num { font-size: 26px; font-weight: 900; color: #00d2ff; }
 
         #countdown-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 5, 29, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
-        .countdown-num { font-size: 80px; font-weight: 900; color: #00d2ff; }
+        .countdown-num { font-size: 80px; font-weight: 900; color: #00d2ff; animation: countZoom 0.9s infinite alternate; }
+        @keyframes countZoom { 0% { transform: scale(0.9); } 100% { transform: scale(1.1); text-shadow: 0 0 20px #00d2ff; } }
 
         .ad-timer-circle {
             width: 60px; height: 60px; border-radius: 50%; border: 3px solid #00d2ff;
@@ -783,6 +833,9 @@
 
     <div id="recap-modal" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:center;">
+            <!-- Zone cinématique du vainqueur avec affichage de l'avatar et effets de style -->
+            <div id="winner-cinematic-container"></div>
+
             <div id="recap-banner" style="font-size:22px; font-weight:900; margin-bottom:8px;">RÉSULTAT</div>
             <div id="recap-reason" style="color:#aaa; margin-bottom:12px; font-size:13px;"></div>
             
@@ -1345,7 +1398,7 @@
             return currentLang === 'fr' ? 'Novice 🌱' : 'Novice 🌱';
         }
 
-        // Style TFT - Avatar circulaire néon avec icône et drapeau incrusté (Header / Classement)
+        // Style Avatar TFT / Compétitif avec Effets Avancés & Lueurs
         function getAvatarBadgeHTML(flag, avatarNum) {
             const equippedAvatar = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar;
             const isGoldFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame === 'frame_gold';
@@ -1425,7 +1478,6 @@
             const bubble = document.createElement('div');
             bubble.className = 'emote-bubble';
             bubble.innerText = emoji;
-            // Placement sur les côtés pour ne pas gêner la grille de jeu au centre
             const side = Math.random() > 0.5 ? 'left' : 'right';
             const offsetPx = Math.random() * 60 + 15;
             bubble.style[side] = `${offsetPx}px`;
@@ -2724,10 +2776,36 @@
             const myReward = data.rewards && data.rewards[myId] ? data.rewards[myId] : { baseCoins: 30, rushBonus: 0, totalCoins: 30 };
             currentCoinsGained = myReward.totalCoins;
 
-            if (data.winnerId === myId) {
+            const winnerId = data.winnerId;
+            const isWinner = (winnerId === myId);
+            
+            // Affichage de la cinématique de fin de manche avec avatar du vainqueur
+            const cinematicContainer = document.getElementById('winner-cinematic-container');
+            if (winnerId && data.players[winnerId]) {
+                const winnerObj = parsePlayer(data.players[winnerId]);
+                const isGold = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame === 'frame_gold';
+                cinematicContainer.innerHTML = `
+                    <div class="victory-avatar-showcase">
+                        <div class="victory-badge-large ${isGold ? 'gold' : ''}">
+                            <span style="font-size: 46px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.7));">👑</span>
+                            <span style="position: absolute; bottom: -2px; right: -2px; font-size: 18px; background: #0f051d; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #fff;">${winnerObj.flag}</span>
+                        </div>
+                        <div style="font-size: 14px; font-weight: 900; color: #f8b500; text-shadow: 0 0 10px rgba(248,181,0,0.6);">${winnerObj.username} TRIOMPHE !</div>
+                    </div>
+                `;
+            } else {
+                cinematicContainer.innerHTML = `
+                    <div class="victory-avatar-showcase">
+                        <div style="font-size: 36px; margin-bottom: 4px;">🤝</div>
+                        <div style="font-size: 14px; font-weight: 900; color: #00d2ff;">ÉGALITÉ PARFAITE !</div>
+                    </div>
+                `;
+            }
+
+            if (isWinner) {
                 banner.innerText = currentLang === 'fr' ? "🏆 VICTOIRE !" : "🏆 VICTORY!"; banner.style.color = "#00d2ff";
                 SoundEngine.playVictory();
-            } else if (data.winnerId) {
+            } else if (winnerId) {
                 banner.innerText = currentLang === 'fr' ? "❌ DÉFAITE !" : "❌ DEFEAT!"; banner.style.color = "#ff007f";
             } else {
                 banner.innerText = currentLang === 'fr' ? "⏱️ ÉGALITÉ !" : "⏱️ DRAW!"; banner.style.color = "#ff8a00";
@@ -2953,6 +3031,14 @@
             doubleBtn.innerText = currentLang === 'fr' ? '📺 Doubler mes gains (Pub)' : '📺 Double my rewards (Ad)';
 
             socket.emit('claim_solo_reward', soloScore);
+
+            document.getElementById('winner-cinematic-container').innerHTML = `
+                <div class="victory-avatar-showcase">
+                    <div class="victory-badge-large">
+                        <span style="font-size: 40px;">🏋️</span>
+                    </div>
+                </div>
+            `;
 
             document.getElementById('recap-banner').innerText = currentLang === 'fr' ? "🏋️ ENTRAÎNEMENT TERMINÉ" : "🏋️ TRAINING FINISHED";
             document.getElementById('recap-banner').style.color = "#00d2ff";
