@@ -1170,7 +1170,8 @@
             avatar: parseInt(localStorage.getItem('cb_avatar')) || 1,
             flag: localStorage.getItem('cb_flag') || "🇫🇷",
             points: 0, coins: 0, trophies: 0, wins: 0, losses: 0, inventory: {}, unlocked_items: [], equippedPower: null, equippedPowers: [],
-            blitzPassPremium: false
+            blitzPassPremium: false,
+            claimedPassTiers: {}
         };
 
         let cachedOpponent = null;
@@ -1994,10 +1995,10 @@
             document.getElementById('modal-blitz-pass').style.display = 'none';
         }
 
-        // Affichage Passe de Combat interactif et visuel (Style TFT / Fortnite)
         function renderBlitzPass() {
             const container = document.getElementById('blitz-pass-container');
             const isPremium = myProfile.blitzPassPremium;
+            const claimed = myProfile.claimedPassTiers || {};
 
             container.innerHTML = `
                 <div class="bp-header-banner">
@@ -2016,6 +2017,11 @@
             
             BLITZ_PASS_TIERS.forEach(t => {
                 const isUnlocked = t.tier === 1; // Le palier 1 est débloqué par défaut
+                const freeKey = `${t.tier}_free`;
+                const premKey = `${t.tier}_premium`;
+                const isFreeClaimed = claimed[freeKey];
+                const isPremClaimed = claimed[premKey];
+
                 const card = document.createElement('div');
                 card.className = `bp-tier-card ${isUnlocked ? 'unlocked' : ''}`;
                 card.innerHTML = `
@@ -2026,14 +2032,20 @@
                     <div class="bp-tracks-grid">
                         <div class="bp-track-box free">
                             <div><span style="color:#38ef7d; font-weight:bold;">🟢 Gratuit :</span><br>${t.free}</div>
-                            <button class="power-btn ${isUnlocked ? 'equip' : 'buy'}" style="margin-top:6px; font-size:9px; padding:3px;" ${!isUnlocked ? 'disabled style="opacity:0.5;"' : ''} onclick="claimPassReward(${t.tier}, 'free')">
-                                ${isUnlocked ? 'Récupérer' : 'Bloqué'}
+                            <button class="power-btn ${isFreeClaimed ? 'active' : (isUnlocked ? 'equip' : 'buy')}" 
+                                    style="margin-top:6px; font-size:9px; padding:3px;" 
+                                    ${(!isUnlocked || isFreeClaimed) ? 'disabled style="opacity:0.5;"' : ''} 
+                                    onclick="claimPassReward(${t.tier}, 'free')">
+                                ${isFreeClaimed ? 'Récupéré ✅' : (isUnlocked ? 'Récupérer' : 'Bloqué')}
                             </button>
                         </div>
                         <div class="bp-track-box premium">
                             <div><span style="color:#00d2ff; font-weight:bold;">⭐ Premium :</span><br>${t.premium}</div>
-                            <button class="power-btn ${isUnlocked && isPremium ? 'equip' : 'buy'}" style="margin-top:6px; font-size:9px; padding:3px;" ${(!isUnlocked || !isPremium) ? 'disabled style="opacity:0.5;"' : ''} onclick="claimPassReward(${t.tier}, 'premium')">
-                                ${isUnlocked && isPremium ? 'Récupérer' : (isPremium ? 'Bloqué' : 'Requiert Premium')}
+                            <button class="power-btn ${isPremClaimed ? 'active' : (isUnlocked && isPremium ? 'equip' : 'buy')}" 
+                                    style="margin-top:6px; font-size:9px; padding:3px;" 
+                                    ${(!isUnlocked || !isPremium || isPremClaimed) ? 'disabled style="opacity:0.5;"' : ''} 
+                                    onclick="claimPassReward(${t.tier}, 'premium')">
+                                ${isPremClaimed ? 'Récupéré ✅' : (isUnlocked && isPremium ? 'Récupérer' : (isPremium ? 'Bloqué' : 'Requiert Premium'))}
                             </button>
                         </div>
                     </div>
@@ -2057,7 +2069,10 @@
         }
 
         function claimPassReward(tier, track) {
+            myProfile.claimedPassTiers = myProfile.claimedPassTiers || {};
+            myProfile.claimedPassTiers[`${tier}_${track}`] = true;
             showNotificationToast(`🎁 Récompense du Palier ${tier} (${track}) récupérée avec succès !`, "gift");
+            renderBlitzPass();
         }
 
         function switchShopTab(type) {
@@ -2115,7 +2130,6 @@
             });
         }
 
-        // Vérification locale et notification si l'argent est insuffisant
         function buyItem(id) {
             const itemObj = POWERS_CATALOG.find(p => p.id === id);
             if (itemObj && myProfile.coins < itemObj.price) {
