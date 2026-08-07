@@ -1698,12 +1698,14 @@ function renderBlitzPass() {
     const listDiv = document.createElement('div');
     listDiv.style.cssText = "display: flex; flex-direction: column; gap: 6px;";
     
-    BLITZ_PASS_TIERS.forEach(t => {
-        const isUnlocked = t.tier === true;
-        const freeKey = `${t.tier}_free`;
-        const premKey = `${t.tier}_premium`;
-        const isFreeClaimed = claimed[freeKey];
-        const isPremClaimed = claimed[premKey];
+   BLITZ_PASS_TIERS.forEach(t => {
+    const isUnlocked = true; // Débloque tous les paliers
+    const isPremium = true;  // Force le mode VIP/Premium pour tout tester
+    const freeKey = `${t.tier}_free`;
+    const premKey = `${t.tier}_premium`;
+    const isFreeClaimed = claimed[freeKey];
+    const isPremClaimed = claimed[premKey];
+    
 
         const card = document.createElement('div');
         card.className = `bp-tier-card ${isUnlocked ? 'unlocked' : ''}`;
