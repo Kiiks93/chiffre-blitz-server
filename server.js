@@ -61,11 +61,10 @@ setInterval(() => {
         let changed = false;
 
         for (let key in eventSchedule.activeEvents) {
-            if (eventSchedule.activeEvents[key]) {
-                if (globalEvents[key] !== shouldBeActive) {
-                    globalEvents[key] = shouldBeActive;
-                    changed = true;
-                }
+            const targetState = eventSchedule.activeEvents[key] ? shouldBeActive : false;
+            if (globalEvents[key] !== targetState) {
+                globalEvents[key] = targetState;
+                changed = true;
             }
         }
         if (changed) {
@@ -500,12 +499,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('admin_update_events', (newEvents) => {
-        if (!socket.isAdmin) return;
-        globalEvents = { ...globalEvents, ...newEvents };
-        io.emit('events_state_update', globalEvents);
-    });
-
     socket.on('admin_update_schedule', (scheduleData) => {
         if (!socket.isAdmin) return;
         eventSchedule = scheduleData;
@@ -515,9 +508,7 @@ io.on('connection', (socket) => {
             const end = new Date(eventSchedule.endDate).getTime();
             const shouldBeActive = now >= start && now <= end;
             for (let key in eventSchedule.activeEvents) {
-                if (eventSchedule.activeEvents[key]) {
-                    globalEvents[key] = shouldBeActive;
-                }
+                globalEvents[key] = eventSchedule.activeEvents[key] ? shouldBeActive : false;
             }
             io.emit('events_state_update', globalEvents);
         }
