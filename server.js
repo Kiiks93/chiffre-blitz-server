@@ -264,6 +264,7 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Correction de l'avatar Standard intégrée
     socket.on('equip_cosmetic', async (itemId) => {
         const player = activePlayers[socket.id];
         if (!player) return;
@@ -304,7 +305,6 @@ io.on('connection', (socket) => {
         io.to(oppId).emit('receive_malus', { type: data.type });
     });
 
-    // --- SYSTÈME D'ÉMOTES TFT-STYLE ---
     socket.on('send_emote', (data) => {
         const match = activeMatches[socket.id];
         if (match) {
@@ -463,6 +463,115 @@ io.on('connection', (socket) => {
         leaveAllRooms(socket);
     });
 
+    // --- SYSTÈME D'AMIS ---
+    socket.on('get_friends_list', async () => {
+        const player = activePlayers[socket.id];
+        if (!player) return;
+
+        try {
+            const { data: friendships, error } = await supabase
+                .from('friendships')
+                .select('*')
+                .or(`user_username.ilike.${player.username},friend_username.ilike.${player.username}`);
+
+            if (error) throw error;
+
+            let friendsData = [];
+            for (let f of friendships) {
+                const friendName = f.user_username.toLowerCase() === player.username.toLowerCase() 
+                    ? f.friend_username 
+                    : f.user_username;
+
+                let isOnline = false;
+                let targetSocketId = null;
+                for (let sId in activePlayers) {
+                    if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === friendName.toLowerCase()) {
+                        isOnline = true;
+                        targetSocketId = sId;
+                        break;
+                    }
+                }
+
+                friendsData.push({
+                    id: f.id,
+                    username: friendName,
+                    status: f.status,
+                    isRequester: f.user_username.toLowerCase() === player.username.toLowerCase(),
+                    isOnline,
+                    targetSocketId
+                });
+            }
+
+            socket.emit('friends_list_data', friendsData);
+        } catch (err) {
+            console.error("Erreur récupération amis :", err);
+        }
+    });
+
+    socket.on('send_friend_request', async (targetUsername) => {
+        const player = activePlayers[socket.id];
+        if (!player || !targetUsername) return;
+
+        const cleanTarget = targetUsername.trim();
+        if (cleanTarget.toLowerCase() === player.username.toLowerCase()) {
+            socket.emit('friend_error', "Tu ne peux pas t'ajouter toi-même !");
+            return;
+        }
+
+        const { data: targetExists } = await supabase
+            .from('players')
+            .select('username')
+            .ilike('username', cleanTarget)
+            .single();
+
+        if (!targetExists) {
+            socket.emit('friend_error', "Ce joueur n'existe pas !");
+            return;
+        }
+
+        const { error } = await supabase
+            .from('friendships')
+            .insert([{
+                user_username: player.username,
+                friend_username: targetExists.username,
+                status: 'pending'
+            }]);
+
+        if (error) {
+            socket.emit('friend_error', "Demande déjà envoyée ou amitié existante.");
+        } else {
+            socket.emit('friend_success', `Demande d'ami envoyée à ${targetExists.username} !`);
+        }
+    });
+
+    socket.on('accept_friend_request', async (friendshipId) => {
+        await supabase
+            .from('friendships')
+            .update({ status: 'accepted' })
+            .eq('id', friendshipId);
+        socket.emit('friend_updated');
+    });
+
+    socket.on('remove_friend', async (friendshipId) => {
+        await supabase
+            .from('friendships')
+            .delete()
+            .eq('id', friendshipId);
+        socket.emit('friend_updated');
+    });
+
+    socket.on('invite_friend_to_game', (data) => {
+        const { targetSocketId, roomCode } = data;
+        const player = activePlayers[socket.id];
+        if (!player || !targetSocketId) return;
+
+        io.to(targetSocketId).emit('receive_game_invite', {
+            from: player.username,
+            roomCode: roomCode || null
+        });
+    });
+
+    // --- RECHERCHE ET MATCHMAKING ---
     socket.on('find_1v1_match', () => {
         matchmakingQueue.push(socket.id);
         if (matchmakingQueue.length >= 2) {
@@ -494,6 +603,29 @@ io.on('connection', (socket) => {
             const p1 = tugOfWarQueue.shift();
             const p2 = tugOfWarQueue.shift();
             startMatchBetween(p1, p2, false, true, true); 
+        }
+    });
+
+    // --- SYSTÈME DE REVANCHE ---
+    socket.on('request_rematch', () => {
+        const match = activeMatches[socket.id];
+        if (!match) return; // Le délai de 20s est expiré ou le match n'existe plus
+
+        const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
+        if (!activePlayers[oppId]) {
+            socket.emit('room_error', "L'adversaire s'est déconnecté.");
+            return;
+        }
+
+        match.rematchVotes = match.rematchVotes || {};
+        match.rematchVotes[socket.id] = true;
+
+        io.to(oppId).emit('opponent_wants_rematch');
+
+        if (match.rematchVotes[match.id1] && match.rematchVotes[match.id2]) {
+            delete activeMatches[match.id1];
+            delete activeMatches[match.id2];
+            startMatchBetween(match.id1, match.id2, false, true, false);
         }
     });
 
@@ -725,7 +857,8 @@ function startMatchBetween(id1, id2, isRanked = false, isOnline = true, isTugOfW
         isRanked,
         isTugOfWar,
         ropePosition: 0,
-        ended: false
+        ended: false,
+        rematchVotes: {}
     };
 
     activeMatches[id1] = match;
@@ -810,7 +943,7 @@ function applyPassReward(p, tier, track) {
 }
 
 async function endMatch(id1, id2, matchData, isRanked) {
-    // Nettoyage différé après 20 secondes (laisse le temps d'échanger des émotes sur l'écran de fin)
+    // Nettoyage différé après 20 secondes (laisse le temps d'échanger des émotes et demander une revanche)
     setTimeout(() => {
         if (activeMatches[id1] === matchData) delete activeMatches[id1];
         if (activeMatches[id2] === matchData) delete activeMatches[id2];
