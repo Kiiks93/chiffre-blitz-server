@@ -1320,7 +1320,7 @@
             let activeList = [];
             if (events.coinRush) activeList.push("🪙 <b>Coin Rush</b> (Pièces x2)");
             if (events.rankShield) activeList.push("🛡️ <b>Rank Shield</b> (Zéro perte de points en classé)");
-            if (events.expressoMatch) activeList.push("⚡ <b>Expresso Match</b> (Parties rapides en 20s pour le 1v1 Online)");
+            if (events.expressoMatch) activeList.push("⚡ <b>Expresso Match</b> (Parties rapides en 20s pour le 1v1 Online Non Classé)");
             if (events.chaosMode) activeList.push("🌪️ <b>Chaos Mode</b> (Modificateurs aléatoires en non classé)");
             if (events.jackpotEclair) activeList.push("🎁 <b>Jackpot Éclair</b> (Coffres mystères)");
             if (events.tugOfWarMode) activeList.push("🪢 <b>Mode Exclusif : Corde Raide (Tug-of-War)</b>");
@@ -1445,7 +1445,7 @@
                                 </label>
 
                                 <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-                                    <span>⚡ Expresso Match (Timer 20s en Online)</span>
+                                    <span>⚡ Expresso Match (Timer 20s en Non Classé)</span>
                                     <input type="checkbox" id="chk-expressoMatch" onchange="sendAdminEventsUpdate()">
                                 </label>
 
@@ -1963,8 +1963,18 @@
 
         function autoValidateTarget() {
             const is1v1 = document.getElementById('hud-1v1').style.display !== 'none';
-            if (is1v1) handle1v1TileClick(parseInt(document.getElementById('game-target-giant').innerText) || 1);
-            else handleSoloTileClick(soloTarget);
+            if (is1v1) {
+                // Trouver l'index de la tuile correspondant à la cible actuelle
+                const targetVal = parseInt(document.getElementById('game-target-giant').innerText) || 1;
+                const tiles = document.querySelectorAll('#grid .tile');
+                tiles.forEach((t, idx) => {
+                    if (parseInt(t.innerText) === targetVal) {
+                        handle1v1TileClick(targetVal, idx);
+                    }
+                });
+            } else {
+                handleSoloTileClick(soloTarget);
+            }
         }
 
         socket.on('receive_malus', (data) => {
@@ -2165,8 +2175,6 @@
         function updateTugOfWarGauge(pos) {
             const indicator = document.getElementById('tow-indicator');
             if (!indicator) return;
-            // pos ranges from -6 to +6. Map to percentage 0% to 100%.
-            // pos = -6 -> 0%, pos = 0 -> 50%, pos = +6 -> 100%
             let percent = 50 + (pos / 6) * 45;
             percent = Math.max(5, Math.min(95, percent));
             indicator.style.left = `${percent}%`;
@@ -2313,9 +2321,10 @@
             }
         });
 
-        function handle1v1TileClick(num) {
+        // CORRECTION : Transmission correcte de l'index de la tuile cliquée pour les modes 1v1 / Amis / Tug-of-War
+        function handle1v1TileClick(num, index) {
             if (current1v1Time <= 0) return;
-            socket.emit('player_click_1v1', num);
+            socket.emit('player_click_1v1', index);
         }
 
         function startSoloTraining(mode) {
@@ -2510,16 +2519,17 @@
             modal.style.display = 'flex';
         }
 
+        // CORRECTION : Transmission de l'index (en plus de la valeur) lors de la génération de la grille multijoueur
         function renderGrid(pool, handler) {
             const grid = document.getElementById('grid');
             if (!grid) return;
             grid.innerHTML = '';
             if (!pool) return;
-            pool.forEach(num => {
+            pool.forEach((num, index) => {
                 const tile = document.createElement('div');
                 tile.className = 'tile';
                 tile.innerText = num;
-                tile.onclick = () => handler(num);
+                tile.onclick = () => handler(num, index);
                 grid.appendChild(tile);
             });
         }
