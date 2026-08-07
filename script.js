@@ -491,6 +491,7 @@ let latest1v1StartData = null;
 let pendingGameOverData = null;
 let activeAvatarChoice = 'standard';
 let currentFriendFilter = 'all';
+let myGameInvites = [];
 
 function getFlagEmoji(flag) {
     if (!flag) return '🇫🇷';
@@ -810,7 +811,6 @@ socket.on('player_registered', (rawData) => {
     }
 });
 
-// Écouteurs pour synchroniser les actions du Passe de Combat en temps réel
 socket.on('blitz_pass_updated', (data) => {
     if (data.coins !== undefined) myProfile.coins = data.coins;
     if (data.blitzPassPremium !== undefined) myProfile.blitzPassPremium = data.blitzPassPremium;
@@ -953,7 +953,14 @@ function switchFriendTab(tab) {
     currentFriendFilter = tab;
     document.getElementById('friend-tab-all').classList.toggle('active', tab === 'all');
     document.getElementById('friend-tab-requests').classList.toggle('active', tab === 'requests');
-    socket.emit('get_friends_list');
+    const invitesTab = document.getElementById('friend-tab-invites');
+    if (invitesTab) invitesTab.classList.toggle('active', tab === 'invites');
+    
+    if (tab === 'invites') {
+        renderGameInvitesList();
+    } else {
+        socket.emit('get_friends_list');
+    }
 }
 
 function sendFriendRequest() {
@@ -966,12 +973,75 @@ function sendFriendRequest() {
 
 function acceptFriend(id) { socket.emit('accept_friend_request', id); }
 function removeFriend(id) { socket.emit('remove_friend', id); }
+
 function inviteFriend(targetSocketId) {
-    socket.emit('invite_friend_to_game', { targetSocketId });
-    showNotificationToast("📤 Invitation envoyée !", "gift");
+    const randomRoomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+    
+    socket.emit('create_room', { 
+        code: randomRoomCode, 
+        password: '', 
+        username: myProfile.username, 
+        avatar: myProfile.avatar, 
+        flag: myProfile.flag 
+    });
+    
+    socket.emit('invite_friend_to_game', { targetSocketId, roomCode: randomRoomCode });
+    
+    closeFriendsModal();
+    showNotificationToast("📤 Salon créé et invitation envoyée !", "gift");
+}
+
+socket.on('receive_game_invite', (data) => {
+    myGameInvites.unshift({
+        from: data.from,
+        roomCode: data.roomCode,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    });
+    
+    if (currentFriendFilter === 'invites' && document.getElementById('modal-friends').style.display === 'flex') {
+        renderGameInvitesList();
+    }
+
+    let inviteHtml = `📩 Invitation de jeu de <b>${data.from}</b> !`;
+    if (data.roomCode) {
+        inviteHtml += `<br><button class="power-btn equip" onclick="closeFriendsModal(); joinRoomDirect('${data.roomCode}', '')" style="margin-top:6px; font-size:11px; padding:4px 10px;">Rejoindre le salon ⚡</button>`;
+    }
+    showNotificationToast(inviteHtml, 'gift');
+});
+
+function renderGameInvitesList() {
+    const container = document.getElementById('friends-list-container');
+    container.innerHTML = '';
+    
+    if (myGameInvites.length === 0) {
+        container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:20px; font-size:12px;">${currentLang === 'fr' ? 'Aucune invitation en attente.' : 'No pending invitations.'}</div>`;
+        return;
+    }
+
+    myGameInvites.forEach((inv, index) => {
+        const row = document.createElement('div');
+        row.className = 'friend-card';
+        row.innerHTML = `
+            <div style="text-align:left;">
+                <div style="font-weight:bold; color:#fff; font-size:13px;">${inv.from}</div>
+                <div style="font-size:10px; color:#00d2ff;">Salon : ${inv.roomCode} (${inv.time})</div>
+            </div>
+            <div style="display:flex; gap:6px; align-items:center;">
+                <button class="power-btn equip" onclick="closeFriendsModal(); joinRoomDirect('${inv.roomCode}', '')" style="font-size:10px; padding:6px 10px;">Rejoindre ⚡</button>
+                <button class="power-btn" onclick="removeGameInvite(${index})" style="font-size:10px; padding:6px; background:rgba(255,75,43,0.2); color:#ff4b2b; border:1px solid #ff4b2b;">✕</button>
+            </div>
+        `;
+        container.appendChild(row);
+    });
+}
+
+function removeGameInvite(index) {
+    myGameInvites.splice(index, 1);
+    renderGameInvitesList();
 }
 
 socket.on('friends_list_data', (friends) => {
+    if (currentFriendFilter === 'invites') return;
     const container = document.getElementById('friends-list-container');
     container.innerHTML = '';
     
