@@ -718,6 +718,7 @@ function saveProfileFromModal() {
     myProfile.avatar = avatarVal;
     myProfile.flag = getFlagEmoji(flagVal);
 
+    if (!myProfile.inventory) myProfile.inventory = {};
     if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
     
     if (titleInput) {
@@ -803,7 +804,8 @@ function registerIfPossible() {
             username: myProfile.username,
             region: myProfile.region,
             avatar: myProfile.avatar,
-            flag: myProfile.flag
+            flag: myProfile.flag,
+            inventory: myProfile.inventory
         });
     }
 }
@@ -1660,7 +1662,9 @@ function updateRoomPlayers(players) {
     if (!players || players.length === 0) { playersListEl.innerText = i18n[currentLang].waiting_opponent; return; }
     playersListEl.innerHTML = players.map(rawData => {
         const p = parsePlayer(rawData);
-        return `${getAvatarBadgeHTML(p.flag, p.avatar)} ${p.username}`;
+        const title = p.inventory && p.inventory.__equipped && p.inventory.__equipped.title;
+        const titleHtml = title ? `<span style="font-size: 9px; color: #f8b500; margin-left: 3px;">[${title}]</span>` : '';
+        return `<div style="display:inline-flex; align-items:center; gap:4px;">${getAvatarBadgeHTML(p.flag, p.avatar)} <span>${p.username}</span> ${titleHtml}</div>`;
     }).join(' <span style="color:#aaa; margin:0 4px;">vs</span> ');
     if (players && socket.id) {
         const opp = players.find(p => (p.socketId || p.id) !== socket.id);
@@ -2016,6 +2020,9 @@ socket.on('leaderboard_data', (res) => {
         row.className = 'lb-row';
         const badgeHtml = getAvatarBadgeHTML(p.flag, p.avatar);
         
+        const equippedTitle = p.inventory && p.inventory.__equipped && p.inventory.__equipped.title;
+        const titleHtml = equippedTitle ? `<span style="font-size: 9px; color: #f8b500; font-weight: bold; margin-left: 6px;">[ ${equippedTitle} ]</span>` : '';
+        
         let rightBadge = `<span class="lb-pts" style="color:#00ff88; font-size:14px;">${p.points} pts</span>`;
         if (category === 'coins') {
             rightBadge = `<span class="lb-pts" style="color:#f8b500; font-size:14px;">${p.coins} 🪙</span>`;
@@ -2034,8 +2041,8 @@ socket.on('leaderboard_data', (res) => {
         row.innerHTML = `
             <span class="lb-rank" style="color: ${rankColor};">${rankDisplay}</span>
             <div class="lb-user-info">
-                <div class="lb-name-row">
-                    ${badgeHtml} <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px;">${p.username}</span>
+                <div class="lb-name-row" style="display:flex; align-items:center; flex-wrap:wrap;">
+                    ${badgeHtml} <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; margin-left: 4px;">${p.username}</span> ${titleHtml}
                 </div>
                 <div class="lb-sub-details">
                     <span>🏆 ${p.trophies}</span>
@@ -2071,6 +2078,12 @@ function updateOpponentDisplay(opp) {
     cachedOpponent = parsePlayer(opp);
     document.getElementById('opp-profile-name').innerText = cachedOpponent.username;
     document.getElementById('opp-profile-badge').innerHTML = getAvatarBadgeHTML(cachedOpponent.flag, cachedOpponent.avatar);
+    
+    const oppTitle = cachedOpponent.inventory && cachedOpponent.inventory.__equipped && cachedOpponent.inventory.__equipped.title;
+    const oppTitleEl = document.getElementById('opp-profile-title');
+    if (oppTitleEl) {
+        oppTitleEl.innerText = oppTitle ? `[ ${oppTitle} ]` : "";
+    }
 }
 
 socket.on('start_countdown', (data) => {
