@@ -52,9 +52,11 @@
         }
 
         .tft-avatar-icon {
-            font-size: 20px;
+            font-size: 18px;
+            font-weight: 900;
             z-index: 2;
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+            color: #fff;
         }
         .tft-flag-overlay {
             position: absolute;
@@ -93,8 +95,10 @@
             background: linear-gradient(135deg, #3a2500, #694b00);
         }
         .tft-avatar-large-icon {
-            font-size: 38px;
+            font-size: 26px;
+            font-weight: 900;
             filter: drop-shadow(0 4px 8px rgba(0,0,0,0.7));
+            color: #fff;
         }
         .tft-flag-large-overlay {
             position: absolute;
@@ -313,47 +317,6 @@
         .power-btn.buy { background: #f8b500; color: #000; }
         .power-btn.equip { background: #00d2ff; color: #000; }
         .power-btn.active { background: #00ff88; color: #000; }
-
-        .bp-header-banner {
-            background: linear-gradient(135deg, rgba(248,181,0,0.2), rgba(0,210,255,0.2));
-            border: 2px solid #f8b500;
-            border-radius: 14px;
-            padding: 12px;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        .bp-tier-card {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 8px 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            text-align: left;
-        }
-        .bp-tier-card.unlocked {
-            border-color: #f8b500;
-            background: rgba(248, 181, 0, 0.06);
-        }
-        .bp-tracks-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-        }
-        .bp-track-box {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            font-size: 10px;
-            padding: 6px 8px;
-            border-radius: 8px;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.06);
-            gap: 4px;
-        }
-        .bp-track-box.free { border-left: 3px solid #38ef7d; }
-        .bp-track-box.premium { border-left: 3px solid #00d2ff; background: rgba(0, 210, 255, 0.04); }
 
         .hud { display: grid; grid-template-columns: 1fr; gap: 6px; background: rgba(255,255,255,0.06); padding: 6px 10px; border-radius: 10px; margin-bottom: 6px; max-width: 400px; margin-left: auto; margin-right: auto; }
         .player-box { padding: 4px 8px; border-radius: 8px; background: rgba(0,0,0,0.3); }
@@ -649,9 +612,15 @@
             <input type="text" id="username-input" placeholder="Ex: Kiiks" maxlength="15" 
                    style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:14px; font-weight:bold; text-align:center; margin-bottom:8px; outline:none;">
             
+            <!-- Sélecteur d'Avatar (Standard vs Avatars Spéciaux Débloqués du Shop/Pass) -->
+            <div style="margin-bottom: 8px; text-align: left;">
+                <label style="display:block; font-size:11px; color:#aaa; margin-bottom:4px; font-weight:bold;">STYLE D'AVATAR</label>
+                <div id="profile-avatar-selector" style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;"></div>
+            </div>
+
             <div style="display: flex; gap: 8px; margin-bottom: 8px;">
                 <div style="flex: 1; text-align: left;">
-                    <label style="display:block; font-size:11px; color:#aaa; margin-bottom:4px; font-weight:bold;" data-i18n="avatar_num_label">AVATAR (1-999)</label>
+                    <label style="display:block; font-size:11px; color:#aaa; margin-bottom:4px; font-weight:bold;" data-i18n="avatar_num_label">NUMÉRO (1-999)</label>
                     <input type="number" id="avatar-input" min="1" max="999" value="1" oninput="updateProfilePreview()"
                            style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:14px; font-weight:bold; text-align:center; outline:none;">
                 </div>
@@ -1357,6 +1326,7 @@
         let latestGlobalEvents = {};
         let latest1v1StartData = null;
         let pendingGameOverData = null;
+        let activeAvatarChoice = 'standard'; // 'standard' ou 'avatar_legend'
 
         function getFlagEmoji(flag) {
             if (!flag) return '🇫🇷';
@@ -1399,51 +1369,39 @@
         }
 
         // Style Avatar TFT / Compétitif avec Effets Avancés & Lueurs
-        function getAvatarBadgeHTML(flag, avatarNum) {
-            const equippedAvatar = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar;
+        function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
+            const equippedAvatar = overrideAvatarType || (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar);
             const isGoldFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame === 'frame_gold';
             
-            let avatarIcon = '🧠'; 
+            let avatarContent = avatarNum || 1;
             let avatarTitle = `Avatar #${avatarNum || 1}`;
             
             if (equippedAvatar === 'avatar_legend') {
-                avatarIcon = '🤖'; 
+                avatarContent = '🤖'; 
                 avatarTitle = 'Robot Mathématicien Légendaire';
-            } else if (avatarNum > 700) {
-                avatarIcon = '⚡';
-            } else if (avatarNum > 400) {
-                avatarIcon = '🔥';
-            } else if (avatarNum > 200) {
-                avatarIcon = '💎';
             }
 
             return `
                 <div class="tft-avatar-container ${isGoldFrame ? 'gold-frame' : ''}" title="${avatarTitle}">
-                    <span class="tft-avatar-icon">${avatarIcon}</span>
+                    <span class="tft-avatar-icon" style="${typeof avatarContent === 'number' ? 'font-size: 15px;' : 'font-size: 18px;'}">${avatarContent}</span>
                     <span class="tft-flag-overlay">${flag || '🇫🇷'}</span>
                 </div>
             `;
         }
 
         // Grand Avatar TFT interactif pour la modale de Profil
-        function getLargeAvatarBadgeHTML(flag, avatarNum) {
-            const equippedAvatar = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar;
+        function getLargeAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
+            const avatarType = overrideAvatarType || activeAvatarChoice || (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar);
             const isGoldFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame === 'frame_gold';
             
-            let avatarIcon = '🧠'; 
-            if (equippedAvatar === 'avatar_legend') {
-                avatarIcon = '🤖'; 
-            } else if (avatarNum > 700) {
-                avatarIcon = '⚡';
-            } else if (avatarNum > 400) {
-                avatarIcon = '🔥';
-            } else if (avatarNum > 200) {
-                avatarIcon = '💎';
+            let avatarContent = avatarNum || 1;
+            if (avatarType === 'avatar_legend') {
+                avatarContent = '🤖'; 
             }
 
             return `
                 <div class="tft-avatar-large ${isGoldFrame ? 'gold-frame' : ''}">
-                    <span class="tft-avatar-large-icon">${avatarIcon}</span>
+                    <span class="tft-avatar-large-icon" style="${typeof avatarContent === 'number' ? 'font-size: 22px;' : 'font-size: 28px;'}">${avatarContent}</span>
                     <span class="tft-flag-large-overlay">${flag || '🇫🇷'}</span>
                 </div>
             `;
@@ -1455,7 +1413,54 @@
             const flag = getFlagEmoji(rawFlag);
             const previewContainer = document.getElementById('modal-avatar-preview');
             if (previewContainer) {
-                previewContainer.innerHTML = getLargeAvatarBadgeHTML(flag, avatarNum);
+                previewContainer.innerHTML = getLargeAvatarBadgeHTML(flag, avatarNum, activeAvatarChoice);
+            }
+        }
+
+        function renderProfileAvatarSelector() {
+            const container = document.getElementById('profile-avatar-selector');
+            if (!container) return;
+            container.innerHTML = '';
+
+            // 1. Avatar Standard (Chiffre & Drapeau)
+            const isStandardActive = (activeAvatarChoice === 'standard' || !activeAvatarChoice);
+            const stdCard = document.createElement('div');
+            stdCard.style.cssText = `flex: 1; min-width: 120px; background: ${isStandardActive ? 'rgba(0,210,255,0.2)' : 'rgba(255,255,255,0.05)'}; border: 2px solid ${isStandardActive ? '#00d2ff' : 'rgba(255,255,255,0.1)'}; border-radius: 10px; padding: 6px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;`;
+            stdCard.onclick = () => {
+                activeAvatarChoice = 'standard';
+                renderProfileAvatarSelector();
+                updateProfilePreview();
+            };
+            stdCard.innerHTML = `
+                <span style="font-size: 16px;">🔢</span>
+                <div style="text-align: left;">
+                    <div style="font-size: 10px; font-weight: bold; color: #fff;">Standard</div>
+                    <div style="font-size: 9px; color: #aaa;">Chiffre & Drapeau</div>
+                </div>
+            `;
+            container.appendChild(stdCard);
+
+            // 2. Avatars Spéciaux Débloqués (ex: Robot avatar_legend)
+            const unlockedItems = myProfile.unlocked_items || [];
+            const hasRobot = unlockedItems.includes('avatar_legend') || (myProfile.inventory && myProfile.inventory['avatar_legend'] > 0);
+            
+            if (hasRobot) {
+                const isRobotActive = (activeAvatarChoice === 'avatar_legend');
+                const robotCard = document.createElement('div');
+                robotCard.style.cssText = `flex: 1; min-width: 120px; background: ${isRobotActive ? 'rgba(0,210,255,0.2)' : 'rgba(255,255,255,0.05)'}; border: 2px solid ${isRobotActive ? '#00d2ff' : 'rgba(255,255,255,0.1)'}; border-radius: 10px; padding: 6px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;`;
+                robotCard.onclick = () => {
+                    activeAvatarChoice = 'avatar_legend';
+                    renderProfileAvatarSelector();
+                    updateProfilePreview();
+                };
+                robotCard.innerHTML = `
+                    <span style="font-size: 16px;">🤖</span>
+                    <div style="text-align: left;">
+                        <div style="font-size: 10px; font-weight: bold; color: #fff;">Robot</div>
+                        <div style="font-size: 9px; color: #aaa;">Spécial Shop</div>
+                    </div>
+                `;
+                container.appendChild(robotCard);
             }
         }
 
@@ -1548,8 +1553,15 @@
             updateEconomyUI();
             document.getElementById('modal-username').style.display = 'none';
             registerIfPossible();
-            SoundEngine.init();
 
+            // Enregistrer l'avatar choisi (standard ou spécial)
+            if (activeAvatarChoice === 'avatar_legend') {
+                socket.emit('equip_cosmetic', 'avatar_legend');
+            } else {
+                socket.emit('equip_cosmetic', 'standard');
+            }
+
+            SoundEngine.init();
             showTitleScreen();
         }
 
@@ -1558,6 +1570,11 @@
             if (myProfile.region) document.getElementById('region-input').value = myProfile.region;
             document.getElementById('avatar-input').value = myProfile.avatar || 1;
             document.getElementById('flag-input').value = myProfile.flag || "🇫🇷";
+            
+            const equippedAvatar = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar;
+            activeAvatarChoice = equippedAvatar || 'standard';
+
+            renderProfileAvatarSelector();
             updateProfilePreview();
             document.getElementById('modal-username').style.display = 'flex';
         }
