@@ -20,37 +20,89 @@
         }
         #user-name-display { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60px; }
 
-        .avatar-flag-badge {
+        /* Style Avatar TFT / Compétitif dynamique */
+        .tft-avatar-container {
             position: relative;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: rgba(0, 210, 255, 0.25);
-            border: 1px solid rgba(0, 210, 255, 0.5);
-            border-radius: 6px;
-            padding: 2px 5px;
-            min-width: 32px;
-            height: 22px;
-            overflow: hidden;
-            vertical-align: middle;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e1035, #3c1e69);
+            border: 2px solid #00d2ff;
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.4);
+            overflow: visible;
             flex-shrink: 0;
         }
-        .avatar-flag-badge .flag-bg {
-            position: absolute;
-            font-size: 16px;
-            opacity: 0.35;
-            z-index: 1;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
+        .tft-avatar-container.gold-frame {
+            border-color: #f8b500;
+            box-shadow: 0 0 14px rgba(248, 181, 0, 0.7);
+            background: linear-gradient(135deg, #3a2500, #694b00);
         }
-        .avatar-flag-badge .avatar-num {
-            position: relative;
+        .tft-avatar-icon {
+            font-size: 20px;
             z-index: 2;
-            color: #fff;
-            font-size: 10px;
-            font-weight: 900;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+        }
+        .tft-flag-overlay {
+            position: absolute;
+            bottom: -3px;
+            right: -3px;
+            font-size: 11px;
+            background: #0f051d;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3;
+            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        /* Animation des émotes style TFT (Non bloquant) */
+        .emote-bubble {
+            position: absolute;
+            font-size: 32px;
+            z-index: 9999;
+            pointer-events: none;
+            animation: emoteFlyUp 1.8s ease-out forwards;
+        }
+        @keyframes emoteFlyUp {
+            0% { transform: translateY(0px) scale(0.5); opacity: 0; }
+            20% { transform: translateY(-30px) scale(1.2); opacity: 1; }
+            80% { transform: translateY(-90px) scale(1); opacity: 1; }
+            100% { transform: translateY(-130px) scale(0.8); opacity: 0; }
+        }
+        .emote-bar {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 8px auto;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 6px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 320px;
+        }
+        .emote-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .emote-btn:active {
+            transform: scale(1.25);
+            background: rgba(0, 210, 255, 0.3);
         }
 
         .user-stats {
@@ -173,7 +225,6 @@
         .power-btn.equip { background: #00d2ff; color: #000; }
         .power-btn.active { background: #00ff88; color: #000; }
 
-        /* Styles améliorés pour le Passe de Combat (Style TFT / Fortnite) */
         .bp-header-banner {
             background: linear-gradient(135deg, rgba(248,181,0,0.2), rgba(0,210,255,0.2));
             border: 2px solid #f8b500;
@@ -445,6 +496,17 @@
 
             <p style="color:#aaa; font-size:13px; margin-bottom:8px;" data-i18n="players_in_room">Joueurs dans le salon :</p>
             <div id="room-players-list" style="font-weight:bold; font-size:15px; color:#00ff88; margin-bottom:12px; display:flex; align-items:center; justify-content:center; gap:6px;">En attente...</div>
+            
+            <!-- Barre d'émotes dans le salon d'attente -->
+            <div class="emote-bar">
+                <button class="emote-btn" onclick="sendEmote('🔥')">🔥</button>
+                <button class="emote-btn" onclick="sendEmote('⚡')">⚡</button>
+                <button class="emote-btn" onclick="sendEmote('🤖')">🤖</button>
+                <button class="emote-btn" onclick="sendEmote('💀')">💀</button>
+                <button class="emote-btn" onclick="sendEmote('😂')">😂</button>
+                <button class="emote-btn" onclick="sendEmote('👑')">👑</button>
+            </div>
+
             <div class="matchmaking-loader" style="margin-top:5px;">
                 <div class="radar-box" style="width:50px; height:50px;">
                     <div class="radar-ring"></div>
@@ -557,7 +619,6 @@
         </div>
     </div>
 
-    <!-- Modale Passe de Combat Repensée (Fortnite / TFT Style) -->
     <div id="modal-blitz-pass" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="max-width: 440px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
@@ -665,6 +726,16 @@
         <div id="power-zone" style="display:none;"></div>
 
         <div id="grid" class="grid"></div>
+
+        <!-- Barre d'émotes en plein match (TFT Style) -->
+        <div class="emote-bar">
+            <button class="emote-btn" onclick="sendEmote('🔥')">🔥</button>
+            <button class="emote-btn" onclick="sendEmote('⚡')">⚡</button>
+            <button class="emote-btn" onclick="sendEmote('🤖')">🤖</button>
+            <button class="emote-btn" onclick="sendEmote('💀')">💀</button>
+            <button class="emote-btn" onclick="sendEmote('😂')">😂</button>
+            <button class="emote-btn" onclick="sendEmote('👑')">👑</button>
+        </div>
     </div>
 
     <div id="recap-modal" class="modal-overlay" style="display:none;">
@@ -691,6 +762,16 @@
             <div style="display:flex; justify-content:space-between; margin:6px 0 12px 0; color:#f8b500; font-size:13px;">
                 <span data-i18n="recap_coins">🪙 Pièces Gagnées :</span>
                 <span id="recap-coins-gained" style="font-weight:bold;">+0</span>
+            </div>
+
+            <!-- Barre d'émotes après la partie -->
+            <div class="emote-bar" style="margin-bottom: 12px;">
+                <button class="emote-btn" onclick="sendEmote('🔥')">🔥</button>
+                <button class="emote-btn" onclick="sendEmote('⚡')">⚡</button>
+                <button class="emote-btn" onclick="sendEmote('🤖')">🤖</button>
+                <button class="emote-btn" onclick="sendEmote('💀')">💀</button>
+                <button class="emote-btn" onclick="sendEmote('😂')">😂</button>
+                <button class="emote-btn" onclick="sendEmote('👑')">👑</button>
             </div>
 
             <button id="btn-double-reward" class="btn-main btn-reward" onclick="watchAdToDoubleReward()" data-i18n="double_reward">📺 Doubler mes gains (Pub)</button>
@@ -1221,26 +1302,54 @@
             return currentLang === 'fr' ? 'Novice 🌱' : 'Novice 🌱';
         }
 
-       function getAvatarBadgeHTML(flag, avatarNum) {
-    const equippedAvatar = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar;
-    const isGoldFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame === 'frame_gold';
-    const customStyle = isGoldFrame ? 'border: 2px solid #f8b500; box-shadow: 0 0 10px rgba(248,181,0,0.7);' : '';
-    
-    let avatarContent = `#${avatarNum || 1}`;
-    let extraStyle = '';
-    
-    if (equippedAvatar === 'avatar_legend') {
-        avatarContent = '🤖'; // Robot mathématicien stylé
-        extraStyle = 'font-size: 14px; filter: drop-shadow(0 0 4px #00d2ff);';
-    }
+        // Style TFT - Avatar circulaire néon avec icône et drapeau incrusté
+        function getAvatarBadgeHTML(flag, avatarNum) {
+            const equippedAvatar = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar;
+            const isGoldFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame === 'frame_gold';
+            
+            let avatarIcon = '🧠'; 
+            let avatarTitle = `Avatar #${avatarNum || 1}`;
+            
+            if (equippedAvatar === 'avatar_legend') {
+                avatarIcon = '🤖'; 
+                avatarTitle = 'Robot Mathématicien Légendaire';
+            } else if (avatarNum > 700) {
+                avatarIcon = '⚡';
+            } else if (avatarNum > 400) {
+                avatarIcon = '🔥';
+            } else if (avatarNum > 200) {
+                avatarIcon = '💎';
+            }
 
-    return `
-        <div class="avatar-flag-badge" style="${customStyle}" title="Avatar & Drapeau">
-            <span class="flag-bg">${flag || '🇫🇷'}</span>
-            <span class="avatar-num" style="${extraStyle}">${avatarContent}</span>
-        </div>
-    `;
-}
+            return `
+                <div class="tft-avatar-container ${isGoldFrame ? 'gold-frame' : ''}" title="${avatarTitle}">
+                    <span class="tft-avatar-icon">${avatarIcon}</span>
+                    <span class="tft-flag-overlay">${flag || '🇫🇷'}</span>
+                </div>
+            `;
+        }
+
+        // Gestion des émotes style TFT en temps réel
+        function sendEmote(emoji) {
+            if (!socket.connected) return;
+            socket.emit('send_emote', { emote: emoji });
+            showFloatingEmote(emoji, true);
+        }
+
+        socket.on('receive_emote', (data) => {
+            showFloatingEmote(data.emote, false);
+        });
+
+        function showFloatingEmote(emoji, isMe) {
+            const bubble = document.createElement('div');
+            bubble.className = 'emote-bubble';
+            bubble.innerText = emoji;
+            const randomOffset = (Math.random() - 0.5) * 120;
+            bubble.style.left = `calc(50% + ${randomOffset}px)`;
+            bubble.style.bottom = isMe ? '150px' : '65%';
+            document.body.appendChild(bubble);
+            setTimeout(() => { bubble.remove(); }, 1800);
+        }
 
         function saveLocalPreferences() {
             localStorage.setItem('cb_username', myProfile.username);
@@ -2026,7 +2135,7 @@
             listDiv.style.cssText = "display: flex; flex-direction: column; gap: 8px; margin-top: 4px;";
             
             BLITZ_PASS_TIERS.forEach(t => {
-                const isUnlocked = t.tier === 1; // Le palier 1 est débloqué par défaut
+                const isUnlocked = t.tier === 1;
                 const freeKey = `${t.tier}_free`;
                 const premKey = `${t.tier}_premium`;
                 const isFreeClaimed = claimed[freeKey];
