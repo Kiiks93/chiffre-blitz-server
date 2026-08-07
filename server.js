@@ -38,7 +38,6 @@ let globalEvents = {
     tugOfWarMode: false
 };
 
-// Stockage des programmations individuelles par événement (contenant les timestamps en ms)[cite: 3]
 let eventSchedules = {
     coinRush: { manual: false, start: null, end: null },
     rankShield: { manual: false, start: null, end: null },
@@ -48,16 +47,14 @@ let eventSchedules = {
     tugOfWarMode: { manual: false, start: null, end: null }
 };
 
-// Vérification toutes les 5 secondes[cite: 3]
 setInterval(() => {
     const now = Date.now();
     let changed = false;
 
     for (let key in eventSchedules) {
         const ev = eventSchedules[key];
-        let shouldBeActive = ev.manual; // Activé manuellement via la case[cite: 3]
+        let shouldBeActive = ev.manual;
 
-        // Si une plage horaire est définie, elle prend le dessus ou s'ajoute[cite: 3]
         if (ev.start && ev.end) {
             if (now >= ev.start && now <= ev.end) {
                 shouldBeActive = true;
@@ -222,7 +219,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // 🎫 ACHAT DU PASSE DE COMBAT PREMIUM
     socket.on('buy_blitz_pass', async () => {
         const player = activePlayers[socket.id];
         if (!player) return;
@@ -240,7 +236,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // 🎁 RÉCUPÉRATION D'UN PALIER DU PASSE DE COMBAT
     socket.on('claim_pass_tier', async (data) => {
         const player = activePlayers[socket.id];
         if (!player) return;
@@ -248,7 +243,7 @@ io.on('connection', (socket) => {
 
         player.claimedPassTiers = player.claimedPassTiers || {};
         const key = `${tier}_${track}`;
-        if (player.claimedPassTiers[key]) return; // Déjà récupéré
+        if (player.claimedPassTiers[key]) return;
         if (track === 'premium' && !player.blitzPassPremium) return;
 
         player.claimedPassTiers[key] = true;
@@ -303,6 +298,24 @@ io.on('connection', (socket) => {
         if (!match) return;
         const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
         io.to(oppId).emit('receive_malus', { type: data.type });
+    });
+
+    // --- SYSTÈME D'ÉMOTES TFT-STYLE ---
+    socket.on('send_emote', (data) => {
+        const match = activeMatches[socket.id];
+        if (match) {
+            const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
+            io.to(oppId).emit('receive_emote', { senderId: socket.id, emote: data.emote });
+        } else {
+            for (let code in rooms) {
+                const room = rooms[code];
+                const isInRoom = room.players.some(p => (p.socketId || p.id) === socket.id);
+                if (isInRoom) {
+                    io.to(code).emit('receive_emote', { senderId: socket.id, emote: data.emote });
+                    break;
+                }
+            }
+        }
     });
 
     socket.on('spin_jackpot_wheel', async () => {
@@ -568,7 +581,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // --- GESTIONNAIRE ADMIN ---
     socket.on('admin_auth', (password) => {
         if (password === ADMIN_PASSWORD) {
             socket.isAdmin = true;
