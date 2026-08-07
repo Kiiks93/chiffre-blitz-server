@@ -11,9 +11,12 @@
 
     <div class="header-bar">
         <h1>Chiffre Blitz ⚡</h1>
-        <div id="user-pill" class="user-pill" onclick="promptProfileChange()">
-            <div id="user-avatar-badge"></div>
-            <span id="user-name-display">Définir pseudo</span>
+        <div id="user-pill" class="user-pill" onclick="promptProfileChange()" style="flex-direction: column; align-items: flex-start; gap: 0; padding: 6px 12px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <div id="user-avatar-badge"></div>
+                <span id="user-name-display" style="font-weight: bold; font-size: 13px;">Définir pseudo</span>
+            </div>
+            <span id="user-title-display" style="font-size: 9px; color: #f8b500; font-weight: bold; margin-left: 28px; line-height: 1;"></span>
         </div>
         <div class="header-btns">
             <button onclick="openFriendsModal()" class="icon-btn" style="background: rgba(0, 210, 255, 0.15); border-color: #00d2ff; padding: 0 10px; gap: 4px; width: auto;" data-i18n="friends_btn">👥 Amis</button>
@@ -92,11 +95,11 @@
         <button class="btn-main btn-blue" onclick="openLaunchAdModal()" style="margin-top: 12px; width: 100%; font-size: 16px; padding: 14px;" data-i18n="btn_play">JOUER ⚡</button>
     </div>
 
-    <!-- MENU PRINCIPAL - MIS EN PAGE VERTICAL ET ÉPURÉ -->
+    <!-- MENU PRINCIPAL - TOUS LES MODES EMPILÉS VERTICALEMENT AVEC PASSE DE COMBAT MIS EN AVANT AU DESSUS -->
     <div id="screen-menu" class="menu-container" style="display:none; width: 92%; max-width: 440px; margin: auto; min-height: 85vh; display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: 24px 0;">
         <div id="player-event-banner" class="event-banner"></div>
 
-        <!-- 🎫 PASSE DE COMBAT (MIS EN AVANT & LÉGÈREMENT DÉTACHÉ) -->
+        <!-- 🎫 PASSE DE COMBAT (MIS EN AVANT AU DESSUS DE L'ENTRAÎNEMENT) -->
         <div onclick="openBlitzPass()" style="background: linear-gradient(135deg, rgba(248,181,0,0.18), rgba(255,65,108,0.18)); border: 2px solid #f8b500; border-radius: 16px; padding: 14px 16px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 18px rgba(248,181,0,0.25); transition: transform 0.2s;">
             <div style="display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 28px;">🎫</span>
@@ -331,6 +334,15 @@
             <input type="text" id="username-input" placeholder="Ex: Kiiks" maxlength="15" 
                    style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:14px; font-weight:bold; text-align:center; margin-bottom:8px; outline:none;">
             
+            <!-- SÉLECTEUR DE TITRE -->
+            <div style="margin-bottom: 8px; text-align: left;">
+                <label style="display:block; font-size:11px; color:#aaa; margin-bottom:4px; font-weight:bold;">TITRE ACTIF</label>
+                <select id="title-input" style="width:100%; padding:9px; border-radius:8px; border:2px solid #f8b500; background:#0f051d; color:#f8b500; font-size:13px; font-weight:bold; outline:none;">
+                    <option value="">Aucun titre</option>
+                    <option value="Initié du Plasma">⚡ Initié du Plasma</option>
+                </select>
+            </div>
+
             <div style="margin-bottom: 8px; text-align: left;">
                 <label style="display:block; font-size:11px; color:#aaa; margin-bottom:4px; font-weight:bold;">STYLE D'AVATAR</label>
                 <div id="profile-avatar-selector" style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;"></div>
