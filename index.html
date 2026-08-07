@@ -1221,16 +1221,26 @@
             return currentLang === 'fr' ? 'Novice 🌱' : 'Novice 🌱';
         }
 
-        function getAvatarBadgeHTML(flag, avatarNum) {
-            const isGoldFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame === 'frame_gold';
-            const customStyle = isGoldFrame ? 'border: 2px solid #f8b500; box-shadow: 0 0 10px rgba(248,181,0,0.7);' : '';
-            return `
-                <div class="avatar-flag-badge" style="${customStyle}">
-                    <span class="flag-bg">${flag || '🇫🇷'}</span>
-                    <span class="avatar-num">#${avatarNum || 1}</span>
-                </div>
-            `;
-        }
+       function getAvatarBadgeHTML(flag, avatarNum) {
+    const equippedAvatar = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar;
+    const isGoldFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame === 'frame_gold';
+    const customStyle = isGoldFrame ? 'border: 2px solid #f8b500; box-shadow: 0 0 10px rgba(248,181,0,0.7);' : '';
+    
+    let avatarContent = `#${avatarNum || 1}`;
+    let extraStyle = '';
+    
+    if (equippedAvatar === 'avatar_legend') {
+        avatarContent = '🤖'; // Robot mathématicien stylé
+        extraStyle = 'font-size: 14px; filter: drop-shadow(0 0 4px #00d2ff);';
+    }
+
+    return `
+        <div class="avatar-flag-badge" style="${customStyle}" title="Avatar & Drapeau">
+            <span class="flag-bg">${flag || '🇫🇷'}</span>
+            <span class="avatar-num" style="${extraStyle}">${avatarContent}</span>
+        </div>
+    `;
+}
 
         function saveLocalPreferences() {
             localStorage.setItem('cb_username', myProfile.username);
