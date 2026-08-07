@@ -1429,64 +1429,23 @@
                 div.id = 'modal-admin-dashboard';
                 div.className = 'modal-overlay';
                 div.innerHTML = `
-                    <div class="modal-card" style="max-width:450px; text-align:left;">
-                        <h2 style="color:#00d2ff; margin-top:0; text-align:center;">🎛️ PANEL ADMIN - CONTRÔLE</h2>
+                    <div class="modal-card" style="max-width:460px; text-align:left;">
+                        <h2 style="color:#00d2ff; margin-top:0; text-align:center;">🎛️ PANEL ADMIN - ÉVÉNEMENTS</h2>
                         
-                        <div style="max-height:65vh; overflow-y:auto; padding-right:6px; display:flex; flex-direction:column; gap:10px; font-size:12px;">
+                        <div style="max-height:70vh; overflow-y:auto; padding-right:6px; display:flex; flex-direction:column; gap:10px; font-size:12px;">
                             
                             <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
-                                <strong style="color:#ff8a00; display:block; margin-bottom:6px;">⚡ SÉLECTION DES ÉVÉNEMENTS (ADMIN ABUSE)</strong>
-                                
-                                <div style="display:flex; gap:6px; margin-bottom:8px;">
-                                    <button class="btn-secondary" onclick="toggleSelectAllAdminEvents(true)" style="flex:1; padding:6px; font-size:11px; margin-top:0;">Tout cocher ✓</button>
-                                    <button class="btn-secondary" onclick="toggleSelectAllAdminEvents(false)" style="flex:1; padding:6px; font-size:11px; margin-top:0;">Tout décocher ✗</button>
-                                </div>
-
-                                <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-                                    <span>🪙 Coin Rush (Pièces x2)</span>
-                                    <input type="checkbox" id="chk-coinRush">
-                                </label>
-
-                                <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-                                    <span>🛡️ Rank Shield (Pas de perte de points)</span>
-                                    <input type="checkbox" id="chk-rankShield">
-                                </label>
-
-                                <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-                                    <span>⚡ Expresso Match (Timer 20s en Non Classé)</span>
-                                    <input type="checkbox" id="chk-expressoMatch">
-                                </label>
-
-                                <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-                                    <span>🌪️ Chaos Mode (En Non Classé uniquement)</span>
-                                    <input type="checkbox" id="chk-chaosMode">
-                                </label>
-
-                                <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-                                    <span>🎁 Jackpot Éclair (Coffres mystères)</span>
-                                    <input type="checkbox" id="chk-jackpotEclair">
-                                </label>
-
-                                <label style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-                                    <span>🪢 Mode Corde Raide (Tug-of-War)</span>
-                                    <input type="checkbox" id="chk-tugOfWarMode">
-                                </label>
-                            </div>
-
-                            <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
-                                <strong style="color:#00ff88; display:block; margin-bottom:6px;">⏰ PROGRAMMATION PAR DATE & HEURE</strong>
-                                <div style="display:flex; gap:6px; margin-bottom:6px;">
-                                    <div style="flex:1;">
-                                        <label style="font-size:10px; color:#aaa; display:block;">Date de début :</label>
-                                        <input type="datetime-local" id="admin-sched-start" style="width:100%; padding:6px; border-radius:6px; border:1px solid #00ff88; background:#0f051d; color:#fff; font-size:11px; outline:none;">
-                                    </div>
-                                    <div style="flex:1;">
-                                        <label style="font-size:10px; color:#aaa; display:block;">Date de fin :</label>
-                                        <input type="datetime-local" id="admin-sched-end" style="width:100%; padding:6px; border-radius:6px; border:1px solid #00ff88; background:#0f051d; color:#fff; font-size:11px; outline:none;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                    <strong style="color:#ff8a00;">⚡ GESTION DES ÉVÉNEMENTS & PROGRAMMATIONS</strong>
+                                    <div style="display:flex; gap:4px;">
+                                        <button class="btn-secondary" onclick="toggleSelectAllManual(true)" style="padding:4px 8px; font-size:10px; margin-top:0;">Tout cocher</button>
+                                        <button class="btn-secondary" onclick="toggleSelectAllManual(false)" style="padding:4px 8px; font-size:10px; margin-top:0;">Tout décocher</button>
                                     </div>
                                 </div>
-                                <button class="btn-main btn-blue" onclick="saveAdminSchedule()" style="padding:8px; font-size:12px; width:100%;">Enregistrer & Programmer ⏰</button>
+                                <div id="admin-events-config-list" style="display:flex; flex-direction:column; gap:8px;"></div>
                             </div>
+
+                            <button class="btn-main btn-blue" onclick="saveAdminSchedule()" style="padding:10px; font-size:13px; width:100%;">Enregistrer toutes les modifications 💾</button>
 
                             <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
                                 <strong style="color:#f8b500; display:block; margin-bottom:6px;">🎁 CADEAUX / DON DE MONNAIE</strong>
@@ -1516,56 +1475,80 @@
                 dash = div;
             }
 
-            if (data.schedule && data.schedule.activeEvents) {
-                for (let key in data.schedule.activeEvents) {
-                    const chk = document.getElementById(`chk-${key}`);
-                    if (chk) chk.checked = data.schedule.activeEvents[key];
-                }
-            } else if (data.events) {
-                for (let key in data.events) {
-                    const chk = document.getElementById(`chk-${key}`);
-                    if (chk) chk.checked = data.events[key];
-                }
-            }
+            const eventMeta = [
+                { id: 'coinRush', label: '🪙 Coin Rush (Pièces x2)' },
+                { id: 'rankShield', label: '🛡️ Rank Shield (Anti-perte points)' },
+                { id: 'expressoMatch', label: '⚡ Expresso Match (Timer 20s)' },
+                { id: 'chaosMode', label: '🌪️ Chaos Mode (Malus aléatoires)' },
+                { id: 'jackpotEclair', label: '🎁 Jackpot Éclair (Coffres mystères)' },
+                { id: 'tugOfWarMode', label: '🪢 Mode Corde Raide (Tug-of-War)' }
+            ];
 
-            if (data.schedule) {
-                if (data.schedule.startDate) document.getElementById('admin-sched-start').value = data.schedule.startDate;
-                if (data.schedule.endDate) document.getElementById('admin-sched-end').value = data.schedule.endDate;
-            }
+            const listContainer = document.getElementById('admin-events-config-list');
+            listContainer.innerHTML = '';
+
+            const schedules = data.schedules || {};
+
+            eventMeta.forEach(ev => {
+                const evData = schedules[ev.id] || { manual: false, start: null, end: null };
+                
+                const formatLocalDateTime = (ts) => {
+                    if (!ts) return '';
+                    const d = new Date(ts);
+                    const pad = (n) => String(n).padStart(2, '0');
+                    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                };
+
+                const row = document.createElement('div');
+                row.style.cssText = "background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:8px; border-radius:8px; display:flex; flex-direction:column; gap:6px;";
+                row.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:bold; color:#fff;">${ev.label}</span>
+                        <label style="display:flex; align-items:center; gap:4px; cursor:pointer; color:#00ff88; font-weight:bold;">
+                            Activer direct <input type="checkbox" id="chk-manual-${ev.id}" ${evData.manual ? 'checked' : ''}>
+                        </label>
+                    </div>
+                    <div style="display:flex; gap:4px;">
+                        <div style="flex:1;">
+                            <span style="font-size:9px; color:#aaa;">Début (optionnel) :</span>
+                            <input type="datetime-local" id="sched-start-${ev.id}" value="${formatLocalDateTime(evData.start)}" style="width:100%; padding:4px; border-radius:4px; border:1px solid #00d2ff; background:#0f051d; color:#fff; font-size:10px; outline:none;">
+                        </div>
+                        <div style="flex:1;">
+                            <span style="font-size:9px; color:#aaa;">Fin (optionnel) :</span>
+                            <input type="datetime-local" id="sched-end-${ev.id}" value="${formatLocalDateTime(evData.end)}" style="width:100%; padding:4px; border-radius:4px; border:1px solid #00d2ff; background:#0f051d; color:#fff; font-size:10px; outline:none;">
+                        </div>
+                    </div>
+                `;
+                listContainer.appendChild(row);
+            });
+
             dash.style.display = 'flex';
         }
 
-        function toggleSelectAllAdminEvents(status) {
+        function toggleSelectAllManual(status) {
             ['coinRush', 'rankShield', 'expressoMatch', 'chaosMode', 'jackpotEclair', 'tugOfWarMode'].forEach(key => {
-                const chk = document.getElementById(`chk-${key}`);
+                const chk = document.getElementById(`chk-manual-${key}`);
                 if (chk) chk.checked = status;
             });
         }
 
         function saveAdminSchedule() {
-            const startDate = document.getElementById('admin-sched-start').value;
-            const endDate = document.getElementById('admin-sched-end').value;
-            const activeEvents = {
-                coinRush: document.getElementById('chk-coinRush').checked,
-                rankShield: document.getElementById('chk-rankShield').checked,
-                expressoMatch: document.getElementById('chk-expressoMatch').checked,
-                chaosMode: document.getElementById('chk-chaosMode').checked,
-                jackpotEclair: document.getElementById('chk-jackpotEclair').checked,
-                tugOfWarMode: document.getElementById('chk-tugOfWarMode').checked
-            };
+            const schedulesData = {};
+            ['coinRush', 'rankShield', 'expressoMatch', 'chaosMode', 'jackpotEclair', 'tugOfWarMode'].forEach(key => {
+                const manual = document.getElementById(`chk-manual-${key}`).checked;
+                const startVal = document.getElementById(`sched-start-${key}`).value;
+                const endVal = document.getElementById(`sched-end-${key}`).value;
 
-            if (!startDate || !endDate) {
-                alert("Veuillez renseigner une date de début et une date de fin !");
-                return;
-            }
+                schedulesData[key] = {
+                    manual: manual,
+                    start: startVal ? new Date(startVal).getTime() : null,
+                    end: endVal ? new Date(endVal).getTime() : null
+                };
+            });
 
-            socket.emit('admin_update_schedule', { startDate, endDate, activeEvents });
-            showNotificationToast("⏰ Programmation enregistrée avec succès !", "gift");
+            socket.emit('admin_update_schedule', schedulesData);
+            showNotificationToast("⏰ Programmation par événement enregistrée !", "gift");
         }
-
-        socket.on('admin_schedule_saved', (sched) => {
-            console.log("Schedule saved:", sched);
-        });
 
         function sendAdminGift() {
             const targetUsername = document.getElementById('admin-gift-target').value;
