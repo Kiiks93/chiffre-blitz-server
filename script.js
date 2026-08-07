@@ -1130,10 +1130,18 @@ socket.on('friend_updated', () => {
 
 function requestRematch() {
     socket.emit('request_rematch');
-    const btn = document.getElementById('btn-rematch');
-    btn.innerText = currentLang === 'fr' ? "En attente..." : "Waiting...";
-    btn.disabled = true;
-    btn.style.opacity = '0.5';
+    document.getElementById('recap-modal').style.display = 'none';
+    
+    // Si on est dans un salon, on retourne au salon d'attente, sinon écran de recherche/lobby
+    const roomCodeText = document.getElementById('current-room-code').innerText;
+    if (roomCodeText && roomCodeText !== '----') {
+        document.getElementById('screen-room-waiting').style.display = 'block';
+    } else {
+        document.getElementById('screen-1v1-lobby').style.display = 'flex';
+        let digit = 1;
+        if (radarInterval) clearInterval(radarInterval);
+        radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById('radar-digit').innerText = digit; }, 70);
+    }
 }
 
 socket.on('opponent_wants_rematch', () => {
