@@ -35,13 +35,20 @@ let globalEvents = {
     expressoMatch: false,
     chaosMode: false,
     jackpotEclair: false,
-    tugOfWarMode: false,
-    _isScheduledActive: false
+    tugOfWarMode: false
 };
 
 let eventSchedule = {
     startDate: null,
-    endDate: null
+    endDate: null,
+    activeEvents: {
+        coinRush: false,
+        rankShield: false,
+        expressoMatch: false,
+        chaosMode: false,
+        jackpotEclair: false,
+        tugOfWarMode: false
+    }
 };
 
 setInterval(() => {
@@ -51,12 +58,21 @@ setInterval(() => {
         const end = new Date(eventSchedule.endDate).getTime();
         
         const shouldBeActive = now >= start && now <= end;
-        if (globalEvents._isScheduledActive !== shouldBeActive) {
-            globalEvents._isScheduledActive = shouldBeActive;
+        let changed = false;
+
+        for (let key in eventSchedule.activeEvents) {
+            if (eventSchedule.activeEvents[key]) {
+                if (globalEvents[key] !== shouldBeActive) {
+                    globalEvents[key] = shouldBeActive;
+                    changed = true;
+                }
+            }
+        }
+        if (changed) {
             io.emit('events_state_update', globalEvents);
         }
     }
-}, 30000);
+}, 10000);
 
 app.get('/', (req, res) => {
     res.send('Chiffre Blitz Server is running ⚡');
@@ -355,7 +371,7 @@ io.on('connection', (socket) => {
         if (matchmakingQueue.length >= 2) {
             const p1 = matchmakingQueue.shift();
             const p2 = matchmakingQueue.shift();
-            startMatchBetween(p1, p2, false, true, false); // 1v1 Online Unranked (ici le mode Expresso s'applique si activé)
+            startMatchBetween(p1, p2, false, true, false); 
         }
     });
 
@@ -368,7 +384,7 @@ io.on('connection', (socket) => {
         if (rankedQueue.length >= 2) {
             const p1 = rankedQueue.shift();
             const p2 = rankedQueue.shift();
-            startMatchBetween(p1, p2, true, true, false); // Ranked Online Matchmaking (Pas d'Expresso)
+            startMatchBetween(p1, p2, true, true, false); 
         }
     });
 
@@ -380,7 +396,7 @@ io.on('connection', (socket) => {
         if (tugOfWarQueue.length >= 2) {
             const p1 = tugOfWarQueue.shift();
             const p2 = tugOfWarQueue.shift();
-            startMatchBetween(p1, p2, false, true, true); // Tug of War Online Match (Pas d'Expresso)
+            startMatchBetween(p1, p2, false, true, true); 
         }
     });
 
@@ -493,6 +509,18 @@ io.on('connection', (socket) => {
     socket.on('admin_update_schedule', (scheduleData) => {
         if (!socket.isAdmin) return;
         eventSchedule = scheduleData;
+        if (eventSchedule.startDate && eventSchedule.endDate) {
+            const now = Date.now();
+            const start = new Date(eventSchedule.startDate).getTime();
+            const end = new Date(eventSchedule.endDate).getTime();
+            const shouldBeActive = now >= start && now <= end;
+            for (let key in eventSchedule.activeEvents) {
+                if (eventSchedule.activeEvents[key]) {
+                    globalEvents[key] = shouldBeActive;
+                }
+            }
+            io.emit('events_state_update', globalEvents);
+        }
         socket.emit('admin_schedule_saved', eventSchedule);
     });
 
@@ -587,7 +615,6 @@ function startMatchBetween(id1, id2, isRanked = false, isOnline = true, isTugOfW
     const p1 = activePlayers[id1] || { socketId: id1, username: "Joueur 1", avatar: 1, flag: "🇫🇷", points: 0 };
     const p2 = activePlayers[id2] || { socketId: id2, username: "Joueur 2", avatar: 2, flag: "🇫🇷", points: 0 };
 
-    // Le mode Expresso (20s) est STRICTEMENT réservé au 1v1 online non classé (isOnline && !isRanked && !isTugOfWar)
     const isExpressoActive = globalEvents.expressoMatch && isOnline && !isRanked && !isTugOfWar;
 
     const match = {
