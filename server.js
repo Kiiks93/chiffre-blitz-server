@@ -12,12 +12,12 @@ const io = new Server(server, {
     }
 });
 
-// --- CONFIGURATION SUPABASE[cite: 3] ---
+// --- CONFIGURATION SUPABASE ---
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jjhoblvdpbstxwuelmoa.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqaG9ibHZkcGJzdHh3dWVsbW9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzNDMwNTksImV4cCI6MjEwMDkxOTA1OX0.BIIuE0e3WbpJ6asxPx7FpH01FESDHfqRUMBW54jfh4E';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// --- STOCKAGE EN MÉMOIRE (Sessions actives)[cite: 3] ---
+// --- STOCKAGE EN MÉMOIRE (Sessions actives) ---
 const activePlayers = {}; 
 const rooms = {};    
 const matchmakingQueue = [];
@@ -26,7 +26,7 @@ let tugOfWarQueue = [];
 const activeMatches = {}; 
 const lastMatchEarnings = {};
 
-// --- CONFIGURATION ADMIN & ÉVÉNEMENTS[cite: 3] ---
+// --- CONFIGURATION ADMIN & ÉVÉNEMENTS ---
 const ADMIN_PASSWORD = "*JE_SUIS_ADMIN1301*";
 
 let globalEvents = {
@@ -268,10 +268,15 @@ io.on('connection', (socket) => {
         const player = activePlayers[socket.id];
         if (!player) return;
         
-        if (player.unlocked_items && player.unlocked_items.includes(itemId)) {
-            if (!player.inventory) player.inventory = {};
-            if (!player.inventory.__equipped) player.inventory.__equipped = {};
-            
+        if (!player.inventory) player.inventory = {};
+        if (!player.inventory.__equipped) player.inventory.__equipped = {};
+
+        // Si le joueur choisit "Standard", "none" ou ne passe rien, on retire l'avatar spécial
+        if (itemId === 'none' || itemId === 'standard' || !itemId) {
+            delete player.inventory.__equipped.avatar;
+            await savePlayerToSupabase(socket.id);
+            socket.emit('player_registered', player);
+        } else if (player.unlocked_items && player.unlocked_items.includes(itemId)) {
             let category = 'theme';
             if (itemId.startsWith('avatar_')) category = 'avatar';
             else if (itemId === 'frame_gold' || itemId.startsWith('frame_')) category = 'frame';
