@@ -665,6 +665,13 @@ function updateEconomyUI() {
     document.getElementById('user-rank-display').innerText = getRankName(myProfile.points);
     document.getElementById('user-points-display').innerText = myProfile.points;
     document.getElementById('user-name-display').innerText = myProfile.username || "Définir pseudo";
+
+    const equippedTitle = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.title;
+    const titleEl = document.getElementById('user-title-display');
+    if (titleEl) {
+        titleEl.innerText = equippedTitle ? `[ ${equippedTitle} ]` : "";
+    }
+
     document.getElementById('user-avatar-badge').innerHTML = getAvatarBadgeHTML(myProfile.flag, myProfile.avatar);
     updateShopCoinsDisplay();
 }
@@ -698,6 +705,7 @@ function checkAndShowProfileModal() {
 function saveProfileFromModal() {
     const nameInput = document.getElementById('username-input').value.trim();
     const regionInput = document.getElementById('region-input').value;
+    const titleInput = document.getElementById('title-input').value;
     let avatarVal = parseInt(document.getElementById('avatar-input').value);
     const flagVal = document.getElementById('flag-input').value;
 
@@ -711,6 +719,13 @@ function saveProfileFromModal() {
     myProfile.flag = getFlagEmoji(flagVal);
 
     if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
+    
+    if (titleInput) {
+        myProfile.inventory.__equipped.title = titleInput;
+    } else {
+        delete myProfile.inventory.__equipped.title;
+    }
+
     if (activeAvatarChoice === 'avatar_legend') {
         myProfile.inventory.__equipped.avatar = 'avatar_legend';
         socket.emit('equip_cosmetic', 'avatar_legend');
@@ -731,6 +746,7 @@ function saveProfileFromModal() {
 function saveAvatarChoiceOnly() {
     let avatarVal = parseInt(document.getElementById('avatar-input').value);
     const flagVal = document.getElementById('flag-input').value;
+    const titleInput = document.getElementById('title-input').value;
 
     if (isNaN(avatarVal) || avatarVal < 1) avatarVal = 1;
     if (avatarVal > 999) avatarVal = 999;
@@ -740,6 +756,12 @@ function saveAvatarChoiceOnly() {
 
     if (!myProfile.inventory) myProfile.inventory = {};
     if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
+
+    if (titleInput) {
+        myProfile.inventory.__equipped.title = titleInput;
+    } else {
+        delete myProfile.inventory.__equipped.title;
+    }
 
     if (activeAvatarChoice === 'avatar_legend') {
         myProfile.inventory.__equipped.avatar = 'avatar_legend';
@@ -753,7 +775,7 @@ function saveAvatarChoiceOnly() {
     updateEconomyUI();
 
     document.getElementById('modal-username').style.display = 'none';
-    showNotificationToast("✅ Choix d'avatar enregistré avec succès !", "gift");
+    showNotificationToast("✅ Choix de profil enregistré avec succès !", "gift");
     registerIfPossible();
 }
 
@@ -763,6 +785,10 @@ function promptProfileChange() {
     document.getElementById('avatar-input').value = myProfile.avatar || 1;
     document.getElementById('flag-input').value = myProfile.flag || "🇫🇷";
     
+    const equippedTitle = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.title;
+    const titleSelect = document.getElementById('title-input');
+    if (titleSelect) titleSelect.value = equippedTitle || "";
+
     const equippedAvatar = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar;
     activeAvatarChoice = equippedAvatar || 'standard';
 
