@@ -38,40 +38,42 @@ let globalEvents = {
     tugOfWarMode: false
 };
 
-let eventSchedule = {
-    startDate: null,
-    endDate: null,
-    activeEvents: {
-        coinRush: false,
-        rankShield: false,
-        expressoMatch: false,
-        chaosMode: false,
-        jackpotEclair: false,
-        tugOfWarMode: false
-    }
+// Stockage des programmations individuelles par événement (contenant les timestamps en ms)
+let eventSchedules = {
+    coinRush: { manual: false, start: null, end: null },
+    rankShield: { manual: false, start: null, end: null },
+    expressoMatch: { manual: false, start: null, end: null },
+    chaosMode: { manual: false, start: null, end: null },
+    jackpotEclair: { manual: false, start: null, end: null },
+    tugOfWarMode: { manual: false, start: null, end: null }
 };
 
+// Vérification toutes les 5 secondes
 setInterval(() => {
-    if (eventSchedule.startDate && eventSchedule.endDate) {
-        const now = Date.now();
-        const start = new Date(eventSchedule.startDate).getTime();
-        const end = new Date(eventSchedule.endDate).getTime();
-        
-        const shouldBeActive = now >= start && now <= end;
-        let changed = false;
+    const now = Date.now();
+    let changed = false;
 
-        for (let key in eventSchedule.activeEvents) {
-            const targetState = eventSchedule.activeEvents[key] ? shouldBeActive : false;
-            if (globalEvents[key] !== targetState) {
-                globalEvents[key] = targetState;
-                changed = true;
+    for (let key in eventSchedules) {
+        const ev = eventSchedules[key];
+        let shouldBeActive = ev.manual; // Activé manuellement via la case
+
+        // Si une plage horaire est définie, elle prend le dessus ou s'ajoute
+        if (ev.start && ev.end) {
+            if (now >= ev.start && now <= ev.end) {
+                shouldBeActive = true;
             }
         }
-        if (changed) {
-            io.emit('events_state_update', globalEvents);
+
+        if (globalEvents[key] !== shouldBeActive) {
+            globalEvents[key] = shouldBeActive;
+            changed = true;
         }
     }
-}, 10000);
+
+    if (changed) {
+        io.emit('events_state_update', globalEvents);
+    }
+}, 5000);
 
 app.get('/', (req, res) => {
     res.send('Chiffre Blitz Server is running ⚡');
@@ -493,26 +495,35 @@ io.on('connection', (socket) => {
     socket.on('admin_auth', (password) => {
         if (password === ADMIN_PASSWORD) {
             socket.isAdmin = true;
-            socket.emit('admin_auth_success', { events: globalEvents, schedule: eventSchedule });
+            socket.emit('admin_auth_success', { events: globalEvents, schedules: eventSchedules });
         } else {
             socket.emit('admin_auth_fail', "Mot de passe administrateur incorrect !");
         }
     });
 
-    socket.on('admin_update_schedule', (scheduleData) => {
+    socket.on('admin_update_schedule', (schedulesData) => {
         if (!socket.isAdmin) return;
-        eventSchedule = scheduleData;
-        if (eventSchedule.startDate && eventSchedule.endDate) {
-            const now = Date.now();
-            const start = new Date(eventSchedule.startDate).getTime();
-            const end = new Date(eventSchedule.endDate).getTime();
-            const shouldBeActive = now >= start && now <= end;
-            for (let key in eventSchedule.activeEvents) {
-                globalEvents[key] = eventSchedule.activeEvents[key] ? shouldBeActive : false;
+        eventSchedules = schedulesData;
+
+        const now = Date.now();
+        let changed = false;
+
+        for (let key in eventSchedules) {
+            const ev = eventSchedules[key];
+            let shouldBeActive = ev.manual;
+            if (ev.start && ev.end) {
+                if (now >= ev.start && now <= ev.end) shouldBeActive = true;
             }
+            if (globalEvents[key] !== shouldBeActive) {
+                globalEvents[key] = shouldBeActive;
+                changed = true;
+            }
+        }
+
+        if (changed) {
             io.emit('events_state_update', globalEvents);
         }
-        socket.emit('admin_schedule_saved', eventSchedule);
+        socket.emit('admin_schedule_saved', eventSchedules);
     });
 
     socket.on('admin_broadcast_message', (message) => {
