@@ -309,7 +309,9 @@ io.on('connection', (socket) => {
         const match = activeMatches[socket.id];
         if (match) {
             const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
-            io.to(oppId).emit('receive_emote', { senderId: socket.id, emote: data.emote });
+            if (activePlayers[oppId]) {
+                io.to(oppId).emit('receive_emote', { senderId: socket.id, emote: data.emote });
+            }
         } else {
             for (let code in rooms) {
                 const room = rooms[code];
@@ -808,8 +810,11 @@ function applyPassReward(p, tier, track) {
 }
 
 async function endMatch(id1, id2, matchData, isRanked) {
-    // Les références dans activeMatches ne sont plus supprimées immédiatement ici 
-    // pour permettre aux joueurs d'envoyer des émotes sur l'écran de fin de match.
+    // Nettoyage différé après 20 secondes (laisse le temps d'échanger des émotes sur l'écran de fin)
+    setTimeout(() => {
+        if (activeMatches[id1] === matchData) delete activeMatches[id1];
+        if (activeMatches[id2] === matchData) delete activeMatches[id2];
+    }, 20000);
 
     let winnerId = null;
     let reason = "Temps écoulé !";
