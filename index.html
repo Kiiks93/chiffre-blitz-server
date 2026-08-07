@@ -500,6 +500,7 @@
             <div class="tabs">
                 <button id="shop-tab-bonus" class="tab-btn active" onclick="switchShopTab('bonus')" data-i18n="shop_tab_bonus">🟢 Bonus (pour soi)</button>
                 <button id="shop-tab-malus" class="tab-btn" onclick="switchShopTab('malus')" data-i18n="shop_tab_malus">🔴 Malus (adversaire)</button>
+                <button id="shop-tab-cosmetics" class="tab-btn" onclick="switchShopTab('cosmetics')">✨ Style</button>
             </div>
             <div id="shop-container" class="shop-grid"></div>
             <button class="btn-secondary" onclick="closeShop()" data-i18n="close">Fermer</button>
@@ -1103,7 +1104,7 @@
             region: localStorage.getItem('cb_region') || "Hauts-de-France",
             avatar: parseInt(localStorage.getItem('cb_avatar')) || 1,
             flag: localStorage.getItem('cb_flag') || "🇫🇷",
-            points: 0, coins: 0, trophies: 0, wins: 0, losses: 0, inventory: {}, equippedPower: null, equippedPowers: []
+            points: 0, coins: 0, trophies: 0, wins: 0, losses: 0, inventory: {}, unlocked_items: [], equippedPower: null, equippedPowers: []
         };
 
         let cachedOpponent = null;
@@ -1141,6 +1142,7 @@
                 avatar: Number(p.avatar !== undefined ? p.avatar : 1),
                 flag: getFlagEmoji(p.flag),
                 inventory: p.inventory || {},
+                unlocked_items: p.unlocked_items || [],
                 equippedPower: p.equippedPower || p.equipped_power || null
             };
         }
@@ -1260,6 +1262,7 @@
                 myProfile.wins = player.wins;
                 myProfile.losses = player.losses;
                 myProfile.inventory = player.inventory;
+                myProfile.unlocked_items = player.unlocked_items;
                 myProfile.equippedPower = player.equippedPower;
                 
                 updateEconomyUI();
@@ -1334,14 +1337,17 @@
         });
 
         const POWERS_CATALOG = [
-            { id: 'spotlight', price: 150, type: 'bonus' },
-            { id: 'freeze', price: 350, type: 'bonus' },
-            { id: 'joker', price: 600, type: 'bonus' },
-            { id: 'nova', price: 1200, type: 'bonus' },
-            { id: 'quake', price: 200, type: 'malus' },
-            { id: 'micro', price: 400, type: 'malus' },
-            { id: 'eclipse', price: 800, type: 'malus' },
-            { id: 'chaos', price: 2000, type: 'malus' }
+            { id: 'spotlight', price: 300, type: 'bonus' },
+            { id: 'freeze', price: 700, type: 'bonus' },
+            { id: 'joker', price: 1200, type: 'bonus' },
+            { id: 'nova', price: 2500, type: 'bonus' },
+            { id: 'quake', price: 400, type: 'malus' },
+            { id: 'micro', price: 800, type: 'malus' },
+            { id: 'eclipse', price: 1500, type: 'malus' },
+            { id: 'chaos', price: 4000, type: 'malus' },
+            { id: 'theme_alt', price: 1500, type: 'cosmetics' },
+            { id: 'avatar_legend', price: 2500, type: 'cosmetics' },
+            { id: 'frame_gold', price: 5000, type: 'cosmetics' }
         ];
 
         let current1v1Time = 30, radarInterval = null;
@@ -1704,7 +1710,7 @@
             const container = document.getElementById('ranked-items-container');
             container.innerHTML = '';
             const powersDict = i18n[currentLang].powers;
-            const ownedPowers = POWERS_CATALOG.filter(p => (myProfile.inventory[p.id] || 0) > 0);
+            const ownedPowers = POWERS_CATALOG.filter(p => p.type !== 'cosmetics' && (myProfile.inventory[p.id] || 0) > 0);
             
             if (ownedPowers.length === 0) {
                 container.innerHTML = `<div style="grid-column: span 2; text-align:center; color:#aaa; padding:15px; font-size:12px;">${currentLang === 'fr' ? 'Ton inventaire est vide ! Achète des objets dans la boutique.' : 'Your inventory is empty! Buy items in the shop.'}</div>`;
@@ -1899,35 +1905,51 @@
             updateShopCoinsDisplay();
             document.getElementById('shop-tab-bonus').classList.toggle('active', type === 'bonus');
             document.getElementById('shop-tab-malus').classList.toggle('active', type === 'malus');
+            const cosmeticsTabBtn = document.getElementById('shop-tab-cosmetics');
+            if (cosmeticsTabBtn) cosmeticsTabBtn.classList.toggle('active', type === 'cosmetics');
+            
             const container = document.getElementById('shop-container');
             container.innerHTML = '';
             
             const powersDict = i18n[currentLang].powers;
+            const cosmeticsDict = {
+                theme_alt: { name: '🎨 Thème Rétro', desc: 'Grille visuelle alternative' },
+                avatar_legend: { name: '🤖 Avatar Robot', desc: 'Avatar exclusif robot mathématicien' },
+                frame_gold: { name: '👑 Cadre Or Massif', desc: 'Bordure dorée prestigieuse' }
+            };
+
             POWERS_CATALOG.filter(p => p.type === type).forEach(p => {
-                const powerInfo = powersDict[p.id];
-                const qty = myProfile.inventory[p.id] || 0;
-                const isEquipped = myProfile.equippedPower === p.id;
                 const card = document.createElement('div');
-                card.className = `power-card ${isEquipped ? 'equipped' : ''}`;
-                card.innerHTML = `
-                    <h4>${powerInfo.name}</h4>
-                    <p>${powerInfo.desc}</p>
-                    <div class="stock-badge">Stock : ${qty}</div>
-                    <div style="font-weight:bold; margin-bottom:6px; font-size:11px; color:#f8b500;">${p.price} 🪙</div>
-                    <button class="power-btn buy" onclick="buyPower('${p.id}')">${currentLang === 'fr' ? 'Acheter (+1)' : 'Buy (+1)'}</button>
-                    ${qty > 0 ? `<button class="power-btn ${isEquipped ? 'active' : 'equip'}" onclick="equipPower('${p.id}')">${isEquipped ? (currentLang === 'fr' ? 'Équipé ✅' : 'Equipped ✅') : (currentLang === 'fr' ? 'Équiper' : 'Equip')}</button>` : ''}
-                `;
+                if (type === 'cosmetics') {
+                    const info = cosmeticsDict[p.id];
+                    const unlocked = myProfile.unlocked_items && myProfile.unlocked_items.includes(p.id);
+                    card.className = `power-card ${unlocked ? 'equipped' : ''}`;
+                    card.innerHTML = `
+                        <h4>${info.name}</h4>
+                        <p>${info.desc}</p>
+                        <div style="font-weight:bold; margin-bottom:6px; font-size:11px; color:#f8b500;">${p.price} 🪙</div>
+                        ${unlocked ? '<div style="color:#00ff88; font-weight:bold; font-size:11px;">Possédé ✅</div>' : `<button class="power-btn buy" onclick="buyItem('${p.id}')">Acheter</button>`}
+                    `;
+                } else {
+                    const powerInfo = powersDict[p.id];
+                    const qty = myProfile.inventory[p.id] || 0;
+                    const isEquipped = myProfile.equippedPower === p.id;
+                    card.className = `power-card ${isEquipped ? 'equipped' : ''}`;
+                    card.innerHTML = `
+                        <h4>${powerInfo.name}</h4>
+                        <p>${powerInfo.desc}</p>
+                        <div class="stock-badge">Stock : ${qty}</div>
+                        <div style="font-weight:bold; margin-bottom:6px; font-size:11px; color:#f8b500;">${p.price} 🪙</div>
+                        <button class="power-btn buy" onclick="buyItem('${p.id}')">Acheter (+1)</button>
+                        ${qty > 0 ? `<button class="power-btn ${isEquipped ? 'active' : 'equip'}" onclick="equipPower('${p.id}')">${isEquipped ? 'Équipé ✅' : 'Équiper'}</button>` : ''}
+                    `;
+                }
                 container.appendChild(card);
             });
         }
 
-        function buyPower(id) {
-            const power = POWERS_CATALOG.find(p => p.id === id);
-            if (power && myProfile.coins < power.price) {
-                alert(i18n[currentLang].not_enough_coins);
-                return;
-            }
-            if (socket.connected) socket.emit('buy_power', id);
+        function buyItem(id) {
+            if (socket.connected) socket.emit('buy_item', id);
         }
 
         function equipPower(id) { if (socket.connected) socket.emit('equip_power', id); }
