@@ -657,6 +657,9 @@
                 </div>
             </div>
 
+            <!-- Bouton dédié pour enregistrer directement son choix d'avatar -->
+            <button class="btn-secondary" onclick="saveAvatarChoiceOnly()" style="margin-top: 2px; margin-bottom: 8px; width: 100%; font-size: 11px; background: rgba(0,210,255,0.15); border-color: #00d2ff; color: #00d2ff; font-weight: bold;">💾 Enregistrer ce choix d'avatar</button>
+
             <label style="display:block; text-align:left; font-size:11px; color:#aaa; margin-bottom:4px; font-weight:bold;" data-i18n="region_label">RÉGION</label>
             <select id="region-input" style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:13px; font-weight:bold; margin-bottom:12px; outline:none;">
                 <option value="Hauts-de-France">Hauts-de-France</option>
@@ -1573,6 +1576,31 @@
 
             SoundEngine.init();
             showTitleScreen();
+        }
+
+        // Nouvelle fonction pour enregistrer uniquement le choix de l'avatar et du style instantanément
+        function saveAvatarChoiceOnly() {
+            let avatarVal = parseInt(document.getElementById('avatar-input').value);
+            const flagVal = document.getElementById('flag-input').value;
+
+            if (isNaN(avatarVal) || avatarVal < 1) avatarVal = 1;
+            if (avatarVal > 999) avatarVal = 999;
+
+            myProfile.avatar = avatarVal;
+            myProfile.flag = getFlagEmoji(flagVal);
+
+            saveLocalPreferences();
+            updateEconomyUI();
+
+            if (activeAvatarChoice === 'avatar_legend') {
+                socket.emit('equip_cosmetic', 'avatar_legend');
+            } else {
+                socket.emit('equip_cosmetic', 'standard');
+            }
+
+            document.getElementById('modal-username').style.display = 'none';
+            showNotificationToast("✅ Choix d'avatar enregistré avec succès !", "gift");
+            registerIfPossible();
         }
 
         function promptProfileChange() {
@@ -2783,7 +2811,7 @@
             showGameOverRecap(data);
         });
 
-        // Fonction pour récupérer et afficher l'avatar exact du vainqueur avec animation adaptée (ex: Robot dansant 🤖)
+        // Fonction corrigée pour récupérer et afficher l'avatar exact du vainqueur avec animation adaptée
         function getWinnerAvatarShowcaseHTML(playerObj) {
             if (!playerObj) return '';
             const equippedAvatar = playerObj.inventory && playerObj.inventory.__equipped && playerObj.inventory.__equipped.avatar;
@@ -2792,7 +2820,7 @@
             let iconContent = playerObj.avatar || 1;
             let isRobot = false;
 
-            if (equippedAvatar === 'avatar_legend') {
+            if (equippedAvatar === 'avatar_legend' || playerObj.avatar === 'avatar_legend') {
                 iconContent = '🤖';
                 isRobot = true;
             }
@@ -2803,7 +2831,7 @@
                         <span style="font-size: ${isRobot ? '42px' : '30px'}; font-weight: 900; color: #fff; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.7));">${iconContent}</span>
                         <span style="position: absolute; bottom: -2px; right: -2px; font-size: 18px; background: #0f051d; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; z-index:3;">${playerObj.flag || '🇫🇷'}</span>
                     </div>
-                    <div style="font-size: 14px; font-weight: 900; color: #f8b500; text-shadow: 0 0 10px rgba(248,181,0,0.6); margin-top: 4px;">${playerObj.username} TRIOMPHE !</div>
+                    <div style="font-size: 14px; font-weight: 900; color: #f8b500; text-shadow: 0 0 10px rgba(248,181,0,0.6); margin-top: 4px;">${playerObj.username || 'Joueur'} TRIOMPHE !</div>
                 </div>
             `;
         }
@@ -2832,8 +2860,29 @@
             const isWinner = (winnerId === myId);
             
             const cinematicContainer = document.getElementById('winner-cinematic-container');
-            if (winnerId && data.players[winnerId]) {
-                const winnerObj = parsePlayer(data.players[winnerId]);
+            
+            // Logique robuste de récupération des informations du vainqueur
+            let winnerObj = null;
+            if (winnerId) {
+                if (winnerId === myId) {
+                    winnerObj = {
+                        username: myProfile.username,
+                        avatar: myProfile.avatar,
+                        flag: myProfile.flag,
+                        inventory: myProfile.inventory,
+                        unlocked_items: myProfile.unlocked_items
+                    };
+                } else if (cachedOpponent && (winnerId === cachedOpponent.id || winnerId === cachedOpponent.socketId)) {
+                    winnerObj = cachedOpponent;
+                } else if (data.players[winnerId]) {
+                    winnerObj = parsePlayer(data.players[winnerId]);
+                    if (!winnerObj.username || winnerObj.username === 'Joueur') {
+                        if (cachedOpponent && cachedOpponent.username) winnerObj.username = cachedOpponent.username;
+                    }
+                }
+            }
+
+            if (winnerObj) {
                 cinematicContainer.innerHTML = getWinnerAvatarShowcaseHTML(winnerObj);
             } else {
                 cinematicContainer.innerHTML = `
