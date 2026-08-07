@@ -2046,10 +2046,8 @@ socket.on('start_countdown', (data) => {
     let oppData = extractOpponentInfo(data);
     if (oppData) updateOpponentDisplay(oppData);
 
-    ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-avalanche-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-room-waiting', 'screen-join-custom'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = 'none';
-    });
+    hideAllScreens();
+
     document.getElementById('countdown-overlay').style.display = 'flex';
     let count = 3;
     document.getElementById('countdown-number').innerText = count;
