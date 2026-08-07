@@ -38,7 +38,6 @@ let globalEvents = {
     tugOfWarMode: false
 };
 
-// Stockage des programmations individuelles par événement (contenant les timestamps en ms)
 let eventSchedules = {
     coinRush: { manual: false, start: null, end: null },
     rankShield: { manual: false, start: null, end: null },
@@ -48,16 +47,14 @@ let eventSchedules = {
     tugOfWarMode: { manual: false, start: null, end: null }
 };
 
-// Vérification toutes les 5 secondes
 setInterval(() => {
     const now = Date.now();
     let changed = false;
 
     for (let key in eventSchedules) {
         const ev = eventSchedules[key];
-        let shouldBeActive = ev.manual; // Activé manuellement via la case
+        let shouldBeActive = ev.manual;
 
-        // Si une plage horaire est définie, elle prend le dessus ou s'ajoute
         if (ev.start && ev.end) {
             if (now >= ev.start && now <= ev.end) {
                 shouldBeActive = true;
@@ -96,7 +93,9 @@ async function savePlayerToSupabase(socketId) {
             region: p.region,
             avatar: p.avatar,
             flag: p.flag,
-            unlocked_items: p.unlocked_items
+            unlocked_items: p.unlocked_items,
+            blitz_pass_premium: p.blitzPassPremium,
+            claimed_pass_tiers: p.claimedPassTiers
         })
         .eq('id', p.dbId);
 }
@@ -131,7 +130,9 @@ io.on('connection', (socket) => {
                     losses: 0,
                     inventory: {},
                     equipped_power: null,
-                    unlocked_items: []
+                    unlocked_items: [],
+                    blitz_pass_premium: false,
+                    claimed_pass_tiers: {}
                 };
 
                 const { data: inserted, error: insertErr } = await supabase
@@ -176,7 +177,9 @@ io.on('connection', (socket) => {
                 losses: playerData.losses || 0,
                 inventory: playerData.inventory || {},
                 equippedPower: playerData.equipped_power || null,
-                unlocked_items: playerData.unlocked_items || []
+                unlocked_items: playerData.unlocked_items || [],
+                blitzPassPremium: playerData.blitz_pass_premium || false,
+                claimedPassTiers: playerData.claimed_pass_tiers || {}
             };
 
             socket.emit('player_registered', activePlayers[socket.id]);
@@ -214,6 +217,43 @@ io.on('connection', (socket) => {
             await savePlayerToSupabase(socket.id);
             socket.emit('player_registered', player);
         }
+    });
+
+    // 🎫 ACHAT DU PASSE DE COMBAT PREMIUM
+    socket.on('buy_blitz_pass', async () => {
+        const player = activePlayers[socket.id];
+        if (!player) return;
+        if (player.blitzPassPremium) return;
+
+        const cost = 1000;
+        if (player.coins >= cost) {
+            player.coins -= cost;
+            player.blitzPassPremium = true;
+            await savePlayerToSupabase(socket.id);
+            socket.emit('player_registered', player);
+            socket.emit('admin_gift_received', { message: "🎉 Passe de Combat Premium activé et sauvegardé avec succès !" });
+        } else {
+            socket.emit('room_error', "Tu n'as pas assez de pièces 🪙 !");
+        }
+    });
+
+    // 🎁 RÉCUPÉRATION D'UN PALIER DU PASSE DE COMBAT
+    socket.on('claim_pass_tier', async (data) => {
+        const player = activePlayers[socket.id];
+        if (!player) return;
+        const { tier, track } = data;
+
+        player.claimedPassTiers = player.claimedPassTiers || {};
+        const key = `${tier}_${track}`;
+        if (player.claimedPassTiers[key]) return; // Déjà récupéré
+        if (track === 'premium' && !player.blitzPassPremium) return;
+
+        player.claimedPassTiers[key] = true;
+        applyPassReward(player, tier, track);
+
+        await savePlayerToSupabase(socket.id);
+        socket.emit('player_registered', player);
+        socket.emit('admin_gift_received', { message: `🎁 Récompense du Palier ${tier} (${track}) enregistrée !` });
     });
 
     socket.on('equip_power', async (powerId) => {
@@ -720,6 +760,32 @@ function generatePool(target) {
     for (let i = 1; i <= 50; i++) if (i !== target) candidates.push(i);
     candidates.sort(() => Math.random() - 0.5);
     return pool.concat(candidates.slice(0, 11)).sort(() => Math.random() - 0.5);
+}
+
+function applyPassReward(p, tier, track) {
+    p.inventory = p.inventory || {};
+    p.unlocked_items = p.unlocked_items || [];
+    
+    if (track === 'free') {
+        if (tier === 1 || tier === 3 || tier === 7) p.coins = (p.coins || 0) + 50;
+        else if (tier === 5 || tier === 9 || tier === 10) p.coins = (p.coins || 0) + 100;
+        else if (tier === 2 || tier === 8) p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 1;
+        else if (tier === 4) p.inventory['freeze'] = (p.inventory['freeze'] || 0) + 1;
+        else if (tier === 6) p.inventory['joker'] = (p.inventory['joker'] || 0) + 1;
+    } else if (track === 'premium') {
+        if (tier === 1) p.coins = (p.coins || 0) + 100;
+        else if (tier === 2 || tier === 6) p.coins = (p.coins || 0) + 150;
+        else if (tier === 3) p.inventory['freeze'] = (p.inventory['freeze'] || 0) + 1;
+        else if (tier === 4 || tier === 8) p.coins = (p.coins || 0) + 200;
+        else if (tier === 5) {
+            if (!p.unlocked_items.includes('frame_gold')) p.unlocked_items.push('frame_gold');
+        }
+        else if (tier === 7) p.inventory['nova'] = (p.inventory['nova'] || 0) + 2;
+        else if (tier === 9) {
+            if (!p.unlocked_items.includes('theme_alt')) p.unlocked_items.push('theme_alt');
+        }
+        else if (tier === 10) p.coins = (p.coins || 0) + 500;
+    }
 }
 
 async function endMatch(id1, id2, matchData, isRanked) {
