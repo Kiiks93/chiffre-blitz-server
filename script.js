@@ -1699,7 +1699,7 @@ function renderBlitzPass() {
     listDiv.style.cssText = "display: flex; flex-direction: column; gap: 6px;";
     
     BLITZ_PASS_TIERS.forEach(t => {
-        const isUnlocked = t.tier === 1;
+        const isUnlocked = t.tier === true;
         const freeKey = `${t.tier}_free`;
         const premKey = `${t.tier}_premium`;
         const isFreeClaimed = claimed[freeKey];
