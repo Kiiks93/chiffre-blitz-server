@@ -13,13 +13,13 @@ const i18n = {
         rule4_title: "🎯 Mode Tournoi",
         rule4_desc: "Bientôt disponible ! Affrontez les meilleurs joueurs dans un tournoi épique (en cours de réflexion).",
         btn_play: "JOUER ⚡",
-        menu_solo: "🏋️ ENTRAÎNEMENT SOLO",
-        menu_1v1: "⚔️ DUEL 1v1 ONLINE",
+        menu_solo: "🏋️ ENTRAÎNEMENT",
+        menu_1v1: "⚔️ DUEL 1v1",
         menu_tow: "🪢 Mode Corde Raide (Tug-of-War)",
-        menu_friends: "👥 JOUER ENTRE AMIS",
-        menu_shop: "🛍️ BOUTIQUE POUVOIRS",
+        menu_friends: "👥 SALONS",
+        menu_shop: "🛍️ BOUTIQUE",
         menu_lb: "🏆 CLASSEMENT",
-        menu_tourney: "🎯 MODE TOURNOI",
+        menu_tourney: "🎯 TOURNOIS",
         menu_info: "ℹ️ Informations & Règles",
         solo_menu_title: "MODES D'ENTRAÎNEMENT",
         solo_classic: "⚡ Classique (Croissant)",
@@ -66,7 +66,7 @@ const i18n = {
         welcome_title: "⚡ IDENTITÉ BLITZ ⚡",
         welcome_sub: "Personnalise ton profil compétitif :",
         pseudo_label: "PSEUDO",
-        avatar_num_label: "NUMÉRO (1-999)",
+        avatar_num_label: "AVATAR (1-999)",
         flag_label: "DRAPEAU",
         region_label: "RÉGION",
         shop_title: "🛍️ BOUTIQUE",
@@ -127,13 +127,13 @@ const i18n = {
         rule4_title: "🎯 Tournament Mode",
         rule4_desc: "Coming soon! Face the best players in an epic tournament (under consideration).",
         btn_play: "PLAY ⚡",
-        menu_solo: "🏋️ SOLO TRAINING",
-        menu_1v1: "⚔️ ONLINE 1v1 DUEL",
+        menu_solo: "🏋️ TRAINING",
+        menu_1v1: "⚔️ 1v1 DUEL",
         menu_tow: "🪢 Tug-of-War Mode",
-        menu_friends: "👥 PLAY WITH FRIENDS",
-        menu_shop: "🛍️ POWERS SHOP",
+        menu_friends: "👥 ROOMS",
+        menu_shop: "🛍️ SHOP",
         menu_lb: "🏆 LEADERBOARD",
-        menu_tourney: "🎯 TOURNAMENT MODE",
+        menu_tourney: "🎯 TOURNAMENTS",
         menu_info: "ℹ️ Info & Rules",
         solo_menu_title: "TRAINING MODES",
         solo_classic: "⚡ Classic (Ascending)",
@@ -1345,7 +1345,8 @@ function showTitleScreen() {
 function showMainMenu() {
     hideAllScreens();
     window.history.replaceState({}, '', window.location.pathname);
-    document.getElementById('screen-menu').style.display = 'flex';
+    const menuEl = document.getElementById('screen-menu');
+    if (menuEl) menuEl.style.display = 'flex';
     SoundEngine.startMusic('menu');
 }
 
