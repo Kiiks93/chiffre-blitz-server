@@ -273,7 +273,7 @@ io.on('connection', (socket) => {
         } else if (player.unlocked_items && player.unlocked_items.includes(itemId)) {
             let category = 'theme';
             if (itemId.startsWith('avatar_')) category = 'avatar';
-            else if (itemId === 'frame_gold' || itemId.startsWith('frame_')) category = 'frame';
+            else if (itemId.startsWith('frame_')) category = 'frame';
             else if (itemId === 'theme_alt') category = 'theme';
             else if (itemId.startsWith('title_')) category = 'title';
             
@@ -725,7 +725,7 @@ function applyPassReward(p, tier, track) {
         if (tier === 1) { if (!p.unlocked_items.includes('title_plasma_initiate')) p.unlocked_items.push('title_plasma_initiate'); }
         else if (tier === 2) p.coins = (p.coins || 0) + 100;
         else if (tier === 3) { if (!p.unlocked_items.includes('title_flux_master')) p.unlocked_items.push('title_flux_master'); }
-        else if (tier === 4) p.coins = (p.coins || 0) + 200;
+        else if (tier === 4) { if (!p.unlocked_items.includes('frame_silver')) p.unlocked_items.push('frame_silver'); }
         else if (tier === 5) p.coins = (p.coins || 0) + 150;
         else if (tier === 6) p.coins = (p.coins || 0) + 150;
         else if (tier === 7) { if (!p.unlocked_items.includes('title_lightning_pro')) p.unlocked_items.push('title_lightning_pro'); }
