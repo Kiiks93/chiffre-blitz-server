@@ -734,7 +734,9 @@ function saveProfileFromModal() {
         localStorage.setItem('cb_equipped_theme', selectedThemeId);
         socket.emit('equip_cosmetic', selectedThemeId);
     } else {
-        delete myProfile.inventory.__equipped.theme;
+        if (myProfile.inventory && myProfile.inventory.__equipped) {
+            delete myProfile.inventory.__equipped.theme;
+        }
         localStorage.removeItem('cb_equipped_theme');
         socket.emit('equip_cosmetic', 'none_theme');
     }
@@ -796,7 +798,9 @@ function saveAvatarChoiceOnly() {
         localStorage.setItem('cb_equipped_theme', selectedThemeId);
         socket.emit('equip_cosmetic', selectedThemeId);
     } else {
-        delete myProfile.inventory.__equipped.theme;
+        if (myProfile.inventory && myProfile.inventory.__equipped) {
+            delete myProfile.inventory.__equipped.theme;
+        }
         localStorage.removeItem('cb_equipped_theme');
         socket.emit('equip_cosmetic', 'none_theme');
     }
@@ -855,17 +859,29 @@ socket.on('player_registered', (rawData) => {
         const localEquipped = myProfile.inventory && myProfile.inventory.__equipped ? {...myProfile.inventory.__equipped} : {};
         const savedTitle = localStorage.getItem('cb_equipped_title');
         const savedFrame = localStorage.getItem('cb_equipped_frame');
-        const savedTheme = localStorage.getItem('cb_equipped_theme');
+        const savedTheme = localStorage.getItem('cb_equipped_theme'); // Récupère le localStorage
+        
         if (savedTitle && !localEquipped.title) localEquipped.title = savedTitle;
         if (savedFrame && !localEquipped.frame) localEquipped.frame = savedFrame;
-        if (savedTheme && !localEquipped.theme) localEquipped.theme = savedTheme;
+        
+        // Si le localStorage a explicitement un thème sauvegardé, on l'utilise, sinon on s'assure qu'il est vide
+        if (savedTheme) {
+            localEquipped.theme = savedTheme;
+        } else {
+            delete localEquipped.theme;
+        }
 
         myProfile.inventory = player.inventory || {};
-        if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = localEquipped;
-        else {
-            if (!myProfile.inventory.__equipped.title && localEquipped.title) myProfile.inventory.__equipped.title = localEquipped.title;
-            if (!myProfile.inventory.__equipped.frame && localEquipped.frame) myProfile.inventory.__equipped.frame = localEquipped.frame;
-            if (!myProfile.inventory.__equipped.theme && localEquipped.theme) myProfile.inventory.__equipped.theme = localEquipped.theme;
+        if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
+        
+        myProfile.inventory.__equipped.title = savedTitle || localEquipped.title || "";
+        myProfile.inventory.__equipped.frame = savedFrame || localEquipped.frame || "";
+        
+        // CORRECTION CLÉ : Si le localStorage n'a pas de thème (choix par défaut), on force la suppression même si le serveur essaie de renvoyer l'ancien
+        if (savedTheme) {
+            myProfile.inventory.__equipped.theme = savedTheme;
+        } else {
+            delete myProfile.inventory.__equipped.theme;
         }
 
         myProfile.unlocked_items = player.unlocked_items;
