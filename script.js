@@ -464,9 +464,10 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
     
     const pill = document.getElementById('user-pill');
     if (pill) {
-        pill.classList.remove('silver-frame', 'gold-frame');
+        pill.classList.remove('silver-frame', 'gold-frame', 'animated-frame');
         if (equippedFrame === 'frame_silver') pill.classList.add('silver-frame');
         if (equippedFrame === 'frame_gold') pill.classList.add('gold-frame');
+        if (equippedFrame === 'frame_animated') pill.classList.add('animated-frame');
     }
     
     let avatarContent = avatarNum || 1;
@@ -476,8 +477,11 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
         avatarContent = '🤖'; avatarTitle = 'Robot Mathématicien Légendaire';
     }
 
+    const isGold = equippedFrame === 'frame_gold';
+    const isAnimated = equippedFrame === 'frame_animated';
+
     return `
-        <div class="tft-avatar-container" title="${avatarTitle}">
+        <div class="tft-avatar-container ${isGold ? 'gold-frame' : ''} ${isAnimated ? 'animated-frame' : ''}" title="${avatarTitle}">
             <span class="tft-avatar-icon" style="${typeof avatarContent === 'number' ? 'font-size: 14px;' : 'font-size: 16px;'}">${avatarContent}</span>
             <span class="tft-flag-overlay">${flag || '🇫🇷'}</span>
         </div>
@@ -488,12 +492,13 @@ function getLargeAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
     const avatarType = overrideAvatarType || activeAvatarChoice || (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar);
     const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
     const isGoldFrame = equippedFrame === 'frame_gold';
+    const isAnimatedFrame = equippedFrame === 'frame_animated';
     
     let avatarContent = avatarNum || 1;
     if (avatarType === 'avatar_legend') avatarContent = '🤖'; 
 
     return `
-        <div class="tft-avatar-large ${isGoldFrame ? 'gold-frame' : ''}">
+        <div class="tft-avatar-large ${isGoldFrame ? 'gold-frame' : ''} ${isAnimatedFrame ? 'animated-frame' : ''}">
             <span class="tft-avatar-large-icon" style="${typeof avatarContent === 'number' ? 'font-size: 24px;' : 'font-size: 30px;'}">${avatarContent}</span>
             <span class="tft-flag-large-overlay">${flag || '🇫🇷'}</span>
         </div>
