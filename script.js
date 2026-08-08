@@ -1700,6 +1700,28 @@ function openBlitzPass() {
     renderBlitzPass();
 }
 
+function showRewardPopUp(rewardName, rewardIcon) {
+    let popup = document.getElementById('reward-popup-overlay');
+    if (!popup) {
+        popup = document.createElement('div');
+        popup.id = 'reward-popup-overlay';
+        popup.className = 'modal-overlay';
+        popup.innerHTML = `
+            <div class="modal-card" style="text-align:center; animation: victoryScalePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; border-color: #f8b500; box-shadow: 0 0 40px rgba(248,181,0,0.8);">
+                <div style="font-size: 55px; margin-bottom: 10px;" id="popup-reward-icon">🎁</div>
+                <div style="font-size: 10px; font-weight: 900; color: #f8b500; letter-spacing: 2px; margin-bottom: 4px;">RÉCOMPENSE DÉBLOQUÉE</div>
+                <div id="popup-reward-name" style="color: #fff; font-size: 15px; font-weight: bold; margin-bottom: 20px; line-height: 1.4;">-</div>
+                <button class="btn-main btn-gold" onclick="document.getElementById('reward-popup-overlay').style.display='none'" style="width:100%; margin-top:0;">Récupéré ! ⚡</button>
+            </div>
+        `;
+        document.body.appendChild(popup);
+    }
+    document.getElementById('popup-reward-icon').innerText = rewardIcon || '🎁';
+    document.getElementById('popup-reward-name').innerText = rewardName;
+    popup.style.display = 'flex';
+    SoundEngine.playVictory();
+}
+
 function closeBlitzPass() { document.getElementById('modal-blitz-pass').style.display = 'none'; }
 
 function renderBlitzPass() {
@@ -1768,7 +1790,17 @@ function buyBlitzPassPremium() {
     socket.emit('buy_blitz_pass');
 }
 
-function claimPassReward(tier, track) { socket.emit('claim_pass_tier', { tier, track }); }
+function claimPassReward(tier, track) { 
+    socket.emit('claim_pass_tier', { tier, track });
+    
+    // Récupère le texte de la récompense pour l'afficher dans la pop-up
+    const tierData = BLITZ_PASS_TIERS.find(t => t.tier === tier);
+    const rewardText = tierData ? (track === 'premium' ? tierData.premium : tierData.free) : `Palier ${tier}`;
+    
+    // Icône spéciale pour le grand lot final du palier 30
+    const icon = (tier === 30 && track === 'premium') ? '🏆' : '🌟';
+    showRewardPopUp(rewardText, icon);
+}
 
 function switchShopTab(type) {
     currentShopTab = type;
