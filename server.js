@@ -727,7 +727,11 @@ function applyPassReward(p, tier, track) {
         else if (tier === 3) { if (!p.unlocked_items.includes('title_flux_master')) p.unlocked_items.push('title_flux_master'); }
         else if (tier === 4) { if (!p.unlocked_items.includes('frame_silver')) p.unlocked_items.push('frame_silver'); }
         else if (tier === 5) p.coins = (p.coins || 0) + 150;
-        else if (tier === 6) p.coins = (p.coins || 0) + 150;
+        else if (tier === 6) {
+    p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 1;
+    p.inventory['freeze'] = (p.inventory['freeze'] || 0) + 1;
+    p.inventory['joker'] = (p.inventory['joker'] || 0) + 1;
+}
         else if (tier === 7) { if (!p.unlocked_items.includes('title_lightning_pro')) p.unlocked_items.push('title_lightning_pro'); }
         else if (tier === 8) p.inventory['nova'] = (p.inventory['nova'] || 0) + 2;
         else if (tier === 9) p.coins = (p.coins || 0) + 200;
