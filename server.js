@@ -943,14 +943,23 @@ function applyPassReward(p, tier, track) {
             p.inventory['nova'] = (p.inventory['nova'] || 0) + (tier === 27 ? 4 : 1);
         }
     } else if (track === 'premium') {
-        // Piste Premium : Pièces massives, objets tactiques et cosmétiques exclusifs de Saison 1
-        if (tier === 1) p.coins = (p.coins || 0) + 100;
+        // Sécurité absolue : si le pass premium n'est pas acheté, on bloque
+        if (!p.blitzPassPremium) return;
+
+        // Piste Premium : Titres, cosmétiques exclusifs et pièces de la Saison 1
+        if (tier === 1) {
+            if (!p.unlocked_items.includes('title_plasma_initiate')) p.unlocked_items.push('title_plasma_initiate');
+        }
         else if (tier === 2) p.coins = (p.coins || 0) + 100;
-        else if (tier === 3) p.coins = (p.coins || 0) + 150;
+        else if (tier === 3) {
+            if (!p.unlocked_items.includes('title_flux_master')) p.unlocked_items.push('title_flux_master');
+        }
         else if (tier === 4) p.coins = (p.coins || 0) + 200;
         else if (tier === 5) p.coins = (p.coins || 0) + 150;
         else if (tier === 6) p.coins = (p.coins || 0) + 150;
-        else if (tier === 7) p.coins = (p.coins || 0) + 200;
+        else if (tier === 7) {
+            if (!p.unlocked_items.includes('title_lightning_pro')) p.unlocked_items.push('title_lightning_pro');
+        }
         else if (tier === 8) p.inventory['nova'] = (p.inventory['nova'] || 0) + 2;
         else if (tier === 9) p.coins = (p.coins || 0) + 200;
         else if (tier === 10) {
@@ -959,7 +968,9 @@ function applyPassReward(p, tier, track) {
         }
         else if (tier === 11) p.coins = (p.coins || 0) + 120;
         else if (tier === 12) p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 1;
-        else if (tier === 13) p.coins = (p.coins || 0) + 160;
+        else if (tier === 13) {
+            if (!p.unlocked_items.includes('title_free_electron')) p.unlocked_items.push('title_free_electron');
+        }
         else if (tier === 14) p.inventory['freeze'] = (p.inventory['freeze'] || 0) + 2;
         else if (tier === 15) {
             // Bordure de Profil Or Massif
@@ -975,7 +986,9 @@ function applyPassReward(p, tier, track) {
         }
         else if (tier === 21) p.coins = (p.coins || 0) + 220;
         else if (tier === 22) p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 3;
-        else if (tier === 23) p.coins = (p.coins || 0) + 250;
+        else if (tier === 23) {
+            if (!p.unlocked_items.includes('title_brain_overload')) p.unlocked_items.push('title_brain_overload');
+        }
         else if (tier === 24) p.coins = (p.coins || 0) + 300;
         else if (tier === 25) {
             // Cadre Animé de Saison
