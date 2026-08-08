@@ -25,9 +25,10 @@
             </div>
         </div>
         <div class="header-btns">
-            <!-- Bouton Amis corrigé avec un seul logo et le texte -->
-            <button onclick="openFriendsModal()" class="icon-btn" style="padding: 0 8px; position: relative; display: flex; align-items: center; gap: 4px;" title="Amis">
-                👥 <span data-i18n="friends_btn">Amis</span><span id="friends-main-badge" style="display:none; position: absolute; top: -2px; right: -2px; background: #ff4b2b; color: #fff; border-radius: 50%; padding: 1px 4px; font-size: 9px; font-weight: bold;">0</span>
+            <!-- Bouton Amis avec texte uniquement et badge de notification -->
+            <button onclick="openFriendsModal()" class="icon-btn" style="padding: 0 10px; position: relative;" title="Amis">
+                <span data-i18n="friends_btn">Amis</span>
+                <span id="friends-main-badge" style="display:none; position: absolute; top: -2px; right: -2px; background: #ff4b2b; color: #fff; border-radius: 50%; padding: 1px 4px; font-size: 9px; font-weight: bold;">0</span>
             </button>
             <button id="lang-btn" class="icon-btn" onclick="toggleLanguage()">ENG</button>
             <button id="mute-btn" class="icon-btn" onclick="toggleMute()">🔊</button>
