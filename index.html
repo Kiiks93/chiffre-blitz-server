@@ -483,6 +483,60 @@
         </div>
     </div>
 
+    <!-- ========================================================= -->
+    <!-- PANNEAU ADMINISTRATEUR COMPLET (Intégré sans toucher au reste) -->
+    <!-- ========================================================= -->
+    <div id="admin-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-card" style="max-width: 500px; max-height: 85vh; overflow-y: auto; text-align: left;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h2 style="margin:0; color:#00d2ff; font-size:16px;">⚡ Panneau Administrateur</h2>
+                <button class="icon-btn" onclick="closeAdminPanel()" style="width:28px; height:28px;">✕</button>
+            </div>
+            
+            <!-- Écran de connexion admin -->
+            <div id="admin-login-section">
+                <input type="password" id="admin-password-input" placeholder="Mot de passe admin..." style="width:100%; padding:8px; border-radius:8px; border:1px solid #00d2ff; background:#0f051d; color:#fff; font-size:12px; outline:none; margin-bottom:8px; box-sizing:border-box;">
+                <button class="btn-main btn-blue" onclick="authAdmin()" style="width:100%; margin-top:0;">Connexion Admin</button>
+                <p id="admin-login-error" style="color: #ff4b2b; text-align: center; margin-top: 8px; font-size: 11px;"></p>
+            </div>
+
+            <!-- Dashboard admin (caché tant qu'on n'est pas connecté) -->
+            <div id="admin-dashboard-section" class="hidden">
+                <!-- Section Cadeaux -->
+                <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+                    <h3 style="font-size: 12px; color: #f8b500; margin: 0 0 6px 0;">🎁 Distribuer des pièces / points</h3>
+                    <input type="text" id="admin-target-user" placeholder="Nom du joueur (ou TOUS)" style="width:100%; padding:6px; border-radius:6px; border:1px solid #334155; background:#0f051d; color:#fff; font-size:11px; margin-bottom:6px; box-sizing:border-box;">
+                    <div style="display:flex; gap:6px; margin-bottom:6px;">
+                        <select id="admin-currency-type" style="flex:1; padding:6px; border-radius:6px; border:1px solid #334155; background:#0f051d; color:#fff; font-size:11px;">
+                            <option value="coins">Pièces 🪙</option>
+                            <option value="points">Points 🏅</option>
+                        </select>
+                        <input type="number" id="admin-amount" value="100" style="flex:1; padding:6px; border-radius:6px; border:1px solid #334155; background:#0f051d; color:#fff; font-size:11px; text-align:center;">
+                    </div>
+                    <button class="btn-main btn-blue" onclick="adminSendGift()" style="width:100%; margin-top:0; padding:6px; font-size:11px;">Envoyer le cadeau</button>
+                </div>
+
+                <!-- Section Annonce Globale -->
+                <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+                    <h3 style="font-size: 12px; color: #00d2ff; margin: 0 0 6px 0;">📢 Annonce Globale</h3>
+                    <input type="text" id="admin-broadcast-text" placeholder="Message global..." style="width:100%; padding:6px; border-radius:6px; border:1px solid #334155; background:#0f051d; color:#fff; font-size:11px; margin-bottom:6px; box-sizing:border-box;">
+                    <button class="btn-main btn-purple" onclick="adminBroadcast()" style="width:100%; margin-top:0; padding:6px; font-size:11px;">Diffuser l'annonce</button>
+                </div>
+
+                <!-- Section Activation & Planification des Modes -->
+                <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+                    <h3 style="font-size: 12px; color: #38ef7d; margin: 0 0 6px 0;">⚙️ Gestion & Planification des Modes</h3>
+                    <div id="admin-schedules-container" style="display:flex; flex-direction:column; gap:6px; max-height: 180px; overflow-y:auto; font-size:11px;">
+                        <!-- Généré dynamiquement par script.js -->
+                    </div>
+                    <button class="btn-main btn-gold" onclick="saveAdminSchedules()" style="width:100%; margin-top:8px; padding:6px; font-size:11px;">Enregistrer les planifications</button>
+                </div>
+
+                <button class="btn-secondary" onclick="closeAdminPanel()" style="width:100%; margin-top:0; padding:8px; font-size:12px;">Fermer</button>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js" defer></script>
 </body>
 </html>
