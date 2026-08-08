@@ -868,12 +868,11 @@ socket.on('player_registered', (rawData) => {
         const localEquipped = myProfile.inventory && myProfile.inventory.__equipped ? {...myProfile.inventory.__equipped} : {};
         const savedTitle = localStorage.getItem('cb_equipped_title');
         const savedFrame = localStorage.getItem('cb_equipped_frame');
-        const savedTheme = localStorage.getItem('cb_equipped_theme'); // Récupère le localStorage
+        const savedTheme = localStorage.getItem('cb_equipped_theme');
         
         if (savedTitle && !localEquipped.title) localEquipped.title = savedTitle;
         if (savedFrame && !localEquipped.frame) localEquipped.frame = savedFrame;
         
-        // Si le localStorage a explicitement un thème sauvegardé, on l'utilise, sinon on s'assure qu'il est vide
         if (savedTheme) {
             localEquipped.theme = savedTheme;
         } else {
@@ -886,7 +885,6 @@ socket.on('player_registered', (rawData) => {
         myProfile.inventory.__equipped.title = savedTitle || localEquipped.title || "";
         myProfile.inventory.__equipped.frame = savedFrame || localEquipped.frame || "";
         
-        // CORRECTION CLÉ : Si le localStorage n'a pas de thème (choix par défaut), on force la suppression même si le serveur essaie de renvoyer l'ancien
         if (savedTheme) {
             myProfile.inventory.__equipped.theme = savedTheme;
         } else {
@@ -995,7 +993,7 @@ document.addEventListener("DOMContentLoaded", () => {
             logoClickCount++;
             clearTimeout(logoClickTimer);
             logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 2500);
-            if (logoClickCount >= 10) { logoClickCount = 0; openAdminLoginModal(); }
+            if (logoClickCount >= 10) { logoClickCount = 0; openAdminPanel(); }
         });
     }
 
@@ -1005,6 +1003,118 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => { if (isProfileValid()) openJoinCustomScreen(targetRoom.toUpperCase()); }, 1000);
     }
 });
+
+/* ========================================== */
+/* GESTION DU PANNEAU ADMINISTRATEUR          */
+/* ========================================== */
+function openAdminPanel() {
+    document.getElementById('admin-modal').style.display = 'flex';
+    document.getElementById('admin-login-section').classList.remove('hidden');
+    document.getElementById('admin-dashboard-section').classList.add('hidden');
+    document.getElementById('admin-password-input').value = '';
+    const errEl = document.getElementById('admin-login-error');
+    if (errEl) errEl.innerText = '';
+}
+
+function closeAdminPanel() {
+    document.getElementById('admin-modal').style.display = 'none';
+}
+
+function authAdmin() {
+    const pass = document.getElementById('admin-password-input').value;
+    socket.emit('admin_auth', pass);
+}
+
+socket.on('admin_auth_fail', (msg) => {
+    const errEl = document.getElementById('admin-login-error');
+    if (errEl) errEl.innerText = msg || "Mot de passe incorrect";
+});
+
+socket.on('admin_auth_success', (data) => {
+    document.getElementById('admin-login-section').classList.add('hidden');
+    document.getElementById('admin-dashboard-section').classList.remove('hidden');
+    renderAdminSchedules(data.schedules || {});
+});
+
+function adminSendGift() {
+    const target = document.getElementById('admin-target-user').value.trim();
+    const currency = document.getElementById('admin-currency-type').value;
+    const amount = parseInt(document.getElementById('admin-amount').value) || 0;
+    socket.emit('admin_send_gift', { target, currency, amount });
+    showNotificationToast("🎁 Commande de cadeau envoyée !", "gift");
+}
+
+function adminBroadcast() {
+    const text = document.getElementById('admin-broadcast-text').value.trim();
+    if (!text) return;
+    socket.emit('admin_broadcast', text);
+    document.getElementById('admin-broadcast-text').value = '';
+    showNotificationToast("📢 Annonce globale diffusée !", "announcement");
+}
+
+function renderAdminSchedules(schedules) {
+    const container = document.getElementById('admin-schedules-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const EVENT_NAMES = {
+        coinRush: "🪙 Coin Rush (Pièces x2)",
+        rankShield: "🛡️ Rank Shield (Zéro perte)",
+        expressoMatch: "⚡ Expresso Match (20s)",
+        chaosMode: "🌪️ Chaos Mode (Malus auto)",
+        jackpotEclair: "🎁 Jackpot Éclair",
+        tugOfWarMode: "🪢 Mode Corde Raide (Tug-of-War)"
+    };
+
+    for (let key in EVENT_NAMES) {
+        const s = schedules[key] || { manual: false, start: null, end: null };
+        const startStr = s.start ? new Date(s.start).toISOString().slice(0, 16) : "";
+        const endStr = s.end ? new Date(s.end).toISOString().slice(0, 16) : "";
+
+        const row = document.createElement('div');
+        row.style.cssText = "background:rgba(0,0,0,0.3); padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); margin-bottom:4px;";
+        row.innerHTML = `
+            <div style="font-weight:bold; color:#fff; margin-bottom:4px;">${EVENT_NAMES[key]}</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                <label style="display:flex; align-items:center; gap:4px; cursor:pointer;">
+                    <input type="checkbox" id="admin-manual-${key}" ${s.manual ? 'checked' : ''}> Actif (Forcé)
+                </label>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="color:#aaa;">Début :</span>
+                    <input type="datetime-local" id="admin-start-${key}" value="${startStr}" style="background:#0f051d; color:#fff; border:1px solid #444; border-radius:4px; padding:2px 4px; font-size:10px;">
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="color:#aaa;">Fin :</span>
+                    <input type="datetime-local" id="admin-end-${key}" value="${endStr}" style="background:#0f051d; color:#fff; border:1px solid #444; border-radius:4px; padding:2px 4px; font-size:10px;">
+                </div>
+            </div>
+        `;
+        container.appendChild(row);
+    }
+}
+
+function saveAdminSchedules() {
+    const EVENT_KEYS = ['coinRush', 'rankShield', 'expressoMatch', 'chaosMode', 'jackpotEclair', 'tugOfWarMode'];
+    const schedulesData = {};
+
+    EVENT_KEYS.forEach(key => {
+        const manualEl = document.getElementById(`admin-manual-${key}`);
+        const startEl = document.getElementById(`admin-start-${key}`);
+        const endEl = document.getElementById(`admin-end-${key}`);
+        if (manualEl && startEl && endEl) {
+            schedulesData[key] = {
+                manual: manualEl.checked,
+                start: startEl.value ? new Date(startEl.value).getTime() : null,
+                end: endEl.value ? new Date(endEl.value).getTime() : null
+            };
+        }
+    });
+
+    socket.emit('admin_update_schedule', schedulesData);
+    showNotificationToast("✅ Programmation enregistrée avec succès !", "gift");
+}
 
 function openFriendsModal() {
     if (!isProfileValid()) { checkAndShowProfileModal(); return; }
@@ -1161,127 +1271,8 @@ function requestRematch() {
 
 socket.on('opponent_wants_rematch', () => { showNotificationToast("⚔️ L'adversaire souhaite une revanche !", 'gift'); });
 
-function openAdminLoginModal() {
-    let modal = document.getElementById('modal-admin-login');
-    if (!modal) {
-        const div = document.createElement('div');
-        div.id = 'modal-admin-login'; div.className = 'modal-overlay';
-        div.innerHTML = `
-            <div class="modal-card" style="text-align:center;">
-                <h2 style="color:#ff4b2b; margin-top:0; font-size:16px;">🛡️ ACCÈS ADMINISTRATEUR</h2>
-                <p style="color:#aaa; font-size:11px;">Entrez le mot de passe secret :</p>
-                <input type="password" id="admin-pass-input" placeholder="Mot de passe" 
-                       style="width:100%; padding:9px; border-radius:8px; border:2px solid #ff4b2b; background:#0f051d; color:#fff; font-size:14px; text-align:center; margin-bottom:12px; outline:none;">
-                <div style="display:flex; gap:6px;">
-                    <button class="btn-secondary" onclick="document.getElementById('modal-admin-login').style.display='none'">Fermer</button>
-                    <button class="btn-main" onclick="submitAdminLogin()" style="flex:1; background:linear-gradient(45deg, #ff416c, #ff4b2b); margin-top:0;">Connexion ⚡</button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(div); modal = div;
-    }
-    modal.style.display = 'flex';
-}
-
-function submitAdminLogin() { socket.emit('admin_auth', document.getElementById('admin-pass-input').value); }
-socket.on('admin_auth_fail', (msg) => { alert(msg); });
-socket.on('admin_auth_success', (data) => { document.getElementById('modal-admin-login').style.display = 'none'; openAdminDashboard(data); });
-
-function openAdminDashboard(data) {
-    let dash = document.getElementById('modal-admin-dashboard');
-    if (!dash) {
-        const div = document.createElement('div');
-        div.id = 'modal-admin-dashboard'; div.className = 'modal-overlay';
-        div.innerHTML = `
-            <div class="modal-card" style="max-width:420px; text-align:left;">
-                <h2 style="color:#00d2ff; margin-top:0; text-align:center; font-size:16px;">🎛️ PANEL ADMIN - ÉVÉNEMENTS</h2>
-                <div style="max-height:68vh; overflow-y:auto; padding-right:4px; display:flex; flex-direction:column; gap:8px; font-size:11px;">
-                    <div style="background:rgba(255,255,255,0.04); padding:8px; border-radius:8px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                            <strong style="color:#ff8a00;">⚡ ÉVÉNEMENTS & PROGRAMMATIONS</strong>
-                        </div>
-                        <div id="admin-events-config-list" style="display:flex; flex-direction:column; gap:6px;"></div>
-                    </div>
-                    <button class="btn-main btn-blue" onclick="saveAdminSchedule()" style="padding:8px; font-size:12px; width:100%; margin-top:0;">Enregistrer les modifications 💾</button>
-                </div>
-                <button class="btn-secondary" onclick="document.getElementById('modal-admin-dashboard').style.display='none'" style="margin-top:8px;">Fermer</button>
-            </div>
-        `;
-        document.body.appendChild(div); dash = div;
-    }
-
-    // Définition des noms d'événements pour l'affichage
-    const EVENT_NAMES = {
-        coinRush: "🪙 Coin Rush (Pièces x2)",
-        rankShield: "🛡️ Rank Shield (Zéro perte)",
-        expressoMatch: "⚡ Expresso Match (20s)",
-        chaosMode: "🌪️ Chaos Mode (Malus auto)",
-        jackpotEclair: "🎁 Jackpot Éclair",
-        tugOfWarMode: "🪢 Mode Corde Raide (Tug-of-War)"
-    };
-
-    // Génération dynamique de la liste
-    const listEl = document.getElementById('admin-events-config-list');
-    listEl.innerHTML = '';
-    const schedules = data.schedules || {};
-
-    for (let key in EVENT_NAMES) {
-        const s = schedules[key] || { manual: false, start: null, end: null };
-        
-        // Formatage des dates pour les inputs datetime-local
-        const startStr = s.start ? new Date(s.start).toISOString().slice(0, 16) : "";
-        const endStr = s.end ? new Date(s.end).toISOString().slice(0, 16) : "";
-
-        const row = document.createElement('div');
-        row.style.cssText = "background:rgba(0,0,0,0.3); padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.1);";
-        row.innerHTML = `
-            <div style="font-weight:bold; color:#fff; margin-bottom:4px;">${EVENT_NAMES[key]}</div>
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-                <label style="display:flex; align-items:center; gap:4px; cursor:pointer;">
-                    <input type="checkbox" id="admin-manual-${key}" ${s.manual ? 'checked' : ''}> Actif (Forcé)
-                </label>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:4px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="color:#aaa;">Début :</span>
-                    <input type="datetime-local" id="admin-start-${key}" value="${startStr}" style="background:#0f051d; color:#fff; border:1px solid #444; border-radius:4px; padding:2px 4px; font-size:10px;">
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="color:#aaa;">Fin :</span>
-                    <input type="datetime-local" id="admin-end-${key}" value="${endStr}" style="background:#0f051d; color:#fff; border:1px solid #444; border-radius:4px; padding:2px 4px; font-size:10px;">
-                </div>
-            </div>
-        `;
-        listEl.appendChild(row);
-    }
-
-    dash.style.display = 'flex';
-}
-
-// Fonction manquante pour sauvegarder et envoyer au serveur
-function saveAdminSchedule() {
-    const EVENT_KEYS = ['coinRush', 'rankShield', 'expressoMatch', 'chaosMode', 'jackpotEclair', 'tugOfWarMode'];
-    const schedulesData = {};
-
-    EVENT_KEYS.forEach(key => {
-        const manual = document.getElementById(`admin-manual-${key}`).checked;
-        const startVal = document.getElementById(`admin-start-${key}`).value;
-        const endVal = document.getElementById(`admin-end-${key}`).value;
-
-        schedulesData[key] = {
-            manual: manual,
-            start: startVal ? new Date(startVal).getTime() : null,
-            end: endVal ? new Date(endVal).getTime() : null
-        };
-    });
-
-    socket.emit('admin_update_schedule', schedulesData);
-    document.getElementById('modal-admin-dashboard').style.display = 'none';
-    showNotificationToast("✅ Programmation enregistrée avec succès !", "gift");
-}
-
 function hideAllScreens() {
-    ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-avalanche-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'modal-blitz-pass', 'countdown-overlay', 'modal-create-room', 'modal-launch-ad', 'simulated-ad-overlay', 'modal-ranked-loadout', 'modal-jackpot-wheel'].forEach(id => {
+    ['screen-title', 'screen-menu', 'screen-solo-menu', 'screen-avalanche-menu', 'screen-1v1-hub', 'screen-1v1-lobby', 'screen-rooms', 'screen-join-custom', 'screen-room-waiting', 'screen-tournament', 'screen-game', 'recap-modal', 'modal-leaderboard', 'modal-shop', 'modal-blitz-pass', 'countdown-overlay', 'modal-create-room', 'modal-launch-ad', 'simulated-ad-overlay', 'modal-ranked-loadout', 'modal-jackpot-wheel', 'admin-modal'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
     });
