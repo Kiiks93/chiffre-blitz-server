@@ -33,6 +33,11 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
     background: linear-gradient(135deg, #3a2500, #694b00);
     animation: goldPulseAura 2.5s infinite ease-in-out;
 }
+.tft-avatar-container.silver-frame {
+    border-color: #c0c0c0 !important;
+    box-shadow: 0 0 12px rgba(192, 192, 192, 0.8), inset 0 0 8px rgba(192, 192, 192, 0.5) !important;
+    background: linear-gradient(135deg, #2a2a2a, #505050);
+}
 @keyframes avatarPulseAura {
     0%, 100% { box-shadow: 0 0 10px rgba(0, 210, 255, 0.4), inset 0 0 6px rgba(0, 210, 255, 0.3); }
     50% { box-shadow: 0 0 18px rgba(0, 210, 255, 0.8), inset 0 0 10px rgba(0, 210, 255, 0.6); }
@@ -83,6 +88,11 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
     border-color: #f8b500;
     box-shadow: 0 0 28px rgba(248, 181, 0, 0.9);
     background: linear-gradient(135deg, #3a2500, #694b00);
+}
+.tft-avatar-large.silver-frame {
+    border-color: #c0c0c0 !important;
+    box-shadow: 0 0 12px rgba(192, 192, 192, 0.8) !important;
+    background: linear-gradient(135deg, #2a2a2a, #505050);
 }
 .tft-avatar-large-icon {
     font-size: 26px;
