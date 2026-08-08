@@ -326,7 +326,6 @@ const SoundEngine = {
         this.stopMusic(false);
         this.currentMode = mode;
         this.step = 0;
-        // Menu = Rétro 8-bit (115 BPM), Jeu = Geometry Dash Electro rapide (138 BPM)
         this.bpm = (mode === 'menu') ? 115 : 138;
         const intervalMs = (60 / this.bpm / 4) * 1000;
 
@@ -344,7 +343,6 @@ const SoundEngine = {
         const t = this.ctx.currentTime;
         const melodyNotes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 293.66, 349.23];
         
-        // Basse 8-bit sur chaque temps
         if (step % 4 === 0) {
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
@@ -356,7 +354,6 @@ const SoundEngine = {
             osc.start(t); osc.stop(t + 0.1);
         }
 
-        // Mélodie chiptune
         if (step % 2 === 0) {
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
@@ -372,7 +369,6 @@ const SoundEngine = {
     tickGeometryDash(step) {
         const t = this.ctx.currentTime;
         
-        // Kick 4-on-the-floor (Basse lourde style electro)
         if (step % 16 === 0) {
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
@@ -385,7 +381,6 @@ const SoundEngine = {
             osc.start(t); osc.stop(t + 0.13);
         }
 
-        // Snare / Bruit blanc percutant
         if (step % 16 === 8) {
             const bufferSize = this.ctx.sampleRate * 0.08;
             const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
@@ -402,7 +397,6 @@ const SoundEngine = {
             noise.start(t);
         }
 
-        // Arpège rapide et incisif (style Geometry Dash)
         const gdNotes = [220, 261.63, 329.63, 440, 523.25, 659.25, 523.25, 440];
         const osc = this.ctx.createOscillator();
         const filter = this.ctx.createBiquadFilter();
@@ -1066,20 +1060,27 @@ document.addEventListener("DOMContentLoaded", () => {
 /* GESTION DU PANNEAU ADMINISTRATEUR COMPLET  */
 /* ========================================== */
 function openAdminPanel() {
-    document.getElementById('admin-modal').style.display = 'flex';
-    document.getElementById('admin-login-section').classList.remove('hidden');
-    document.getElementById('admin-dashboard-section').classList.add('hidden');
-    document.getElementById('admin-password-input').value = '';
+    const modal = document.getElementById('admin-modal');
+    const loginSec = document.getElementById('admin-login-section');
+    const dashSec = document.getElementById('admin-dashboard-section');
+    const passInput = document.getElementById('admin-password-input');
     const errEl = document.getElementById('admin-login-error');
+
+    if (modal) modal.style.display = 'flex';
+    if (loginSec) loginSec.style.display = 'block';
+    if (dashSec) dashSec.style.display = 'none';
+    if (passInput) passInput.value = '';
     if (errEl) errEl.innerText = '';
 }
 
 function closeAdminPanel() {
-    document.getElementById('admin-modal').style.display = 'none';
+    const modal = document.getElementById('admin-modal');
+    if (modal) modal.style.display = 'none';
 }
 
 function authAdmin() {
-    const pass = document.getElementById('admin-password-input').value;
+    const passInput = document.getElementById('admin-password-input');
+    const pass = passInput ? passInput.value : '';
     socket.emit('admin_auth', pass);
 }
 
@@ -1089,9 +1090,12 @@ socket.on('admin_auth_fail', (msg) => {
 });
 
 socket.on('admin_auth_success', (data) => {
-    document.getElementById('admin-login-section').classList.add('hidden');
-    const dash = document.getElementById('admin-dashboard-section');
-    dash.classList.remove('hidden');
+    const loginSec = document.getElementById('admin-login-section');
+    const dashSec = document.getElementById('admin-dashboard-section');
+    
+    if (loginSec) loginSec.style.display = 'none';
+    if (dashSec) dashSec.style.display = 'block';
+    
     renderAdminDashboard(data);
 });
 
