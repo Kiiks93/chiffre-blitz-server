@@ -458,16 +458,19 @@ function getRankName(points) {
     return currentLang === 'fr' ? 'Novice 🌱' : 'Novice 🌱';
 }
 
-function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
-    const equippedAvatar = overrideAvatarType || (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar);
-    const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
+function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
+    const profile = playerObj || myProfile;
+    const equippedAvatar = overrideAvatarType || (profile.inventory && profile.inventory.__equipped && profile.inventory.__equipped.avatar);
+    const equippedFrame = profile.inventory && profile.inventory.__equipped && profile.inventory.__equipped.frame;
     
-    const pill = document.getElementById('user-pill');
-    if (pill) {
-        pill.classList.remove('silver-frame', 'gold-frame', 'animated-frame');
-        if (equippedFrame === 'frame_silver') pill.classList.add('silver-frame');
-        if (equippedFrame === 'frame_gold') pill.classList.add('gold-frame');
-        if (equippedFrame === 'frame_animated') pill.classList.add('animated-frame');
+    if (!playerObj) {
+        const pill = document.getElementById('user-pill');
+        if (pill) {
+            pill.classList.remove('silver-frame', 'gold-frame', 'animated-frame');
+            if (equippedFrame === 'frame_silver') pill.classList.add('silver-frame');
+            if (equippedFrame === 'frame_gold') pill.classList.add('gold-frame');
+            if (equippedFrame === 'frame_animated') pill.classList.add('animated-frame');
+        }
     }
     
     let avatarContent = avatarNum || 1;
@@ -478,10 +481,11 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
     }
 
     const isGold = equippedFrame === 'frame_gold';
+    const isSilver = equippedFrame === 'frame_silver';
     const isAnimated = equippedFrame === 'frame_animated';
 
     return `
-        <div class="tft-avatar-container ${isGold ? 'gold-frame' : ''} ${isAnimated ? 'animated-frame' : ''}" title="${avatarTitle}">
+        <div class="tft-avatar-container ${isGold ? 'gold-frame' : ''} ${isSilver ? 'silver-frame' : ''} ${isAnimated ? 'animated-frame' : ''}" title="${avatarTitle}">
             <span class="tft-avatar-icon" style="${typeof avatarContent === 'number' ? 'font-size: 14px;' : 'font-size: 16px;'}">${avatarContent}</span>
             <span class="tft-flag-overlay">${flag || '🇫🇷'}</span>
         </div>
@@ -1404,7 +1408,7 @@ function updateRoomPlayers(players) {
         const p = parsePlayer(rawData);
         const title = p.inventory && p.inventory.__equipped && p.inventory.__equipped.title;
         const titleHtml = title ? `<span style="font-size: 8px; color: #f8b500; margin-left: 3px;">[${TITLE_DISPLAY_NAMES[title] || title}]</span>` : '';
-        return `<div style="display:inline-flex; align-items:center; gap:4px;">${getAvatarBadgeHTML(p.flag, p.avatar)} <span>${p.username}</span> ${titleHtml}</div>`;
+        return `<div style="display:inline-flex; align-items:center; gap:4px;">${getAvatarBadgeHTML(p.flag, p.avatar, null, p)} <span>${p.username}</span> ${titleHtml}</div>`;
     }).join(' <span style="color:#aaa; margin:0 4px;">vs</span> ');
     if (players && socket.id) {
         const opp = players.find(p => (p.socketId || p.id) !== socket.id);
@@ -1859,14 +1863,22 @@ function getWinnerAvatarShowcaseHTML(playerObj) {
     if (!playerObj) return '';
     const equippedAvatar = playerObj.inventory && playerObj.inventory.__equipped && playerObj.inventory.__equipped.avatar;
     const equippedFrame = playerObj.inventory && playerObj.inventory.__equipped && playerObj.inventory.__equipped.frame;
+    
     const isGoldFrame = equippedFrame === 'frame_gold';
+    const isSilverFrame = equippedFrame === 'frame_silver';
+    const isAnimatedFrame = equippedFrame === 'frame_animated';
     
     let iconContent = playerObj.avatar || 1, isRobot = false;
     if (equippedAvatar === 'avatar_legend' || playerObj.avatar === 'avatar_legend') { iconContent = '🤖'; isRobot = true; }
 
+    let frameClass = '';
+    if (isGoldFrame) frameClass = 'gold';
+    else if (isSilverFrame) frameClass = 'silver-frame';
+    else if (isAnimatedFrame) frameClass = 'animated-frame';
+
     return `
         <div class="victory-avatar-showcase">
-            <div class="victory-badge-large ${isGoldFrame ? 'gold' : ''} ${isRobot ? 'robot-dancing' : ''}">
+            <div class="victory-badge-large ${frameClass} ${isRobot ? 'robot-dancing' : ''}">
                 <span style="font-size: ${isRobot ? '36px' : '26px'}; font-weight: 900; color: #fff;">${iconContent}</span>
                 <span style="position: absolute; bottom: -2px; right: -2px; font-size: 14px; background: #0f051d; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; z-index:3;">${playerObj.flag || '🇫🇷'}</span>
             </div>
