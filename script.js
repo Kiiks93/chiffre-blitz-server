@@ -460,7 +460,14 @@ function getRankName(points) {
 function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
     const equippedAvatar = overrideAvatarType || (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar);
     const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
-    const isGoldFrame = equippedFrame === 'frame_gold';
+    
+    // Applique dynamiquement la classe du cadre sur la pilule de profil globale
+    const pill = document.getElementById('user-pill');
+    if (pill) {
+        pill.classList.remove('silver-frame', 'gold-frame');
+        if (equippedFrame === 'frame_silver') pill.classList.add('silver-frame');
+        if (equippedFrame === 'frame_gold') pill.classList.add('gold-frame');
+    }
     
     let avatarContent = avatarNum || 1;
     let avatarTitle = `Avatar #${avatarNum || 1}`;
@@ -470,7 +477,7 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
     }
 
     return `
-        <div class="tft-avatar-container ${isGoldFrame ? 'gold-frame' : ''}" title="${avatarTitle}">
+        <div class="tft-avatar-container" title="${avatarTitle}">
             <span class="tft-avatar-icon" style="${typeof avatarContent === 'number' ? 'font-size: 14px;' : 'font-size: 16px;'}">${avatarContent}</span>
             <span class="tft-flag-overlay">${flag || '🇫🇷'}</span>
         </div>
