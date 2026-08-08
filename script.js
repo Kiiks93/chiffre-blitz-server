@@ -973,7 +973,7 @@ function showNotificationToast(message, type = 'info') {
     }
     const toast = document.createElement('div');
     let bg = 'rgba(0, 210, 255, 0.95)', border = '#00d2ff', color = '#000';
-    if (type === 'gift') { bg = 'rgba(248, 181, 0, 0.95)'; border = '#f8b500'; color = '#000'; }
+    if (type === 'gift') { bg = 'rgba(248, 181, 0, 0.95)', border = '#f8b500'; color = '#000'; }
     else if (type === 'announcement') { bg = 'rgba(255, 75, 43, 0.95)'; border = '#ff4b2b'; color = '#fff'; }
     toast.style.cssText = `background: ${bg}; border: 2px solid ${border}; color: ${color}; padding: 10px 14px; border-radius: 12px; font-weight: bold; font-size: 12px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.5); pointer-events: auto; animation: toastFade 4.5s ease forwards;`;
     toast.innerHTML = message;
@@ -1102,46 +1102,9 @@ socket.on('admin_auth_success', (data) => {
 function renderAdminDashboard(data) {
     const dash = document.getElementById('admin-dashboard-section');
     if (!dash) return;
-    dash.innerHTML = `
-        <div style="font-size: 14px; font-weight: 900; color: #f8b500; margin-bottom: 10px; text-align: center;">⚡ PANNEAU SUPRÊME ADMIN ⚡</div>
-        
-        <!-- ANNONCES GLOBALES -->
-        <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.1);">
-            <div style="font-weight: bold; color: #fff; margin-bottom: 6px; font-size: 12px;">📢 Annonce Globale (Popup tous les joueurs)</div>
-            <input type="text" id="admin-broadcast-text" placeholder="Message de l'annonce..." style="width: 100%; background: #0f051d; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 6px; font-size: 11px; margin-bottom: 6px;">
-            <button class="power-btn equip" onclick="adminBroadcast()" style="width: 100%; padding: 6px; font-size: 11px;">Diffuser l'annonce 🚀</button>
-        </div>
-
-        <!-- DON DE PIÈCES & POINTS (TOUT LE MONDE OU PSEUDO) -->
-        <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.1);">
-            <div style="font-weight: bold; color: #fff; margin-bottom: 6px; font-size: 12px;">🎁 Distribution de Cadeaux (Pièces, Points, Trophées)</div>
-            <div style="display: flex; gap: 6px; margin-bottom: 6px;">
-                <select id="admin-target-type" onchange="toggleAdminTargetInput()" style="flex: 1; background: #0f051d; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 4px; font-size: 11px;">
-                    <option value="all">🌍 Tout le monde (Global)</option>
-                    <option value="pseudo">👤 Par Pseudo spécifique</option>
-                </select>
-                <input type="text" id="admin-target-pseudo" placeholder="Pseudo exact..." style="flex: 1; background: #0f051d; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 4px; font-size: 11px; display: none;">
-            </div>
-            <div style="display: flex; gap: 6px; margin-bottom: 6px;">
-                <select id="admin-currency-type" style="flex: 1; background: #0f051d; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 4px; font-size: 11px;">
-                    <option value="coins">🪙 Pièces</option>
-                    <option value="points">⚡ Points (Classement)</option>
-                    <option value="trophies">🏆 Trophées</option>
-                </select>
-                <input type="number" id="admin-amount" placeholder="Montant" value="100" style="flex: 1; background: #0f051d; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 4px; font-size: 11px;">
-            </div>
-            <button class="power-btn equip" onclick="adminSendGift()" style="width: 100%; padding: 6px; font-size: 11px; background: linear-gradient(135deg, #f8b500, #fceabb); color: #000; font-weight: bold;">Envoyer la récompense ⚡</button>
-        </div>
-
-        <!-- ÉVÉNEMENTS & MODES -->
-        <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.1);">
-            <div style="font-weight: bold; color: #fff; margin-bottom: 6px; font-size: 12px;">⚡ Programmation & Événements</div>
-            <div id="admin-schedules-container" style="max-height: 140px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;"></div>
-            <button class="power-btn equip" onclick="saveAdminSchedules()" style="width: 100%; padding: 6px; font-size: 11px;">Sauvegarder les Événements 💾</button>
-        </div>
-
-        <button class="power-btn" onclick="closeAdminPanel()" style="width: 100%; background: rgba(255,75,43,0.2); color: #ff4b2b; border: 1px solid #ff4b2b; padding: 6px; font-size: 11px;">Fermer le Panel ❌</button>
-    `;
+    
+    // Nettoyage de l'ancien contenu pour éviter les doublons d'en-tête, 
+    // le conteneur principal gère déjà l'affichage propre.
     renderAdminSchedules(data.schedules || {});
 }
 
@@ -1197,7 +1160,7 @@ function renderAdminSchedules(schedules) {
         const endStr = s.end ? new Date(s.end).toISOString().slice(0, 16) : "";
 
         const row = document.createElement('div');
-        row.style.cssText = "background:rgba(0,0,0,0.3); padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); margin-bottom:4px;";
+        row.style.cssText = "background:rgba(0,0,0,0.3); padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); margin-bottom:4px;";
         row.innerHTML = `
             <div style="font-weight:bold; color:#fff; margin-bottom:4px; font-size:11px;">${EVENT_NAMES[key]}</div>
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
@@ -1670,7 +1633,7 @@ function renderBlitzPass() {
     container.innerHTML = `
         <div class="bp-header-banner">
             <div style="font-size: 13px; font-weight: 900; color: #f8b500; margin-bottom: 2px;">🌟 SAISON 1 : PLASMA DORÉ</div>
-            <div style="font-size: 10px; color: #ccc; margin-bottom: 6px;">${isPremium ? '✨ Passe Premium Actif !' : 'Débloque le Passe Premium pour 1000 🪙'}</div>
+            <div style="font-size: 9px; color: #ccc; margin-bottom: 6px;">${isPremium ? '✨ Passe Premium Actif !' : 'Débloque le Passe Premium pour 1000 🪙'}</div>
             ${!isPremium ? `<button class="btn-main btn-gold" onclick="buyBlitzPassPremium()" style="padding: 6px 10px; font-size: 11px; margin: 0 auto; width: auto;">Acheter le Passe Premium (1000 🪙) ⭐</button>` : `<div style="color: #00ff88; font-weight: bold; font-size: 10px;">Statut : VIP / Premium</div>`}
         </div>
     `;
@@ -2326,10 +2289,10 @@ function renderGrid(pool, handler) {
     if (!grid) return; grid.innerHTML = '';
     if (!pool) return;
     const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
-    const isAltTheme = equippedTheme === 'theme_alt' || (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme === 'theme_alt');
+    const isAltTest = equippedTheme === 'theme_alt';
     pool.forEach((num, index) => {
         const tile = document.createElement('div');
-        tile.className = `tile ${isAltTheme ? 'alt-theme' : ''}`;
+        tile.className = `tile ${isAltTest ? 'alt-theme' : ''}`;
         tile.innerText = num; tile.onclick = () => handler(num, index);
         grid.appendChild(tile);
     });
