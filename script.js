@@ -235,15 +235,9 @@ function toggleLanguage() {
     currentLang = (currentLang === 'fr') ? 'en' : 'fr';
     localStorage.setItem('cb_lang', currentLang);
     applyTranslations();
-    if (document.getElementById('modal-shop').style.display === 'flex') {
-        switchShopTab(currentShopTab);
-    }
-    if (document.getElementById('modal-ranked-loadout').style.display === 'flex') {
-        renderRankedLoadoutItems();
-    }
-    if (document.getElementById('modal-blitz-pass').style.display === 'flex') {
-        renderBlitzPass();
-    }
+    if (document.getElementById('modal-shop').style.display === 'flex') switchShopTab(currentShopTab);
+    if (document.getElementById('modal-ranked-loadout').style.display === 'flex') renderRankedLoadoutItems();
+    if (document.getElementById('modal-blitz-pass').style.display === 'flex') renderBlitzPass();
     updateCombinedExplanationVisibility();
 }
 
@@ -251,9 +245,7 @@ function applyTranslations() {
     const dict = i18n[currentLang];
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        if (dict[key]) {
-            el.innerText = dict[key];
-        }
+        if (dict[key]) el.innerText = dict[key];
     });
     document.getElementById('lang-btn').innerText = (currentLang === 'fr') ? 'ENG' : 'FR';
 }
@@ -266,9 +258,7 @@ const SoundEngine = {
                 const AudioCtx = window.AudioContext || window.webkitAudioContext;
                 this.ctx = new AudioCtx(); 
             }
-            if (this.ctx.state === 'suspended') {
-                this.ctx.resume();
-            }
+            if (this.ctx.state === 'suspended') this.ctx.resume();
         } catch(e) {}
     },
     toggleMute() {
@@ -328,16 +318,11 @@ const SoundEngine = {
     startMusic(mode) {
         if (this.isMuted) return;
         this.init();
-        if (this.ctx && this.ctx.state === 'suspended') {
-            this.ctx.resume();
-        }
-        if (this.timerId && this.currentMode === mode) {
-            return;
-        }
+        if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+        if (this.timerId && this.currentMode === mode) return;
         this.stopMusic(false);
         this.currentMode = mode;
         this.step = 0;
-
         this.bpm = (mode === 'menu') ? 95 : 105;
         const intervalMs = (60 / this.bpm / 4) * 1000;
 
@@ -364,7 +349,7 @@ const SoundEngine = {
             osc.start(t); osc.stop(t + 0.09);
         }
 
-        if (step === 4 || step === 12 || step === 20 || step === 28 || step === 36 || step === 44 || step === 52 || step === 60) {
+        if ([4, 12, 20, 28, 36, 44, 52, 60].includes(step)) {
             const bufferSize = this.ctx.sampleRate * 0.07;
             const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
             const data = buffer.getChannelData(0);
@@ -379,72 +364,6 @@ const SoundEngine = {
             noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
             noise.start(t);
         }
-
-        if (step % 2 === 1 && mode !== 'menu') {
-            const bufferSize = this.ctx.sampleRate * 0.03;
-            const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-            const noise = this.ctx.createBufferSource();
-            noise.buffer = buffer;
-            const filter = this.ctx.createBiquadFilter();
-            filter.type = 'highpass'; filter.frequency.setValueAtTime(6000, t);
-            const gain = this.ctx.createGain();
-            gain.gain.setValueAtTime(0.03, t);
-            gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
-            noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-            noise.start(t);
-        }
-
-        if (mode !== 'menu') {
-            const bar = Math.floor(step / 16);
-            let melodyPatterns = [
-                [0, 2, 4, 7, 9, 7, 4, 2, 3, 5, 7, 10, 9, 7, 5, 2],
-                [2, 4, 5, 9, 11, 9, 5, 4, 5, 7, 9, 12, 11, 9, 7, 4],
-                [4, 5, 7, 11, 12, 11, 7, 5, 7, 9, 11, 14, 12, 11, 9, 7],
-                [7, 9, 11, 14, 16, 14, 11, 9, 11, 12, 14, 16, 14, 12, 9, 4]
-            ];
-            const currentPattern = melodyPatterns[bar];
-            const noteIdx = currentPattern[step % 16];
-            const freq = scale[noteIdx % scale.length] * 2;
-
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            const filter = this.ctx.createBiquadFilter();
-
-            osc.type = (step % 4 === 0) ? 'sawtooth' : 'square';
-            osc.frequency.setValueAtTime(freq, t);
-
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(1800 + (bar * 200), t);
-
-            gain.gain.setValueAtTime(0.04, t);
-            gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
-
-            osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-            osc.start(t); osc.stop(t + 0.09);
-        } else {
-            if (step % 2 === 0) {
-                const menuBar = Math.floor(step / 16);
-                const menuPatterns = [
-                    [0, 3, 5, 7],
-                    [2, 5, 7, 9],
-                    [3, 7, 8, 10],
-                    [5, 8, 10, 12]
-                ];
-                const chord = menuPatterns[menuBar];
-                const freq = scale[chord[(step / 2) % chord.length]];
-                
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(freq, t);
-                gain.gain.setValueAtTime(0.025, t);
-                gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
-                osc.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(t); osc.stop(t + 0.15);
-            }
-        }
     }
 };
 
@@ -457,9 +376,7 @@ document.addEventListener('click', () => { SoundEngine.init(); }, { once: true }
 
 const SERVER_URL = "https://chiffre-blitz-server.onrender.com";
 const socket = io(SERVER_URL, {
-    reconnection: true,
-    reconnectionAttempts: 10,
-    reconnectionDelay: 1000
+    reconnection: true, reconnectionAttempts: 10, reconnectionDelay: 1000
 });
 
 socket.on('disconnect', () => { SoundEngine.stopMusic(true); });
@@ -481,7 +398,8 @@ let myProfile = {
     points: 0, coins: 0, trophies: 0, wins: 0, losses: 0, 
     inventory: {
         __equipped: {
-            title: localStorage.getItem('cb_equipped_title') || ""
+            title: localStorage.getItem('cb_equipped_title') || "",
+            frame: localStorage.getItem('cb_equipped_frame') || ""
         }
     }, 
     unlocked_items: [], equippedPower: null, equippedPowers: [],
@@ -507,9 +425,7 @@ function getFlagEmoji(flag) {
         try {
             const codePoints = cleanFlag.toUpperCase().split('').map(char => 127397 + char.charCodeAt(0));
             return String.fromCodePoint(...codePoints);
-        } catch(e) {
-            return '🇫🇷';
-        }
+        } catch(e) { return '🇫🇷'; }
     }
     return cleanFlag;
 }
@@ -520,11 +436,11 @@ function parsePlayer(p) {
         id: p.id || '',
         username: p.username || p.name || p.pseudo || 'Joueur',
         region: p.region || 'Hauts-de-France',
-        points: Number(p.points !== undefined ? p.points : (p.score !== undefined ? p.score : 0)),
-        coins: Number(p.coins !== undefined ? p.coins : (p.argent !== undefined ? p.argent : 0)),
-        trophies: Number(p.trophies !== undefined ? p.trophies : (p.trophees !== undefined ? p.trophees : 0)),
-        wins: Number(p.wins !== undefined ? p.wins : (p.victories !== undefined ? p.victories : 0)),
-        losses: Number(p.losses !== undefined ? p.losses : (p.defeats !== undefined ? p.defeats : 0)),
+        points: Number(p.points !== undefined ? p.points : 0),
+        coins: Number(p.coins !== undefined ? p.coins : 0),
+        trophies: Number(p.trophies !== undefined ? p.trophies : 0),
+        wins: Number(p.wins !== undefined ? p.wins : 0),
+        losses: Number(p.losses !== undefined ? p.losses : 0),
         avatar: Number(p.avatar !== undefined ? p.avatar : 1),
         flag: getFlagEmoji(p.flag),
         inventory: p.inventory || {},
@@ -544,14 +460,14 @@ function getRankName(points) {
 
 function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
     const equippedAvatar = overrideAvatarType || (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar);
-    const isGoldFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame === 'frame_gold';
+    const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
+    const isGoldFrame = equippedFrame === 'frame_gold';
     
     let avatarContent = avatarNum || 1;
     let avatarTitle = `Avatar #${avatarNum || 1}`;
     
     if (equippedAvatar === 'avatar_legend') {
-        avatarContent = '🤖'; 
-        avatarTitle = 'Robot Mathématicien Légendaire';
+        avatarContent = '🤖'; avatarTitle = 'Robot Mathématicien Légendaire';
     }
 
     return `
@@ -564,12 +480,11 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
 
 function getLargeAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
     const avatarType = overrideAvatarType || activeAvatarChoice || (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar);
-    const isGoldFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame === 'frame_gold';
+    const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
+    const isGoldFrame = equippedFrame === 'frame_gold';
     
     let avatarContent = avatarNum || 1;
-    if (avatarType === 'avatar_legend') {
-        avatarContent = '🤖'; 
-    }
+    if (avatarType === 'avatar_legend') avatarContent = '🤖'; 
 
     return `
         <div class="tft-avatar-large ${isGoldFrame ? 'gold-frame' : ''}">
@@ -584,9 +499,7 @@ function updateProfilePreview() {
     const rawFlag = document.getElementById('flag-input').value;
     const flag = getFlagEmoji(rawFlag);
     const previewContainer = document.getElementById('modal-avatar-preview');
-    if (previewContainer) {
-        previewContainer.innerHTML = getLargeAvatarBadgeHTML(flag, avatarNum, activeAvatarChoice);
-    }
+    if (previewContainer) previewContainer.innerHTML = getLargeAvatarBadgeHTML(flag, avatarNum, activeAvatarChoice);
 }
 
 function renderProfileAvatarSelector() {
@@ -597,11 +510,7 @@ function renderProfileAvatarSelector() {
     const isStandardActive = (activeAvatarChoice === 'standard' || !activeAvatarChoice);
     const stdCard = document.createElement('div');
     stdCard.style.cssText = `flex: 1; min-width: 90px; background: ${isStandardActive ? 'rgba(0,210,255,0.2)' : 'rgba(255,255,255,0.05)'}; border: 2px solid ${isStandardActive ? '#00d2ff' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 4px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;`;
-    stdCard.onclick = () => {
-        activeAvatarChoice = 'standard';
-        renderProfileAvatarSelector();
-        updateProfilePreview();
-    };
+    stdCard.onclick = () => { activeAvatarChoice = 'standard'; renderProfileAvatarSelector(); updateProfilePreview(); };
     stdCard.innerHTML = `<span style="font-size: 13px;">🔢</span><div style="font-size: 9px; font-weight: bold; color: #fff;">Standard</div>`;
     container.appendChild(stdCard);
 
@@ -612,14 +521,63 @@ function renderProfileAvatarSelector() {
         const isRobotActive = (activeAvatarChoice === 'avatar_legend');
         const robotCard = document.createElement('div');
         robotCard.style.cssText = `flex: 1; min-width: 90px; background: ${isRobotActive ? 'rgba(0,210,255,0.2)' : 'rgba(255,255,255,0.05)'}; border: 2px solid ${isRobotActive ? '#00d2ff' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 4px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;`;
-        robotCard.onclick = () => {
-            activeAvatarChoice = 'avatar_legend';
-            renderProfileAvatarSelector();
-            updateProfilePreview();
-        };
+        robotCard.onclick = () => { activeAvatarChoice = 'avatar_legend'; renderProfileAvatarSelector(); updateProfilePreview(); };
         robotCard.innerHTML = `<span style="font-size: 13px;">🤖</span><div style="font-size: 9px; font-weight: bold; color: #fff;">Robot</div>`;
         container.appendChild(robotCard);
     }
+}
+
+// Dictionnaires d'affichage pour les titres et cadres débloqués
+const TITLE_DISPLAY_NAMES = {
+    'title_plasma_initiate': '⚡ Initié du Plasma',
+    'title_flux_master': '⚡ Maître des Flux',
+    'title_lightning_pro': '⚡ Pro de l\'Éclair',
+    'title_free_electron': '⚡ Électron Libre',
+    'title_brain_overload': '⚡ Surcharge Mentale',
+    'title_legend': '👑 Légende'
+};
+
+const FRAME_DISPLAY_NAMES = {
+    'frame_gold': '👑 Cadre Or Massif',
+    'frame_animated': '✨ Cadre Animé de Saison'
+};
+
+function renderProfileCustomizationMenus() {
+    const titleSelect = document.getElementById('title-input');
+    const equippedTitle = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.title;
+    
+    if (titleSelect) {
+        titleSelect.innerHTML = `<option value="">Aucun titre actif</option>`;
+        const unlockedTitles = (myProfile.unlocked_items || []).filter(id => id.startsWith('title_'));
+        
+        unlockedTitles.forEach(tId => {
+            const displayName = TITLE_DISPLAY_NAMES[tId] || tId;
+            const opt = document.createElement('option');
+            opt.value = tId;
+            opt.innerText = displayName;
+            if (equippedTitle === tId || equippedTitle === displayName) opt.selected = true;
+            titleSelect.appendChild(opt);
+        });
+    }
+
+    const frameSelect = document.getElementById('frame-input');
+    const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
+
+    if (frameSelect) {
+        frameSelect.innerHTML = `<option value="">Aucun cadre (Défaut)</option>`;
+        const unlockedFrames = (myProfile.unlocked_items || []).filter(id => id.startsWith('frame_') || id === 'frame_gold');
+
+        unlockedFrames.forEach(fId => {
+            const displayName = FRAME_DISPLAY_NAMES[fId] || fId;
+            const opt = document.createElement('option');
+            opt.value = fId;
+            opt.innerText = displayName;
+            if (equippedFrame === fId) opt.selected = true;
+            frameSelect.appendChild(opt);
+        });
+    }
+
+    renderProfileAvatarSelector();
 }
 
 let lastEmoteTime = 0;
@@ -632,18 +590,14 @@ function sendEmote(emoji) {
     showFloatingEmote(emoji, true);
 }
 
-socket.on('receive_emote', (data) => {
-    showFloatingEmote(data.emote, false);
-});
+socket.on('receive_emote', (data) => { showFloatingEmote(data.emote, false); });
 
 function showFloatingEmote(emoji, isMe) {
     const bubble = document.createElement('div');
-    bubble.className = 'emote-bubble';
-    bubble.innerText = emoji;
+    bubble.className = 'emote-bubble'; bubble.innerText = emoji;
     const side = Math.random() > 0.5 ? 'left' : 'right';
     const offsetPx = Math.random() * 60 + 15;
-    bubble.style[side] = `${offsetPx}px`;
-    bubble.style.bottom = isMe ? '130px' : '65%';
+    bubble.style[side] = `${offsetPx}px`; bubble.style.bottom = isMe ? '130px' : '65%';
     document.body.appendChild(bubble);
     setTimeout(() => { bubble.remove(); }, 1600);
 }
@@ -664,9 +618,7 @@ function updateEconomyUI() {
 
     const equippedTitle = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.title;
     const titleEl = document.getElementById('user-title-display');
-    if (titleEl) {
-        titleEl.innerText = equippedTitle ? `[ ${equippedTitle} ]` : "";
-    }
+    if (titleEl) titleEl.innerText = equippedTitle ? `[ ${TITLE_DISPLAY_NAMES[equippedTitle] || equippedTitle} ]` : "";
 
     document.getElementById('user-avatar-badge').innerHTML = getAvatarBadgeHTML(myProfile.flag, myProfile.avatar);
     updateShopCoinsDisplay();
@@ -684,19 +636,20 @@ function isProfileValid() {
 }
 
 function checkAndShowProfileModal() {
-    if (!isProfileValid()) {
-        promptProfileChange();
-    } else {
+    if (!isProfileValid()) { promptProfileChange(); } 
+    else {
         myProfile.username = localStorage.getItem('cb_username');
         myProfile.region = localStorage.getItem('cb_region');
         myProfile.avatar = parseInt(localStorage.getItem('cb_avatar')) || 1;
         myProfile.flag = getFlagEmoji(localStorage.getItem('cb_flag') || "🇫🇷");
         
         const savedTitle = localStorage.getItem('cb_equipped_title');
-        if (savedTitle) {
+        const savedFrame = localStorage.getItem('cb_equipped_frame');
+        if (savedTitle || savedFrame) {
             if (!myProfile.inventory) myProfile.inventory = {};
             if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
-            myProfile.inventory.__equipped.title = savedTitle;
+            if (savedTitle) myProfile.inventory.__equipped.title = savedTitle;
+            if (savedFrame) myProfile.inventory.__equipped.frame = savedFrame;
         }
 
         updateEconomyUI();
@@ -709,7 +662,8 @@ function checkAndShowProfileModal() {
 function saveProfileFromModal() {
     const nameInput = document.getElementById('username-input').value.trim();
     const regionInput = document.getElementById('region-input').value;
-    const titleInput = document.getElementById('title-input').value;
+    const selectedTitleId = document.getElementById('title-input').value;
+    const selectedFrameId = document.getElementById('frame-input').value;
     let avatarVal = parseInt(document.getElementById('avatar-input').value);
     const flagVal = document.getElementById('flag-input').value;
 
@@ -725,14 +679,29 @@ function saveProfileFromModal() {
     if (!myProfile.inventory) myProfile.inventory = {};
     if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
     
-    if (titleInput) {
-        myProfile.inventory.__equipped.title = titleInput;
-        localStorage.setItem('cb_equipped_title', titleInput);
+    // Sauvegarde et envoi du Titre
+    if (selectedTitleId) {
+        myProfile.inventory.__equipped.title = selectedTitleId;
+        localStorage.setItem('cb_equipped_title', selectedTitleId);
+        socket.emit('equip_cosmetic', selectedTitleId);
     } else {
         delete myProfile.inventory.__equipped.title;
         localStorage.removeItem('cb_equipped_title');
+        socket.emit('equip_cosmetic', 'none_title');
     }
 
+    // Sauvegarde et envoi du Cadre
+    if (selectedFrameId) {
+        myProfile.inventory.__equipped.frame = selectedFrameId;
+        localStorage.setItem('cb_equipped_frame', selectedFrameId);
+        socket.emit('equip_cosmetic', selectedFrameId);
+    } else {
+        delete myProfile.inventory.__equipped.frame;
+        localStorage.removeItem('cb_equipped_frame');
+        socket.emit('equip_cosmetic', 'none_frame');
+    }
+
+    // Gestion de l'avatar spécial
     if (activeAvatarChoice === 'avatar_legend') {
         myProfile.inventory.__equipped.avatar = 'avatar_legend';
         socket.emit('equip_cosmetic', 'avatar_legend');
@@ -745,7 +714,6 @@ function saveProfileFromModal() {
     updateEconomyUI();
     document.getElementById('modal-username').style.display = 'none';
     registerIfPossible();
-
     SoundEngine.init();
     showTitleScreen();
 }
@@ -753,7 +721,8 @@ function saveProfileFromModal() {
 function saveAvatarChoiceOnly() {
     let avatarVal = parseInt(document.getElementById('avatar-input').value);
     const flagVal = document.getElementById('flag-input').value;
-    const titleInput = document.getElementById('title-input').value;
+    const selectedTitleId = document.getElementById('title-input').value;
+    const selectedFrameId = document.getElementById('frame-input').value;
 
     if (isNaN(avatarVal) || avatarVal < 1) avatarVal = 1;
     if (avatarVal > 999) avatarVal = 999;
@@ -764,12 +733,24 @@ function saveAvatarChoiceOnly() {
     if (!myProfile.inventory) myProfile.inventory = {};
     if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
 
-    if (titleInput) {
-        myProfile.inventory.__equipped.title = titleInput;
-        localStorage.setItem('cb_equipped_title', titleInput);
+    if (selectedTitleId) {
+        myProfile.inventory.__equipped.title = selectedTitleId;
+        localStorage.setItem('cb_equipped_title', selectedTitleId);
+        socket.emit('equip_cosmetic', selectedTitleId);
     } else {
         delete myProfile.inventory.__equipped.title;
         localStorage.removeItem('cb_equipped_title');
+        socket.emit('equip_cosmetic', 'none_title');
+    }
+
+    if (selectedFrameId) {
+        myProfile.inventory.__equipped.frame = selectedFrameId;
+        localStorage.setItem('cb_equipped_frame', selectedFrameId);
+        socket.emit('equip_cosmetic', selectedFrameId);
+    } else {
+        delete myProfile.inventory.__equipped.frame;
+        localStorage.removeItem('cb_equipped_frame');
+        socket.emit('equip_cosmetic', 'none_frame');
     }
 
     if (activeAvatarChoice === 'avatar_legend') {
@@ -782,7 +763,6 @@ function saveAvatarChoiceOnly() {
 
     saveLocalPreferences();
     updateEconomyUI();
-
     document.getElementById('modal-username').style.display = 'none';
     showNotificationToast("✅ Choix de profil enregistré avec succès !", "gift");
     registerIfPossible();
@@ -794,14 +774,10 @@ function promptProfileChange() {
     document.getElementById('avatar-input').value = myProfile.avatar || 1;
     document.getElementById('flag-input').value = myProfile.flag || "🇫🇷";
     
-    const equippedTitle = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.title;
-    const titleSelect = document.getElementById('title-input');
-    if (titleSelect) titleSelect.value = equippedTitle || "";
-
     const equippedAvatar = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar;
     activeAvatarChoice = equippedAvatar || 'standard';
 
-    renderProfileAvatarSelector();
+    renderProfileCustomizationMenus();
     updateProfilePreview();
     document.getElementById('modal-username').style.display = 'flex';
 }
@@ -809,11 +785,8 @@ function promptProfileChange() {
 function registerIfPossible() {
     if (isProfileValid() && socket.connected) {
         socket.emit('register_player', {
-            username: myProfile.username,
-            region: myProfile.region,
-            avatar: myProfile.avatar,
-            flag: myProfile.flag,
-            inventory: myProfile.inventory
+            username: myProfile.username, region: myProfile.region,
+            avatar: myProfile.avatar, flag: myProfile.flag, inventory: myProfile.inventory
         });
     }
 }
@@ -833,13 +806,15 @@ socket.on('player_registered', (rawData) => {
         
         const localEquipped = myProfile.inventory && myProfile.inventory.__equipped ? {...myProfile.inventory.__equipped} : {};
         const savedTitle = localStorage.getItem('cb_equipped_title');
+        const savedFrame = localStorage.getItem('cb_equipped_frame');
         if (savedTitle && !localEquipped.title) localEquipped.title = savedTitle;
+        if (savedFrame && !localEquipped.frame) localEquipped.frame = savedFrame;
 
         myProfile.inventory = player.inventory || {};
-        if (!myProfile.inventory.__equipped) {
-            myProfile.inventory.__equipped = localEquipped;
-        } else if (!myProfile.inventory.__equipped.title && localEquipped.title) {
-            myProfile.inventory.__equipped.title = localEquipped.title;
+        if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = localEquipped;
+        else {
+            if (!myProfile.inventory.__equipped.title && localEquipped.title) myProfile.inventory.__equipped.title = localEquipped.title;
+            if (!myProfile.inventory.__equipped.frame && localEquipped.frame) myProfile.inventory.__equipped.frame = localEquipped.frame;
         }
 
         myProfile.unlocked_items = player.unlocked_items;
@@ -848,12 +823,8 @@ socket.on('player_registered', (rawData) => {
         myProfile.claimedPassTiers = player.claimedPassTiers;
         
         updateEconomyUI();
-        if (document.getElementById('modal-shop').style.display === 'flex') {
-            switchShopTab(currentShopTab);
-        }
-        if (document.getElementById('modal-blitz-pass').style.display === 'flex') {
-            renderBlitzPass();
-        }
+        if (document.getElementById('modal-shop').style.display === 'flex') switchShopTab(currentShopTab);
+        if (document.getElementById('modal-blitz-pass').style.display === 'flex') renderBlitzPass();
     }
 });
 
@@ -862,9 +833,7 @@ socket.on('blitz_pass_updated', (data) => {
     if (data.blitzPassPremium !== undefined) myProfile.blitzPassPremium = data.blitzPassPremium;
     if (data.claimedPassTiers) myProfile.claimedPassTiers = data.claimedPassTiers;
     updateEconomyUI();
-    if (document.getElementById('modal-blitz-pass').style.display === 'flex') {
-        renderBlitzPass();
-    }
+    if (document.getElementById('modal-blitz-pass').style.display === 'flex') renderBlitzPass();
     showNotificationToast("✨ Passe de combat mis à jour avec succès !", "gift");
 });
 
@@ -877,18 +846,9 @@ function showNotificationToast(message, type = 'info') {
         document.body.appendChild(container);
     }
     const toast = document.createElement('div');
-    let bg = 'rgba(0, 210, 255, 0.95)';
-    let border = '#00d2ff';
-    let color = '#000';
-    if (type === 'gift') {
-        bg = 'rgba(248, 181, 0, 0.95)';
-        border = '#f8b500';
-        color = '#000';
-    } else if (type === 'announcement') {
-        bg = 'rgba(255, 75, 43, 0.95)';
-        border = '#ff4b2b';
-        color = '#fff';
-    }
+    let bg = 'rgba(0, 210, 255, 0.95)', border = '#00d2ff', color = '#000';
+    if (type === 'gift') { bg = 'rgba(248, 181, 0, 0.95)'; border = '#f8b500'; color = '#000'; }
+    else if (type === 'announcement') { bg = 'rgba(255, 75, 43, 0.95)'; border = '#ff4b2b'; color = '#fff'; }
     toast.style.cssText = `background: ${bg}; border: 2px solid ${border}; color: ${color}; padding: 10px 14px; border-radius: 12px; font-weight: bold; font-size: 12px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.5); pointer-events: auto; animation: toastFade 4.5s ease forwards;`;
     toast.innerHTML = message;
     container.appendChild(toast);
@@ -909,11 +869,7 @@ socket.on('events_state_update', (events) => {
     latestGlobalEvents = events;
     const banner = document.getElementById('player-event-banner');
     const towBtn = document.getElementById('btn-tow-menu');
-    
-    if (towBtn) {
-        towBtn.style.display = events.tugOfWarMode ? 'flex' : 'none';
-    }
-
+    if (towBtn) towBtn.style.display = events.tugOfWarMode ? 'flex' : 'none';
     if (!banner) return;
 
     let activeList = [];
@@ -927,9 +883,7 @@ socket.on('events_state_update', (events) => {
     if (activeList.length > 0) {
         banner.innerHTML = `⚡ <b>ADMIN ABUSE EN COURS :</b><br>` + activeList.join("<br>");
         banner.style.display = 'block';
-    } else {
-        banner.style.display = 'none';
-    }
+    } else { banner.style.display = 'none'; }
 });
 
 const POWERS_CATALOG = [
@@ -951,11 +905,8 @@ let activeTrainingMode = 'classic';
 let soloTarget = 1, soloScore = 0, soloTimeLeft = 30, soloTimerInterval = null;
 let currentShopTab = 'bonus', isTimeFrozen = false;
 let currentCoinsGained = 0, rewardDoubled = false;
-
 let avalancheGridData = [], avalancheTarget = null, avalancheInterval = null, avalancheTimerInterval = null, avalancheTimeLeft = 30;
-
-let logoClickCount = 0;
-let logoClickTimer = null;
+let logoClickCount = 0, logoClickTimer = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     applyTranslations();
@@ -968,20 +919,14 @@ document.addEventListener("DOMContentLoaded", () => {
             logoClickCount++;
             clearTimeout(logoClickTimer);
             logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 2500);
-
-            if (logoClickCount >= 10) {
-                logoClickCount = 0;
-                openAdminLoginModal();
-            }
+            if (logoClickCount >= 10) { logoClickCount = 0; openAdminLoginModal(); }
         });
     }
 
     const urlParams = new URLSearchParams(window.location.search);
     const targetRoom = urlParams.get('room');
     if (targetRoom) {
-        setTimeout(() => {
-            if (isProfileValid()) { openJoinCustomScreen(targetRoom.toUpperCase()); }
-        }, 1000);
+        setTimeout(() => { if (isProfileValid()) openJoinCustomScreen(targetRoom.toUpperCase()); }, 1000);
     }
 });
 
@@ -990,23 +935,13 @@ function openFriendsModal() {
     document.getElementById('modal-friends').style.display = 'flex';
     socket.emit('get_friends_list');
 }
-
-function closeFriendsModal() {
-    document.getElementById('modal-friends').style.display = 'none';
-}
+function closeFriendsModal() { document.getElementById('modal-friends').style.display = 'none'; }
 
 function updateBadges(reqCount, invCount) {
     const reqBadge = document.getElementById('badge-requests');
     const invBadge = document.getElementById('badge-invites');
-    
-    if (reqBadge) {
-        reqBadge.innerText = reqCount;
-        reqBadge.style.display = reqCount > 0 ? 'inline-block' : 'none';
-    }
-    if (invBadge) {
-        invBadge.innerText = invCount;
-        invBadge.style.display = invCount > 0 ? 'inline-block' : 'none';
-    }
+    if (reqBadge) { reqBadge.innerText = reqCount; reqBadge.style.display = reqCount > 0 ? 'inline-block' : 'none'; }
+    if (invBadge) { invBadge.innerText = invCount; invBadge.style.display = invCount > 0 ? 'inline-block' : 'none'; }
 }
 
 function switchFriendTab(tab) {
@@ -1016,19 +951,13 @@ function switchFriendTab(tab) {
     const invitesTab = document.getElementById('friend-tab-invites');
     if (invitesTab) invitesTab.classList.toggle('active', tab === 'invites');
     
-    if (tab === 'invites') {
-        renderGameInvitesList();
-    } else {
-        socket.emit('get_friends_list');
-    }
+    if (tab === 'invites') renderGameInvitesList();
+    else socket.emit('get_friends_list');
 }
 
 function sendFriendRequest() {
     const target = document.getElementById('input-add-friend').value.trim();
-    if (target) {
-        socket.emit('send_friend_request', target);
-        document.getElementById('input-add-friend').value = '';
-    }
+    if (target) { socket.emit('send_friend_request', target); document.getElementById('input-add-friend').value = ''; }
 }
 
 function acceptFriend(id) { socket.emit('accept_friend_request', id); }
@@ -1043,21 +972,12 @@ function inviteFriend(targetSocketId) {
 }
 
 socket.on('receive_game_invite', (data) => {
-    myGameInvites.unshift({
-        from: data.from,
-        roomCode: data.roomCode,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    });
+    myGameInvites.unshift({ from: data.from, roomCode: data.roomCode, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
     updateBadges(window.lastRequestsCount, myGameInvites.length);
-
-    if (currentFriendFilter === 'invites' && document.getElementById('modal-friends').style.display === 'flex') {
-        renderGameInvitesList();
-    }
+    if (currentFriendFilter === 'invites' && document.getElementById('modal-friends').style.display === 'flex') renderGameInvitesList();
 
     let inviteHtml = `📩 Invitation de jeu de <b>${data.from}</b> !`;
-    if (data.roomCode) {
-        inviteHtml += `<br><button class="power-btn equip" onclick="closeFriendsModal(); joinRoomDirect('${data.roomCode}', '')" style="margin-top:6px; font-size:11px; padding:4px 10px;">Rejoindre le salon ⚡</button>`;
-    }
+    if (data.roomCode) inviteHtml += `<br><button class="power-btn equip" onclick="closeFriendsModal(); joinRoomDirect('${data.roomCode}', '')" style="margin-top:6px; font-size:11px; padding:4px 10px;">Rejoindre le salon ⚡</button>`;
     showNotificationToast(inviteHtml, 'gift');
 });
 
@@ -1065,7 +985,7 @@ function renderGameInvitesList() {
     const container = document.getElementById('friends-list-container');
     container.innerHTML = '';
     if (myGameInvites.length === 0) {
-        container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">${currentLang === 'fr' ? 'Aucune invitation en attente.' : 'No pending invitations.'}</div>`;
+        container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">Aucune invitation en attente.</div>`;
         return;
     }
     myGameInvites.forEach((inv, index) => {
@@ -1102,14 +1022,11 @@ socket.on('friends_list_data', (friends) => {
     updateBadges(window.lastRequestsCount, myGameInvites.length);
 
     let filtered = allFriends;
-    if (currentFriendFilter === 'all') {
-        filtered = allFriends.filter(f => f.status === 'accepted');
-    } else if (currentFriendFilter === 'requests') {
-        filtered = incomingRequests;
-    }
+    if (currentFriendFilter === 'all') filtered = allFriends.filter(f => f.status === 'accepted');
+    else if (currentFriendFilter === 'requests') filtered = incomingRequests;
 
     if (!filtered || filtered.length === 0) {
-        container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">${currentLang === 'fr' ? 'Aucun ami pour le moment.' : 'No friends yet.'}</div>`;
+        container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">Aucun ami pour le moment.</div>`;
         return;
     }
     
@@ -1117,19 +1034,14 @@ socket.on('friends_list_data', (friends) => {
         const row = document.createElement('div');
         row.className = 'friend-card';
         const dotColor = f.isOnline ? '#38ef7d' : '#aaa';
-        const statusText = f.isOnline ? (currentLang === 'fr' ? 'En ligne' : 'Online') : (currentLang === 'fr' ? 'Hors-ligne' : 'Offline');
+        const statusText = f.isOnline ? 'En ligne' : 'Hors-ligne';
         
         let actionsHtml = '';
         if (f.status === 'pending') {
-            if (!f.isRequester) {
-                actionsHtml += `<button class="power-btn equip" onclick="acceptFriend('${f.id}')" style="font-size:10px; padding:4px 6px;">Accepter</button>`;
-            } else {
-                actionsHtml += `<span style="font-size:10px; color:#f8b500;">En attente</span>`;
-            }
-        } else if (f.status === 'accepted') {
-            if (f.isOnline && f.targetSocketId) {
-                actionsHtml += `<button class="power-btn buy" onclick="inviteFriend('${f.targetSocketId}')" style="font-size:10px; padding:4px 6px;">Inviter</button>`;
-            }
+            if (!f.isRequester) actionsHtml += `<button class="power-btn equip" onclick="acceptFriend('${f.id}')" style="font-size:10px; padding:4px 6px;">Accepter</button>`;
+            else actionsHtml += `<span style="font-size:10px; color:#f8b500;">En attente</span>`;
+        } else if (f.status === 'accepted' && f.isOnline && f.targetSocketId) {
+            actionsHtml += `<button class="power-btn buy" onclick="inviteFriend('${f.targetSocketId}')" style="font-size:10px; padding:4px 6px;">Inviter</button>`;
         }
         actionsHtml += `<button class="power-btn" onclick="removeFriend('${f.id}')" style="font-size:10px; padding:4px 6px; background:rgba(255,75,43,0.2); color:#ff4b2b; border:1px solid #ff4b2b;">Supprimer</button>`;
 
@@ -1155,9 +1067,8 @@ function requestRematch() {
     socket.emit('request_rematch');
     document.getElementById('recap-modal').style.display = 'none';
     const roomCodeText = document.getElementById('current-room-code').innerText;
-    if (roomCodeText && roomCodeText !== '----') {
-        document.getElementById('screen-room-waiting').style.display = 'block';
-    } else {
+    if (roomCodeText && roomCodeText !== '----') document.getElementById('screen-room-waiting').style.display = 'block';
+    else {
         document.getElementById('screen-1v1-lobby').style.display = 'flex';
         let digit = 1;
         if (radarInterval) clearInterval(radarInterval);
@@ -1165,16 +1076,13 @@ function requestRematch() {
     }
 }
 
-socket.on('opponent_wants_rematch', () => {
-    showNotificationToast(currentLang === 'fr' ? "⚔️ L'adversaire souhaite une revanche !" : "⚔️ Opponent wants a rematch!", 'gift');
-});
+socket.on('opponent_wants_rematch', () => { showNotificationToast("⚔️ L'adversaire souhaite une revanche !", 'gift'); });
 
 function openAdminLoginModal() {
     let modal = document.getElementById('modal-admin-login');
     if (!modal) {
         const div = document.createElement('div');
-        div.id = 'modal-admin-login';
-        div.className = 'modal-overlay';
+        div.id = 'modal-admin-login'; div.className = 'modal-overlay';
         div.innerHTML = `
             <div class="modal-card" style="text-align:center;">
                 <h2 style="color:#ff4b2b; margin-top:0; font-size:16px;">🛡️ ACCÈS ADMINISTRATEUR</h2>
@@ -1187,32 +1095,20 @@ function openAdminLoginModal() {
                 </div>
             </div>
         `;
-        document.body.appendChild(div);
-        modal = div;
+        document.body.appendChild(div); modal = div;
     }
     modal.style.display = 'flex';
 }
 
-function submitAdminLogin() {
-    const pass = document.getElementById('admin-pass-input').value;
-    socket.emit('admin_auth', pass);
-}
-
+function submitAdminLogin() { socket.emit('admin_auth', document.getElementById('admin-pass-input').value); }
 socket.on('admin_auth_fail', (msg) => { alert(msg); });
-socket.on('admin_auth_success', (data) => {
-    document.getElementById('modal-admin-login').style.display = 'none';
-    openAdminDashboard(data);
-});
-
-let cachedAdminData = null;
+socket.on('admin_auth_success', (data) => { document.getElementById('modal-admin-login').style.display = 'none'; openAdminDashboard(data); });
 
 function openAdminDashboard(data) {
-    cachedAdminData = data;
     let dash = document.getElementById('modal-admin-dashboard');
     if (!dash) {
         const div = document.createElement('div');
-        div.id = 'modal-admin-dashboard';
-        div.className = 'modal-overlay';
+        div.id = 'modal-admin-dashboard'; div.className = 'modal-overlay';
         div.innerHTML = `
             <div class="modal-card" style="max-width:420px; text-align:left;">
                 <h2 style="color:#00d2ff; margin-top:0; text-align:center; font-size:16px;">🎛️ PANEL ADMIN - ÉVÉNEMENTS</h2>
@@ -1220,118 +1116,17 @@ function openAdminDashboard(data) {
                     <div style="background:rgba(255,255,255,0.04); padding:8px; border-radius:8px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                             <strong style="color:#ff8a00;">⚡ ÉVÉNEMENTS & PROGRAMMATIONS</strong>
-                            <div style="display:flex; gap:4px;">
-                                <button class="btn-secondary" onclick="toggleSelectAllManual(true)" style="padding:3px 6px; font-size:9px; margin-top:0; width:auto;">Tout cocher</button>
-                                <button class="btn-secondary" onclick="toggleSelectAllManual(false)" style="padding:3px 6px; font-size:9px; margin-top:0; width:auto;">Tout décocher</button>
-                            </div>
                         </div>
                         <div id="admin-events-config-list" style="display:flex; flex-direction:column; gap:6px;"></div>
                     </div>
                     <button class="btn-main btn-blue" onclick="saveAdminSchedule()" style="padding:8px; font-size:12px; width:100%; margin-top:0;">Enregistrer les modifications 💾</button>
-                    <div style="background:rgba(255,255,255,0.04); padding:8px; border-radius:8px;">
-                        <strong style="color:#f8b500; display:block; margin-bottom:4px;">🎁 CADEAUX / MONNAIE</strong>
-                        <input type="text" id="admin-gift-target" placeholder="Pseudo (ou vide pour TOUS)" style="width:100%; padding:5px; border-radius:6px; border:1px solid #f8b500; background:#0f051d; color:#fff; margin-bottom:4px; outline:none; font-size:10px;">
-                        <div style="display:flex; gap:4px; margin-bottom:4px;">
-                            <select id="admin-gift-currency" style="flex:1; padding:5px; border-radius:6px; border:1px solid #f8b500; background:#0f051d; color:#fff; font-size:10px; outline:none;">
-                                <option value="coins">Pièces 🪙</option>
-                                <option value="points">Points 🏅</option>
-                            </select>
-                            <input type="number" id="admin-gift-amount" placeholder="Montant" value="100" style="flex:1; padding:5px; border-radius:6px; border:1px solid #f8b500; background:#0f051d; color:#fff; font-size:10px; outline:none; text-align:center;">
-                        </div>
-                        <button class="btn-main btn-gold" onclick="sendAdminGift()" style="padding:6px; font-size:11px; width:100%; margin-top:0;">Envoyer le Cadeau 🎁</button>
-                    </div>
-                    <div style="background:rgba(255,255,255,0.04); padding:8px; border-radius:8px;">
-                        <strong style="color:#00d2ff; display:block; margin-bottom:4px;">📢 ANNONCE GLOBALE</strong>
-                        <input type="text" id="admin-broadcast-input" placeholder="Message..." style="width:100%; padding:5px; border-radius:6px; border:1px solid #00d2ff; background:#0f051d; color:#fff; margin-bottom:4px; outline:none; font-size:10px;">
-                        <button class="btn-main btn-blue" onclick="sendAdminBroadcast()" style="padding:6px; font-size:11px; width:100%; margin-top:0;">Diffuser ⚡</button>
-                    </div>
                 </div>
                 <button class="btn-secondary" onclick="document.getElementById('modal-admin-dashboard').style.display='none'" style="margin-top:8px;">Fermer</button>
             </div>
         `;
-        document.body.appendChild(div);
-        dash = div;
+        document.body.appendChild(div); dash = div;
     }
-
-    const eventMeta = [
-        { id: 'coinRush', label: '🪙 Coin Rush (Pièces x2)' },
-        { id: 'rankShield', label: '🛡️ Rank Shield (Anti-perte points)' },
-        { id: 'expressoMatch', label: '⚡ Expresso Match (Timer 20s)' },
-        { id: 'chaosMode', label: '🌪️ Chaos Mode (Malus aléatoires)' },
-        { id: 'jackpotEclair', label: '🎁 Jackpot Éclair (Coffres mystères)' },
-        { id: 'tugOfWarMode', label: '🪢 Mode Exclusif : Corde Raide (Tug-of-War)' }
-    ];
-
-    const listContainer = document.getElementById('admin-events-config-list');
-    listContainer.innerHTML = '';
-    const schedules = data.schedules || {};
-
-    eventMeta.forEach(ev => {
-        const evData = schedules[ev.id] || { manual: false, start: null, end: null };
-        const formatLocalDateTime = (ts) => {
-            if (!ts) return '';
-            const d = new Date(ts);
-            const pad = (n) => String(n).padStart(2, '0');
-            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-        };
-
-        const row = document.createElement('div');
-        row.style.cssText = "background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); padding:6px; border-radius:6px; display:flex; flex-direction:column; gap:4px;";
-        row.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-weight:bold; color:#fff;">${ev.label}</span>
-                <label style="display:flex; align-items:center; gap:4px; cursor:pointer; color:#00ff88; font-weight:bold;">
-                    Direct <input type="checkbox" id="chk-manual-${ev.id}" ${evData.manual ? 'checked' : ''}>
-                </label>
-            </div>
-            <div style="display:flex; gap:4px;">
-                <div style="flex:1;"><input type="datetime-local" id="sched-start-${ev.id}" value="${formatLocalDateTime(evData.start)}" style="width:100%; padding:3px; border-radius:4px; border:1px solid #00d2ff; background:#0f051d; color:#fff; font-size:9px; outline:none;"></div>
-                <div style="flex:1;"><input type="datetime-local" id="sched-end-${ev.id}" value="${formatLocalDateTime(evData.end)}" style="width:100%; padding:3px; border-radius:4px; border:1px solid #00d2ff; background:#0f051d; color:#fff; font-size:9px; outline:none;"></div>
-            </div>
-        `;
-        listContainer.appendChild(row);
-    });
-
     dash.style.display = 'flex';
-}
-
-function toggleSelectAllManual(status) {
-    ['coinRush', 'rankShield', 'expressoMatch', 'chaosMode', 'jackpotEclair', 'tugOfWarMode'].forEach(key => {
-        const chk = document.getElementById(`chk-manual-${key}`);
-        if (chk) chk.checked = status;
-    });
-}
-
-function saveAdminSchedule() {
-    const schedulesData = {};
-    ['coinRush', 'rankShield', 'expressoMatch', 'chaosMode', 'jackpotEclair', 'tugOfWarMode'].forEach(key => {
-        const manual = document.getElementById(`chk-manual-${key}`).checked;
-        const startVal = document.getElementById(`sched-start-${key}`).value;
-        const endVal = document.getElementById(`sched-end-${key}`).value;
-        schedulesData[key] = {
-            manual: manual,
-            start: startVal ? new Date(startVal).getTime() : null,
-            end: endVal ? new Date(endVal).getTime() : null
-        };
-    });
-    socket.emit('admin_update_schedule', schedulesData);
-    showNotificationToast("⏰ Programmation enregistrée !", "gift");
-}
-
-function sendAdminGift() {
-    const targetUsername = document.getElementById('admin-gift-target').value;
-    const currency = document.getElementById('admin-gift-currency').value;
-    const amount = parseInt(document.getElementById('admin-gift-amount').value) || 0;
-    if (amount <= 0) { alert("Montant invalide !"); return; }
-    socket.emit('admin_give_gift', { targetUsername, currency, amount });
-    showNotificationToast("🎁 Cadeau envoyé !", "gift");
-}
-
-function sendAdminBroadcast() {
-    const message = document.getElementById('admin-broadcast-input').value;
-    if (!message) return;
-    socket.emit('admin_broadcast_message', message);
-    showNotificationToast("📢 Annonce diffusée !", "announcement");
 }
 
 function hideAllScreens() {
@@ -1361,35 +1156,14 @@ function showMainMenu() {
     SoundEngine.startMusic('menu');
 }
 
-function openLaunchAdModal() {
-    SoundEngine.init();
-    document.getElementById('modal-launch-ad').style.display = 'flex';
-}
-
-function playLaunchAd() {
-    document.getElementById('modal-launch-ad').style.display = 'none';
-    simulateAd(() => { showMainMenu(); });
-}
-
-function openSoloMenu() {
-    if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-    hideAllScreens();
-    document.getElementById('screen-solo-menu').style.display = 'flex';
-    SoundEngine.startMusic('menu');
-}
-
-function openAvalancheDifficulties() {
-    hideAllScreens();
-    document.getElementById('screen-avalanche-menu').style.display = 'flex';
-    SoundEngine.startMusic('menu');
-}
-
+function openLaunchAdModal() { SoundEngine.init(); document.getElementById('modal-launch-ad').style.display = 'flex'; }
+function playLaunchAd() { document.getElementById('modal-launch-ad').style.display = 'none'; simulateAd(() => { showMainMenu(); }); }
+function openSoloMenu() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } hideAllScreens(); document.getElementById('screen-solo-menu').style.display = 'flex'; SoundEngine.startMusic('menu'); }
+function openAvalancheDifficulties() { hideAllScreens(); document.getElementById('screen-avalanche-menu').style.display = 'flex'; SoundEngine.startMusic('menu'); }
 function startTugOfWarQueue() {
     if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-    hideAllScreens();
-    document.getElementById('screen-1v1-lobby').style.display = 'flex';
-    let digit = 1;
-    radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById('radar-digit').innerText = digit; }, 70);
+    hideAllScreens(); document.getElementById('screen-1v1-lobby').style.display = 'flex';
+    let digit = 1; radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById('radar-digit').innerText = digit; }, 70);
     socket.emit('find_tug_of_war_match');
 }
 
@@ -1399,83 +1173,49 @@ function simulateAd(callback) {
     const overlay = document.getElementById('simulated-ad-overlay');
     const timerEl = document.getElementById('ad-timer');
     const closeBtn = document.getElementById('ad-close-btn');
-    overlay.style.display = 'flex';
-    closeBtn.style.display = 'none';
-    let timeLeft = 5;
-    timerEl.innerText = timeLeft;
+    overlay.style.display = 'flex'; closeBtn.style.display = 'none';
+    let timeLeft = 5; timerEl.innerText = timeLeft;
     const interval = setInterval(() => {
-        timeLeft--;
-        timerEl.innerText = timeLeft;
-        if (timeLeft <= 0) {
-            clearInterval(interval);
-            timerEl.innerText = "✓";
-            closeBtn.style.display = 'block';
-            adCallbackFunction = callback;
-        }
+        timeLeft--; timerEl.innerText = timeLeft;
+        if (timeLeft <= 0) { clearInterval(interval); timerEl.innerText = "✓"; closeBtn.style.display = 'block'; adCallbackFunction = callback; }
     }, 1000);
 }
 
 function closeSimulatedAd() {
     document.getElementById('simulated-ad-overlay').style.display = 'none';
     SoundEngine.startMusic('menu');
-    if (adCallbackFunction) {
-        adCallbackFunction();
-        adCallbackFunction = null;
-    }
+    if (adCallbackFunction) { adCallbackFunction(); adCallbackFunction = null; }
 }
 
 function watchAdToDoubleReward() {
     if (rewardDoubled) return;
     simulateAd(() => {
-        rewardDoubled = true;
-        socket.emit('double_reward');
-        currentCoinsGained *= 2;
+        rewardDoubled = true; socket.emit('double_reward'); currentCoinsGained *= 2;
         document.getElementById('recap-coins-gained').innerText = `+${currentCoinsGained} (x2 ⚡)`;
         const doubleBtn = document.getElementById('btn-double-reward');
-        doubleBtn.disabled = true;
-        doubleBtn.style.opacity = '0.5';
-        doubleBtn.innerText = currentLang === 'fr' ? '✅ Gains doublés !' : '✅ Rewards doubled!';
+        doubleBtn.disabled = true; doubleBtn.style.opacity = '0.5';
+        doubleBtn.innerText = '✅ Gains doublés !';
         document.getElementById('recap-modal').style.display = 'flex';
     });
 }
 
-function open1v1Hub() {
-    if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-    hideAllScreens();
-    document.getElementById('screen-1v1-hub').style.display = 'flex';
-    SoundEngine.startMusic('menu');
-}
-
+function open1v1Hub() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } hideAllScreens(); document.getElementById('screen-1v1-hub').style.display = 'flex'; SoundEngine.startMusic('menu'); }
 function startRandom1v1() {
     if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-    hideAllScreens();
-    document.getElementById('screen-1v1-lobby').style.display = 'flex';
-    let digit = 1;
-    radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById('radar-digit').innerText = digit; }, 70);
+    hideAllScreens(); document.getElementById('screen-1v1-lobby').style.display = 'flex';
+    let digit = 1; radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById('radar-digit').innerText = digit; }, 70);
     socket.emit('find_1v1_match');
 }
 
-function openRankedLoadoutModal() {
-    if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-    selectedRankedItems = [];
-    document.getElementById('modal-ranked-loadout').style.display = 'flex';
-    renderRankedLoadoutItems();
-}
-
-function closeRankedLoadoutModal() {
-    document.getElementById('modal-ranked-loadout').style.display = 'none';
-}
+function openRankedLoadoutModal() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } selectedRankedItems = []; document.getElementById('modal-ranked-loadout').style.display = 'flex'; renderRankedLoadoutItems(); }
+function closeRankedLoadoutModal() { document.getElementById('modal-ranked-loadout').style.display = 'none'; }
 
 function renderRankedLoadoutItems() {
-    const container = document.getElementById('ranked-items-container');
-    container.innerHTML = '';
+    const container = document.getElementById('ranked-items-container'); container.innerHTML = '';
     const powersDict = i18n[currentLang].powers;
     const ownedPowers = POWERS_CATALOG.filter(p => p.type !== 'cosmetics' && (myProfile.inventory[p.id] || 0) > 0);
     
-    if (ownedPowers.length === 0) {
-        container.innerHTML = `<div style="grid-column: span 2; text-align:center; color:#aaa; padding:12px; font-size:11px;">${currentLang === 'fr' ? 'Inventaire vide !' : 'Empty inventory!'}</div>`;
-        return;
-    }
+    if (ownedPowers.length === 0) { container.innerHTML = `<div style="grid-column: span 2; text-align:center; color:#aaa; padding:12px; font-size:11px;">Inventaire vide !</div>`; return; }
 
     ownedPowers.forEach(p => {
         const powerInfo = powersDict[p.id];
@@ -1489,75 +1229,52 @@ function renderRankedLoadoutItems() {
             <h4>${powerInfo.name}</h4>
             <p>${powerInfo.desc}</p>
             <div class="stock-badge">Stock : ${qty}</div>
-            <div style="font-weight:bold; font-size:10px; color:${isSelected ? '#00ff88' : '#f8b500'};">
-                ${isSelected ? 'Sélectionné ✅' : 'Sélectionner'}
-            </div>
+            <div style="font-weight:bold; font-size:10px; color:${isSelected ? '#00ff88' : '#f8b500'};">${isSelected ? 'Sélectionné ✅' : 'Sélectionner'}</div>
         `;
         container.appendChild(card);
     });
 }
 
 function toggleRankedItem(id) {
-    if (selectedRankedItems.includes(id)) {
-        selectedRankedItems = selectedRankedItems.filter(item => item !== id);
-    } else {
-        if (selectedRankedItems.length >= 2) {
-            alert(currentLang === 'fr' ? 'Maximum 2 objets pour le classé.' : 'Maximum 2 items for ranked.');
-            return;
-        }
+    if (selectedRankedItems.includes(id)) selectedRankedItems = selectedRankedItems.filter(item => item !== id);
+    else {
+        if (selectedRankedItems.length >= 2) { alert('Maximum 2 objets pour le classé.'); return; }
         selectedRankedItems.push(id);
     }
     renderRankedLoadoutItems();
 }
 
 function startRankedMatch() {
-    if (selectedRankedItems.length === 0) {
-        alert(currentLang === 'fr' ? 'Sélectionne au moins un objet.' : 'Select at least one item.');
-        return;
-    }
-    closeRankedLoadoutModal();
-    hideAllScreens();
+    if (selectedRankedItems.length === 0) { alert('Sélectionne au moins un objet.'); return; }
+    closeRankedLoadoutModal(); hideAllScreens();
     document.getElementById('screen-1v1-lobby').style.display = 'flex';
-    let digit = 1;
-    radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById('radar-digit').innerText = digit; }, 70);
+    let digit = 1; radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById('radar-digit').innerText = digit; }, 70);
     myProfile.equippedPowers = selectedRankedItems;
     socket.emit('find_ranked_match', { items: selectedRankedItems });
 }
 
 function cancel1v1Search() { showMainMenu(); }
-
-function openRoomsScreen() {
-    if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-    hideAllScreens();
-    window.history.replaceState({}, '', window.location.pathname);
-    document.getElementById('screen-rooms').style.display = 'flex';
-    fetchRoomsList();
-}
-
+function openRoomsScreen() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } hideAllScreens(); window.history.replaceState({}, '', window.location.pathname); document.getElementById('screen-rooms').style.display = 'flex'; fetchRoomsList(); }
 function fetchRoomsList() { socket.emit('get_rooms_list'); }
 
 function openCreateRoomModal() {
     if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-    document.getElementById('custom-room-name').value = '';
-    document.getElementById('custom-room-pass').value = '';
+    document.getElementById('custom-room-name').value = ''; document.getElementById('custom-room-pass').value = '';
     document.getElementById('modal-create-room').style.display = 'flex';
 }
-
 function closeCreateRoomModal() { document.getElementById('modal-create-room').style.display = 'none'; }
 
 function submitCreateRoom() {
     const code = document.getElementById('custom-room-name').value.trim().toUpperCase();
     const password = document.getElementById('custom-room-pass').value.trim();
     if (code !== '' && code.length < 2) { alert("Nom de salon trop court."); return; }
-    if (!socket.connected) { alert("Non connecté au serveur."); return; }
     socket.emit('create_room', { code: code, password: password, username: myProfile.username, avatar: myProfile.avatar, flag: myProfile.flag });
     closeCreateRoomModal();
 }
 
 function openJoinCustomScreen(prefilledCode = '') {
     if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-    hideAllScreens();
-    document.getElementById('screen-join-custom').style.display = 'flex';
+    hideAllScreens(); document.getElementById('screen-join-custom').style.display = 'flex';
     document.getElementById('join-room-code-input').value = prefilledCode;
     document.getElementById('join-room-pass-input').value = '';
 }
@@ -1566,61 +1283,32 @@ function submitJoinCustomRoom() {
     const roomCode = document.getElementById('join-room-code-input').value.trim().toUpperCase();
     const password = document.getElementById('join-room-pass-input').value.trim();
     if (!roomCode) { alert("Entrer un code valide."); return; }
-    if (!socket.connected) { alert("Non connecté."); return; }
     socket.emit('join_room', { code: roomCode, password: password });
 }
 
-function joinRoomFromList(code, hasPassword) {
-    if (hasPassword) openJoinCustomScreen(code);
-    else joinRoomDirect(code, '');
-}
-
-function joinRoomDirect(code, password) {
-    if (!socket.connected) { alert("Non connecté."); return; }
-    socket.emit('join_room', { code: code.toUpperCase(), password: password });
-}
-
-function leaveCustomRoom() {
-    socket.emit('leave_room');
-    window.history.replaceState({}, '', window.location.pathname);
-    openRoomsScreen();
-}
-
-function copyRoomLink() {
-    const input = document.getElementById('room-share-link');
-    input.select();
-    navigator.clipboard.writeText(input.value).then(() => { alert(i18n[currentLang].link_copied); });
-}
-
+function joinRoomFromList(code, hasPassword) { if (hasPassword) openJoinCustomScreen(code); else joinRoomDirect(code, ''); }
+function joinRoomDirect(code, password) { socket.emit('join_room', { code: code.toUpperCase(), password: password }); }
+function leaveCustomRoom() { socket.emit('leave_room'); window.history.replaceState({}, '', window.location.pathname); openRoomsScreen(); }
+function copyRoomLink() { const input = document.getElementById('room-share-link'); input.select(); navigator.clipboard.writeText(input.value).then(() => { alert(i18n[currentLang].link_copied); }); }
 function shareRoomLink() {
     const input = document.getElementById('room-share-link');
-    if (navigator.share) {
-        navigator.share({ title: 'Chiffre Blitz ⚡', text: 'Viens m\'affronter !', url: input.value }).catch(() => {});
-    } else { copyRoomLink(); }
+    if (navigator.share) navigator.share({ title: 'Chiffre Blitz ⚡', text: 'Viens m\'affronter !', url: input.value }).catch(() => {});
+    else copyRoomLink();
 }
 
 socket.on('rooms_list_data', (rooms) => {
-    const listEl = document.getElementById('rooms-list');
-    listEl.innerHTML = '';
-    if (!rooms || rooms.length === 0) {
-        listEl.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:8px; font-size:11px;">${i18n[currentLang].no_rooms}</div>`;
-        return;
-    }
+    const listEl = document.getElementById('rooms-list'); listEl.innerHTML = '';
+    if (!rooms || rooms.length === 0) { listEl.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:8px; font-size:11px;">Aucun salon ouvert.</div>`; return; }
     rooms.forEach(r => {
-        const row = document.createElement('div');
-        row.className = 'room-row';
+        const row = document.createElement('div'); row.className = 'room-row';
         const lockIcon = r.hasPassword ? ' 🔒' : '';
-        row.innerHTML = `
-            <span class="room-info">Salon <b>${r.code}</b>${lockIcon} (${r.playersCount}/2)</span>
-            <button class="power-btn equip" onclick="joinRoomFromList('${r.code}', ${r.hasPassword})">Rejoindre</button>
-        `;
+        row.innerHTML = `<span class="room-info">Salon <b>${r.code}</b>${lockIcon} (${r.playersCount}/2)</span><button class="power-btn equip" onclick="joinRoomFromList('${r.code}', ${r.hasPassword})">Rejoindre</button>`;
         listEl.appendChild(row);
     });
 });
 
 socket.on('room_joined_success', (data) => {
-    hideAllScreens();
-    document.getElementById('screen-room-waiting').style.display = 'flex';
+    hideAllScreens(); document.getElementById('screen-room-waiting').style.display = 'flex';
     document.getElementById('current-room-code').innerText = data.code;
     const shareUrl = `${window.location.origin}${window.location.pathname}?room=${data.code}`;
     window.history.replaceState({}, '', `?room=${data.code}`);
@@ -1632,11 +1320,11 @@ socket.on('room_players_update', (data) => { updateRoomPlayers(data.players); })
 
 function updateRoomPlayers(players) {
     const playersListEl = document.getElementById('room-players-list');
-    if (!players || players.length === 0) { playersListEl.innerText = i18n[currentLang].waiting_opponent; return; }
+    if (!players || players.length === 0) { playersListEl.innerText = 'En attente d\'un adversaire...'; return; }
     playersListEl.innerHTML = players.map(rawData => {
         const p = parsePlayer(rawData);
         const title = p.inventory && p.inventory.__equipped && p.inventory.__equipped.title;
-        const titleHtml = title ? `<span style="font-size: 8px; color: #f8b500; margin-left: 3px;">[${title}]</span>` : '';
+        const titleHtml = title ? `<span style="font-size: 8px; color: #f8b500; margin-left: 3px;">[${TITLE_DISPLAY_NAMES[title] || title}]</span>` : '';
         return `<div style="display:inline-flex; align-items:center; gap:4px;">${getAvatarBadgeHTML(p.flag, p.avatar)} <span>${p.username}</span> ${titleHtml}</div>`;
     }).join(' <span style="color:#aaa; margin:0 4px;">vs</span> ');
     if (players && socket.id) {
@@ -1646,19 +1334,8 @@ function updateRoomPlayers(players) {
 }
 
 socket.on('room_error', (msg) => { alert(msg); });
-
-function openTournamentScreen() {
-    if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-    hideAllScreens();
-    document.getElementById('screen-tournament').style.display = 'flex';
-}
-
-function openShop() {
-    if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-    updateShopCoinsDisplay();
-    document.getElementById('modal-shop').style.display = 'flex';
-    switchShopTab(currentShopTab);
-}
+function openTournamentScreen() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } hideAllScreens(); document.getElementById('screen-tournament').style.display = 'flex'; }
+function openShop() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } updateShopCoinsDisplay(); document.getElementById('modal-shop').style.display = 'flex'; switchShopTab(currentShopTab); }
 function closeShop() { document.getElementById('modal-shop').style.display = 'none'; }
 
 const BLITZ_PASS_TIERS = [
@@ -1694,18 +1371,13 @@ const BLITZ_PASS_TIERS = [
     { tier: 30, free: "Titre suprême « Légende » + 500 🪙", premium: "🏆 GRAND LOT : Lampe Plasma Dorée Animée (Avatar 3D Ultime) + 1000 🪙" }
 ];
 
-function openBlitzPass() {
-    if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-    document.getElementById('modal-blitz-pass').style.display = 'flex';
-    renderBlitzPass();
-}
+function openBlitzPass() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } document.getElementById('modal-blitz-pass').style.display = 'flex'; renderBlitzPass(); }
 
 function showRewardPopUp(rewardName, rewardIcon) {
     let popup = document.getElementById('reward-popup-overlay');
     if (!popup) {
         popup = document.createElement('div');
-        popup.id = 'reward-popup-overlay';
-        popup.className = 'modal-overlay';
+        popup.id = 'reward-popup-overlay'; popup.className = 'modal-overlay';
         popup.innerHTML = `
             <div class="modal-card" style="text-align:center; animation: victoryScalePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; border-color: #f8b500; box-shadow: 0 0 40px rgba(248,181,0,0.8);">
                 <div style="font-size: 55px; margin-bottom: 10px;" id="popup-reward-icon">🎁</div>
@@ -1718,8 +1390,7 @@ function showRewardPopUp(rewardName, rewardIcon) {
     }
     document.getElementById('popup-reward-icon').innerText = rewardIcon || '🎁';
     document.getElementById('popup-reward-name').innerText = rewardName;
-    popup.style.display = 'flex';
-    SoundEngine.playVictory();
+    popup.style.display = 'flex'; SoundEngine.playVictory();
 }
 
 function closeBlitzPass() { document.getElementById('modal-blitz-pass').style.display = 'none'; }
@@ -1740,40 +1411,29 @@ function renderBlitzPass() {
     const listDiv = document.createElement('div');
     listDiv.style.cssText = "display: flex; flex-direction: column; gap: 6px;";
     
-   BLITZ_PASS_TIERS.forEach(t => {
-    const isUnlocked = true; // Débloque tous les paliers
-    const isPremium = true;  // Force le mode VIP/Premium pour tout tester
-    const freeKey = `${t.tier}_free`;
-    const premKey = `${t.tier}_premium`;
-    const isFreeClaimed = claimed[freeKey];
-    const isPremClaimed = claimed[premKey];
-    
+    BLITZ_PASS_TIERS.forEach(t => {
+        const isUnlocked = true;
+        const isPremium = true;
+        const freeKey = `${t.tier}_free`;
+        const premKey = `${t.tier}_premium`;
+        const isFreeClaimed = claimed[freeKey];
+        const isPremClaimed = claimed[premKey];
 
         const card = document.createElement('div');
         card.className = `bp-tier-card ${isUnlocked ? 'unlocked' : ''}`;
         card.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 3px;">
                 <span style="font-weight: 900; color: #f8b500; font-size: 11px;">PALIER ${t.tier}</span>
-                <span style="font-size: 9px; font-weight: bold; color: ${isUnlocked ? '#00ff88' : '#aaa'};">${isUnlocked ? 'Disponible ✅' : '🔒'}</span>
+                <span style="font-size: 9px; font-weight: bold; color: #00ff88;">Disponible ✅</span>
             </div>
             <div class="bp-tracks-grid">
                 <div class="bp-track-box">
                     <div><span style="color:#38ef7d; font-weight:bold;">🟢 Gratuit :</span><br>${t.free}</div>
-                    <button class="power-btn ${isFreeClaimed ? 'active' : (isUnlocked ? 'equip' : 'buy')}" 
-                            style="margin-top:4px; font-size:9px; padding:3px;" 
-                            ${(!isUnlocked || isFreeClaimed) ? 'disabled style="opacity:0.5;"' : ''} 
-                            onclick="claimPassReward(${t.tier}, 'free')">
-                        ${isFreeClaimed ? 'Récupéré' : 'Récupérer'}
-                    </button>
+                    <button class="power-btn ${isFreeClaimed ? 'active' : 'equip'}" style="margin-top:4px; font-size:9px; padding:3px;" ${isFreeClaimed ? 'disabled style="opacity:0.5;"' : ''} onclick="claimPassReward(${t.tier}, 'free')">${isFreeClaimed ? 'Récupéré' : 'Récupérer'}</button>
                 </div>
                 <div class="bp-track-box">
                     <div><span style="color:#00d2ff; font-weight:bold;">⭐ Premium :</span><br>${t.premium}</div>
-                    <button class="power-btn ${isPremClaimed ? 'active' : (isUnlocked && isPremium ? 'equip' : 'buy')}" 
-                            style="margin-top:4px; font-size:9px; padding:3px;" 
-                            ${(!isUnlocked || !isPremium || isPremClaimed) ? 'disabled style="opacity:0.5;"' : ''} 
-                            onclick="claimPassReward(${t.tier}, 'premium')">
-                        ${isPremClaimed ? 'Récupéré' : 'Récupérer'}
-                    </button>
+                    <button class="power-btn ${isPremClaimed ? 'active' : 'equip'}" style="margin-top:4px; font-size:9px; padding:3px;" ${isPremClaimed ? 'disabled style="opacity:0.5;"' : ''} onclick="claimPassReward(${t.tier}, 'premium')">${isPremClaimed ? 'Récupéré' : 'Récupérer'}</button>
                 </div>
             </div>
         `;
@@ -1783,36 +1443,26 @@ function renderBlitzPass() {
 }
 
 function buyBlitzPassPremium() {
-    if (myProfile.coins < 1000) {
-        showNotificationToast(i18n[currentLang].not_enough_coins, 'announcement');
-        return;
-    }
+    if (myProfile.coins < 1000) { showNotificationToast(i18n[currentLang].not_enough_coins, 'announcement'); return; }
     socket.emit('buy_blitz_pass');
 }
 
 function claimPassReward(tier, track) { 
     socket.emit('claim_pass_tier', { tier, track });
-    
-    // Récupère le texte de la récompense pour l'afficher dans la pop-up
     const tierData = BLITZ_PASS_TIERS.find(t => t.tier === tier);
     const rewardText = tierData ? (track === 'premium' ? tierData.premium : tierData.free) : `Palier ${tier}`;
-    
-    // Icône spéciale pour le grand lot final du palier 30
     const icon = (tier === 30 && track === 'premium') ? '🏆' : '🌟';
     showRewardPopUp(rewardText, icon);
 }
 
 function switchShopTab(type) {
-    currentShopTab = type;
-    updateShopCoinsDisplay();
+    currentShopTab = type; updateShopCoinsDisplay();
     document.getElementById('shop-tab-bonus').classList.toggle('active', type === 'bonus');
     document.getElementById('shop-tab-malus').classList.toggle('active', type === 'malus');
     const cosmeticsTabBtn = document.getElementById('shop-tab-cosmetics');
     if (cosmeticsTabBtn) cosmeticsTabBtn.classList.toggle('active', type === 'cosmetics');
     
-    const container = document.getElementById('shop-container');
-    container.innerHTML = '';
-    
+    const container = document.getElementById('shop-container'); container.innerHTML = '';
     const powersDict = i18n[currentLang].powers;
     const cosmeticsDict = {
         theme_alt: { name: '🎨 Thème Rétro', desc: 'Grille visuelle alternative' },
@@ -1854,11 +1504,7 @@ function switchShopTab(type) {
 
 function buyItem(id) {
     const itemObj = POWERS_CATALOG.find(p => p.id === id);
-    if (itemObj && myProfile.coins < itemObj.price) {
-        SoundEngine.playError();
-        showNotificationToast(i18n[currentLang].not_enough_coins, 'announcement');
-        return;
-    }
+    if (itemObj && myProfile.coins < itemObj.price) { SoundEngine.playError(); showNotificationToast(i18n[currentLang].not_enough_coins, 'announcement'); return; }
     if (socket.connected) socket.emit('buy_item', id);
 }
 
@@ -1866,8 +1512,7 @@ function equipCosmetic(id) { if (socket.connected) socket.emit('equip_cosmetic',
 function equipPower(id) { if (socket.connected) socket.emit('equip_power', id); }
 
 function preparePowerHUD() {
-    const zone = document.getElementById('power-zone');
-    zone.innerHTML = '';
+    const zone = document.getElementById('power-zone'); zone.innerHTML = '';
     let powers = (myProfile.equippedPowers && myProfile.equippedPowers.length > 0) ? myProfile.equippedPowers : (myProfile.equippedPower ? [myProfile.equippedPower] : []);
     let usableCount = 0;
 
@@ -1891,31 +1536,23 @@ function triggerSpecificPower(powerId, btnEl) {
     if (stock <= 0) return;
     socket.emit('use_power', powerId);
     myProfile.inventory[powerId]--;
-    btnEl.disabled = true;
-    btnEl.style.opacity = '0.5';
+    btnEl.disabled = true; btnEl.style.opacity = '0.5';
 
     const currentTarget = parseInt(document.getElementById('game-target-giant').innerText) || 1;
     if (powerId === 'spotlight') {
         document.querySelectorAll('.tile').forEach(t => {
             if (parseInt(t.innerText) === currentTarget) {
-                t.classList.add('highlight-target');
-                setTimeout(() => t.classList.remove('highlight-target'), 2000);
+                t.classList.add('highlight-target'); setTimeout(() => t.classList.remove('highlight-target'), 2000);
             }
         });
-    } else if (powerId === 'joker') {
-        autoValidateTarget();
-    } else if (powerId === 'freeze') {
-        isTimeFrozen = true;
-        const timerEl = document.getElementById('game-timer');
+    } else if (powerId === 'joker') autoValidateTarget();
+    else if (powerId === 'freeze') {
+        isTimeFrozen = true; const timerEl = document.getElementById('game-timer');
         timerEl.classList.add('frozen');
         setTimeout(() => { isTimeFrozen = false; timerEl.classList.remove('frozen'); }, 3000);
     } else if (powerId === 'nova') {
-        autoValidateTarget();
-        setTimeout(() => autoValidateTarget(), 250);
-        setTimeout(() => autoValidateTarget(), 500);
-    } else {
-        socket.emit('send_malus', { type: powerId });
-    }
+        autoValidateTarget(); setTimeout(() => autoValidateTarget(), 250); setTimeout(() => autoValidateTarget(), 500);
+    } else socket.emit('send_malus', { type: powerId });
     setTimeout(() => preparePowerHUD(), 100);
 }
 
@@ -1926,14 +1563,11 @@ function autoValidateTarget() {
         document.querySelectorAll('#grid .tile').forEach((t, idx) => {
             if (parseInt(t.innerText) === targetVal) handle1v1TileClick(targetVal, idx);
         });
-    } else {
-        handleSoloTileClick(soloTarget);
-    }
+    } else handleSoloTileClick(soloTarget);
 }
 
 socket.on('receive_malus', (data) => {
-    const grid = document.getElementById('grid');
-    SoundEngine.playError();
+    const grid = document.getElementById('grid'); SoundEngine.playError();
     showNotificationToast(`💥 PIÈGE ADVERSAIRE REÇU !`, 'announcement');
     if (data.type === 'quake') { grid.classList.add('effect-quake'); setTimeout(() => grid.classList.remove('effect-quake'), 2000); }
     else if (data.type === 'micro') { grid.classList.add('effect-micro'); setTimeout(() => grid.classList.remove('effect-micro'), 2000); }
@@ -1946,14 +1580,12 @@ socket.on('receive_malus', (data) => {
     }
 });
 
-let currentLbCategory = 'points';
-let currentLbScope = 'regional';
+let currentLbCategory = 'points', currentLbScope = 'regional';
 
 function openLeaderboard() {
     if (!isProfileValid()) { checkAndShowProfileModal(); return; }
     document.getElementById('modal-leaderboard').style.display = 'flex';
-    updateCombinedExplanationVisibility();
-    fetchLeaderboard();
+    updateCombinedExplanationVisibility(); fetchLeaderboard();
 }
 
 function closeLeaderboard() { document.getElementById('modal-leaderboard').style.display = 'none'; }
@@ -1964,8 +1596,7 @@ function setLbCategory(cat) {
         const btn = document.getElementById(`lb-cat-${c}`);
         if (btn) btn.classList.toggle('active', c === cat);
     });
-    updateCombinedExplanationVisibility();
-    fetchLeaderboard();
+    updateCombinedExplanationVisibility(); fetchLeaderboard();
 }
 
 function updateCombinedExplanationVisibility() {
@@ -1989,34 +1620,25 @@ function fetchLeaderboard() {
 }
 
 socket.on('leaderboard_data', (res) => {
-    const container = document.getElementById('lb-list');
-    container.innerHTML = '';
-    if (!res.data || res.data.length === 0) { 
-        container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">Aucun joueur.</div>`; 
-        return; 
-    }
+    const container = document.getElementById('lb-list'); container.innerHTML = '';
+    if (!res.data || res.data.length === 0) { container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">Aucun joueur.</div>`; return; }
     
     const category = res.type ? res.type.split('_')[0] : 'points';
     const parsedList = res.data.map(p => parsePlayer(p));
-
-    if (category === 'combined') {
-        parsedList.sort((a, b) => (b.trophies - a.trophies) !== 0 ? (b.trophies - a.trophies) : (b.points - a.points));
-    }
+    if (category === 'combined') parsedList.sort((a, b) => (b.trophies - a.trophies) !== 0 ? (b.trophies - a.trophies) : (b.points - a.points));
 
     parsedList.forEach((p, index) => {
-        const row = document.createElement('div');
-        row.className = 'lb-row';
+        const row = document.createElement('div'); row.className = 'lb-row';
         const badgeHtml = getAvatarBadgeHTML(p.flag, p.avatar);
         const equippedTitle = p.inventory && p.inventory.__equipped && p.inventory.__equipped.title;
-        const titleHtml = equippedTitle ? `<span style="font-size: 8px; color: #f8b500; font-weight: bold; margin-left: 4px;">[${equippedTitle}]</span>` : '';
+        const titleHtml = equippedTitle ? `<span style="font-size: 8px; color: #f8b500; font-weight: bold; margin-left: 4px;">[${TITLE_DISPLAY_NAMES[equippedTitle] || equippedTitle}]</span>` : '';
         
         let rightBadge = `<span class="lb-pts" style="color:#00ff88;">${p.points} pts</span>`;
         if (category === 'coins') rightBadge = `<span class="lb-pts" style="color:#f8b500;">${p.coins} 🪙</span>`;
         else if (category === 'trophies') rightBadge = `<span class="lb-pts" style="color:#fceabb;">${p.trophies} 🏆</span>`;
         else if (category === 'combined') rightBadge = `<span class="lb-pts" style="color:#00d2ff; font-size:11px;">🏆${p.trophies} | ${p.points}pts</span>`;
 
-        let rankDisplay = `#${index + 1}`;
-        let rankColor = '#00d2ff';
+        let rankDisplay = `#${index + 1}`, rankColor = '#00d2ff';
         if (index === 0) { rankDisplay = '🥇'; rankColor = '#f8b500'; }
         else if (index === 1) { rankDisplay = '🥈'; rankColor = '#e0e0e0'; }
         else if (index === 2) { rankDisplay = '🥉'; rankColor = '#cd7f32'; }
@@ -2025,11 +1647,7 @@ socket.on('leaderboard_data', (res) => {
             <span class="lb-rank" style="color: ${rankColor};">${rankDisplay}</span>
             <div class="lb-user-info">
                 <div class="lb-name-row">${badgeHtml} <span>${p.username}</span> ${titleHtml}</div>
-                <div class="lb-sub-details">
-                    <span>🏆 ${p.trophies}</span>
-                    <span>🪙 ${p.coins}</span>
-                    <span>⚔️ V:${p.wins}/D:${p.losses}</span>
-                </div>
+                <div class="lb-sub-details"><span>🏆 ${p.trophies}</span><span>🪙 ${p.coins}</span><span>⚔️ V:${p.wins}/D:${p.losses}</span></div>
             </div>
             ${rightBadge}
         `;
@@ -2057,7 +1675,7 @@ function updateOpponentDisplay(opp) {
     document.getElementById('opp-profile-badge').innerHTML = getAvatarBadgeHTML(cachedOpponent.flag, cachedOpponent.avatar);
     const oppTitle = cachedOpponent.inventory && cachedOpponent.inventory.__equipped && cachedOpponent.inventory.__equipped.title;
     const oppTitleEl = document.getElementById('opp-profile-title');
-    if (oppTitleEl) oppTitleEl.innerText = oppTitle ? `[ ${oppTitle} ]` : "";
+    if (oppTitleEl) oppTitleEl.innerText = oppTitle ? `[ ${TITLE_DISPLAY_NAMES[oppTitle] || oppTitle} ]` : "";
 }
 
 socket.on('start_countdown', (data) => {
@@ -2068,13 +1686,11 @@ socket.on('start_countdown', (data) => {
 
     hideAllScreens();
     document.getElementById('countdown-overlay').style.display = 'flex';
-    let count = 3;
-    document.getElementById('countdown-number').innerText = count;
+    let count = 3; document.getElementById('countdown-number').innerText = count;
     const timer = setInterval(() => {
         count--;
-        if (count > 0) {
-            document.getElementById('countdown-number').innerText = count;
-        } else {
+        if (count > 0) document.getElementById('countdown-number').innerText = count;
+        else {
             clearInterval(timer);
             document.getElementById('countdown-overlay').style.display = 'none';
             document.getElementById('screen-game').style.display = 'block';
@@ -2082,30 +1698,21 @@ socket.on('start_countdown', (data) => {
             document.getElementById('hud-solo').style.display = 'none';
 
             const towHud = document.getElementById('hud-tow');
-            if (data.isTugOfWar) {
-                towHud.style.display = 'block';
-                updateTugOfWarGauge(0);
-            } else {
-                towHud.style.display = 'none';
-            }
+            if (data.isTugOfWar) { towHud.style.display = 'block'; updateTugOfWarGauge(0); }
+            else towHud.style.display = 'none';
 
             if (latest1v1StartData) {
                 document.getElementById('game-target-giant').innerText = latest1v1StartData.myTarget || 1;
                 renderGrid(latest1v1StartData.myPool, handle1v1TileClick);
             }
-
             preparePowerHUD();
             current1v1Time = latest1v1StartData ? latest1v1StartData.timeLeft : 30;
-            isTimeFrozen = false;
-            SoundEngine.startMusic('1v1');
+            isTimeFrozen = false; SoundEngine.startMusic('1v1');
         }
     }, 1000);
 });
 
-socket.on('timer_update', (time) => {
-    if (!isTimeFrozen) { current1v1Time = time; document.getElementById('game-timer').innerText = Math.max(0, time); }
-});
-
+socket.on('timer_update', (time) => { if (!isTimeFrozen) { current1v1Time = time; document.getElementById('game-timer').innerText = Math.max(0, time); } });
 socket.on('tug_of_war_update', (data) => { updateTugOfWarGauge(data.ropePosition); });
 
 function updateTugOfWarGauge(pos) {
@@ -2118,8 +1725,7 @@ function updateTugOfWarGauge(pos) {
 socket.on('my_grid_updated', (data) => {
     document.getElementById('game-target-giant').innerText = data.target;
     renderGrid(data.newPool, handle1v1TileClick);
-    if (data.success) SoundEngine.playClick();
-    else SoundEngine.playError();
+    if (data.success) SoundEngine.playClick(); else SoundEngine.playError();
 });
 
 socket.on('opponent_progress', (data) => {
@@ -2133,18 +1739,15 @@ socket.on('trigger_jackpot_wheel', () => {
     const wheelModal = document.getElementById('modal-jackpot-wheel');
     const spinBtn = document.getElementById('btn-spin-wheel');
     const wheelEl = document.getElementById('wheel-element');
-    wheelEl.style.transition = 'none';
-    wheelEl.style.transform = 'rotate(0deg)';
-    spinBtn.disabled = false;
-    spinBtn.style.opacity = '1';
+    wheelEl.style.transition = 'none'; wheelEl.style.transform = 'rotate(0deg)';
+    spinBtn.disabled = false; spinBtn.style.opacity = '1';
     document.getElementById('wheel-result-text').innerText = '';
     wheelModal.style.display = 'flex';
 });
 
 function spinJackpotWheel() {
     const spinBtn = document.getElementById('btn-spin-wheel');
-    spinBtn.disabled = true;
-    spinBtn.style.opacity = '0.5';
+    spinBtn.disabled = true; spinBtn.style.opacity = '0.5';
     document.getElementById('wheel-result-text').innerText = '';
     socket.emit('spin_jackpot_wheel');
 }
@@ -2156,49 +1759,32 @@ socket.on('jackpot_wheel_result', (data) => {
     wheelEl.style.transform = `rotate(${data.targetAngle || 135}deg)`;
 
     setTimeout(() => {
-        if (data.outcome === 'jackpot') {
-            resultText.innerHTML = `🎉 <span style="color:#f8b500;">JACKPOT ! +${data.coinDelta} Pièces 🪙</span>`;
-            SoundEngine.playVictory();
-        } else if (data.outcome === 'objet') {
-            resultText.innerHTML = `🎁 <span style="color:#00c6ff;">OBJET GAGNÉ ! ⚡</span>`;
-            SoundEngine.playVictory();
-        } else if (data.outcome === 'banqueroute') {
-            resultText.innerHTML = `💀 <span style="color:#ff4b2b;">PERDU ! ${data.coinDelta} Pièces 🪙</span>`;
-            SoundEngine.playError();
-        } else {
-            resultText.innerHTML = `❌ <span style="color:#38ef7d;">RIEN ! Retente ta chance.</span>`;
-        }
+        if (data.outcome === 'jackpot') { resultText.innerHTML = `🎉 <span style="color:#f8b500;">JACKPOT ! +${data.coinDelta} Pièces 🪙</span>`; SoundEngine.playVictory(); }
+        else if (data.outcome === 'objet') { resultText.innerHTML = `🎁 <span style="color:#00c6ff;">OBJET GAGNÉ ! ⚡</span>`; SoundEngine.playVictory(); }
+        else if (data.outcome === 'banqueroute') { resultText.innerHTML = `💀 <span style="color:#ff4b2b;">PERDU ! ${data.coinDelta} Pièces 🪙</span>`; SoundEngine.playError(); }
+        else resultText.innerHTML = `❌ <span style="color:#38ef7d;">RIEN ! Retente ta chance.</span>`;
 
         setTimeout(() => {
             document.getElementById('modal-jackpot-wheel').style.display = 'none';
-            if (pendingGameOverData) {
-                showGameOverRecap(pendingGameOverData);
-                pendingGameOverData = null;
-            }
+            if (pendingGameOverData) { showGameOverRecap(pendingGameOverData); pendingGameOverData = null; }
         }, 2200);
     }, 3600);
 });
 
 socket.on('game_over_1v1', (data) => {
     const wheelModal = document.getElementById('modal-jackpot-wheel');
-    if (wheelModal && wheelModal.style.display === 'flex') {
-        pendingGameOverData = data;
-        return;
-    }
+    if (wheelModal && wheelModal.style.display === 'flex') { pendingGameOverData = data; return; }
     showGameOverRecap(data);
 });
 
 function getWinnerAvatarShowcaseHTML(playerObj) {
     if (!playerObj) return '';
     const equippedAvatar = playerObj.inventory && playerObj.inventory.__equipped && playerObj.inventory.__equipped.avatar;
-    const isGoldFrame = playerObj.inventory && playerObj.inventory.__equipped && playerObj.inventory.__equipped.frame === 'frame_gold';
+    const equippedFrame = playerObj.inventory && playerObj.inventory.__equipped && playerObj.inventory.__equipped.frame;
+    const isGoldFrame = equippedFrame === 'frame_gold';
     
-    let iconContent = playerObj.avatar || 1;
-    let isRobot = false;
-    if (equippedAvatar === 'avatar_legend' || playerObj.avatar === 'avatar_legend') {
-        iconContent = '🤖';
-        isRobot = true;
-    }
+    let iconContent = playerObj.avatar || 1, isRobot = false;
+    if (equippedAvatar === 'avatar_legend' || playerObj.avatar === 'avatar_legend') { iconContent = '🤖'; isRobot = true; }
 
     return `
         <div class="victory-avatar-showcase">
@@ -2212,65 +1798,41 @@ function getWinnerAvatarShowcaseHTML(playerObj) {
 }
 
 function showGameOverRecap(data) {
-    hideAllScreens();
-    window.history.replaceState({}, '', window.location.pathname);
+    hideAllScreens(); window.history.replaceState({}, '', window.location.pathname);
     const modal = document.getElementById('recap-modal');
     const banner = document.getElementById('recap-banner');
     document.getElementById('recap-1v1-rows').style.display = 'block';
-    const myId = socket.id;
-    const myData = data.players[myId];
+    const myId = socket.id, myData = data.players[myId];
     const oppId = Object.keys(data.players).find(id => id !== myId);
     const oppData = oppId ? data.players[oppId] : { target: '-', score: 0 };
     
     rewardDoubled = false;
     const doubleBtn = document.getElementById('btn-double-reward');
-    doubleBtn.disabled = false;
-    doubleBtn.style.opacity = '1';
-    doubleBtn.innerText = currentLang === 'fr' ? '📺 Doubler mes gains (Pub)' : '📺 Double my rewards (Ad)';
+    doubleBtn.disabled = false; doubleBtn.style.opacity = '1';
+    doubleBtn.innerText = '📺 Doubler mes gains (Pub)';
 
     const rematchBtn = document.getElementById('btn-rematch');
-    if (rematchBtn) {
-        rematchBtn.style.display = 'block';
-        rematchBtn.disabled = false;
-        rematchBtn.style.opacity = '1';
-        rematchBtn.innerText = currentLang === 'fr' ? "Revanche ⚔️" : "Rematch ⚔️";
-    }
+    if (rematchBtn) { rematchBtn.style.display = 'block'; rematchBtn.disabled = false; rematchBtn.style.opacity = '1'; rematchBtn.innerText = "Revanche ⚔️"; }
 
     const myReward = data.rewards && data.rewards[myId] ? data.rewards[myId] : { baseCoins: 30, rushBonus: 0, totalCoins: 30 };
     currentCoinsGained = myReward.totalCoins;
 
-    const winnerId = data.winnerId;
-    const isWinner = (winnerId === myId);
+    const winnerId = data.winnerId, isWinner = (winnerId === myId);
     const cinematicContainer = document.getElementById('winner-cinematic-container');
     
     let winnerObj = null;
     if (winnerId) {
-        if (winnerId === myId) {
-            winnerObj = { username: myProfile.username, avatar: myProfile.avatar, flag: myProfile.flag, inventory: myProfile.inventory, unlocked_items: myProfile.unlocked_items };
-        } else if (cachedOpponent && (winnerId === cachedOpponent.id || winnerId === cachedOpponent.socketId)) {
-            winnerObj = cachedOpponent;
-        } else if (data.players[winnerId]) {
-            winnerObj = parsePlayer(data.players[winnerId]);
-            if (!winnerObj.username || winnerObj.username === 'Joueur') {
-                if (cachedOpponent && cachedOpponent.username) winnerObj.username = cachedOpponent.username;
-            }
-        }
+        if (winnerId === myId) winnerObj = { username: myProfile.username, avatar: myProfile.avatar, flag: myProfile.flag, inventory: myProfile.inventory, unlocked_items: myProfile.unlocked_items };
+        else if (cachedOpponent && (winnerId === cachedOpponent.id || winnerId === cachedOpponent.socketId)) winnerObj = cachedOpponent;
+        else if (data.players[winnerId]) winnerObj = parsePlayer(data.players[winnerId]);
     }
 
-    if (winnerObj) {
-        cinematicContainer.innerHTML = getWinnerAvatarShowcaseHTML(winnerObj);
-    } else {
-        cinematicContainer.innerHTML = `<div class="victory-avatar-showcase"><div style="font-size: 28px; margin-bottom: 4px;">🤝</div><div style="font-size: 13px; font-weight: 900; color: #00d2ff;">ÉGALITÉ !</div></div>`;
-    }
+    if (winnerObj) cinematicContainer.innerHTML = getWinnerAvatarShowcaseHTML(winnerObj);
+    else cinematicContainer.innerHTML = `<div class="victory-avatar-showcase"><div style="font-size: 28px; margin-bottom: 4px;">🤝</div><div style="font-size: 13px; font-weight: 900; color: #00d2ff;">ÉGALITÉ !</div></div>`;
 
-    if (isWinner) {
-        banner.innerText = currentLang === 'fr' ? "🏆 VICTOIRE !" : "🏆 VICTORY!"; banner.style.color = "#00d2ff";
-        SoundEngine.playVictory();
-    } else if (winnerId) {
-        banner.innerText = currentLang === 'fr' ? "❌ DÉFAITE !" : "❌ DEFEAT!"; banner.style.color = "#ff007f";
-    } else {
-        banner.innerText = currentLang === 'fr' ? "⏱️ ÉGALITÉ !" : "⏱️ DRAW!"; banner.style.color = "#ff8a00";
-    }
+    if (isWinner) { banner.innerText = "🏆 VICTOIRE !"; banner.style.color = "#00d2ff"; SoundEngine.playVictory(); }
+    else if (winnerId) { banner.innerText = "❌ DÉFAITE !"; banner.style.color = "#ff007f"; }
+    else { banner.innerText = "⏱️ ÉGALITÉ !"; banner.style.color = "#ff8a00"; }
     
     document.getElementById('recap-reason').innerText = data.reason;
     document.getElementById('recap-my-target').innerText = myData ? myData.target : '-';
@@ -2280,9 +1842,7 @@ function showGameOverRecap(data) {
     let htmlCoins = `+${myReward.baseCoins}`;
     if (myReward.rushBonus > 0) htmlCoins += ` <span style="color:#ff8a00;">+${myReward.rushBonus}(RUSH)</span>`;
     document.getElementById('recap-coins-gained').innerHTML = htmlCoins;
-
-    modal.style.display = 'flex';
-    registerIfPossible();
+    modal.style.display = 'flex'; registerIfPossible();
 }
 
 socket.on('solo_reward_result', (data) => {
@@ -2296,8 +1856,7 @@ socket.on('solo_reward_result', (data) => {
             document.getElementById('recap-modal').style.display = 'none';
             document.getElementById('modal-jackpot-wheel').style.display = 'flex';
             const wheelEl = document.getElementById('wheel-element');
-            wheelEl.style.transition = 'none';
-            wheelEl.style.transform = 'rotate(0deg)';
+            wheelEl.style.transition = 'none'; wheelEl.style.transform = 'rotate(0deg)';
             document.getElementById('btn-spin-wheel').disabled = false;
             document.getElementById('btn-spin-wheel').style.opacity = '1';
             document.getElementById('wheel-result-text').innerText = '';
@@ -2324,9 +1883,7 @@ function startSoloTraining(mode) {
     document.getElementById('game-target-giant').innerText = soloTarget;
     document.getElementById('solo-score').innerText = soloScore;
     document.getElementById('game-timer').innerText = soloTimeLeft;
-    preparePowerHUD();
-    generateSoloGrid();
-    SoundEngine.startMusic('solo');
+    preparePowerHUD(); generateSoloGrid(); SoundEngine.startMusic('solo');
 
     soloTimerInterval = setInterval(() => {
         if (!isTimeFrozen) {
@@ -2396,11 +1953,8 @@ function startAvalancheGame(speed, initialCount) {
 
     avalancheGridData = Array(16).fill(null);
     avalancheTarget = null;
-    for(let i=0; i<initialCount; i++) spawnAvalancheNumber();
-    updateAvalancheTarget();
-    renderAvalancheGrid();
-
-    preparePowerHUD();
+    for (let i = 0; i < initialCount; i++) spawnAvalancheNumber();
+    updateAvalancheTarget(); renderAvalancheGrid(); preparePowerHUD();
     SoundEngine.startMusic('solo');
 
     avalancheTimerInterval = setInterval(() => {
@@ -2408,22 +1962,15 @@ function startAvalancheGame(speed, initialCount) {
             avalancheTimeLeft--;
             document.getElementById('game-timer').innerText = Math.max(0, avalancheTimeLeft);
             if (avalancheTimeLeft <= 0) {
-                clearInterval(avalancheTimerInterval);
-                clearInterval(avalancheInterval);
-                endSoloGame();
+                clearInterval(avalancheTimerInterval); clearInterval(avalancheInterval); endSoloGame();
             }
         }
     }, 1000);
 
     avalancheInterval = setInterval(() => {
         if (!isTimeFrozen) {
-            let added = spawnAvalancheNumber();
-            renderAvalancheGrid();
-            if (!added) {
-                clearInterval(avalancheTimerInterval);
-                clearInterval(avalancheInterval);
-                endSoloGame();
-            }
+            let added = spawnAvalancheNumber(); renderAvalancheGrid();
+            if (!added) { clearInterval(avalancheTimerInterval); clearInterval(avalancheInterval); endSoloGame(); }
         }
     }, speed);
 }
@@ -2444,26 +1991,20 @@ function updateAvalancheTarget() {
         avalancheTarget = activeNumbers[Math.floor(Math.random() * activeNumbers.length)];
         document.getElementById('game-target-giant').innerText = avalancheTarget;
     } else {
-        avalancheTarget = null;
-        document.getElementById('game-target-giant').innerText = '-';
+        avalancheTarget = null; document.getElementById('game-target-giant').innerText = '-';
     }
 }
 
 function renderAvalancheGrid() {
     const grid = document.getElementById('grid');
-    if (!grid) return;
-    grid.innerHTML = '';
+    if (!grid) return; grid.innerHTML = '';
     const isAltTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme === 'theme_alt';
     avalancheGridData.forEach((val, idx) => {
         const tile = document.createElement('div');
         if (val !== null) {
             tile.className = `tile ${isAltTheme ? 'alt-theme' : ''}`;
-            tile.innerText = val;
-            tile.onclick = () => handleAvalancheClick(val, idx);
-        } else {
-            tile.className = 'tile empty';
-            tile.innerText = '';
-        }
+            tile.innerText = val; tile.onclick = () => handleAvalancheClick(val, idx);
+        } else { tile.className = 'tile empty'; tile.innerText = ''; }
         grid.appendChild(tile);
     });
 }
@@ -2471,12 +2012,10 @@ function renderAvalancheGrid() {
 function handleAvalancheClick(val, idx) {
     if (val === avalancheTarget) {
         SoundEngine.playClick();
-        avalancheGridData[idx] = null;
-        soloScore += 20;
+        avalancheGridData[idx] = null; soloScore += 20;
         document.getElementById('solo-score').innerText = soloScore;
-        updateAvalancheTarget();
-        renderAvalancheGrid();
-    } else { SoundEngine.playError(); }
+        updateAvalancheTarget(); renderAvalancheGrid();
+    } else SoundEngine.playError();
 }
 
 function endSoloGame() {
@@ -2484,9 +2023,8 @@ function endSoloGame() {
     const modal = document.getElementById('recap-modal');
     rewardDoubled = false;
     const doubleBtn = document.getElementById('btn-double-reward');
-    doubleBtn.disabled = false;
-    doubleBtn.style.opacity = '1';
-    doubleBtn.innerText = currentLang === 'fr' ? '📺 Doubler mes gains (Pub)' : '📺 Double my rewards (Ad)';
+    doubleBtn.disabled = false; doubleBtn.style.opacity = '1';
+    doubleBtn.innerText = '📺 Doubler mes gains (Pub)';
 
     const rematchBtn = document.getElementById('btn-rematch');
     if (rematchBtn) rematchBtn.style.display = 'none';
@@ -2499,27 +2037,24 @@ function endSoloGame() {
         </div>
     `;
 
-    document.getElementById('recap-banner').innerText = currentLang === 'fr' ? "🏋️ ENTRAÎNEMENT TERMINÉ" : "🏋️ TRAINING FINISHED";
+    document.getElementById('recap-banner').innerText = "🏋️ ENTRAÎNEMENT TERMINÉ";
     document.getElementById('recap-banner').style.color = "#00d2ff";
     document.getElementById('recap-1v1-rows').style.display = 'none';
     document.getElementById('recap-reason').innerText = `Score : ${soloScore}`;
     document.getElementById('recap-my-score').innerText = soloScore;
 
-    SoundEngine.playVictory();
-    modal.style.display = 'flex';
+    SoundEngine.playVictory(); modal.style.display = 'flex';
 }
 
 function renderGrid(pool, handler) {
     const grid = document.getElementById('grid');
-    if (!grid) return;
-    grid.innerHTML = '';
+    if (!grid) return; grid.innerHTML = '';
     if (!pool) return;
     const isAltTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme === 'theme_alt';
     pool.forEach((num, index) => {
         const tile = document.createElement('div');
         tile.className = `tile ${isAltTheme ? 'alt-theme' : ''}`;
-        tile.innerText = num;
-        tile.onclick = () => handler(num, index);
+        tile.innerText = num; tile.onclick = () => handler(num, index);
         grid.appendChild(tile);
     });
 }
