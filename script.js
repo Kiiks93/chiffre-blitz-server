@@ -506,16 +506,18 @@ robloxAdminStyles.innerHTML = `
         box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     }
     
-    /* Animation 3D / Rotation Avatar Palier 20 & 30 */
+    /* Animations 3D et Boule Plasma / Lampe Plasma avec Effet Main et Arcs Électriques */
     @keyframes robloxFloat {
         0% { transform: translateY(0px) rotate(0deg); }
         50% { transform: translateY(-6px) rotate(3deg); }
         100% { transform: translateY(0px) rotate(0deg); }
     }
-    @keyframes plasmaPulse {
-        0% { filter: drop-shadow(0 0 5px #ff007f) brightness(1); transform: scale(1); }
-        50% { filter: drop-shadow(0 0 20px #00d2ff) brightness(1.3); transform: scale(1.08); }
-        100% { filter: drop-shadow(0 0 5px #ff007f) brightness(1); transform: scale(1); }
+    @keyframes plasmaLightning {
+        0% { filter: drop-shadow(0 0 6px #ff007f) brightness(1); transform: scale(1) rotate(0deg); }
+        25% { filter: drop-shadow(0 0 18px #00d2ff) brightness(1.4); transform: scale(1.05) rotate(-2deg); }
+        50% { filter: drop-shadow(0 0 25px #fffa65) brightness(1.6); transform: scale(1.12) rotate(2deg); }
+        75% { filter: drop-shadow(0 0 15px #ff007f) brightness(1.3); transform: scale(1.06) rotate(-1deg); }
+        100% { filter: drop-shadow(0 0 6px #ff007f) brightness(1); transform: scale(1) rotate(0deg); }
     }
     @keyframes energyCoreSpin {
         0% { transform: rotate(0deg) scale(1); filter: hue-rotate(0deg); }
@@ -524,23 +526,24 @@ robloxAdminStyles.innerHTML = `
     }
 
     .avatar-energy-core {
-        animation: energyCoreSpin 4s infinite linear, plasmaPulse 2s infinite ease-in-out;
+        animation: energyCoreSpin 4s infinite linear, plasmaLightning 2s infinite ease-in-out;
         display: inline-block;
     }
     .avatar-plasma-lamp-3d {
-        animation: robloxFloat 3s infinite ease-in-out, plasmaPulse 2.5s infinite alternate;
+        animation: robloxFloat 3s infinite ease-in-out, plasmaLightning 1.5s infinite alternate;
         display: inline-block;
         transform-style: preserve-3d;
+        filter: drop-shadow(0 0 12px rgba(0, 210, 255, 0.9));
     }
 `;
 document.head.appendChild(robloxAdminStyles);
 
 const COSMETICS_DICTIONARY_EXTENDED = {
     'theme_alt': { name: '🎨 Thème Rétro', desc: 'Grille visuelle alternative' },
-    'avatar_legend': { name: '🤖 Avatar Robot', desc: 'Avatar exclusif robot' },
+    'avatar_legend': { name: '🔮 Boule Plasma', desc: 'Avatar sphère plasma interactive' },
     'frame_gold': { name: '👑 Cadre Or Massif', desc: 'Bordure dorée prestigieuse' },
     'avatar_energy_core': { name: '⚛️ Avatar Noyau d\'Énergie (Palier 20)', desc: 'Avatar animé 3D technologique' },
-    'avatar_plasma_gold': { name: '🏆 Lampe Plasma Dorée (Palier 30)', desc: 'Avatar ultime animé 3D étincelant' }
+    'avatar_plasma_gold': { name: '⚡ Lampe Plasma 3D + Arcs (Palier 30)', desc: 'Avatar ultime sphère plasma style effet main' }
 };
 
 function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
@@ -563,11 +566,11 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
     let customClass = '';
 
     if (equippedAvatar === 'avatar_legend') {
-        avatarContent = '🤖'; avatarTitle = 'Robot Mathématicien Légendaire';
+        avatarContent = '🔮'; avatarTitle = 'Boule Plasma Interactive'; customClass = 'avatar-plasma-lamp-3d';
     } else if (equippedAvatar === 'avatar_energy_core') {
         avatarContent = '⚛️'; avatarTitle = 'Noyau d\'Énergie (Palier 20)'; customClass = 'avatar-energy-core';
     } else if (equippedAvatar === 'avatar_plasma_gold') {
-        avatarContent = '🏮'; avatarTitle = 'Lampe Plasma 3D (Palier 30)'; customClass = 'avatar-plasma-lamp-3d';
+        avatarContent = '⚡✋'; avatarTitle = 'Lampe Plasma 3D avec Arcs (Palier 30)'; customClass = 'avatar-plasma-lamp-3d';
     }
 
     const isGold = equippedFrame === 'frame_gold';
@@ -590,9 +593,9 @@ function getLargeAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
     
     let avatarContent = avatarNum || 1;
     let customClass = '';
-    if (avatarType === 'avatar_legend') avatarContent = '🤖'; 
+    if (avatarType === 'avatar_legend') { avatarContent = '🔮'; customClass = 'avatar-plasma-lamp-3d'; } 
     else if (avatarType === 'avatar_energy_core') { avatarContent = '⚛️'; customClass = 'avatar-energy-core'; }
-    else if (avatarType === 'avatar_plasma_gold') { avatarContent = '🏮'; customClass = 'avatar-plasma-lamp-3d'; }
+    else if (avatarType === 'avatar_plasma_gold') { avatarContent = '⚡✋'; customClass = 'avatar-plasma-lamp-3d'; }
 
     return `
         <div class="tft-avatar-large ${isGoldFrame ? 'gold-frame' : ''} ${isAnimatedFrame ? 'animated-frame' : ''}">
@@ -627,9 +630,9 @@ function renderProfileAvatarSelector() {
     addAvatarOption('standard', '🔢', 'Standard');
     
     const unlocked = myProfile.unlocked_items || [];
-    if (unlocked.includes('avatar_legend')) addAvatarOption('avatar_legend', '🤖', 'Robot');
+    if (unlocked.includes('avatar_legend')) addAvatarOption('avatar_legend', '🔮', 'Boule Plasma');
     if (unlocked.includes('avatar_energy_core')) addAvatarOption('avatar_energy_core', '⚛️', 'Noyau 20');
-    if (unlocked.includes('avatar_plasma_gold')) addAvatarOption('avatar_plasma_gold', '🏮', 'Plasma 3D');
+    if (unlocked.includes('avatar_plasma_gold')) addAvatarOption('avatar_plasma_gold', '⚡✋', 'Lampe 3D');
 }
 
 const TITLE_DISPLAY_NAMES = {
@@ -1622,7 +1625,7 @@ const BLITZ_PASS_TIERS = [
     { tier: 27, free: "2 💡 Projecteur", premium: "4 🌟 Novas Temporelles" },
     { tier: 28, free: "140 Pièces (🪙)", premium: "400 Pièces (🪙)" },
     { tier: 29, free: "300 Pièces (🪙)", premium: "500 Pièces (🪙)" },
-    { tier: 30, free: "Titre suprême « Légende » + 500 🪙", premium: "🏆 GRAND LOT : Lampe Plasma Dorée Animée 3D (Avatar Ultime) + 1000 🪙" }
+    { tier: 30, free: "Titre suprême « Légende » + 500 🪙", premium: "🏆 GRAND LOT : Lampe Plasma 3D avec Arcs Électriques & Effet Main + 1000 🪙" }
 ];
 
 function openBlitzPass() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } document.getElementById('modal-blitz-pass').style.display = 'flex'; renderBlitzPass(); }
@@ -1703,7 +1706,7 @@ function claimPassReward(tier, track) {
     socket.emit('claim_pass_tier', { tier, track });
     const tierData = BLITZ_PASS_TIERS.find(t => t.tier === tier);
     const rewardText = tierData ? (track === 'premium' ? tierData.premium : tierData.free) : `Palier ${tier}`;
-    const icon = (tier === 30 && track === 'premium') ? '🏆' : (tier === 20 && track === 'premium') ? '⚛️' : '🌟';
+    const icon = (tier === 30 && track === 'premium') ? '⚡✋' : (tier === 20 && track === 'premium') ? '⚛️' : '🌟';
     showRewardPopUp(rewardText, icon);
 }
 
@@ -1718,7 +1721,7 @@ function switchShopTab(type) {
     const powersDict = i18n[currentLang].powers;
     const cosmeticsDict = {
         theme_alt: { name: '🎨 Thème Rétro', desc: 'Grille visuelle alternative' },
-        avatar_legend: { name: '🤖 Avatar Robot', desc: 'Avatar exclusif robot' },
+        avatar_legend: { name: '🔮 Boule Plasma', desc: 'Sphère plasma interactive' },
         frame_gold: { name: '👑 Cadre Or Massif', desc: 'Bordure dorée prestigieuse' }
     };
 
@@ -2038,9 +2041,9 @@ function getWinnerAvatarShowcaseHTML(playerObj) {
     const isAnimatedFrame = equippedFrame === 'frame_animated';
     
     let iconContent = playerObj.avatar || 1, customClass = '';
-    if (equippedAvatar === 'avatar_legend' || playerObj.avatar === 'avatar_legend') { iconContent = '🤖'; }
+    if (equippedAvatar === 'avatar_legend' || playerObj.avatar === 'avatar_legend') { iconContent = '🔮'; customClass = 'avatar-plasma-lamp-3d'; }
     else if (equippedAvatar === 'avatar_energy_core') { iconContent = '⚛️'; customClass = 'avatar-energy-core'; }
-    else if (equippedAvatar === 'avatar_plasma_gold') { iconContent = '🏮'; customClass = 'avatar-plasma-lamp-3d'; }
+    else if (equippedAvatar === 'avatar_plasma_gold') { iconContent = '⚡✋'; customClass = 'avatar-plasma-lamp-3d'; }
 
     let frameClass = '';
     if (isGoldFrame) frameClass = 'gold';
