@@ -25,18 +25,22 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
     transition: all 0.3s ease;
 }
 
-/* Si l'avatar à l'intérieur a un cadre argenté, toute la pilule s'habille */
+/* Cadre Argenté sur la pilule (gère la classe directe ou via l'avatar intérieur) */
+.user-pill.silver-frame,
+.user-pill:has(.silver-frame),
 .user-pill:has(.tft-avatar-container.silver-frame) {
     border-color: #c0c0c0 !important;
-    box-shadow: 0 0 12px rgba(192, 192, 192, 0.6), inset 0 0 6px rgba(192, 192, 192, 0.3) !important;
-    background: linear-gradient(135deg, rgba(42, 42, 42, 0.8), rgba(80, 80, 80, 0.8));
+    box-shadow: 0 0 14px rgba(192, 192, 192, 0.7), inset 0 0 6px rgba(192, 192, 192, 0.4) !important;
+    background: linear-gradient(135deg, rgba(42, 42, 42, 0.85), rgba(80, 80, 80, 0.85)) !important;
 }
 
-/* Si l'avatar à l'intérieur a un cadre doré, toute la pilule s'habille */
+/* Cadre Doré sur la pilule (gère la classe directe ou via l'avatar intérieur) */
+.user-pill.gold-frame,
+.user-pill:has(.gold-frame),
 .user-pill:has(.tft-avatar-container.gold-frame) {
     border-color: #f8b500 !important;
     box-shadow: 0 0 16px rgba(248, 181, 0, 0.8), inset 0 0 8px rgba(248, 181, 0, 0.5) !important;
-    background: linear-gradient(135deg, rgba(58, 37, 0, 0.85), rgba(105, 75, 0, 0.85));
+    background: linear-gradient(135deg, rgba(58, 37, 0, 0.85), rgba(105, 75, 0, 0.85)) !important;
     animation: goldPillPulse 2.5s infinite ease-in-out;
 }
 
@@ -47,7 +51,7 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
 
 #user-name-display { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 75px; }
 
-/* Avatar miniature dans la pilule (on neutralise son propre cadre pour éviter les conflits) */
+/* Avatar miniature dans la pilule */
 .tft-avatar-container {
     position: relative;
     display: inline-flex;
@@ -61,13 +65,6 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
     overflow: visible;
     flex-shrink: 0;
-}
-.user-pill .tft-avatar-container.silver-frame,
-.user-pill .tft-avatar-container.gold-frame {
-    border-color: transparent !important;
-    box-shadow: none !important;
-    background: transparent !important;
-    animation: none !important;
 }
 
 .tft-avatar-icon {
