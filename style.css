@@ -507,12 +507,10 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
 
 .animated-frame {
     position: relative;
-    /* Utilisation de 'steps' pour donner un effet de crépitement électrique saccadé typique d'un arc plasma */
     animation: plasmaDischarge 1.2s infinite linear !important;
     border: 2px solid #00d2ff !important;
 }
 
-/* Double arc électrique crépitant aux coins opposés */
 .animated-frame::before,
 .animated-frame::after {
     content: '⚡';
@@ -533,10 +531,26 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
     right: -8px;
     animation: electricArcFlicker 0.9s infinite steps(5) alternate-reverse;
 }
-/* Cadre Animé sur la pilule globale */
+
 .user-pill.animated-frame,
 .user-pill:has(.animated-frame),
 .user-pill:has(.tft-avatar-container.animated-frame) {
     animation: electricPlasma 2s infinite linear !important;
     border-color: #00d2ff !important;
+}
+
+/* ========================================================= */
+/* ADAPTATION RESPONSIVE PC / GRAND ÉCRAN POUR LE PANEL ADMIN */
+/* ========================================================= */
+@media (min-width: 768px) {
+    #admin-modal .modal-card {
+        max-width: 650px !important;
+        padding: 24px !important;
+    }
+    
+    #admin-dashboard-section > div {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
 }
