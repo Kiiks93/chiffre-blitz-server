@@ -398,7 +398,8 @@ let myProfile = {
     inventory: {
         __equipped: {
             title: localStorage.getItem('cb_equipped_title') || "",
-            frame: localStorage.getItem('cb_equipped_frame') || ""
+            frame: localStorage.getItem('cb_equipped_frame') || "",
+            theme: localStorage.getItem('cb_equipped_theme') || ""
         }
     }, 
     unlocked_items: [], equippedPower: null, equippedPowers: [],
@@ -461,7 +462,6 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
     const equippedAvatar = overrideAvatarType || (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar);
     const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
     
-    // Applique dynamiquement la classe du cadre sur la pilule de profil globale
     const pill = document.getElementById('user-pill');
     if (pill) {
         pill.classList.remove('silver-frame', 'gold-frame');
@@ -548,6 +548,10 @@ const FRAME_DISPLAY_NAMES = {
     'frame_animated': '✨ Cadre Animé de Saison'
 };
 
+const THEME_DISPLAY_NAMES = {
+    'theme_alt': '🎨 Thème Rétro (Plasma)'
+};
+
 function renderProfileCustomizationMenus() {
     const titleSelect = document.getElementById('title-input');
     const equippedTitle = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.title;
@@ -580,6 +584,23 @@ function renderProfileCustomizationMenus() {
             opt.innerText = displayName;
             if (equippedFrame === fId) opt.selected = true;
             frameSelect.appendChild(opt);
+        });
+    }
+
+    const themeSelect = document.getElementById('theme-input');
+    const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
+
+    if (themeSelect) {
+        themeSelect.innerHTML = `<option value="">Thème de grille standard</option>`;
+        const unlockedThemes = (myProfile.unlocked_items || []).filter(id => id.startsWith('theme_'));
+
+        unlockedThemes.forEach(thId => {
+            const displayName = THEME_DISPLAY_NAMES[thId] || thId;
+            const opt = document.createElement('option');
+            opt.value = thId;
+            opt.innerText = displayName;
+            if (equippedTheme === thId) opt.selected = true;
+            themeSelect.appendChild(opt);
         });
     }
 
@@ -651,11 +672,13 @@ function checkAndShowProfileModal() {
         
         const savedTitle = localStorage.getItem('cb_equipped_title');
         const savedFrame = localStorage.getItem('cb_equipped_frame');
-        if (savedTitle || savedFrame) {
+        const savedTheme = localStorage.getItem('cb_equipped_theme');
+        if (savedTitle || savedFrame || savedTheme) {
             if (!myProfile.inventory) myProfile.inventory = {};
             if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
             if (savedTitle) myProfile.inventory.__equipped.title = savedTitle;
             if (savedFrame) myProfile.inventory.__equipped.frame = savedFrame;
+            if (savedTheme) myProfile.inventory.__equipped.theme = savedTheme;
         }
 
         updateEconomyUI();
@@ -670,6 +693,7 @@ function saveProfileFromModal() {
     const regionInput = document.getElementById('region-input').value;
     const selectedTitleId = document.getElementById('title-input').value;
     const selectedFrameId = document.getElementById('frame-input').value;
+    const selectedThemeId = document.getElementById('theme-input').value;
     let avatarVal = parseInt(document.getElementById('avatar-input').value);
     const flagVal = document.getElementById('flag-input').value;
 
@@ -705,6 +729,16 @@ function saveProfileFromModal() {
         socket.emit('equip_cosmetic', 'none_frame');
     }
 
+    if (selectedThemeId) {
+        myProfile.inventory.__equipped.theme = selectedThemeId;
+        localStorage.setItem('cb_equipped_theme', selectedThemeId);
+        socket.emit('equip_cosmetic', selectedThemeId);
+    } else {
+        delete myProfile.inventory.__equipped.theme;
+        localStorage.removeItem('cb_equipped_theme');
+        socket.emit('equip_cosmetic', 'none_theme');
+    }
+
     if (activeAvatarChoice === 'avatar_legend') {
         myProfile.inventory.__equipped.avatar = 'avatar_legend';
         socket.emit('equip_cosmetic', 'avatar_legend');
@@ -726,6 +760,7 @@ function saveAvatarChoiceOnly() {
     const flagVal = document.getElementById('flag-input').value;
     const selectedTitleId = document.getElementById('title-input').value;
     const selectedFrameId = document.getElementById('frame-input').value;
+    const selectedThemeId = document.getElementById('theme-input').value;
 
     if (isNaN(avatarVal) || avatarVal < 1) avatarVal = 1;
     if (avatarVal > 999) avatarVal = 999;
@@ -754,6 +789,16 @@ function saveAvatarChoiceOnly() {
         delete myProfile.inventory.__equipped.frame;
         localStorage.removeItem('cb_equipped_frame');
         socket.emit('equip_cosmetic', 'none_frame');
+    }
+
+    if (selectedThemeId) {
+        myProfile.inventory.__equipped.theme = selectedThemeId;
+        localStorage.setItem('cb_equipped_theme', selectedThemeId);
+        socket.emit('equip_cosmetic', selectedThemeId);
+    } else {
+        delete myProfile.inventory.__equipped.theme;
+        localStorage.removeItem('cb_equipped_theme');
+        socket.emit('equip_cosmetic', 'none_theme');
     }
 
     if (activeAvatarChoice === 'avatar_legend') {
@@ -810,14 +855,17 @@ socket.on('player_registered', (rawData) => {
         const localEquipped = myProfile.inventory && myProfile.inventory.__equipped ? {...myProfile.inventory.__equipped} : {};
         const savedTitle = localStorage.getItem('cb_equipped_title');
         const savedFrame = localStorage.getItem('cb_equipped_frame');
+        const savedTheme = localStorage.getItem('cb_equipped_theme');
         if (savedTitle && !localEquipped.title) localEquipped.title = savedTitle;
         if (savedFrame && !localEquipped.frame) localEquipped.frame = savedFrame;
+        if (savedTheme && !localEquipped.theme) localEquipped.theme = savedTheme;
 
         myProfile.inventory = player.inventory || {};
         if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = localEquipped;
         else {
             if (!myProfile.inventory.__equipped.title && localEquipped.title) myProfile.inventory.__equipped.title = localEquipped.title;
             if (!myProfile.inventory.__equipped.frame && localEquipped.frame) myProfile.inventory.__equipped.frame = localEquipped.frame;
+            if (!myProfile.inventory.__equipped.theme && localEquipped.theme) myProfile.inventory.__equipped.theme = localEquipped.theme;
         }
 
         myProfile.unlocked_items = player.unlocked_items;
@@ -2007,7 +2055,8 @@ function updateAvalancheTarget() {
 function renderAvalancheGrid() {
     const grid = document.getElementById('grid');
     if (!grid) return; grid.innerHTML = '';
-    const isAltTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme === 'theme_alt';
+    const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
+    const isAltTheme = equippedTheme === 'theme_alt' || (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme === 'theme_alt');
     avalancheGridData.forEach((val, idx) => {
         const tile = document.createElement('div');
         if (val !== null) {
@@ -2059,7 +2108,8 @@ function renderGrid(pool, handler) {
     const grid = document.getElementById('grid');
     if (!grid) return; grid.innerHTML = '';
     if (!pool) return;
-    const isAltTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme === 'theme_alt';
+    const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
+    const isAltTheme = equippedTheme === 'theme_alt' || (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme === 'theme_alt');
     pool.forEach((num, index) => {
         const tile = document.createElement('div');
         tile.className = `tile ${isAltTheme ? 'alt-theme' : ''}`;
