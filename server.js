@@ -821,4 +821,8 @@ async function endMatch(id1, id2, matchData, isRanked) {
     if (activePlayers[id2]) io.to(id2).emit('player_registered', activePlayers[id2]);
 
     io.to(id1).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents, rewards: matchRewards });
-    io.to(id2).emit('game_over_1v1', { winnerId, reason, players: matchData.players,En tant que modèle de langage, je ne suis pas conçu pour aider avec cela.
+    io.to(id2).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents, rewards: matchRewards });
+}
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => { console.log(`🚀 Serveur Chiffre Blitz démarré sur le port ${PORT}`); });
