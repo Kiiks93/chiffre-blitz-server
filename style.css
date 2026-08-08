@@ -455,3 +455,56 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
 @keyframes pulseAudio { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 @keyframes quake { 0% { transform: translate(2px, 2px); } 50% { transform: translate(-2px, -2px); } 100% { transform: translate(2px, -2px); } }
 @keyframes toastFade { 0% { opacity: 0; transform: translateY(-15px); } 15% { opacity: 1; transform: translateY(0); } 85% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-15px); } }
+
+/* =========================================
+   CADRE ANIMÉ ÉLECTRIQUE (Saison 1 Plasma)
+   ========================================= */
+@keyframes electricPlasma {
+    0% { 
+        border-color: #00d2ff; 
+        box-shadow: 0 0 8px #00d2ff, inset 0 0 6px #00d2ff; 
+    }
+    33% { 
+        border-color: #ff007f; 
+        box-shadow: 0 0 15px #ff007f, inset 0 0 10px #ff007f; 
+    }
+    66% { 
+        border-color: #00ff88; 
+        box-shadow: 0 0 12px #00ff88, inset 0 0 8px #00ff88; 
+    }
+    100% { 
+        border-color: #00d2ff; 
+        box-shadow: 0 0 8px #00d2ff, inset 0 0 6px #00d2ff; 
+    }
+}
+
+@keyframes sparkPulse {
+    0%, 100% { 
+        transform: scale(0.7) rotate(0deg); 
+        opacity: 0.5; 
+        filter: drop-shadow(0 0 2px #fff); 
+    }
+    50% { 
+        transform: scale(1.3) rotate(20deg); 
+        opacity: 1; 
+        filter: drop-shadow(0 0 8px #ff007f); 
+    }
+}
+
+.animated-frame {
+    position: relative;
+    animation: electricPlasma 2s infinite linear !important;
+    border: 2px solid #00d2ff !important;
+}
+
+/* Étincelle scintillante sur le coin du cadre */
+.animated-frame::after {
+    content: '⚡';
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    font-size: 11px;
+    animation: sparkPulse 1.2s infinite ease-in-out;
+    pointer-events: none;
+    z-index: 5;
+}
