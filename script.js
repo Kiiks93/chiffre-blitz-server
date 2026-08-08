@@ -251,7 +251,7 @@ function applyTranslations() {
 }
 
 /* ========================================== */
-/* MOTEUR SONORE RÉTRO ARCADE (SOUNDENGINE)   */
+/* MOTEUR SONORE (RÉTRO 8-BIT & GEOMETRY DASH)*/
 /* ========================================== */
 const SoundEngine = {
     ctx: null, isMuted: false, timerId: null, currentMode: null, step: 0, bpm: 115,
@@ -275,13 +275,13 @@ const SoundEngine = {
         if (!this.ctx) return;
         const t = this.ctx.currentTime;
         const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(523.25, t); // C5
-        osc.frequency.exponentialRampToValueAtTime(1046.50, t + 0.07);
-        gain.gain.setValueAtTime(0.12, t);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(440, t);
+        osc.frequency.exponentialRampToValueAtTime(880, t + 0.05);
+        gain.gain.setValueAtTime(0.1, t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
         osc.connect(gain); gain.connect(this.ctx.destination);
-        osc.start(t); osc.stop(t + 0.08);
+        osc.start(t); osc.stop(t + 0.05);
     },
     playError() {
         if (this.isMuted) return; this.init();
@@ -289,28 +289,28 @@ const SoundEngine = {
         const t = this.ctx.currentTime;
         const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
         osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(130.81, t);
-        osc.frequency.linearRampToValueAtTime(65.41, t + 0.15);
+        osc.frequency.setValueAtTime(120, t);
+        osc.frequency.linearRampToValueAtTime(60, t + 0.12);
         gain.gain.setValueAtTime(0.15, t);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
         osc.connect(gain); gain.connect(this.ctx.destination);
-        osc.start(t); osc.stop(t + 0.15);
+        osc.start(t); osc.stop(t + 0.12);
     },
     playVictory() {
         if (this.isMuted) return; this.init();
         if (!this.ctx) return;
-        [523.25, 659.25, 783.99, 1046.50, 1318.51].forEach((freq, i) => {
+        [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98].forEach((freq, i) => {
             setTimeout(() => {
                 if (this.isMuted || !this.ctx) return;
                 const t = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
                 osc.type = 'square';
                 osc.frequency.setValueAtTime(freq, t);
-                gain.gain.setValueAtTime(0.1, t);
-                gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+                gain.gain.setValueAtTime(0.12, t);
+                gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
                 osc.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(t); osc.stop(t + 0.3);
-            }, i * 90);
+                osc.start(t); osc.stop(t + 0.25);
+            }, i * 80);
         });
     },
     stopMusic(clear = true) {
@@ -326,54 +326,101 @@ const SoundEngine = {
         this.stopMusic(false);
         this.currentMode = mode;
         this.step = 0;
-        this.bpm = (mode === 'menu') ? 100 : 120;
+        // Menu = Rétro 8-bit (115 BPM), Jeu = Geometry Dash Electro rapide (138 BPM)
+        this.bpm = (mode === 'menu') ? 115 : 138;
         const intervalMs = (60 / this.bpm / 4) * 1000;
 
         this.timerId = setInterval(() => {
             if (this.isMuted || !this.ctx || this.ctx.state !== 'running') return;
-            this.tickSynthwave(this.currentMode, this.step);
+            if (this.currentMode === 'menu') {
+                this.tickMenu8Bit(this.step);
+            } else {
+                this.tickGeometryDash(this.step);
+            }
             this.step = (this.step + 1) % 64;
         }, intervalMs);
     },
-    tickSynthwave(mode, step) {
-        if (!this.ctx) return;
+    tickMenu8Bit(step) {
         const t = this.ctx.currentTime;
-
-        // Bassline on every beat
+        const melodyNotes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 293.66, 349.23];
+        
+        // Basse 8-bit sur chaque temps
         if (step % 4 === 0) {
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
-            osc.type = 'sawtooth';
-            const bassNotes = mode === 'menu' ? [110, 110, 98.0, 87.31] : [130.81, 130.81, 146.83, 164.81];
-            const freq = bassNotes[Math.floor(step / 16) % bassNotes.length];
-            osc.frequency.setValueAtTime(freq, t);
-            
-            const filter = this.ctx.createBiquadFilter();
-            filter.type = 'lowpass'; filter.frequency.setValueAtTime(800, t);
-
-            gain.gain.setValueAtTime(0.12, t);
-            gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
-
-            osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-            osc.start(t); osc.stop(t + 0.12);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(130.81, t);
+            gain.gain.setValueAtTime(0.1, t);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+            osc.connect(gain); gain.connect(this.ctx.destination);
+            osc.start(t); osc.stop(t + 0.1);
         }
 
-        // Crisp Arpeggio / Hi-Hat
-        if ([2, 6, 10, 14, 18, 22, 26, 30, 34, 38, 42, 46, 50, 54, 58, 62].includes(step)) {
-            const bufferSize = this.ctx.sampleRate * 0.05;
+        // Mélodie chiptune
+        if (step % 2 === 0) {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'square';
+            const note = melodyNotes[(step / 2) % melodyNotes.length];
+            osc.frequency.setValueAtTime(note, t);
+            gain.gain.setValueAtTime(0.06, t);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+            osc.connect(gain); gain.connect(this.ctx.destination);
+            osc.start(t); osc.stop(t + 0.08);
+        }
+    },
+    tickGeometryDash(step) {
+        const t = this.ctx.currentTime;
+        
+        // Kick 4-on-the-floor (Basse lourde style electro)
+        if (step % 16 === 0) {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(160, t);
+            osc.frequency.exponentialRampToValueAtTime(35, t + 0.12);
+            gain.gain.setValueAtTime(0.28, t);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
+            osc.connect(gain); gain.connect(this.ctx.destination);
+            osc.start(t); osc.stop(t + 0.13);
+        }
+
+        // Snare / Bruit blanc percutant
+        if (step % 16 === 8) {
+            const bufferSize = this.ctx.sampleRate * 0.08;
             const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
             const data = buffer.getChannelData(0);
             for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
             const noise = this.ctx.createBufferSource();
             noise.buffer = buffer;
             const filter = this.ctx.createBiquadFilter();
-            filter.type = 'highpass'; filter.frequency.setValueAtTime(3000, t);
+            filter.type = 'bandpass'; filter.frequency.setValueAtTime(2500, t); filter.Q.setValueAtTime(2, t);
             const gain = this.ctx.createGain();
-            gain.gain.setValueAtTime(0.06, t);
-            gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+            gain.gain.setValueAtTime(0.18, t);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
             noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
             noise.start(t);
         }
+
+        // Arpège rapide et incisif (style Geometry Dash)
+        const gdNotes = [220, 261.63, 329.63, 440, 523.25, 659.25, 523.25, 440];
+        const osc = this.ctx.createOscillator();
+        const filter = this.ctx.createBiquadFilter();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sawtooth';
+        const noteFreq = gdNotes[step % gdNotes.length];
+        osc.frequency.setValueAtTime(noteFreq, t);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1400, t);
+        filter.frequency.exponentialRampToValueAtTime(300, t + 0.07);
+
+        gain.gain.setValueAtTime(0.08, t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+
+        osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(t); osc.stop(t + 0.07);
     }
 };
 
