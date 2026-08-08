@@ -7,7 +7,7 @@ const i18n = {
         rule2_title: "🏋️ Entraînement Solo",
         rule2_desc: "Modes Classique, Aléatoire ou Avalanche pour enchaîner les chiffres et gagner des pièces (🪙).",
         rule3_title: "⚔️ Duel 1v1 Online",
-        rule3_desc: "Affronte un adversaire en temps réel (matchmaking non classé, classé SBMM ou salons privés).",
+        rule3_desc: "Affronte un adversaire en temps réel (unranked, ranked SBMM ou salons privés).",
         rule5_title: "🏆 Système de Rangs",
         rule5_desc: "Monte en points en match classé à travers 4 paliers : Novice 🌱, Chiffre 🔢, Expert 🧠 et Calculateur ⚡ !",
         rule4_title: "🎯 Mode Tournoi",
@@ -45,8 +45,8 @@ const i18n = {
         loading: "Chargement...",
         join_title: "🔑 Rejoindre un Salon",
         join_subtitle: "Entre le code et le mot de passe (si requis) :",
-        room_code_label: "CODE DU SALON",
-        room_pass_label: "MOT DE PASSE (Optionnel)",
+        room_code_label: "ROOM CODE",
+        room_pass_label: "PASSWORD (Optional)",
         join_btn: "Rejoindre ⚡",
         room_header: "Salon",
         share_label: "INVITATION RAPIDE (SMS / WhatsApp) :",
@@ -494,6 +494,55 @@ function getRankName(points) {
     return currentLang === 'fr' ? 'Novice 🌱' : 'Novice 🌱';
 }
 
+const robloxAdminStyles = document.createElement('style');
+robloxAdminStyles.innerHTML = `
+    /* Styles Roblox Studio / Admin Fullscreen */
+    #admin-dashboard-section { font-family: monospace; }
+    .roblox-card {
+        background: rgba(20, 10, 35, 0.85);
+        border: 2px solid rgba(0, 210, 255, 0.4);
+        border-radius: 12px;
+        padding: 14px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    
+    /* Animation 3D / Rotation Avatar Palier 20 & 30 */
+    @keyframes robloxFloat {
+        0% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-6px) rotate(3deg); }
+        100% { transform: translateY(0px) rotate(0deg); }
+    }
+    @keyframes plasmaPulse {
+        0% { filter: drop-shadow(0 0 5px #ff007f) brightness(1); transform: scale(1); }
+        50% { filter: drop-shadow(0 0 20px #00d2ff) brightness(1.3); transform: scale(1.08); }
+        100% { filter: drop-shadow(0 0 5px #ff007f) brightness(1); transform: scale(1); }
+    }
+    @keyframes energyCoreSpin {
+        0% { transform: rotate(0deg) scale(1); filter: hue-rotate(0deg); }
+        50% { transform: rotate(180deg) scale(1.1); filter: hue-rotate(90deg); }
+        100% { transform: rotate(360deg) scale(1); filter: hue-rotate(0deg); }
+    }
+
+    .avatar-energy-core {
+        animation: energyCoreSpin 4s infinite linear, plasmaPulse 2s infinite ease-in-out;
+        display: inline-block;
+    }
+    .avatar-plasma-lamp-3d {
+        animation: robloxFloat 3s infinite ease-in-out, plasmaPulse 2.5s infinite alternate;
+        display: inline-block;
+        transform-style: preserve-3d;
+    }
+`;
+document.head.appendChild(robloxAdminStyles);
+
+const COSMETICS_DICTIONARY_EXTENDED = {
+    'theme_alt': { name: '🎨 Thème Rétro', desc: 'Grille visuelle alternative' },
+    'avatar_legend': { name: '🤖 Avatar Robot', desc: 'Avatar exclusif robot' },
+    'frame_gold': { name: '👑 Cadre Or Massif', desc: 'Bordure dorée prestigieuse' },
+    'avatar_energy_core': { name: '⚛️ Avatar Noyau d\'Énergie (Palier 20)', desc: 'Avatar animé 3D technologique' },
+    'avatar_plasma_gold': { name: '🏆 Lampe Plasma Dorée (Palier 30)', desc: 'Avatar ultime animé 3D étincelant' }
+};
+
 function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
     const profile = playerObj || myProfile;
     const equippedAvatar = overrideAvatarType || (profile.inventory && profile.inventory.__equipped && profile.inventory.__equipped.avatar);
@@ -511,8 +560,14 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
     
     let avatarContent = avatarNum || 1;
     let avatarTitle = `Avatar #${avatarNum || 1}`;
+    let customClass = '';
+
     if (equippedAvatar === 'avatar_legend') {
         avatarContent = '🤖'; avatarTitle = 'Robot Mathématicien Légendaire';
+    } else if (equippedAvatar === 'avatar_energy_core') {
+        avatarContent = '⚛️'; avatarTitle = 'Noyau d\'Énergie (Palier 20)'; customClass = 'avatar-energy-core';
+    } else if (equippedAvatar === 'avatar_plasma_gold') {
+        avatarContent = '🏮'; avatarTitle = 'Lampe Plasma 3D (Palier 30)'; customClass = 'avatar-plasma-lamp-3d';
     }
 
     const isGold = equippedFrame === 'frame_gold';
@@ -521,7 +576,7 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
 
     return `
         <div class="tft-avatar-container ${isGold ? 'gold-frame' : ''} ${isSilver ? 'silver-frame' : ''} ${isAnimated ? 'animated-frame' : ''}" title="${avatarTitle}">
-            <span class="tft-avatar-icon" style="${typeof avatarContent === 'number' ? 'font-size: 14px;' : 'font-size: 16px;'}">${avatarContent}</span>
+            <span class="tft-avatar-icon ${customClass}" style="${typeof avatarContent === 'number' ? 'font-size: 14px;' : 'font-size: 16px;'}">${avatarContent}</span>
             <span class="tft-flag-overlay">${flag || '🇫🇷'}</span>
         </div>
     `;
@@ -534,11 +589,14 @@ function getLargeAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
     const isAnimatedFrame = equippedFrame === 'frame_animated';
     
     let avatarContent = avatarNum || 1;
+    let customClass = '';
     if (avatarType === 'avatar_legend') avatarContent = '🤖'; 
+    else if (avatarType === 'avatar_energy_core') { avatarContent = '⚛️'; customClass = 'avatar-energy-core'; }
+    else if (avatarType === 'avatar_plasma_gold') { avatarContent = '🏮'; customClass = 'avatar-plasma-lamp-3d'; }
 
     return `
         <div class="tft-avatar-large ${isGoldFrame ? 'gold-frame' : ''} ${isAnimatedFrame ? 'animated-frame' : ''}">
-            <span class="tft-avatar-large-icon" style="${typeof avatarContent === 'number' ? 'font-size: 24px;' : 'font-size: 30px;'}">${avatarContent}</span>
+            <span class="tft-avatar-large-icon ${customClass}" style="${typeof avatarContent === 'number' ? 'font-size: 24px;' : 'font-size: 30px;'}">${avatarContent}</span>
             <span class="tft-flag-large-overlay">${flag || '🇫🇷'}</span>
         </div>
     `;
@@ -557,24 +615,21 @@ function renderProfileAvatarSelector() {
     if (!container) return;
     container.innerHTML = '';
 
-    const isStandardActive = (activeAvatarChoice === 'standard' || !activeAvatarChoice);
-    const stdCard = document.createElement('div');
-    stdCard.style.cssText = `flex: 1; min-width: 90px; background: ${isStandardActive ? 'rgba(0,210,255,0.2)' : 'rgba(255,255,255,0.05)'}; border: 2px solid ${isStandardActive ? '#00d2ff' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 4px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;`;
-    stdCard.onclick = () => { activeAvatarChoice = 'standard'; renderProfileAvatarSelector(); updateProfilePreview(); };
-    stdCard.innerHTML = `<span style="font-size: 13px;">🔢</span><div style="font-size: 9px; font-weight: bold; color: #fff;">Standard</div>`;
-    container.appendChild(stdCard);
+    const addAvatarOption = (id, icon, label) => {
+        const isActive = (activeAvatarChoice === id);
+        const card = document.createElement('div');
+        card.style.cssText = `flex: 1; min-width: 80px; background: ${isActive ? 'rgba(0,210,255,0.25)' : 'rgba(255,255,255,0.05)'}; border: 2px solid ${isActive ? '#00d2ff' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 4px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;`;
+        card.onclick = () => { activeAvatarChoice = id; renderProfileAvatarSelector(); updateProfilePreview(); };
+        card.innerHTML = `<span style="font-size: 13px;">${icon}</span><div style="font-size: 8px; font-weight: bold; color: #fff;">${label}</div>`;
+        container.appendChild(card);
+    };
 
-    const unlockedItems = myProfile.unlocked_items || [];
-    const hasRobot = unlockedItems.includes('avatar_legend') || (myProfile.inventory && myProfile.inventory['avatar_legend'] > 0);
+    addAvatarOption('standard', '🔢', 'Standard');
     
-    if (hasRobot) {
-        const isRobotActive = (activeAvatarChoice === 'avatar_legend');
-        const robotCard = document.createElement('div');
-        robotCard.style.cssText = `flex: 1; min-width: 90px; background: ${isRobotActive ? 'rgba(0,210,255,0.2)' : 'rgba(255,255,255,0.05)'}; border: 2px solid ${isRobotActive ? '#00d2ff' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 4px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;`;
-        robotCard.onclick = () => { activeAvatarChoice = 'avatar_legend'; renderProfileAvatarSelector(); updateProfilePreview(); };
-        robotCard.innerHTML = `<span style="font-size: 13px;">🤖</span><div style="font-size: 9px; font-weight: bold; color: #fff;">Robot</div>`;
-        container.appendChild(robotCard);
-    }
+    const unlocked = myProfile.unlocked_items || [];
+    if (unlocked.includes('avatar_legend')) addAvatarOption('avatar_legend', '🤖', 'Robot');
+    if (unlocked.includes('avatar_energy_core')) addAvatarOption('avatar_energy_core', '⚛️', 'Noyau 20');
+    if (unlocked.includes('avatar_plasma_gold')) addAvatarOption('avatar_plasma_gold', '🏮', 'Plasma 3D');
 }
 
 const TITLE_DISPLAY_NAMES = {
@@ -780,9 +835,9 @@ function saveProfileFromModal() {
         socket.emit('equip_cosmetic', 'none_theme');
     }
 
-    if (activeAvatarChoice === 'avatar_legend') {
-        myProfile.inventory.__equipped.avatar = 'avatar_legend';
-        socket.emit('equip_cosmetic', 'avatar_legend');
+    if (activeAvatarChoice && activeAvatarChoice !== 'standard') {
+        myProfile.inventory.__equipped.avatar = activeAvatarChoice;
+        socket.emit('equip_cosmetic', activeAvatarChoice);
     } else {
         delete myProfile.inventory.__equipped.avatar;
         socket.emit('equip_cosmetic', 'none');
@@ -842,9 +897,9 @@ function saveAvatarChoiceOnly() {
         socket.emit('equip_cosmetic', 'none_theme');
     }
 
-    if (activeAvatarChoice === 'avatar_legend') {
-        myProfile.inventory.__equipped.avatar = 'avatar_legend';
-        socket.emit('equip_cosmetic', 'avatar_legend');
+    if (activeAvatarChoice && activeAvatarChoice !== 'standard') {
+        myProfile.inventory.__equipped.avatar = activeAvatarChoice;
+        socket.emit('equip_cosmetic', activeAvatarChoice);
     } else {
         delete myProfile.inventory.__equipped.avatar;
         socket.emit('equip_cosmetic', 'none');
@@ -1058,7 +1113,7 @@ socket.on('admin_auth_success', (data) => {
     const loginSec = document.getElementById('admin-login-section');
     const dashSec = document.getElementById('admin-dashboard-section');
     if (loginSec) loginSec.style.display = 'none';
-    if (dashSec) dashSec.style.display = 'block';
+    if (dashSec) dashSec.style.display = 'flex';
     renderAdminDashboard(data);
 });
 
@@ -1066,37 +1121,39 @@ function renderAdminDashboard(data) {
     const dash = document.getElementById('admin-dashboard-section');
     if (!dash) return;
     dash.innerHTML = `
-        <div style="font-size: 14px; font-weight: 900; color: #f8b500; margin-bottom: 10px; text-align: center;">⚡ PANNEAU SUPRÊME ADMIN ⚡</div>
-        <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.1);">
-            <div style="font-weight: bold; color: #fff; margin-bottom: 6px; font-size: 12px;">📢 Annonce Globale</div>
-            <input type="text" id="admin-broadcast-text" placeholder="Message de l'annonce..." style="width: 100%; background: #0f051d; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 6px; font-size: 11px; margin-bottom: 6px;">
-            <button class="power-btn equip" onclick="adminBroadcast()" style="width: 100%; padding: 6px; font-size: 11px;">Diffuser l'annonce 🚀</button>
-        </div>
-        <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.1);">
-            <div style="font-weight: bold; color: #fff; margin-bottom: 6px; font-size: 12px;">🎁 Distribution de Cadeaux</div>
-            <div style="display: flex; gap: 6px; margin-bottom: 6px;">
-                <select id="admin-target-type" onchange="toggleAdminTargetInput()" style="flex: 1; background: #0f051d; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 4px; font-size: 11px;">
-                    <option value="all">🌍 Tout le monde (Global)</option>
-                    <option value="pseudo">👤 Par Pseudo spécifique</option>
-                </select>
-                <input type="text" id="admin-target-pseudo" placeholder="Pseudo exact..." style="flex: 1; background: #0f051d; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 4px; font-size: 11px; display: none;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+            <div class="roblox-card">
+                <div style="font-weight: 900; color: #00d2ff; margin-bottom: 8px; font-size: 13px;">📢 Diffuseur d'Annonce Roblox</div>
+                <input type="text" id="admin-broadcast-text" placeholder="Message global studio..." style="width: 100%; background: #0f051d; color: #fff; border: 2px solid #00d2ff; border-radius: 6px; padding: 8px; font-size: 11px; margin-bottom: 8px; box-sizing: border-box;">
+                <button class="btn-main btn-blue" onclick="adminBroadcast()" style="width: 100%; padding: 8px; font-size: 11px; margin-top:0;">Diffuser l'annonce 🚀</button>
             </div>
-            <div style="display: flex; gap: 6px; margin-bottom: 6px;">
-                <select id="admin-currency-type" style="flex: 1; background: #0f051d; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 4px; font-size: 11px;">
-                    <option value="coins">🪙 Pièces</option>
-                    <option value="points">⚡ Points (Classement)</option>
-                    <option value="trophies">🏆 Trophées</option>
-                </select>
-                <input type="number" id="admin-amount" placeholder="Montant" value="100" style="flex: 1; background: #0f051d; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 4px; font-size: 11px;">
+            
+            <div class="roblox-card">
+                <div style="font-weight: 900; color: #f8b500; margin-bottom: 8px; font-size: 13px;">🎁 Distribution de Cadeaux Admin</div>
+                <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+                    <select id="admin-target-type" onchange="toggleAdminTargetInput()" style="flex: 1; background: #0f051d; color: #fff; border: 2px solid #f8b500; border-radius: 6px; padding: 6px; font-size: 11px;">
+                        <option value="all">🌍 Tout le monde</option>
+                        <option value="pseudo">👤 Par Pseudo</option>
+                    </select>
+                    <input type="text" id="admin-target-pseudo" placeholder="Pseudo exact..." style="flex: 1; background: #0f051d; color: #fff; border: 2px solid #f8b500; border-radius: 6px; padding: 6px; font-size: 11px; display: none;">
+                </div>
+                <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+                    <select id="admin-currency-type" style="flex: 1; background: #0f051d; color: #fff; border: 2px solid #f8b500; border-radius: 6px; padding: 6px; font-size: 11px;">
+                        <option value="coins">🪙 Pièces</option>
+                        <option value="points">⚡ Points</option>
+                        <option value="trophies">🏆 Trophées</option>
+                    </select>
+                    <input type="number" id="admin-amount" placeholder="Montant" value="100" style="flex: 1; background: #0f051d; color: #fff; border: 2px solid #f8b500; border-radius: 6px; padding: 6px; font-size: 11px;">
+                </div>
+                <button class="btn-main btn-gold" onclick="adminSendGift()" style="width: 100%; padding: 8px; font-size: 11px; margin-top:0;">Envoyer le Cadeau ⚡</button>
             </div>
-            <button class="power-btn equip" onclick="adminSendGift()" style="width: 100%; padding: 6px; font-size: 11px; background: linear-gradient(135deg, #f8b500, #fceabb); color: #000; font-weight: bold;">Envoyer la récompense ⚡</button>
         </div>
-        <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.1);">
-            <div style="font-weight: bold; color: #fff; margin-bottom: 6px; font-size: 12px;">⚡ Programmation & Événements</div>
-            <div id="admin-schedules-container" style="max-height: 140px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;"></div>
-            <button class="power-btn equip" onclick="saveAdminSchedules()" style="width: 100%; padding: 6px; font-size: 11px;">Sauvegarder les Événements 💾</button>
+
+        <div class="roblox-card" style="flex: 1; display: flex; flex-direction: column;">
+            <div style="font-weight: 900; color: #38ef7d; margin-bottom: 8px; font-size: 13px;">⚡ Planification des Événements & Abuses</div>
+            <div id="admin-schedules-container" style="flex: 1; overflow-y: auto; max-height: 250px; display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px;"></div>
+            <button class="btn-main btn-blue" onclick="saveAdminSchedules()" style="width: 100%; padding: 8px; font-size: 11px; margin-top:0;">Sauvegarder les Configurations 💾</button>
         </div>
-        <button class="power-btn" onclick="closeAdminPanel()" style="width: 100%; background: rgba(255,75,43,0.2); color: #ff4b2b; border: 1px solid #ff4b2b; padding: 6px; font-size: 11px;">Fermer le Panel ❌</button>
     `;
     renderAdminSchedules(data.schedules || {});
 }
@@ -1555,7 +1612,7 @@ const BLITZ_PASS_TIERS = [
     { tier: 17, free: "2 💡 Projecteur", premium: "2 🌟 Novas Temporelles" },
     { tier: 18, free: "90 Pièces (🪙)", premium: "250 Pièces (🪙)" },
     { tier: 19, free: "1 ⚡ Joker Éclair", premium: "1 📳 Séisme" },
-    { tier: 20, free: "100 Pièces (🪙)", premium: "🤖 Avatar Exclusif « Noyau d'Énergie »" },
+    { tier: 20, free: "100 Pièces (🪙)", premium: "⚛️ Avatar 3D « Noyau d'Énergie »" },
     { tier: 21, free: "110 Pièces (🪙)", premium: "220 Pièces (🪙)" },
     { tier: 22, free: "1 ⏳ Blocage du Temps", premium: "3 💡 Projecteur" },
     { tier: 23, free: "120 Pièces (🪙)", premium: "Titre honorifique « Surcharge Mentale »" },
@@ -1565,7 +1622,7 @@ const BLITZ_PASS_TIERS = [
     { tier: 27, free: "2 💡 Projecteur", premium: "4 🌟 Novas Temporelles" },
     { tier: 28, free: "140 Pièces (🪙)", premium: "400 Pièces (🪙)" },
     { tier: 29, free: "300 Pièces (🪙)", premium: "500 Pièces (🪙)" },
-    { tier: 30, free: "Titre suprême « Légende » + 500 🪙", premium: "🏆 GRAND LOT : Lampe Plasma Dorée Animée (Avatar 3D Ultime) + 1000 🪙" }
+    { tier: 30, free: "Titre suprême « Légende » + 500 🪙", premium: "🏆 GRAND LOT : Lampe Plasma Dorée Animée 3D (Avatar Ultime) + 1000 🪙" }
 ];
 
 function openBlitzPass() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } document.getElementById('modal-blitz-pass').style.display = 'flex'; renderBlitzPass(); }
@@ -1646,7 +1703,7 @@ function claimPassReward(tier, track) {
     socket.emit('claim_pass_tier', { tier, track });
     const tierData = BLITZ_PASS_TIERS.find(t => t.tier === tier);
     const rewardText = tierData ? (track === 'premium' ? tierData.premium : tierData.free) : `Palier ${tier}`;
-    const icon = (tier === 30 && track === 'premium') ? '🏆' : '🌟';
+    const icon = (tier === 30 && track === 'premium') ? '🏆' : (tier === 20 && track === 'premium') ? '⚛️' : '🌟';
     showRewardPopUp(rewardText, icon);
 }
 
@@ -1824,7 +1881,7 @@ socket.on('leaderboard_data', (res) => {
 
     parsedList.forEach((p, index) => {
         const row = document.createElement('div'); row.className = 'lb-row';
-        const badgeHtml = getAvatarBadgeHTML(p.flag, p.avatar);
+        const badgeHtml = getAvatarBadgeHTML(p.flag, p.avatar, null, p);
         const equippedTitle = p.inventory && p.inventory.__equipped && p.inventory.__equipped.title;
         const titleHtml = equippedTitle ? `<span style="font-size: 8px; color: #f8b500; font-weight: bold; margin-left: 4px;">[${TITLE_DISPLAY_NAMES[equippedTitle] || equippedTitle}]</span>` : '';
         
@@ -1980,8 +2037,10 @@ function getWinnerAvatarShowcaseHTML(playerObj) {
     const isSilverFrame = equippedFrame === 'frame_silver';
     const isAnimatedFrame = equippedFrame === 'frame_animated';
     
-    let iconContent = playerObj.avatar || 1, isRobot = false;
-    if (equippedAvatar === 'avatar_legend' || playerObj.avatar === 'avatar_legend') { iconContent = '🤖'; isRobot = true; }
+    let iconContent = playerObj.avatar || 1, customClass = '';
+    if (equippedAvatar === 'avatar_legend' || playerObj.avatar === 'avatar_legend') { iconContent = '🤖'; }
+    else if (equippedAvatar === 'avatar_energy_core') { iconContent = '⚛️'; customClass = 'avatar-energy-core'; }
+    else if (equippedAvatar === 'avatar_plasma_gold') { iconContent = '🏮'; customClass = 'avatar-plasma-lamp-3d'; }
 
     let frameClass = '';
     if (isGoldFrame) frameClass = 'gold';
@@ -1990,8 +2049,8 @@ function getWinnerAvatarShowcaseHTML(playerObj) {
 
     return `
         <div class="victory-avatar-showcase">
-            <div class="victory-badge-large ${frameClass} ${isRobot ? 'robot-dancing' : ''}">
-                <span style="font-size: ${isRobot ? '36px' : '26px'}; font-weight: 900; color: #fff;">${iconContent}</span>
+            <div class="victory-badge-large ${frameClass}">
+                <span class="${customClass}" style="font-size: 30px; font-weight: 900; color: #fff;">${iconContent}</span>
                 <span style="position: absolute; bottom: -2px; right: -2px; font-size: 14px; background: #0f051d; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; z-index:3;">${playerObj.flag || '🇫🇷'}</span>
             </div>
             <div style="font-size: 13px; font-weight: 900; color: #f8b500; margin-top: 4px;">${playerObj.username || 'Joueur'} TRIOMPHE !</div>
