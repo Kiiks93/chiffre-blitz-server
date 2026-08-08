@@ -508,3 +508,10 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
     pointer-events: none;
     z-index: 5;
 }
+/* Cadre Animé sur la pilule globale */
+.user-pill.animated-frame,
+.user-pill:has(.animated-frame),
+.user-pill:has(.tft-avatar-container.animated-frame) {
+    animation: electricPlasma 2s infinite linear !important;
+    border-color: #00d2ff !important;
+}
