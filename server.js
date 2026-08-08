@@ -735,7 +735,9 @@ function applyPassReward(p, tier, track) {
         else if (tier === 17) p.inventory['nova'] = (p.inventory['nova'] || 0) + 2;
         else if (tier === 18) p.coins = (p.coins || 0) + 250;
         else if (tier === 19) p.inventory['quake'] = (p.inventory['quake'] || 0) + 1;
-        else if (tier === 20) { if (!p.unlocked_items.includes('avatar_legend')) p.unlocked_items.push('avatar_legend'); }
+        else if (tier === 20) { 
+            if (!p.unlocked_items.includes('avatar_energy_core')) p.unlocked_items.push('avatar_energy_core'); 
+        }
         else if (tier === 21) p.coins = (p.coins || 0) + 220;
         else if (tier === 22) p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 3;
         else if (tier === 23) { if (!p.unlocked_items.includes('title_brain_overload')) p.unlocked_items.push('title_brain_overload'); }
