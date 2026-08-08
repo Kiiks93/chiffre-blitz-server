@@ -217,14 +217,14 @@ const i18n = {
         ad_sponsored: "SPONSORED VIDEO...",
         not_enough_coins: "You don't have enough coins 🪙 to buy this item!",
         powers: {
-            spotlight: { name: '💡 Spotlight', desc: 'Highlights the correct tile (2s)' },
-            freeze: { name: '⏳ Time Freeze', desc: 'Freezes the timer for 3s' },
-            joker: { name: '⚡ Lightning Joker', desc: 'Validates current target' },
-            nova: { name: '🌟 Time Nova', desc: 'GIGA: Validates 3 targets' },
-            quake: { name: '📳 Quake', desc: 'Shakes opponent grid (2s)' },
-            micro: { name: '🐜 Micro-Tiles', desc: 'Shrinks opponent grid (2s)' },
-            eclipse: { name: '🌑 Eclipse', desc: 'Blurs opponent grid (1.5s)' },
-            chaos: { name: '🌪️ Absolute Chaos', desc: 'GIGA: Malus combo (5s)' }
+            spotlight: { name: '💡 Projecteur', desc: 'Highlights the correct tile (2s)' },
+            freeze: { name: '⏳ Blocage du Temps', desc: 'Freezes the timer for 3s' },
+            joker: { name: '⚡ Joker Éclair', desc: 'Validates current target' },
+            nova: { name: '🌟 Nova Temporelle', desc: 'GIGA: Validates 3 targets' },
+            quake: { name: '📳 Séisme', desc: 'Shakes opponent grid (2s)' },
+            micro: { name: '🐜 Micro-Tuiles', desc: 'Shrinks opponent grid (2s)' },
+            eclipse: { name: '🌑 Éclipse', desc: 'Blurs opponent grid (1.5s)' },
+            chaos: { name: '🌪️ Chaos Absolu', desc: 'GIGA: Malus combo (5s)' }
         }
     }
 };
@@ -335,7 +335,6 @@ const SoundEngine = {
     tickSequence(mode, step) {
         if (!this.ctx) return;
         const t = this.ctx.currentTime;
-        const scale = [110, 123.47, 130.81, 146.83, 164.81, 196, 220, 246.94, 261.63, 293.66, 329.63, 349.23, 392];
 
         if (step % 4 === 0) {
             const osc = this.ctx.createOscillator();
@@ -527,7 +526,6 @@ function renderProfileAvatarSelector() {
     }
 }
 
-// Dictionnaires d'affichage pour les titres et cadres débloqués
 const TITLE_DISPLAY_NAMES = {
     'title_plasma_initiate': '⚡ Initié du Plasma',
     'title_flux_master': '⚡ Maître des Flux',
@@ -538,6 +536,7 @@ const TITLE_DISPLAY_NAMES = {
 };
 
 const FRAME_DISPLAY_NAMES = {
+    'frame_silver': '🛡️ Cadre de Profil Argenté',
     'frame_gold': '👑 Cadre Or Massif',
     'frame_animated': '✨ Cadre Animé de Saison'
 };
@@ -565,7 +564,7 @@ function renderProfileCustomizationMenus() {
 
     if (frameSelect) {
         frameSelect.innerHTML = `<option value="">Aucun cadre (Défaut)</option>`;
-        const unlockedFrames = (myProfile.unlocked_items || []).filter(id => id.startsWith('frame_') || id === 'frame_gold');
+        const unlockedFrames = (myProfile.unlocked_items || []).filter(id => id.startsWith('frame_'));
 
         unlockedFrames.forEach(fId => {
             const displayName = FRAME_DISPLAY_NAMES[fId] || fId;
@@ -679,7 +678,6 @@ function saveProfileFromModal() {
     if (!myProfile.inventory) myProfile.inventory = {};
     if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
     
-    // Sauvegarde et envoi du Titre
     if (selectedTitleId) {
         myProfile.inventory.__equipped.title = selectedTitleId;
         localStorage.setItem('cb_equipped_title', selectedTitleId);
@@ -690,7 +688,6 @@ function saveProfileFromModal() {
         socket.emit('equip_cosmetic', 'none_title');
     }
 
-    // Sauvegarde et envoi du Cadre
     if (selectedFrameId) {
         myProfile.inventory.__equipped.frame = selectedFrameId;
         localStorage.setItem('cb_equipped_frame', selectedFrameId);
@@ -701,7 +698,6 @@ function saveProfileFromModal() {
         socket.emit('equip_cosmetic', 'none_frame');
     }
 
-    // Gestion de l'avatar spécial
     if (activeAvatarChoice === 'avatar_legend') {
         myProfile.inventory.__equipped.avatar = 'avatar_legend';
         socket.emit('equip_cosmetic', 'avatar_legend');
@@ -1342,7 +1338,7 @@ const BLITZ_PASS_TIERS = [
     { tier: 1, free: "50 Pièces (🪙)", premium: "Titre exclusif « Initié du Plasma »" },
     { tier: 2, free: "1 💡 Projecteur", premium: "100 Pièces (🪙)" },
     { tier: 3, free: "50 Pièces (🪙)", premium: "Titre rare « Maître des Flux »" },
-    { tier: 4, free: "1 ⏳ Blocage du Temps", premium: "Cadre de Profil Argenté" },
+    { tier: 4, free: "1 ⏳ Blocage du Temps", premium: "🛡️ Cadre de Profil Argenté" },
     { tier: 5, free: "75 Pièces (🪙)", premium: "150 Pièces (🪙)" },
     { tier: 6, free: "1 ⚡ Joker Éclair", premium: "Pack de Consommables (Bonus)" },
     { tier: 7, free: "50 Pièces (🪙)", premium: "Titre « Pro de l'Éclair »" },
@@ -1353,7 +1349,7 @@ const BLITZ_PASS_TIERS = [
     { tier: 12, free: "1 ⏳ Blocage du Temps", premium: "1 💡 Projecteur" },
     { tier: 13, free: "70 Pièces (🪙)", premium: "Titre « Électron Libre »" },
     { tier: 14, free: "1 ⚡ Joker Éclair", premium: "2 ⏳ Blocage du Temps" },
-    { tier: 15, free: "150 Pièces (🪙)", premium: "👑 Bordure de Profil Or Massif" },
+    { tier: 15, free: "150 Pièces (🪙)", premium: "👑 Cadre Or Massif" },
     { tier: 16, free: "80 Pièces (🪙)", premium: "160 Pièces (🪙)" },
     { tier: 17, free: "2 💡 Projecteur", premium: "2 🌟 Novas Temporelles" },
     { tier: 18, free: "90 Pièces (🪙)", premium: "250 Pièces (🪙)" },
@@ -1363,7 +1359,7 @@ const BLITZ_PASS_TIERS = [
     { tier: 22, free: "1 ⏳ Blocage du Temps", premium: "3 💡 Projecteur" },
     { tier: 23, free: "120 Pièces (🪙)", premium: "Titre honorifique « Surcharge Mentale »" },
     { tier: 24, free: "1 ⚡ Joker Éclair", premium: "300 Pièces (🪙)" },
-    { tier: 25, free: "150 Pièces (🪙)", premium: "Cadre Animé de Saison" },
+    { tier: 25, free: "150 Pièces (🪙)", premium: "✨ Cadre Animé de Saison" },
     { tier: 26, free: "130 Pièces (🪙)", premium: "260 Pièces (🪙)" },
     { tier: 27, free: "2 💡 Projecteur", premium: "4 🌟 Novas Temporelles" },
     { tier: 28, free: "140 Pièces (🪙)", premium: "400 Pièces (🪙)" },
@@ -1413,7 +1409,6 @@ function renderBlitzPass() {
     
     BLITZ_PASS_TIERS.forEach(t => {
         const isUnlocked = true;
-        const isPremium = true;
         const freeKey = `${t.tier}_free`;
         const premKey = `${t.tier}_premium`;
         const isFreeClaimed = claimed[freeKey];
