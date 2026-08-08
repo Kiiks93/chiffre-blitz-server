@@ -12,7 +12,6 @@ const io = new Server(server, {
     }
 });
 
-// --- CONFIGURATION SUPABASE ---
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jjhoblvdpbstxwuelmoa.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqaG9ibHZkcGJzdHh3dWVsbW9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzNDMwNTksImV4cCI6MjEwMDkxOTA1OX0.BIIuE0e3WbpJ6asxPx7FpH01FESDHfqRUMBW54jfh4E';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -184,12 +183,10 @@ io.on('connection', (socket) => {
     socket.on('buy_item', async (itemId) => {
         const player = activePlayers[socket.id];
         if (!player) return;
-        
         const cost = SHOP_PRICES[itemId];
         if (!cost || player.coins < cost) return;
 
         const permanents = ['theme_alt', 'avatar_legend', 'frame_gold'];
-
         if (permanents.includes(itemId)) {
             if (!player.unlocked_items) player.unlocked_items = [];
             if (!player.unlocked_items.includes(itemId)) {
@@ -208,9 +205,7 @@ io.on('connection', (socket) => {
 
     socket.on('buy_blitz_pass', async () => {
         const player = activePlayers[socket.id];
-        if (!player) return;
-        if (player.blitzPassPremium) return;
-
+        if (!player || player.blitzPassPremium) return;
         const cost = 1000;
         if (player.coins >= cost) {
             player.coins -= cost;
@@ -227,7 +222,6 @@ io.on('connection', (socket) => {
         const player = activePlayers[socket.id];
         if (!player) return;
         const { tier, track } = data;
-
         player.claimedPassTiers = player.claimedPassTiers || {};
         const key = `${tier}_${track}`;
         if (player.claimedPassTiers[key]) return;
@@ -254,7 +248,6 @@ io.on('connection', (socket) => {
     socket.on('equip_cosmetic', async (itemId) => {
         const player = activePlayers[socket.id];
         if (!player) return;
-        
         if (!player.inventory) player.inventory = {};
         if (!player.inventory.__equipped) player.inventory.__equipped = {};
 
@@ -268,6 +261,10 @@ io.on('connection', (socket) => {
             socket.emit('player_registered', player);
         } else if (itemId === 'none_frame') {
             delete player.inventory.__equipped.frame;
+            await savePlayerToSupabase(socket.id);
+            socket.emit('player_registered', player);
+        } else if (itemId === 'none_theme') {
+            delete player.inventory.__equipped.theme;
             await savePlayerToSupabase(socket.id);
             socket.emit('player_registered', player);
         } else if (player.unlocked_items && player.unlocked_items.includes(itemId)) {
@@ -320,7 +317,6 @@ io.on('connection', (socket) => {
     socket.on('spin_jackpot_wheel', async () => {
         const player = activePlayers[socket.id];
         if (!player) return;
-        
         const roll = Math.random();
         let outcome = 'rien';
         let coinDelta = 0;
@@ -372,10 +368,7 @@ io.on('connection', (socket) => {
     socket.on('create_room', (data) => {
         const code = data.code || Math.random().toString(36).substring(2, 6).toUpperCase();
         if (rooms[code]) { socket.emit('room_error', "Ce salon existe déjà !"); return; }
-
-        const currentPlayer = activePlayers[socket.id] || { 
-            socketId: socket.id, username: data.username, avatar: data.avatar, flag: data.flag 
-        };
+        const currentPlayer = activePlayers[socket.id] || { socketId: socket.id, username: data.username, avatar: data.avatar, flag: data.flag };
 
         rooms[code] = { code: code, password: data.password || '', players: [currentPlayer], hostId: socket.id };
         socket.join(code);
@@ -409,13 +402,11 @@ io.on('connection', (socket) => {
     socket.on('get_friends_list', async () => {
         const player = activePlayers[socket.id];
         if (!player) return;
-
         try {
             const { data: friendships, error } = await supabase
                 .from('friendships')
                 .select('*')
                 .or(`user_username.ilike.${player.username},friend_username.ilike.${player.username}`);
-
             if (error) throw error;
 
             let friendsData = [];
@@ -589,39 +580,26 @@ io.on('connection', (socket) => {
         socket.emit('admin_schedule_saved', eventSchedules);
     });
 
-    // Supporte les deux noms d'événements pour le broadcast admin
     socket.on('admin_broadcast_message', (message) => {
         if (!socket.isAdmin) return;
         io.emit('global_announcement', message);
     });
-    socket.on('admin_broadcast', (message) => {
-        if (!socket.isAdmin) return;
-        io.emit('global_announcement', message);
-    });
 
-    // Supporte les deux noms d'événements pour le don admin (coins, points, trophées)
-    async function handleAdminGift(data) {
+    socket.on('admin_give_gift', async (data) => {
         if (!socket.isAdmin) return;
-        const { targetUsername, target, currency, amount } = data;
-        const selectedTarget = targetUsername || target;
-        const cur = currency || 'coins';
-        const amt = amount || 0;
+        const { targetUsername, currency, amount } = data;
+        const currencyLabel = currency === 'coins' ? 'Pièces 🪙' : 'Points 🏅';
+        const msg = `🎁 Cadeau Admin reçu : +${amount} ${currencyLabel} !`;
         
-        let currencyLabel = 'Pièces 🪙';
-        if (cur === 'points') currencyLabel = 'Points 🏅';
-        if (cur === 'trophies') currencyLabel = 'Trophées 🏆';
-
-        const msg = `🎁 Cadeau Admin reçu : +${amt} ${currencyLabel} !`;
-        
-        if (!selectedTarget || selectedTarget.trim() === '' || selectedTarget.toUpperCase() === 'TOUS' || selectedTarget.toUpperCase() === 'ALL') {
+        if (!targetUsername || targetUsername.trim() === '' || targetUsername.toUpperCase() === 'TOUS') {
             for (let sId in activePlayers) {
-                activePlayers[sId][cur] = (activePlayers[sId][cur] || 0) + amt;
+                activePlayers[sId][currency] = (activePlayers[sId][currency] || 0) + amount;
                 await savePlayerToSupabase(sId);
                 io.to(sId).emit('player_registered', activePlayers[sId]);
-                io.to(sId).emit('admin_gift_received', { currency: cur, amount: amt, message: `🎁 Cadeau Admin global : +${amt} ${currencyLabel} !` });
+                io.to(sId).emit('admin_gift_received', { currency, amount, message: `🎁 Cadeau Admin global : +${amount} ${currencyLabel} !` });
             }
         } else {
-            const cleanTarget = selectedTarget.trim().toLowerCase();
+            const cleanTarget = targetUsername.trim().toLowerCase();
             let foundActiveSocketId = null;
             for (let sId in activePlayers) {
                 if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === cleanTarget) { foundActiveSocketId = sId; break; }
@@ -629,23 +607,20 @@ io.on('connection', (socket) => {
 
             if (foundActiveSocketId) {
                 const targetPlayer = activePlayers[foundActiveSocketId];
-                targetPlayer[cur] = (targetPlayer[cur] || 0) + amt;
+                targetPlayer[currency] = (targetPlayer[currency] || 0) + amount;
                 await savePlayerToSupabase(foundActiveSocketId);
                 io.to(foundActiveSocketId).emit('player_registered', targetPlayer);
-                io.to(foundActiveSocketId).emit('admin_gift_received', { currency: cur, amount: amt, message: msg });
+                io.to(foundActiveSocketId).emit('admin_gift_received', { currency, amount, message: msg });
             } else {
-                const { data: matchedPlayers, error } = await supabase.from('players').select('*').ilike('username', selectedTarget.trim());
+                const { data: matchedPlayers, error } = await supabase.from('players').select('*').ilike('username', targetUsername.trim());
                 if (!error && matchedPlayers && matchedPlayers.length > 0) {
                     const targetDbPlayer = matchedPlayers[0];
-                    const updatedVal = (targetDbPlayer[cur] || 0) + amt;
-                    await supabase.from('players').update({ [cur]: updatedVal }).eq('id', targetDbPlayer.id);
+                    const updatedVal = (targetDbPlayer[currency] || 0) + amount;
+                    await supabase.from('players').update({ [currency]: updatedVal }).eq('id', targetDbPlayer.id);
                 }
             }
         }
-    }
-
-    socket.on('admin_give_gift', handleAdminGift);
-    socket.on('admin_send_gift', handleAdminGift);
+    });
 
     socket.on('disconnect', async () => {
         console.log(`🔌 Déconnexion : ${socket.id}`);
@@ -737,7 +712,6 @@ function applyPassReward(p, tier, track) {
         else if (tier === 10 || tier === 27) p.inventory['nova'] = (p.inventory['nova'] || 0) + (tier === 27 ? 4 : 1);
     } else if (track === 'premium') {
         if (!p.blitzPassPremium) return;
-
         if (tier === 1) { if (!p.unlocked_items.includes('title_plasma_initiate')) p.unlocked_items.push('title_plasma_initiate'); }
         else if (tier === 2) p.coins = (p.coins || 0) + 100;
         else if (tier === 3) { if (!p.unlocked_items.includes('title_flux_master')) p.unlocked_items.push('title_flux_master'); }
