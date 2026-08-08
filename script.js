@@ -476,8 +476,10 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
     let avatarContent = avatarNum || 1;
     let avatarTitle = `Avatar #${avatarNum || 1}`;
     
-    if (equippedAvatar === 'avatar_legend') {
-        avatarContent = '🤖'; avatarTitle = 'Robot Mathématicien Légendaire';
+    if (equippedAvatar === 'avatar_core') {
+        avatarContent = '⚛️'; avatarTitle = 'Noyau d\'Énergie';
+    } else if (equippedAvatar === 'avatar_plasma') {
+        avatarContent = '🔮'; avatarTitle = 'Lampe Plasma Dorée (Avatar Ultime)';
     }
 
     const isGold = equippedFrame === 'frame_gold';
@@ -499,10 +501,11 @@ function getLargeAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
     const isAnimatedFrame = equippedFrame === 'frame_animated';
     
     let avatarContent = avatarNum || 1;
-    if (avatarType === 'avatar_legend') avatarContent = '🤖'; 
+    if (avatarType === 'avatar_core') avatarContent = '⚛️';
+    else if (avatarType === 'avatar_plasma') avatarContent = '🔮'; 
 
     return `
-        <div class="tft-avatar-large ${isGoldFrame ? 'gold-frame' : ''} ${isAnimatedFrame ? 'animated-frame' : ''}">
+        <div class="tft-avatar-large ${isGoldFrame ? 'gold-frame' : ''} ${isAnimatedFrame ? 'animated-frame' : ''} ${avatarType === 'avatar_plasma' ? 'plasma-orb' : ''}">
             <span class="tft-avatar-large-icon" style="${typeof avatarContent === 'number' ? 'font-size: 24px;' : 'font-size: 30px;'}">${avatarContent}</span>
             <span class="tft-flag-large-overlay">${flag || '🇫🇷'}</span>
         </div>
@@ -524,21 +527,31 @@ function renderProfileAvatarSelector() {
 
     const isStandardActive = (activeAvatarChoice === 'standard' || !activeAvatarChoice);
     const stdCard = document.createElement('div');
-    stdCard.style.cssText = `flex: 1; min-width: 90px; background: ${isStandardActive ? 'rgba(0,210,255,0.2)' : 'rgba(255,255,255,0.05)'}; border: 2px solid ${isStandardActive ? '#00d2ff' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 4px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;`;
+    stdCard.style.cssText = `flex: 1; min-width: 80px; background: ${isStandardActive ? 'rgba(0,210,255,0.2)' : 'rgba(255,255,255,0.05)'}; border: 2px solid ${isStandardActive ? '#00d2ff' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 4px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;`;
     stdCard.onclick = () => { activeAvatarChoice = 'standard'; renderProfileAvatarSelector(); updateProfilePreview(); };
-    stdCard.innerHTML = `<span style="font-size: 13px;">🔢</span><div style="font-size: 9px; font-weight: bold; color: #fff;">Standard</div>`;
+    stdCard.innerHTML = `<span style="font-size: 12px;">🔢</span><div style="font-size: 8px; font-weight: bold; color: #fff;">Standard</div>`;
     container.appendChild(stdCard);
 
     const unlockedItems = myProfile.unlocked_items || [];
-    const hasRobot = unlockedItems.includes('avatar_legend') || (myProfile.inventory && myProfile.inventory['avatar_legend'] > 0);
     
-    if (hasRobot) {
-        const isRobotActive = (activeAvatarChoice === 'avatar_legend');
-        const robotCard = document.createElement('div');
-        robotCard.style.cssText = `flex: 1; min-width: 90px; background: ${isRobotActive ? 'rgba(0,210,255,0.2)' : 'rgba(255,255,255,0.05)'}; border: 2px solid ${isRobotActive ? '#00d2ff' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 4px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;`;
-        robotCard.onclick = () => { activeAvatarChoice = 'avatar_legend'; renderProfileAvatarSelector(); updateProfilePreview(); };
-        robotCard.innerHTML = `<span style="font-size: 13px;">🤖</span><div style="font-size: 9px; font-weight: bold; color: #fff;">Robot</div>`;
-        container.appendChild(robotCard);
+    const hasCore = unlockedItems.includes('avatar_core') || (myProfile.inventory && myProfile.inventory['avatar_core'] > 0);
+    if (hasCore) {
+        const isCoreActive = (activeAvatarChoice === 'avatar_core');
+        const coreCard = document.createElement('div');
+        coreCard.style.cssText = `flex: 1; min-width: 80px; background: ${isCoreActive ? 'rgba(0,210,255,0.3)' : 'rgba(255,255,255,0.05)'}; border: 2px solid ${isCoreActive ? '#00d2ff' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 4px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;`;
+        coreCard.onclick = () => { activeAvatarChoice = 'avatar_core'; renderProfileAvatarSelector(); updateProfilePreview(); };
+        coreCard.innerHTML = `<span style="font-size: 12px;">⚛️</span><div style="font-size: 8px; font-weight: bold; color: #fff;">Noyau</div>`;
+        container.appendChild(coreCard);
+    }
+
+    const hasPlasma = unlockedItems.includes('avatar_plasma') || (myProfile.inventory && myProfile.inventory['avatar_plasma'] > 0);
+    if (hasPlasma) {
+        const isPlasmaActive = (activeAvatarChoice === 'avatar_plasma');
+        const plasmaCard = document.createElement('div');
+        plasmaCard.style.cssText = `flex: 1; min-width: 80px; background: ${isPlasmaActive ? 'rgba(248,181,0,0.3)' : 'rgba(255,255,255,0.05)'}; border: 2px solid ${isPlasmaActive ? '#f8b500' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 4px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;`;
+        plasmaCard.onclick = () => { activeAvatarChoice = 'avatar_plasma'; renderProfileAvatarSelector(); updateProfilePreview(); };
+        plasmaCard.innerHTML = `<span style="font-size: 12px;">🔮</span><div style="font-size: 8px; font-weight: bold; color: #f8b500;">Plasma</div>`;
+        container.appendChild(plasmaCard);
     }
 }
 
@@ -597,11 +610,14 @@ function renderProfileCustomizationMenus() {
     }
 
     const themeSelect = document.getElementById('theme-input');
-    const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
+    const equippedTheme = localStorage.getItem('cb_equipped_theme') || (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme);
 
     if (themeSelect) {
         themeSelect.innerHTML = `<option value="">Thème de grille standard</option>`;
-        const unlockedThemes = (myProfile.unlocked_items || []).filter(id => id.startsWith('theme_'));
+        let unlockedThemes = (myProfile.unlocked_items || []).filter(id => id.startsWith('theme_'));
+        if ((myProfile.inventory['theme_alt'] || 0) > 0 && !unlockedThemes.includes('theme_alt')) {
+            unlockedThemes.push('theme_alt');
+        }
 
         unlockedThemes.forEach(thId => {
             const displayName = THEME_DISPLAY_NAMES[thId] || thId;
@@ -743,16 +759,14 @@ function saveProfileFromModal() {
         localStorage.setItem('cb_equipped_theme', selectedThemeId);
         socket.emit('equip_cosmetic', selectedThemeId);
     } else {
-        if (myProfile.inventory && myProfile.inventory.__equipped) {
-            delete myProfile.inventory.__equipped.theme;
-        }
+        delete myProfile.inventory.__equipped.theme;
         localStorage.removeItem('cb_equipped_theme');
         socket.emit('equip_cosmetic', 'none_theme');
     }
 
-    if (activeAvatarChoice === 'avatar_legend') {
-        myProfile.inventory.__equipped.avatar = 'avatar_legend';
-        socket.emit('equip_cosmetic', 'avatar_legend');
+    if (activeAvatarChoice === 'avatar_core' || activeAvatarChoice === 'avatar_plasma') {
+        myProfile.inventory.__equipped.avatar = activeAvatarChoice;
+        socket.emit('equip_cosmetic', activeAvatarChoice);
     } else {
         delete myProfile.inventory.__equipped.avatar;
         socket.emit('equip_cosmetic', 'none');
@@ -807,16 +821,14 @@ function saveAvatarChoiceOnly() {
         localStorage.setItem('cb_equipped_theme', selectedThemeId);
         socket.emit('equip_cosmetic', selectedThemeId);
     } else {
-        if (myProfile.inventory && myProfile.inventory.__equipped) {
-            delete myProfile.inventory.__equipped.theme;
-        }
+        delete myProfile.inventory.__equipped.theme;
         localStorage.removeItem('cb_equipped_theme');
         socket.emit('equip_cosmetic', 'none_theme');
     }
 
-    if (activeAvatarChoice === 'avatar_legend') {
-        myProfile.inventory.__equipped.avatar = 'avatar_legend';
-        socket.emit('equip_cosmetic', 'avatar_legend');
+    if (activeAvatarChoice === 'avatar_core' || activeAvatarChoice === 'avatar_plasma') {
+        myProfile.inventory.__equipped.avatar = activeAvatarChoice;
+        socket.emit('equip_cosmetic', activeAvatarChoice);
     } else {
         delete myProfile.inventory.__equipped.avatar;
         socket.emit('equip_cosmetic', 'none');
@@ -868,12 +880,11 @@ socket.on('player_registered', (rawData) => {
         const localEquipped = myProfile.inventory && myProfile.inventory.__equipped ? {...myProfile.inventory.__equipped} : {};
         const savedTitle = localStorage.getItem('cb_equipped_title');
         const savedFrame = localStorage.getItem('cb_equipped_frame');
-        const savedTheme = localStorage.getItem('cb_equipped_theme'); // Récupère le localStorage
+        const savedTheme = localStorage.getItem('cb_equipped_theme');
         
         if (savedTitle && !localEquipped.title) localEquipped.title = savedTitle;
         if (savedFrame && !localEquipped.frame) localEquipped.frame = savedFrame;
         
-        // Si le localStorage a explicitement un thème sauvegardé, on l'utilise, sinon on s'assure qu'il est vide
         if (savedTheme) {
             localEquipped.theme = savedTheme;
         } else {
@@ -886,7 +897,6 @@ socket.on('player_registered', (rawData) => {
         myProfile.inventory.__equipped.title = savedTitle || localEquipped.title || "";
         myProfile.inventory.__equipped.frame = savedFrame || localEquipped.frame || "";
         
-        // CORRECTION CLÉ : Si le localStorage n'a pas de thème (choix par défaut), on force la suppression même si le serveur essaie de renvoyer l'ancien
         if (savedTheme) {
             myProfile.inventory.__equipped.theme = savedTheme;
         } else {
@@ -972,7 +982,8 @@ const POWERS_CATALOG = [
     { id: 'eclipse', price: 1500, type: 'malus' },
     { id: 'chaos', price: 4000, type: 'malus' },
     { id: 'theme_alt', price: 1500, type: 'cosmetics' },
-    { id: 'avatar_legend', price: 2500, type: 'cosmetics' },
+    { id: 'avatar_core', price: 3000, type: 'cosmetics' },
+    { id: 'avatar_plasma', price: 5000, type: 'cosmetics' },
     { id: 'frame_gold', price: 5000, type: 'cosmetics' }
 ];
 
@@ -1441,7 +1452,7 @@ const BLITZ_PASS_TIERS = [
     { tier: 17, free: "2 💡 Projecteur", premium: "2 🌟 Novas Temporelles" },
     { tier: 18, free: "90 Pièces (🪙)", premium: "250 Pièces (🪙)" },
     { tier: 19, free: "1 ⚡ Joker Éclair", premium: "1 📳 Séisme" },
-    { tier: 20, free: "100 Pièces (🪙)", premium: "🤖 Avatar Exclusif « Noyau d'Énergie »" },
+    { tier: 20, free: "100 Pièces (🪙)", premium: "⚛️ Avatar « Noyau d'Énergie »" },
     { tier: 21, free: "110 Pièces (🪙)", premium: "220 Pièces (🪙)" },
     { tier: 22, free: "1 ⏳ Blocage du Temps", premium: "3 💡 Projecteur" },
     { tier: 23, free: "120 Pièces (🪙)", premium: "Titre honorifique « Surcharge Mentale »" },
@@ -1548,7 +1559,8 @@ function switchShopTab(type) {
     const powersDict = i18n[currentLang].powers;
     const cosmeticsDict = {
         theme_alt: { name: '🎨 Thème Rétro', desc: 'Grille visuelle alternative' },
-        avatar_legend: { name: '🤖 Avatar Robot', desc: 'Avatar exclusif robot' },
+        avatar_core: { name: '⚛️ Noyau d\'Énergie', desc: 'Avatar pur et électrique' },
+        avatar_plasma: { name: '🔮 Lampe Plasma', desc: 'Avatar sphère plasma ultime' },
         frame_gold: { name: '👑 Cadre Or Massif', desc: 'Bordure dorée prestigieuse' }
     };
 
@@ -1711,7 +1723,7 @@ socket.on('leaderboard_data', (res) => {
 
     parsedList.forEach((p, index) => {
         const row = document.createElement('div'); row.className = 'lb-row';
-        const badgeHtml = getAvatarBadgeHTML(p.flag, p.avatar);
+        const badgeHtml = getAvatarBadgeHTML(p.flag, p.avatar, null, p);
         const equippedTitle = p.inventory && p.inventory.__equipped && p.inventory.__equipped.title;
         const titleHtml = equippedTitle ? `<span style="font-size: 8px; color: #f8b500; font-weight: bold; margin-left: 4px;">[${TITLE_DISPLAY_NAMES[equippedTitle] || equippedTitle}]</span>` : '';
         
@@ -1868,8 +1880,9 @@ function getWinnerAvatarShowcaseHTML(playerObj) {
     const isSilverFrame = equippedFrame === 'frame_silver';
     const isAnimatedFrame = equippedFrame === 'frame_animated';
     
-    let iconContent = playerObj.avatar || 1, isRobot = false;
-    if (equippedAvatar === 'avatar_legend' || playerObj.avatar === 'avatar_legend') { iconContent = '🤖'; isRobot = true; }
+    let iconContent = playerObj.avatar || 1, isPlasma = false;
+    if (equippedAvatar === 'avatar_core' || playerObj.avatar === 'avatar_core') { iconContent = '⚛️'; }
+    else if (equippedAvatar === 'avatar_plasma' || playerObj.avatar === 'avatar_plasma') { iconContent = '🔮'; isPlasma = true; }
 
     let frameClass = '';
     if (isGoldFrame) frameClass = 'gold';
@@ -1878,8 +1891,8 @@ function getWinnerAvatarShowcaseHTML(playerObj) {
 
     return `
         <div class="victory-avatar-showcase">
-            <div class="victory-badge-large ${frameClass} ${isRobot ? 'robot-dancing' : ''}">
-                <span style="font-size: ${isRobot ? '36px' : '26px'}; font-weight: 900; color: #fff;">${iconContent}</span>
+            <div class="victory-badge-large ${frameClass} ${isPlasma ? 'plasma-orb' : ''}">
+                <span style="font-size: ${isPlasma ? '34px' : '26px'}; font-weight: 900; color: #fff;">${iconContent}</span>
                 <span style="position: absolute; bottom: -2px; right: -2px; font-size: 14px; background: #0f051d; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; z-index:3;">${playerObj.flag || '🇫🇷'}</span>
             </div>
             <div style="font-size: 13px; font-weight: 900; color: #f8b500; margin-top: 4px;">${playerObj.username || 'Joueur'} TRIOMPHE !</div>
