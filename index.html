@@ -171,13 +171,8 @@
     <div id="screen-join-custom" style="display:none;" class="menu-container">
         <h2 data-i18n="join_title" style="font-size:16px;">🔑 Rejoindre un Salon</h2>
         <p style="color:#aaa; font-size:11px; margin-bottom:6px;" data-i18n="join_subtitle">Entre le code et le mot de passe :</p>
-        
-        <input type="text" id="join-room-code-input" placeholder="CODE DU SALON" maxlength="10" 
-               style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:14px; font-weight:bold; text-align:center; margin-bottom:8px; outline:none; text-transform: uppercase;">
-        
-        <input type="text" id="join-room-pass-input" placeholder="MOT DE PASSE (Optionnel)" maxlength="15" 
-               style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:14px; font-weight:bold; text-align:center; margin-bottom:10px; outline:none;">
-        
+        <input type="text" id="join-room-code-input" placeholder="CODE DU SALON" maxlength="10" style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:14px; font-weight:bold; text-align:center; margin-bottom:8px; outline:none; text-transform: uppercase;">
+        <input type="text" id="join-room-pass-input" placeholder="MOT DE PASSE (Optionnel)" maxlength="15" style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:14px; font-weight:bold; text-align:center; margin-bottom:10px; outline:none;">
         <button class="btn-main btn-blue" onclick="submitJoinCustomRoom()" data-i18n="join_btn" style="margin-top:0;">Rejoindre ⚡</button>
         <button class="btn-secondary" onclick="openRoomsScreen()" data-i18n="back">⬅️ Retour</button>
     </div>
@@ -193,10 +188,8 @@
                 </div>
                 <input type="text" id="room-share-link" style="position: absolute; left: -9999px;" readonly>
             </div>
-
             <p style="color:#aaa; font-size:12px; margin-bottom:6px;" data-i18n="players_in_room">Joueurs :</p>
             <div id="room-players-list" style="font-weight:bold; font-size:14px; color:#00ff88; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:6px;">En attente...</div>
-            
             <div class="emote-bar" style="margin: 6px auto;">
                 <button class="emote-btn" onclick="sendEmote('🔥')">🔥</button>
                 <button class="emote-btn" onclick="sendEmote('⚡')">⚡</button>
@@ -212,10 +205,8 @@
     <div id="modal-create-room" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:center;">
             <h2 style="margin:0 0 6px 0; color:#00d2ff; font-size:16px;" data-i18n="create_modal_title">✨ CRÉER UN SALON</h2>
-            <input type="text" id="custom-room-name" placeholder="NOM DU SALON" maxlength="10" 
-                   style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:14px; font-weight:bold; text-align:center; margin-bottom:8px; outline:none; text-transform: uppercase;">
-            <input type="text" id="custom-room-pass" placeholder="MOT DE PASSE (Optionnel)" maxlength="15" 
-                   style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:14px; font-weight:bold; text-align:center; margin-bottom:10px; outline:none;">
+            <input type="text" id="custom-room-name" placeholder="NOM DU SALON" maxlength="10" style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:14px; font-weight:bold; text-align:center; margin-bottom:8px; outline:none; text-transform: uppercase;">
+            <input type="text" id="custom-room-pass" placeholder="MOT DE PASSE (Optionnel)" maxlength="15" style="width:100%; padding:9px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:14px; font-weight:bold; text-align:center; margin-bottom:10px; outline:none;">
             <div style="display:flex; gap:6px;">
                 <button class="btn-secondary" onclick="closeCreateRoomModal()" style="margin-top:0;" data-i18n="cancel">Annuler</button>
                 <button class="btn-main btn-blue" onclick="submitCreateRoom()" style="margin-top:0; flex:1;" data-i18n="create_btn">Créer ⚡</button>
@@ -230,8 +221,7 @@
                 <button class="icon-btn" onclick="closeFriendsModal()" style="width:28px; height:28px;">✕</button>
             </div>
             <div style="background:rgba(0,0,0,0.2); border:1px solid rgba(0,210,255,0.2); padding:8px; border-radius:10px; margin-bottom:10px; display:flex; gap:6px;">
-                <input type="text" id="input-add-friend" placeholder="Pseudo exact..." maxlength="15" 
-                       style="flex:1; padding:8px; border-radius:8px; border:1px solid #00d2ff; background:#0f051d; color:#fff; font-size:12px; outline:none;">
+                <input type="text" id="input-add-friend" placeholder="Pseudo exact..." maxlength="15" style="flex:1; padding:8px; border-radius:8px; border:1px solid #00d2ff; background:#0f051d; color:#fff; font-size:12px; outline:none;">
                 <button class="btn-main btn-blue" onclick="sendFriendRequest()" style="padding:8px 12px; font-size:11px; margin-top:0; width:auto;" data-i18n="add_btn">Ajouter</button>
             </div>
             <div class="tabs" style="margin-bottom:8px;">
@@ -257,30 +247,21 @@
     <div id="modal-username" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:center; max-width: 380px;">
             <div id="modal-avatar-preview"></div>
-            
             <h2 style="margin:2px 0; color:#00d2ff; font-size:16px;" data-i18n="welcome_title">⚡ IDENTITÉ BLITZ ⚡</h2>
             <p style="color:#aaa; font-size:10px; margin-bottom:8px;" data-i18n="welcome_sub">Personnalise ton profil :</p>
-            
-            <input type="text" id="username-input" placeholder="PSEUDO" maxlength="15" 
-                   style="width:100%; padding:8px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:13px; font-weight:bold; text-align:center; margin-bottom:6px; outline:none;">
-            
+            <input type="text" id="username-input" placeholder="PSEUDO" maxlength="15" style="width:100%; padding:8px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:13px; font-weight:bold; text-align:center; margin-bottom:6px; outline:none;">
             <select id="title-input" style="width:100%; padding:8px; border-radius:8px; border:2px solid #f8b500; background:#0f051d; color:#f8b500; font-size:12px; font-weight:bold; margin-bottom:6px; outline:none;">
                 <option value="">Aucun titre actif</option>
             </select>
-
             <select id="frame-input" style="width:100%; padding:8px; border-radius:8px; border:2px solid #f8b500; background:#0f051d; color:#f8b500; font-size:12px; font-weight:bold; margin-bottom:6px; outline:none;">
                 <option value="">Aucun cadre (Défaut)</option>
             </select>
-
             <select id="theme-input" style="width:100%; padding:8px; border-radius:8px; border:2px solid #f8b500; background:#0f051d; color:#f8b500; font-size:12px; font-weight:bold; margin-bottom:6px; outline:none;">
                 <option value="">Thème de grille standard</option>
             </select>
-
             <div id="profile-avatar-selector" style="display: flex; gap: 6px; overflow-x: auto; margin-bottom: 6px;"></div>
-
             <div style="display: flex; gap: 6px; margin-bottom: 6px;">
-                <input type="number" id="avatar-input" min="1" max="999" value="1" oninput="updateProfilePreview()" placeholder="AVATAR (1-999)"
-                       style="flex:1; padding:8px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:13px; font-weight:bold; text-align:center; outline:none;">
+                <input type="number" id="avatar-input" min="1" max="999" value="1" oninput="updateProfilePreview()" placeholder="AVATAR (1-999)" style="flex:1; padding:8px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:13px; font-weight:bold; text-align:center; outline:none;">
                 <select id="flag-input" onchange="updateProfilePreview()" style="flex:1; padding:8px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:12px; font-weight:bold; outline:none;">
                     <option value="🇫🇷">🇫🇷 France</option>
                     <option value="🇧🇪">🇧🇪 Belgique</option>
@@ -296,9 +277,7 @@
                     <option value="🌍">🌍 Autre</option>
                 </select>
             </div>
-
             <button class="btn-secondary" onclick="saveAvatarChoiceOnly()" style="margin: 0 0 6px 0; font-size: 11px; background: rgba(0,210,255,0.15); border-color: #00d2ff; color: #00d2ff;">💾 Enregistrer l'avatar uniquement</button>
-
             <select id="region-input" style="width:100%; padding:8px; border-radius:8px; border:2px solid #00d2ff; background:#0f051d; color:#fff; font-size:12px; font-weight:bold; margin-bottom:10px; outline:none;">
                 <option value="Hauts-de-France">Hauts-de-France</option>
                 <option value="Île-de-France">Île-de-France</option>
@@ -315,7 +294,6 @@
                 <option value="Corse">Corse</option>
                 <option value="DOM-TOM / Autre">DOM-TOM / Autre</option>
             </select>
-            
             <button class="btn-main btn-blue" onclick="saveProfileFromModal()" data-i18n="btn_play" style="margin-top:0;">VALIDER & JOUER ⚡</button>
         </div>
     </div>
@@ -482,76 +460,21 @@
         </div>
     </div>
 
-    <!-- ========================================================= -->
-    <!-- PANNEAU ADMINISTRATEUR PLEIN ÉCRAN                        -->
-    <!-- ========================================================= -->
-    <div id="admin-modal" class="modal-overlay" style="display:none; padding: 0; justify-content: flex-start; align-items: stretch;">
-        <div class="modal-card" style="max-width: 100% !important; width: 100% !important; height: 100% !important; max-height: 100vh !important; border-radius: 0 !important; border: none; background: linear-gradient(135deg, #090214, #15062b); padding: 15px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column;">
-            
-            <!-- En-tête Console Plein Écran -->
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px dashed rgba(255,0,127,0.3); padding-bottom:8px;">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:18px;">💻</span>
-                    <h2 style="margin:0; color:#ff007f; font-size:16px; font-weight:900; letter-spacing:1px;">ADMIN_ABUSE://CONSOLE (PLEIN ÉCRAN)</h2>
-                </div>
-                <button class="icon-btn" onclick="closeAdminPanel()" style="width:32px; height:32px; border-radius:50%; background:rgba(255,0,127,0.15); border:1px solid #ff007f; color:#ff007f; font-weight:bold; font-size:14px;">✕</button>
+    <!-- PANNEAU ADMINISTRATEUR COMPLET -->
+    <div id="admin-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-card" style="max-width: 500px; max-height: 85vh; overflow-y: auto; text-align: left;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h2 style="margin:0; color:#00d2ff; font-size:16px;">⚡ Panneau Administrateur</h2>
+                <button class="icon-btn" onclick="closeAdminPanel()" style="width:28px; height:28px;">✕</button>
             </div>
             
-            <!-- Connexion admin -->
-            <div id="admin-login-section" style="margin: auto; width: 100%; max-width: 400px;">
-                <div style="text-align:center; padding: 20px;">
-                    <div style="font-size: 36px; margin-bottom: 8px;">🔒</div>
-                    <div style="color: #fff; font-size: 13px; font-weight: bold; margin-bottom: 12px; font-family: monospace;">CLÉ ROOT REQUISE</div>
-                    <input type="password" id="admin-password-input" placeholder="Mot de passe..." style="width:100%; padding:12px; border-radius:8px; border:2px solid #ff007f; background:#05010a; color:#ff007f; font-size:14px; outline:none; margin-bottom:10px; box-sizing:border-box; text-align:center; font-weight:bold;">
-                    <button class="btn-main" onclick="authAdmin()" style="width:100%; margin-top:0; padding:12px; font-size:13px; background:linear-gradient(45deg, #ff007f, #7b4397);">EXECUTE LOGIN ⚡</button>
-                    <p id="admin-login-error" style="color: #ff4b2b; text-align: center; margin-top: 10px; font-size: 11px; font-weight: bold;"></p>
-                </div>
+            <div id="admin-login-section">
+                <input type="password" id="admin-password-input" placeholder="Mot de passe admin..." style="width:100%; padding:8px; border-radius:8px; border:1px solid #00d2ff; background:#0f051d; color:#fff; font-size:12px; outline:none; margin-bottom:8px; box-sizing:border-box;">
+                <button class="btn-main btn-blue" onclick="authAdmin()" style="width:100%; margin-top:0;">Connexion Admin</button>
+                <p id="admin-login-error" style="color: #ff4b2b; text-align: center; margin-top: 8px; font-size: 11px;"></p>
             </div>
 
-            <!-- Dashboard admin plein écran -->
-            <div id="admin-dashboard-section" class="hidden" style="display:flex; flex-direction:column; gap:12px; flex: 1; max-width: 700px; margin: 0 auto; width: 100%;">
-                
-                <!-- 1. Annonce Globale -->
-                <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(0, 210, 255, 0.3); padding: 10px 12px; border-radius: 8px;">
-                    <div style="font-size:11px; font-weight:bold; color:#00d2ff; margin-bottom:6px; font-family:monospace;">📢 :broadcast [MESSAGE]</div>
-                    <div style="display:flex; gap:6px;">
-                        <input type="text" id="admin-broadcast-text" placeholder="Message global pour les joueurs..." style="flex:1; padding:9px; border-radius:6px; border:1px solid rgba(0,210,255,0.4); background:#05010a; color:#fff; font-size:12px; outline:none; box-sizing:border-box;">
-                        <button class="btn-main btn-blue" onclick="adminBroadcast()" style="width:auto; margin-top:0; padding:8px 14px; font-size:11px; flex-shrink:0;">Diffuser 🚀</button>
-                    </div>
-                </div>
-
-                <!-- 2. Distribution de Cadeaux -->
-                <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(248, 181, 0, 0.3); padding: 10px 12px; border-radius: 8px;">
-                    <div style="font-size:11px; font-weight:bold; color:#f8b500; margin-bottom:6px; font-family:monospace;">🎁 :give [PLAYER] [CURRENCY] [AMT]</div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:6px; margin-bottom:6px;">
-                        <select id="admin-target-type" onchange="toggleAdminTargetInput()" style="padding:8px; border-radius:6px; border:1px solid rgba(248,181,0,0.4); background:#05010a; color:#fff; font-size:11px; outline:none;">
-                            <option value="all">🌍 TOUS</option>
-                            <option value="pseudo">👤 Joueur</option>
-                        </select>
-                        <select id="admin-currency-type" style="padding:8px; border-radius:6px; border:1px solid rgba(248,181,0,0.4); background:#05010a; color:#fff; font-size:11px; outline:none;">
-                            <option value="coins">🪙 Pièces</option>
-                            <option value="points">🏅 Points</option>
-                            <option value="trophies">🏆 Trophées</option>
-                        </select>
-                        <input type="number" id="admin-amount" value="100" placeholder="Montant" style="padding:8px; border-radius:6px; border:1px solid rgba(248,181,0,0.4); background:#05010a; color:#fff; font-size:11px; text-align:center; outline:none; box-sizing:border-box;">
-                    </div>
-                    <input type="text" id="admin-target-pseudo" placeholder="Entrer le pseudo exact..." style="width:100%; padding:8px; border-radius:6px; border:1px solid rgba(248,181,0,0.4); background:#05010a; color:#fff; font-size:11px; display:none; outline:none; box-sizing:border-box; margin-bottom:6px;">
-                    <button class="btn-main btn-gold" onclick="adminSendGift()" style="width:100%; margin-top:0; padding:9px; font-size:12px; color:#000; font-weight:900;">DONNER LA RÉCOMPENSE ⚡</button>
-                </div>
-
-                <!-- 3. Server Event Abuse Modes -->
-                <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(56, 239, 125, 0.3); padding: 10px 12px; border-radius: 8px; flex: 1;">
-                    <div style="font-size:11px; font-weight:bold; color:#38ef7d; margin-bottom:8px; font-family:monospace;">⚙️ :server_events [FORCED TOGGLES]</div>
-                    
-                    <div id="admin-schedules-container" style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; font-size:11px;">
-                        <!-- Généré dynamiquement par script.js -->
-                    </div>
-                    
-                    <button class="btn-main" onclick="saveAdminSchedules()" style="width:100%; margin-top:10px; padding:9px; font-size:11px; background:linear-gradient(45deg, #11998e, #38ef7d); color:#000; font-weight:900;">APPLIQUER LES ÉVÉNEMENTS 💾</button>
-                </div>
-
-                <button class="btn-secondary" onclick="closeAdminPanel()" style="width:100%; margin-top:4px; padding:10px; font-size:12px; background:rgba(255,75,43,0.15); border-color:#ff4b2b; color:#ff4b2b;">FERMER LA CONSOLE ❌</button>
-            </div>
+            <div id="admin-dashboard-section" class="hidden"></div>
         </div>
     </div>
 
