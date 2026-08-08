@@ -18,7 +18,7 @@
                 <span id="user-title-display" style="font-size: 8px; color: #f8b500; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></span>
             </div>
         </div>
-      <div class="header-btns">
+        <div class="header-btns">
             <button onclick="openFriendsModal()" class="icon-btn" style="padding: 0 10px; position: relative;" title="Amis">
                 <span data-i18n="friends_btn">Amis</span>
                 <span id="friends-main-badge" style="display:none; position: absolute; top: -4px; right: -4px; background: #ff4b2b; color: #fff; border-radius: 50%; padding: 1px 5px; font-size: 9px; font-weight: bold;">0</span>
@@ -396,35 +396,38 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; font-size: 10px;">
                     <div>
                         <span id="opp-profile-name" style="color: #ff007f; font-weight: bold;">Adversaire</span>
-                        <span id="opp-profile-title" style="font-size: 8px; color: #f8b500; font-weight: bold; margin-left: 4px;"></span>
+                        <span id="opp-profile-title" style="display: block; font-size: 8px; color: #f8b500;"></span>
                     </div>
-                    <div id="opp-profile-badge"></div>
+                    <span id="opp-score" style="font-size: 12px; font-weight: 900; color: #ff007f;">0</span>
                 </div>
-                <div data-i18n="hud_opp_target" style="font-size: 9px; color: #aaa;">CIBLE ADVERSAIRE</div>
-                <div style="font-size:18px; color:#ff007f; font-weight:bold;" id="opp-target">1</div>
+                <div style="font-size: 10px; color: #aaa;">Cible : <strong id="opp-target" style="color:#fff;">1</strong></div>
+            </div>
+            <div class="player-box">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; font-size: 10px;">
+                    <div>
+                        <span id="my-profile-name" style="color: #00d2ff; font-weight: bold;">Moi</span>
+                        <span id="my-profile-title" style="display: block; font-size: 8px; color: #f8b500;"></span>
+                    </div>
+                    <span id="my-score" style="font-size: 12px; font-weight: 900; color: #00d2ff;">0</span>
+                </div>
+                <div style="font-size: 10px; color: #aaa;">Cible : <strong id="my-target" style="color:#fff;">1</strong></div>
             </div>
         </div>
 
-        <div id="hud-solo" class="hud" style="display:none;">
-            <div class="player-box me">
-                <div data-i18n="hud_solo_score" style="font-size: 9px; color: #aaa;">SCORE</div>
-                <div style="font-size:18px; color:#00ff88; font-weight:bold;" id="solo-score">0</div>
+        <div class="hud" id="hud-solo">
+            <div class="player-box">
+                <div style="font-size: 10px; color: #aaa;" data-i18n="target">CIBLE</div>
+                <div id="game-target" style="font-size: 18px; font-weight: 900; color: #00d2ff;">1</div>
+            </div>
+            <div class="player-box" style="text-align: right;">
+                <div style="font-size: 10px; color: #aaa;" data-i18n="time">TEMPS</div>
+                <div id="game-timer" style="font-size: 18px; font-weight: 900; color: #ff4b2b;">30</div>
             </div>
         </div>
-        
-        <div style="font-size:13px; margin-bottom:4px; font-weight:bold;">
-            <span data-i18n="timer_label">Temps</span> : <span id="game-timer" style="color:#ff007f;">30</span>s
-        </div>
 
-        <div style="background: rgba(0, 210, 255, 0.1); border: 2px solid #00d2ff; border-radius: 10px; padding: 4px 10px; margin: 0 auto 6px auto; max-width: 400px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-            <span style="font-size: 10px; font-weight: bold; color: #aaa;" data-i18n="target_label">CIBLE :</span>
-            <span id="game-target-giant" style="font-size: 24px; font-weight: 900; color: #00d2ff;">1</span>
-        </div>
+        <div id="grid-container" class="game-grid"></div>
 
-        <div id="power-zone" style="display:none;"></div>
-        <div id="grid" class="grid"></div>
-
-        <div class="emote-bar">
+        <div class="emote-bar" id="game-emote-bar" style="margin-top: 6px;">
             <button class="emote-btn" onclick="sendEmote('🔥')">🔥</button>
             <button class="emote-btn" onclick="sendEmote('⚡')">⚡</button>
             <button class="emote-btn" onclick="sendEmote('🤖')">🤖</button>
@@ -434,48 +437,15 @@
         </div>
     </div>
 
-    <div id="recap-modal" class="modal-overlay" style="display:none;">
-        <div class="modal-card" style="text-align:center;">
-            <div id="winner-cinematic-container"></div>
-            <div id="recap-banner" style="font-size:20px; font-weight:900; margin-bottom:6px;">RÉSULTAT</div>
-            <div id="recap-reason" style="color:#aaa; margin-bottom:10px; font-size:12px;"></div>
-            
-            <div id="recap-1v1-rows">
-                <div style="display:flex; justify-content:space-between; margin:4px 0; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:3px; font-size:12px;">
-                    <span data-i18n="recap_my_target">🎯 Ma Cible :</span>
-                    <span id="recap-my-target" style="color:#00d2ff; font-weight:bold;">-</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; margin:4px 0; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:3px; font-size:12px;">
-                    <span data-i18n="recap_opp_target">🎯 Cible Adversaire :</span>
-                    <span id="recap-opp-target" style="color:#ff007f; font-weight:bold;">-</span>
-                </div>
-            </div>
-
-            <div style="display:flex; justify-content:space-between; margin:4px 0; font-size:12px;">
-                <span data-i18n="recap_my_score">⭐ Mon Score :</span>
-                <span id="recap-my-score" style="font-weight:bold;">-</span>
-            </div>
-
-            <div style="display:flex; justify-content:space-between; margin:4px 0 10px 0; color:#f8b500; font-size:12px;">
-                <span data-i18n="recap_coins">🪙 Pièces Gagnées :</span>
-                <span id="recap-coins-gained" style="font-weight:bold;">+0</span>
-            </div>
-
-            <div class="emote-bar" style="margin-bottom: 10px;">
-                <button class="emote-btn" onclick="sendEmote('🔥')">🔥</button>
-                <button class="emote-btn" onclick="sendEmote('⚡')">⚡</button>
-                <button class="emote-btn" onclick="sendEmote('🤖')">🤖</button>
-                <button class="emote-btn" onclick="sendEmote('💀')">💀</button>
-                <button class="emote-btn" onclick="sendEmote('😂')">😂</button>
-                <button class="emote-btn" onclick="sendEmote('👑')">👑</button>
-            </div>
-
-            <button id="btn-rematch" class="btn-main btn-blue" onclick="requestRematch()" style="margin-bottom: 6px; display: none;" data-i18n="rematch_btn">Revanche ⚔️</button>
-            <button id="btn-double-reward" class="btn-main btn-reward" onclick="watchAdToDoubleReward()" data-i18n="double_reward">📺 Doubler mes gains (Pub)</button>
-            <button class="btn-main" onclick="showMainMenu()" data-i18n="main_menu">MENU PRINCIPAL</button>
+    <div id="screen-game-over" style="display:none;" class="menu-container">
+        <h2 style="color:#00d2ff; font-size:16px; margin-bottom:4px;" data-i18n="game_over_title">RÉSULTAT DE LA PARTIE</h2>
+        <div id="game-over-content" style="font-size:12px; margin-bottom:8px; line-height:1.4;"></div>
+        <div style="display: flex; gap: 6px;">
+            <button class="btn-main btn-blue" onclick="requestRematch()" style="margin-top:0;" data-i18n="rematch">🔄 Revanche</button>
+            <button class="btn-secondary" onclick="showMainMenu()" style="margin-top:0;" data-i18n="back_menu">Menu principal</button>
         </div>
     </div>
 
-    <script src="script.js" defer></script>
+    <script src="script.js"></script>
 </body>
 </html>
