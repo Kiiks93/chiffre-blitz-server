@@ -4,7 +4,7 @@ body { font-family: system-ui, -apple-system, sans-serif; background: #0f051d; c
 .header-bar { display: flex; justify-content: space-between; align-items: center; max-width: 400px; margin: 0 auto 6px auto; gap: 6px; }
 h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,210,255,0.4); white-space: nowrap; cursor: pointer; }
 
-/* Bloc Pilule de Profil (avec support complet des cadres) */
+/* Bloc Pilule de Profil global */
 .user-pill {
     background: rgba(255, 255, 255, 0.08); 
     border: 1.5px solid rgba(255, 255, 255, 0.25);
@@ -25,13 +25,15 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
     transition: all 0.3s ease;
 }
 
-.user-pill.silver-frame {
+/* Si l'avatar à l'intérieur a un cadre argenté, toute la pilule s'habille */
+.user-pill:has(.tft-avatar-container.silver-frame) {
     border-color: #c0c0c0 !important;
     box-shadow: 0 0 12px rgba(192, 192, 192, 0.6), inset 0 0 6px rgba(192, 192, 192, 0.3) !important;
     background: linear-gradient(135deg, rgba(42, 42, 42, 0.8), rgba(80, 80, 80, 0.8));
 }
 
-.user-pill.gold-frame {
+/* Si l'avatar à l'intérieur a un cadre doré, toute la pilule s'habille */
+.user-pill:has(.tft-avatar-container.gold-frame) {
     border-color: #f8b500 !important;
     box-shadow: 0 0 16px rgba(248, 181, 0, 0.8), inset 0 0 8px rgba(248, 181, 0, 0.5) !important;
     background: linear-gradient(135deg, rgba(58, 37, 0, 0.85), rgba(105, 75, 0, 0.85));
@@ -45,7 +47,7 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
 
 #user-name-display { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 75px; }
 
-/* Avatar à l'intérieur de la pilule (design épuré) */
+/* Avatar miniature dans la pilule (on neutralise son propre cadre pour éviter les conflits) */
 .tft-avatar-container {
     position: relative;
     display: inline-flex;
@@ -59,6 +61,13 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
     overflow: visible;
     flex-shrink: 0;
+}
+.user-pill .tft-avatar-container.silver-frame,
+.user-pill .tft-avatar-container.gold-frame {
+    border-color: transparent !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    animation: none !important;
 }
 
 .tft-avatar-icon {
@@ -85,7 +94,7 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
     box-shadow: 0 2px 4px rgba(0,0,0,0.8);
 }
 
-/* Avatar Large (dans les modals/aperçus) */
+/* Avatar Large (dans les modals et aperçus de profil) */
 .tft-avatar-large {
     position: relative;
     display: inline-flex;
