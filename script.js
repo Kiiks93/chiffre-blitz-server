@@ -1209,7 +1209,75 @@ function openAdminDashboard(data) {
         `;
         document.body.appendChild(div); dash = div;
     }
+
+    // Définition des noms d'événements pour l'affichage
+    const EVENT_NAMES = {
+        coinRush: "🪙 Coin Rush (Pièces x2)",
+        rankShield: "🛡️ Rank Shield (Zéro perte)",
+        expressoMatch: "⚡ Expresso Match (20s)",
+        chaosMode: "🌪️ Chaos Mode (Malus auto)",
+        jackpotEclair: "🎁 Jackpot Éclair",
+        tugOfWarMode: "🪢 Mode Corde Raide (Tug-of-War)"
+    };
+
+    // Génération dynamique de la liste
+    const listEl = document.getElementById('admin-events-config-list');
+    listEl.innerHTML = '';
+    const schedules = data.schedules || {};
+
+    for (let key in EVENT_NAMES) {
+        const s = schedules[key] || { manual: false, start: null, end: null };
+        
+        // Formatage des dates pour les inputs datetime-local
+        const startStr = s.start ? new Date(s.start).toISOString().slice(0, 16) : "";
+        const endStr = s.end ? new Date(s.end).toISOString().slice(0, 16) : "";
+
+        const row = document.createElement('div');
+        row.style.cssText = "background:rgba(0,0,0,0.3); padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.1);";
+        row.innerHTML = `
+            <div style="font-weight:bold; color:#fff; margin-bottom:4px;">${EVENT_NAMES[key]}</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                <label style="display:flex; align-items:center; gap:4px; cursor:pointer;">
+                    <input type="checkbox" id="admin-manual-${key}" ${s.manual ? 'checked' : ''}> Actif (Forcé)
+                </label>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="color:#aaa;">Début :</span>
+                    <input type="datetime-local" id="admin-start-${key}" value="${startStr}" style="background:#0f051d; color:#fff; border:1px solid #444; border-radius:4px; padding:2px 4px; font-size:10px;">
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="color:#aaa;">Fin :</span>
+                    <input type="datetime-local" id="admin-end-${key}" value="${endStr}" style="background:#0f051d; color:#fff; border:1px solid #444; border-radius:4px; padding:2px 4px; font-size:10px;">
+                </div>
+            </div>
+        `;
+        listEl.appendChild(row);
+    }
+
     dash.style.display = 'flex';
+}
+
+// Fonction manquante pour sauvegarder et envoyer au serveur
+function saveAdminSchedule() {
+    const EVENT_KEYS = ['coinRush', 'rankShield', 'expressoMatch', 'chaosMode', 'jackpotEclair', 'tugOfWarMode'];
+    const schedulesData = {};
+
+    EVENT_KEYS.forEach(key => {
+        const manual = document.getElementById(`admin-manual-${key}`).checked;
+        const startVal = document.getElementById(`admin-start-${key}`).value;
+        const endVal = document.getElementById(`admin-end-${key}`).value;
+
+        schedulesData[key] = {
+            manual: manual,
+            start: startVal ? new Date(startVal).getTime() : null,
+            end: endVal ? new Date(endVal).getTime() : null
+        };
+    });
+
+    socket.emit('admin_update_schedule', schedulesData);
+    document.getElementById('modal-admin-dashboard').style.display = 'none';
+    showNotificationToast("✅ Programmation enregistrée avec succès !", "gift");
 }
 
 function hideAllScreens() {
