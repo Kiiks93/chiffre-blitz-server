@@ -483,78 +483,79 @@
     </div>
 
     <!-- ========================================================= -->
-    <!-- PANNEAU ADMINISTRATEUR DESIGN UNIQUE ET MODERNISÉ         -->
+    <!-- PANNEAU ADMINISTRATEUR STYLE ROBLOX ADMIN ABUSE           -->
     <!-- ========================================================= -->
     <div id="admin-modal" class="modal-overlay" style="display:none;">
-        <div class="modal-card" style="max-width: 450px; max-height: 90vh; overflow-y: auto; text-align: left; background: linear-gradient(135deg, #170b29, #251347); border: 2px solid #00d2ff; box-shadow: 0 0 25px rgba(0,210,255,0.3);">
+        <div class="modal-card" style="max-width: 440px; max-height: 92vh; overflow-y: auto; text-align: left; background: linear-gradient(135deg, #090214, #15062b); border: 2px solid #ff007f; box-shadow: 0 0 30px rgba(255,0,127,0.4); padding: 12px;">
             
-            <!-- En-tête du Panel -->
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px;">
+            <!-- En-tête Admin Style Console / Roblox -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px dashed rgba(255,0,127,0.3); padding-bottom:6px;">
                 <div style="display:flex; align-items:center; gap:6px;">
-                    <span style="font-size:18px;">⚡</span>
-                    <h2 style="margin:0; color:#00d2ff; font-size:15px; font-weight:900; letter-spacing:0.5px;">PANNEAU SUPRÊME ADMIN</h2>
+                    <span style="font-size:16px;">💻</span>
+                    <h2 style="margin:0; color:#ff007f; font-size:14px; font-weight:900; letter-spacing:1px; text-shadow: 0 0 8px rgba(255,0,127,0.6);">ADMIN_ABUSE://CONSOLE</h2>
                 </div>
-                <button class="icon-btn" onclick="closeAdminPanel()" style="width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2);">✕</button>
+                <button class="icon-btn" onclick="closeAdminPanel()" style="width:26px; height:26px; border-radius:50%; background:rgba(255,0,127,0.15); border:1px solid #ff007f; color:#ff007f; font-weight:bold;">✕</button>
             </div>
             
             <!-- Écran de connexion admin -->
             <div id="admin-login-section">
-                <div style="text-align:center; padding: 20px 0;">
-                    <div style="font-size: 32px; margin-bottom: 8px;">🔐</div>
-                    <div style="color: #fff; font-size: 13px; font-weight: bold; margin-bottom: 12px;">Accès Administrateur Restreint</div>
-                    <input type="password" id="admin-password-input" placeholder="Mot de passe secret..." style="width:100%; padding:10px 12px; border-radius:10px; border:2px solid rgba(0,210,255,0.4); background:#0f051d; color:#fff; font-size:13px; outline:none; margin-bottom:10px; box-sizing:border-box; text-align:center;">
-                    <button class="btn-main btn-blue" onclick="authAdmin()" style="width:100%; margin-top:0; padding:10px; font-size:13px;">Se connecter ⚡</button>
-                    <p id="admin-login-error" style="color: #ff4b2b; text-align: center; margin-top: 10px; font-size: 11px; font-weight: bold;"></p>
+                <div style="text-align:center; padding: 15px 0;">
+                    <div style="font-size: 28px; margin-bottom: 6px;">🔒</div>
+                    <div style="color: #fff; font-size: 12px; font-weight: bold; margin-bottom: 10px; font-family: monospace;">ENTREZ LA CLÉ ROOT ADMIN</div>
+                    <input type="password" id="admin-password-input" placeholder="Mot de passe..." style="width:100%; padding:9px; border-radius:8px; border:2px solid #ff007f; background:#05010a; color:#ff007f; font-size:13px; outline:none; margin-bottom:8px; box-sizing:border-box; text-align:center; font-weight:bold;">
+                    <button class="btn-main" onclick="authAdmin()" style="width:100%; margin-top:0; padding:9px; font-size:12px; background:linear-gradient(45deg, #ff007f, #7b4397); box-shadow:0 0 12px rgba(255,0,127,0.4);">EXECUTE LOGIN ⚡</button>
+                    <p id="admin-login-error" style="color: #ff4b2b; text-align: center; margin-top: 8px; font-size: 10px; font-weight: bold;"></p>
                 </div>
             </div>
 
             <!-- Dashboard admin (affiché après connexion) -->
             <div id="admin-dashboard-section" class="hidden">
                 
-                <!-- Section 1 : Annonce Globale -->
-                <div style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(0, 210, 255, 0.2); padding: 12px; border-radius: 12px; margin-bottom: 10px;">
-                    <div style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:bold; color:#00d2ff; margin-bottom:8px;">
-                        <span>📢</span> Diffusion d'Annonce
+                <!-- Commande 1 : Annonce Globale (Broadcast) -->
+                <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(0, 210, 255, 0.3); padding: 8px 10px; border-radius: 8px; margin-bottom: 8px;">
+                    <div style="display:flex; align-items:center; gap:4px; font-size:11px; font-weight:bold; color:#00d2ff; margin-bottom:6px; font-family:monospace;">
+                        <span>📢</span> :broadcast [MESSAGE]
                     </div>
-                    <input type="text" id="admin-broadcast-text" placeholder="Message popup pour tous les joueurs..." style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:#0f051d; color:#fff; font-size:11px; margin-bottom:8px; box-sizing:border-box; outline:none;">
-                    <button class="btn-main btn-blue" onclick="adminBroadcast()" style="width:100%; margin-top:0; padding:8px; font-size:11px;">Diffuser l'annonce 🚀</button>
+                    <div style="display:flex; gap:6px;">
+                        <input type="text" id="admin-broadcast-text" placeholder="Message global pour tous les serveurs..." style="flex:1; padding:7px; border-radius:6px; border:1px solid rgba(0,210,255,0.4); background:#05010a; color:#fff; font-size:11px; outline:none; box-sizing:border-box;">
+                        <button class="btn-main btn-blue" onclick="adminBroadcast()" style="width:auto; margin-top:0; padding:6px 10px; font-size:11px; flex-shrink:0;">Envoyer 🚀</button>
+                    </div>
                 </div>
 
-                <!-- Section 2 : Distribution de Cadeaux -->
-                <div style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(248, 181, 0, 0.2); padding: 12px; border-radius: 12px; margin-bottom: 10px;">
-                    <div style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:bold; color:#f8b500; margin-bottom:8px;">
-                        <span>🎁</span> Distribution de Récompenses
+                <!-- Commande 2 : Distribution de Cadeaux (Give Items / Currency) -->
+                <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(248, 181, 0, 0.3); padding: 8px 10px; border-radius: 8px; margin-bottom: 8px;">
+                    <div style="display:flex; align-items:center; gap:4px; font-size:11px; font-weight:bold; color:#f8b500; margin-bottom:6px; font-family:monospace;">
+                        <span>🎁</span> :give [PLAYER] [CURRENCY] [AMOUNT]
                     </div>
-                    <div style="display:flex; gap:6px; margin-bottom:6px;">
-                        <select id="admin-target-type" onchange="toggleAdminTargetInput()" style="flex:1; padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:#0f051d; color:#fff; font-size:11px; outline:none;">
-                            <option value="all">🌍 Tout le monde</option>
-                            <option value="pseudo">👤 Un joueur précis</option>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-bottom:6px;">
+                        <select id="admin-target-type" onchange="toggleAdminTargetInput()" style="width:100%; padding:7px; border-radius:6px; border:1px solid rgba(248,181,0,0.4); background:#05010a; color:#fff; font-size:11px; outline:none;">
+                            <option value="all">🌍 TOUT LE MONDE (ALL)</option>
+                            <option value="pseudo">👤 Joueur Spécifique</option>
                         </select>
-                        <input type="text" id="admin-target-pseudo" placeholder="Pseudo exact..." style="flex:1; padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:#0f051d; color:#fff; font-size:11px; display:none; outline:none;">
-                    </div>
-                    <div style="display:flex; gap:6px; margin-bottom:8px;">
-                        <select id="admin-currency-type" style="flex:1; padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:#0f051d; color:#fff; font-size:11px; outline:none;">
+                        <input type="text" id="admin-target-pseudo" placeholder="Pseudo exact..." style="width:100%; padding:7px; border-radius:6px; border:1px solid rgba(248,181,0,0.4); background:#05010a; color:#fff; font-size:11px; display:none; outline:none; box-sizing:border-box;">
+                        
+                        <select id="admin-currency-type" style="width:100%; padding:7px; border-radius:6px; border:1px solid rgba(248,181,0,0.4); background:#05010a; color:#fff; font-size:11px; outline:none;">
                             <option value="coins">🪙 Pièces</option>
                             <option value="points">🏅 Points</option>
                             <option value="trophies">🏆 Trophées</option>
                         </select>
-                        <input type="number" id="admin-amount" value="100" placeholder="Montant" style="flex:1; padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:#0f051d; color:#fff; font-size:11px; text-align:center; outline:none;">
+                        <input type="number" id="admin-amount" value="100" placeholder="Montant" style="width:100%; padding:7px; border-radius:6px; border:1px solid rgba(248,181,0,0.4); background:#05010a; color:#fff; font-size:11px; text-align:center; outline:none; box-sizing:border-box;">
                     </div>
-                    <button class="btn-main btn-gold" onclick="adminSendGift()" style="width:100%; margin-top:0; padding:8px; font-size:11px; color:#000; font-weight:900;">Envoyer le Cadeau ⚡</button>
+                    <button class="btn-main btn-gold" onclick="adminSendGift()" style="width:100%; margin-top:0; padding:7px; font-size:11px; color:#000; font-weight:900;">DONNER LA RÉCOMPENSE ⚡</button>
                 </div>
 
-                <!-- Section 3 : Planification des Modes & Événements -->
-                <div style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(56, 239, 125, 0.2); padding: 12px; border-radius: 12px; margin-bottom: 12px;">
-                    <div style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:bold; color:#38ef7d; margin-bottom:8px;">
-                        <span>⚙️</span> Gestion & Planification des Modes
+                <!-- Commande 3 : Programmer / Forcer les Événements (Server Abuse Modes) -->
+                <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(56, 239, 125, 0.3); padding: 8px 10px; border-radius: 8px; margin-bottom: 10px;">
+                    <div style="display:flex; align-items:center; gap:4px; font-size:11px; font-weight:bold; color:#38ef7d; margin-bottom:6px; font-family:monospace;">
+                        <span>⚙️</span> :server_events [ABUSE_MODES]
                     </div>
-                    <div id="admin-schedules-container" style="display:flex; flex-direction:column; gap:6px; max-height: 200px; overflow-y:auto; font-size:11px; padding-right:2px;">
+                    <div id="admin-schedules-container" style="display:flex; flex-direction:column; gap:6px; max-height: 180px; overflow-y:auto; font-size:11px; padding-right:2px;">
                         <!-- Généré dynamiquement par script.js -->
                     </div>
-                    <button class="btn-main" onclick="saveAdminSchedules()" style="width:100%; margin-top:8px; padding:8px; font-size:11px; background:linear-gradient(45deg, #11998e, #38ef7d); color:#000; font-weight:900;">Sauvegarder les Événements 💾</button>
+                    <button class="btn-main" onclick="saveAdminSchedules()" style="width:100%; margin-top:6px; padding:7px; font-size:11px; background:linear-gradient(45deg, #11998e, #38ef7d); color:#000; font-weight:900;">SAUVEGARDER LES ÉVÉNEMENTS 💾</button>
                 </div>
 
-                <button class="btn-secondary" onclick="closeAdminPanel()" style="width:100%; margin-top:0; padding:10px; font-size:12px; background:rgba(255,75,43,0.15); border-color:#ff4b2b; color:#ff4b2b;">Fermer le Panel ❌</button>
+                <button class="btn-secondary" onclick="closeAdminPanel()" style="width:100%; margin-top:0; padding:8px; font-size:11px; background:rgba(255,75,43,0.15); border-color:#ff4b2b; color:#ff4b2b;">FERMER LA CONSOLE ❌</button>
             </div>
         </div>
     </div>
