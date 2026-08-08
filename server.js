@@ -264,7 +264,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Correction de l'avatar Standard intégrée
     socket.on('equip_cosmetic', async (itemId) => {
         const player = activePlayers[socket.id];
         if (!player) return;
@@ -609,7 +608,7 @@ io.on('connection', (socket) => {
     // --- SYSTÈME DE REVANCHE ---
     socket.on('request_rematch', () => {
         const match = activeMatches[socket.id];
-        if (!match) return; // Le délai de 20s est expiré ou le match n'existe plus
+        if (!match) return;
 
         const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
         if (!activePlayers[oppId]) {
@@ -916,34 +915,85 @@ function generatePool(target) {
     return pool.concat(candidates.slice(0, 11)).sort(() => Math.random() - 0.5);
 }
 
+// --- DISTRIBUTION DES 30 PALIERS DU PASSE DE COMBAT (SAISON 1 : PLASMA DORÉ) ---
 function applyPassReward(p, tier, track) {
     p.inventory = p.inventory || {};
     p.unlocked_items = p.unlocked_items || [];
     
     if (track === 'free') {
-        if (tier === 1 || tier === 3 || tier === 7) p.coins = (p.coins || 0) + 50;
-        else if (tier === 5 || tier === 9 || tier === 10) p.coins = (p.coins || 0) + 100;
-        else if (tier === 2 || tier === 8) p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 1;
-        else if (tier === 4) p.inventory['freeze'] = (p.inventory['freeze'] || 0) + 1;
-        else if (tier === 6) p.inventory['joker'] = (p.inventory['joker'] || 0) + 1;
-    } else if (track === 'premium') {
-        if (tier === 1) p.coins = (p.coins || 0) + 100;
-        else if (tier === 2 || tier === 6) p.coins = (p.coins || 0) + 150;
-        else if (tier === 3) p.inventory['freeze'] = (p.inventory['freeze'] || 0) + 1;
-        else if (tier === 4 || tier === 8) p.coins = (p.coins || 0) + 200;
-        else if (tier === 5) {
-            if (!p.unlocked_items.includes('frame_gold')) p.unlocked_items.push('frame_gold');
+        // Pièces et petits consommables sur la piste gratuite
+        if ([1, 3, 7, 11, 13, 16, 18, 21, 23, 26, 28].includes(tier)) {
+            const coinMap = { 1: 50, 3: 50, 7: 50, 11: 60, 13: 70, 16: 80, 18: 90, 21: 110, 23: 120, 26: 130, 28: 140 };
+            p.coins = (p.coins || 0) + (coinMap[tier] || 50);
+        } else if ([5, 9, 20].includes(tier)) {
+            p.coins = (p.coins || 0) + 100;
+        } else if ([15, 25].includes(tier)) {
+            p.coins = (p.coins || 0) + 150;
+        } else if (tier === 29) {
+            p.coins = (p.coins || 0) + 300;
+        } else if (tier === 30) {
+            p.coins = (p.coins || 0) + 500; // Titre suprême "Légende" + 500 pièces
+        } else if ([2, 8, 17].includes(tier)) {
+            p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + (tier === 17 ? 2 : 1);
+        } else if ([4, 12, 22].includes(tier)) {
+            p.inventory['freeze'] = (p.inventory['freeze'] || 0) + 1;
+        } else if ([6, 14, 19, 24].includes(tier)) {
+            p.inventory['joker'] = (p.inventory['joker'] || 0) + 1;
+        } else if (tier === 10 || tier === 27) {
+            p.inventory['nova'] = (p.inventory['nova'] || 0) + (tier === 27 ? 4 : 1);
         }
-        else if (tier === 7) p.inventory['nova'] = (p.inventory['nova'] || 0) + 2;
-        else if (tier === 9) {
+    } else if (track === 'premium') {
+        // Piste Premium : Pièces massives, objets tactiques et cosmétiques exclusifs de Saison 1
+        if (tier === 1) p.coins = (p.coins || 0) + 100;
+        else if (tier === 2) p.coins = (p.coins || 0) + 100;
+        else if (tier === 3) p.coins = (p.coins || 0) + 150;
+        else if (tier === 4) p.coins = (p.coins || 0) + 200;
+        else if (tier === 5) p.coins = (p.coins || 0) + 150;
+        else if (tier === 6) p.coins = (p.coins || 0) + 150;
+        else if (tier === 7) p.coins = (p.coins || 0) + 200;
+        else if (tier === 8) p.inventory['nova'] = (p.inventory['nova'] || 0) + 2;
+        else if (tier === 9) p.coins = (p.coins || 0) + 200;
+        else if (tier === 10) {
+            // Thème de Grille Alternatif (Plasma)
             if (!p.unlocked_items.includes('theme_alt')) p.unlocked_items.push('theme_alt');
         }
-        else if (tier === 10) p.coins = (p.coins || 0) + 500;
+        else if (tier === 11) p.coins = (p.coins || 0) + 120;
+        else if (tier === 12) p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 1;
+        else if (tier === 13) p.coins = (p.coins || 0) + 160;
+        else if (tier === 14) p.inventory['freeze'] = (p.inventory['freeze'] || 0) + 2;
+        else if (tier === 15) {
+            // Bordure de Profil Or Massif
+            if (!p.unlocked_items.includes('frame_gold')) p.unlocked_items.push('frame_gold');
+        }
+        else if (tier === 16) p.coins = (p.coins || 0) + 160;
+        else if (tier === 17) p.inventory['nova'] = (p.inventory['nova'] || 0) + 2;
+        else if (tier === 18) p.coins = (p.coins || 0) + 250;
+        else if (tier === 19) p.inventory['quake'] = (p.inventory['quake'] || 0) + 1;
+        else if (tier === 20) {
+            // Avatar Exclusif « Noyau d'Énergie »
+            if (!p.unlocked_items.includes('avatar_legend')) p.unlocked_items.push('avatar_legend');
+        }
+        else if (tier === 21) p.coins = (p.coins || 0) + 220;
+        else if (tier === 22) p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 3;
+        else if (tier === 23) p.coins = (p.coins || 0) + 250;
+        else if (tier === 24) p.coins = (p.coins || 0) + 300;
+        else if (tier === 25) {
+            // Cadre Animé de Saison
+            if (!p.unlocked_items.includes('frame_animated')) p.unlocked_items.push('frame_animated');
+        }
+        else if (tier === 26) p.coins = (p.coins || 0) + 260;
+        else if (tier === 27) p.inventory['nova'] = (p.inventory['nova'] || 0) + 4;
+        else if (tier === 28) p.coins = (p.coins || 0) + 400;
+        else if (tier === 29) p.coins = (p.coins || 0) + 500;
+        else if (tier === 30) {
+            // 🏆 GRAND LOT ULTIME : Lampe Plasma Dorée Animée (Avatar 3D Ultime) + 1000 🪙
+            p.coins = (p.coins || 0) + 1000;
+            if (!p.unlocked_items.includes('avatar_plasma_gold')) p.unlocked_items.push('avatar_plasma_gold');
+        }
     }
 }
 
 async function endMatch(id1, id2, matchData, isRanked) {
-    // Nettoyage différé après 20 secondes (laisse le temps d'échanger des émotes et demander une revanche)
     setTimeout(() => {
         if (activeMatches[id1] === matchData) delete activeMatches[id1];
         if (activeMatches[id2] === matchData) delete activeMatches[id2];
