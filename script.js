@@ -1662,16 +1662,36 @@ function openShop() {
 function closeShop() { document.getElementById('modal-shop').style.display = 'none'; }
 
 const BLITZ_PASS_TIERS = [
-    { tier: 1, free: "50 Pièces (🪙)", premium: "Titre « Initié du Plasma » + 100 Pièces" },
-    { tier: 2, free: "1 Projecteur", premium: "150 Pièces" },
-    { tier: 3, free: "50 Pièces", premium: "1 Gel du temps" },
-    { tier: 4, free: "1 Gel du temps", premium: "200 Pièces" },
-    { tier: 5, free: "100 Pièces", premium: "Bordure Cristal & Or" },
-    { tier: 6, free: "1 Joker", premium: "150 Pièces" },
-    { tier: 7, free: "50 Pièces", premium: "2 Novas" },
-    { tier: 8, free: "1 Projecteur", premium: "250 Pièces" },
-    { tier: 9, free: "100 Pièces", premium: "Thème de tuiles épuré" },
-    { tier: 10, free: "Titre « Apprenti » + 150 Pièces", premium: "Bordure profil + 500 Pièces" }
+    { tier: 1, free: "50 Pièces (🪙)", premium: "Titre exclusif « Initié du Plasma »" },
+    { tier: 2, free: "1 Projecteur", premium: "100 Pièces (🪙)" },
+    { tier: 3, free: "50 Pièces (🪙)", premium: "Titre rare « Maître des Flux »" },
+    { tier: 4, free: "1 Gel du temps", premium: "Cadre de Profil Argenté" },
+    { tier: 5, free: "75 Pièces (🪙)", premium: "150 Pièces (🪙)" },
+    { tier: 6, free: "1 Joker", premium: "Pack de Consommables (Bonus)" },
+    { tier: 7, free: "50 Pièces (🪙)", premium: "Titre « Pro de l'Éclair »" },
+    { tier: 8, free: "1 Projecteur", premium: "2 Novas Temporelles" },
+    { tier: 9, free: "100 Pièces (🪙)", premium: "200 Pièces (🪙)" },
+    { tier: 10, free: "1 Nova Temporelle", premium: "🎨 Thème de Grille Alternatif (Plasma)" },
+    { tier: 11, free: "60 Pièces (🪙)", premium: "120 Pièces (🪙)" },
+    { tier: 12, free: "1 Gel du temps", premium: "1 Projecteur" },
+    { tier: 13, free: "70 Pièces (🪙)", premium: "Titre « Électron Libre »" },
+    { tier: 14, free: "1 Joker", premium: "2 Gel du temps" },
+    { tier: 15, free: "150 Pièces (🪙)", premium: "👑 Bordure de Profil Or Massif" },
+    { tier: 16, free: "80 Pièces (🪙)", premium: "160 Pièces (🪙)" },
+    { tier: 17, free: "1 Projecteur", premium: "2 Novas Temporelles" },
+    { tier: 18, free: "90 Pièces (🪙)", premium: "250 Pièces (🪙)" },
+    { tier: 19, free: "1 Joker", premium: "Pack Malus (Tactique)" },
+    { tier: 20, free: "100 Pièces (🪙)", premium: "🤖 Avatar Exclusif « Noyau d'Énergie »" },
+    { tier: 21, free: "110 Pièces (🪙)", premium: "220 Pièces (🪙)" },
+    { tier: 22, free: "1 Gel du temps", premium: "3 Projecteurs" },
+    { tier: 23, free: "120 Pièces (🪙)", premium: "Titre honorifique « Surcharge Mentale »" },
+    { tier: 24, free: "1 Joker", premium: "300 Pièces (🪙)" },
+    { tier: 25, free: "150 Pièces (🪙)", premium: "Cadre Animé de Saison" },
+    { tier: 26, free: "130 Pièces (🪙)", premium: "260 Pièces (🪙)" },
+    { tier: 27, free: "2 Projecteurs", premium: "4 Novas Temporelles" },
+    { tier: 28, free: "140 Pièces (🪙)", premium: "400 Pièces (🪙)" },
+    { tier: 29, free: "300 Pièces (🪙)", premium: "500 Pièces (🪙)" },
+    { tier: 30, free: "Titre suprême « Légende » + 500 🪙", premium: "🏆 GRAND LOT : Lampe Plasma Dorée Animée (Avatar 3D Ultime) + 1000 🪙" }
 ];
 
 function openBlitzPass() {
