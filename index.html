@@ -6,12 +6,6 @@
     <title>Chiffre Blitz ⚡</title>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <link rel="stylesheet" href="style.css">
-    <style>
-        .tft-avatar-container.silver-frame, .tft-avatar-large.silver-frame {
-            border-color: #c0c0c0 !important;
-            box-shadow: 0 0 12px rgba(192, 192, 192, 0.8) !important;
-        }
-    </style>
 </head>
 <body>
 
@@ -25,7 +19,6 @@
             </div>
         </div>
       <div class="header-btns">
-            <!-- Bouton Amis propre (l'icône est gérée par le script.js via data-i18n) -->
             <button onclick="openFriendsModal()" class="icon-btn" style="padding: 0 10px; position: relative;" title="Amis">
                 <span data-i18n="friends_btn">Amis</span>
                 <span id="friends-main-badge" style="display:none; position: absolute; top: -4px; right: -4px; background: #ff4b2b; color: #fff; border-radius: 50%; padding: 1px 5px; font-size: 9px; font-weight: bold;">0</span>
