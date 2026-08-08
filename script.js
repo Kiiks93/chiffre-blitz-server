@@ -933,11 +933,18 @@ function openFriendsModal() {
 }
 function closeFriendsModal() { document.getElementById('modal-friends').style.display = 'none'; }
 
+function updateFriendsBadge() {
+    const totalCount = (window.lastRequestsCount || 0) + (myGameInvites ? myGameInvites.length : 0);
+    const badge = document.getElementById('friends-main-badge');
+    if (badge) {
+        badge.innerText = totalCount;
+        badge.style.display = totalCount > 0 ? 'inline-block' : 'none';
+    }
+}
+
 function updateBadges(reqCount, invCount) {
-    const reqBadge = document.getElementById('badge-requests');
-    const invBadge = document.getElementById('badge-invites');
-    if (reqBadge) { reqBadge.innerText = reqCount; reqBadge.style.display = reqCount > 0 ? 'inline-block' : 'none'; }
-    if (invBadge) { invBadge.innerText = invCount; invBadge.style.display = invCount > 0 ? 'inline-block' : 'none'; }
+    window.lastRequestsCount = reqCount;
+    updateFriendsBadge();
 }
 
 function switchFriendTab(tab) {
@@ -969,7 +976,7 @@ function inviteFriend(targetSocketId) {
 
 socket.on('receive_game_invite', (data) => {
     myGameInvites.unshift({ from: data.from, roomCode: data.roomCode, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
-    updateBadges(window.lastRequestsCount, myGameInvites.length);
+    updateFriendsBadge();
     if (currentFriendFilter === 'invites' && document.getElementById('modal-friends').style.display === 'flex') renderGameInvitesList();
 
     let inviteHtml = `📩 Invitation de jeu de <b>${data.from}</b> !`;
@@ -1003,7 +1010,7 @@ function renderGameInvitesList() {
 
 function removeGameInvite(index) {
     myGameInvites.splice(index, 1);
-    updateBadges(window.lastRequestsCount, myGameInvites.length);
+    updateFriendsBadge();
     renderGameInvitesList();
 }
 
@@ -1015,7 +1022,7 @@ socket.on('friends_list_data', (friends) => {
     let allFriends = friends || [];
     const incomingRequests = allFriends.filter(f => f.status === 'pending' && !f.isRequester);
     window.lastRequestsCount = incomingRequests.length;
-    updateBadges(window.lastRequestsCount, myGameInvites.length);
+    updateFriendsBadge();
 
     let filtered = allFriends;
     if (currentFriendFilter === 'all') filtered = allFriends.filter(f => f.status === 'accepted');
