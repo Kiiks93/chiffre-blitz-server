@@ -1,10 +1,10 @@
-* { box-sizing: border-box; touch-action: manipulation; user-select: none; }
+{ box-sizing: border-box; touch-action: manipulation; user-select: none; }
 body { font-family: system-ui, -apple-system, sans-serif; background: #0f051d; color: #fff; margin: 0; padding: 10px; text-align: center; overflow-x: hidden; }
 
 .header-bar { display: flex; justify-content: space-between; align-items: center; max-width: 400px; margin: 0 auto 6px auto; gap: 6px; }
 h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,210,255,0.4); white-space: nowrap; cursor: pointer; }
 
-/* Bloc Pilule de Profil global */
+/* Bloc Pilule de Profil global & Glorification des grades/cadres */
 .user-pill {
     background: rgba(255, 255, 255, 0.08); 
     border: 1.5px solid rgba(255, 255, 255, 0.25);
@@ -176,6 +176,7 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
     background: rgba(0, 210, 255, 0.3);
 }
 
+/* Contraste Dynamique & Showcases de Victoire/Défaite */
 .victory-avatar-showcase {
     display: flex;
     flex-direction: column;
@@ -189,6 +190,7 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
     70% { transform: scale(1.1); opacity: 1; filter: brightness(1.2); }
     100% { transform: scale(1); opacity: 1; filter: brightness(1); }
 }
+
 .victory-badge-large {
     position: relative;
     width: 90px;
@@ -211,6 +213,19 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
 @keyframes badgeGlowPulse {
     0% { box-shadow: 0 0 20px rgba(0, 210, 255, 0.6); }
     100% { box-shadow: 0 0 35px rgba(0, 210, 255, 1), 0 0 15px rgba(255,255,255,0.8); }
+}
+
+/* Styles pour l'écran de Défaite (Ambiance Glitch & Sombre) */
+.defeat-theme {
+    background: rgba(20, 5, 15, 0.98) !important;
+    border-color: #ff4b2b !important;
+    box-shadow: 0 0 30px rgba(255, 75, 43, 0.4), inset 0 0 15px rgba(100, 0, 50, 0.5) !important;
+    animation: defeatGlitch 0.4s ease;
+}
+@keyframes defeatGlitch {
+    0% { transform: scale(0.95); filter: saturate(0.5); }
+    50% { transform: scale(1.02); filter: hue-rotate(-20deg); }
+    100% { transform: scale(1); filter: saturate(0.8); }
 }
 
 .user-stats {
@@ -401,9 +416,29 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
     background: #2a1845; border: 2px solid #522d80; border-radius: 10px; height: 58px;
     display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; cursor: pointer;
     transition: transform 0.2s, border-color 0.2s, background-color 0.2s;
+    position: relative;
+    overflow: hidden;
 }
 .tile:active { transform: scale(0.92); background: #3c1e69; }
 .tile.empty { background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.05); cursor: default; }
+
+/* Effet d'Onde de Choc / Ripple Tactile sur les tuiles */
+.tile::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: rgba(0, 210, 255, 0.6);
+    border-radius: 50%;
+    transform: scale(0);
+    opacity: 1;
+    pointer-events: none;
+    transition: transform 0.4s ease-out, opacity 0.4s ease-out;
+}
+.tile.ripple-active::after {
+    transform: scale(8);
+    opacity: 0;
+}
 
 .tile.alt-theme {
     background: linear-gradient(135deg, #f8b500, #ff8a00) !important;
