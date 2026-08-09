@@ -25,7 +25,7 @@ const i18n = {
         solo_classic: "⚡ Classique (Croissant)",
         solo_random: "🎲 Aléatoire (Cibles variées)",
         solo_avalanche_btn: "🧊 Avalanche (Difficultés)",
-        avalanche_menu_title: "🧊 Avalanche (Difficultés)",
+        avalanche_menu_title: "🧊 AVALANCHE (Difficultés)",
         diff_easy: "Facile", diff_medium: "Moyen", diff_hard: "Difficile 💀",
         back_menu: "⬅️ Retour Menu",
         hub_title: "⚔️ DUEL 1v1 ONLINE",
@@ -502,8 +502,10 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
     if (!playerObj) {
         const pill = document.getElementById('user-pill');
         if (pill) {
-            pill.classList.remove('silver-frame', 'gold-frame', 'animated-frame', 'frame_chroma', 'frame_prism', 'frame_silver');
-            if (equippedFrame) pill.classList.add(equippedFrame);
+            pill.classList.remove('silver-frame', 'gold-frame', 'animated-frame');
+            if (equippedFrame === 'frame_silver') pill.classList.add('silver-frame');
+            if (equippedFrame === 'frame_gold') pill.classList.add('gold-frame');
+            if (equippedFrame === 'frame_animated') pill.classList.add('animated-frame');
         }
     }
     
@@ -518,8 +520,12 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
         avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="cat-assistant.json" style="width:32px; height:32px;"></div>`;
     }
 
+    const isGold = equippedFrame === 'frame_gold';
+    const isSilver = equippedFrame === 'frame_silver';
+    const isAnimated = equippedFrame === 'frame_animated';
+
     const html = `
-        <div class="tft-avatar-container ${equippedFrame || ''}" title="${avatarTitle}">
+        <div class="tft-avatar-container ${isGold ? 'gold-frame' : ''} ${isSilver ? 'silver-frame' : ''} ${isAnimated ? 'animated-frame' : ''}" title="${avatarTitle}">
             <span class="tft-avatar-icon" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; ${typeof avatarContent === 'number' ? 'font-size: 14px;' : ''}">${avatarContent}</span>
             <span class="tft-flag-overlay">${flag || '🇫🇷'}</span>
         </div>
@@ -531,6 +537,8 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
 function getLargeAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
     const avatarType = overrideAvatarType || activeAvatarChoice || (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar);
     const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
+    const isGoldFrame = equippedFrame === 'frame_gold';
+    const isAnimatedFrame = equippedFrame === 'frame_animated';
     
     let avatarContent = avatarNum || 1;
     if (avatarType === 'avatar_lottie_palier30') {
@@ -540,7 +548,7 @@ function getLargeAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
     }
 
     const html = `
-        <div class="tft-avatar-large ${equippedFrame || ''}">
+        <div class="tft-avatar-large ${isGoldFrame ? 'gold-frame' : ''} ${isAnimatedFrame ? 'animated-frame' : ''}">
             <span class="tft-avatar-large-icon" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; ${typeof avatarContent === 'number' ? 'font-size: 24px;' : ''}">${avatarContent}</span>
             <span class="tft-flag-large-overlay">${flag || '🇫🇷'}</span>
         </div>
@@ -598,21 +606,16 @@ const TITLE_DISPLAY_NAMES = {
     'title_felin': 'Réflexe Félin',
     'title_neon': 'Pulsion Néon',
     'title_spectre': 'Spectre Cosmique',
-    'title_felin_supreme': '⚡ FÉLIN SUPRÊME',
     'title_supreme': '⚡ FÉLIN SUPRÊME'
 };
 
 const FRAME_DISPLAY_NAMES = {
-    'frame_silver': 'Cadre Argenté',
-    'frame_chroma': 'Cadre Flux Chroma',
-    'frame_prism': 'Cadre Prisme Solaire',
-    'frame_electric': 'Cadre Électrique',
-    'frame_vortex': 'Cadre Vortex'
+    'frame_chroma': '🌈 Cadre « Flux Chroma »',
+    'frame_prism': '✨ Cadre « Prisme Solaire »'
 };
 
 const THEME_DISPLAY_NAMES = {
-    'theme_alt': 'Thème Doré (Boutique)',
-    'theme_rainbow': 'Thème Vague Arc-en-ciel (Passe)'
+    'theme_alt': '🎨 Thème de Grille Rétro / Doré'
 };
 
 function renderProfileCustomizationMenus() {
@@ -929,7 +932,6 @@ socket.on('player_registered', (rawData) => {
         myProfile.inventory.__equipped.frame = savedFrame || localEquipped.frame || "";
         if (savedTheme) myProfile.inventory.__equipped.theme = savedTheme;
         else delete myProfile.inventory.__equipped.theme;
-        if (localEquipped.avatar) myProfile.inventory.__equipped.avatar = localEquipped.avatar;
 
         myProfile.unlocked_items = player.unlocked_items;
         myProfile.equippedPower = player.equippedPower;
@@ -1557,6 +1559,7 @@ function openTournamentScreen() { if (!isProfileValid()) { checkAndShowProfileMo
 function openShop() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } updateShopCoinsDisplay(); document.getElementById('modal-shop').style.display = 'flex'; switchShopTab(currentShopTab); }
 function closeShop() { document.getElementById('modal-shop').style.display = 'none'; }
 
+/* Passe de Combat complet (Saison 1 - 30 Paliers) avec animations Lottie et Titres */
 const BLITZ_PASS_TIERS = [
     { tier: 1, free: "50 Pièces (🪙)", premium: "Titre exclusif « [ Stalker Numérique ] »" },
     { tier: 2, free: "1 💡 Projecteur", premium: "100 Pièces (🪙)" },
@@ -1567,27 +1570,27 @@ const BLITZ_PASS_TIERS = [
     { tier: 7, free: "50 Pièces (🪙)", premium: "Titre « [ Pulsion Néon ] »" },
     { tier: 8, free: "1 💡 Projecteur", premium: "2 🌟 Novas Temporelles" },
     { tier: 9, free: "100 Pièces (🪙)", premium: "200 Pièces (🪙)" },
-    { tier: 10, free: "1 🌟 Nova Temporelle", premium: "🎨 Thème de Grille Arc-en-ciel" },
+    { tier: 10, free: "1 🌟 Nova Temporelle", premium: "🎨 Thème de Grille Alternatif (Plasma)" },
     { tier: 11, free: "60 Pièces (🪙)", premium: "120 Pièces (🪙)" },
     { tier: 12, free: "1 ⏳ Blocage du Temps", premium: "1 💡 Projecteur" },
     { tier: 13, free: "70 Pièces (🪙)", premium: "Titre « [ Spectre Cosmique ] »" },
     { tier: 14, free: "1 ⚡ Joker Éclair", premium: "2 ⏳ Blocage du Temps" },
-    { tier: 15, free: "150 Pièces (🪙)", premium: "Avatar exclusif" },
+    { tier: 15, free: "150 Pièces (🪙)", premium: "🐱 Avatar Animé Lottie : Chat Assistant (`cat-assistant.json`)" },
     { tier: 16, free: "80 Pièces (🪙)", premium: "160 Pièces (🪙)" },
     { tier: 17, free: "2 💡 Projecteur", premium: "2 🌟 Novas Temporelles" },
     { tier: 18, free: "90 Pièces (🪙)", premium: "250 Pièces (🪙)" },
     { tier: 19, free: "1 ⚡ Joker Éclair", premium: "1 📳 Séisme" },
-    { tier: 20, free: "100 Pièces (🪙)", premium: "Cadre Électrique" },
+    { tier: 20, free: "100 Pièces (🪙)", premium: "🌈 Cadre Animé « Flux Chroma »" },
     { tier: 21, free: "110 Pièces (🪙)", premium: "220 Pièces (🪙)" },
     { tier: 22, free: "1 ⏳ Blocage du Temps", premium: "3 💡 Projecteur" },
     { tier: 23, free: "120 Pièces (🪙)", premium: "Titre honorifique spécial" },
     { tier: 24, free: "1 ⚡ Joker Éclair", premium: "300 Pièces (🪙)" },
-    { tier: 25, free: "150 Pièces (🪙)", premium: "Cadre Vortex" },
+    { tier: 25, free: "150 Pièces (🪙)", premium: "✨ Cadre Animé « Prisme Solaire »" },
     { tier: 26, free: "130 Pièces (🪙)", premium: "260 Pièces (🪙)" },
     { tier: 27, free: "2 💡 Projecteur", premium: "4 🌟 Novas Temporelles" },
     { tier: 28, free: "140 Pièces (🪙)", premium: "400 Pièces (🪙)" },
     { tier: 29, free: "300 Pièces (🪙)", premium: "500 Pièces (🪙)" },
-    { tier: 30, free: "Titre « [ ⚡ FÉLIN SUPRÊME ] » + 500 🪙", premium: "Avatar exclusif + 1000 🪙" }
+    { tier: 30, free: "Titre suprême « [ ⚡ FÉLIN SUPRÊME ] » + 500 🪙", premium: "🏆 GRAND LOT : Avatar Animé Lottie : Chat Arc-en-ciel (`black-rainbow-cat.json`) + 1000 🪙" }
 ];
 
 function openBlitzPass() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } document.getElementById('modal-blitz-pass').style.display = 'flex'; renderBlitzPass(); }
@@ -1682,9 +1685,9 @@ function switchShopTab(type) {
     const container = document.getElementById('shop-container'); container.innerHTML = '';
     const powersDict = i18n[currentLang].powers;
     const cosmeticsDict = {
-        theme_alt: { name: 'Thème de Grille Alternatif Doré', desc: 'Grille visuelle alternative dorée exclusive boutique' },
-        frame_chroma: { name: 'Cadre Flux Chroma', desc: 'Dégradé néon pulsé en rotation exclusive boutique' },
-        frame_prism: { name: 'Cadre Prisme Solaire', desc: 'Reflets prismatiques chatoyants exclusifs boutique' }
+        theme_alt: { name: '🎨 Thème Rétro', desc: 'Grille visuelle alternative' },
+        frame_chroma: { name: '🌈 Cadre Flux Chroma', desc: 'Dégradé néon pulsé en rotation' },
+        frame_prism: { name: '✨ Cadre Prisme Solaire', desc: 'Reflets prismatiques chatoyants' }
     };
 
     POWERS_CATALOG.filter(p => p.type === type).forEach(p => {
@@ -1889,7 +1892,7 @@ function updateOpponentDisplay(opp) {
     if (!opp) return;
     cachedOpponent = parsePlayer(opp);
     document.getElementById('opp-profile-name').innerText = cachedOpponent.username;
-    document.getElementById('opp-profile-badge').innerHTML = getAvatarBadgeHTML(cachedOpponent.flag, cachedOpponent.avatar, cachedOpponent.inventory && cachedOpponent.inventory.__equipped ? cachedOpponent.inventory.__equipped.avatar : null, cachedOpponent);
+    document.getElementById('opp-profile-badge').innerHTML = getAvatarBadgeHTML(cachedOpponent.flag, cachedOpponent.avatar);
     const oppTitle = cachedOpponent.inventory && cachedOpponent.inventory.__equipped && cachedOpponent.inventory.__equipped.title;
     const oppTitleEl = document.getElementById('opp-profile-title');
     if (oppTitleEl) oppTitleEl.innerText = oppTitle ? `[ ${TITLE_DISPLAY_NAMES[oppTitle] || oppTitle} ]` : "";
@@ -1998,6 +2001,9 @@ function getWinnerAvatarShowcaseHTML(playerObj) {
     if (!playerObj) return '';
     const equippedAvatar = playerObj.inventory && playerObj.inventory.__equipped && playerObj.inventory.__equipped.avatar;
     const equippedFrame = playerObj.inventory && playerObj.inventory.__equipped && playerObj.inventory.__equipped.frame;
+    const isGoldFrame = equippedFrame === 'frame_gold';
+    const isSilverFrame = equippedFrame === 'frame_silver';
+    const isAnimatedFrame = equippedFrame === 'frame_animated';
     
     let iconContent = playerObj.avatar || 1;
     if (equippedAvatar === 'avatar_lottie_palier30') {
@@ -2006,9 +2012,14 @@ function getWinnerAvatarShowcaseHTML(playerObj) {
         iconContent = `<div class="lottie-avatar-large" data-lottie-url="cat-assistant.json" style="width:75px; height:75px;"></div>`;
     }
 
+    let frameClass = '';
+    if (isGoldFrame) frameClass = 'gold';
+    else if (isSilverFrame) frameClass = 'silver-frame';
+    else if (isAnimatedFrame) frameClass = 'animated-frame';
+
     const html = `
         <div class="victory-avatar-showcase">
-            <div class="victory-badge-large ${equippedFrame || ''}" style="display: flex; align-items: center; justify-content: center;">
+            <div class="victory-badge-large ${frameClass}" style="display: flex; align-items: center; justify-content: center;">
                 <span style="font-weight: 900; color: #fff;">${iconContent}</span>
                 <span style="position: absolute; bottom: -2px; right: -2px; font-size: 14px; background: #0f051d; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; z-index:3;">${playerObj.flag || '🇫🇷'}</span>
             </div>
@@ -2043,9 +2054,10 @@ function showGameOverRecap(data) {
     const winnerId = data.winnerId, isWinner = (winnerId === myId);
     const cinematicContainer = document.getElementById('winner-cinematic-container');
     
+    // Contraste Dynamique : Victoire vs Défaite
     if (modalCard) {
-        modalCard.classList.remove('recap-lose');
-        modalCard.classList.add(isWinner ? 'recap-win' : 'recap-lose');
+        modalCard.classList.remove('defeat-theme');
+        if (!isWinner && winnerId) modalCard.classList.add('defeat-theme');
     }
 
     let winnerObj = null;
@@ -2238,11 +2250,11 @@ function renderAvalancheGrid() {
     const grid = document.getElementById('grid');
     if (!grid) return; grid.innerHTML = '';
     const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
-    const isAltTheme = equippedTheme === 'theme_alt' || equippedTheme === 'theme_rainbow';
+    const isAltTheme = equippedTheme === 'theme_alt';
     avalancheGridData.forEach((val, idx) => {
         const tile = document.createElement('div');
         if (val !== null) {
-            tile.className = `tile ${isAltTheme ? equippedTheme : ''}`;
+            tile.className = `tile ${isAltTheme ? 'alt-theme' : ''}`;
             tile.innerText = val; tile.onclick = () => handleAvalancheClick(val, idx);
         } else { tile.className = 'tile empty'; tile.innerText = ''; }
         grid.appendChild(tile);
@@ -2296,10 +2308,10 @@ function renderGrid(pool, handler) {
     if (!grid) return; grid.innerHTML = '';
     if (!pool) return;
     const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
-    const isAltTheme = equippedTheme === 'theme_alt' || equippedTheme === 'theme_rainbow';
+    const isAltTheme = equippedTheme === 'theme_alt';
     pool.forEach((num, index) => {
         const tile = document.createElement('div');
-        tile.className = `tile ${isAltTheme ? equippedTheme : ''}`;
+        tile.className = `tile ${isAltTheme ? 'alt-theme' : ''}`;
         tile.innerText = num; tile.onclick = () => handler(num, index);
         grid.appendChild(tile);
     });
