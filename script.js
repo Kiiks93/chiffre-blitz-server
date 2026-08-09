@@ -1,4 +1,3 @@
-function updateShopCoinsDisplay()
 const i18n = {
     fr: {
         coins: "Pièces ",
