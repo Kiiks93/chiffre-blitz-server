@@ -25,7 +25,6 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
     transition: all 0.3s ease;
 }
 
-/* Cadre Argenté sur la pilule (gère la classe directe ou via l'avatar intérieur) */
 .user-pill.silver-frame,
 .user-pill:has(.silver-frame),
 .user-pill:has(.tft-avatar-container.silver-frame) {
@@ -34,7 +33,6 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
     background: linear-gradient(135deg, rgba(42, 42, 42, 0.85), rgba(80, 80, 80, 0.85)) !important;
 }
 
-/* Cadre Doré sur la pilule (gère la classe directe ou via l'avatar intérieur) */
 .user-pill.gold-frame,
 .user-pill:has(.gold-frame),
 .user-pill:has(.tft-avatar-container.gold-frame) {
@@ -51,7 +49,6 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
 
 #user-name-display { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 75px; }
 
-/* Avatar miniature dans la pilule */
 .tft-avatar-container {
     position: relative;
     display: inline-flex;
@@ -91,7 +88,6 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
     box-shadow: 0 2px 4px rgba(0,0,0,0.8);
 }
 
-/* Avatar Large (dans les modals et aperçus de profil) */
 .tft-avatar-large {
     position: relative;
     display: inline-flex;
@@ -215,19 +211,6 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
 @keyframes badgeGlowPulse {
     0% { box-shadow: 0 0 20px rgba(0, 210, 255, 0.6); }
     100% { box-shadow: 0 0 35px rgba(0, 210, 255, 1), 0 0 15px rgba(255,255,255,0.8); }
-}
-
-@keyframes robotDance {
-    0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
-    20% { transform: translateY(-10px) rotate(-8deg) scale(1.08); }
-    40% { transform: translateY(0) rotate(0deg) scale(1); }
-    60% { transform: translateY(-10px) rotate(8deg) scale(1.08); }
-    80% { transform: translateY(-4px) rotate(-3deg) scale(1.02); }
-}
-.victory-badge-large.robot-dancing {
-    animation: robotDance 0.8s infinite ease-in-out, badgeGlowPulse 2s infinite alternate;
-    background: linear-gradient(135deg, #1e3c72, #2a5298);
-    border-color: #00d2ff;
 }
 
 .user-stats {
@@ -456,9 +439,6 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
 @keyframes quake { 0% { transform: translate(2px, 2px); } 50% { transform: translate(-2px, -2px); } 100% { transform: translate(2px, -2px); } }
 @keyframes toastFade { 0% { opacity: 0; transform: translateY(-15px); } 15% { opacity: 1; transform: translateY(0); } 85% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-15px); } }
 
-/* =========================================
-   CADRE ANIMÉ : EFFET PLASMA & ARCS ÉLECTRIQUES
-   ========================================= */
 @keyframes plasmaDischarge {
     0% { 
         border-color: #00d2ff; 
@@ -539,9 +519,6 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
     border-color: #00d2ff !important;
 }
 
-/* ========================================================= */
-/* ADAPTATION RESPONSIVE PC / GRAND ÉCRAN POUR LE PANEL ADMIN */
-/* ========================================================= */
 @media (min-width: 768px) {
     #admin-modal .modal-card {
         max-width: 650px !important;
