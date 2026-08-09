@@ -122,6 +122,35 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
     overflow: visible;
     flex-shrink: 0;
 }
+.tft-avatar-container.silver-frame {
+    border-color: #c0c0c0 !important;
+    box-shadow: 0 0 14px rgba(192, 192, 192, 0.8) !important;
+    background: linear-gradient(135deg, #2a2a2a, #505050);
+}
+.tft-avatar-container.chroma-frame {
+    border-color: transparent !important;
+    box-shadow: 0 0 14px rgba(255, 0, 200, 0.7) !important;
+    background: linear-gradient(90deg, #ff00c8, #00d2ff, #ffe600, #ff00c8);
+    background-size: 300% 100%;
+    animation: chromaFlow 4s linear infinite;
+}
+.tft-avatar-container.prism-frame {
+    border-color: #ffffff !important;
+    box-shadow: 0 0 16px rgba(255, 255, 255, 0.9), 0 0 20px rgba(248, 181, 0, 0.6) !important;
+    background: linear-gradient(135deg, #fff6d5, #f8b500, #fff6d5, #00d2ff);
+    background-size: 250% 250%;
+    animation: prismShimmer 3s ease-in-out infinite;
+}
+.tft-avatar-container.voltage-frame {
+    border-color: #fff34d !important;
+    box-shadow: 0 0 14px rgba(255, 243, 77, 0.9) !important;
+    background: linear-gradient(135deg, #282805, #5a550a);
+}
+.tft-avatar-container.obsidian-frame {
+    border-color: #7a0026 !important;
+    box-shadow: 0 0 14px rgba(255, 0, 60, 0.7) !important;
+    background: linear-gradient(135deg, #0a050a, #23050f);
+}
 
 .tft-avatar-icon {
     font-size: 18px;
