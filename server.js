@@ -12,8 +12,14 @@ const io = new Server(server, {
     }
 });
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jjhoblvdpbstxwuelmoa.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqaG9ibHZkcGJzdHh3dWVsbW9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzNDMwNTksImV4cCI6MjEwMDkxOTA1OX0.BIIuE0e3WbpJ6asxPx7FpH01FESDHfqRUMBW54jfh4E';
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+    console.error('❌ SUPABASE_URL et SUPABASE_KEY doivent être définies en variables d\'environnement.');
+    process.exit(1);
+}
+
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const activePlayers = {}; 
@@ -24,7 +30,12 @@ let tugOfWarQueue = [];
 const activeMatches = {}; 
 const lastMatchEarnings = {};
 
-const ADMIN_PASSWORD = "*JE_SUIS_ADMIN1301*";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+if (!ADMIN_PASSWORD) {
+    console.error('❌ ADMIN_PASSWORD doit être définie en variable d\'environnement.');
+    process.exit(1);
+}
 
 let globalEvents = {
     coinRush: false,
