@@ -1997,7 +1997,7 @@ function getWinnerAvatarShowcaseHTML(playerObj) {
     const isSilverFrame = equippedFrame === 'frame_silver';
     const isAnimatedFrame = equippedFrame === 'frame_animated';
     
-    let iconContent = playerObj.avatar || 1, customClass = '';
+    let iconContent = playerObj.avatar || 1;
     if (equippedAvatar === 'avatar_legend' || playerObj.avatar === 'avatar_legend' || equippedAvatar === 'avatar_plasma_gold') { 
         iconContent = `
             <div class="plasma-sphere-3d-wrapper" style="transform: scale(1.4);">
