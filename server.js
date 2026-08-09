@@ -127,7 +127,7 @@ io.on('connection', (socket) => {
                 const { data: inserted, error: insertErr } = await supabase
                     .from('players')
                     .insert([newRecord])
-.select()
+                    .select()
                     .single();
 
                 if (!insertErr && inserted) playerData = inserted;
@@ -267,11 +267,15 @@ io.on('connection', (socket) => {
             delete player.inventory.__equipped.theme;
             await savePlayerToSupabase(socket.id);
             socket.emit('player_registered', player);
-        } else if (itemId === 'avatar_lottie_palier15' || itemId === 'avatar_lottie_palier30' || (player.unlocked_items && player.unlocked_items.includes(itemId))) {
+        } else if (
+            itemId === 'avatar_lottie_palier15' || 
+            itemId === 'avatar_lottie_palier30' || 
+            (player.unlocked_items && player.unlocked_items.includes(itemId))
+        ) {
             let category = 'theme';
-            if (itemId.startsWith('avatar_')) category = 'avatar';
-            else if (itemId.startsWith('frame_')) category = 'frame';
-            else if (itemId === 'theme_alt') category = 'theme';
+            if (itemId.startsWith('avatar_') || itemId === 'avatar_lottie_palier15' || itemId === 'avatar_lottie_palier30') category = 'avatar';
+            else if (itemId.startsWith('frame_') || itemId === 'frame_electric' || itemId === 'frame_vortex') category = 'frame';
+            else if (itemId === 'theme_alt' || itemId === 'theme_rainbow') category = 'theme';
             else if (itemId.startsWith('title_')) category = 'title';
             
             player.inventory.__equipped[category] = itemId;
@@ -728,7 +732,7 @@ function applyPassReward(p, tier, track) {
         else if (tier === 7) { if (!p.unlocked_items.includes('title_neon')) p.unlocked_items.push('title_neon'); }
         else if (tier === 8) p.inventory['nova'] = (p.inventory['nova'] || 0) + 2;
         else if (tier === 9) p.coins = (p.coins || 0) + 200;
-        else if (tier === 10) { if (!p.unlocked_items.includes('theme_alt')) p.unlocked_items.push('theme_alt'); }
+        else if (tier === 10) { if (!p.unlocked_items.includes('theme_rainbow')) p.unlocked_items.push('theme_rainbow'); } // Thème arc-en-ciel unique pour le passe
         else if (tier === 11) p.coins = (p.coins || 0) + 120;
         else if (tier === 12) p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 1;
         else if (tier === 13) { if (!p.unlocked_items.includes('title_spectre')) p.unlocked_items.push('title_spectre'); }
@@ -740,18 +744,19 @@ function applyPassReward(p, tier, track) {
         else if (tier === 17) p.inventory['nova'] = (p.inventory['nova'] || 0) + 2;
         else if (tier === 18) p.coins = (p.coins || 0) + 250;
         else if (tier === 19) p.inventory['quake'] = (p.inventory['quake'] || 0) + 1;
-        else if (tier === 20) { if (!p.unlocked_items.includes('frame_chroma')) p.unlocked_items.push('frame_chroma'); }
+        else if (tier === 20) { if (!p.unlocked_items.includes('frame_electric')) p.unlocked_items.push('frame_electric'); } // Cadre exclusif passe
         else if (tier === 21) p.coins = (p.coins || 0) + 220;
         else if (tier === 22) p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 3;
-        else if (tier === 23) { if (!p.unlocked_items.includes('title_supreme')) p.unlocked_items.push('title_supreme'); }
+        else if (tier === 23) { if (!p.unlocked_items.includes('title_brain_overload')) p.unlocked_items.push('title_brain_overload'); }
         else if (tier === 24) p.coins = (p.coins || 0) + 300;
-        else if (tier === 25) { if (!p.unlocked_items.includes('frame_prism')) p.unlocked_items.push('frame_prism'); }
+        else if (tier === 25) { if (!p.unlocked_items.includes('frame_vortex')) p.unlocked_items.push('frame_vortex'); } // Cadre exclusif passe
         else if (tier === 26) p.coins = (p.coins || 0) + 260;
         else if (tier === 27) p.inventory['nova'] = (p.inventory['nova'] || 0) + 4;
         else if (tier === 28) p.coins = (p.coins || 0) + 400;
         else if (tier === 29) p.coins = (p.coins || 0) + 500;
         else if (tier === 30) {
             p.coins = (p.coins || 0) + 1000;
+            if (!p.unlocked_items.includes('title_felin_supreme')) p.unlocked_items.push('title_felin_supreme'); // Titre Félin Suprême au palier 30
             if (!p.unlocked_items.includes('avatar_lottie_palier30')) p.unlocked_items.push('avatar_lottie_palier30');
         }
     }
