@@ -494,6 +494,17 @@ function getRankName(points) {
     return currentLang === 'fr' ? 'Novice 🌱' : 'Novice 🌱';
 }
 
+function getFrameClass(equippedFrame) {
+    const FRAME_CLASS_MAP = {
+        'frame_silver': 'silver-frame',
+        'frame_chroma': 'chroma-frame',
+        'frame_prism': 'prism-frame',
+        'frame_voltage': 'voltage-frame',
+        'frame_obsidian': 'obsidian-frame'
+    };
+    return FRAME_CLASS_MAP[equippedFrame] || '';
+}
+
 function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
     const profile = playerObj || myProfile;
     const equippedAvatar = overrideAvatarType || (profile.inventory && profile.inventory.__equipped && profile.inventory.__equipped.avatar);
@@ -502,10 +513,9 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
     if (!playerObj) {
         const pill = document.getElementById('user-pill');
         if (pill) {
-            pill.classList.remove('silver-frame', 'gold-frame', 'animated-frame');
-            if (equippedFrame === 'frame_silver') pill.classList.add('silver-frame');
-            if (equippedFrame === 'frame_gold') pill.classList.add('gold-frame');
-            if (equippedFrame === 'frame_animated') pill.classList.add('animated-frame');
+            pill.classList.remove('silver-frame', 'chroma-frame', 'prism-frame', 'voltage-frame', 'obsidian-frame');
+            const frameClass = getFrameClass(equippedFrame);
+            if (frameClass) pill.classList.add(frameClass);
         }
     }
     
@@ -520,12 +530,10 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
         avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="cat-assistant.json" style="width:32px; height:32px;"></div>`;
     }
 
-    const isGold = equippedFrame === 'frame_gold';
-    const isSilver = equippedFrame === 'frame_silver';
-    const isAnimated = equippedFrame === 'frame_animated';
+    const frameClass = getFrameClass(equippedFrame);
 
     const html = `
-        <div class="tft-avatar-container ${isGold ? 'gold-frame' : ''} ${isSilver ? 'silver-frame' : ''} ${isAnimated ? 'animated-frame' : ''}" title="${avatarTitle}">
+        <div class="tft-avatar-container ${frameClass}" title="${avatarTitle}">
             <span class="tft-avatar-icon" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; ${typeof avatarContent === 'number' ? 'font-size: 14px;' : ''}">${avatarContent}</span>
             <span class="tft-flag-overlay">${flag || '🇫🇷'}</span>
         </div>
@@ -537,8 +545,7 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
 function getLargeAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
     const avatarType = overrideAvatarType || activeAvatarChoice || (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar);
     const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
-    const isGoldFrame = equippedFrame === 'frame_gold';
-    const isAnimatedFrame = equippedFrame === 'frame_animated';
+    const frameClass = getFrameClass(equippedFrame);
     
     let avatarContent = avatarNum || 1;
     if (avatarType === 'avatar_lottie_palier30') {
@@ -548,7 +555,7 @@ function getLargeAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
     }
 
     const html = `
-        <div class="tft-avatar-large ${isGoldFrame ? 'gold-frame' : ''} ${isAnimatedFrame ? 'animated-frame' : ''}">
+        <div class="tft-avatar-large ${frameClass}">
             <span class="tft-avatar-large-icon" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; ${typeof avatarContent === 'number' ? 'font-size: 24px;' : ''}">${avatarContent}</span>
             <span class="tft-flag-large-overlay">${flag || '🇫🇷'}</span>
         </div>
@@ -606,16 +613,20 @@ const TITLE_DISPLAY_NAMES = {
     'title_felin': 'Réflexe Félin',
     'title_neon': 'Pulsion Néon',
     'title_spectre': 'Spectre Cosmique',
-    'title_supreme': '⚡ FÉLIN SUPRÊME'
+    'title_supreme': '⚡ FÉLIN SUPRÊME',
+    'title_champion': '🏅 Champion Éclair'
 };
 
 const FRAME_DISPLAY_NAMES = {
     'frame_chroma': '🌈 Cadre « Flux Chroma »',
-    'frame_prism': '✨ Cadre « Prisme Solaire »'
+    'frame_prism': '✨ Cadre « Prisme Solaire »',
+    'frame_voltage': '⚡ Cadre « Sous Tension »',
+    'frame_obsidian': '🖤 Cadre « Obsidienne »'
 };
 
 const THEME_DISPLAY_NAMES = {
-    'theme_alt': '🎨 Thème de Grille Rétro / Doré'
+    'theme_alt': '🎨 Thème de Grille Rétro / Doré',
+    'theme_glacial': '🧊 Thème de Grille Cryo'
 };
 
 function renderProfileCustomizationMenus() {
@@ -1011,9 +1022,9 @@ const POWERS_CATALOG = [
     { id: 'micro', price: 800, type: 'malus' },
     { id: 'eclipse', price: 1500, type: 'malus' },
     { id: 'chaos', price: 4000, type: 'malus' },
-    { id: 'theme_alt', price: 1500, type: 'cosmetics' },
-    { id: 'frame_chroma', price: 2500, type: 'cosmetics' },
-    { id: 'frame_prism', price: 5000, type: 'cosmetics' }
+    { id: 'theme_glacial', price: 1200, type: 'cosmetics' },
+    { id: 'frame_voltage', price: 2200, type: 'cosmetics' },
+    { id: 'frame_obsidian', price: 4500, type: 'cosmetics' }
 ];
 
 let current1v1Time = 30, radarInterval = null;
@@ -1685,9 +1696,9 @@ function switchShopTab(type) {
     const container = document.getElementById('shop-container'); container.innerHTML = '';
     const powersDict = i18n[currentLang].powers;
     const cosmeticsDict = {
-        theme_alt: { name: '🎨 Thème Rétro', desc: 'Grille visuelle alternative' },
-        frame_chroma: { name: '🌈 Cadre Flux Chroma', desc: 'Dégradé néon pulsé en rotation' },
-        frame_prism: { name: '✨ Cadre Prisme Solaire', desc: 'Reflets prismatiques chatoyants' }
+        theme_glacial: { name: '🧊 Thème Cryo', desc: 'Grille aux reflets bleutés glacés' },
+        frame_voltage: { name: '⚡ Cadre Sous Tension', desc: 'Éclairs électriques crépitants autour de l\'avatar' },
+        frame_obsidian: { name: '🖤 Cadre Obsidienne', desc: 'Cadre sombre strié de lueurs pourpres' }
     };
 
     POWERS_CATALOG.filter(p => p.type === type).forEach(p => {
@@ -2001,10 +2012,6 @@ function getWinnerAvatarShowcaseHTML(playerObj) {
     if (!playerObj) return '';
     const equippedAvatar = playerObj.inventory && playerObj.inventory.__equipped && playerObj.inventory.__equipped.avatar;
     const equippedFrame = playerObj.inventory && playerObj.inventory.__equipped && playerObj.inventory.__equipped.frame;
-    const isGoldFrame = equippedFrame === 'frame_gold';
-    const isSilverFrame = equippedFrame === 'frame_silver';
-    const isAnimatedFrame = equippedFrame === 'frame_animated';
-    
     let iconContent = playerObj.avatar || 1;
     if (equippedAvatar === 'avatar_lottie_palier30') {
         iconContent = `<div class="lottie-avatar-large" data-lottie-url="black-rainbow-cat.json" style="width:75px; height:75px;"></div>`;
@@ -2012,10 +2019,7 @@ function getWinnerAvatarShowcaseHTML(playerObj) {
         iconContent = `<div class="lottie-avatar-large" data-lottie-url="cat-assistant.json" style="width:75px; height:75px;"></div>`;
     }
 
-    let frameClass = '';
-    if (isGoldFrame) frameClass = 'gold';
-    else if (isSilverFrame) frameClass = 'silver-frame';
-    else if (isAnimatedFrame) frameClass = 'animated-frame';
+    const frameClass = getFrameClass(equippedFrame);
 
     const html = `
         <div class="victory-avatar-showcase">
@@ -2251,10 +2255,11 @@ function renderAvalancheGrid() {
     if (!grid) return; grid.innerHTML = '';
     const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
     const isAltTheme = equippedTheme === 'theme_alt';
+    const isGlacialTheme = equippedTheme === 'theme_glacial';
     avalancheGridData.forEach((val, idx) => {
         const tile = document.createElement('div');
         if (val !== null) {
-            tile.className = `tile ${isAltTheme ? 'alt-theme' : ''}`;
+            tile.className = `tile ${isAltTheme ? 'alt-theme' : ''} ${isGlacialTheme ? 'glacial-theme' : ''}`;
             tile.innerText = val; tile.onclick = () => handleAvalancheClick(val, idx);
         } else { tile.className = 'tile empty'; tile.innerText = ''; }
         grid.appendChild(tile);
@@ -2309,9 +2314,10 @@ function renderGrid(pool, handler) {
     if (!pool) return;
     const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
     const isAltTheme = equippedTheme === 'theme_alt';
+    const isGlacialTheme = equippedTheme === 'theme_glacial';
     pool.forEach((num, index) => {
         const tile = document.createElement('div');
-        tile.className = `tile ${isAltTheme ? 'alt-theme' : ''}`;
+        tile.className = `tile ${isAltTheme ? 'alt-theme' : ''} ${isGlacialTheme ? 'glacial-theme' : ''}`;
         tile.innerText = num; tile.onclick = () => handler(num, index);
         grid.appendChild(tile);
     });
