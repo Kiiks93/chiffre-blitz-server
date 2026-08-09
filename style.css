@@ -47,6 +47,65 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
     50% { box-shadow: 0 0 24px rgba(248, 181, 0, 1), inset 0 0 12px rgba(248, 181, 0, 0.8); }
 }
 
+.user-pill.voltage-frame,
+.user-pill:has(.voltage-frame),
+.user-pill:has(.tft-avatar-container.voltage-frame) {
+    border-color: #fff34d !important;
+    box-shadow: 0 0 14px rgba(255, 243, 77, 0.8), inset 0 0 6px rgba(255, 243, 77, 0.4) !important;
+    background: linear-gradient(135deg, rgba(40, 40, 5, 0.85), rgba(90, 85, 10, 0.85)) !important;
+    animation: voltageFlicker 1.4s infinite steps(2, jump-none);
+}
+
+@keyframes voltageFlicker {
+    0%, 100% { box-shadow: 0 0 14px rgba(255, 243, 77, 0.6), inset 0 0 6px rgba(255, 243, 77, 0.3); }
+    50% { box-shadow: 0 0 26px rgba(255, 243, 77, 1), inset 0 0 12px rgba(255, 255, 255, 0.6); }
+}
+
+.user-pill.obsidian-frame,
+.user-pill:has(.obsidian-frame),
+.user-pill:has(.tft-avatar-container.obsidian-frame) {
+    border-color: #7a0026 !important;
+    box-shadow: 0 0 14px rgba(122, 0, 38, 0.8), inset 0 0 8px rgba(255, 0, 60, 0.35) !important;
+    background: linear-gradient(135deg, rgba(10, 5, 10, 0.9), rgba(35, 5, 15, 0.9)) !important;
+    animation: obsidianPulse 3s infinite ease-in-out;
+}
+
+@keyframes obsidianPulse {
+    0%, 100% { box-shadow: 0 0 12px rgba(122, 0, 38, 0.6), inset 0 0 6px rgba(255, 0, 60, 0.25); }
+    50% { box-shadow: 0 0 22px rgba(255, 0, 60, 0.9), inset 0 0 12px rgba(255, 0, 60, 0.55); }
+}
+
+/* Cadres exclusifs au Blitz Pass (récompenses de paliers premium) */
+.user-pill.chroma-frame,
+.user-pill:has(.chroma-frame),
+.user-pill:has(.tft-avatar-container.chroma-frame) {
+    border-color: transparent !important;
+    box-shadow: 0 0 16px rgba(255, 0, 200, 0.7) !important;
+    background: linear-gradient(90deg, #ff00c8, #00d2ff, #ffe600, #ff00c8) !important;
+    background-size: 300% 100%;
+    animation: chromaFlow 4s linear infinite;
+}
+
+@keyframes chromaFlow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+}
+
+.user-pill.prism-frame,
+.user-pill:has(.prism-frame),
+.user-pill:has(.tft-avatar-container.prism-frame) {
+    border-color: #ffffff !important;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.9), 0 0 30px rgba(248, 181, 0, 0.6) !important;
+    background: linear-gradient(135deg, #fff6d5, #f8b500, #fff6d5, #00d2ff) !important;
+    background-size: 250% 250%;
+    animation: prismShimmer 3s ease-in-out infinite;
+}
+
+@keyframes prismShimmer {
+    0%, 100% { background-position: 0% 0%; }
+    50% { background-position: 100% 100%; }
+}
+
 #user-name-display { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 75px; }
 
 .tft-avatar-container {
@@ -110,6 +169,30 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
     border-color: #c0c0c0 !important;
     box-shadow: 0 0 18px rgba(192, 192, 192, 0.8) !important;
     background: linear-gradient(135deg, #2a2a2a, #505050);
+}
+.tft-avatar-large.chroma-frame {
+    border-color: transparent !important;
+    box-shadow: 0 0 22px rgba(255, 0, 200, 0.7) !important;
+    background: linear-gradient(90deg, #ff00c8, #00d2ff, #ffe600, #ff00c8);
+    background-size: 300% 100%;
+    animation: chromaFlow 4s linear infinite;
+}
+.tft-avatar-large.prism-frame {
+    border-color: #ffffff !important;
+    box-shadow: 0 0 26px rgba(255, 255, 255, 0.9), 0 0 34px rgba(248, 181, 0, 0.6) !important;
+    background: linear-gradient(135deg, #fff6d5, #f8b500, #fff6d5, #00d2ff);
+    background-size: 250% 250%;
+    animation: prismShimmer 3s ease-in-out infinite;
+}
+.tft-avatar-large.voltage-frame {
+    border-color: #fff34d !important;
+    box-shadow: 0 0 22px rgba(255, 243, 77, 0.9) !important;
+    background: linear-gradient(135deg, #282805, #5a550a);
+}
+.tft-avatar-large.obsidian-frame {
+    border-color: #7a0026 !important;
+    box-shadow: 0 0 20px rgba(255, 0, 60, 0.7) !important;
+    background: linear-gradient(135deg, #0a050a, #23050f);
 }
 .tft-avatar-large-icon {
     font-size: 26px;
@@ -209,6 +292,33 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
     background: linear-gradient(135deg, #3a2500, #f8b500);
     border-color: #f8b500;
     box-shadow: 0 0 40px rgba(248, 181, 0, 0.9), 0 0 20px #fff;
+}
+.victory-badge-large.silver-frame {
+    background: linear-gradient(135deg, #2a2a2a, #c0c0c0);
+    border-color: #c0c0c0;
+    box-shadow: 0 0 30px rgba(192, 192, 192, 0.8), 0 0 15px #fff;
+}
+.victory-badge-large.chroma-frame {
+    background: linear-gradient(90deg, #ff00c8, #00d2ff, #ffe600, #ff00c8);
+    background-size: 300% 100%;
+    animation: chromaFlow 4s linear infinite, badgeGlowPulse 2s infinite alternate;
+    border-color: transparent;
+}
+.victory-badge-large.prism-frame {
+    background: linear-gradient(135deg, #fff6d5, #f8b500, #fff6d5, #00d2ff);
+    background-size: 250% 250%;
+    animation: prismShimmer 3s ease-in-out infinite, badgeGlowPulse 2s infinite alternate;
+    border-color: #fff;
+}
+.victory-badge-large.voltage-frame {
+    background: linear-gradient(135deg, #282805, #fff34d);
+    border-color: #fff34d;
+    box-shadow: 0 0 35px rgba(255, 243, 77, 0.9), 0 0 15px #fff;
+}
+.victory-badge-large.obsidian-frame {
+    background: linear-gradient(135deg, #0a050a, #7a0026);
+    border-color: #7a0026;
+    box-shadow: 0 0 35px rgba(255, 0, 60, 0.8), 0 0 15px #fff;
 }
 @keyframes badgeGlowPulse {
     0% { box-shadow: 0 0 20px rgba(0, 210, 255, 0.6); }
@@ -445,6 +555,13 @@ h1 { color: #00d2ff; margin: 0; font-size: 16px; text-shadow: 0 0 15px rgba(0,21
     border-color: #ffe600 !important;
     color: #111 !important;
     box-shadow: 0 0 12px rgba(248,181,0,0.6);
+}
+
+.tile.glacial-theme {
+    background: linear-gradient(135deg, #0a2a4d, #0ea5c9) !important;
+    border-color: #7be8ff !important;
+    color: #eafcff !important;
+    box-shadow: 0 0 12px rgba(14, 165, 201, 0.6);
 }
 
 .tile.highlight-target { border-color: #00ff88 !important; background: #00ff88 !important; color: #000 !important; box-shadow: 0 0 15px #00ff88; }
