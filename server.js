@@ -127,7 +127,7 @@ io.on('connection', (socket) => {
                 const { data: inserted, error: insertErr } = await supabase
                     .from('players')
                     .insert([newRecord])
-                    .select()
+.select()
                     .single();
 
                 if (!insertErr && inserted) playerData = inserted;
@@ -177,7 +177,7 @@ io.on('connection', (socket) => {
     const SHOP_PRICES = {
         spotlight: 300, freeze: 700, joker: 1200, nova: 2500,
         quake: 400, micro: 800, eclipse: 1500, chaos: 4000,
-        theme_alt: 1500, avatar_legend: 2500, frame_gold: 5000
+        theme_alt: 1500, frame_chroma: 2500, frame_prism: 5000
     };
 
     socket.on('buy_item', async (itemId) => {
@@ -186,7 +186,7 @@ io.on('connection', (socket) => {
         const cost = SHOP_PRICES[itemId];
         if (!cost || player.coins < cost) return;
 
-        const permanents = ['theme_alt', 'avatar_legend', 'frame_gold'];
+        const permanents = ['theme_alt', 'frame_chroma', 'frame_prism'];
         if (permanents.includes(itemId)) {
             if (!player.unlocked_items) player.unlocked_items = [];
             if (!player.unlocked_items.includes(itemId)) {
@@ -267,7 +267,7 @@ io.on('connection', (socket) => {
             delete player.inventory.__equipped.theme;
             await savePlayerToSupabase(socket.id);
             socket.emit('player_registered', player);
-        } else if (player.unlocked_items && player.unlocked_items.includes(itemId)) {
+        } else if (itemId === 'avatar_lottie_palier15' || itemId === 'avatar_lottie_palier30' || (player.unlocked_items && player.unlocked_items.includes(itemId))) {
             let category = 'theme';
             if (itemId.startsWith('avatar_')) category = 'avatar';
             else if (itemId.startsWith('frame_')) category = 'frame';
@@ -705,16 +705,19 @@ function applyPassReward(p, tier, track) {
         } else if ([5, 9, 20].includes(tier)) p.coins = (p.coins || 0) + 100;
         else if ([15, 25].includes(tier)) p.coins = (p.coins || 0) + 150;
         else if (tier === 29) p.coins = (p.coins || 0) + 300;
-        else if (tier === 30) p.coins = (p.coins || 0) + 500;
+        else if (tier === 30) {
+            p.coins = (p.coins || 0) + 500;
+            if (!p.unlocked_items.includes('title_supreme')) p.unlocked_items.push('title_supreme');
+        }
         else if ([2, 8, 17].includes(tier)) p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + (tier === 17 ? 2 : 1);
         else if ([4, 12, 22].includes(tier)) p.inventory['freeze'] = (p.inventory['freeze'] || 0) + 1;
         else if ([6, 14, 19, 24].includes(tier)) p.inventory['joker'] = (p.inventory['joker'] || 0) + 1;
         else if (tier === 10 || tier === 27) p.inventory['nova'] = (p.inventory['nova'] || 0) + (tier === 27 ? 4 : 1);
     } else if (track === 'premium') {
         if (!p.blitzPassPremium) return;
-        if (tier === 1) { if (!p.unlocked_items.includes('title_plasma_initiate')) p.unlocked_items.push('title_plasma_initiate'); }
+        if (tier === 1) { if (!p.unlocked_items.includes('title_stalker')) p.unlocked_items.push('title_stalker'); }
         else if (tier === 2) p.coins = (p.coins || 0) + 100;
-        else if (tier === 3) { if (!p.unlocked_items.includes('title_flux_master')) p.unlocked_items.push('title_flux_master'); }
+        else if (tier === 3) { if (!p.unlocked_items.includes('title_felin')) p.unlocked_items.push('title_felin'); }
         else if (tier === 4) { if (!p.unlocked_items.includes('frame_silver')) p.unlocked_items.push('frame_silver'); }
         else if (tier === 5) p.coins = (p.coins || 0) + 150;
         else if (tier === 6) {
@@ -722,34 +725,34 @@ function applyPassReward(p, tier, track) {
             p.inventory['freeze'] = (p.inventory['freeze'] || 0) + 1;
             p.inventory['joker'] = (p.inventory['joker'] || 0) + 1;
         }
-        else if (tier === 7) { if (!p.unlocked_items.includes('title_lightning_pro')) p.unlocked_items.push('title_lightning_pro'); }
+        else if (tier === 7) { if (!p.unlocked_items.includes('title_neon')) p.unlocked_items.push('title_neon'); }
         else if (tier === 8) p.inventory['nova'] = (p.inventory['nova'] || 0) + 2;
         else if (tier === 9) p.coins = (p.coins || 0) + 200;
         else if (tier === 10) { if (!p.unlocked_items.includes('theme_alt')) p.unlocked_items.push('theme_alt'); }
         else if (tier === 11) p.coins = (p.coins || 0) + 120;
         else if (tier === 12) p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 1;
-        else if (tier === 13) { if (!p.unlocked_items.includes('title_free_electron')) p.unlocked_items.push('title_free_electron'); }
+        else if (tier === 13) { if (!p.unlocked_items.includes('title_spectre')) p.unlocked_items.push('title_spectre'); }
         else if (tier === 14) p.inventory['freeze'] = (p.inventory['freeze'] || 0) + 2;
-        else if (tier === 15) { if (!p.unlocked_items.includes('frame_gold')) p.unlocked_items.push('frame_gold'); }
+        else if (tier === 15) { 
+            if (!p.unlocked_items.includes('avatar_lottie_palier15')) p.unlocked_items.push('avatar_lottie_palier15'); 
+        }
         else if (tier === 16) p.coins = (p.coins || 0) + 160;
         else if (tier === 17) p.inventory['nova'] = (p.inventory['nova'] || 0) + 2;
         else if (tier === 18) p.coins = (p.coins || 0) + 250;
         else if (tier === 19) p.inventory['quake'] = (p.inventory['quake'] || 0) + 1;
-        else if (tier === 20) { 
-            if (!p.unlocked_items.includes('avatar_energy_core')) p.unlocked_items.push('avatar_energy_core'); 
-        }
+        else if (tier === 20) { if (!p.unlocked_items.includes('frame_chroma')) p.unlocked_items.push('frame_chroma'); }
         else if (tier === 21) p.coins = (p.coins || 0) + 220;
         else if (tier === 22) p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 3;
-        else if (tier === 23) { if (!p.unlocked_items.includes('title_brain_overload')) p.unlocked_items.push('title_brain_overload'); }
+        else if (tier === 23) { if (!p.unlocked_items.includes('title_supreme')) p.unlocked_items.push('title_supreme'); }
         else if (tier === 24) p.coins = (p.coins || 0) + 300;
-        else if (tier === 25) { if (!p.unlocked_items.includes('frame_animated')) p.unlocked_items.push('frame_animated'); }
+        else if (tier === 25) { if (!p.unlocked_items.includes('frame_prism')) p.unlocked_items.push('frame_prism'); }
         else if (tier === 26) p.coins = (p.coins || 0) + 260;
         else if (tier === 27) p.inventory['nova'] = (p.inventory['nova'] || 0) + 4;
         else if (tier === 28) p.coins = (p.coins || 0) + 400;
         else if (tier === 29) p.coins = (p.coins || 0) + 500;
         else if (tier === 30) {
             p.coins = (p.coins || 0) + 1000;
-            if (!p.unlocked_items.includes('avatar_plasma_gold')) p.unlocked_items.push('avatar_plasma_gold');
+            if (!p.unlocked_items.includes('avatar_lottie_palier30')) p.unlocked_items.push('avatar_lottie_palier30');
         }
     }
 }
