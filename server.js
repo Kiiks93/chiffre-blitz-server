@@ -188,7 +188,7 @@ io.on('connection', (socket) => {
     const SHOP_PRICES = {
         spotlight: 300, freeze: 700, joker: 1200, nova: 2500,
         quake: 400, micro: 800, eclipse: 1500, chaos: 4000,
-        theme_alt: 1500, frame_chroma: 2500, frame_prism: 5000
+        theme_glacial: 1200, frame_voltage: 2200, frame_obsidian: 4500
     };
 
     socket.on('buy_item', async (itemId) => {
@@ -718,7 +718,7 @@ function applyPassReward(p, tier, track) {
         else if (tier === 29) p.coins = (p.coins || 0) + 300;
         else if (tier === 30) {
             p.coins = (p.coins || 0) + 500;
-            if (!p.unlocked_items.includes('title_supreme')) p.unlocked_items.push('title_supreme');
+            if (!p.unlocked_items.includes('title_champion')) p.unlocked_items.push('title_champion');
         }
         else if ([2, 8, 17].includes(tier)) p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + (tier === 17 ? 2 : 1);
         else if ([4, 12, 22].includes(tier)) p.inventory['freeze'] = (p.inventory['freeze'] || 0) + 1;
