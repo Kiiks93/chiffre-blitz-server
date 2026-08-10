@@ -1302,7 +1302,8 @@ socket.on("player_registered", (rawData) => {
     myProfile.equippedPower = player.equippedPower;
     myProfile.blitzPassPremium = player.blitzPassPremium;
     myProfile.claimedPassTiers = player.claimedPassTiers;
-
+    
+    sanitizeEquippedPowers();
     updateEconomyUI();
 
     if (document.getElementById("modal-shop").style.display === "flex") {
@@ -3081,17 +3082,44 @@ function equipPower(id) {
         socket.emit("equip_power", id);
     }
 }
+function sanitizeEquippedPowers() {
+    if (!myProfile.inventory) myProfile.inventory = {};
+
+    // Si le pouvoir équipé n'a plus de stock, on le retire
+    if (myProfile.equippedPower && (myProfile.inventory[myProfile.equippedPower] || 0) <= 0) {
+        myProfile.equippedPower = null;
+    }
+
+    // Nettoie les pouvoirs équipés en classé
+    if (myProfile.equippedPowers && myProfile.equippedPowers.length > 0) {
+        myProfile.equippedPowers = myProfile.equippedPowers.filter(powerId => {
+            return (myProfile.inventory[powerId] || 0) > 0;
+        });
+    }
+
+    // Nettoie aussi la sélection classée si besoin
+    if (selectedRankedItems && selectedRankedItems.length > 0) {
+        selectedRankedItems = selectedRankedItems.filter(powerId => {
+            return (myProfile.inventory[powerId] || 0) > 0;
+        });
+    }
+}
 function preparePowerHUD() {
     const zone = document.getElementById("power-zone");
     if (!zone) return;
 
     zone.innerHTML = "";
 
-    sanitizeEquippedPower();
+    sanitizeEquippedPowers();
 
     let powers = (myProfile.equippedPowers && myProfile.equippedPowers.length > 0)
         ? myProfile.equippedPowers
         : (myProfile.equippedPower ? [myProfile.equippedPower] : []);
+
+    // On garde uniquement les objets qui ont encore du stock
+    powers = powers.filter(powerId => {
+        return (myProfile.inventory[powerId] || 0) > 0;
+    });
 
     const uniquePowers = [...new Set(powers)];
 
@@ -3100,6 +3128,9 @@ function preparePowerHUD() {
     uniquePowers.forEach(powerId => {
         const stock = myProfile.inventory[powerId] || 0;
         const equippedCount = powers.filter(id => id === powerId).length;
+
+        // Exemple : si tu as équipé 2x Quake mais qu'il t'en reste 1,
+        // tu ne peux l'utiliser qu'une seule fois
         const usable = Math.min(stock, equippedCount);
 
         if (usable > 0) {
