@@ -1451,6 +1451,8 @@ const POWERS_CATALOG = [
     { id: "frame_obsidian", price: 4500, type: "cosmetics" }
 ];
 
+let currentMatchCharges = {};
+let currentSoloCharges = {};
 let current1v1Time = 30;
 let radarInterval = null;
 
@@ -3105,104 +3107,75 @@ function sanitizeEquippedPowers() {
     }
 }
 function preparePowerHUD() {
-    const zone = document.getElementById("power-zone");
-    if (!zone) return;
+    const zone = document.getElementById('power-zone');
+    zone.innerHTML = '';
 
-    zone.innerHTML = "";
-
-    sanitizeEquippedPowers();
-
-    let powers = (myProfile.equippedPowers && myProfile.equippedPowers.length > 0)
-        ? myProfile.equippedPowers
-        : (myProfile.equippedPower ? [myProfile.equippedPower] : []);
-
-    // On garde uniquement les objets qui ont encore du stock
-    powers = powers.filter(powerId => {
-        return (myProfile.inventory[powerId] || 0) > 0;
-    });
-
-    const uniquePowers = [...new Set(powers)];
+    const isSolo = document.getElementById('hud-solo').style.display !== 'none';
+    const charges = isSolo ? currentSoloCharges : currentMatchCharges;
 
     let usableCount = 0;
 
-    uniquePowers.forEach(powerId => {
-        const stock = myProfile.inventory[powerId] || 0;
-        const equippedCount = powers.filter(id => id === powerId).length;
+    for (const powerId in charges) {
+        const remaining = charges[powerId] || 0;
 
-        // Exemple : si tu as équipé 2x Quake mais qu'il t'en reste 1,
-        // tu ne peux l'utiliser qu'une seule fois
-        const usable = Math.min(stock, equippedCount);
-
-        if (usable > 0) {
+        if (remaining > 0) {
             usableCount++;
 
             const powerInfo = i18n[currentLang].powers[powerId];
 
-            const btn = document.createElement("button");
-            btn.className = "btn-power-hud";
-
-            btn.innerHTML = `⚡ ${powerInfo ? powerInfo.name : powerId} (${usable})`;
-
+            const btn = document.createElement('button');
+            btn.className = 'btn-power-hud';
+            btn.innerHTML = `⚡ ${powerInfo ? powerInfo.name : powerId} (${remaining})`;
             btn.onclick = () => triggerSpecificPower(powerId, btn);
 
             zone.appendChild(btn);
         }
-    });
+    }
 
-    zone.style.display = usableCount > 0 ? "block" : "none";
+    zone.style.display = usableCount > 0 ? 'block' : 'none';
 }
 
 function triggerSpecificPower(powerId, btnEl) {
-    const stock = myProfile.inventory[powerId] || 0;
+    const isSolo = document.getElementById('hud-solo').style.display !== 'none';
+    const charges = isSolo ? currentSoloCharges : currentMatchCharges;
 
-    if (stock <= 0 || btnEl.disabled) return;
+    if ((charges[powerId] || 0) <= 0 || btnEl.disabled) return;
+
+    charges[powerId]--;
 
     btnEl.disabled = true;
-    btnEl.style.opacity = "0.5";
+    btnEl.style.opacity = '0.5';
 
-    socket.emit("use_power", powerId);
+    socket.emit('use_power', powerId);
 
-    const currentTarget = parseInt(document.getElementById("game-target-giant").innerText) || 1;
+    const MALUS = ['quake', 'micro', 'eclipse', 'chaos'];
+    if (MALUS.includes(powerId) && !isSolo) {
+        socket.emit('send_malus', { type: powerId });
+    }
 
-    if (powerId === "spotlight") {
-        document.querySelectorAll(".tile").forEach(t => {
+    const currentTarget = parseInt(document.getElementById('game-target-giant').innerText) || 1;
+
+    if (powerId === 'spotlight') {
+        document.querySelectorAll('.tile').forEach(t => {
             if (parseInt(t.innerText) === currentTarget) {
-                t.classList.add("highlight-target");
-
-                setTimeout(() => {
-                    t.classList.remove("highlight-target");
-                }, 2000);
+                t.classList.add('highlight-target');
+                setTimeout(() => t.classList.remove('highlight-target'), 2000);
             }
         });
-    } else if (powerId === "joker") {
+    } else if (powerId === 'joker') {
         autoValidateTarget();
-    } else if (powerId === "freeze") {
+    } else if (powerId === 'freeze') {
         isTimeFrozen = true;
-
-        const timerEl = document.getElementById("game-timer");
-
-        if (timerEl) {
-            timerEl.classList.add("frozen");
-        }
-
-        setTimeout(() => {
-            isTimeFrozen = false;
-
-            if (timerEl) {
-                timerEl.classList.remove("frozen");
-            }
-        }, 3000);
-    } else if (powerId === "nova") {
+        const timerEl = document.getElementById('game-timer');
+        timerEl.classList.add('frozen');
+        setTimeout(() => { isTimeFrozen = false; timerEl.classList.remove('frozen'); }, 3000);
+    } else if (powerId === 'nova') {
         autoValidateTarget();
-
         setTimeout(() => autoValidateTarget(), 250);
         setTimeout(() => autoValidateTarget(), 500);
     }
 
-    // Les malus quake / micro / eclipse / chaos
-    // sont envoyés à l'adversaire directement par le serveur corrigé.
-
-    setTimeout(() => preparePowerHUD(), 150);
+    setTimeout(() => preparePowerHUD(), 100);
 }
 
 socket.on("power_used_success", () => {
@@ -3490,7 +3463,17 @@ socket.on("start_countdown", (data) => {
     if (radarInterval) clearInterval(radarInterval);
 
     latest1v1StartData = data;
+    currentMatchCharges = {};
+    let loadout = (myProfile.equippedPowers && myProfile.equippedPowers.length > 0)
+        ? myProfile.equippedPowers
+        : (myProfile.equippedPower ? [myProfile.equippedPower] : []);
 
+    loadout.forEach(id => {
+        const stock = myProfile.inventory[id] || 0;
+        if (stock > 0) {
+            currentMatchCharges[id] = Math.min((currentMatchCharges[id] || 0) + 1, stock);
+        }
+    });
     let oppData = extractOpponentInfo(data);
 
     if (oppData) {
@@ -3874,7 +3857,10 @@ function startSoloTraining(mode) {
     soloScore = 0;
     soloTimeLeft = 30;
     isTimeFrozen = false;
-
+    currentSoloCharges = {};
+    if (myProfile.equippedPower && (myProfile.inventory[myProfile.equippedPower] || 0) > 0) {
+        currentSoloCharges[myProfile.equippedPower] = 1;
+    }
     socket.emit("start_solo_training", {
         mode: activeTrainingMode,
         loadout: getOptionalLoadout ? getOptionalLoadout() : []
@@ -3999,6 +3985,10 @@ function startAvalancheGame(speed, initialCount) {
     soloScore = 0;
     avalancheTimeLeft = 30;
     isTimeFrozen = false;
+        currentSoloCharges = {};
+    if (myProfile.equippedPower && (myProfile.inventory[myProfile.equippedPower] || 0) > 0) {
+        currentSoloCharges[myProfile.equippedPower] = 1;
+    }
 
     socket.emit("start_solo_training", {
         mode: "avalanche",
