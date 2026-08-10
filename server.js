@@ -475,7 +475,7 @@ io.on('connection', (socket) => {
        POUVOIRS
     ============================================================ */
 
-    socket.on('use_power', async (powerId) => {
+        socket.on('use_power', async (powerId) => {
         const player = activePlayers[socket.id];
         if (!player) return;
 
@@ -505,7 +505,26 @@ io.on('connection', (socket) => {
             return;
         }
 
+        // On décompte l'objet de l'inventaire
         player.inventory[powerId]--;
+
+        // ==========================================
+        // 🎯 AJOUT ICI : Déséquiper si le stock est à 0
+        // ==========================================
+        const remaining = player.inventory[powerId] || 0;
+
+        if (remaining <= 0) {
+            // Si c'était le pouvoir unique équipé (1v1 normal, solo)
+            if (player.equippedPower === powerId) {
+                player.equippedPower = null;
+            }
+
+            // Si c'était dans les pouvoirs du classé (2 objets)
+            if (Array.isArray(player.equippedPowers)) {
+                player.equippedPowers = player.equippedPowers.filter(id => id !== powerId);
+            }
+        }
+        // ==========================================
 
         await savePlayerToSupabase(socket.id);
 
