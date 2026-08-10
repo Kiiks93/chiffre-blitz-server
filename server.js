@@ -1,7 +1,7 @@
-const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
-const { createClient } = require("@supabase/supabase-js");
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const server = http.createServer(app);
@@ -31,7 +31,7 @@ if (!ADMIN_PASSWORD) {
 }
 
 /* ============================================================
-   OBJET ET POUVOIRS
+   OBJETS
 ============================================================ */
 
 const POWER_IDS = [
@@ -45,8 +45,15 @@ const POWER_IDS = [
     "chaos"
 ];
 
+const MALUS_POWERS = [
+    "quake",
+    "micro",
+    "eclipse",
+    "chaos"
+];
+
 const ITEM_CATALOG = {
-    // Pouvoirs consommables : boutique + pass
+    // Pouvoirs : achetables en boutique et obtenables dans le pass
     spotlight: { sources: ["shop", "pass"], type: "power", price: 300 },
     freeze: { sources: ["shop", "pass"], type: "power", price: 700 },
     joker: { sources: ["shop", "pass"], type: "power", price: 1200 },
@@ -72,16 +79,17 @@ const ITEM_CATALOG = {
     avatar_lottie_palier30: { sources: ["pass"], type: "avatar", permanent: true },
 
     // Titres pass
-    title_champion: { sources: ["pass"], type: "title", permanent: true },
     title_stalker: { sources: ["pass"], type: "title", permanent: true },
     title_felin: { sources: ["pass"], type: "title", permanent: true },
     title_neon: { sources: ["pass"], type: "title", permanent: true },
     title_spectre: { sources: ["pass"], type: "title", permanent: true },
-    title_supreme: { sources: ["pass"], type: "title", permanent: true }
+    title_supreme: { sources: ["pass"], type: "title", permanent: true },
+    title_champion: { sources: ["pass"], type: "title", permanent: true }
 };
 
 function hasSource(itemId, source) {
     const item = ITEM_CATALOG[itemId];
+
     return !!(
         item &&
         Array.isArray(item.sources) &&
@@ -91,10 +99,6 @@ function hasSource(itemId, source) {
 
 function isShopItem(itemId) {
     return hasSource(itemId, "shop");
-}
-
-function isPassItem(itemId) {
-    return hasSource(itemId, "pass");
 }
 
 function getCosmeticCategory(itemId) {
@@ -112,48 +116,6 @@ function getCosmeticCategory(itemId) {
     return null;
 }
 
-function countLoadout(loadout) {
-    const counts = {};
-
-    for (const itemId of loadout || []) {
-        counts[itemId] = (counts[itemId] || 0) + 1;
-    }
-
-    return counts;
-}
-
-function validateLoadout(socketId, rawLoadout, minSlots, maxSlots) {
-    const player = activePlayers[socketId];
-    if (!player) return null;
-
-    let items = [];
-
-    if (Array.isArray(rawLoadout)) {
-        items = rawLoadout;
-    } else if (rawLoadout && Array.isArray(rawLoadout.items)) {
-        items = rawLoadout.items;
-    }
-
-    // Garder uniquement les pouvoirs valides
-    items = items.filter(itemId => POWER_IDS.includes(itemId));
-
-    if (items.length < minSlots || items.length > maxSlots) {
-        return null;
-    }
-
-    const needed = countLoadout(items);
-
-    for (const itemId in needed) {
-        const owned = player.inventory[itemId] || 0;
-
-        if (owned < needed[itemId]) {
-            return null;
-        }
-    }
-
-    return items;
-}
-
 /* ============================================================
    ÉTAT SERVEUR
 ============================================================ */
@@ -166,8 +128,6 @@ let tugOfWarQueue = [];
 
 const activeMatches = {};
 const lastMatchEarnings = {};
-const pendingLoadouts = {};
-const soloSessions = {};
 
 let globalEvents = {
     coinRush: false,
@@ -193,10 +153,13 @@ setInterval(() => {
 
     for (let key in eventSchedules) {
         const ev = eventSchedules[key];
+
         let shouldBeActive = ev.manual;
 
         if (ev.start && ev.end) {
-            if (now >= ev.start && now <= ev.end) shouldBeActive = true;
+            if (now >= ev.start && now <= ev.end) {
+                shouldBeActive = true;
+            }
         }
 
         if (globalEvents[key] !== shouldBeActive) {
@@ -205,11 +168,13 @@ setInterval(() => {
         }
     }
 
-    if (changed) io.emit("events_state_update", globalEvents);
+    if (changed) {
+        io.emit("events_state_update", globalEvents);
+    }
 }, 5000);
 
-app.get("/", (req, res) => {
-    res.send("Chiffre Blitz Server is running ⚡");
+app.get('/', (req, res) => {
+    res.send('Chiffre Blitz Server is running ⚡');
 });
 
 async function savePlayerToSupabase(socketId) {
@@ -217,7 +182,7 @@ async function savePlayerToSupabase(socketId) {
     if (!p) return;
 
     await supabase
-        .from("players")
+        .from('players')
         .update({
             points: p.points,
             coins: p.coins,
@@ -227,41 +192,36 @@ async function savePlayerToSupabase(socketId) {
             inventory: p.inventory,
             equipped_power: p.equippedPower,
             region: p.region,
-            country: p.country || "FR",
             avatar: p.avatar,
             flag: p.flag,
             unlocked_items: p.unlocked_items,
             blitz_pass_premium: p.blitzPassPremium,
             claimed_pass_tiers: p.claimedPassTiers
         })
-        .eq("id", p.dbId);
+        .eq('id', p.dbId);
 }
 
 /* ============================================================
    SOCKET
 ============================================================ */
 
-io.on("connection", (socket) => {
+io.on('connection', (socket) => {
     console.log(`🔌 Un utilisateur s'est connecté : ${socket.id}`);
 
-    socket.emit("events_state_update", globalEvents);
-
-    socket.on("get_item_catalog", () => {
-        socket.emit("item_catalog", ITEM_CATALOG);
-    });
+    socket.emit('events_state_update', globalEvents);
 
     /* ============================================================
        PROFIL / SUPABASE
     ============================================================ */
 
-    socket.on("register_player", async (data) => {
+    socket.on('register_player', async (data) => {
         const rawUsername = data.username ? data.username.trim() : "Joueur";
 
         try {
             let { data: matchedPlayers, error } = await supabase
-                .from("players")
-                .select("*")
-                .ilike("username", rawUsername);
+                .from('players')
+                .select('*')
+                .ilike('username', rawUsername);
 
             let dbPlayer = matchedPlayers && matchedPlayers.length > 0 ? matchedPlayers[0] : null;
             let playerData;
@@ -286,7 +246,7 @@ io.on("connection", (socket) => {
                 };
 
                 const { data: inserted, error: insertErr } = await supabase
-                    .from("players")
+                    .from('players')
                     .insert([newRecord])
                     .select()
                     .single();
@@ -300,17 +260,19 @@ io.on("connection", (socket) => {
                 playerData = dbPlayer;
 
                 const { data: updated } = await supabase
-                    .from("players")
+                    .from('players')
                     .update({
                         region: data.region || dbPlayer.region,
                         avatar: data.avatar || dbPlayer.avatar,
                         flag: data.flag || dbPlayer.flag
                     })
-                    .eq("id", dbPlayer.id)
+                    .eq('id', dbPlayer.id)
                     .select()
                     .single();
 
-                if (updated) playerData = updated;
+                if (updated) {
+                    playerData = updated;
+                }
             }
 
             activePlayers[socket.id] = {
@@ -335,7 +297,7 @@ io.on("connection", (socket) => {
                 claimedPassTiers: playerData.claimed_pass_tiers || {}
             };
 
-            socket.emit("player_registered", activePlayers[socket.id]);
+            socket.emit('player_registered', activePlayers[socket.id]);
         } catch (err) {
             console.error("Erreur lors de l'enregistrement Supabase :", err);
         }
@@ -345,21 +307,21 @@ io.on("connection", (socket) => {
        BOUTIQUE
     ============================================================ */
 
-    socket.on("buy_item", async (itemId) => {
+    socket.on('buy_item', async (itemId) => {
         const player = activePlayers[socket.id];
         if (!player) return;
 
         const item = ITEM_CATALOG[itemId];
 
         if (!item || !isShopItem(itemId)) {
-            socket.emit("room_error", "Cet objet ne peut pas être acheté dans la boutique.");
+            socket.emit('room_error', "Cet objet ne peut pas être acheté dans la boutique.");
             return;
         }
 
         const cost = item.price;
 
-        if (typeof cost !== "number" || player.coins < cost) {
-            socket.emit("room_error", "Tu n'as pas assez de pièces 🪙 !");
+        if (typeof cost !== 'number' || player.coins < cost) {
+            socket.emit('room_error', "Tu n'as pas assez de pièces 🪙 !");
             return;
         }
 
@@ -367,7 +329,7 @@ io.on("connection", (socket) => {
         player.unlocked_items = player.unlocked_items || [];
 
         // Pouvoirs consommables
-        if (item.type === "power") {
+        if (item.type === 'power') {
             player.coins -= cost;
             player.inventory[itemId] = (player.inventory[itemId] || 0) + 1;
         }
@@ -375,7 +337,7 @@ io.on("connection", (socket) => {
         // Cosmétiques permanents
         else if (item.permanent) {
             if (player.unlocked_items.includes(itemId)) {
-                socket.emit("room_error", "Tu possèdes déjà cet objet.");
+                socket.emit('room_error', "Tu possèdes déjà cet objet.");
                 return;
             }
 
@@ -388,10 +350,10 @@ io.on("connection", (socket) => {
         }
 
         await savePlayerToSupabase(socket.id);
-        socket.emit("player_registered", player);
+        socket.emit('player_registered', player);
     });
 
-    socket.on("equip_power", async (powerId) => {
+    socket.on('equip_power', async (powerId) => {
         const player = activePlayers[socket.id];
         if (!player) return;
 
@@ -399,32 +361,33 @@ io.on("connection", (socket) => {
 
         if ((player.inventory[powerId] || 0) > 0) {
             player.equippedPower = powerId;
+
             await savePlayerToSupabase(socket.id);
-            socket.emit("player_registered", player);
+            socket.emit('player_registered', player);
         }
     });
 
-    socket.on("equip_cosmetic", async (itemId) => {
+    socket.on('equip_cosmetic', async (itemId) => {
         const player = activePlayers[socket.id];
         if (!player) return;
 
         if (!player.inventory) player.inventory = {};
         if (!player.inventory.__equipped) player.inventory.__equipped = {};
 
-        if (itemId === "none" || itemId === "standard" || !itemId) {
+        if (itemId === 'none' || itemId === 'standard' || !itemId) {
             delete player.inventory.__equipped.avatar;
-        } else if (itemId === "none_title") {
+        } else if (itemId === 'none_title') {
             delete player.inventory.__equipped.title;
-        } else if (itemId === "none_frame") {
+        } else if (itemId === 'none_frame') {
             delete player.inventory.__equipped.frame;
-        } else if (itemId === "none_theme") {
+        } else if (itemId === 'none_theme') {
             delete player.inventory.__equipped.theme;
         } else {
             const category = getCosmeticCategory(itemId);
-            const owned = (player.unlocked_items || []).includes(itemId);
+            const owned = player.unlocked_items && player.unlocked_items.includes(itemId);
 
             if (!category || !owned) {
-                socket.emit("room_error", "Tu ne possèdes pas cet objet cosmétique.");
+                socket.emit('room_error', "Tu ne possèdes pas cet objet cosmétique.");
                 return;
             }
 
@@ -432,14 +395,14 @@ io.on("connection", (socket) => {
         }
 
         await savePlayerToSupabase(socket.id);
-        socket.emit("player_registered", player);
+        socket.emit('player_registered', player);
     });
 
     /* ============================================================
-       PASS DE SAISON
+       PASSE DE COMBAT
     ============================================================ */
 
-    socket.on("buy_blitz_pass", async () => {
+    socket.on('buy_blitz_pass', async () => {
         const player = activePlayers[socket.id];
         if (!player || player.blitzPassPremium) return;
 
@@ -451,22 +414,22 @@ io.on("connection", (socket) => {
 
             await savePlayerToSupabase(socket.id);
 
-            socket.emit("player_registered", player);
-            socket.emit("blitz_pass_updated", {
+            socket.emit('player_registered', player);
+            socket.emit('blitz_pass_updated', {
                 coins: player.coins,
                 blitzPassPremium: player.blitzPassPremium,
                 claimedPassTiers: player.claimedPassTiers
             });
 
-            socket.emit("admin_gift_received", {
+            socket.emit('admin_gift_received', {
                 message: "🎉 Passe de Combat Premium activé avec succès !"
             });
         } else {
-            socket.emit("room_error", "Tu n'as pas assez de pièces 🪙 !");
+            socket.emit('room_error', "Tu n'as pas assez de pièces 🪙 !");
         }
     });
 
-    socket.on("claim_pass_tier", async (data) => {
+    socket.on('claim_pass_tier', async (data) => {
         const player = activePlayers[socket.id];
         if (!player) return;
 
@@ -476,279 +439,129 @@ io.on("connection", (socket) => {
 
         const key = `${tier}_${track}`;
 
-        if (player.claimedPassTiers[key]) return;
-        if (track === "premium" && !player.blitzPassPremium) return;
+        if (player.claimedPassTiers[key]) {
+            socket.emit('pass_claim_denied', {
+                tier,
+                track,
+                reason: "already_claimed"
+            });
+            return;
+        }
+
+        if (track === 'premium' && !player.blitzPassPremium) {
+            socket.emit('pass_claim_denied', {
+                tier,
+                track,
+                reason: "premium_required"
+            });
+            return;
+        }
 
         player.claimedPassTiers[key] = true;
+
         applyPassReward(player, tier, track);
 
         await savePlayerToSupabase(socket.id);
 
-        socket.emit("player_registered", player);
-        socket.emit("blitz_pass_updated", {
-            coins: player.coins,
-            blitzPassPremium: player.blitzPassPremium,
-            claimedPassTiers: player.claimedPassTiers
-        });
+        socket.emit('player_registered', player);
+        socket.emit('pass_tier_claimed', { tier, track });
 
-        socket.emit("admin_gift_received", {
+        socket.emit('admin_gift_received', {
             message: `🎁 Récompense du Palier ${tier} (${track}) enregistrée !`
         });
     });
 
     /* ============================================================
-       LOADOUT / MATCHMAKING
+       POUVOIRS
     ============================================================ */
 
-    // Solo : 0 ou 1 objet
-    socket.on("start_solo_training", (data) => {
-        const mode = data && data.mode ? data.mode : "classic";
-        const rawLoadout = data && data.loadout ? data.loadout : [];
-
-        const validLoadout = validateLoadout(socket.id, rawLoadout, 0, 1);
-
-        if (!validLoadout) {
-            socket.emit("room_error", "Entraînement : maximum 1 objet autorisé.");
-            return;
-        }
-
-        soloSessions[socket.id] = {
-            mode,
-            loadout: validLoadout,
-            remainingCharges: countLoadout(validLoadout),
-            startedAt: Date.now(),
-            rewarded: false
-        };
-
-        socket.emit("solo_session_started", {
-            mode,
-            loadout: validLoadout,
-            remainingCharges: soloSessions[socket.id].remainingCharges
-        });
-    });
-
-    // 1v1 normal : 0 ou 1 objet
-    socket.on("find_1v1_match", (rawLoadout) => {
-        const validLoadout = validateLoadout(socket.id, rawLoadout, 0, 1);
-
-        if (!validLoadout) {
-            socket.emit("room_error", "Duel 1v1 : maximum 1 objet autorisé.");
-            return;
-        }
-
-        pendingLoadouts[socket.id] = validLoadout;
-        matchmakingQueue.push(socket.id);
-
-        if (matchmakingQueue.length >= 2) {
-            startMatchBetween(
-                matchmakingQueue.shift(),
-                matchmakingQueue.shift(),
-                false,
-                true,
-                false
-            );
-        }
-    });
-
-    // Classé : exactement 2 objets
-    socket.on("find_ranked_match", (data) => {
-        const validLoadout = validateLoadout(socket.id, data, 2, 2);
-
-        if (!validLoadout) {
-            socket.emit("room_error", "En mode classé, tu dois équiper exactement 2 objets valides.");
-            return;
-        }
-
-        pendingLoadouts[socket.id] = validLoadout;
-
-        if (activePlayers[socket.id]) {
-            activePlayers[socket.id].equippedPowers = validLoadout;
-            activePlayers[socket.id].equippedPower = validLoadout[0];
-        }
-
-        rankedQueue.push(socket.id);
-
-        if (rankedQueue.length >= 2) {
-            startMatchBetween(
-                rankedQueue.shift(),
-                rankedQueue.shift(),
-                true,
-                true,
-                false
-            );
-        }
-    });
-
-    // Tug-of-War : 0 ou 1 objet
-    socket.on("find_tug_of_war_match", (rawLoadout) => {
-        if (!globalEvents.tugOfWarMode) return;
-
-        const validLoadout = validateLoadout(socket.id, rawLoadout, 0, 1);
-
-        if (!validLoadout) {
-            socket.emit("room_error", "Mode spécial : maximum 1 objet autorisé.");
-            return;
-        }
-
-        pendingLoadouts[socket.id] = validLoadout;
-
-        tugOfWarQueue = tugOfWarQueue.filter(sId => sId !== socket.id);
-        tugOfWarQueue.push(socket.id);
-
-        if (tugOfWarQueue.length >= 2) {
-            startMatchBetween(
-                tugOfWarQueue.shift(),
-                tugOfWarQueue.shift(),
-                false,
-                true,
-                true
-            );
-        }
-    });
-
-    /* ============================================================
-       UTILISATION DES POUVOIRS
-    ============================================================ */
-
-    socket.on("use_power", async (powerId) => {
+    socket.on('use_power', async (powerId) => {
         const player = activePlayers[socket.id];
         if (!player) return;
 
         if (!POWER_IDS.includes(powerId)) return;
 
-        const match = activeMatches[socket.id];
+        player.inventory = player.inventory || {};
 
-        // Match online
-        if (match && !match.ended) {
-            const pData = match.players[socket.id];
-            if (!pData) return;
+        const stock = player.inventory[powerId] || 0;
 
-            pData.remainingCharges = pData.remainingCharges || {};
-
-            if ((pData.remainingCharges[powerId] || 0) <= 0) {
-                socket.emit("room_error", "Tu n'as plus cet objet disponible dans cette partie.");
-                return;
-            }
-
-            if ((player.inventory[powerId] || 0) <= 0) {
-                socket.emit("room_error", "Tu ne possèdes plus cet objet.");
-                return;
-            }
-
-            pData.remainingCharges[powerId]--;
-            player.inventory[powerId]--;
-
-            await savePlayerToSupabase(socket.id);
-
-            socket.emit("player_registered", player);
-            socket.emit("power_used_success", {
+        if (stock <= 0) {
+            socket.emit('power_use_denied', {
                 powerId,
-                remaining: pData.remainingCharges[powerId]
+                reason: "no_stock"
             });
-
-            const MALUS_POWERS = ["quake", "micro", "eclipse", "chaos"];
-
-            if (MALUS_POWERS.includes(powerId)) {
-                const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
-                io.to(oppId).emit("receive_malus", { type: powerId });
-            }
-
             return;
         }
 
-        // Solo training
-        const solo = soloSessions[socket.id];
+        // Vérifier que le pouvoir est bien équipé
+        const equippedSingle = player.equippedPower === powerId;
+        const equippedRanked = Array.isArray(player.equippedPowers) && player.equippedPowers.includes(powerId);
 
-        if (solo && !solo.rewarded) {
-            solo.remainingCharges = solo.remainingCharges || {};
-
-            if ((solo.remainingCharges[powerId] || 0) <= 0) {
-                socket.emit("room_error", "Tu n'as plus cet objet disponible dans cet entraînement.");
-                return;
-            }
-
-            if ((player.inventory[powerId] || 0) <= 0) {
-                socket.emit("room_error", "Tu ne possèdes plus cet objet.");
-                return;
-            }
-
-            solo.remainingCharges[powerId]--;
-            player.inventory[powerId]--;
-
-            await savePlayerToSupabase(socket.id);
-
-            socket.emit("player_registered", player);
-            socket.emit("power_used_success", {
+        if (!equippedSingle && !equippedRanked) {
+            socket.emit('power_use_denied', {
                 powerId,
-                remaining: solo.remainingCharges[powerId]
+                reason: "not_equipped"
             });
-        }
-    });
-
-    // Désactivé car les malus sont maintenant envoyés automatiquement par use_power
-    socket.on("send_malus", () => {});
-
-    /* ============================================================
-       RÉCOMPENSES SOLO
-    ============================================================ */
-
-    socket.on("claim_solo_reward", async (score) => {
-        const player = activePlayers[socket.id];
-        if (!player) return;
-
-        const session = soloSessions[socket.id];
-
-        if (!session || session.rewarded) return;
-
-        const elapsed = Date.now() - session.startedAt;
-
-        // Sécurité minimale : une partie solo ne peut pas être récompensée instantanément
-        if (elapsed < 5000) return;
-
-        const normalizedScore = Number(score);
-
-        if (!Number.isFinite(normalizedScore) || normalizedScore < 0 || normalizedScore > 20000) {
             return;
         }
 
-        session.rewarded = true;
-
-        let baseCoins = Math.min(100, Math.floor(normalizedScore / 3));
-        let rushBonus = globalEvents.coinRush ? baseCoins : 0;
-        let earnedCoins = baseCoins + rushBonus;
-
-        player.coins += earnedCoins;
-        lastMatchEarnings[socket.id] = earnedCoins;
-
-        // 10% si Jackpot Éclair actif
-        let triggerWheel = (globalEvents.jackpotEclair && Math.random() < 0.10);
+        player.inventory[powerId]--;
 
         await savePlayerToSupabase(socket.id);
 
-        socket.emit("player_registered", player);
-        socket.emit("solo_reward_result", {
-            baseCoins,
-            rushBonus,
-            earnedCoins,
-            triggerWheel,
-            globalEvents
+        socket.emit('power_used_success', {
+            powerId,
+            remaining: player.inventory[powerId]
         });
 
-        delete soloSessions[socket.id];
+        socket.emit('player_registered', player);
+
+        const match = activeMatches[socket.id];
+
+        if (match && MALUS_POWERS.includes(powerId)) {
+            const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
+
+            io.to(oppId).emit('receive_malus', {
+                type: powerId
+            });
+        }
     });
 
-    socket.on("double_reward", async () => {
-        const player = activePlayers[socket.id];
-        if (!player) return;
+    // Désactivé pour éviter les doubles malus.
+    // Les malus sont maintenant envoyés automatiquement par use_power.
+    socket.on('send_malus', () => {});
 
-        const earnings = lastMatchEarnings[socket.id] || 0;
+    /* ============================================================
+       ÉMOTICÔNES
+    ============================================================ */
 
-        if (earnings > 0) {
-            player.coins += earnings;
-            lastMatchEarnings[socket.id] = 0;
+    socket.on('send_emote', (data) => {
+        const match = activeMatches[socket.id];
 
-            await savePlayerToSupabase(socket.id);
-            socket.emit("player_registered", player);
+        if (match) {
+            const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
+
+            if (activePlayers[oppId]) {
+                io.to(oppId).emit('receive_emote', {
+                    senderId: socket.id,
+                    emote: data.emote
+                });
+            }
+        } else {
+            for (let code in rooms) {
+                const room = rooms[code];
+
+                const isInRoom = room.players.some(p => (p.socketId || p.id) === socket.id);
+
+                if (isInRoom) {
+                    io.to(code).emit('receive_emote', {
+                        senderId: socket.id,
+                        emote: data.emote
+                    });
+
+                    break;
+                }
+            }
         }
     });
 
@@ -756,31 +569,37 @@ io.on("connection", (socket) => {
        ROUE JACKPOT
     ============================================================ */
 
-    socket.on("spin_jackpot_wheel", async () => {
+    socket.on('spin_jackpot_wheel', async () => {
         const player = activePlayers[socket.id];
         if (!player) return;
 
         const roll = Math.random();
 
-        let outcome = "rien";
+        let outcome = 'rien';
         let coinDelta = 0;
         let itemId = null;
 
-        const possiblePowerRewards = ["spotlight", "freeze", "joker", "quake"];
+        const possiblePowerRewards = [
+            "spotlight",
+            "freeze",
+            "joker",
+            "quake"
+        ];
 
         if (roll < 0.30) {
-            outcome = "jackpot";
+            outcome = 'jackpot';
             coinDelta = 250;
         } else if (roll < 0.45) {
-            outcome = "objet";
+            outcome = 'objet';
             itemId = possiblePowerRewards[Math.floor(Math.random() * possiblePowerRewards.length)];
+
             player.inventory = player.inventory || {};
             player.inventory[itemId] = (player.inventory[itemId] || 0) + 1;
         } else if (roll < 0.70) {
-            outcome = "banqueroute";
+            outcome = 'banqueroute';
             coinDelta = -150;
         } else {
-            outcome = "rien";
+            outcome = 'rien';
             coinDelta = 0;
         }
 
@@ -794,8 +613,9 @@ io.on("connection", (socket) => {
 
         await savePlayerToSupabase(socket.id);
 
-        socket.emit("player_registered", player);
-        socket.emit("jackpot_wheel_result", {
+        socket.emit('player_registered', player);
+
+        socket.emit('jackpot_wheel_result', {
             outcome,
             coinDelta,
             itemId,
@@ -807,43 +627,53 @@ io.on("connection", (socket) => {
        CLASSEMENT
     ============================================================ */
 
-    socket.on("get_leaderboard", async (type) => {
+    socket.on('get_leaderboard', async (type) => {
         try {
-            const [category, scope] = type.split("_");
+            const [category, scope] = type.split('_');
 
-            let query = supabase.from("players").select("*");
+            let query = supabase.from('players').select('*');
 
             const player = activePlayers[socket.id];
 
-            if (scope === "regional" && player) {
-                query = query.eq("region", player.region);
+            if (scope === 'regional' && player) {
+                query = query.eq('region', player.region);
             }
 
-            if (scope === "national" && player) {
-                const myCountry = player.country || "FR";
-                query = query.eq("country", myCountry);
+            if (scope === 'national' && player) {
+                const myCountry = player.country || 'FR';
+                query = query.eq('country', myCountry);
             }
 
-            if (category === "points") {
-                query = query.order("points", { ascending: false });
-            } else if (category === "trophies") {
-                query = query.order("trophies", { ascending: false });
-            } else if (category === "coins") {
-                query = query.order("coins", { ascending: false });
-            } else if (category === "combined") {
-                query = query.order("trophies", { ascending: false }).order("points", { ascending: false });
+            if (category === 'points') {
+                query = query.order('points', { ascending: false });
+            } else if (category === 'trophies') {
+                query = query.order('trophies', { ascending: false });
+            } else if (category === 'coins') {
+                query = query.order('coins', { ascending: false });
+            } else if (category === 'combined') {
+                query = query.order('trophies', { ascending: false }).order('points', { ascending: false });
             }
 
             const { data: sortedData, error } = await query.limit(50);
 
             if (!error && sortedData) {
-                socket.emit("leaderboard_data", { type, data: sortedData });
+                socket.emit('leaderboard_data', {
+                    type,
+                    data: sortedData
+                });
             } else {
-                socket.emit("leaderboard_data", { type, data: [] });
+                socket.emit('leaderboard_data', {
+                    type,
+                    data: []
+                });
             }
         } catch (err) {
             console.error("Erreur récupération classement Supabase :", err);
-            socket.emit("leaderboard_data", { type, data: [] });
+
+            socket.emit('leaderboard_data', {
+                type,
+                data: []
+            });
         }
     });
 
@@ -851,21 +681,21 @@ io.on("connection", (socket) => {
        SALONS
     ============================================================ */
 
-    socket.on("get_rooms_list", () => {
+    socket.on('get_rooms_list', () => {
         const openRooms = Object.values(rooms).map(r => ({
             code: r.code,
             hasPassword: !!r.password,
             playersCount: r.players.length
         }));
 
-        socket.emit("rooms_list_data", openRooms);
+        socket.emit('rooms_list_data', openRooms);
     });
 
-    socket.on("create_room", (data) => {
+    socket.on('create_room', (data) => {
         const code = data.code || Math.random().toString(36).substring(2, 6).toUpperCase();
 
         if (rooms[code]) {
-            socket.emit("room_error", "Ce salon existe déjà !");
+            socket.emit('room_error', "Ce salon existe déjà !");
             return;
         }
 
@@ -878,30 +708,36 @@ io.on("connection", (socket) => {
 
         rooms[code] = {
             code: code,
-            password: data.password || "",
+            password: data.password || '',
             players: [currentPlayer],
             hostId: socket.id
         };
 
         socket.join(code);
-        socket.emit("room_joined_success", { code, players: rooms[code].players });
+
+        socket.emit('room_joined_success', {
+            code,
+            players: rooms[code].players
+        });
+
+        io.emit('rooms_list_changed');
     });
 
-    socket.on("join_room", (data) => {
+    socket.on('join_room', (data) => {
         const room = rooms[data.code];
 
         if (!room) {
-            socket.emit("room_error", "Salon introuvable !");
+            socket.emit('room_error', "Salon introuvable !");
             return;
         }
 
         if (room.password && room.password !== data.password) {
-            socket.emit("room_error", "Mot de passe incorrect !");
+            socket.emit('room_error', "Mot de passe incorrect !");
             return;
         }
 
         if (room.players.length >= 2) {
-            socket.emit("room_error", "Le salon est complet !");
+            socket.emit('room_error', "Le salon est complet !");
             return;
         }
 
@@ -916,12 +752,12 @@ io.on("connection", (socket) => {
 
         socket.join(room.code);
 
-        socket.emit("room_joined_success", {
+        socket.emit('room_joined_success', {
             code: room.code,
             players: room.players
         });
 
-        io.to(room.code).emit("room_players_update", {
+        io.to(room.code).emit('room_players_update', {
             players: room.players
         });
 
@@ -935,7 +771,7 @@ io.on("connection", (socket) => {
         }
     });
 
-    socket.on("leave_room", () => {
+    socket.on('leave_room', () => {
         leaveAllRooms(socket);
     });
 
@@ -943,14 +779,14 @@ io.on("connection", (socket) => {
        AMIS
     ============================================================ */
 
-    socket.on("get_friends_list", async () => {
+    socket.on('get_friends_list', async () => {
         const player = activePlayers[socket.id];
         if (!player) return;
 
         try {
             const { data: friendships, error } = await supabase
-                .from("friendships")
-                .select("*")
+                .from('friendships')
+                .select('*')
                 .or(`user_username.ilike.${player.username},friend_username.ilike.${player.username}`);
 
             if (error) throw error;
@@ -986,115 +822,180 @@ io.on("connection", (socket) => {
                 });
             }
 
-            socket.emit("friends_list_data", friendsData);
+            socket.emit('friends_list_data', friendsData);
         } catch (err) {
             console.error("Erreur récupération amis :", err);
         }
     });
 
-    socket.on("send_friend_request", async (targetUsername) => {
+    socket.on('send_friend_request', async (targetUsername) => {
         const player = activePlayers[socket.id];
         if (!player || !targetUsername) return;
 
         const cleanTarget = targetUsername.trim();
 
         if (cleanTarget.toLowerCase() === player.username.toLowerCase()) {
-            socket.emit("friend_error", "Tu ne peux pas t'ajouter toi-même !");
+            socket.emit('friend_error', "Tu ne peux pas t'ajouter toi-même !");
             return;
         }
 
         const { data: targetExists } = await supabase
-            .from("players")
-            .select("username")
-            .ilike("username", cleanTarget)
+            .from('players')
+            .select('username')
+            .ilike('username', cleanTarget)
             .single();
 
         if (!targetExists) {
-            socket.emit("friend_error", "Ce joueur n'existe pas !");
+            socket.emit('friend_error', "Ce joueur n'existe pas !");
             return;
         }
 
         const { error } = await supabase
-            .from("friendships")
+            .from('friendships')
             .insert([{
                 user_username: player.username,
                 friend_username: targetExists.username,
-                status: "pending"
+                status: 'pending'
             }]);
 
         if (error) {
-            socket.emit("friend_error", "Demande déjà envoyée ou amitié existante.");
+            socket.emit('friend_error', "Demande déjà envoyée ou amitié existante.");
         } else {
-            socket.emit("friend_success", `Demande d'ami envoyée à ${targetExists.username} !`);
+            socket.emit('friend_success', `Demande d'ami envoyée à ${targetExists.username} !`);
         }
     });
 
-    socket.on("accept_friend_request", async (friendshipId) => {
+    socket.on('accept_friend_request', async (friendshipId) => {
         await supabase
-            .from("friendships")
-            .update({ status: "accepted" })
-            .eq("id", friendshipId);
+            .from('friendships')
+            .update({ status: 'accepted' })
+            .eq('id', friendshipId);
 
-        socket.emit("friend_updated");
+        socket.emit('friend_updated');
     });
 
-    socket.on("remove_friend", async (friendshipId) => {
+    socket.on('remove_friend', async (friendshipId) => {
         await supabase
-            .from("friendships")
+            .from('friendships')
             .delete()
-            .eq("id", friendshipId);
+            .eq('id', friendshipId);
 
-        socket.emit("friend_updated");
+        socket.emit('friend_updated');
     });
 
-    socket.on("invite_friend_to_game", (data) => {
+    socket.on('invite_friend_to_game', (data) => {
         const { targetSocketId, roomCode } = data;
+
         const player = activePlayers[socket.id];
 
         if (!player || !targetSocketId) return;
 
-        io.to(targetSocketId).emit("receive_game_invite", {
+        io.to(targetSocketId).emit('receive_game_invite', {
             from: player.username,
             roomCode: roomCode || null
         });
     });
 
     /* ============================================================
-       REMATCH
+       MATCHMAKING
     ============================================================ */
 
-    socket.on("request_rematch", () => {
+    socket.on('find_1v1_match', () => {
+        matchmakingQueue.push(socket.id);
+
+        if (matchmakingQueue.length >= 2) {
+            startMatchBetween(
+                matchmakingQueue.shift(),
+                matchmakingQueue.shift(),
+                false,
+                true,
+                false
+            );
+        }
+    });
+
+    socket.on('find_ranked_match', (data) => {
+        const player = activePlayers[socket.id];
+        if (!player) return;
+
+        let items = data && Array.isArray(data.items) ? data.items : [];
+
+        items = items.filter(itemId => POWER_IDS.includes(itemId));
+
+        if (items.length !== 2) {
+            socket.emit('room_error', "En mode classé, tu dois équiper exactement 2 objets.");
+            return;
+        }
+
+        const needed = {};
+
+        items.forEach(itemId => {
+            needed[itemId] = (needed[itemId] || 0) + 1;
+        });
+
+        for (const itemId in needed) {
+            const owned = player.inventory[itemId] || 0;
+
+            if (owned < needed[itemId]) {
+                socket.emit('room_error', "Tu ne possèdes pas assez d'un objet sélectionné.");
+                return;
+            }
+        }
+
+        player.equippedPowers = items;
+        player.equippedPower = items[0];
+
+        rankedQueue.push(socket.id);
+
+        if (rankedQueue.length >= 2) {
+            startMatchBetween(
+                rankedQueue.shift(),
+                rankedQueue.shift(),
+                true,
+                true,
+                false
+            );
+        }
+    });
+
+    socket.on('find_tug_of_war_match', () => {
+        if (!globalEvents.tugOfWarMode) return;
+
+        tugOfWarQueue = tugOfWarQueue.filter(sId => sId !== socket.id);
+        tugOfWarQueue.push(socket.id);
+
+        if (tugOfWarQueue.length >= 2) {
+            startMatchBetween(
+                tugOfWarQueue.shift(),
+                tugOfWarQueue.shift(),
+                false,
+                true,
+                true
+            );
+        }
+    });
+
+    socket.on('request_rematch', () => {
         const match = activeMatches[socket.id];
         if (!match) return;
 
         const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
 
         if (!activePlayers[oppId]) {
-            socket.emit("room_error", "L'adversaire s'est déconnecté.");
+            socket.emit('room_error', "L'adversaire s'est déconnecté.");
             return;
         }
 
         match.rematchVotes = match.rematchVotes || {};
         match.rematchVotes[socket.id] = true;
 
-        io.to(oppId).emit("opponent_wants_rematch");
+        io.to(oppId).emit('opponent_wants_rematch');
 
         if (match.rematchVotes[match.id1] && match.rematchVotes[match.id2]) {
-            const lastLoadouts = match.lastLoadouts || {};
-
-            pendingLoadouts[match.id1] = lastLoadouts[match.id1] || [];
-            pendingLoadouts[match.id2] = lastLoadouts[match.id2] || [];
-
             delete activeMatches[match.id1];
             delete activeMatches[match.id2];
 
-            startMatchBetween(
-                match.id1,
-                match.id2,
-                match.isRanked,
-                true,
-                match.isTugOfWar
-            );
+            startMatchBetween(match.id1, match.id2, match.isRanked, true, match.isTugOfWar);
         }
     });
 
@@ -1102,7 +1003,7 @@ io.on("connection", (socket) => {
        GAMEPLAY 1V1
     ============================================================ */
 
-    socket.on("player_click_1v1", (clickedIndex) => {
+    socket.on('player_click_1v1', (clickedIndex) => {
         const match = activeMatches[socket.id];
         if (!match || match.ended) return;
 
@@ -1111,7 +1012,7 @@ io.on("connection", (socket) => {
 
         const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
 
-        if (typeof clickedIndex !== "number" || clickedIndex < 0 || clickedIndex >= pData.pool.length) {
+        if (typeof clickedIndex !== 'number' || clickedIndex < 0 || clickedIndex >= pData.pool.length) {
             return;
         }
 
@@ -1129,8 +1030,13 @@ io.on("connection", (socket) => {
                     match.ropePosition--;
                 }
 
-                io.to(match.id1).emit("tug_of_war_update", { ropePosition: match.ropePosition });
-                io.to(match.id2).emit("tug_of_war_update", { ropePosition: match.ropePosition });
+                io.to(match.id1).emit('tug_of_war_update', {
+                    ropePosition: match.ropePosition
+                });
+
+                io.to(match.id2).emit('tug_of_war_update', {
+                    ropePosition: match.ropePosition
+                });
 
                 if (match.ropePosition >= 6 || match.ropePosition <= -6) {
                     match.ended = true;
@@ -1139,20 +1045,20 @@ io.on("connection", (socket) => {
                 }
             }
 
-            socket.emit("my_grid_updated", {
+            socket.emit('my_grid_updated', {
                 target: pData.target,
                 newPool: pData.pool,
                 success: true,
                 score: pData.score
             });
 
-            io.to(oppId).emit("opponent_progress", {
+            io.to(oppId).emit('opponent_progress', {
                 target: pData.target,
                 score: pData.score,
                 opponent: activePlayers[socket.id]
             });
         } else {
-            socket.emit("my_grid_updated", {
+            socket.emit('my_grid_updated', {
                 target: pData.target,
                 newPool: pData.pool,
                 success: false,
@@ -1162,34 +1068,54 @@ io.on("connection", (socket) => {
     });
 
     /* ============================================================
-       ÉMOTICÔNES
+       RÉCOMPENSES SOLO
     ============================================================ */
 
-    socket.on("send_emote", (data) => {
-        const match = activeMatches[socket.id];
+    socket.on('claim_solo_reward', async (score) => {
+        const player = activePlayers[socket.id];
+        if (!player) return;
 
-        if (match) {
-            const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
+        const normalizedScore = Number(score);
 
-            if (activePlayers[oppId]) {
-                io.to(oppId).emit("receive_emote", {
-                    senderId: socket.id,
-                    emote: data.emote
-                });
-            }
-        } else {
-            for (let code in rooms) {
-                const room = rooms[code];
-                const isInRoom = room.players.some(p => (p.socketId || p.id) === socket.id);
+        if (!Number.isFinite(normalizedScore) || normalizedScore < 0 || normalizedScore > 20000) {
+            return;
+        }
 
-                if (isInRoom) {
-                    io.to(code).emit("receive_emote", {
-                        senderId: socket.id,
-                        emote: data.emote
-                    });
-                    break;
-                }
-            }
+        let baseCoins = Math.min(100, Math.floor(normalizedScore / 3));
+        let rushBonus = globalEvents.coinRush ? baseCoins : 0;
+        let earnedCoins = baseCoins + rushBonus;
+
+        player.coins += earnedCoins;
+        lastMatchEarnings[socket.id] = earnedCoins;
+
+        // 10% si Jackpot Éclair actif
+        let triggerWheel = (globalEvents.jackpotEclair && Math.random() < 0.10);
+
+        await savePlayerToSupabase(socket.id);
+
+        socket.emit('player_registered', player);
+
+        socket.emit('solo_reward_result', {
+            baseCoins,
+            rushBonus,
+            earnedCoins,
+            triggerWheel,
+            globalEvents
+        });
+    });
+
+    socket.on('double_reward', async () => {
+        const player = activePlayers[socket.id];
+        if (!player) return;
+
+        const earnings = lastMatchEarnings[socket.id] || 0;
+
+        if (earnings > 0) {
+            player.coins += earnings;
+            lastMatchEarnings[socket.id] = 0;
+
+            await savePlayerToSupabase(socket.id);
+            socket.emit('player_registered', player);
         }
     });
 
@@ -1199,27 +1125,28 @@ io.on("connection", (socket) => {
 
     socket.adminAttempts = 0;
 
-    socket.on("admin_auth", (password) => {
+    socket.on('admin_auth', (password) => {
         if (socket.isAdmin) return;
 
         if (socket.adminAttempts >= 5) {
-            socket.emit("admin_auth_fail", "Trop de tentatives. Réessaie plus tard.");
+            socket.emit('admin_auth_fail', "Trop de tentatives. Réessaie plus tard.");
             return;
         }
 
         if (password === ADMIN_PASSWORD) {
             socket.isAdmin = true;
-            socket.emit("admin_auth_success", {
+
+            socket.emit('admin_auth_success', {
                 events: globalEvents,
                 schedules: eventSchedules
             });
         } else {
             socket.adminAttempts++;
-            socket.emit("admin_auth_fail", "Mot de passe administrateur incorrect !");
+            socket.emit('admin_auth_fail', "Mot de passe administrateur incorrect !");
         }
     });
 
-    socket.on("admin_update_schedule", (schedulesData) => {
+    socket.on('admin_update_schedule', (schedulesData) => {
         if (!socket.isAdmin) return;
 
         eventSchedules = schedulesData;
@@ -1229,6 +1156,7 @@ io.on("connection", (socket) => {
 
         for (let key in eventSchedules) {
             const ev = eventSchedules[key];
+
             let shouldBeActive = ev.manual;
 
             if (ev.start && ev.end && now >= ev.start && now <= ev.end) {
@@ -1241,17 +1169,20 @@ io.on("connection", (socket) => {
             }
         }
 
-        if (changed) io.emit("events_state_update", globalEvents);
+        if (changed) {
+            io.emit('events_state_update', globalEvents);
+        }
 
-        socket.emit("admin_schedule_saved", eventSchedules);
+        socket.emit('admin_schedule_saved', eventSchedules);
     });
 
-    socket.on("admin_broadcast_message", (message) => {
+    socket.on('admin_broadcast_message', (message) => {
         if (!socket.isAdmin) return;
-        io.emit("global_announcement", message);
+
+        io.emit('global_announcement', message);
     });
 
-    socket.on("admin_give_gift", async (data) => {
+    socket.on('admin_give_gift', async (data) => {
         if (!socket.isAdmin) return;
 
         const { targetUsername, currency, amount } = data;
@@ -1259,20 +1190,20 @@ io.on("connection", (socket) => {
         if (!["coins", "points", "trophies"].includes(currency)) return;
 
         const currencyLabel =
-            currency === "coins" ? "Pièces 🪙" :
-            currency === "points" ? "Points 🏅" :
-            "Trophées 🏆";
+            currency === 'coins' ? 'Pièces 🪙' :
+            currency === 'points' ? 'Points 🏅' :
+            'Trophées 🏆';
 
         const msg = `🎁 Cadeau Admin reçu : +${amount} ${currencyLabel} !`;
 
-        if (!targetUsername || targetUsername.trim() === "" || targetUsername.toUpperCase() === "TOUS") {
+        if (!targetUsername || targetUsername.trim() === '' || targetUsername.toUpperCase() === 'TOUS') {
             for (let sId in activePlayers) {
                 activePlayers[sId][currency] = (activePlayers[sId][currency] || 0) + amount;
 
                 await savePlayerToSupabase(sId);
 
-                io.to(sId).emit("player_registered", activePlayers[sId]);
-                io.to(sId).emit("admin_gift_received", {
+                io.to(sId).emit('player_registered', activePlayers[sId]);
+                io.to(sId).emit('admin_gift_received', {
                     currency,
                     amount,
                     message: `🎁 Cadeau Admin global : +${amount} ${currencyLabel} !`
@@ -1299,26 +1230,26 @@ io.on("connection", (socket) => {
 
                 await savePlayerToSupabase(foundActiveSocketId);
 
-                io.to(foundActiveSocketId).emit("player_registered", targetPlayer);
-                io.to(foundActiveSocketId).emit("admin_gift_received", {
+                io.to(foundActiveSocketId).emit('player_registered', targetPlayer);
+                io.to(foundActiveSocketId).emit('admin_gift_received', {
                     currency,
                     amount,
                     message: msg
                 });
             } else {
                 const { data: matchedPlayers, error } = await supabase
-                    .from("players")
-                    .select("*")
-                    .ilike("username", targetUsername.trim());
+                    .from('players')
+                    .select('*')
+                    .ilike('username', targetUsername.trim());
 
                 if (!error && matchedPlayers && matchedPlayers.length > 0) {
                     const targetDbPlayer = matchedPlayers[0];
                     const updatedVal = (targetDbPlayer[currency] || 0) + amount;
 
                     await supabase
-                        .from("players")
+                        .from('players')
                         .update({ [currency]: updatedVal })
-                        .eq("id", targetDbPlayer.id);
+                        .eq('id', targetDbPlayer.id);
                 }
             }
         }
@@ -1328,7 +1259,7 @@ io.on("connection", (socket) => {
        DÉCONNEXION
     ============================================================ */
 
-    socket.on("disconnect", async () => {
+    socket.on('disconnect', async () => {
         console.log(`🔌 Déconnexion : ${socket.id}`);
 
         leaveAllRooms(socket);
@@ -1343,8 +1274,6 @@ io.on("connection", (socket) => {
 
         delete activeMatches[socket.id];
         delete lastMatchEarnings[socket.id];
-        delete pendingLoadouts[socket.id];
-        delete soloSessions[socket.id];
 
         await savePlayerToSupabase(socket.id);
 
@@ -1357,6 +1286,8 @@ io.on("connection", (socket) => {
 ============================================================ */
 
 function leaveAllRooms(socket) {
+    let changed = false;
+
     for (let code in rooms) {
         const room = rooms[code];
 
@@ -1366,9 +1297,17 @@ function leaveAllRooms(socket) {
 
         if (room.players.length === 0) {
             delete rooms[code];
+            changed = true;
         } else {
-            io.to(code).emit("room_players_update", { players: room.players });
+            io.to(code).emit('room_players_update', {
+                players: room.players
+            });
+            changed = true;
         }
+    }
+
+    if (changed) {
+        io.emit('rooms_list_changed');
     }
 }
 
@@ -1393,12 +1332,6 @@ function startMatchBetween(id1, id2, isRanked = false, isOnline = true, isTugOfW
         points: 0
     };
 
-    const loadout1 = pendingLoadouts[id1] || [];
-    const loadout2 = pendingLoadouts[id2] || [];
-
-    delete pendingLoadouts[id1];
-    delete pendingLoadouts[id2];
-
     const isExpressoActive = globalEvents.expressoMatch && isOnline && !isRanked && !isTugOfWar;
 
     const match = {
@@ -1409,50 +1342,38 @@ function startMatchBetween(id1, id2, isRanked = false, isOnline = true, isTugOfW
             [id1]: {
                 target: 1,
                 score: 0,
-                pool: generatePool(1),
-                loadout: loadout1,
-                remainingCharges: countLoadout(loadout1)
+                pool: generatePool(1)
             },
             [id2]: {
                 target: 1,
                 score: 0,
-                pool: generatePool(1),
-                loadout: loadout2,
-                remainingCharges: countLoadout(loadout2)
+                pool: generatePool(1)
             }
         },
         isRanked,
         isTugOfWar,
         ropePosition: 0,
         ended: false,
-        rematchVotes: {},
-        lastLoadouts: {
-            [id1]: loadout1,
-            [id2]: loadout2
-        }
+        rematchVotes: {}
     };
 
     activeMatches[id1] = match;
     activeMatches[id2] = match;
 
-    io.to(id1).emit("start_countdown", {
+    io.to(id1).emit('start_countdown', {
         opponent: p2,
         timeLeft: match.timeLeft,
         myTarget: 1,
         myPool: match.players[id1].pool,
-        isTugOfWar,
-        myLoadout: loadout1,
-        myRemainingCharges: match.players[id1].remainingCharges
+        isTugOfWar
     });
 
-    io.to(id2).emit("start_countdown", {
+    io.to(id2).emit('start_countdown', {
         opponent: p1,
         timeLeft: match.timeLeft,
         myTarget: 1,
         myPool: match.players[id2].pool,
-        isTugOfWar,
-        myLoadout: loadout2,
-        myRemainingCharges: match.players[id2].remainingCharges
+        isTugOfWar
     });
 
     let chaosTimer = 0;
@@ -1460,8 +1381,8 @@ function startMatchBetween(id1, id2, isRanked = false, isOnline = true, isTugOfW
     const gameInterval = setInterval(() => {
         match.timeLeft--;
 
-        io.to(id1).emit("timer_update", match.timeLeft);
-        io.to(id2).emit("timer_update", match.timeLeft);
+        io.to(id1).emit('timer_update', match.timeLeft);
+        io.to(id2).emit('timer_update', match.timeLeft);
 
         if (globalEvents.chaosMode && !isRanked && isOnline) {
             chaosTimer++;
@@ -1469,11 +1390,16 @@ function startMatchBetween(id1, id2, isRanked = false, isOnline = true, isTugOfW
             if (chaosTimer >= 8) {
                 chaosTimer = 0;
 
-                const maluses = ["quake", "micro", "eclipse"];
+                const maluses = ['quake', 'micro', 'eclipse'];
                 const randomMalus = maluses[Math.floor(Math.random() * maluses.length)];
 
-                io.to(id1).emit("receive_malus", { type: randomMalus });
-                io.to(id2).emit("receive_malus", { type: randomMalus });
+                io.to(id1).emit('receive_malus', {
+                    type: randomMalus
+                });
+
+                io.to(id2).emit('receive_malus', {
+                    type: randomMalus
+                });
             }
         }
 
@@ -1501,6 +1427,131 @@ function generatePool(target) {
     return pool.concat(candidates.slice(0, 11)).sort(() => Math.random() - 0.5);
 }
 
+/* ============================================================
+   PASS REWARDS
+============================================================ */
+
+function applyPassReward(p, tier, track) {
+    p.inventory = p.inventory || {};
+    p.unlocked_items = p.unlocked_items || [];
+
+    if (track === 'free') {
+        if ([1, 3, 7, 11, 13, 16, 18, 21, 23, 26, 28].includes(tier)) {
+            const coinMap = {
+                1: 50,
+                3: 50,
+                7: 50,
+                11: 60,
+                13: 70,
+                16: 80,
+                18: 90,
+                21: 110,
+                23: 120,
+                26: 130,
+                28: 140
+            };
+
+            p.coins = (p.coins || 0) + (coinMap[tier] || 50);
+        } else if ([5, 9, 20].includes(tier)) {
+            p.coins = (p.coins || 0) + 100;
+        } else if ([15, 25].includes(tier)) {
+            p.coins = (p.coins || 0) + 150;
+        } else if (tier === 29) {
+            p.coins = (p.coins || 0) + 300;
+        } else if (tier === 30) {
+            p.coins = (p.coins || 0) + 500;
+
+            if (!p.unlocked_items.includes('title_champion')) {
+                p.unlocked_items.push('title_champion');
+            }
+        } else if ([2, 8, 17].includes(tier)) {
+            p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + (tier === 17 ? 2 : 1);
+        } else if ([4, 12, 22].includes(tier)) {
+            p.inventory['freeze'] = (p.inventory['freeze'] || 0) + 1;
+        } else if ([6, 14, 19, 24].includes(tier)) {
+            p.inventory['joker'] = (p.inventory['joker'] || 0) + 1;
+        } else if (tier === 10 || tier === 27) {
+            p.inventory['nova'] = (p.inventory['nova'] || 0) + (tier === 27 ? 4 : 1);
+        }
+    } else if (track === 'premium') {
+        if (!p.blitzPassPremium) return;
+
+        if (tier === 1) {
+            if (!p.unlocked_items.includes('title_stalker')) p.unlocked_items.push('title_stalker');
+        } else if (tier === 2) {
+            p.coins = (p.coins || 0) + 100;
+        } else if (tier === 3) {
+            if (!p.unlocked_items.includes('title_felin')) p.unlocked_items.push('title_felin');
+        } else if (tier === 4) {
+            if (!p.unlocked_items.includes('frame_silver')) p.unlocked_items.push('frame_silver');
+        } else if (tier === 5) {
+            p.coins = (p.coins || 0) + 150;
+        } else if (tier === 6) {
+            p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 1;
+            p.inventory['freeze'] = (p.inventory['freeze'] || 0) + 1;
+            p.inventory['joker'] = (p.inventory['joker'] || 0) + 1;
+        } else if (tier === 7) {
+            if (!p.unlocked_items.includes('title_neon')) p.unlocked_items.push('title_neon');
+        } else if (tier === 8) {
+            p.inventory['nova'] = (p.inventory['nova'] || 0) + 2;
+        } else if (tier === 9) {
+            p.coins = (p.coins || 0) + 200;
+        } else if (tier === 10) {
+            if (!p.unlocked_items.includes('theme_alt')) p.unlocked_items.push('theme_alt');
+        } else if (tier === 11) {
+            p.coins = (p.coins || 0) + 120;
+        } else if (tier === 12) {
+            p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 1;
+        } else if (tier === 13) {
+            if (!p.unlocked_items.includes('title_spectre')) p.unlocked_items.push('title_spectre');
+        } else if (tier === 14) {
+            p.inventory['freeze'] = (p.inventory['freeze'] || 0) + 2;
+        } else if (tier === 15) {
+            if (!p.unlocked_items.includes('avatar_lottie_palier15')) {
+                p.unlocked_items.push('avatar_lottie_palier15');
+            }
+        } else if (tier === 16) {
+            p.coins = (p.coins || 0) + 160;
+        } else if (tier === 17) {
+            p.inventory['nova'] = (p.inventory['nova'] || 0) + 2;
+        } else if (tier === 18) {
+            p.coins = (p.coins || 0) + 250;
+        } else if (tier === 19) {
+            p.inventory['quake'] = (p.inventory['quake'] || 0) + 1;
+        } else if (tier === 20) {
+            if (!p.unlocked_items.includes('frame_chroma')) p.unlocked_items.push('frame_chroma');
+        } else if (tier === 21) {
+            p.coins = (p.coins || 0) + 220;
+        } else if (tier === 22) {
+            p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 3;
+        } else if (tier === 23) {
+            if (!p.unlocked_items.includes('title_supreme')) p.unlocked_items.push('title_supreme');
+        } else if (tier === 24) {
+            p.coins = (p.coins || 0) + 300;
+        } else if (tier === 25) {
+            if (!p.unlocked_items.includes('frame_prism')) p.unlocked_items.push('frame_prism');
+        } else if (tier === 26) {
+            p.coins = (p.coins || 0) + 260;
+        } else if (tier === 27) {
+            p.inventory['nova'] = (p.inventory['nova'] || 0) + 4;
+        } else if (tier === 28) {
+            p.coins = (p.coins || 0) + 400;
+        } else if (tier === 29) {
+            p.coins = (p.coins || 0) + 500;
+        } else if (tier === 30) {
+            p.coins = (p.coins || 0) + 1000;
+
+            if (!p.unlocked_items.includes('avatar_lottie_palier30')) {
+                p.unlocked_items.push('avatar_lottie_palier30');
+            }
+        }
+    }
+}
+
+/* ============================================================
+   FIN DE MATCH
+============================================================ */
+
 async function endMatch(id1, id2, matchData, isRanked) {
     setTimeout(() => {
         if (activeMatches[id1] === matchData) delete activeMatches[id1];
@@ -1511,16 +1562,22 @@ async function endMatch(id1, id2, matchData, isRanked) {
     let reason = "Temps écoulé !";
 
     if (matchData.isTugOfWar) {
-        if (matchData.ropePosition > 0) winnerId = id1;
-        else if (matchData.ropePosition < 0) winnerId = id2;
+        if (matchData.ropePosition > 0) {
+            winnerId = id1;
+        } else if (matchData.ropePosition < 0) {
+            winnerId = id2;
+        }
 
         reason = "Corde tirée entièrement ! KO 🪢";
     } else {
         const s1 = matchData.players[id1] ? matchData.players[id1].score : 0;
         const s2 = matchData.players[id2] ? matchData.players[id2].score : 0;
 
-        if (s1 > s2) winnerId = id1;
-        else if (s2 > s1) winnerId = id2;
+        if (s1 > s2) {
+            winnerId = id1;
+        } else if (s2 > s1) {
+            winnerId = id2;
+        }
     }
 
     const matchRewards = {};
@@ -1544,9 +1601,9 @@ async function endMatch(id1, id2, matchData, isRanked) {
                 totalCoins
             };
 
-            // 10% de chance si Jackpot Éclair actif
+            // 10% si Jackpot Éclair actif
             if (isWinner && globalEvents.jackpotEclair && Math.random() < 0.10) {
-                io.to(sId).emit("trigger_jackpot_wheel");
+                io.to(sId).emit('trigger_jackpot_wheel');
             }
         }
     }
@@ -1581,10 +1638,15 @@ async function endMatch(id1, id2, matchData, isRanked) {
     await savePlayerToSupabase(id1);
     await savePlayerToSupabase(id2);
 
-    if (activePlayers[id1]) io.to(id1).emit("player_registered", activePlayers[id1]);
-    if (activePlayers[id2]) io.to(id2).emit("player_registered", activePlayers[id2]);
+    if (activePlayers[id1]) {
+        io.to(id1).emit('player_registered', activePlayers[id1]);
+    }
 
-    io.to(id1).emit("game_over_1v1", {
+    if (activePlayers[id2]) {
+        io.to(id2).emit('player_registered', activePlayers[id2]);
+    }
+
+    io.to(id1).emit('game_over_1v1', {
         winnerId,
         reason,
         players: matchData.players,
@@ -1592,7 +1654,7 @@ async function endMatch(id1, id2, matchData, isRanked) {
         rewards: matchRewards
     });
 
-    io.to(id2).emit("game_over_1v1", {
+    io.to(id2).emit('game_over_1v1', {
         winnerId,
         reason,
         players: matchData.players,
@@ -1602,125 +1664,8 @@ async function endMatch(id1, id2, matchData, isRanked) {
 }
 
 /* ============================================================
-   PASS REWARDS
+   DÉMARRAGE
 ============================================================ */
-
-function applyPassReward(p, tier, track) {
-    p.inventory = p.inventory || {};
-    p.unlocked_items = p.unlocked_items || [];
-
-    if (track === "free") {
-        if ([1, 3, 7, 11, 13, 16, 18, 21, 23, 26, 28].includes(tier)) {
-            const coinMap = {
-                1: 50,
-                3: 50,
-                7: 50,
-                11: 60,
-                13: 70,
-                16: 80,
-                18: 90,
-                21: 110,
-                23: 120,
-                26: 130,
-                28: 140
-            };
-
-            p.coins = (p.coins || 0) + (coinMap[tier] || 50);
-        } else if ([5, 9, 20].includes(tier)) {
-            p.coins = (p.coins || 0) + 100;
-        } else if ([15, 25].includes(tier)) {
-            p.coins = (p.coins || 0) + 150;
-        } else if (tier === 29) {
-            p.coins = (p.coins || 0) + 300;
-        } else if (tier === 30) {
-            p.coins = (p.coins || 0) + 500;
-
-            if (!p.unlocked_items.includes("title_champion")) {
-                p.unlocked_items.push("title_champion");
-            }
-        } else if ([2, 8, 17].includes(tier)) {
-            p.inventory["spotlight"] = (p.inventory["spotlight"] || 0) + (tier === 17 ? 2 : 1);
-        } else if ([4, 12, 22].includes(tier)) {
-            p.inventory["freeze"] = (p.inventory["freeze"] || 0) + 1;
-        } else if ([6, 14, 19, 24].includes(tier)) {
-            p.inventory["joker"] = (p.inventory["joker"] || 0) + 1;
-        } else if (tier === 10 || tier === 27) {
-            p.inventory["nova"] = (p.inventory["nova"] || 0) + (tier === 27 ? 4 : 1);
-        }
-    } else if (track === "premium") {
-        if (!p.blitzPassPremium) return;
-
-        if (tier === 1) {
-            if (!p.unlocked_items.includes("title_stalker")) p.unlocked_items.push("title_stalker");
-        } else if (tier === 2) {
-            p.coins = (p.coins || 0) + 100;
-        } else if (tier === 3) {
-            if (!p.unlocked_items.includes("title_felin")) p.unlocked_items.push("title_felin");
-        } else if (tier === 4) {
-            if (!p.unlocked_items.includes("frame_silver")) p.unlocked_items.push("frame_silver");
-        } else if (tier === 5) {
-            p.coins = (p.coins || 0) + 150;
-        } else if (tier === 6) {
-            p.inventory["spotlight"] = (p.inventory["spotlight"] || 0) + 1;
-            p.inventory["freeze"] = (p.inventory["freeze"] || 0) + 1;
-            p.inventory["joker"] = (p.inventory["joker"] || 0) + 1;
-        } else if (tier === 7) {
-            if (!p.unlocked_items.includes("title_neon")) p.unlocked_items.push("title_neon");
-        } else if (tier === 8) {
-            p.inventory["nova"] = (p.inventory["nova"] || 0) + 2;
-        } else if (tier === 9) {
-            p.coins = (p.coins || 0) + 200;
-        } else if (tier === 10) {
-            if (!p.unlocked_items.includes("theme_alt")) p.unlocked_items.push("theme_alt");
-        } else if (tier === 11) {
-            p.coins = (p.coins || 0) + 120;
-        } else if (tier === 12) {
-            p.inventory["spotlight"] = (p.inventory["spotlight"] || 0) + 1;
-        } else if (tier === 13) {
-            if (!p.unlocked_items.includes("title_spectre")) p.unlocked_items.push("title_spectre");
-        } else if (tier === 14) {
-            p.inventory["freeze"] = (p.inventory["freeze"] || 0) + 2;
-        } else if (tier === 15) {
-            if (!p.unlocked_items.includes("avatar_lottie_palier15")) {
-                p.unlocked_items.push("avatar_lottie_palier15");
-            }
-        } else if (tier === 16) {
-            p.coins = (p.coins || 0) + 160;
-        } else if (tier === 17) {
-            p.inventory["nova"] = (p.inventory["nova"] || 0) + 2;
-        } else if (tier === 18) {
-            p.coins = (p.coins || 0) + 250;
-        } else if (tier === 19) {
-            p.inventory["quake"] = (p.inventory["quake"] || 0) + 1;
-        } else if (tier === 20) {
-            if (!p.unlocked_items.includes("frame_chroma")) p.unlocked_items.push("frame_chroma");
-        } else if (tier === 21) {
-            p.coins = (p.coins || 0) + 220;
-        } else if (tier === 22) {
-            p.inventory["spotlight"] = (p.inventory["spotlight"] || 0) + 3;
-        } else if (tier === 23) {
-            if (!p.unlocked_items.includes("title_supreme")) p.unlocked_items.push("title_supreme");
-        } else if (tier === 24) {
-            p.coins = (p.coins || 0) + 300;
-        } else if (tier === 25) {
-            if (!p.unlocked_items.includes("frame_prism")) p.unlocked_items.push("frame_prism");
-        } else if (tier === 26) {
-            p.coins = (p.coins || 0) + 260;
-        } else if (tier === 27) {
-            p.inventory["nova"] = (p.inventory["nova"] || 0) + 4;
-        } else if (tier === 28) {
-            p.coins = (p.coins || 0) + 400;
-        } else if (tier === 29) {
-            p.coins = (p.coins || 0) + 500;
-        } else if (tier === 30) {
-            p.coins = (p.coins || 0) + 1000;
-
-            if (!p.unlocked_items.includes("avatar_lottie_palier30")) {
-                p.unlocked_items.push("avatar_lottie_palier30");
-            }
-        }
-    }
-}
 
 const PORT = process.env.PORT || 3000;
 
