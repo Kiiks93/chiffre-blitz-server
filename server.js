@@ -933,7 +933,7 @@ io.on('connection', (socket) => {
         }
     });
 
-        socket.on('find_ranked_match', (data) => {
+            socket.on('find_ranked_match', (data) => {
         const player = activePlayers[socket.id];
         if (!player) return;
 
@@ -941,11 +941,11 @@ io.on('connection', (socket) => {
 
         // 🛡️ Vérification 1 : Exactement 2 objets obligatoires en classé
         if (items.length !== 2) {
-            socket.emit('room_error', "En mode classé, tu dois équiper exactement 2 objets.");
+            socket.emit('room_error', "En mode classe, tu dois equiper exactement 2 objets.");
             return;
         }
 
-        // 🛡️ Vérification 2 : Le joueur possède bien les objets en stock
+        // 🛡️ Vérification 2 : Le joueur possede bien les objets en stock
         const counts = {};
         items.forEach(id => {
             counts[id] = (counts[id] || 0) + 1;
@@ -954,12 +954,12 @@ io.on('connection', (socket) => {
         for (const id in counts) {
             const owned = player.inventory[id] || 0;
             if (owned < counts[id]) {
-                socket.emit('room_error', "Tu ne possèdes pas assez d'exemplaires d'un objet sélectionné (Stock insuffisant).");
+                socket.emit('room_error', "Tu ne possedes pas assez d'exemplaires d'un objet (Stock insuffisant).");
                 return;
-            }²
+            }
         }
 
-        // ✅ Si tout est valide, on équipe le joueur et on le met dans la file d'attente
+        // ✅ Si tout est valide, on equipe le joueur et on le met dans la file
         player.equippedPowers = items;
         player.equippedPower = items[0];
 
@@ -967,31 +967,6 @@ io.on('connection', (socket) => {
         
         if (rankedQueue.length >= 2) {
             startMatchBetween(rankedQueue.shift(), rankedQueue.shift(), true, true, false);
-        }
-    });
-
-        for (const itemId in needed) {
-            const owned = player.inventory[itemId] || 0;
-
-            if (owned < needed[itemId]) {
-                socket.emit('room_error', "Tu ne possèdes pas assez d'un objet sélectionné.");
-                return;
-            }
-        }
-
-        player.equippedPowers = items;
-        player.equippedPower = items[0];
-
-        rankedQueue.push(socket.id);
-
-        if (rankedQueue.length >= 2) {
-            startMatchBetween(
-                rankedQueue.shift(),
-                rankedQueue.shift(),
-                true,
-                true,
-                false
-            );
         }
     });
 
