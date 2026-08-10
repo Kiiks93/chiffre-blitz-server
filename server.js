@@ -476,20 +476,29 @@ io.on('connection', (socket) => {
     ============================================================ */
 
         socket.on('use_power', async (powerId) => {
-        const player = activePlayers[socket.id];
-        if (!player) return;
+     const player = activePlayers[socket.id];
+     if (!player) return;
+     if ((player.inventory[powerId] || 0) <= 0) return;
 
-        if (!POWER_IDS.includes(powerId)) return;
+     const match = activeMatches[socket.id];
 
-        player.inventory = player.inventory || {};
+     if (match && !match.ended) {
+         const pData = match.players[socket.id];
+         if (!pData) return;
 
-        const stock = player.inventory[powerId] || 0;
+         pData.charges = pData.charges || {};
 
-        if (stock <= 0) {
-            socket.emit('power_use_denied', {
-                powerId,
-                reason: "no_stock"
-            });
+         if ((pData.charges[powerId] || 0) <= 0) {
+             return;
+         }
+
+         pData.charges[powerId]--;
+     }
+
+     player.inventory[powerId]--;
+     await savePlayerToSupabase(socket.id);
+     socket.emit('player_registered', player);
+ });
             return;
         }
 
@@ -1326,7 +1335,23 @@ function leaveAllRooms(socket) {
 /* ============================================================
    FONCTIONS MATCH
 ============================================================ */
+function buildMatchCharges(playerObj) {
+    const charges = {};
+    if (!playerObj) return charges;
 
+    const loadout = (playerObj.equippedPowers && playerObj.equippedPowers.length > 0)
+        ? playerObj.equippedPowers
+        : (playerObj.equippedPower ? [playerObj.equippedPower] : []);
+
+    loadout.forEach(id => {
+        const stock = playerObj.inventory ? (playerObj.inventory[id] || 0) : 0;
+        if (stock > 0) {
+            charges[id] = Math.min((charges[id] || 0) + 1, stock);
+        }
+    });
+
+    return charges;
+}
 function startMatchBetween(id1, id2, isRanked = false, isOnline = true, isTugOfWar = false) {
     const p1 = activePlayers[id1] || {
         socketId: id1,
@@ -1350,18 +1375,10 @@ function startMatchBetween(id1, id2, isRanked = false, isOnline = true, isTugOfW
         id1,
         id2,
         timeLeft: isExpressoActive ? 20 : 30,
-        players: {
-            [id1]: {
-                target: 1,
-                score: 0,
-                pool: generatePool(1)
-            },
-            [id2]: {
-                target: 1,
-                score: 0,
-                pool: generatePool(1)
-            }
-        },
+            players: {
+         [id1]: { target: 1, score: 0, pool: generatePool(1), charges: buildMatchCharges(activePlayers[id1]) },
+         [id2]: { target: 1, score: 0, pool: generatePool(1), charges: buildMatchCharges(activePlayers[id2]) }
+     },
         isRanked,
         isTugOfWar,
         ropePosition: 0,
