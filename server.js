@@ -471,92 +471,64 @@ io.on('connection', (socket) => {
         });
     });
 
-    /* ============================================================
+        /* ============================================================
        POUVOIRS
     ============================================================ */
 
-        socket.on('use_power', async (powerId) => {
-     const player = activePlayers[socket.id];
-     if (!player) return;
-     if ((player.inventory[powerId] || 0) <= 0) return;
-
-     const match = activeMatches[socket.id];
-
-     if (match && !match.ended) {
-         const pData = match.players[socket.id];
-         if (!pData) return;
-
-         pData.charges = pData.charges || {};
-
-         if ((pData.charges[powerId] || 0) <= 0) {
-             return;
-         }
-
-         pData.charges[powerId]--;
-     }
-
-     player.inventory[powerId]--;
-     await savePlayerToSupabase(socket.id);
-     socket.emit('player_registered', player);
- });
+    socket.on('use_power', async (powerId) => {
+        const player = activePlayers[socket.id];
+        if (!player) return;
+        if (!POWER_IDS.includes(powerId)) return;
+        
+        if ((player.inventory[powerId] || 0) <= 0) {
+            socket.emit('power_use_denied', { powerId, reason: "no_stock" });
             return;
         }
 
-        // Vérifier que le pouvoir est bien équipé
-        const equippedSingle = player.equippedPower === powerId;
-        const equippedRanked = Array.isArray(player.equippedPowers) && player.equippedPowers.includes(powerId);
+        const match = activeMatches[socket.id];
 
-        if (!equippedSingle && !equippedRanked) {
-            socket.emit('power_use_denied', {
-                powerId,
-                reason: "not_equipped"
-            });
-            return;
+        if (match && !match.ended) {
+            const pData = match.players[socket.id];
+            if (!pData) return;
+
+            pData.charges = pData.charges || {};
+
+            if ((pData.charges[powerId] || 0) <= 0) {
+                socket.emit('power_use_denied', { powerId, reason: "no_charges" });
+                return;
+            }
+
+            pData.charges[powerId]--;
         }
 
-        // On décompte l'objet de l'inventaire
         player.inventory[powerId]--;
-
-        // ==========================================
-        // 🎯 AJOUT ICI : Déséquiper si le stock est à 0
-        // ==========================================
+        
         const remaining = player.inventory[powerId] || 0;
-
+        
         if (remaining <= 0) {
-            // Si c'était le pouvoir unique équipé (1v1 normal, solo)
             if (player.equippedPower === powerId) {
                 player.equippedPower = null;
             }
-
-            // Si c'était dans les pouvoirs du classé (2 objets)
             if (Array.isArray(player.equippedPowers)) {
                 player.equippedPowers = player.equippedPowers.filter(id => id !== powerId);
             }
         }
-        // ==========================================
-
+        
         await savePlayerToSupabase(socket.id);
-
+        
         socket.emit('power_used_success', {
             powerId,
             remaining: player.inventory[powerId]
         });
-
+        
         socket.emit('player_registered', player);
-
-        const match = activeMatches[socket.id];
 
         if (match && MALUS_POWERS.includes(powerId)) {
             const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
-
-            io.to(oppId).emit('receive_malus', {
-                type: powerId
-            });
+            io.to(oppId).emit('receive_malus', { type: powerId });
         }
     });
 
-    // Désactivé pour éviter les doubles malus.
-    // Les malus sont maintenant envoyés automatiquement par use_power.
     socket.on('send_malus', () => {});
 
     /* ============================================================
