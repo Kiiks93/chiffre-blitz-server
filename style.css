@@ -38,7 +38,6 @@ h1 {
     cursor: pointer;
 }
 
-/* Bloc Pilule de Profil global & Glorification des grades/cadres */
 .user-pill {
     background: rgba(255, 255, 255, 0.08);
     border: 1.5px solid rgba(255, 255, 255, 0.25);
@@ -121,7 +120,6 @@ h1 {
     }
 }
 
-/* Cadres exclusifs au Blitz Pass */
 .user-pill.chroma-frame,
 .user-pill:has(.chroma-frame),
 .user-pill:has(.tft-avatar-container.chroma-frame) {
@@ -384,7 +382,6 @@ h1 {
     background: rgba(0, 210, 255, 0.3);
 }
 
-/* Contraste Dynamique & Showcases de Victoire/Défaite */
 .victory-avatar-showcase {
     display: flex;
     flex-direction: column;
@@ -474,7 +471,6 @@ h1 {
     }
 }
 
-/* Styles pour l'écran de Défaite */
 .defeat-theme {
     background: rgba(20, 5, 15, 0.98) !important;
     border-color: #ff4b2b !important;
@@ -896,6 +892,11 @@ h1 {
     color: #000;
 }
 
+.power-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 .friend-card {
     display: flex;
     align-items: center;
@@ -1039,7 +1040,6 @@ h1 {
     cursor: default;
 }
 
-/* Effet d'Onde de Choc / Ripple Tactile sur les tuiles */
 .tile::after {
     content: '';
     position: absolute;
@@ -1329,6 +1329,13 @@ h1 {
 .user-pill:has(.tft-avatar-container.animated-frame) {
     animation: electricPlasma 2s infinite linear !important;
     border-color: #00d2ff !important;
+}
+
+.roblox-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px;
 }
 
 @media (min-width: 768px) {
