@@ -791,12 +791,15 @@ return savedName && savedName.trim().length >= 3 && savedName !== "Profil" && sa
 }
 function checkAndShowProfileModal() {
 if (!isProfileValid()) {
+profileMode = "create";
 promptProfileChange();
 } else {
 if (!localStorage.getItem('cb_secret')) {
+profileMode = "login";
 promptProfileChange();
 return;
 }
+profileMode = "login";
 myProfile.username = localStorage.getItem("cb_username");
 myProfile.region = localStorage.getItem("cb_region");
 myProfile.avatar = parseInt(localStorage.getItem("cb_avatar")) || 1;
@@ -929,6 +932,15 @@ document.getElementById("modal-username").style.display = "none";
 showNotificationToast("✅ Choix de profil enregistré avec succès !", "gift");
 registerIfPossible();
 }
+let profileMode = "create";
+
+function setProfileMode(mode) {
+profileMode = mode;
+const tc = document.getElementById('profile-tab-create');
+const tl = document.getElementById('profile-tab-login');
+if (tc) tc.classList.toggle('active', mode === 'create');
+if (tl) tl.classList.toggle('active
+                            
 function promptProfileChange() {
 document.getElementById("username-input").value = isProfileValid() ? myProfile.username : "";
 if (myProfile.region) document.getElementById("region-input").value = myProfile.region;
@@ -938,6 +950,7 @@ const equippedAvatar = myProfile.inventory && myProfile.inventory.__equipped && 
 activeAvatarChoice = equippedAvatar || "standard";
 renderProfileCustomizationMenus();
 updateProfilePreview();
+
 let secretInput = document.getElementById('secret-input');
 if (!secretInput) {
 const nameInput = document.getElementById('username-input');
@@ -945,11 +958,29 @@ secretInput = document.createElement('input');
 secretInput.id = 'secret-input';
 secretInput.type = 'password';
 secretInput.maxLength = 12;
-secretInput.placeholder = '🔒 Code secret (4 min)';
 secretInput.style.cssText = 'width:100%; background:#0f051d; color:#fff; border:2px solid #ff007f; border-radius:8px; padding:8px; font-size:13px; margin-top:6px; box-sizing:border-box; text-align:center;';
 nameInput.parentElement.insertBefore(secretInput, nameInput.nextSibling);
 }
 secretInput.value = '';
+
+let tabBar = document.getElementById('profile-tabs');
+if (!tabBar) {
+tabBar = document.createElement('div');
+tabBar.id = 'profile-tabs';
+tabBar.className = 'tabs';
+tabBar.style.marginBottom = '8px';
+tabBar.innerHTML = '<button type="button" class="tab-btn" id="profile-tab-create" onclick="setProfileMode(\'create\')">➕ Créer un profil</button><button type="button" class="tab-btn" id="profile-tab-login" onclick="setProfileMode(\'login\')">🔑 Se connecter</button>';
+const card = document.getElementById('modal-username').querySelector('.modal-card');
+card.insertBefore(tabBar, card.children[1] || null);
+}
+
+const avBtn = document.querySelector('[onclick="saveAvatarChoiceOnly()"]');
+if (avBtn) avBtn.style.display = 'none';
+
+const validateBtn = document.querySelector('[onclick="saveProfileFromModal()"]');
+if (validateBtn && !validateBtn.id) validateBtn.id = 'btn-validate-profile';
+
+setProfileMode(profileMode);
 document.getElementById("modal-username").style.display = "flex";
 }
 function registerIfPossible() {
@@ -960,7 +991,8 @@ region: myProfile.region,
 avatar: myProfile.avatar,
 flag: myProfile.flag,
 inventory: myProfile.inventory,
-secretCode: myProfile.secretCode || localStorage.getItem('cb_secret') || ''
+secretCode: myProfile.secretCode || localStorage.getItem('cb_secret') || '',
+mode: profileMode || 'login'
 });
 }
 }
@@ -1003,10 +1035,22 @@ if (document.getElementById("screen-game").style.display === "block") preparePow
 socket.on('register_result', (res) => {
 if (!res.ok) {
 pendingProfileValidation = false;
-if (res.reason === 'taken') alert('❌ Ce pseudo est déjà pris ! Entre ton code secret pour le récupérer, ou choisis un autre pseudo.');
-else if (res.reason === 'nocode') alert('🔒 Choisis un code secret (4 caractères minimum).');
+if (res.reason === 'taken') alert("❌ Code secret incorrect ! Ce pseudo appartient à un autre joueur.");
+else if (res.reason === 'exists') { alert("❌ Ce pseudo existe déjà ! Utilise l'onglet « Se connecter »."); setProfileMode('login'); }
+else if (res.reason === 'no_account') { alert("❌ Ce profil n'existe pas ! Utilise l'onglet « Créer un profil »."); setProfileMode('create'); }
+else if (res.reason === 'nocode') alert('🔒 Entre un code secret (4 caractères minimum).');
 else if (res.reason === 'short') alert('Ton pseudo doit contenir au moins 3 caractères !');
 else alert('❌ Erreur de connexion au serveur. Réessaie.');
+promptProfileChange();
+return;
+}
+if (pendingProfileValidation) {
+pendingProfileValidation = false;
+saveLocalPreferences();
+document.getElementById('modal-username').style.display = 'none';
+showTitleScreen();
+}
+});
 promptProfileChange();
 return;
 }
