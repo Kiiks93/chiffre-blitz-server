@@ -105,7 +105,22 @@ claimed_pass_tiers: p.claimedPassTiers
 io.on('connection', (socket) => {
 console.log('Connexion : ' + socket.id);
 socket.emit('events_state_update', globalEvents);
-
+socket.on('delete_account', async (data) => {
+const player = activePlayers[socket.id];
+if (!player) return;
+const code = (data.secretCode || '').trim();
+const { data: rows } = await supabase.from('players').select('*').ilike('username', player.username);
+const row = rows && rows[0];
+if (!row) { socket.emit('delete_account_result', { ok: false }); return; }
+const stored = (row.secret_code || '').trim();
+if (stored && stored.toLowerCase() !== code.toLowerCase()) {
+socket.emit('delete_account_result', { ok: false, reason: 'bad_code' });
+return;
+}
+await supabase.from('players').delete().eq('id', row.id');
+delete activePlayers[socket.id];
+socket.emit('delete_account_result', { ok: true });
+});
 socket.on('register_player', async (data) => {
 const rawUsername = (data.username || '').trim();
 const secretCode = (data.secretCode || '').trim();
