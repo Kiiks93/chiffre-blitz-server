@@ -109,12 +109,18 @@ socket.emit('events_state_update', globalEvents);
 socket.on('register_player', async (data) => {
 const rawUsername = (data.username || '').trim();
 const secretCode = (data.secretCode || '').trim();
+const mode = data.mode || 'auto';
 if (rawUsername.length < 3) { socket.emit('register_result', { ok: false, reason: 'short' }); return; }
 if (secretCode.length < 4) { socket.emit('register_result', { ok: false, reason: 'nocode' }); return; }
 try {
 let { data: matchedPlayers, error } = await supabase.from('players').select('*').ilike('username', rawUsername);
+const exists = !error && matchedPlayers && matchedPlayers.length > 0;
+
+if (mode === 'create' && exists) { socket.emit('register_result', { ok: false, reason: 'exists' }); return; }
+if (mode === 'login' && !exists) { socket.emit('register_result', { ok: false, reason: 'no_account' }); return; }
+
 let playerData;
-if (!error && matchedPlayers && matchedPlayers.length > 0) {
+if (exists) {
 const existing = matchedPlayers[0];
 const storedCode = (existing.secret_code || '').trim();
 if (storedCode && storedCode.toLowerCase() !== secretCode.toLowerCase()) {
@@ -136,12 +142,12 @@ inventory: {}, equipped_power: null, unlocked_items: [],
 blitz_pass_premium: false, claimed_pass_tiers: {}
 };
 const { data: inserted, error: insertErr } = await supabase.from('players').insert([newRecord]).select().single();
-if (!insertErr && inserted) {
-playerData = inserted;
-} else {
-console.error("ERREUR INSERT SUPABASE : ", insertErr ? insertErr.message : "aucune donnee");
-playerData = { ...newRecord, id: socket.id };
+if (insertErr) {
+console.error("ERREUR INSERT SUPABASE : ", insertErr.message);
+socket.emit('register_result', { ok: false, reason: 'error' });
+return;
 }
+playerData = inserted;
 }
 activePlayers[socket.id] = {
 socketId: socket.id, dbId: playerData.id || socket.id, id: socket.id,
