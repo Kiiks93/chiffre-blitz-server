@@ -2,22 +2,18 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const { createClient } = require('@supabase/supabase-js');
-
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*", methods: ["GET", "POST"] } });
-
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
 if (!SUPABASE_URL || !SUPABASE_KEY) { console.error("SUPABASE_URL et SUPABASE_KEY doivent etre definies."); process.exit(1); }
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 if (!ADMIN_PASSWORD) { console.error("ADMIN_PASSWORD doit etre definie."); process.exit(1); }
 
 const POWER_IDS = ["spotlight", "freeze", "joker", "nova", "quake", "micro", "eclipse", "chaos"];
 const MALUS_POWERS = ["quake", "micro", "eclipse", "chaos"];
-
 const ITEM_CATALOG = {
 spotlight: { sources: ["shop", "pass"], type: "power", price: 300 },
 freeze: { sources: ["shop", "pass"], type: "power", price: 700 },
@@ -43,7 +39,6 @@ title_spectre: { sources: ["pass"], type: "title", permanent: true },
 title_supreme: { sources: ["pass"], type: "title", permanent: true },
 title_champion: { sources: ["pass"], type: "title", permanent: true }
 };
-
 function hasSource(itemId, source) {
 const item = ITEM_CATALOG[itemId];
 return !!(item && Array.isArray(item.sources) && item.sources.includes(source));
@@ -66,7 +61,6 @@ const rankedQueue = [];
 let tugOfWarQueue = [];
 const activeMatches = {};
 const lastMatchEarnings = {};
-
 let globalEvents = { coinRush: false, rankShield: false, expressoMatch: false, chaosMode: false, jackpotEclair: false, tugOfWarMode: false };
 let eventSchedules = {
 coinRush: { manual: false, start: null, end: null },
@@ -76,7 +70,6 @@ chaosMode: { manual: false, start: null, end: null },
 jackpotEclair: { manual: false, start: null, end: null },
 tugOfWarMode: { manual: false, start: null, end: null }
 };
-
 setInterval(() => {
 const now = Date.now();
 let changed = false;
@@ -88,7 +81,6 @@ if (globalEvents[key] !== shouldBeActive) { globalEvents[key] = shouldBeActive; 
 }
 if (changed) io.emit("events_state_update", globalEvents);
 }, 5000);
-
 app.get('/', (req, res) => { res.send('Chiffre Blitz Server is running ⚡'); });
 
 async function savePlayerToSupabase(socketId) {
@@ -105,37 +97,16 @@ claimed_pass_tiers: p.claimedPassTiers
 io.on('connection', (socket) => {
 console.log('Connexion : ' + socket.id);
 socket.emit('events_state_update', globalEvents);
-socket.on('delete_account', async (data) => {
-const player = activePlayers[socket.id];
-if (!player) return;
-const code = (data.secretCode || '').trim();
-const { data: rows } = await supabase.from('players').select('*').ilike('username', player.username);
-const row = rows && rows[0];
-if (!row) { socket.emit('delete_account_result', { ok: false }); return; }
-const stored = (row.secret_code || '').trim();
-if (stored && stored.toLowerCase() !== code.toLowerCase()) {
-socket.emit('delete_account_result', { ok: false, reason: 'bad_code' });
-return;
-}
-await supabase.from('players').delete().eq('id', row.id');
-delete activePlayers[socket.id];
-socket.emit('delete_account_result', { ok: true });
-});
+
 socket.on('register_player', async (data) => {
 const rawUsername = (data.username || '').trim();
 const secretCode = (data.secretCode || '').trim();
-const mode = data.mode || 'auto';
 if (rawUsername.length < 3) { socket.emit('register_result', { ok: false, reason: 'short' }); return; }
 if (secretCode.length < 4) { socket.emit('register_result', { ok: false, reason: 'nocode' }); return; }
 try {
 let { data: matchedPlayers, error } = await supabase.from('players').select('*').ilike('username', rawUsername);
-const exists = !error && matchedPlayers && matchedPlayers.length > 0;
-
-if (mode === 'create' && exists) { socket.emit('register_result', { ok: false, reason: 'exists' }); return; }
-if (mode === 'login' && !exists) { socket.emit('register_result', { ok: false, reason: 'no_account' }); return; }
-
 let playerData;
-if (exists) {
+if (!error && matchedPlayers && matchedPlayers.length > 0) {
 const existing = matchedPlayers[0];
 const storedCode = (existing.secret_code || '').trim();
 if (storedCode && storedCode.toLowerCase() !== secretCode.toLowerCase()) {
@@ -157,12 +128,12 @@ inventory: {}, equipped_power: null, unlocked_items: [],
 blitz_pass_premium: false, claimed_pass_tiers: {}
 };
 const { data: inserted, error: insertErr } = await supabase.from('players').insert([newRecord]).select().single();
-if (insertErr) {
-console.error("ERREUR INSERT SUPABASE : ", insertErr.message);
-socket.emit('register_result', { ok: false, reason: 'error' });
-return;
-}
+if (!insertErr && inserted) {
 playerData = inserted;
+} else {
+console.error("ERREUR INSERT SUPABASE : ", insertErr ? insertErr.message : "aucune donnee");
+playerData = { ...newRecord, id: socket.id };
+}
 }
 activePlayers[socket.id] = {
 socketId: socket.id, dbId: playerData.id || socket.id, id: socket.id,
@@ -624,7 +595,7 @@ return charges;
 
 function startMatchBetween(id1, id2, isRanked = false, isOnline = true, isTugOfWar = false) {
 const p1 = activePlayers[id1] || { socketId: id1, username: "Joueur 1", avatar: 1, flag: "🇫🇷", points: 0 };
-const p2 = activePlayers[id2] || { socketId: id2, username: "Joueur 2", avatar: 2, flag: "🇫", points: 0 };
+const p2 = activePlayers[id2] || { socketId: id2, username: "Joueur 2", avatar: 2, flag: "🇫🇷", points: 0 };
 const isExpressoActive = globalEvents.expressoMatch && isOnline && !isRanked && !isTugOfWar;
 const match = {
 id1, id2,
