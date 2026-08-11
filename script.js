@@ -628,16 +628,16 @@ socket.on("disconnect", () => {
 });
 
 socket.on("connect", () => {
+    if (localStorage.getItem('cb_secret')) {
     registerIfPossible();
-
+}
     const urlParams = new URLSearchParams(window.location.search);
     const targetRoom = urlParams.get("room");
-
     if (targetRoom && isProfileValid()) {
-        setTimeout(() => {
-            joinRoomDirect(targetRoom.toUpperCase(), "");
-        }, 500);
-    }
+    setTimeout(() => {
+    joinRoomDirect(targetRoom.toUpperCase(), "");
+    }, 500);
+}
 });
 
 let myProfile = {
@@ -1408,18 +1408,17 @@ socket.on('register_result', (res) => {
     if (!res.ok) {
     pendingProfileValidation = false;
     if (res.reason === 'taken') alert('❌ Ce pseudo est déjà pris ! Entre ton code secret pour le récupérer, ou choisis un autre pseudo.');
-    else if (res.reason === 'nocode') alert('🔒 Entre ton code secret pour récupérer ton compte.');
     else if (res.reason === 'short') alert('Ton pseudo doit contenir au moins 3 caractères !');
-    else alert('❌ Erreur de connexion au serveur. Réessaie.');
+    else if (res.reason === 'error') alert('❌ Erreur de connexion au serveur. Réessaie.');
     promptProfileChange();
     return;
 }
     if (pendingProfileValidation) {
-        pendingProfileValidation = false;
-        saveLocalPreferences();
-        document.getElementById('modal-username').style.display = 'none';
-        showTitleScreen();
-    }
+    pendingProfileValidation = false;
+    saveLocalPreferences();
+    document.getElementById('modal-username').style.display = 'none';
+    showTitleScreen();
+}
 });
 
 socket.on("blitz_pass_updated", (data) => {
