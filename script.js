@@ -1157,8 +1157,8 @@ function saveProfileFromModal() {
         return;
     }
     const secretVal = (document.getElementById('secret-input') ? document.getElementById('secret-input').value.trim() : '');
-if (secretVal.length < 4) { alert('🔒 Choisis un code secret (4 caractères minimum) pour protéger ton compte !'); return; }
-myProfile.secretCode = secretVal;
+    if (secretVal.length < 4) { alert('🔒 Choisis un code secret (4 caractères minimum) pour protéger ton compte !'); return; }
+    myProfile.secretCode = secretVal;
 
     if (isNaN(avatarVal) || avatarVal < 1) avatarVal = 1;
     if (avatarVal > 999) avatarVal = 999;
