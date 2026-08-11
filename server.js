@@ -142,7 +142,12 @@ io.on('connection', (socket) => {
           blitz_pass_premium: false, claimed_pass_tiers: {}
         };
         const { data: inserted, error: insertErr } = await supabase.from('players').insert([newRecord]).select().single();
-        playerData = (!insertErr && inserted) ? inserted : { ...newRecord, id: socket.id };
+        if (!insertErr && inserted) {
+    playerData = inserted;
+} else {
+    console.error("ERREUR INSERT SUPABASE :", insertErr ? insertErr.message : "aucune donnee");
+    playerData = { ...newRecord, id: socket.id };
+}
       }
       activePlayers[socket.id] = {
         socketId: socket.id, dbId: playerData.id || socket.id, id: socket.id,
