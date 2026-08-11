@@ -2161,8 +2161,9 @@ function leaveRoomIfInRoom() {
 }
 
 function hideAllScreens() {
+    setMenuFX(false);
     [
-        setMenuFX(false);
+        
         "screen-title",
         "screen-menu",
         "screen-solo-menu",
