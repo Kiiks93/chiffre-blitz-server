@@ -39,23 +39,22 @@ h1 {
 }
 
 .user-pill {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1.5px solid rgba(255, 255, 255, 0.25);
-    border-radius: 20px;
-    padding: 3px 10px 3px 4px;
-    font-size: 11px;
-    color: #00d2ff;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    white-space: nowrap;
-    max-width: 190px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-    transition: all 0.3s ease;
+background: rgba(255, 255, 255, 0.08);
+border: 1.5px solid rgba(255, 255, 255, 0.25);
+border-radius: 20px;
+padding: 4px 12px 4px 5px;
+font-size: 11px;
+color: #00d2ff;
+font-weight: bold;
+display: flex;
+align-items: center;
+flex-wrap: wrap;
+gap: 6px;
+cursor: pointer;
+white-space: nowrap;
+max-width: 240px;
+box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+transition: all 0.3s ease;
 }
 
 .user-pill.silver-frame,
@@ -159,25 +158,35 @@ h1 {
 }
 
 #user-name-display {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 75px;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+max-width: 110px;
+}
+#user-title-display {
+width: 100%;
+font-size: 9px;
+font-weight: bold;
+color: #f8b500;
+white-space: normal;
+line-height: 1.2;
+text-align: center;
+letter-spacing: 0.3px;
 }
 
 .tft-avatar-container {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #1e1035, #3c1e69);
-    border: 1.5px solid rgba(255, 255, 255, 0.25);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-    overflow: visible;
-    flex-shrink: 0;
+position: relative;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+width: 48px;
+height: 48px;
+border-radius: 50%;
+background: linear-gradient(135deg, #1e1035, #3c1e69);
+border: 1.5px solid rgba(255, 255, 255, 0.25);
+box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+overflow: visible;
+flex-shrink: 0;
 }
 
 .tft-avatar-container.silver-frame {
@@ -215,28 +224,28 @@ h1 {
 }
 
 .tft-avatar-icon {
-    font-size: 18px;
-    font-weight: 900;
-    z-index: 2;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
-    color: #fff;
+font-size: 22px;
+font-weight: 900;
+z-index: 2;
+filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+color: #fff;
 }
 
 .tft-flag-overlay {
-    position: absolute;
-    bottom: -3px;
-    right: -3px;
-    font-size: 11px;
-    background: #0f051d;
-    border-radius: 50%;
-    width: 16px;
-    height: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 3;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+position: absolute;
+bottom: -3px;
+right: -3px;
+font-size: 12px;
+background: #0f051d;
+border-radius: 50%;
+width: 18px;
+height: 18px;
+display: flex;
+align-items: center;
+justify-content: center;
+z-index: 3;
+border: 1px solid rgba(255, 255, 255, 0.3);
+box-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 .tft-avatar-large {
@@ -317,11 +326,9 @@ h1 {
     z-index: 3;
 }
 
-.lottie-avatar-badge,
-.lottie-avatar-large {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.tft-avatar-container .lottie-avatar-badge {
+width: 40px !important;
+height: 40px !important;
 }
 
 .emote-bubble {
