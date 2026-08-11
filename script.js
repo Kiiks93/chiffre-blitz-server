@@ -1404,6 +1404,11 @@ socket.on("admin_gift_received", (data) => {
     registerIfPossible();
 });
 
+socket.on('pass_reward_received', (data) => {
+const msg = data.message || "🎫 Récompense du Passe de Combat !";
+showNotificationToast(`🎫 <b>PASSE DE COMBAT !</b><br>` + msg, 'gift');
+});
+
 socket.on("global_announcement", (msg) => {
     showNotificationToast(`📢 <b>ANNONCE GLOBALE :</b><br>` + msg, "announcement");
 });
