@@ -645,6 +645,7 @@ let myProfile = {
     region: localStorage.getItem("cb_region") || "Hauts-de-France",
     avatar: parseInt(localStorage.getItem("cb_avatar")) || 1,
     flag: localStorage.getItem("cb_flag") || "🇫🇷",
+    secretCode: localStorage.getItem('cb_secret') || '',
     points: 0,
     coins: 0,
     trophies: 0,
@@ -665,6 +666,7 @@ let myProfile = {
 };
 
 let cachedOpponent = null;
+let pendingProfileValidation = false;
 let adCallbackFunction = null;
 let selectedRankedItems = [];
 let latestGlobalEvents = {};
@@ -1061,6 +1063,7 @@ function saveLocalPreferences() {
     localStorage.setItem("cb_region", myProfile.region);
     localStorage.setItem("cb_avatar", myProfile.avatar);
     localStorage.setItem("cb_flag", myProfile.flag);
+    if (myProfile.secretCode) localStorage.setItem('cb_secret', myProfile.secretCode);
 }
 
 function updateEconomyUI() {
@@ -1151,6 +1154,9 @@ function saveProfileFromModal() {
         alert("Ton pseudo doit contenir au moins 3 caractères !");
         return;
     }
+    const secretVal = (document.getElementById('secret-input') ? document.getElementById('secret-input').value.trim() : '');
+if (secretVal.length < 4) { alert('🔒 Choisis un code secret (4 caractères minimum) pour protéger ton compte !'); return; }
+myProfile.secretCode = secretVal;
 
     if (isNaN(avatarVal) || avatarVal < 1) avatarVal = 1;
     if (avatarVal > 999) avatarVal = 999;
@@ -1207,11 +1213,9 @@ function saveProfileFromModal() {
     saveLocalPreferences();
     updateEconomyUI();
 
-    document.getElementById("modal-username").style.display = "none";
-
-    registerIfPossible();
-    SoundEngine.init();
-    showTitleScreen();
+    pendingProfileValidation = true;
+registerIfPossible();
+SoundEngine.init();
 }
 
 function saveAvatarChoiceOnly() {
@@ -1300,6 +1304,19 @@ function promptProfileChange() {
 
     renderProfileCustomizationMenus();
     updateProfilePreview();
+    
+    let secretInput = document.getElementById('secret-input');
+if (!secretInput) {
+    const nameInput = document.getElementById('username-input');
+    secretInput = document.createElement('input');
+    secretInput.id = 'secret-input';
+    secretInput.type = 'password';
+    secretInput.maxLength = 12;
+    secretInput.placeholder = '🔒 Code secret (4 min)';
+    secretInput.style.cssText = 'width:100%; background:#0f051d; color:#fff; border:2px solid #ff007f; border-radius:8px; padding:8px; font-size:13px; margin-top:6px; box-sizing:border-box; text-align:center;';
+    nameInput.parentElement.insertBefore(secretInput, nameInput.nextSibling);
+}
+secretInput.value = '';
 
     document.getElementById("modal-username").style.display = "flex";
 }
@@ -1312,6 +1329,7 @@ function registerIfPossible() {
             avatar: myProfile.avatar,
             flag: myProfile.flag,
             inventory: myProfile.inventory
+            secretCode: myProfile.secretCode || localStorage.getItem('cb_secret') || ''
         });
     }
 }
@@ -1381,6 +1399,24 @@ socket.on("player_registered", (rawData) => {
 
     if (document.getElementById("screen-game").style.display === "block") {
         preparePowerHUD();
+    }
+});
+
+socket.on('register_result', (res) => {
+    if (!res.ok) {
+        pendingProfileValidation = false;
+        if (res.reason === 'taken') alert('❌ Ce pseudo est déjà pris ! Entre ton code secret pour le récupérer, ou choisis un autre pseudo.');
+        else if (res.reason === 'nocode') alert('🔒 Choisis un code secret (4 caractères minimum).');
+        else if (res.reason === 'short') alert('Ton pseudo doit contenir au moins 3 caractères !');
+        else alert('❌ Erreur de connexion au serveur. Réessaie.');
+        document.getElementById('modal-username').style.display = 'flex';
+        return;
+    }
+    if (pendingProfileValidation) {
+        pendingProfileValidation = false;
+        saveLocalPreferences();
+        document.getElementById('modal-username').style.display = 'none';
+        showTitleScreen();
     }
 });
 
