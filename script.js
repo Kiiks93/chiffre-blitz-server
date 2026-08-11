@@ -1212,12 +1212,12 @@ function saveProfileFromModal() {
         socket.emit("equip_cosmetic", "none");
     }
 
-    saveLocalPreferences();
+   saveLocalPreferences();
     updateEconomyUI();
-
-    pendingProfileValidation = true;
-registerIfPossible();
-SoundEngine.init();
+    document.getElementById("modal-username").style.display = "none";
+    showTitleScreen();
+    SoundEngine.init();
+    registerIfPossible();
 }
 
 function saveAvatarChoiceOnly() {
