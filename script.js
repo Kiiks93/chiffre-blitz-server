@@ -405,7 +405,7 @@ const SoundEngine = {
 
         this.currentMode = mode;
         this.step = 0;
-        this.bpm = (mode === "menu") ? 112 : 138;
+        this.bpm = (mode === "menu") ? 108 : 138;
 
         const intervalMs = (60 / this.bpm / 4) * 1000;
 
@@ -427,7 +427,6 @@ const SoundEngine = {
     const bar = Math.floor(step / 16);
     const inBar = step % 16;
 
-    // Accords : Am - F - C - G
     const chords = [
         { root: 110.00, notes: [220.00, 261.63, 329.63] },
         { root: 87.31, notes: [174.61, 220.00, 261.63] },
@@ -436,53 +435,49 @@ const SoundEngine = {
     ];
     const chord = chords[bar % 4];
 
-    // 🥁 Kick doux (juste pour le mouvement)
-    if (inBar % 4 === 0) {
+    // 🥁 Kick style GD mais doux, en demi-temps (groove chill)
+    if (inBar === 0 || inBar === 8) {
         const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(140, t);
-        osc.frequency.exponentialRampToValueAtTime(45, t + 0.09);
-        gain.gain.setValueAtTime(0.15, t);
+        osc.frequency.setValueAtTime(150, t);
+        osc.frequency.exponentialRampToValueAtTime(40, t + 0.1);
+        gain.gain.setValueAtTime(0.16, t);
         gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
         osc.connect(gain); gain.connect(this.ctx.destination);
         osc.start(t); osc.stop(t + 0.12);
     }
 
-    // 🎸 Basse ronde (début de mesure) + respiration (milieu)
-    if (inBar === 0) {
-        const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-        osc.type = 'sine';
+    // 🎩 Hat très léger
+    if (inBar % 4 === 2) {
+        const bufferSize = this.ctx.sampleRate * 0.03;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = this.ctx.createBufferSource(); noise.buffer = buffer;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'highpass'; filter.frequency.setValueAtTime(6000, t);
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.025, t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
+        noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+        noise.start(t);
+    }
+
+    // 🎸 Basse GD (sawtooth + lowpass) ronde et douce
+    if (inBar % 2 === 0) {
+        const osc = this.ctx.createOscillator(), filter = this.ctx.createBiquadFilter(), gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(chord.root, t);
-        gain.gain.setValueAtTime(0.09, t);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
-        osc.connect(gain); gain.connect(this.ctx.destination);
-        osc.start(t); osc.stop(t + 1.6);
-    }
-    if (inBar === 8) {
-        const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(chord.root * 2, t);
-        gain.gain.setValueAtTime(0.04, t);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
-        osc.connect(gain); gain.connect(this.ctx.destination);
-        osc.start(t); osc.stop(t + 0.5);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(600, t);
+        filter.frequency.exponentialRampToValueAtTime(180, t + 0.1);
+        gain.gain.setValueAtTime(0.055, t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
+        osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(t); osc.stop(t + 0.11);
     }
 
-    // 🌫️ Nappe d'accords (attaque lente, très douce)
-    if (inBar === 0) {
-        chord.notes.forEach((f) => {
-            const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-            o.type = 'triangle';
-            o.frequency.setValueAtTime(f, t);
-            g.gain.setValueAtTime(0.0001, t);
-            g.gain.linearRampToValueAtTime(0.018, t + 0.4);
-            g.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
-            o.connect(g); g.connect(this.ctx.destination);
-            o.start(t); o.stop(t + 2.2);
-        });
-    }
-
-    // 🎼 MÉLODIE fluide et legato (le cœur du morceau)
+    // 🎼 Mélodie GD (sawtooth filtré) legato et chantante
     if (inBar % 2 === 0) {
         const melodyA = [
             [440, 493.88, 523.25, 659.25, 587.33, 523.25, 493.88, 440],
@@ -500,25 +495,36 @@ const SoundEngine = {
         const note = table[bar % 4][inBar / 2];
 
         if (note > 0) {
-            // Voix principale : triangle, enveloppe legato (les notes se chevauchent)
-            const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-            osc.type = 'triangle';
+            const osc = this.ctx.createOscillator(), filter = this.ctx.createBiquadFilter(), gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(note, t);
-            gain.gain.setValueAtTime(0.0001, t);
-            gain.gain.linearRampToValueAtTime(0.055, t + 0.03);
-            gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.34);
-            osc.connect(gain); gain.connect(this.ctx.destination);
-            osc.start(t); osc.stop(t + 0.34);
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(1600, t);
+            filter.frequency.exponentialRampToValueAtTime(500, t + 0.22);
+            gain.gain.setValueAtTime(0.04, t);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
+            osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+            osc.start(t); osc.stop(t + 0.32);
+        }
+    }
 
-            // Doublure scintillante une octave plus haut (très discrète)
-            const o2 = this.ctx.createOscillator(), g2 = this.ctx.createGain();
-            o2.type = 'sine';
-            o2.frequency.setValueAtTime(note * 2, t);
-            g2.gain.setValueAtTime(0.0001, t);
-            g2.gain.linearRampToValueAtTime(0.012, t + 0.03);
-            g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
-            o2.connect(g2); g2.connect(this.ctx.destination);
-            o2.start(t); o2.stop(t + 0.3);
+    // 🌫️ Nappe d'accords douce + lueur du fond qui pulse sur la musique
+    if (inBar === 0) {
+        chord.notes.forEach((f) => {
+            const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(f, t);
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.linearRampToValueAtTime(0.015, t + 0.4);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
+            o.connect(g); g.connect(this.ctx.destination);
+            o.start(t); o.stop(t + 2.2);
+        });
+
+        const glow = document.getElementById('bg-glow');
+        if (glow) {
+            glow.style.opacity = '0.22';
+            setTimeout(() => { glow.style.opacity = '0.08'; }, 350);
         }
     }
 },
