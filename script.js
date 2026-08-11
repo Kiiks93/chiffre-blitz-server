@@ -1551,6 +1551,7 @@ let logoClickTimer = null;
 document.addEventListener("DOMContentLoaded", () => {
     applyTranslations();
     updateEconomyUI();
+    initMenuBackgroundFX();
     checkAndShowProfileModal();
 
     const mainLogo = document.querySelector("h1");
@@ -2161,6 +2162,7 @@ function leaveRoomIfInRoom() {
 
 function hideAllScreens() {
     [
+        setMenuFX(false);
         "screen-title",
         "screen-menu",
         "screen-solo-menu",
@@ -2199,7 +2201,38 @@ function hideAllScreens() {
 
     isTimeFrozen = false;
 }
+function initMenuBackgroundFX() {
+    if (document.getElementById('bg-fx')) return;
 
+    const fx = document.createElement('div');
+    fx.id = 'bg-fx';
+
+    const glow = document.createElement('div');
+    glow.id = 'bg-glow';
+    fx.appendChild(glow);
+
+    const shapes = ['◆', '▲', '■', '●'];
+    const colors = ['#00d2ff', '#ff007f', '#ffe600', '#00ff88'];
+
+    for (let i = 0; i < 12; i++) {
+        const s = document.createElement('div');
+        s.className = 'bg-shape';
+        s.innerText = shapes[i % shapes.length];
+        s.style.fontSize = (14 + Math.random() * 26) + 'px';
+        s.style.left = Math.random() * 100 + '%';
+        s.style.color = colors[i % colors.length];
+        s.style.animationDuration = (14 + Math.random() * 16) + 's';
+        s.style.animationDelay = (-Math.random() * 25) + 's';
+        fx.appendChild(s);
+    }
+
+    document.body.appendChild(fx);
+}
+
+function setMenuFX(visible) {
+    const fx = document.getElementById('bg-fx');
+    if (fx) fx.style.opacity = visible ? '1' : '0';
+}
 function showTitleScreen() {
     hideAllScreens();
 
@@ -2208,6 +2241,7 @@ function showTitleScreen() {
     document.getElementById("screen-title").style.display = "block";
 
     SoundEngine.startMusic("menu");
+    setMenuFX(true);
 }
 
 function showMainMenu() {
@@ -2221,6 +2255,7 @@ function showMainMenu() {
 
     if (menuEl) {
         menuEl.style.display = "flex";
+        setMenuFX(true);
     }
 
     SoundEngine.startMusic("menu");
