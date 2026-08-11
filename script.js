@@ -405,7 +405,7 @@ const SoundEngine = {
 
         this.currentMode = mode;
         this.step = 0;
-        this.bpm = (mode === "menu") ? 100 : 138;
+        this.bpm = (mode === "menu") ? 126 : 138;
 
         const intervalMs = (60 / this.bpm / 4) * 1000;
 
@@ -424,70 +424,90 @@ const SoundEngine = {
 
     tickMenu8Bit(step) {
     const t = this.ctx.currentTime;
-
-    // 8 mesures de 16 pas = boucle d'environ 20 secondes
     const bar = Math.floor(step / 16);
     const inBar = step % 16;
 
-    // Progression d'accords : Am - F - C - G
-    const chords = [
-        { bass: 110.00, notes: [220.00, 261.63, 329.63] },
-        { bass: 87.31, notes: [174.61, 220.00, 261.63] },
-        { bass: 130.81, notes: [261.63, 329.63, 392.00] },
-        { bass: 98.00, notes: [196.00, 246.94, 293.66] }
-    ];
-    const chord = chords[bar % 4];
+    // Progression : Am - F - C - G
+    const roots = [110.00, 87.31, 130.81, 98.00];
+    const root = roots[bar % 4];
 
-    // Basse douce + nappe d'accord légère au début de chaque mesure
-    if (inBar === 0) {
-        const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(chord.bass, t);
-        gain.gain.setValueAtTime(0.07, t);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.8);
-        osc.connect(gain); gain.connect(this.ctx.destination);
-        osc.start(t); osc.stop(t + 1.8);
-
-        chord.notes.forEach((f) => {
-            const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-            o.type = 'triangle';
-            o.frequency.setValueAtTime(f, t);
-            g.gain.setValueAtTime(0.0001, t);
-            g.gain.linearRampToValueAtTime(0.02, t + 0.5);
-            g.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
-            o.connect(g); g.connect(this.ctx.destination);
-            o.start(t); o.stop(t + 2.2);
-        });
-    }
-
-    // Mélodie aérée (1 note par temps, avec des silences)
-    // Section A (mesures 0-3) et Section B (mesures 4-7)
+    // 🥁 KICK : four-on-the-floor
     if (inBar % 4 === 0) {
-        const seqA = [440, 523.25, 659.25, 587.33, 523.25, 440, 392, 440, 523.25, 587.33, 659.25, 783.99, 659.25, 587.33, 523.25, 0];
-        const seqB = [880, 783.99, 659.25, 587.33, 523.25, 587.33, 659.25, 0, 440, 523.25, 587.33, 659.25, 523.25, 0, 440, 0];
-        const seq = (bar < 4) ? seqA : seqB;
-        const note = seq[(bar % 4) * 4 + (inBar / 4)];
-
-        if (note > 0) {
-            const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(note, t);
-            gain.gain.setValueAtTime(0.035, t);
-            gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
-            osc.connect(gain); gain.connect(this.ctx.destination);
-            osc.start(t); osc.stop(t + 0.6);
-        }
-    }
-
-    // Petit scintillement discret toutes les 2 mesures
-    if (inBar === 8 && bar % 2 === 0) {
         const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(chord.notes[2] * 2, t);
-        gain.gain.setValueAtTime(0.015, t);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.0);
+        osc.frequency.setValueAtTime(150, t);
+        osc.frequency.exponentialRampToValueAtTime(40, t + 0.1);
+        gain.gain.setValueAtTime(0.22, t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
         osc.connect(gain); gain.connect(this.ctx.destination);
-        osc.start(t); osc.stop(t + 1.0);
+        osc.start(t); osc.stop(t + 0.13);
+    }
+
+    // 👏 SNARE sur les temps 2 et 4
+    if (inBar === 4 || inBar === 12) {
+        const bufferSize = this.ctx.sampleRate * 0.08;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1800, t);
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.09, t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+        noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+        noise.start(t);
+    }
+
+    // 🎩 HI-HAT off-beat
+    if (inBar % 4 === 2) {
+        const bufferSize = this.ctx.sampleRate * 0.03;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.setValueAtTime(7000, t);
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.05, t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
+        noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+        noise.start(t);
+    }
+
+    // 🎸 BASSE : croches pumpées
+    if (inBar % 2 === 0) {
+        const osc = this.ctx.createOscillator(), filter = this.ctx.createBiquadFilter(), gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime((inBar % 8 === 6) ? root * 2 : root, t);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(900, t);
+        filter.frequency.exponentialRampToValueAtTime(250, t + 0.1);
+        gain.gain.setValueAtTime(0.08, t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
+        osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(t); osc.stop(t + 0.11);
+    }
+
+    // 🎹 LEAD : riff énergique, section A (mesures 0-3) / B (mesures 4-7)
+    const melodyA = [440, 0, 0, 523.25, 0, 0, 659.25, 0, 880, 0, 659.25, 0, 587.33, 0, 523.25, 0];
+    const melodyB = [523.25, 0, 659.25, 0, 880, 0, 783.99, 0, 659.25, 0, 587.33, 0, 523.25, 0, 440, 0];
+    const note = (bar < 4 ? melodyA : melodyB)[inBar];
+
+    if (note > 0) {
+        const osc = this.ctx.createOscillator(), filter = this.ctx.createBiquadFilter(), gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(note, t);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(2500, t);
+        gain.gain.setValueAtTime(0.04, t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
+        osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(t); osc.stop(t + 0.15);
     }
 },
 
