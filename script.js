@@ -1041,8 +1041,6 @@ else if (res.reason === 'no_account') { alert("❌ Ce profil n'existe pas ! Util
 else if (res.reason === 'nocode') alert('🔒 Entre un code secret (4 caractères minimum).');
 else if (res.reason === 'short') alert('Ton pseudo doit contenir au moins 3 caractères !');
 else alert('❌ Erreur de connexion au serveur. Réessaie.');
-promptProfileChange();
-return;
 }
 if (pendingProfileValidation) {
 pendingProfileValidation = false;
