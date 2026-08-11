@@ -526,6 +526,7 @@ claimedPassTiers: {}
 };
 let cachedOpponent = null;
 let pendingProfileValidation = false;
+let pendingCustomization = false;
 function switchAccount() {
 localStorage.removeItem('cb_username');
 localStorage.removeItem('cb_secret');
@@ -980,54 +981,39 @@ if (secretInput) secretInput.placeholder = (mode === 'create') ? '🔒 Choisis u
                             
 function promptProfileChange() {
 document.getElementById("username-input").value = isProfileValid() ? myProfile.username : "";
-if (myProfile.region) {
-    document.getElementById("region-input").value = myProfile.region;
-}
+if (myProfile.region) document.getElementById("region-input").value = myProfile.region;
 document.getElementById("avatar-input").value = myProfile.avatar || 1;
 document.getElementById("flag-input").value = myProfile.flag || "🇫🇷";
-const equippedAvatar = myProfile.inventory &&
-    myProfile.inventory.__equipped &&
-    myProfile.inventory.__equipped.avatar;
+const equippedAvatar = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar;
 activeAvatarChoice = equippedAvatar || "standard";
 renderProfileCustomizationMenus();
 updateProfilePreview();
-
 let secretInput = document.getElementById('secret-input');
 if (!secretInput) {
-    const nameInput = document.getElementById('username-input');
-    secretInput = document.createElement('input');
-    secretInput.id = 'secret-input';
-    secretInput.type = 'password';
-    secretInput.maxLength = 12;
-    secretInput.placeholder = '🔒 Code secret (4 min)';
-    secretInput.style.cssText = 'width:100%; background:#0f051d; color:#fff; border:2px solid #ff007f; border-radius:8px; padding:8px; font-size:13px; margin-top:6px; box-sizing:border-box; text-align:center;';
-    nameInput.parentElement.insertBefore(secretInput, nameInput.nextSibling);
+const nameInput = document.getElementById('username-input');
+secretInput = document.createElement('input');
+secretInput.id = 'secret-input';
+secretInput.type = 'password';
+secretInput.maxLength = 12;
+secretInput.placeholder = '🔒 Code secret (4 min)';
+secretInput.style.cssText = 'width:100%; background:#0f051d; color:#fff; border:2px solid #ff007f; border-radius:8px; padding:8px; font-size:13px; margin-top:6px; box-sizing:border-box; text-align:center;';
+nameInput.parentElement.insertBefore(secretInput, nameInput.nextSibling);
 }
 secretInput.value = '';
-
-// 🔓 Séparation COMPTE / PERSONNALISATION
 const alreadyLogged = isProfileValid() && localStorage.getItem('cb_secret');
 secretInput.style.display = alreadyLogged ? 'none' : 'block';
 const nameField = document.getElementById('username-input');
 if (nameField) nameField.disabled = alreadyLogged;
-
 let switchBtn = document.getElementById('switch-account-btn');
 if (!switchBtn) {
-    switchBtn = document.createElement('div');
-    switchBtn.id = 'switch-account-btn';
-    switchBtn.innerText = '🔑 Changer de compte';
-    switchBtn.style.cssText = 'margin-top:6px; font-size:10px; color:#00d2ff; cursor:pointer; text-decoration:underline;';
-    switchBtn.onclick = switchAccount;
-    secretInput.parentElement.insertBefore(switchBtn, secretInput.nextSibling);
+switchBtn = document.createElement('div');
+switchBtn.id = 'switch-account-btn';
+switchBtn.innerText = '🔑 Changer de compte';
+switchBtn.style.cssText = 'margin-top:6px; font-size:10px; color:#00d2ff; cursor:pointer; text-decoration:underline;';
+switchBtn.onclick = switchAccount;
+secretInput.parentElement.insertBefore(switchBtn, secretInput.nextSibling);
 }
 switchBtn.style.display = alreadyLogged ? 'block' : 'none';
-
-const validateBtn = document.querySelector('[onclick="saveProfileFromModal()"]');
-if (validateBtn) validateBtn.innerText = alreadyLogged ? '💾 Enregistrer ma personnalisation' : 'VALIDER & JOUER ⚡';
-
-document.getElementById("modal-username").style.display = "flex";
-}
-
 let tabBar = document.getElementById('profile-tabs');
 if (!tabBar) {
 tabBar = document.createElement('div');
@@ -1038,16 +1024,15 @@ tabBar.innerHTML = '<button type="button" class="tab-btn" id="profile-tab-create
 const card = document.getElementById('modal-username').querySelector('.modal-card');
 card.insertBefore(tabBar, card.children[1] || null);
 }
-
 const avBtn = document.querySelector('[onclick="saveAvatarChoiceOnly()"]');
 if (avBtn) avBtn.style.display = 'none';
-
 const validateBtn = document.querySelector('[onclick="saveProfileFromModal()"]');
 if (validateBtn && !validateBtn.id) validateBtn.id = 'btn-validate-profile';
-
+if (validateBtn) validateBtn.innerText = alreadyLogged ? '💾 Enregistrer ma personnalisation' : 'VALIDER & JOUER ⚡';
 setProfileMode(profileMode);
 document.getElementById("modal-username").style.display = "flex";
 }
+
 function registerIfPossible() {
 if (isProfileValid() && socket.connected) {
 socket.emit("register_player", {
@@ -1098,18 +1083,31 @@ if (document.getElementById("modal-blitz-pass").style.display === "flex") render
 if (document.getElementById("screen-game").style.display === "block") preparePowerHUD();
 });
 
+socket.on('register_result', (res) => {
+if (!res.ok) {
+pendingProfileValidation = false;
+if (res.reason === 'taken') alert("❌ Ce pseudo est déjà pris ! Entre ton code secret pour le récupérer, ou choisis un autre pseudo.");
+else if (res.reason === 'exists') { alert("❌ Ce pseudo existe déjà ! Utilise l'onglet « Se connecter »."); setProfileMode('login'); }
+else if (res.reason === 'no_account') { alert("❌ Ce profil n'existe pas ! Utilise l'onglet « Créer un profil »."); setProfileMode('create'); }
+else if (res.reason === 'nocode') alert("🔒 Entre ton code secret (4 caractères minimum).");
+else if (res.reason === 'short') alert("Ton pseudo doit contenir au moins 3 caractères !");
+else alert("❌ Erreur de connexion au serveur. Réessaie.");
+promptProfileChange();
+return;
+}
 if (pendingProfileValidation) {
 pendingProfileValidation = false;
 saveLocalPreferences();
 document.getElementById('modal-username').style.display = 'none';
 if (pendingCustomization) {
-    pendingCustomization = false;
-    updateEconomyUI();
+pendingCustomization = false;
+updateEconomyUI();
 } else {
-    showTitleScreen();
+showTitleScreen();
 }
 }
 });
+
 socket.on("blitz_pass_updated", (data) => {
 if (data.coins !== undefined) myProfile.coins = data.coins;
 if (data.blitzPassPremium !== undefined) myProfile.blitzPassPremium = data.blitzPassPremium;
