@@ -646,22 +646,23 @@ region: localStorage.getItem("cb_region") || "Hauts-de-France",
 avatar: parseInt(localStorage.getItem("cb_avatar")) || 1,
 flag: localStorage.getItem("cb_flag") || "🇫🇷",
 secretCode: localStorage.getItem('cb_secret') || '',
-    points: 0,
-    coins: 0,
-    trophies: 0,
-    wins: 0,
-    losses: 0,
-    inventory.__equipped: {
-            title: localStorage.getItem("cb_equipped_title") || "",
-            frame: localStorage.getItem("cb_equipped_frame") || "",
-            theme: localStorage.getItem("cb_equipped_theme") || ""
-        }
-    },
-    unlocked_items: [],
-    equippedPower: null,
-    equippedPowers: [],
-    blitzPassPremium: false,
-    claimedPassTiers: {}
+points: 0,
+coins: 0,
+trophies: 0,
+wins: 0,
+losses: 0,
+inventory: {
+__equipped: {
+title: localStorage.getItem("cb_equipped_title") || "",
+frame: localStorage.getItem("cb_equipped_frame") || "",
+theme: localStorage.getItem("cb_equipped_theme") || ""
+}
+},
+unlocked_items: [],
+equippedPower: null,
+equippedPowers: [],
+blitzPassPremium: false,
+claimedPassTiers: {}
 };
 
 let cachedOpponent = null;
