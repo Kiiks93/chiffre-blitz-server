@@ -1322,16 +1322,16 @@ secretInput.value = '';
 }
 
 function registerIfPossible() {
-    if (isProfileValid() && socket.connected) {
-        socket.emit("register_player", {
-            username: myProfile.username,
-            region: myProfile.region,
-            avatar: myProfile.avatar,
-            flag: myProfile.flag,
-            inventory: myProfile.inventory
-            secretCode: myProfile.secretCode || localStorage.getItem('cb_secret') || ''
-        });
-    }
+if (isProfileValid() && socket.connected) {
+socket.emit("register_player", {
+username: myProfile.username,
+region: myProfile.region,
+avatar: myProfile.avatar,
+flag: myProfile.flag,
+inventory: myProfile.inventory,
+secretCode: myProfile.secretCode || localStorage.getItem('cb_secret') || ''
+});
+}
 }
 
 socket.on("player_registered", (rawData) => {
@@ -3095,13 +3095,12 @@ socket.on("pass_tier_claimed", (data) => {
 });
 
 socket.on("pass_claim_denied", (data) => {
-    if (data.reason === "premium_required") {
-        showNotificationToast("❌ Tu dois acheter le Passe Premium pour récupérer cette récompense !", "announcement");
-    } else if (data.reason === "already_claimed") {
-        showNotificationToast("❌ Cette récompense a déjà été récupérée.", "announcement");
-    }
-
-    renderBlitzPass();
+if (data.reason === "premium_required") {
+showNotificationToast("❌ Tu dois acheter le Passe Premium pour récupérer cette récompense !", "announcement");
+} else if (data.reason === "already_claimed") {
+showNotificationToast("❌ Cette récompense a déjà été récupérée.", "announcement");
+}
+renderBlitzPass();
 });
 
 /* ============================================================
