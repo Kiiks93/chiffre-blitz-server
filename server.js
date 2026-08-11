@@ -421,9 +421,7 @@ io.on('connection', (socket) => {
                 claimedPassTiers: player.claimedPassTiers
             });
 
-            socket.emit('admin_gift_received', {
-                message: "🎉 Passe de Combat Premium activé avec succès !"
-            });
+           socket.emit('pass_reward_received', { message: "🎉 Passe de Combat Premium activé avec succès !" });
         } else {
             socket.emit('room_error', "Tu n'as pas assez de pièces 🪙 !");
         }
@@ -466,9 +464,7 @@ io.on('connection', (socket) => {
         socket.emit('player_registered', player);
         socket.emit('pass_tier_claimed', { tier, track });
 
-        socket.emit('admin_gift_received', {
-            message: `🎁 Récompense du Palier ${tier} (${track}) enregistrée !`
-        });
+       socket.emit('pass_reward_received', { message: `🎁 Récompense du Palier ${tier} (${track}) récupérée !` });
     });
 
         /* ============================================================
