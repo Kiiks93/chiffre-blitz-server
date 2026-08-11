@@ -641,18 +641,17 @@ socket.on("connect", () => {
 });
 
 let myProfile = {
-    username: localStorage.getItem("cb_username") || "",
-    region: localStorage.getItem("cb_region") || "Hauts-de-France",
-    avatar: parseInt(localStorage.getItem("cb_avatar")) || 1,
-    flag: localStorage.getItem("cb_flag") || "🇫🇷",
-    secretCode: localStorage.getItem('cb_secret') || '',
+username: localStorage.getItem("cb_username") || "",
+region: localStorage.getItem("cb_region") || "Hauts-de-France",
+avatar: parseInt(localStorage.getItem("cb_avatar")) || 1,
+flag: localStorage.getItem("cb_flag") || "🇫🇷",
+secretCode: localStorage.getItem('cb_secret') || '',
     points: 0,
     coins: 0,
     trophies: 0,
     wins: 0,
     losses: 0,
-    inventory: {
-        __equipped: {
+    inventory.__equipped: {
             title: localStorage.getItem("cb_equipped_title") || "",
             frame: localStorage.getItem("cb_equipped_frame") || "",
             theme: localStorage.getItem("cb_equipped_theme") || ""
@@ -717,21 +716,20 @@ function parsePlayer(p) {
 }
 
 function getRankName(points) {
-    if (points >= 1300) return currentLang === "fr" ? "Calculateur ⚡" : "Calculator ⚡";
-    if (points >= 700) return currentLang === "fr" ? "Expert 🧠" : "Expert 🧠";
-    if (points >= 300) return currentLang === "fr" ? "Chiffre 🔢" : "Cipher 🔢";
-
-    return currentLang === "fr" ? "Novice 🌱" : "Novice 🌱";
+if (points >= 1300) return currentLang === "fr" ? "Calculateur ⚡" : "Calculator ⚡";
+if (points >= 700) return currentLang === "fr" ? "Expert 🧠" : "Expert 🧠";
+if (points >= 300) return currentLang === "fr" ? "Chiffre 🔢" : "Cipher 🔢";
+return currentLang === "fr" ? "Novice 🌱" : "Novice 🌱";
 }
 
 function getFrameClass(equippedFrame) {
-    const FRAME_CLASS_MAP = {
-        "frame_silver": "silver-frame",
-        "frame_chroma": "chroma-frame",
-        "frame_prism": "prism-frame",
-        "frame_voltage": "voltage-frame",
-        "frame_obsidian": "obsidian-frame"
-    };
+   const FRAME_CLASS_MAP = {
+"frame_silver": "silver-frame",
+"frame_chroma": "chroma-frame",
+"frame_prism": "prism-frame",
+"frame_voltage": "voltage-frame",
+"frame_obsidian": "obsidian-frame"
+};
 
     return FRAME_CLASS_MAP[equippedFrame] || "";
 }
@@ -917,20 +915,19 @@ function renderProfileAvatarSelector() {
 }
 
 const TITLE_DISPLAY_NAMES = {
-    "title_stalker": "Stalker Numérique",
-    "title_felin": "Réflexe Félin",
-    "title_neon": "Pulsion Néon",
-    "title_spectre": "Spectre Cosmique",
-    "title_supreme": "⚡ FÉLIN SUPRÊME",
-    "title_champion": "🏅 Champion Éclair"
+"title_stalker": "Stalker Numérique",
+"title_felin": "Réflexe Félin",
+"title_neon": "Pulsion Néon",
+"title_spectre": "Spectre Cosmique",
+"title_supreme": "⚡ FÉLIN SUPRÊME",
+"title_champion": "🏅 Champion Éclair"
 };
-
 const FRAME_DISPLAY_NAMES = {
-    "frame_silver": "🛡️ Cadre « Argenté »",
-    "frame_chroma": "🌈 Cadre « Flux Chroma »",
-    "frame_prism": "✨ Cadre « Prisme Solaire »",
-    "frame_voltage": "⚡ Cadre « Sous Tension »",
-    "frame_obsidian": "🖤 Cadre « Obsidienne »"
+"frame_silver": "🛡️ Cadre « Argenté »",
+"frame_chroma": "🌈 Cadre « Flux Chroma »",
+"frame_prism": "✨ Cadre « Prisme Solaire »",
+"frame_voltage": "⚡ Cadre « Sous Tension »",
+"frame_obsidian": "🖤 Cadre « Obsidienne »"
 };
 
 const THEME_DISPLAY_NAMES = {
@@ -1543,18 +1540,18 @@ socket.on("events_state_update", (events) => {
     }
 });
 
-const POWERS_CATALOG = [
-    { id: "spotlight", price: 300, type: "bonus" },
-    { id: "freeze", price: 700, type: "bonus" },
-    { id: "joker", price: 1200, type: "bonus" },
-    { id: "nova", price: 2500, type: "bonus" },
-    { id: "quake", price: 400, type: "malus" },
-    { id: "micro", price: 800, type: "malus" },
-    { id: "eclipse", price: 1500, type: "malus" },
-    { id: "chaos", price: 4000, type: "malus" },
-    { id: "theme_glacial", price: 1200, type: "cosmetics" },
-    { id: "frame_voltage", price: 2200, type: "cosmetics" },
-    { id: "frame_obsidian", price: 4500, type: "cosmetics" }
+  const POWERS_CATALOG = [
+{ id: "spotlight", price: 300, type: "bonus" },
+{ id: "freeze", price: 700, type: "bonus" },
+{ id: "joker", price: 1200, type: "bonus" },
+{ id: "nova", price: 2500, type: "bonus" },
+{ id: "quake", price: 400, type: "malus" },
+{ id: "micro", price: 800, type: "malus" },
+{ id: "eclipse", price: 1500, type: "malus" },
+{ id: "chaos", price: 4000, type: "malus" },
+{ id: "theme_glacial", price: 1200, type: "cosmetics" },
+{ id: "frame_voltage", price: 2200, type: "cosmetics" },
+{ id: "frame_obsidian", price: 4500, type: "cosmetics" }
 ];
 
 let currentMatchCharges = {};
