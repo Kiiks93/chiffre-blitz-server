@@ -939,7 +939,12 @@ profileMode = mode;
 const tc = document.getElementById('profile-tab-create');
 const tl = document.getElementById('profile-tab-login');
 if (tc) tc.classList.toggle('active', mode === 'create');
-if (tl) tl.classList.toggle('active
+if (tl) tl.classList.toggle('active', mode === 'login');
+const validateBtn = document.getElementById('btn-validate-profile');
+if (validateBtn) validateBtn.innerText = (mode === 'create') ? 'CRÉER MON PROFIL ⚡' : 'SE CONNECTER ⚡';
+const secretInput = document.getElementById('secret-input');
+if (secretInput) secretInput.placeholder = (mode === 'create') ? '🔒 Choisis un code secret (4 min)' : '🔒 Entre ton code secret';
+}
                             
 function promptProfileChange() {
 document.getElementById("username-input").value = isProfileValid() ? myProfile.username : "";
@@ -1032,23 +1037,16 @@ if (document.getElementById("modal-shop").style.display === "flex") switchShopTa
 if (document.getElementById("modal-blitz-pass").style.display === "flex") renderBlitzPass();
 if (document.getElementById("screen-game").style.display === "block") preparePowerHUD();
 });
+
 socket.on('register_result', (res) => {
 if (!res.ok) {
 pendingProfileValidation = false;
-if (res.reason === 'taken') alert("❌ Code secret incorrect ! Ce pseudo appartient à un autre joueur.");
+if (res.reason === 'taken') alert("❌ Ce pseudo est déjà pris ! Entre ton code secret pour le récupérer, ou choisis un autre pseudo.");
 else if (res.reason === 'exists') { alert("❌ Ce pseudo existe déjà ! Utilise l'onglet « Se connecter »."); setProfileMode('login'); }
 else if (res.reason === 'no_account') { alert("❌ Ce profil n'existe pas ! Utilise l'onglet « Créer un profil »."); setProfileMode('create'); }
 else if (res.reason === 'nocode') alert('🔒 Entre un code secret (4 caractères minimum).');
 else if (res.reason === 'short') alert('Ton pseudo doit contenir au moins 3 caractères !');
 else alert('❌ Erreur de connexion au serveur. Réessaie.');
-}
-if (pendingProfileValidation) {
-pendingProfileValidation = false;
-saveLocalPreferences();
-document.getElementById('modal-username').style.display = 'none';
-showTitleScreen();
-}
-});
 promptProfileChange();
 return;
 }
