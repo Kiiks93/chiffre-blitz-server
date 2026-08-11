@@ -215,93 +215,104 @@ io.on('connection', (socket) => {
     ============================================================ */
 
     socket.on('register_player', async (data) => {
-        const rawUsername = data.username ? data.username.trim() : "Joueur";
+    const rawUsername = (data.username || '').trim();
+    const secretCode = (data.secretCode || '').trim();
 
-        try {
-            let { data: matchedPlayers, error } = await supabase
-                .from('players')
-                .select('*')
-                .ilike('username', rawUsername);
+    if (rawUsername.length < 3) {
+        socket.emit('register_result', { ok: false, reason: 'short' });
+        return;
+    }
 
-            let dbPlayer = matchedPlayers && matchedPlayers.length > 0 ? matchedPlayers[0] : null;
-            let playerData;
+    if (secretCode.length < 4) {
+        socket.emit('register_result', { ok: false, reason: 'nocode' });
+        return;
+    }
 
-            if (error || !dbPlayer) {
-                const newRecord = {
-                    username: rawUsername,
-                    region: data.region || "Hauts-de-France",
-                    country: data.country || "FR",
-                    avatar: data.avatar || 1,
-                    flag: data.flag || "🇫🇷",
-                    points: 0,
-                    coins: 100,
-                    trophies: 0,
-                    wins: 0,
-                    losses: 0,
-                    inventory: {},
-                    equipped_power: null,
-                    unlocked_items: [],
-                    blitz_pass_premium: false,
-                    claimed_pass_tiers: {}
-                };
+    try {
+        let { data: matchedPlayers, error } = await supabase
+            .from('players')
+            .select('*')
+            .ilike('username', rawUsername);
 
-                const { data: inserted, error: insertErr } = await supabase
-                    .from('players')
-                    .insert([newRecord])
-                    .select()
-                    .single();
+        let playerData;
 
-                if (!insertErr && inserted) {
-                    playerData = inserted;
-                } else {
-                    playerData = { ...newRecord, id: socket.id };
-                }
-            } else {
-                playerData = dbPlayer;
+        if (!error && matchedPlayers && matchedPlayers.length > 0) {
+            const existing = matchedPlayers[0];
+            const storedCode = (existing.secret_code || '').trim();
 
-                const { data: updated } = await supabase
-                    .from('players')
-                    .update({
-                        region: data.region || dbPlayer.region,
-                        avatar: data.avatar || dbPlayer.avatar,
-                        flag: data.flag || dbPlayer.flag
-                    })
-                    .eq('id', dbPlayer.id)
-                    .select()
-                    .single();
-
-                if (updated) {
-                    playerData = updated;
-                }
+            // 🛡️ Pseudo déjà pris ET mauvais code secret → REFUSÉ
+            if (storedCode && storedCode.toLowerCase() !== secretCode.toLowerCase()) {
+                socket.emit('register_result', { ok: false, reason: 'taken' });
+                return;
             }
 
-            activePlayers[socket.id] = {
-                socketId: socket.id,
-                dbId: playerData.id || socket.id,
-                id: socket.id,
-                username: playerData.username,
-                region: playerData.region,
-                country: playerData.country || "FR",
-                avatar: playerData.avatar,
-                flag: playerData.flag,
-                points: playerData.points || 0,
-                coins: playerData.coins || 0,
-                trophies: playerData.trophies || 0,
-                wins: playerData.wins || 0,
-                losses: playerData.losses || 0,
-                inventory: playerData.inventory || {},
-                equippedPower: playerData.equipped_power || null,
-                equippedPowers: [],
-                unlocked_items: playerData.unlocked_items || [],
-                blitzPassPremium: playerData.blitz_pass_premium || false,
-                claimedPassTiers: playerData.claimed_pass_tiers || {}
+            // ✅ Récupération de compte (ou 1ère connexion d'un ancien compte sans code)
+            const updates = {
+                region: data.region || existing.region,
+                avatar: data.avatar || existing.avatar,
+                flag: data.flag || existing.flag
+            };
+            if (!storedCode) updates.secret_code = secretCode;
+
+            const { data: updated } = await supabase
+                .from('players')
+                .update(updates)
+                .eq('id', existing.id)
+                .select()
+                .single();
+
+            playerData = updated || existing;
+        } else {
+            // 🆕 Création d'un nouveau compte
+            const newRecord = {
+                username: rawUsername,
+                secret_code: secretCode,
+                region: data.region || "Hauts-de-France",
+                country: data.flag ? data.flag.replace(/['"]/g, '').trim() : "FR",
+                avatar: data.avatar || 1,
+                flag: data.flag || "🇫🇷",
+                points: 0, coins: 100, trophies: 0, wins: 0, losses: 0,
+                inventory: {}, equipped_power: null, unlocked_items: [],
+                blitz_pass_premium: false, claimed_pass_tiers: {}
             };
 
-            socket.emit('player_registered', activePlayers[socket.id]);
-        } catch (err) {
-            console.error("Erreur lors de l'enregistrement Supabase :", err);
+            const { data: inserted, error: insertErr } = await supabase
+                .from('players')
+                .insert([newRecord])
+                .select()
+                .single();
+
+            if (!insertErr && inserted) playerData = inserted;
+            else playerData = { ...newRecord, id: socket.id };
         }
-    });
+
+        activePlayers[socket.id] = {
+            socketId: socket.id,
+            dbId: playerData.id || socket.id,
+            id: socket.id,
+            username: playerData.username,
+            region: playerData.region,
+            avatar: playerData.avatar,
+            flag: playerData.flag,
+            points: playerData.points || 0,
+            coins: playerData.coins || 0,
+            trophies: playerData.trophies || 0,
+            wins: playerData.wins || 0,
+            losses: playerData.losses || 0,
+            inventory: playerData.inventory || {},
+            equippedPower: playerData.equipped_power || null,
+            unlocked_items: playerData.unlocked_items || [],
+            blitzPassPremium: playerData.blitz_pass_premium || false,
+            claimedPassTiers: playerData.claimed_pass_tiers || {}
+        };
+
+        socket.emit('register_result', { ok: true });
+        socket.emit('player_registered', activePlayers[socket.id]);
+    } catch (err) {
+        console.error("Erreur lors de l'enregistrement Supabase :", err);
+        socket.emit('register_result', { ok: false, reason: 'error' });
+    }
+});
 
     /* ============================================================
        BOUTIQUE
