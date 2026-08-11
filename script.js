@@ -526,6 +526,12 @@ claimedPassTiers: {}
 };
 let cachedOpponent = null;
 let pendingProfileValidation = false;
+function switchAccount() {
+localStorage.removeItem('cb_username');
+localStorage.removeItem('cb_secret');
+myProfile.secretCode = '';
+promptProfileChange();
+}
 let adCallbackFunction = null;
 let selectedRankedItems = [];
 let latestGlobalEvents = {};
@@ -828,58 +834,84 @@ const selectedFrameId = document.getElementById("frame-input").value;
 const selectedThemeId = document.getElementById("theme-input").value;
 let avatarVal = parseInt(document.getElementById("avatar-input").value);
 const flagVal = document.getElementById("flag-input").value;
-if (nameInput.length < 3) { alert("Ton pseudo doit contenir au moins 3 caractères !"); return; }
-const secretVal = (document.getElementById('secret-input') ? document.getElementById('secret-input').value.trim() : '');
-if (secretVal.length < 4) { alert('🔒 Choisis un code secret (4 caractères minimum) pour protéger ton compte !'); return; }
-myProfile.secretCode = secretVal;
+
+if (nameInput.length < 3) {
+    alert("Ton pseudo doit contenir au moins 3 caractères !");
+    return;
+}
+
+// 💡 Déjà connecté + pseudo inchangé = simple personnalisation (PAS de code demandé)
+const savedSecret = localStorage.getItem('cb_secret') || '';
+const savedName = localStorage.getItem('cb_username') || '';
+const isCustomizationOnly = savedSecret !== '' && isProfileValid() && (nameInput === savedName);
+
+if (isCustomizationOnly) {
+    myProfile.secretCode = savedSecret;
+    pendingCustomization = true;
+} else {
+    const secretVal = (document.getElementById('secret-input') ? document.getElementById('secret-input').value.trim() : '');
+    if (secretVal.length < 4) { alert('🔒 Choisis un code secret (4 caractères minimum) pour protéger ton compte !'); return; }
+    myProfile.secretCode = secretVal;
+    pendingCustomization = false;
+}
+
 if (isNaN(avatarVal) || avatarVal < 1) avatarVal = 1;
 if (avatarVal > 999) avatarVal = 999;
 myProfile.username = nameInput;
 myProfile.region = regionInput;
 myProfile.avatar = avatarVal;
 myProfile.flag = getFlagEmoji(flagVal);
+
 if (!myProfile.inventory) myProfile.inventory = {};
 if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
+
 if (selectedTitleId) {
-myProfile.inventory.__equipped.title = selectedTitleId;
-localStorage.setItem("cb_equipped_title", selectedTitleId);
-socket.emit("equip_cosmetic", selectedTitleId);
+    myProfile.inventory.__equipped.title = selectedTitleId;
+    localStorage.setItem("cb_equipped_title", selectedTitleId);
+    socket.emit("equip_cosmetic", selectedTitleId);
 } else {
-delete myProfile.inventory.__equipped.title;
-localStorage.removeItem("cb_equipped_title");
-socket.emit("equip_cosmetic", "none_title");
+    delete myProfile.inventory.__equipped.title;
+    localStorage.removeItem("cb_equipped_title");
+    socket.emit("equip_cosmetic", "none_title");
 }
+
 if (selectedFrameId) {
-myProfile.inventory.__equipped.frame = selectedFrameId;
-localStorage.setItem("cb_equipped_frame", selectedFrameId);
-socket.emit("equip_cosmetic", selectedFrameId);
+    myProfile.inventory.__equipped.frame = selectedFrameId;
+    localStorage.setItem("cb_equipped_frame", selectedFrameId);
+    socket.emit("equip_cosmetic", selectedFrameId);
 } else {
-delete myProfile.inventory.__equipped.frame;
-localStorage.removeItem("cb_equipped_frame");
-socket.emit("equip_cosmetic", "none_frame");
+    delete myProfile.inventory.__equipped.frame;
+    localStorage.removeItem("cb_equipped_frame");
+    socket.emit("equip_cosmetic", "none_frame");
 }
+
 if (selectedThemeId) {
-myProfile.inventory.__equipped.theme = selectedThemeId;
-localStorage.setItem("cb_equipped_theme", selectedThemeId);
-socket.emit("equip_cosmetic", selectedThemeId);
+    myProfile.inventory.__equipped.theme = selectedThemeId;
+    localStorage.setItem("cb_equipped_theme", selectedThemeId);
+    socket.emit("equip_cosmetic", selectedThemeId);
 } else {
-if (myProfile.inventory && myProfile.inventory.__equipped) delete myProfile.inventory.__equipped.theme;
-localStorage.removeItem("cb_equipped_theme");
-socket.emit("equip_cosmetic", "none_theme");
+    if (myProfile.inventory && myProfile.inventory.__equipped) {
+        delete myProfile.inventory.__equipped.theme;
+    }
+    localStorage.removeItem("cb_equipped_theme");
+    socket.emit("equip_cosmetic", "none_theme");
 }
+
 if (activeAvatarChoice && activeAvatarChoice !== "standard") {
-myProfile.inventory.__equipped.avatar = activeAvatarChoice;
-socket.emit("equip_cosmetic", activeAvatarChoice);
+    myProfile.inventory.__equipped.avatar = activeAvatarChoice;
+    socket.emit("equip_cosmetic", activeAvatarChoice);
 } else {
-delete myProfile.inventory.__equipped.avatar;
-socket.emit("equip_cosmetic", "none");
+    delete myProfile.inventory.__equipped.avatar;
+    socket.emit("equip_cosmetic", "none");
 }
+
 saveLocalPreferences();
 updateEconomyUI();
 pendingProfileValidation = true;
 registerIfPossible();
 SoundEngine.init();
 }
+
 function saveAvatarChoiceOnly() {
 let avatarVal = parseInt(document.getElementById("avatar-input").value);
 const flagVal = document.getElementById("flag-input").value;
@@ -948,25 +980,53 @@ if (secretInput) secretInput.placeholder = (mode === 'create') ? '🔒 Choisis u
                             
 function promptProfileChange() {
 document.getElementById("username-input").value = isProfileValid() ? myProfile.username : "";
-if (myProfile.region) document.getElementById("region-input").value = myProfile.region;
+if (myProfile.region) {
+    document.getElementById("region-input").value = myProfile.region;
+}
 document.getElementById("avatar-input").value = myProfile.avatar || 1;
 document.getElementById("flag-input").value = myProfile.flag || "🇫🇷";
-const equippedAvatar = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar;
+const equippedAvatar = myProfile.inventory &&
+    myProfile.inventory.__equipped &&
+    myProfile.inventory.__equipped.avatar;
 activeAvatarChoice = equippedAvatar || "standard";
 renderProfileCustomizationMenus();
 updateProfilePreview();
 
 let secretInput = document.getElementById('secret-input');
 if (!secretInput) {
-const nameInput = document.getElementById('username-input');
-secretInput = document.createElement('input');
-secretInput.id = 'secret-input';
-secretInput.type = 'password';
-secretInput.maxLength = 12;
-secretInput.style.cssText = 'width:100%; background:#0f051d; color:#fff; border:2px solid #ff007f; border-radius:8px; padding:8px; font-size:13px; margin-top:6px; box-sizing:border-box; text-align:center;';
-nameInput.parentElement.insertBefore(secretInput, nameInput.nextSibling);
+    const nameInput = document.getElementById('username-input');
+    secretInput = document.createElement('input');
+    secretInput.id = 'secret-input';
+    secretInput.type = 'password';
+    secretInput.maxLength = 12;
+    secretInput.placeholder = '🔒 Code secret (4 min)';
+    secretInput.style.cssText = 'width:100%; background:#0f051d; color:#fff; border:2px solid #ff007f; border-radius:8px; padding:8px; font-size:13px; margin-top:6px; box-sizing:border-box; text-align:center;';
+    nameInput.parentElement.insertBefore(secretInput, nameInput.nextSibling);
 }
 secretInput.value = '';
+
+// 🔓 Séparation COMPTE / PERSONNALISATION
+const alreadyLogged = isProfileValid() && localStorage.getItem('cb_secret');
+secretInput.style.display = alreadyLogged ? 'none' : 'block';
+const nameField = document.getElementById('username-input');
+if (nameField) nameField.disabled = alreadyLogged;
+
+let switchBtn = document.getElementById('switch-account-btn');
+if (!switchBtn) {
+    switchBtn = document.createElement('div');
+    switchBtn.id = 'switch-account-btn';
+    switchBtn.innerText = '🔑 Changer de compte';
+    switchBtn.style.cssText = 'margin-top:6px; font-size:10px; color:#00d2ff; cursor:pointer; text-decoration:underline;';
+    switchBtn.onclick = switchAccount;
+    secretInput.parentElement.insertBefore(switchBtn, secretInput.nextSibling);
+}
+switchBtn.style.display = alreadyLogged ? 'block' : 'none';
+
+const validateBtn = document.querySelector('[onclick="saveProfileFromModal()"]');
+if (validateBtn) validateBtn.innerText = alreadyLogged ? '💾 Enregistrer ma personnalisation' : 'VALIDER & JOUER ⚡';
+
+document.getElementById("modal-username").style.display = "flex";
+}
 
 let tabBar = document.getElementById('profile-tabs');
 if (!tabBar) {
@@ -1038,23 +1098,16 @@ if (document.getElementById("modal-blitz-pass").style.display === "flex") render
 if (document.getElementById("screen-game").style.display === "block") preparePowerHUD();
 });
 
-socket.on('register_result', (res) => {
-if (!res.ok) {
-pendingProfileValidation = false;
-if (res.reason === 'taken') alert("❌ Ce pseudo est déjà pris ! Entre ton code secret pour le récupérer, ou choisis un autre pseudo.");
-else if (res.reason === 'exists') { alert("❌ Ce pseudo existe déjà ! Utilise l'onglet « Se connecter »."); setProfileMode('login'); }
-else if (res.reason === 'no_account') { alert("❌ Ce profil n'existe pas ! Utilise l'onglet « Créer un profil »."); setProfileMode('create'); }
-else if (res.reason === 'nocode') alert('🔒 Entre un code secret (4 caractères minimum).');
-else if (res.reason === 'short') alert('Ton pseudo doit contenir au moins 3 caractères !');
-else alert('❌ Erreur de connexion au serveur. Réessaie.');
-promptProfileChange();
-return;
-}
 if (pendingProfileValidation) {
 pendingProfileValidation = false;
 saveLocalPreferences();
 document.getElementById('modal-username').style.display = 'none';
-showTitleScreen();
+if (pendingCustomization) {
+    pendingCustomization = false;
+    updateEconomyUI();
+} else {
+    showTitleScreen();
+}
 }
 });
 socket.on("blitz_pass_updated", (data) => {
