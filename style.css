@@ -1,4 +1,7 @@
-* { box-sizing: border-box; touch-action: manipulation; }
+* {
+box-sizing: border-box;
+touch-action: manipulation;
+}
 
 body {
     font-family: system-ui, -apple-system, sans-serif;
