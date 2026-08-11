@@ -405,7 +405,7 @@ const SoundEngine = {
 
         this.currentMode = mode;
         this.step = 0;
-        this.bpm = (mode === "menu") ? 126 : 138;
+        this.bpm = (mode === "menu") ? 112 : 138;
 
         const intervalMs = (60 / this.bpm / 4) * 1000;
 
@@ -427,90 +427,101 @@ const SoundEngine = {
     const bar = Math.floor(step / 16);
     const inBar = step % 16;
 
-    // Progression : Am - F - C - G
-    const roots = [110.00, 87.31, 130.81, 98.00];
-    const root = roots[bar % 4];
+    // Accords : Am - F - C - G
+    const chords = [
+        { root: 110.00, notes: [220.00, 261.63, 329.63] },
+        { root: 87.31, notes: [174.61, 220.00, 261.63] },
+        { root: 130.81, notes: [261.63, 329.63, 392.00] },
+        { root: 98.00, notes: [196.00, 246.94, 293.66] }
+    ];
+    const chord = chords[bar % 4];
 
-    // 🥁 KICK : four-on-the-floor
+    // 🥁 Kick doux (juste pour le mouvement)
     if (inBar % 4 === 0) {
         const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(150, t);
-        osc.frequency.exponentialRampToValueAtTime(40, t + 0.1);
-        gain.gain.setValueAtTime(0.22, t);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
+        osc.frequency.setValueAtTime(140, t);
+        osc.frequency.exponentialRampToValueAtTime(45, t + 0.09);
+        gain.gain.setValueAtTime(0.15, t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
         osc.connect(gain); gain.connect(this.ctx.destination);
-        osc.start(t); osc.stop(t + 0.13);
+        osc.start(t); osc.stop(t + 0.12);
     }
 
-    // 👏 SNARE sur les temps 2 et 4
-    if (inBar === 4 || inBar === 12) {
-        const bufferSize = this.ctx.sampleRate * 0.08;
-        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-        const noise = this.ctx.createBufferSource();
-        noise.buffer = buffer;
-        const filter = this.ctx.createBiquadFilter();
-        filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(1800, t);
-        const gain = this.ctx.createGain();
+    // 🎸 Basse ronde (début de mesure) + respiration (milieu)
+    if (inBar === 0) {
+        const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(chord.root, t);
         gain.gain.setValueAtTime(0.09, t);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
-        noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-        noise.start(t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(t); osc.stop(t + 1.6);
     }
-
-    // 🎩 HI-HAT off-beat
-    if (inBar % 4 === 2) {
-        const bufferSize = this.ctx.sampleRate * 0.03;
-        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-        const noise = this.ctx.createBufferSource();
-        noise.buffer = buffer;
-        const filter = this.ctx.createBiquadFilter();
-        filter.type = 'highpass';
-        filter.frequency.setValueAtTime(7000, t);
-        const gain = this.ctx.createGain();
-        gain.gain.setValueAtTime(0.05, t);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
-        noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-        noise.start(t);
-    }
-
-    // 🎸 BASSE : croches pumpées
-    if (inBar % 2 === 0) {
-        const osc = this.ctx.createOscillator(), filter = this.ctx.createBiquadFilter(), gain = this.ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime((inBar % 8 === 6) ? root * 2 : root, t);
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(900, t);
-        filter.frequency.exponentialRampToValueAtTime(250, t + 0.1);
-        gain.gain.setValueAtTime(0.08, t);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
-        osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-        osc.start(t); osc.stop(t + 0.11);
-    }
-
-    // 🎹 LEAD : riff énergique, section A (mesures 0-3) / B (mesures 4-7)
-    const melodyA = [440, 0, 0, 523.25, 0, 0, 659.25, 0, 880, 0, 659.25, 0, 587.33, 0, 523.25, 0];
-    const melodyB = [523.25, 0, 659.25, 0, 880, 0, 783.99, 0, 659.25, 0, 587.33, 0, 523.25, 0, 440, 0];
-    const note = (bar < 4 ? melodyA : melodyB)[inBar];
-
-    if (note > 0) {
-        const osc = this.ctx.createOscillator(), filter = this.ctx.createBiquadFilter(), gain = this.ctx.createGain();
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(note, t);
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(2500, t);
+    if (inBar === 8) {
+        const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(chord.root * 2, t);
         gain.gain.setValueAtTime(0.04, t);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
-        osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-        osc.start(t); osc.stop(t + 0.15);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(t); osc.stop(t + 0.5);
+    }
+
+    // 🌫️ Nappe d'accords (attaque lente, très douce)
+    if (inBar === 0) {
+        chord.notes.forEach((f) => {
+            const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(f, t);
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.linearRampToValueAtTime(0.018, t + 0.4);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
+            o.connect(g); g.connect(this.ctx.destination);
+            o.start(t); o.stop(t + 2.2);
+        });
+    }
+
+    // 🎼 MÉLODIE fluide et legato (le cœur du morceau)
+    if (inBar % 2 === 0) {
+        const melodyA = [
+            [440, 493.88, 523.25, 659.25, 587.33, 523.25, 493.88, 440],
+            [349.23, 392, 440, 523.25, 440, 392, 349.23, 392],
+            [392, 440, 392, 329.63, 261.63, 293.66, 329.63, 392],
+            [293.66, 329.63, 369.99, 392, 369.99, 329.63, 293.66, 246.94]
+        ];
+        const melodyB = [
+            [659.25, 587.33, 523.25, 493.88, 523.25, 587.33, 659.25, 523.25],
+            [523.25, 440, 392, 440, 523.25, 440, 392, 349.23],
+            [392, 329.63, 261.63, 329.63, 392, 523.25, 493.88, 392],
+            [293.66, 392, 493.88, 587.33, 493.88, 392, 293.66, 0]
+        ];
+        const table = (bar < 4) ? melodyA : melodyB;
+        const note = table[bar % 4][inBar / 2];
+
+        if (note > 0) {
+            // Voix principale : triangle, enveloppe legato (les notes se chevauchent)
+            const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(note, t);
+            gain.gain.setValueAtTime(0.0001, t);
+            gain.gain.linearRampToValueAtTime(0.055, t + 0.03);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.34);
+            osc.connect(gain); gain.connect(this.ctx.destination);
+            osc.start(t); osc.stop(t + 0.34);
+
+            // Doublure scintillante une octave plus haut (très discrète)
+            const o2 = this.ctx.createOscillator(), g2 = this.ctx.createGain();
+            o2.type = 'sine';
+            o2.frequency.setValueAtTime(note * 2, t);
+            g2.gain.setValueAtTime(0.0001, t);
+            g2.gain.linearRampToValueAtTime(0.012, t + 0.03);
+            g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+            o2.connect(g2); g2.connect(this.ctx.destination);
+            o2.start(t); o2.stop(t + 0.3);
+        }
     }
 },
-
     tickGeometryDash(step) {
         const t = this.ctx.currentTime;
 
