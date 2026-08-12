@@ -959,7 +959,6 @@ showNotificationToast("✅ Choix de profil enregistré avec succès !", "gift");
 registerIfPossible();
 }
 let profileMode = "create";
-
 function setProfileMode(mode) {
 profileMode = mode;
 const tc = document.getElementById('profile-tab-create');
@@ -971,104 +970,8 @@ if (validateBtn) validateBtn.innerText = (mode === 'create') ? 'CRÉER MON PROFI
 const secretInput = document.getElementById('secret-input');
 if (secretInput) secretInput.placeholder = (mode === 'create') ? '🔒 Choisis un code secret (4 min)' : '🔒 Entre ton code secret';
 }
- function injectAccountGear() {
-const headerBtns = document.querySelector('.header-btns');
-if (headerBtns && !document.getElementById('account-gear-btn')) {
-const gear = document.createElement('button');
-gear.id = 'account-gear-btn';
-gear.className = 'icon-btn';
-gear.innerText = '⚙️';
-gear.onclick = openAccountModal;
-headerBtns.appendChild(gear);
-}
-}
-function openAccountModal() {
-let modal = document.getElementById('modal-account');
-if (!modal) {
-modal = document.createElement('div');
-modal.id = 'modal-account';
-modal.className = 'modal-overlay';
-modal.innerHTML = `
-<div class="modal-card" style="max-width:340px;">
-<h3 style="color:#00d2ff; margin:0 0 10px 0; text-align:center;">⚙️ MON COMPTE</h3>
-<div id="account-content"></div>
-<button class="btn-secondary" onclick="closeAccountModal()">Fermer</button>
-</div>`;
-document.body.appendChild(modal);
-}
-renderAccountContent();
-modal.style.display = 'flex';
-}
-function closeAccountModal() {
-const modal = document.getElementById('modal-account');
-if (modal) modal.style.display = 'none';
-}
-function renderAccountContent() {
-const content = document.getElementById('account-content');
-if (!content) return;
-const connected = isProfileValid() && localStorage.getItem('cb_secret');
-const inputStyle = 'width:100%; background:#0f051d; color:#fff; border:2px solid #00d2ff; border-radius:8px; padding:8px; font-size:13px; margin-bottom:6px; box-sizing:border-box; text-align:center;';
-if (!connected) {
-content.innerHTML = `
-<p style="font-size:10px; color:#aaa; text-align:center;">Entre ton pseudo + ton code secret.<br>Si le compte existe → connexion. Sinon → création.</p>
-<input id="account-pseudo" type="text" placeholder="Pseudo" style="${inputStyle}">
-<input id="account-code" type="password" placeholder="🔒 Code secret (4 min)" style="${inputStyle}">
-<button class="btn-main btn-blue" onclick="submitAccountForm()">🔓 Accéder à mon compte ⚡</button>`;
-} else {
-content.innerHTML = `
-<p style="font-size:12px; text-align:center;">Connecté : <b style="color:#00ff88;">${myProfile.username}</b></p>
-<button class="btn-main btn-blue" onclick="switchAccount()" style="margin-bottom:6px;">🔑 Changer de compte</button>
-<button class="btn-main btn-gold" onclick="startCreateAccount()" style="margin-bottom:6px;">➕ Créer un nouveau compte</button>
-<button class="btn-main" onclick="askDeleteAccount()" style="background:linear-gradient(45deg,#ff416c,#7a0026);">🗑️ Supprimer mon compte</button>`;
-}
-}
-function submitAccountForm() {
-const pseudo = (document.getElementById('account-pseudo').value || '').trim();
-const code = (document.getElementById('account-code').value || '').trim();
-if (pseudo.length < 3) { alert('Pseudo : 3 caractères minimum.'); return; }
-if (code.length < 4) { alert('Code secret : 4 caractères minimum.'); return; }
-myProfile.username = pseudo;
-myProfile.secretCode = code;
-if (!myProfile.region) myProfile.region = 'Hauts-de-France';
-localStorage.setItem('cb_username', pseudo);
-localStorage.setItem('cb_secret', code);
-localStorage.setItem('cb_region', myProfile.region);
-pendingAccountLogin = true;
-registerIfPossible();
-}
-function switchAccount() {
-localStorage.removeItem('cb_username');
-localStorage.removeItem('cb_secret');
-myProfile.secretCode = '';
-renderAccountContent();
-}
-function startCreateAccount() {
-if (confirm('⚠️ Un nouveau compte repart de zéro.\n(Ton compte actuel reste sauvegardé.)\nContinuer ?')) {
-switchAccount();
-}
-}
-function askDeleteAccount() {
-const code = prompt('⚠️ SUPPRESSION DÉFINITIVE DU COMPTE.\nEntre ton code secret pour confirmer :');
-if (!code) return;
-socket.emit('delete_account', { secretCode: code });
-}
-socket.on('delete_account_result', (res) => {
-if (res.ok) {
-localStorage.removeItem('cb_username');
-localStorage.removeItem('cb_secret');
-myProfile.secretCode = '';
-myProfile.username = '';
-alert('✅ Compte supprimé.');
-renderAccountContent();
-} else {
-alert('❌ Code secret incorrect : compte NON supprimé.');
-}
-});
-
 function promptProfileChange() {
-if (!isProfileValid() || !localStorage.getItem('cb_secret')) { openAccountModal(); return; }
-document.getElementById("username-input").value = myProfile.username;
-document.getElementById("username-input").disabled = true;
+document.getElementById("username-input").value = isProfileValid() ? myProfile.username : "";
 if (myProfile.region) document.getElementById("region-input").value = myProfile.region;
 document.getElementById("avatar-input").value = myProfile.avatar || 1;
 document.getElementById("flag-input").value = myProfile.flag || "🇫🇷";
@@ -1076,14 +979,49 @@ const equippedAvatar = myProfile.inventory && myProfile.inventory.__equipped && 
 activeAvatarChoice = equippedAvatar || "standard";
 renderProfileCustomizationMenus();
 updateProfilePreview();
-const oldSecret = document.getElementById('secret-input');
-if (oldSecret) oldSecret.style.display = 'none';
-const oldTabs = document.getElementById('profile-tabs');
-if (oldTabs) oldTabs.style.display = 'none';
-const oldSwitch = document.getElementById('switch-account-btn');
-if (oldSwitch) oldSwitch.style.display = 'none';
+let secretInput = document.getElementById('secret-input');
+if (!secretInput) {
+const nameInput = document.getElementById('username-input');
+secretInput = document.createElement('input');
+secretInput.id = 'secret-input';
+secretInput.type = 'password';
+secretInput.maxLength = 12;
+secretInput.placeholder = '🔒 Code secret (4 min)';
+secretInput.style.cssText = 'width:100%; background:#0f051d; color:#fff; border:2px solid #ff007f; border-radius:8px; padding:8px; font-size:13px; margin-top:6px; box-sizing:border-box; text-align:center;';
+nameInput.parentElement.insertBefore(secretInput, nameInput.nextSibling);
+}
+secretInput.value = '';
+const alreadyLogged = isProfileValid() && localStorage.getItem('cb_secret');
+secretInput.style.display = alreadyLogged ? 'none' : 'block';
+const nameField = document.getElementById('username-input');
+if (nameField) nameField.disabled = alreadyLogged;
+let switchBtn = document.getElementById('switch-account-btn');
+if (!switchBtn) {
+switchBtn = document.createElement('div');
+switchBtn.id = 'switch-account-btn';
+switchBtn.innerText = '🔑 Changer de compte';
+switchBtn.style.cssText = 'margin-top:6px; font-size:10px; color:#00d2ff; cursor:pointer; text-decoration:underline;';
+switchBtn.onclick = switchAccount;
+secretInput.parentElement.insertBefore(switchBtn, secretInput.nextSibling);
+}
+switchBtn.style.display = alreadyLogged ? 'block' : 'none';
+const btnText = document.querySelector('[onclick="saveProfileFromModal()"]');
+if (btnText) btnText.innerText = alreadyLogged ? '💾 Enregistrer ma personnalisation' : 'VALIDER & JOUER ⚡';
+let tabBar = document.getElementById('profile-tabs');
+if (!tabBar) {
+tabBar = document.createElement('div');
+tabBar.id = 'profile-tabs';
+tabBar.className = 'tabs';
+tabBar.style.marginBottom = '8px';
+tabBar.innerHTML = '<button type="button" class="tab-btn" id="profile-tab-create" onclick="setProfileMode(\'create\')">➕ Créer un profil</button><button type="button" class="tab-btn" id="profile-tab-login" onclick="setProfileMode(\'login\')">🔑 Se connecter</button>';
+const card = document.getElementById('modal-username').querySelector('.modal-card');
+card.insertBefore(tabBar, card.children[1] || null);
+}
+const avBtn = document.querySelector('[onclick="saveAvatarChoiceOnly()"]');
+if (avBtn) avBtn.style.display = 'none';
 const validateBtn = document.querySelector('[onclick="saveProfileFromModal()"]');
-if (validateBtn) validateBtn.innerText = '💾 Enregistrer ma personnalisation';
+if (validateBtn && !validateBtn.id) validateBtn.id = 'btn-validate-profile';
+setProfileMode(profileMode);
 document.getElementById("modal-username").style.display = "flex";
 }
 
