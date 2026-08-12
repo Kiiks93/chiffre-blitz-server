@@ -1277,64 +1277,11 @@ setTimeout(() => { if (isProfileValid()) openJoinCustomScreen(targetRoom.toUpper
 }
 });
 function openAdminPanel() {
-const modal = document.getElementById("admin-modal");
-const loginSec = document.getElementById("admin-login-section");
-const dashSec = document.getElementById("admin-dashboard-section");
-const passInput = document.getElementById("admin-password-input");
-const errEl = document.getElementById("admin-login-error");
-if (modal) {
-modal.classList.add("admin-floating");
-modal.style.display = "flex";
-}
-if (loginSec) loginSec.style.display = "block";
-if (dashSec) dashSec.style.display = "none";
-if (passInput) passInput.value = "";
-if (errEl) errEl.innerText = "";
-initAdminDrag();
+window.open("admin.html", "cb_admin", "width=430,height=780");
 }
 function closeAdminPanel() {
 const modal = document.getElementById("admin-modal");
 if (modal) modal.style.display = "none";
-}
-function toggleAdminMinimize() {
-const modal = document.getElementById("admin-modal");
-const card = modal ? modal.querySelector(".modal-card") : null;
-if (!card) return;
-card.classList.toggle("admin-minimized");
-const btn = card.querySelector(".admin-min-btn");
-if (btn) btn.innerText = card.classList.contains("admin-minimized") ? "➕" : "➖";
-}
-function initAdminDrag() {
-const modal = document.getElementById("admin-modal");
-if (!modal) return;
-const card = modal.querySelector(".modal-card");
-if (!card || card.querySelector(".admin-drag-bar")) return;
-const bar = document.createElement("div");
-bar.className = "admin-drag-bar";
-bar.innerHTML = '⠿ DÉPLACER <button type="button" class="admin-min-btn">➖</button>';
-card.insertBefore(bar, card.firstChild);
-bar.querySelector(".admin-min-btn").addEventListener("click", (e) => {
-e.stopPropagation();
-toggleAdminMinimize();
-});
-let dragging = false, offX = 0, offY = 0;
-bar.addEventListener("pointerdown", (e) => {
-if (e.target.closest(".admin-min-btn")) return;
-dragging = true;
-const rect = card.getBoundingClientRect();
-offX = e.clientX - rect.left;
-offY = e.clientY - rect.top;
-bar.setPointerCapture(e.pointerId);
-});
-bar.addEventListener("pointermove", (e) => {
-if (!dragging) return;
-card.style.position = "fixed";
-card.style.left = Math.max(0, Math.min(window.innerWidth - 80, e.clientX - offX)) + "px";
-card.style.top = Math.max(0, Math.min(window.innerHeight - 40, e.clientY - offY)) + "px";
-card.style.margin = "0";
-});
-bar.addEventListener("pointerup", () => { dragging = false; });
-bar.addEventListener("pointercancel", () => { dragging = false; });
 }
 function authAdmin() {
 const passInput = document.getElementById("admin-password-input");
