@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚡ Chiffre Blitz • Admin Command Center</title>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<style>
+* { box-sizing: border-box; }
+body { background: #0f051d; color: #fff; font-family: system-ui, sans-serif; margin: 0; padding: 12px; }
+h1 { color: #00d2ff; font-size: 15px; text-align: center; margin: 4px 0 2px; }
+.sub { color: #f8b500; font-size: 10px; text-align: center; font-weight: bold; margin-bottom: 12px; }
+.card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+.card h2 { font-size: 12px; margin: 0 0 8px 0; }
+input, select { width: 100%; background: #0f051d; color: #fff; border: 1px solid #444; border-radius: 6px; padding: 7px; font-size: 12px; margin-bottom: 6px; }
+button { width: 100%; border: none; border-radius: 8px; padding: 9px; font-weight: bold; font-size: 12px; cursor: pointer; }
+.btn-blue { background: linear-gradient(45deg, #00c6ff, #0072ff); color: #fff; }
+.btn-gold { background: linear-gradient(45deg, #f8b500, #fceabb); color: #222; }
+.row { display: flex; gap: 6px; }
+details { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px; margin-bottom: 6px; }
+summary { cursor: pointer; font-weight: bold; font-size: 11px; }
+label { font-size: 10px; color: #aaa; }
+.err { color: #ff4b2b; font-size: 11px; text-align: center; min-height: 14px; }
+.ok { color: #38ef7d; font-size: 11px; text-align: center; min-height: 14px; }
+</style>
+</head>
+<body>
+<h1>⚡ CHIFFRE BLITZ • ADMIN COMMAND CENTER</h1>
+<div class="sub">FENÊTRE INDÉPENDANTE</div>
+
+<div id="admin-login-section" class="card">
+<h2 style="color:#f8b500;">🔒 ACCÈS RESTREINT DÉVELOPPEUR</h2>
+<input type="password" id="admin-password-input" placeholder="Mot de passe admin">
+<button class="btn-blue" onclick="authAdmin()">CONNEXION STUDIO ⚡</button>
+<div class="err" id="admin-login-error"></div>
+</div>
+
+<div id="admin-dashboard-section" style="display:none;">
+<div class="card">
+<h2 style="color:#00d2ff;">📢 Diffuseur d'Annonce</h2>
+<input type="text" id="admin-broadcast-text" placeholder="Message global...">
+<button class="btn-blue" onclick="adminBroadcast()">Diffuser l'annonce 🚀</button>
+</div>
+<div class="card">
+<h2 style="color:#f8b500;">🎁 Distribution de Cadeaux Admin</h2>
+<select id="admin-target-type" onchange="toggleAdminTargetInput()">
+<option value="all">🌍 Tout le monde</option>
+<option value="pseudo">👤 Par Pseudo</option>
+</select>
+<input type="text" id="admin-target-pseudo" placeholder="Pseudo exact..." style="display:none;">
+<div class="row">
+<select id="admin-currency-type">
+<option value="coins">🪙 Pièces</option>
+<option value="points">⚡ Points</option>
+<option value="trophies">🏆 Trophées</option>
+</select>
+<input type="number" id="admin-amount" value="100">
+</div>
+<button class="btn-gold" onclick="adminSendGift()">Envoyer le Cadeau ⚡</button>
+</div>
+<div class="card">
+<h2 style="color:#38ef7d;">⚡ Planification des Événements & Abuses</h2>
+<div id="admin-schedules-container"></div>
+<button class="btn-blue" onclick="saveAdminSchedules()">Sauvegarder les Configurations 💾</button>
+</div>
+<div class="ok" id="admin-status"></div>
+</div>
+
+<script>
+const socket = io("https://chiffre-blitz-server.onrender.com", { reconnection: true });
+
+function showStatus(msg) {
+const el = document.getElementById("admin-status");
+el.innerText = msg;
+setTimeout(() => { el.innerText = ""; }, 3000);
+}
+function authAdmin() {
+const pass = document.getElementById("admin-password-input").value;
+socket.emit("admin_auth", pass);
+}
+socket.on("admin_auth_fail", (msg) => {
+document.getElementById("admin-login-error").innerText = msg || "Mot de passe incorrect";
+});
+socket.on("admin_auth_success", (data) => {
+document.getElementById("admin-login-section").style.display = "none";
+document.getElementById("admin-dashboard-section").style.display = "block";
+renderAdminSchedules(data.schedules || {});
+});
+function toggleAdminTargetInput() {
+const type = document.getElementById("admin-target-type").value;
+document.getElementById("admin-target-pseudo").style.display = (type === "pseudo") ? "block" : "none";
+}
+function adminBroadcast() {
+const text = document.getElementById("admin-broadcast-text").value.trim();
+if (!text) { showStatus("❌ Entre un message d'annonce !"); return; }
+socket.emit("admin_broadcast_message", text);
+document.getElementById("admin-broadcast-text").value = "";
+showStatus("📢 Annonce globale diffusée !");
+}
+function adminSendGift() {
+const targetType = document.getElementById("admin-target-type").value;
+const pseudo = document.getElementById("admin-target-pseudo").value.trim();
+const currency = document.getElementById("admin-currency-type").value;
+const amount = parseInt(document.getElementById("admin-amount").value) || 0;
+const target = (targetType === "all") ? "TOUS" : pseudo;
+if (targetType === "pseudo" && !pseudo) { showStatus("❌ Entre un pseudo valide !"); return; }
+socket.emit("admin_give_gift", { targetUsername: target, currency, amount });
+showStatus("🎁 Don de " + amount + " (" + currency + ") envoyé !");
+}
+const EVENT_NAMES = {
+coinRush: "🪙 Coin Rush (Pièces x2)",
+rankShield: "🛡️ Rank Shield (Zéro perte)",
+expressoMatch: "⚡ Expresso Match (20s)",
+chaosMode: "🌪️ Chaos Mode (Malus auto)",
+jackpotEclair: "🎁 Jackpot Éclair",
+tugOfWarMode: "🪢 Mode Corde Raide (Tug-of-War)"
+};
+function renderAdminSchedules(schedules) {
+const container = document.getElementById("admin-schedules-container");
+container.innerHTML = "";
+for (let key in EVENT_NAMES) {
+const s = schedules[key] || { manual: false, start: null, end: null };
+const startStr = s.start ? new Date(s.start).toISOString().slice(0, 16) : "";
+const endStr = s.end ? new Date(s.end).toISOString().slice(0, 16) : "";
+const d = document.createElement("details");
+d.innerHTML = `
+<summary>${EVENT_NAMES[key]}</summary>
+<label style="display:flex; align-items:center; gap:6px; margin:6px 0;">
+<input type="checkbox" id="admin-manual-${key}" ${s.manual ? "checked" : ""} style="width:auto; margin:0;"> Actif (Forcé)
+</label>
+<label>Début :</label>
+<input type="datetime-local" id="admin-start-${key}" value="${startStr}">
+<label>Fin :</label>
+<input type="datetime-local" id="admin-end-${key}" value="${endStr}">
+`;
+container.appendChild(d);
+}
+}
+function saveAdminSchedules() {
+const EVENT_KEYS = ["coinRush", "rankShield", "expressoMatch", "chaosMode", "jackpotEclair", "tugOfWarMode"];
+const schedulesData = {};
+EVENT_KEYS.forEach(key => {
+const manualEl = document.getElementById(`admin-manual-${key}`);
+const startEl = document.getElementById(`admin-start-${key}`);
+const endEl = document.getElementById(`admin-end-${key}`);
+if (manualEl && startEl && endEl) {
+schedulesData[key] = {
+manual: manualEl.checked,
+start: startEl.value ? new Date(startEl.value).getTime() : null,
+end: endEl.value ? new Date(endEl.value).getTime() : null
+};
+}
+});
+socket.emit("admin_update_schedule", schedulesData);
+showStatus("✅ Configurations sauvegardées !");
+}
+socket.on("admin_schedule_saved", () => { showStatus("✅ Événements mis à jour côté serveur !"); });
+</script>
+</body>
+</html>
