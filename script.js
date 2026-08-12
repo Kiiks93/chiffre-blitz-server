@@ -1282,15 +1282,55 @@ const loginSec = document.getElementById("admin-login-section");
 const dashSec = document.getElementById("admin-dashboard-section");
 const passInput = document.getElementById("admin-password-input");
 const errEl = document.getElementById("admin-login-error");
-if (modal) { modal.style.display = "flex"; modal.style.zIndex = "10000"; }
+if (modal) {
+modal.style.display = "flex";
+modal.classList.add("admin-floating");
+}
 if (loginSec) loginSec.style.display = "block";
 if (dashSec) dashSec.style.display = "none";
 if (passInput) passInput.value = "";
 if (errEl) errEl.innerText = "";
+initAdminDrag();
 }
 function closeAdminPanel() {
 const modal = document.getElementById("admin-modal");
 if (modal) modal.style.display = "none";
+}
+function toggleAdminMinimize() {
+const modal = document.getElementById("admin-modal");
+const card = modal ? modal.querySelector(".modal-card") : null;
+if (!card) return;
+card.classList.toggle("admin-minimized");
+const btn = card.querySelector(".admin-min-btn");
+if (btn) btn.innerText = card.classList.contains("admin-minimized") ? "➕" : "➖";
+}
+function initAdminDrag() {
+const modal = document.getElementById("admin-modal");
+if (!modal) return;
+const card = modal.querySelector(".modal-card");
+if (!card || card.querySelector(".admin-drag-bar")) return;
+const bar = document.createElement("div");
+bar.className = "admin-drag-bar";
+bar.innerHTML = '⠿ DÉPLACER <button class="admin-min-btn" onclick="event.stopPropagation(); toggleAdminMinimize();">➖</button>';
+card.insertBefore(bar, card.firstChild);
+let dragging = false, offX = 0, offY = 0;
+bar.addEventListener("pointerdown", (e) => {
+if (e.target.closest(".admin-min-btn")) return;
+dragging = true;
+const rect = card.getBoundingClientRect();
+offX = e.clientX - rect.left;
+offY = e.clientY - rect.top;
+bar.setPointerCapture(e.pointerId);
+});
+bar.addEventListener("pointermove", (e) => {
+if (!dragging) return;
+card.style.position = "fixed";
+card.style.left = Math.max(0, Math.min(window.innerWidth - 80, e.clientX - offX)) + "px";
+card.style.top = Math.max(0, Math.min(window.innerHeight - 40, e.clientY - offY)) + "px";
+card.style.margin = "0";
+});
+bar.addEventListener("pointerup", () => { dragging = false; });
+bar.addEventListener("pointercancel", () => { dragging = false; });
 }
 function authAdmin() {
 const passInput = document.getElementById("admin-password-input");
@@ -1384,11 +1424,11 @@ for (let key in EVENT_NAMES) {
 const s = schedules[key] || { manual: false, start: null, end: null };
 const startStr = s.start ? new Date(s.start).toISOString().slice(0, 16) : "";
 const endStr = s.end ? new Date(s.end).toISOString().slice(0, 16) : "";
-const row = document.createElement("div");
-row.style.cssText = `background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 4px;`;
+const row = document.createElement("details");
+row.className = "admin-event-details";
 row.innerHTML = `
-<div style="font-weight:bold; color:#fff; margin-bottom:4px; font-size:11px;">${EVENT_NAMES[key]}</div>
-<div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+<summary>${EVENT_NAMES[key]}</summary>
+<div style="display:flex; align-items:center; gap:8px; margin:6px 0 4px 0;">
 <label style="display:flex; align-items:center; gap:4px; cursor:pointer; font-size:10px; color:#aaa;">
 <input type="checkbox" id="admin-manual-${key}" ${s.manual ? "checked" : ""}> Actif (Forcé)
 </label>
