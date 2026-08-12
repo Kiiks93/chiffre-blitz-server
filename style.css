@@ -1452,3 +1452,36 @@ padding: 0 8px;
 font-size: 12px;
 cursor: pointer;
 }
+/* ============================================================
+EFFETS COMBO (particules + bannière)
+============================================================ */
+.combo-particle {
+position: fixed;
+z-index: 9998;
+pointer-events: none;
+font-size: 16px;
+animation: comboFly 0.9s ease-out forwards;
+}
+@keyframes comboFly {
+0% { transform: translate(0, 0) scale(0.5); opacity: 1; }
+100% { transform: translate(var(--dx), var(--dy)) scale(1.4); opacity: 0; }
+}
+.combo-banner {
+position: fixed;
+top: 40%;
+left: 50%;
+transform: translate(-50%, -50%);
+z-index: 9999;
+pointer-events: none;
+font-size: 30px;
+font-weight: 900;
+text-shadow: 0 0 20px currentColor;
+animation: comboPop 1.1s ease forwards;
+white-space: nowrap;
+}
+@keyframes comboPop {
+0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+30% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+70% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+100% { transform: translate(-50%, -50%) scale(1.1); opacity: 0; }
+}
