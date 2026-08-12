@@ -1393,3 +1393,64 @@ height: 40px !important;
     0% { transform: translateY(0) rotate(0deg); }
     100% { transform: translateY(-130vh) rotate(360deg); }
 }
+/* ============================================================
+   PANEL ADMIN FLOTTANT
+============================================================ */
+#admin-modal.admin-floating {
+background: transparent;
+pointer-events: none;
+align-items: flex-start;
+justify-content: flex-end;
+padding: 10px;
+}
+#admin-modal.admin-floating .modal-card {
+pointer-events: auto;
+width: 350px;
+max-width: 94vw;
+max-height: 85vh;
+overflow-y: auto;
+box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+.admin-drag-bar {
+cursor: grab;
+background: rgba(0, 210, 255, 0.15);
+border: 1px solid #00d2ff;
+border-radius: 8px;
+padding: 5px 8px;
+font-size: 10px;
+font-weight: 900;
+color: #00d2ff;
+margin-bottom: 8px;
+text-align: center;
+user-select: none;
+touch-action: none;
+position: sticky;
+top: 0;
+z-index: 10;
+}
+.admin-drag-bar:active { cursor: grabbing; }
+.admin-min-btn {
+float: right;
+background: rgba(255, 255, 255, 0.1);
+border: 1px solid rgba(255, 255, 255, 0.3);
+color: #fff;
+border-radius: 6px;
+padding: 0 6px;
+font-size: 10px;
+cursor: pointer;
+}
+#admin-modal .modal-card.admin-minimized > *:not(.admin-drag-bar) { display: none; }
+#admin-modal .modal-card.admin-minimized { max-height: none; overflow: hidden; }
+.admin-event-details {
+background: rgba(0, 0, 0, 0.3);
+border: 1px solid rgba(255, 255, 255, 0.1);
+border-radius: 6px;
+margin-bottom: 4px;
+padding: 6px 8px;
+}
+.admin-event-details summary {
+cursor: pointer;
+font-weight: bold;
+font-size: 11px;
+color: #fff;
+}
