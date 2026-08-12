@@ -1247,6 +1247,50 @@ let soloTimerInterval = null;
 let currentShopTab = "bonus";
 let isTimeFrozen = false;
 let currentCoinsGained = 0;
+let currentCombo = 0;
+function getComboTheme() {
+const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
+if (theme === "theme_glacial") return { emoji: "❄️", color: "#7be8ff", label: "COMBO GLACIAL" };
+if (theme === "theme_alt") return { emoji: "✨", color: "#f8b500", label: "COMBO DORÉ" };
+return { emoji: "⚡", color: "#00d2ff", label: "COMBO ÉLECTRIQUE" };
+}
+function resetCombo() {
+currentCombo = 0;
+}
+function incrementCombo() {
+currentCombo++;
+if (currentCombo % 5 === 0) {
+triggerComboEffect(currentCombo);
+}
+}
+function triggerComboEffect(combo) {
+const theme = getComboTheme();
+const grid = document.getElementById("grid");
+if (!grid) return;
+const rect = grid.getBoundingClientRect();
+const cx = rect.left + rect.width / 2;
+const cy = rect.top + rect.height / 2;
+for (let i = 0; i < 14; i++) {
+const p = document.createElement("div");
+p.className = "combo-particle";
+p.innerText = theme.emoji;
+p.style.color = theme.color;
+p.style.left = cx + "px";
+p.style.top = cy + "px";
+const angle = (Math.PI * 2 * i) / 14;
+const dist = 70 + Math.random() * 70;
+p.style.setProperty("--dx", (Math.cos(angle) * dist) + "px");
+p.style.setProperty("--dy", (Math.sin(angle) * dist) + "px");
+document.body.appendChild(p);
+setTimeout(() => p.remove(), 950);
+}
+const banner = document.createElement("div");
+banner.className = "combo-banner";
+banner.style.color = theme.color;
+banner.innerText = theme.emoji + " " + theme.label + " x" + combo + " !";
+document.body.appendChild(banner);
+setTimeout(() => banner.remove(), 1100);
+}
 let rewardDoubled = false;
 let avalancheGridData = [];
 let avalancheTarget = null;
@@ -2026,6 +2070,7 @@ socket.on("start_countdown", (data) => {
 if (radarInterval) clearInterval(radarInterval);
 latest1v1StartData = data;
 currentMatchCharges = {};
+resetCombo();
 let loadout = (myProfile.equippedPowers && myProfile.equippedPowers.length > 0) ? myProfile.equippedPowers : (myProfile.equippedPower ? [myProfile.equippedPower] : []);
 loadout.forEach(id => { const stock = myProfile.inventory[id] || 0; if (stock > 0) currentMatchCharges[id] = Math.min((currentMatchCharges[id] || 0) + 1, stock); });
 let oppData = extractOpponentInfo(data);
@@ -2056,7 +2101,12 @@ SoundEngine.startMusic("1v1");
 socket.on("timer_update", (time) => { if (!isTimeFrozen) { current1v1Time = time; document.getElementById("game-timer").innerText = Math.max(0, time); } });
 socket.on("tug_of_war_update", (data) => { updateTugOfWarGauge(data.ropePosition); });
 function updateTugOfWarGauge(pos) { const ind = document.getElementById("tow-indicator"); if (!ind) return; let percent = 50 + (pos / 6) * 45; ind.style.left = `${Math.max(5, Math.min(95, percent))}%`; }
-socket.on("my_grid_updated", (data) => { document.getElementById("game-target-giant").innerText = data.target; renderGrid(data.newPool, handle1v1TileClick); if (data.success) SoundEngine.playClick(); else SoundEngine.playError(); });
+socket.on("my_grid_updated", (data) => {
+document.getElementById("game-target-giant").innerText = data.target;
+renderGrid(data.newPool, handle1v1TileClick);
+if (data.success) { SoundEngine.playClick(); incrementCombo(); }
+else { SoundEngine.playError(); resetCombo(); }
+});
 socket.on("opponent_progress", (data) => { document.getElementById("opp-target").innerText = data.target; let o = extractOpponentInfo(data); if (o) updateOpponentDisplay(o); });
 socket.on("trigger_jackpot_wheel", () => {
 document.getElementById("recap-modal").style.display = "none";
@@ -2172,6 +2222,7 @@ hideAllScreens();
 soloTarget = (activeTrainingMode === "random") ? Math.floor(Math.random() * 50) + 1 : 1;
 soloScore = 0; soloTimeLeft = 30; isTimeFrozen = false;
 currentSoloCharges = {};
+resetCombo();
 if (myProfile.equippedPower && (myProfile.inventory[myProfile.equippedPower] || 0) > 0) currentSoloCharges[myProfile.equippedPower] = 1;
 socket.emit("start_solo_training", { mode: activeTrainingMode, loadout: getOptionalLoadout ? getOptionalLoadout() : [] });
 document.getElementById("screen-game").style.display = "block";
@@ -2206,6 +2257,7 @@ setTimeout(() => { tiles[index].classList.remove("ripple-active"); }, 400);
 if (activeTrainingMode === "classic") {
 if (num === soloTarget) {
 SoundEngine.playClick();
+incrementCombo();
 soloTarget++;
 soloScore += 10;
 document.getElementById("game-target-giant").innerText = soloTarget;
@@ -2213,6 +2265,7 @@ document.getElementById("solo-score").innerText = soloScore;
 generateSoloGrid();
 } else {
 SoundEngine.playError();
+resetCombo();
 if (!isTimeFrozen) {
 soloTimeLeft = Math.max(0, soloTimeLeft - 1);
 document.getElementById("game-timer").innerText = Math.max(0, soloTimeLeft);
@@ -2222,6 +2275,7 @@ if (soloTimeLeft <= 0) endSoloGame();
 } else if (activeTrainingMode === "random") {
 if (num === soloTarget) {
 SoundEngine.playClick();
+incrementCombo();
 soloScore += 15;
 soloTarget = Math.floor(Math.random() * 50) + 1;
 document.getElementById("game-target-giant").innerText = soloTarget;
@@ -2229,6 +2283,7 @@ document.getElementById("solo-score").innerText = soloScore;
 generateSoloGrid();
 } else {
 SoundEngine.playError();
+resetCombo();
 if (!isTimeFrozen) {
 soloTimeLeft = Math.max(0, soloTimeLeft - 1);
 document.getElementById("game-timer").innerText = Math.max(0, soloTimeLeft);
@@ -2248,6 +2303,7 @@ soloScore = 0;
 avalancheTimeLeft = 30;
 isTimeFrozen = false;
 currentSoloCharges = {};
+resetCombo();
 if (myProfile.equippedPower && (myProfile.inventory[myProfile.equippedPower] || 0) > 0) {
 currentSoloCharges[myProfile.equippedPower] = 1;
 }
@@ -2331,6 +2387,7 @@ setTimeout(() => { tiles[idx].classList.remove("ripple-active"); }, 400);
 }
 if (val === avalancheTarget) {
 SoundEngine.playClick();
+incrementCombo();
 avalancheGridData[idx] = null;
 soloScore += 20;
 document.getElementById("solo-score").innerText = soloScore;
@@ -2338,6 +2395,7 @@ updateAvalancheTarget();
 renderAvalancheGrid();
 } else {
 SoundEngine.playError();
+resetCombo();
 }
 }
 function endSoloGame() {
