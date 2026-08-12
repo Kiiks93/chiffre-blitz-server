@@ -1975,3 +1975,421 @@ container.appendChild(row);
 });
 });
 // ===== FIN PARTIE 4/5 =====
+/* ============================================================
+ADVERSAIRE / MATCH 1V1
+============================================================ */
+function extractOpponentInfo(data) {
+if (!data) return cachedOpponent;
+let rawOpp = data.opponent || data.player2 || data.opp;
+if (!rawOpp && data.players) {
+if (Array.isArray(data.players)) rawOpp = data.players.find(p => (p.socketId || p.id) !== socket.id);
+else if (typeof data.players === "object") { const oppId = Object.keys(data.players).find(id => id !== socket.id); if (oppId) rawOpp = data.players[oppId]; }
+}
+return rawOpp ? parsePlayer(rawOpp) : cachedOpponent;
+}
+function updateOpponentDisplay(opp) {
+if (!opp) return;
+cachedOpponent = parsePlayer(opp);
+document.getElementById("opp-profile-name").innerText = cachedOpponent.username;
+document.getElementById("opp-profile-badge").innerHTML = getAvatarBadgeHTML(cachedOpponent.flag, cachedOpponent.avatar);
+const oppTitle = cachedOpponent.inventory && cachedOpponent.inventory.__equipped && cachedOpponent.inventory.__equipped.title;
+const el = document.getElementById("opp-profile-title");
+if (el) el.innerText = oppTitle ? `[ ${TITLE_DISPLAY_NAMES[oppTitle] || oppTitle} ]` : "";
+}
+socket.on("start_countdown", (data) => {
+if (radarInterval) clearInterval(radarInterval);
+latest1v1StartData = data;
+currentMatchCharges = {};
+resetCombo();
+let loadout = (myProfile.equippedPowers && myProfile.equippedPowers.length > 0) ? myProfile.equippedPowers : (myProfile.equippedPower ? [myProfile.equippedPower] : []);
+loadout.forEach(id => { const stock = myProfile.inventory[id] || 0; if (stock > 0) currentMatchCharges[id] = Math.min((currentMatchCharges[id] || 0) + 1, stock); });
+let oppData = extractOpponentInfo(data);
+if (oppData) updateOpponentDisplay(oppData);
+hideAllScreens();
+document.getElementById("countdown-overlay").style.display = "flex";
+let count = 3;
+document.getElementById("countdown-number").innerText = count;
+const timer = setInterval(() => {
+count--;
+if (count > 0) document.getElementById("countdown-number").innerText = count;
+else {
+clearInterval(timer);
+document.getElementById("countdown-overlay").style.display = "none";
+document.getElementById("screen-game").style.display = "block";
+document.getElementById("hud-1v1").style.display = "grid";
+document.getElementById("hud-solo").style.display = "none";
+const towHud = document.getElementById("hud-tow");
+if (data.isTugOfWar) { towHud.style.display = "block"; updateTugOfWarGauge(0); } else towHud.style.display = "none";
+if (latest1v1StartData) { document.getElementById("game-target-giant").innerText = latest1v1StartData.myTarget || 1; renderGrid(latest1v1StartData.myPool, handle1v1TileClick); }
+preparePowerHUD();
+current1v1Time = latest1v1StartData ? latest1v1StartData.timeLeft : 30;
+isTimeFrozen = false;
+SoundEngine.startMusic("1v1");
+}
+}, 1000);
+});
+socket.on("timer_update", (time) => { if (!isTimeFrozen) { current1v1Time = time; document.getElementById("game-timer").innerText = Math.max(0, time); } });
+socket.on("tug_of_war_update", (data) => { updateTugOfWarGauge(data.ropePosition); });
+function updateTugOfWarGauge(pos) { const ind = document.getElementById("tow-indicator"); if (!ind) return; let percent = 50 + (pos / 6) * 45; ind.style.left = `${Math.max(5, Math.min(95, percent))}%`; }
+socket.on("my_grid_updated", (data) => {
+document.getElementById("game-target-giant").innerText = data.target;
+renderGrid(data.newPool, handle1v1TileClick);
+if (data.success) { SoundEngine.playClick(); registerComboHit(); }
+else { SoundEngine.playError(); resetCombo(); }
+});
+socket.on("opponent_progress", (data) => { document.getElementById("opp-target").innerText = data.target; let o = extractOpponentInfo(data); if (o) updateOpponentDisplay(o); });
+socket.on("trigger_jackpot_wheel", () => {
+document.getElementById("recap-modal").style.display = "none";
+const wheelModal = document.getElementById("modal-jackpot-wheel");
+const spinBtn = document.getElementById("btn-spin-wheel");
+const wheelEl = document.getElementById("wheel-element");
+wheelEl.style.transition = "none"; wheelEl.style.transform = "rotate(0deg)";
+spinBtn.disabled = false; spinBtn.style.opacity = "1";
+document.getElementById("wheel-result-text").innerText = "";
+wheelModal.style.display = "flex";
+});
+function spinJackpotWheel() { const b = document.getElementById("btn-spin-wheel"); b.disabled = true; b.style.opacity = "0.5"; document.getElementById("wheel-result-text").innerText = ""; socket.emit("spin_jackpot_wheel"); }
+socket.on("jackpot_wheel_result", (data) => {
+const wheelEl = document.getElementById("wheel-element");
+const resultText = document.getElementById("wheel-result-text");
+const randomSpin = 1440 + Math.floor(Math.random() * 360);
+wheelEl.style.transition = "transform 3.5s cubic-bezier(0.15,0.75,0.1,1)";
+wheelEl.style.transform = `rotate(${data.targetAngle || randomSpin}deg)`;
+setTimeout(() => {
+if (data.outcome === "jackpot") { resultText.innerHTML = `🎉 <span style="color:#f8b500;">JACKPOT ! +${data.coinDelta} Pièces 🪙</span>`; SoundEngine.playVictory(); }
+else if (data.outcome === "objet") { resultText.innerHTML = `🎁 <span style="color:#00c6ff;">OBJET GAGNÉ ! ⚡</span>`; SoundEngine.playVictory(); }
+else if (data.outcome === "banqueroute") { resultText.innerHTML = `💀 <span style="color:#ff4b2b;">PERDU ! ${data.coinDelta} Pièces 🪙</span>`; SoundEngine.playError(); }
+else resultText.innerHTML = `❌ <span style="color:#38ef7d;">RIEN ! Retente ta chance.</span>`;
+setTimeout(() => { document.getElementById("modal-jackpot-wheel").style.display = "none"; if (pendingGameOverData) { showGameOverRecap(pendingGameOverData); pendingGameOverData = null; } }, 2200);
+}, 3600);
+});
+socket.on("game_over_1v1", (data) => {
+const wheelModal = document.getElementById("modal-jackpot-wheel");
+if (wheelModal && wheelModal.style.display === "flex") { pendingGameOverData = data; return; }
+showGameOverRecap(data);
+});
+function getWinnerAvatarShowcaseHTML(playerObj) {
+if (!playerObj) return "";
+const equippedAvatar = playerObj.inventory && playerObj.inventory.__equipped && playerObj.inventory.__equipped.avatar;
+const equippedFrame = playerObj.inventory && playerObj.inventory.__equipped && playerObj.inventory.__equipped.frame;
+let iconContent = playerObj.avatar || 1;
+if (equippedAvatar === "avatar_lottie_palier30") iconContent = `<div class="lottie-avatar-large" data-lottie-url="black-rainbow-cat.json" style="width:75px; height:75px;"></div>`;
+else if (equippedAvatar === "avatar_lottie_palier15") iconContent = `<div class="lottie-avatar-large" data-lottie-url="cat-assistant.json" style="width:75px; height:75px;"></div>`;
+const frameClass = getFrameClass(equippedFrame);
+setTimeout(() => initAllLottieBadges(), 50);
+return `<div class="victory-avatar-showcase"><div class="victory-badge-large ${frameClass}" style="display:flex; align-items:center; justify-content:center;"><span style="font-weight:900; color:#fff;">${iconContent}</span><span style="position:absolute; bottom:-2px; right:-2px; font-size:14px; background:#0f051d; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; border:2px solid #fff; z-index:3;">${playerObj.flag || "🇫🇷"}</span></div><div style="font-size:13px; font-weight:900; color:#f8b500; margin-top:4px;">${playerObj.username || "Joueur"} TRIOMPHE !</div></div>`;
+}
+function showGameOverRecap(data) {
+hideAllScreens();
+window.history.replaceState({}, "", window.location.pathname);
+const modal = document.getElementById("recap-modal");
+const modalCard = modal.querySelector(".modal-card");
+const banner = document.getElementById("recap-banner");
+document.getElementById("recap-1v1-rows").style.display = "block";
+const myId = socket.id;
+const myData = data.players[myId];
+const oppId = Object.keys(data.players).find(id => id !== myId);
+const oppData = oppId ? data.players[oppId] : { target: "-", score: 0 };
+rewardDoubled = false;
+const doubleBtn = document.getElementById("btn-double-reward");
+doubleBtn.disabled = false; doubleBtn.style.opacity = "1"; doubleBtn.innerText = "📺 Doubler mes gains (Pub)";
+const rematchBtn = document.getElementById("btn-rematch");
+if (rematchBtn) { rematchBtn.style.display = "block"; rematchBtn.disabled = false; rematchBtn.style.opacity = "1"; rematchBtn.innerText = "Revanche ⚔️"; }
+const myReward = data.rewards && data.rewards[myId] ? data.rewards[myId] : { baseCoins: 30, rushBonus: 0, totalCoins: 30 };
+currentCoinsGained = myReward.totalCoins;
+const winnerId = data.winnerId;
+const isWinner = (winnerId === myId);
+const cinematic = document.getElementById("winner-cinematic-container");
+if (modalCard) { modalCard.classList.remove("defeat-theme"); if (!isWinner && winnerId) modalCard.classList.add("defeat-theme"); }
+let winnerObj = null;
+if (winnerId) {
+if (winnerId === myId) winnerObj = { username: myProfile.username, avatar: myProfile.avatar, flag: myProfile.flag, inventory: myProfile.inventory, unlocked_items: myProfile.unlocked_items };
+else if (cachedOpponent && (winnerId === cachedOpponent.id || winnerId === cachedOpponent.socketId)) winnerObj = cachedOpponent;
+else if (data.players[winnerId]) winnerObj = parsePlayer(data.players[winnerId]);
+}
+if (winnerObj) cinematic.innerHTML = getWinnerAvatarShowcaseHTML(winnerObj);
+else cinematic.innerHTML = `<div class="victory-avatar-showcase"><div style="font-size:28px; margin-bottom:4px;">🤝</div><div style="font-size:13px; font-weight:900; color:#00d2ff;">ÉGALITÉ !</div></div>`;
+if (isWinner) { banner.innerText = "🏆 VICTOIRE SUPRÊME !"; banner.style.color = "#00ff88"; SoundEngine.playVictory(); }
+else if (winnerId) { banner.innerText = "💥 DÉFAITE AMÈRE..."; banner.style.color = "#ff4b2b"; }
+else { banner.innerText = "⏱️ ÉGALITÉ !"; banner.style.color = "#ff8a00"; }
+document.getElementById("recap-reason").innerText = data.reason;
+document.getElementById("recap-my-target").innerText = myData ? myData.target : "-";
+document.getElementById("recap-opp-target").innerText = oppData ? oppData.target : "-";
+document.getElementById("recap-my-score").innerText = myData ? myData.score : 0;
+let htmlCoins = `+${myReward.baseCoins}`;
+if (myReward.rushBonus > 0) htmlCoins += ` <span style="color:#ff8a00;">+${myReward.rushBonus}(RUSH)</span>`;
+document.getElementById("recap-coins-gained").innerHTML = htmlCoins;
+modal.style.display = "flex";
+registerIfPossible();
+}
+socket.on("solo_reward_result", (data) => {
+currentCoinsGained = data.earnedCoins;
+let htmlCoins = `+${data.baseCoins}`;
+if (data.rushBonus > 0) htmlCoins += `<span style="color:#ff8a00;">+${data.rushBonus}(RUSH)</span>`;
+document.getElementById("recap-coins-gained").innerHTML = htmlCoins;
+if (data.perfection) {
+showRewardPopUp("⚡ PERFECTION — Combo x35 atteint ! Récompense maximale + Succès 🏆 débloqué !", "🏆");
+}
+if (data.triggerWheel) {
+setTimeout(() => {
+document.getElementById("recap-modal").style.display = "none";
+document.getElementById("modal-jackpot-wheel").style.display = "flex";
+const wheelEl = document.getElementById("wheel-element");
+wheelEl.style.transition = "none";
+wheelEl.style.transform = "rotate(0deg)";
+document.getElementById("btn-spin-wheel").disabled = false;
+document.getElementById("btn-spin-wheel").style.opacity = "1";
+document.getElementById("wheel-result-text").innerText = "";
+}, 800);
+}
+});
+function handle1v1TileClick(num, index) {
+if (current1v1Time <= 0) return;
+const tiles = document.querySelectorAll("#grid .tile");
+if (tiles[index]) { tiles[index].classList.add("ripple-active"); setTimeout(() => tiles[index].classList.remove("ripple-active"), 400); }
+socket.emit("player_click_1v1", index);
+}
+/* ============================================================
+ENTRAÎNEMENT SOLO
+============================================================ */
+function startSoloTraining(mode) {
+if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+activeTrainingMode = mode || "classic";
+hideAllScreens();
+soloTarget = (activeTrainingMode === "random") ? Math.floor(Math.random() * 50) + 1 : 1;
+soloScore = 0; soloTimeLeft = 30; isTimeFrozen = false;
+currentSoloCharges = {};
+resetCombo();
+if (myProfile.equippedPower && (myProfile.inventory[myProfile.equippedPower] || 0) > 0) currentSoloCharges[myProfile.equippedPower] = 1;
+socket.emit("start_solo_training", { mode: activeTrainingMode, loadout: getOptionalLoadout ? getOptionalLoadout() : [] });
+document.getElementById("screen-game").style.display = "block";
+document.getElementById("hud-solo").style.display = "grid";
+document.getElementById("hud-1v1").style.display = "none";
+document.getElementById("hud-tow").style.display = "none";
+document.getElementById("game-target-giant").innerText = soloTarget;
+document.getElementById("solo-score").innerText = soloScore;
+document.getElementById("game-timer").innerText = soloTimeLeft;
+preparePowerHUD();
+generateSoloGrid();
+SoundEngine.startMusic("solo");
+soloTimerInterval = setInterval(() => { if (!isTimeFrozen) { soloTimeLeft--; document.getElementById("game-timer").innerText = Math.max(0, soloTimeLeft); if (soloTimeLeft <= 0) endSoloGame(); } }, 1000);
+}
+function generateSoloGrid() {
+let pool = [soloTarget];
+let candidates = [];
+for (let i = 1; i <= 50; i++) { if (i !== soloTarget) candidates.push(i); }
+candidates.sort(() => Math.random() - 0.5);
+pool = pool.concat(candidates.slice(0, 11)).sort(() => Math.random() - 0.5);
+renderGrid(pool, handleSoloTileClick);
+}
+function handleSoloTileClick(num, index) {
+if (soloTimeLeft <= 0) return;
+const tiles = document.querySelectorAll("#grid .tile");
+if (tiles[index]) {
+tiles[index].classList.add("ripple-active");
+setTimeout(() => { tiles[index].classList.remove("ripple-active"); }, 400);
+}
+if (activeTrainingMode === "classic") {
+if (num === soloTarget) {
+SoundEngine.playClick();
+registerComboHit();
+soloTarget++;
+soloScore += 10;
+document.getElementById("game-target-giant").innerText = soloTarget;
+document.getElementById("solo-score").innerText = soloScore;
+generateSoloGrid();
+} else {
+SoundEngine.playError();
+resetCombo();
+if (!isTimeFrozen) {
+soloTimeLeft = Math.max(0, soloTimeLeft - 1);
+document.getElementById("game-timer").innerText = Math.max(0, soloTimeLeft);
+if (soloTimeLeft <= 0) endSoloGame();
+}
+}
+} else if (activeTrainingMode === "random") {
+if (num === soloTarget) {
+SoundEngine.playClick();
+registerComboHit();
+soloScore += 15;
+soloTarget = Math.floor(Math.random() * 50) + 1;
+document.getElementById("game-target-giant").innerText = soloTarget;
+document.getElementById("solo-score").innerText = soloScore;
+generateSoloGrid();
+} else {
+SoundEngine.playError();
+resetCombo();
+if (!isTimeFrozen) {
+soloTimeLeft = Math.max(0, soloTimeLeft - 1);
+document.getElementById("game-timer").innerText = Math.max(0, soloTimeLeft);
+if (soloTimeLeft <= 0) endSoloGame();
+}
+}
+}
+}
+/* ============================================================
+AVALANCHE
+============================================================ */
+function startAvalancheGame(speed, initialCount) {
+if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+hideAllScreens();
+document.getElementById("screen-game").style.display = "block";
+document.getElementById("hud-solo").style.display = "grid";
+document.getElementById("hud-1v1").style.display = "none";
+document.getElementById("hud-tow").style.display = "none";
+soloScore = 0;
+avalancheTimeLeft = 30;
+isTimeFrozen = false;
+currentSoloCharges = {};
+resetCombo();
+if (myProfile.equippedPower && (myProfile.inventory[myProfile.equippedPower] || 0) > 0) {
+currentSoloCharges[myProfile.equippedPower] = 1;
+}
+socket.emit("start_solo_training", { mode: "avalanche", loadout: getOptionalLoadout ? getOptionalLoadout() : [] });
+document.getElementById("solo-score").innerText = soloScore;
+document.getElementById("game-timer").innerText = avalancheTimeLeft;
+avalancheGridData = Array(16).fill(null);
+avalancheTarget = null;
+for (let i = 0; i < initialCount; i++) { spawnAvalancheNumber(); }
+updateAvalancheTarget();
+renderAvalancheGrid();
+preparePowerHUD();
+SoundEngine.startMusic("solo");
+avalancheTimerInterval = setInterval(() => {
+if (!isTimeFrozen) {
+avalancheTimeLeft--;
+document.getElementById("game-timer").innerText = Math.max(0, avalancheTimeLeft);
+if (avalancheTimeLeft <= 0) {
+clearInterval(avalancheTimerInterval);
+clearInterval(avalancheInterval);
+endSoloGame();
+}
+}
+}, 1000);
+avalancheInterval = setInterval(() => {
+if (!isTimeFrozen) {
+let added = spawnAvalancheNumber();
+renderAvalancheGrid();
+if (!added) {
+clearInterval(avalancheTimerInterval);
+clearInterval(avalancheInterval);
+endSoloGame();
+}
+}
+}, speed);
+}
+function spawnAvalancheNumber() {
+let emptyIndices = [];
+avalancheGridData.forEach((val, idx) => { if (val === null) emptyIndices.push(idx); });
+if (emptyIndices.length === 0) return false;
+let randomIdx = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+avalancheGridData[randomIdx] = Math.floor(Math.random() * 50) + 1;
+if (avalancheTarget === null) updateAvalancheTarget();
+return true;
+}
+function updateAvalancheTarget() {
+let activeNumbers = avalancheGridData.filter(v => v !== null);
+if (activeNumbers.length > 0) {
+avalancheTarget = activeNumbers[Math.floor(Math.random() * activeNumbers.length)];
+document.getElementById("game-target-giant").innerText = avalancheTarget;
+} else {
+avalancheTarget = null;
+document.getElementById("game-target-giant").innerText = "-";
+}
+}
+function renderAvalancheGrid() {
+const grid = document.getElementById("grid");
+if (!grid) return;
+grid.innerHTML = "";
+const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
+const isAltTheme = equippedTheme === "theme_alt";
+const isGlacialTheme = equippedTheme === "theme_glacial";
+avalancheGridData.forEach((val, idx) => {
+const tile = document.createElement("div");
+if (val !== null) {
+tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""}`;
+tile.innerText = val;
+tile.onclick = () => handleAvalancheClick(val, idx);
+} else {
+tile.className = "tile empty";
+tile.innerText = "";
+}
+grid.appendChild(tile);
+});
+}
+function handleAvalancheClick(val, idx) {
+const tiles = document.querySelectorAll("#grid .tile");
+if (tiles[idx]) {
+tiles[idx].classList.add("ripple-active");
+setTimeout(() => { tiles[idx].classList.remove("ripple-active"); }, 400);
+}
+if (val === avalancheTarget) {
+SoundEngine.playClick();
+registerComboHit();
+avalancheGridData[idx] = null;
+soloScore += 20;
+document.getElementById("solo-score").innerText = soloScore;
+updateAvalancheTarget();
+renderAvalancheGrid();
+} else {
+SoundEngine.playError();
+resetCombo();
+}
+}
+/* ============================================================
+FIN DE PARTIE SOLO (version corrigée)
+============================================================ */
+function endSoloGame() {
+hideAllScreens();
+const wasPerfection = soloPerfection;
+const modal = document.getElementById("recap-modal");
+rewardDoubled = false;
+const doubleBtn = document.getElementById("btn-double-reward");
+doubleBtn.disabled = false;
+doubleBtn.style.opacity = "1";
+doubleBtn.innerText = "📺 Doubler mes gains (Pub)";
+const rematchBtn = document.getElementById("btn-rematch");
+if (rematchBtn) rematchBtn.style.display = "none";
+socket.emit("claim_solo_reward", { score: soloScore, perfection: wasPerfection });
+document.getElementById("winner-cinematic-container").innerHTML = `
+<div class="victory-avatar-showcase">
+<div class="victory-badge-large">
+<span style="font-size: 28px;">🏋️</span>
+</div>
+</div>`;
+if (wasPerfection) {
+document.getElementById("recap-banner").innerText = "💥 PERFECTION x35 !";
+document.getElementById("recap-banner").style.color = "#f8b500";
+document.getElementById("recap-reason").innerText = "PERFECTION ! Récompense maximale + Succès 🏆";
+} else {
+document.getElementById("recap-banner").innerText = "🏋️ ENTRAÎNEMENT TERMINÉ";
+document.getElementById("recap-banner").style.color = "#00d2ff";
+document.getElementById("recap-reason").innerText = `Score : ${soloScore}`;
+}
+document.getElementById("recap-1v1-rows").style.display = "none";
+document.getElementById("recap-my-score").innerText = soloScore;
+SoundEngine.playVictory();
+modal.style.display = "flex";
+soloPerfection = false;
+resetCombo();
+}
+/* ============================================================
+RENDU DE LA GRILLE
+============================================================ */
+function renderGrid(pool, handler) {
+const grid = document.getElementById("grid");
+if (!grid) return;
+grid.innerHTML = "";
+if (!pool) return;
+const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
+const isAltTheme = equippedTheme === "theme_alt";
+const isGlacialTheme = equippedTheme === "theme_glacial";
+pool.forEach((num, index) => {
+const tile = document.createElement("div");
+tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""}`;
+tile.innerText = num;
+tile.onclick = () => handler(num, index);
+grid.appendChild(tile);
+});
+}
+// ===== FIN PARTIE 5/5 — FIN DU FICHIER =====
