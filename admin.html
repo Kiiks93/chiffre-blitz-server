@@ -3,25 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚡ Chiffre Blitz • Admin Command Center</title>
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<title>⚡ Chiffre Blitz • Admin</title>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <style>
-* { box-sizing: border-box; }
-body { background: #0f051d; color: #fff; font-family: system-ui, sans-serif; margin: 0; padding: 12px; }
-h1 { color: #00d2ff; font-size: 15px; text-align: center; margin: 4px 0 2px; }
-.sub { color: #f8b500; font-size: 10px; text-align: center; font-weight: bold; margin-bottom: 12px; }
-.card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
-.card h2 { font-size: 12px; margin: 0 0 8px 0; }
-input, select { width: 100%; background: #0f051d; color: #fff; border: 1px solid #444; border-radius: 6px; padding: 7px; font-size: 12px; margin-bottom: 6px; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0f051d; color: #fff; font-family: system-ui, sans-serif; padding: 14px; }
+h1 { color: #00d2ff; font-size: 16px; text-align: center; margin-bottom: 4px; }
+.sub { color: #f8b500; font-size: 10px; text-align: center; font-weight: bold; margin-bottom: 14px; }
+.card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+.card h2 { font-size: 13px; margin-bottom: 8px; }
+input, select { width: 100%; background: #0f051d; color: #fff; border: 1px solid #444; border-radius: 6px; padding: 8px; font-size: 12px; margin-bottom: 8px; }
 button { width: 100%; border: none; border-radius: 8px; padding: 9px; font-weight: bold; font-size: 12px; cursor: pointer; }
-.btn-blue { background: linear-gradient(45deg, #00c6ff, #0072ff); color: #fff; }
-.btn-gold { background: linear-gradient(45deg, #f8b500, #fceabb); color: #222; }
+.btn-blue { background: linear-gradient(45deg,#00c6ff,#0072ff); color: #fff; }
+.btn-gold { background: linear-gradient(45deg,#f8b500,#fceabb); color: #222; }
 .row { display: flex; gap: 6px; }
+.err { color: #ff4b2b; font-size: 11px; text-align: center; min-height: 14px; }
 details { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px; margin-bottom: 6px; }
 summary { cursor: pointer; font-weight: bold; font-size: 11px; }
 label { font-size: 10px; color: #aaa; }
-.err { color: #ff4b2b; font-size: 11px; text-align: center; min-height: 14px; }
-.ok { color: #38ef7d; font-size: 11px; text-align: center; min-height: 14px; }
 </style>
 </head>
 <body>
@@ -63,17 +62,11 @@ label { font-size: 10px; color: #aaa; }
 <div id="admin-schedules-container"></div>
 <button class="btn-blue" onclick="saveAdminSchedules()">Sauvegarder les Configurations 💾</button>
 </div>
-<div class="ok" id="admin-status"></div>
 </div>
 
 <script>
-const socket = io("https://chiffre-blitz-server.onrender.com", { reconnection: true });
-
-function showStatus(msg) {
-const el = document.getElementById("admin-status");
-el.innerText = msg;
-setTimeout(() => { el.innerText = ""; }, 3000);
-}
+const SERVER_URL = "https://chiffre-blitz-server.onrender.com";
+const socket = io(SERVER_URL, { reconnection: true });
 function authAdmin() {
 const pass = document.getElementById("admin-password-input").value;
 socket.emit("admin_auth", pass);
@@ -90,22 +83,22 @@ function toggleAdminTargetInput() {
 const type = document.getElementById("admin-target-type").value;
 document.getElementById("admin-target-pseudo").style.display = (type === "pseudo") ? "block" : "none";
 }
-function adminBroadcast() {
-const text = document.getElementById("admin-broadcast-text").value.trim();
-if (!text) { showStatus("❌ Entre un message d'annonce !"); return; }
-socket.emit("admin_broadcast_message", text);
-document.getElementById("admin-broadcast-text").value = "";
-showStatus("📢 Annonce globale diffusée !");
-}
 function adminSendGift() {
 const targetType = document.getElementById("admin-target-type").value;
 const pseudo = document.getElementById("admin-target-pseudo").value.trim();
 const currency = document.getElementById("admin-currency-type").value;
 const amount = parseInt(document.getElementById("admin-amount").value) || 0;
 const target = (targetType === "all") ? "TOUS" : pseudo;
-if (targetType === "pseudo" && !pseudo) { showStatus("❌ Entre un pseudo valide !"); return; }
+if (targetType === "pseudo" && !pseudo) { alert("Entre un pseudo valide !"); return; }
 socket.emit("admin_give_gift", { targetUsername: target, currency, amount });
-showStatus("🎁 Don de " + amount + " (" + currency + ") envoyé !");
+alert(`🎁 Don de ${amount} (${currency}) envoyé !`);
+}
+function adminBroadcast() {
+const text = document.getElementById("admin-broadcast-text").value.trim();
+if (!text) { alert("Entre un message d'annonce !"); return; }
+socket.emit("admin_broadcast_message", text);
+document.getElementById("admin-broadcast-text").value = "";
+alert("📢 Annonce diffusée !");
 }
 const EVENT_NAMES = {
 coinRush: "🪙 Coin Rush (Pièces x2)",
@@ -122,8 +115,8 @@ for (let key in EVENT_NAMES) {
 const s = schedules[key] || { manual: false, start: null, end: null };
 const startStr = s.start ? new Date(s.start).toISOString().slice(0, 16) : "";
 const endStr = s.end ? new Date(s.end).toISOString().slice(0, 16) : "";
-const d = document.createElement("details");
-d.innerHTML = `
+const row = document.createElement("details");
+row.innerHTML = `
 <summary>${EVENT_NAMES[key]}</summary>
 <label style="display:flex; align-items:center; gap:6px; margin:6px 0;">
 <input type="checkbox" id="admin-manual-${key}" ${s.manual ? "checked" : ""} style="width:auto; margin:0;"> Actif (Forcé)
@@ -133,11 +126,11 @@ d.innerHTML = `
 <label>Fin :</label>
 <input type="datetime-local" id="admin-end-${key}" value="${endStr}">
 `;
-container.appendChild(d);
+container.appendChild(row);
 }
 }
 function saveAdminSchedules() {
-const EVENT_KEYS = ["coinRush", "rankShield", "expressoMatch", "chaosMode", "jackpotEclair", "tugOfWarMode"];
+const EVENT_KEYS = ["coinRush","rankShield","expressoMatch","chaosMode","jackpotEclair","tugOfWarMode"];
 const schedulesData = {};
 EVENT_KEYS.forEach(key => {
 const manualEl = document.getElementById(`admin-manual-${key}`);
@@ -152,9 +145,8 @@ end: endEl.value ? new Date(endEl.value).getTime() : null
 }
 });
 socket.emit("admin_update_schedule", schedulesData);
-showStatus("✅ Configurations sauvegardées !");
+alert("✅ Programmation enregistrée !");
 }
-socket.on("admin_schedule_saved", () => { showStatus("✅ Événements mis à jour côté serveur !"); });
 </script>
 </body>
 </html>
