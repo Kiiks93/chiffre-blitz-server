@@ -1308,11 +1308,17 @@ function initAdminDrag() {
 const modal = document.getElementById("admin-modal");
 if (!modal) return;
 const card = modal.querySelector(".modal-card");
-if (!card || card.querySelector(".admin-drag-bar")) return;
+if (!card) return;
+const oldBar = card.querySelector(".admin-drag-bar");
+if (oldBar) oldBar.remove();
 const bar = document.createElement("div");
 bar.className = "admin-drag-bar";
-bar.innerHTML = '⠿ DÉPLACER <button class="admin-min-btn" onclick="event.stopPropagation(); toggleAdminMinimize();">➖</button>';
+bar.innerHTML = '⠿ DÉPLACER <button type="button" class="admin-min-btn">➖</button>';
 card.insertBefore(bar, card.firstChild);
+bar.querySelector(".admin-min-btn").addEventListener("click", (e) => {
+e.stopPropagation();
+toggleAdminMinimize();
+});
 let dragging = false, offX = 0, offY = 0;
 bar.addEventListener("pointerdown", (e) => {
 if (e.target.closest(".admin-min-btn")) return;
