@@ -1299,6 +1299,55 @@ let avalancheTimerInterval = null;
 let avalancheTimeLeft = 30;
 let logoClickCount = 0;
 let logoClickTimer = null;
+/* ============================================================
+SYSTÈME DE COMBO (série de bons clics rapides)
+============================================================ */
+let comboCount = 0;
+let lastComboClickTime = 0;
+let comboActive = false;
+const COMBO_THRESHOLD = 15; // ← passe à 20 si tu préfères
+const COMBO_WINDOW_MS = 2000; // temps max entre 2 bons clics
+function getComboThemeClass() {
+const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
+if (theme === "theme_glacial") return "combo-glacial";
+if (theme === "theme_alt") return "combo-gold";
+return "combo-electric";
+}
+function registerComboHit() {
+const now = Date.now();
+if (now - lastComboClickTime > COMBO_WINDOW_MS) {
+comboCount = 0;
+if (comboActive) { comboActive = false; deactivateComboFX(); }
+}
+lastComboClickTime = now;
+comboCount++;
+if (!comboActive && comboCount >= COMBO_THRESHOLD) {
+comboActive = true;
+activateComboFX();
+}
+}
+function resetCombo() {
+comboCount = 0;
+lastComboClickTime = 0;
+if (comboActive) { comboActive = false; deactivateComboFX(); }
+}
+function activateComboFX() {
+const cls = getComboThemeClass();
+const grid = document.getElementById("grid");
+if (grid) grid.classList.add(cls);
+const labels = { "combo-electric": "⚡ COMBO ÉLECTRIQUE", "combo-glacial": "❄️ COMBO GLACIAL", "combo-gold": "✨ COMBO DORÉ" };
+const colors = { "combo-electric": "#00d2ff", "combo-glacial": "#7be8ff", "combo-gold": "#f8b500" };
+const banner = document.createElement("div");
+banner.className = "combo-banner";
+banner.style.color = colors[cls];
+banner.innerText = labels[cls] + " x" + comboCount + " !";
+document.body.appendChild(banner);
+setTimeout(() => banner.remove(), 1600);
+}
+function deactivateComboFX() {
+const grid = document.getElementById("grid");
+if (grid) grid.classList.remove("combo-electric", "combo-glacial", "combo-gold");
+}
 document.addEventListener("DOMContentLoaded", () => {
 injectAccountGear();
 applyTranslations();
@@ -2094,7 +2143,8 @@ if (latest1v1StartData) { document.getElementById("game-target-giant").innerText
 preparePowerHUD();
 current1v1Time = latest1v1StartData ? latest1v1StartData.timeLeft : 30;
 isTimeFrozen = false;
-SoundEngine.startMusic("1v1");
+resetCombo();
+SoundEngine.startMusic("1v1");    
 }
 }, 1000);
 });
@@ -2104,8 +2154,13 @@ function updateTugOfWarGauge(pos) { const ind = document.getElementById("tow-ind
 socket.on("my_grid_updated", (data) => {
 document.getElementById("game-target-giant").innerText = data.target;
 renderGrid(data.newPool, handle1v1TileClick);
-if (data.success) { SoundEngine.playClick(); incrementCombo(); }
-else { SoundEngine.playError(); resetCombo(); }
+if (data.success) {
+SoundEngine.playClick();
+registerComboHit();
+} else {
+SoundEngine.playError();
+resetCombo();
+}
 });
 socket.on("opponent_progress", (data) => { document.getElementById("opp-target").innerText = data.target; let o = extractOpponentInfo(data); if (o) updateOpponentDisplay(o); });
 socket.on("trigger_jackpot_wheel", () => {
@@ -2220,7 +2275,7 @@ if (!isProfileValid()) { checkAndShowProfileModal(); return; }
 activeTrainingMode = mode || "classic";
 hideAllScreens();
 soloTarget = (activeTrainingMode === "random") ? Math.floor(Math.random() * 50) + 1 : 1;
-soloScore = 0; soloTimeLeft = 30; isTimeFrozen = false;
+soloScore = 0; soloTimeLeft = 30; isTimeFrozen = false; resetCombo();
 currentSoloCharges = {};
 resetCombo();
 if (myProfile.equippedPower && (myProfile.inventory[myProfile.equippedPower] || 0) > 0) currentSoloCharges[myProfile.equippedPower] = 1;
@@ -2257,6 +2312,7 @@ setTimeout(() => { tiles[index].classList.remove("ripple-active"); }, 400);
 if (activeTrainingMode === "classic") {
 if (num === soloTarget) {
 SoundEngine.playClick();
+registerComboHit();
 incrementCombo();
 soloTarget++;
 soloScore += 10;
@@ -2275,6 +2331,7 @@ if (soloTimeLeft <= 0) endSoloGame();
 } else if (activeTrainingMode === "random") {
 if (num === soloTarget) {
 SoundEngine.playClick();
+registerComboHit();
 incrementCombo();
 soloScore += 15;
 soloTarget = Math.floor(Math.random() * 50) + 1;
@@ -2302,6 +2359,7 @@ document.getElementById("hud-tow").style.display = "none";
 soloScore = 0;
 avalancheTimeLeft = 30;
 isTimeFrozen = false;
+resetCombo();
 currentSoloCharges = {};
 resetCombo();
 if (myProfile.equippedPower && (myProfile.inventory[myProfile.equippedPower] || 0) > 0) {
@@ -2387,6 +2445,7 @@ setTimeout(() => { tiles[idx].classList.remove("ripple-active"); }, 400);
 }
 if (val === avalancheTarget) {
 SoundEngine.playClick();
+registerComboHit();
 incrementCombo();
 avalancheGridData[idx] = null;
 soloScore += 20;
@@ -2400,6 +2459,7 @@ resetCombo();
 }
 function endSoloGame() {
 hideAllScreens();
+resetCombo();
 const modal = document.getElementById("recap-modal");
 rewardDoubled = false;
 const doubleBtn = document.getElementById("btn-double-reward");
