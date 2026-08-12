@@ -1283,8 +1283,8 @@ const dashSec = document.getElementById("admin-dashboard-section");
 const passInput = document.getElementById("admin-password-input");
 const errEl = document.getElementById("admin-login-error");
 if (modal) {
-modal.style.display = "flex";
 modal.classList.add("admin-floating");
+modal.style.display = "flex";
 }
 if (loginSec) loginSec.style.display = "block";
 if (dashSec) dashSec.style.display = "none";
@@ -1308,9 +1308,7 @@ function initAdminDrag() {
 const modal = document.getElementById("admin-modal");
 if (!modal) return;
 const card = modal.querySelector(".modal-card");
-if (!card) return;
-const oldBar = card.querySelector(".admin-drag-bar");
-if (oldBar) oldBar.remove();
+if (!card || card.querySelector(".admin-drag-bar")) return;
 const bar = document.createElement("div");
 bar.className = "admin-drag-bar";
 bar.innerHTML = '⠿ DÉPLACER <button type="button" class="admin-min-btn">➖</button>';
