@@ -1300,114 +1300,85 @@ let avalancheTimeLeft = 30;
 let logoClickCount = 0;
 let logoClickTimer = null;
 /* ============================================================
-SYSTÈME DE COMBO (15 bons clics rapides, sans faute)
+SYSTÈME COMBO (solo) — paliers 15 / 30 / 35 (PERFECTION)
 ============================================================ */
-let comboCount = 0;
+let currentCombo = 0;
 let lastComboTime = 0;
-let comboActive = false;
-const COMBO_THRESHOLD = 15;
+let soloPerfection = false;
 const COMBO_WINDOW_MS = 2000;
-
-function getComboTheme() {
-const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
-if (theme === "theme_glacial") return "glacial";
-if (theme === "theme_alt") return "gold";
-return "electric";
-}
 function getComboColor() {
-const t = getComboTheme();
-if (t === "gold") return "#f8b500";
-if (t === "glacial") return "#7be8ff";
+const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
+if (theme === "theme_glacial") return "#7be8ff";
+if (theme === "theme_alt") return "#f8b500";
 return "#00d2ff";
 }
-function clearComboFX() {
-const layer = document.getElementById("combo-fx-layer");
-if (layer) layer.innerHTML = "";
-const bg = document.getElementById("combo-bg");
-if (bg) bg.classList.remove("active");
+function resetCombo() {
+if (soloPerfection) return;
+currentCombo = 0;
+const grid = document.getElementById("grid");
+if (grid) {
+grid.classList.remove("combo-tier1", "combo-tier2", "combo-perfection");
+grid.style.setProperty("--combo-color", getComboColor());
+}
 const banner = document.getElementById("combo-banner");
 if (banner) banner.remove();
 }
-function resetCombo() {
-comboCount = 0;
-lastComboTime = 0;
-comboActive = false;
-clearComboFX();
-}
-function activateComboFX() {
-if (!document.getElementById("combo-bg")) {
-const bg = document.createElement("div");
-bg.id = "combo-bg";
-document.body.appendChild(bg);
-}
-if (!document.getElementById("combo-fx-layer")) {
-const layer = document.createElement("div");
-layer.id = "combo-fx-layer";
-document.body.appendChild(layer);
-}
-const bg = document.getElementById("combo-bg");
-bg.className = "active " + getComboTheme();
-}
-function addCrack() {
-const layer = document.getElementById("combo-fx-layer");
-if (!layer) return;
-if (layer.childElementCount > 18) layer.removeChild(layer.firstChild);
-const w = window.innerWidth, h = window.innerHeight;
-const side = Math.floor(Math.random() * 4);
-let sx, sy;
-if (side === 0) { sx = Math.random() * w; sy = 0; }
-else if (side === 1) { sx = w; sy = Math.random() * h; }
-else if (side === 2) { sx = Math.random() * w; sy = h; }
-else { sx = 0; sy = Math.random() * h; }
-const tx = w * (0.3 + Math.random() * 0.4);
-const ty = h * (0.3 + Math.random() * 0.4);
-const steps = 6 + Math.floor(Math.random() * 4);
-let points = Math.round(sx) + "," + Math.round(sy);
-for (let i = 1; i <= steps; i++) {
-const t = i / steps;
-const j = 60 * (1 - t);
-const bx = sx + (tx - sx) * t + (Math.random() - 0.5) * j;
-const by = sy + (ty - sy) * t + (Math.random() - 0.5) * j;
-points += " " + Math.round(bx) + "," + Math.round(by);
-}
-const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-svg.setAttribute("class", "combo-crack");
-svg.setAttribute("width", w);
-svg.setAttribute("height", h);
-svg.style.color = getComboColor();
-const poly = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-poly.setAttribute("points", points);
-poly.setAttribute("fill", "none");
-poly.setAttribute("stroke", getComboColor());
-poly.setAttribute("stroke-width", "2");
-svg.appendChild(poly);
-layer.appendChild(svg);
-}
-function updateComboBanner() {
-let banner = document.getElementById("combo-banner");
-if (!banner) {
-banner = document.createElement("div");
+function showComboBanner(text) {
+const banner = document.createElement("div");
 banner.id = "combo-banner";
-document.body.appendChild(banner);
-}
 banner.style.color = getComboColor();
-banner.innerText = "⚡ COMBO x" + comboCount;
-banner.style.animation = "none";
-void banner.offsetWidth;
-banner.style.animation = "";
+banner.innerText = text;
+banner.style.animation = "comboPop 0.5s ease";
+document.body.appendChild(banner);
+setTimeout(() => banner.remove(), 1500);
 }
 function registerComboHit() {
+if (soloPerfection) return;
 const now = Date.now();
-if (lastComboTime && now - lastComboTime > COMBO_WINDOW_MS) {
-comboCount = 0;
-if (comboActive) { comboActive = false; clearComboFX(); }
+if (now - lastComboTime > COMBO_WINDOW_MS) {
+currentCombo = 0;
+const g = document.getElementById("grid");
+if (g) g.classList.remove("combo-tier1", "combo-tier2");
 }
 lastComboTime = now;
-comboCount++;
-if (comboCount >= COMBO_THRESHOLD) {
-if (!comboActive) { comboActive = true; activateComboFX(); }
-addCrack();
-updateComboBanner();
+currentCombo++;
+const grid = document.getElementById("grid");
+if (grid) grid.style.setProperty("--combo-color", getComboColor());
+if (currentCombo === 15) {
+if (grid) grid.classList.add("combo-tier1");
+showComboBanner("⚡ COMBO x15 !");
+} else if (currentCombo === 30) {
+if (grid) { grid.classList.remove("combo-tier1"); grid.classList.add("combo-tier2"); }
+showComboBanner("🔥 COMBO x30 !!");
+} else if (currentCombo >= 35) {
+triggerPerfection();
+}
+}
+function triggerPerfection() {
+if (soloPerfection) return;
+soloPerfection = true;
+const grid = document.getElementById("grid");
+if (grid) { grid.classList.remove("combo-tier1", "combo-tier2"); grid.classList.add("combo-perfection"); }
+showComboBanner("💥 PERFECTION x35 !!!");
+spawnExplosionParticles();
+SoundEngine.playVictory();
+if (soloTimerInterval) clearInterval(soloTimerInterval);
+if (avalancheTimerInterval) clearInterval(avalancheTimerInterval);
+if (avalancheInterval) clearInterval(avalancheInterval);
+setTimeout(() => { endSoloGame(); }, 1200);
+}
+function spawnExplosionParticles() {
+const emojis = ["⚡", "💥", "✨", "🔥"];
+for (let i = 0; i < 40; i++) {
+const p = document.createElement("div");
+p.className = "explosion-particle";
+p.innerText = emojis[i % emojis.length];
+const angle = (Math.PI * 2 * i) / 40;
+const dist = 80 + Math.random() * 180;
+p.style.setProperty("--dx", Math.cos(angle) * dist + "px");
+p.style.setProperty("--dy", Math.sin(angle) * dist + "px");
+document.body.appendChild(p);
+setTimeout(() => p.remove(), 1200);
 }
 }
 function openAdminPanel() {
@@ -2292,14 +2263,20 @@ registerIfPossible();
 socket.on("solo_reward_result", (data) => {
 currentCoinsGained = data.earnedCoins;
 let htmlCoins = `+${data.baseCoins}`;
-if (data.rushBonus > 0) htmlCoins += `<span style="color:#ff8a00;">+${data.rushBonus}(RUSH)</span>`;
+if (data.rushBonus > 0) {
+htmlCoins += `<span style="color:#ff8a00;">+${data.rushBonus}(RUSH)</span>`;
+}
 document.getElementById("recap-coins-gained").innerHTML = htmlCoins;
+if (data.perfection) {
+showRewardPopUp("⚡ PERFECTION — Combo x35 atteint ! Récompense maximale + Succès 🏆 débloqué !", "🏆");
+}
 if (data.triggerWheel) {
 setTimeout(() => {
 document.getElementById("recap-modal").style.display = "none";
 document.getElementById("modal-jackpot-wheel").style.display = "flex";
 const wheelEl = document.getElementById("wheel-element");
-wheelEl.style.transition = "none"; wheelEl.style.transform = "rotate(0deg)";
+wheelEl.style.transition = "none";
+wheelEl.style.transform = "rotate(0deg)";
 document.getElementById("btn-spin-wheel").disabled = false;
 document.getElementById("btn-spin-wheel").style.opacity = "1";
 document.getElementById("wheel-result-text").innerText = "";
@@ -2355,7 +2332,7 @@ setTimeout(() => { tiles[index].classList.remove("ripple-active"); }, 400);
 if (activeTrainingMode === "classic") {
 if (num === soloTarget) {
 SoundEngine.playClick();
-registerComboHit();
+    registerComboHit();
 soloTarget++;
 soloScore += 10;
 document.getElementById("game-target-giant").innerText = soloTarget;
@@ -2363,7 +2340,7 @@ document.getElementById("solo-score").innerText = soloScore;
 generateSoloGrid();
 } else {
 SoundEngine.playError();
-resetCombo();
+    resetCombo();
 if (!isTimeFrozen) {
 soloTimeLeft = Math.max(0, soloTimeLeft - 1);
 document.getElementById("game-timer").innerText = Math.max(0, soloTimeLeft);
@@ -2373,7 +2350,7 @@ if (soloTimeLeft <= 0) endSoloGame();
 } else if (activeTrainingMode === "random") {
 if (num === soloTarget) {
 SoundEngine.playClick();
-registerComboHit();
+    registerComboHit();
 soloScore += 15;
 soloTarget = Math.floor(Math.random() * 50) + 1;
 document.getElementById("game-target-giant").innerText = soloTarget;
@@ -2499,7 +2476,7 @@ resetCombo();
 }
 function endSoloGame() {
 hideAllScreens();
-resetCombo();
+const wasPerfection = soloPerfection;
 const modal = document.getElementById("recap-modal");
 rewardDoubled = false;
 const doubleBtn = document.getElementById("btn-double-reward");
@@ -2508,22 +2485,30 @@ doubleBtn.style.opacity = "1";
 doubleBtn.innerText = "📺 Doubler mes gains (Pub)";
 const rematchBtn = document.getElementById("btn-rematch");
 if (rematchBtn) rematchBtn.style.display = "none";
-socket.emit("claim_solo_reward", soloScore);
-document.getElementById("winner-cinematic-container").innerHTML = `
-<div class="victory-avatar-showcase">
-<div class="victory-badge-large">
-<span style="font-size: 28px;">🏋️</span>
-</div>
-</div>
-`;
-document.getElementById("recap-banner").innerText = "🏋️ ENTRAÎNEMENT TERMINÉ";
-document.getElementById("recap-banner").style.color = "#00d2ff";
-document.getElementById("recap-1v1-rows").style.display = "none";
-document.getElementById("recap-reason").innerText = `Score : ${soloScore}`;
-document.getElementById("recap-my-score").innerText = soloScore;
-SoundEngine.playVictory();
-modal.style.display = "flex";
+socket.on('claim_solo_reward', async (payload) => {
+const player = activePlayers[socket.id];
+if (!player) return;
+const score = (typeof payload === 'object' && payload !== null) ? (payload.score || 0) : payload;
+const perfection = (typeof payload === 'object' && payload !== null) ? !!payload.perfection : false;
+const normalizedScore = Number(score);
+if (!Number.isFinite(normalizedScore) || normalizedScore < 0 || normalizedScore > 20000) return;
+let baseCoins = perfection ? 100 : Math.min(100, Math.floor(normalizedScore / 3));
+let rushBonus = globalEvents.coinRush ? baseCoins : 0;
+let earnedCoins = baseCoins + rushBonus;
+player.coins += earnedCoins;
+lastMatchEarnings[socket.id] = earnedCoins;
+if (perfection) {
+player.unlocked_items = player.unlocked_items || [];
+if (!player.unlocked_items.includes('achievement_perfection')) {
+player.unlocked_items.push('achievement_perfection');
 }
+}
+let triggerWheel = (globalEvents.jackpotEclair && Math.random() < 0.10);
+await savePlayerToSupabase(socket.id);
+socket.emit('player_registered', player);
+socket.emit('solo_reward_result', { baseCoins, rushBonus, earnedCoins, triggerWheel, globalEvents, perfection });
+});
+
 function renderGrid(pool, handler) {
 const grid = document.getElementById("grid");
 if (!grid) return;
