@@ -504,7 +504,7 @@ let myProfile = {
 username: localStorage.getItem("cb_username") || "",
 region: localStorage.getItem("cb_region") || "Hauts-de-France",
 avatar: parseInt(localStorage.getItem("cb_avatar")) || 1,
-flag: localStorage.getItem("cb_flag") || "🇫🇷",
+flag: localStorage.getItem("cb_flag") || "🇫",
 secretCode: localStorage.getItem('cb_secret') || '',
 points: 0,
 coins: 0,
