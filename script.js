@@ -1300,75 +1300,116 @@ let avalancheTimeLeft = 30;
 let logoClickCount = 0;
 let logoClickTimer = null;
 /* ============================================================
-SYSTÈME DE COMBO (série de bons clics rapides)
+SYSTÈME DE COMBO (15 bons clics rapides, sans faute)
 ============================================================ */
 let comboCount = 0;
-let lastComboClickTime = 0;
+let lastComboTime = 0;
 let comboActive = false;
-const COMBO_THRESHOLD = 15; // ← passe à 20 si tu préfères
-const COMBO_WINDOW_MS = 2000; // temps max entre 2 bons clics
-function getComboThemeClass() {
+const COMBO_THRESHOLD = 15;
+const COMBO_WINDOW_MS = 2000;
+
+function getComboTheme() {
 const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
-if (theme === "theme_glacial") return "combo-glacial";
-if (theme === "theme_alt") return "combo-gold";
-return "combo-electric";
+if (theme === "theme_glacial") return "glacial";
+if (theme === "theme_alt") return "gold";
+return "electric";
 }
-function registerComboHit() {
-const now = Date.now();
-if (now - lastComboClickTime > COMBO_WINDOW_MS) {
-comboCount = 0;
-if (comboActive) { comboActive = false; deactivateComboFX(); }
+function getComboColor() {
+const t = getComboTheme();
+if (t === "gold") return "#f8b500";
+if (t === "glacial") return "#7be8ff";
+return "#00d2ff";
 }
-lastComboClickTime = now;
-comboCount++;
-if (!comboActive && comboCount >= COMBO_THRESHOLD) {
-comboActive = true;
-activateComboFX();
-}
+function clearComboFX() {
+const layer = document.getElementById("combo-fx-layer");
+if (layer) layer.innerHTML = "";
+const bg = document.getElementById("combo-bg");
+if (bg) bg.classList.remove("active");
+const banner = document.getElementById("combo-banner");
+if (banner) banner.remove();
 }
 function resetCombo() {
 comboCount = 0;
-lastComboClickTime = 0;
-if (comboActive) { comboActive = false; deactivateComboFX(); }
+lastComboTime = 0;
+comboActive = false;
+clearComboFX();
 }
 function activateComboFX() {
-const cls = getComboThemeClass();
-const grid = document.getElementById("grid");
-if (grid) grid.classList.add(cls);
-const labels = { "combo-electric": "⚡ COMBO ÉLECTRIQUE", "combo-glacial": "❄️ COMBO GLACIAL", "combo-gold": "✨ COMBO DORÉ" };
-const colors = { "combo-electric": "#00d2ff", "combo-glacial": "#7be8ff", "combo-gold": "#f8b500" };
-const banner = document.createElement("div");
-banner.className = "combo-banner";
-banner.style.color = colors[cls];
-banner.innerText = labels[cls] + " x" + comboCount + " !";
+if (!document.getElementById("combo-bg")) {
+const bg = document.createElement("div");
+bg.id = "combo-bg";
+document.body.appendChild(bg);
+}
+if (!document.getElementById("combo-fx-layer")) {
+const layer = document.createElement("div");
+layer.id = "combo-fx-layer";
+document.body.appendChild(layer);
+}
+const bg = document.getElementById("combo-bg");
+bg.className = "active " + getComboTheme();
+}
+function addCrack() {
+const layer = document.getElementById("combo-fx-layer");
+if (!layer) return;
+if (layer.childElementCount > 18) layer.removeChild(layer.firstChild);
+const w = window.innerWidth, h = window.innerHeight;
+const side = Math.floor(Math.random() * 4);
+let sx, sy;
+if (side === 0) { sx = Math.random() * w; sy = 0; }
+else if (side === 1) { sx = w; sy = Math.random() * h; }
+else if (side === 2) { sx = Math.random() * w; sy = h; }
+else { sx = 0; sy = Math.random() * h; }
+const tx = w * (0.3 + Math.random() * 0.4);
+const ty = h * (0.3 + Math.random() * 0.4);
+const steps = 6 + Math.floor(Math.random() * 4);
+let points = Math.round(sx) + "," + Math.round(sy);
+for (let i = 1; i <= steps; i++) {
+const t = i / steps;
+const j = 60 * (1 - t);
+const bx = sx + (tx - sx) * t + (Math.random() - 0.5) * j;
+const by = sy + (ty - sy) * t + (Math.random() - 0.5) * j;
+points += " " + Math.round(bx) + "," + Math.round(by);
+}
+const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+svg.setAttribute("class", "combo-crack");
+svg.setAttribute("width", w);
+svg.setAttribute("height", h);
+svg.style.color = getComboColor();
+const poly = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+poly.setAttribute("points", points);
+poly.setAttribute("fill", "none");
+poly.setAttribute("stroke", getComboColor());
+poly.setAttribute("stroke-width", "2");
+svg.appendChild(poly);
+layer.appendChild(svg);
+}
+function updateComboBanner() {
+let banner = document.getElementById("combo-banner");
+if (!banner) {
+banner = document.createElement("div");
+banner.id = "combo-banner";
 document.body.appendChild(banner);
-setTimeout(() => banner.remove(), 1600);
 }
-function deactivateComboFX() {
-const grid = document.getElementById("grid");
-if (grid) grid.classList.remove("combo-electric", "combo-glacial", "combo-gold");
+banner.style.color = getComboColor();
+banner.innerText = "⚡ COMBO x" + comboCount;
+banner.style.animation = "none";
+void banner.offsetWidth;
+banner.style.animation = "";
 }
-document.addEventListener("DOMContentLoaded", () => {
-injectAccountGear();
-applyTranslations();
-updateEconomyUI();
-initMenuBackgroundFX();
-checkAndShowProfileModal();
-const mainLogo = document.querySelector("h1");
-if (mainLogo) {
-mainLogo.addEventListener("click", () => {
-logoClickCount++;
-clearTimeout(logoClickTimer);
-logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 5000);
-if (logoClickCount >= 10) { logoClickCount = 0; openAdminPanel(); }
-});
+function registerComboHit() {
+const now = Date.now();
+if (lastComboTime && now - lastComboTime > COMBO_WINDOW_MS) {
+comboCount = 0;
+if (comboActive) { comboActive = false; clearComboFX(); }
 }
-const urlParams = new URLSearchParams(window.location.search);
-const targetRoom = urlParams.get("room");
-if (targetRoom) {
-setTimeout(() => { if (isProfileValid()) openJoinCustomScreen(targetRoom.toUpperCase()); }, 1000);
+lastComboTime = now;
+comboCount++;
+if (comboCount >= COMBO_THRESHOLD) {
+if (!comboActive) { comboActive = true; activateComboFX(); }
+addCrack();
+updateComboBanner();
 }
-});
+}
 function openAdminPanel() {
 window.open("admin.html", "cb_admin", "width=430,height=780");
 }
@@ -1634,6 +1675,7 @@ if (codeEl && codeEl.innerText && codeEl.innerText !== "----") { if (socket.conn
 }
 function hideAllScreens() {
 setMenuFX(false);
+resetCombo();
 ["screen-title","screen-menu","screen-solo-menu","screen-avalanche-menu","screen-1v1-hub","screen-1v1-lobby","screen-rooms","screen-join-custom","screen-room-waiting","screen-tournament","screen-game","recap-modal","modal-leaderboard","modal-shop","modal-blitz-pass","countdown-overlay","modal-create-room","modal-launch-ad","simulated-ad-overlay","modal-ranked-loadout","modal-jackpot-wheel","modal-friends","admin-modal"].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = "none"; });
 const rewardPopup = document.getElementById("reward-popup-overlay");
 if (rewardPopup) rewardPopup.style.display = "none";
@@ -2302,6 +2344,7 @@ candidates.sort(() => Math.random() - 0.5);
 pool = pool.concat(candidates.slice(0, 11)).sort(() => Math.random() - 0.5);
 renderGrid(pool, handleSoloTileClick);
 }
+
 function handleSoloTileClick(num, index) {
 if (soloTimeLeft <= 0) return;
 const tiles = document.querySelectorAll("#grid .tile");
@@ -2313,7 +2356,6 @@ if (activeTrainingMode === "classic") {
 if (num === soloTarget) {
 SoundEngine.playClick();
 registerComboHit();
-incrementCombo();
 soloTarget++;
 soloScore += 10;
 document.getElementById("game-target-giant").innerText = soloTarget;
@@ -2332,7 +2374,6 @@ if (soloTimeLeft <= 0) endSoloGame();
 if (num === soloTarget) {
 SoundEngine.playClick();
 registerComboHit();
-incrementCombo();
 soloScore += 15;
 soloTarget = Math.floor(Math.random() * 50) + 1;
 document.getElementById("game-target-giant").innerText = soloTarget;
@@ -2446,7 +2487,6 @@ setTimeout(() => { tiles[idx].classList.remove("ripple-active"); }, 400);
 if (val === avalancheTarget) {
 SoundEngine.playClick();
 registerComboHit();
-incrementCombo();
 avalancheGridData[idx] = null;
 soloScore += 20;
 document.getElementById("solo-score").innerText = soloScore;
