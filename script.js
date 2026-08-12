@@ -1631,3 +1631,347 @@ socket.on("friend_error", (msg) => { showNotificationToast("❌ " + msg, "announ
 socket.on("friend_success", (msg) => { showNotificationToast("✅ " + msg, "gift"); socket.emit("get_friends_list"); });
 socket.on("friend_updated", () => { socket.emit("get_friends_list"); });
 // ===== FIN PARTIE 3/5 =====
+/* ============================================================
+SALONS
+============================================================ */
+function openRoomsScreen() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } hideAllScreens(); window.history.replaceState({}, "", window.location.pathname); document.getElementById("screen-rooms").style.display = "flex"; fetchRoomsList(); }
+function fetchRoomsList() { socket.emit("get_rooms_list"); }
+function openCreateRoomModal() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } document.getElementById("custom-room-name").value = ""; document.getElementById("custom-room-pass").value = ""; document.getElementById("modal-create-room").style.display = "flex"; }
+function closeCreateRoomModal() { document.getElementById("modal-create-room").style.display = "none"; }
+function submitCreateRoom() {
+const code = document.getElementById("custom-room-name").value.trim().toUpperCase();
+const password = document.getElementById("custom-room-pass").value.trim();
+if (code !== "" && code.length < 2) { alert("Nom de salon trop court."); return; }
+socket.emit("create_room", { code, password, username: myProfile.username, avatar: myProfile.avatar, flag: myProfile.flag });
+closeCreateRoomModal();
+}
+function openJoinCustomScreen(prefilledCode = "") { if (!isProfileValid()) { checkAndShowProfileModal(); return; } hideAllScreens(); document.getElementById("screen-join-custom").style.display = "flex"; document.getElementById("join-room-code-input").value = prefilledCode; document.getElementById("join-room-pass-input").value = ""; }
+function submitJoinCustomRoom() {
+const roomCode = document.getElementById("join-room-code-input").value.trim().toUpperCase();
+const password = document.getElementById("join-room-pass-input").value.trim();
+if (!roomCode) { alert("Entrer un code valide."); return; }
+socket.emit("join_room", { code: roomCode, password });
+}
+function joinRoomFromList(code, hasPassword) { if (hasPassword) openJoinCustomScreen(code); else joinRoomDirect(code, ""); }
+function joinRoomDirect(code, password) { socket.emit("join_room", { code: code.toUpperCase(), password }); }
+function leaveCustomRoom() { socket.emit("leave_room"); window.history.replaceState({}, "", window.location.pathname); openRoomsScreen(); }
+function copyRoomLink() { const input = document.getElementById("room-share-link"); input.select(); navigator.clipboard.writeText(input.value).then(() => { showNotificationToast("📋 " + i18n[currentLang].link_copied, "gift"); }); }
+function shareRoomLink() { const input = document.getElementById("room-share-link"); if (navigator.share) { navigator.share({ title: "Chiffre Blitz ⚡", text: "Viens m'affronter !", url: input.value }).catch(() => {}); } else copyRoomLink(); }
+socket.on("rooms_list_data", (rooms) => {
+const listEl = document.getElementById("rooms-list");
+listEl.innerHTML = "";
+if (!rooms || rooms.length === 0) { listEl.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:8px; font-size:11px;">Aucun salon ouvert.</div>`; return; }
+rooms.forEach(r => {
+const row = document.createElement("div");
+row.className = "room-row";
+const lockIcon = r.hasPassword ? " 🔒" : "";
+row.innerHTML = `<span class="room-info">Salon <b>${r.code}</b>${lockIcon} (${r.playersCount}/2)</span><button class="power-btn equip" onclick="joinRoomFromList('${r.code}', ${r.hasPassword})">Rejoindre</button>`;
+listEl.appendChild(row);
+});
+});
+socket.on("rooms_list_changed", () => { if (document.getElementById("screen-rooms").style.display === "flex") fetchRoomsList(); });
+socket.on("room_joined_success", (data) => {
+hideAllScreens();
+document.getElementById("screen-room-waiting").style.display = "flex";
+document.getElementById("current-room-code").innerText = data.code;
+const shareUrl = `${window.location.origin}${window.location.pathname}?room=${data.code}`;
+window.history.replaceState({}, "", `?room=${data.code}`);
+document.getElementById("room-share-link").value = shareUrl;
+updateRoomPlayers(data.players);
+});
+socket.on("room_players_update", (data) => { updateRoomPlayers(data.players); });
+function updateRoomPlayers(players) {
+const playersListEl = document.getElementById("room-players-list");
+if (!players || players.length === 0) { playersListEl.innerText = "En attente d'un adversaire..."; return; }
+playersListEl.innerHTML = players.map(rawData => {
+const p = parsePlayer(rawData);
+const title = p.inventory && p.inventory.__equipped && p.inventory.__equipped.title;
+const titleHtml = title ? `<span style="font-size: 8px; color: #f8b500; margin-left: 3px;">[${TITLE_DISPLAY_NAMES[title] || title}]</span>` : "";
+return `<div style="display:inline-flex; align-items:center; gap:4px;">${getAvatarBadgeHTML(p.flag, p.avatar, null, p)}<span>${p.username}</span>${titleHtml}</div>`;
+}).join(' <span style="color:#aaa; margin:0 4px;">vs</span> ');
+if (players && socket.id) { const opp = players.find(p => (p.socketId || p.id) !== socket.id); if (opp) cachedOpponent = parsePlayer(opp); }
+}
+socket.on("room_error", (msg) => { showNotificationToast("❌ " + msg, "announcement"); });
+function openTournamentScreen() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } hideAllScreens(); document.getElementById("screen-tournament").style.display = "flex"; }
+
+/* ============================================================
+BOUTIQUE
+============================================================ */
+function openShop() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } updateShopCoinsDisplay(); document.getElementById("modal-shop").style.display = "flex"; switchShopTab(currentShopTab); }
+function closeShop() { document.getElementById("modal-shop").style.display = "none"; }
+function switchShopTab(type) {
+currentShopTab = type;
+updateShopCoinsDisplay();
+document.getElementById("shop-tab-bonus").classList.toggle("active", type === "bonus");
+document.getElementById("shop-tab-malus").classList.toggle("active", type === "malus");
+const cosmeticsTabBtn = document.getElementById("shop-tab-cosmetics");
+if (cosmeticsTabBtn) cosmeticsTabBtn.classList.toggle("active", type === "cosmetics");
+const container = document.getElementById("shop-container");
+container.innerHTML = "";
+const powersDict = i18n[currentLang].powers;
+const cosmeticsDict = {
+theme_glacial: { name: "🧊 Thème Cryo", desc: "Grille aux reflets bleutés glacés" },
+frame_voltage: { name: "⚡ Cadre Sous Tension", desc: "Éclairs électriques crépitants autour de l'avatar" },
+frame_obsidian: { name: "🖤 Cadre Obsidienne", desc: "Cadre sombre strié de lueurs pourpres" }
+};
+POWERS_CATALOG.filter(p => p.type === type).forEach(p => {
+const card = document.createElement("div");
+if (type === "cosmetics") {
+const info = cosmeticsDict[p.id];
+const unlocked = myProfile.unlocked_items && myProfile.unlocked_items.includes(p.id);
+const equipped = myProfile.inventory && myProfile.inventory.__equipped && Object.values(myProfile.inventory.__equipped).includes(p.id);
+card.className = `power-card ${equipped ? "equipped" : ""}`;
+card.innerHTML = `<h4>${info.name}</h4><p>${info.desc}</p><div style="font-weight:bold; margin-bottom:4px; font-size:10px; color:#f8b500;">${p.price} 🪙</div>
+${unlocked ? `<button class="power-btn ${equipped ? "active" : "equip"}" onclick="equipCosmetic('${p.id}')">${equipped ? "Équipé ✅" : "Équiper"}</button>` : `<button class="power-btn buy" onclick="buyItem('${p.id}')">Acheter</button>`}`;
+} else {
+const powerInfo = powersDict[p.id];
+const qty = myProfile.inventory[p.id] || 0;
+const isEquipped = myProfile.equippedPower === p.id;
+card.className = `power-card ${isEquipped ? "equipped" : ""}`;
+card.innerHTML = `<h4>${powerInfo.name}</h4><p>${powerInfo.desc}</p><div class="stock-badge">Stock : ${qty}</div><div style="font-weight:bold; margin-bottom:4px; font-size:10px; color:#f8b500;">${p.price} 🪙</div>
+<button class="power-btn buy" onclick="buyItem('${p.id}')">Acheter (+1)</button>
+${qty > 0 ? `<button class="power-btn ${isEquipped ? "active" : "equip"}" onclick="equipPower('${p.id}')">${isEquipped ? "Équipé ✅" : "Équiper"}</button>` : ""}`;
+}
+container.appendChild(card);
+});
+}
+function buyItem(id) {
+const itemObj = POWERS_CATALOG.find(p => p.id === id);
+if (itemObj && myProfile.coins < itemObj.price) { SoundEngine.playError(); showNotificationToast(i18n[currentLang].not_enough_coins, "announcement"); return; }
+if (socket.connected) socket.emit("buy_item", id);
+}
+function equipCosmetic(id) { if (socket.connected) socket.emit("equip_cosmetic", id); }
+function equipPower(id) { if (socket.connected) socket.emit("equip_power", id); }
+
+/* ============================================================
+PASSE DE COMBAT
+============================================================ */
+const BLITZ_PASS_TIERS = [
+{ tier: 1, free: "50 Pièces (🪙)", premium: "Titre exclusif « [ Stalker Numérique ] »" },
+{ tier: 2, free: "1 💡 Projecteur", premium: "100 Pièces (🪙)" },
+{ tier: 3, free: "50 Pièces (🪙)", premium: "Titre rare « [ Réflexe Félin ] »" },
+{ tier: 4, free: "1 ⏳ Blocage du Temps", premium: "🛡️ Cadre de Profil Argenté" },
+{ tier: 5, free: "75 Pièces (🪙)", premium: "150 Pièces (🪙)" },
+{ tier: 6, free: "1 ⚡ Joker Éclair", premium: "Pack de Consommables (Bonus)" },
+{ tier: 7, free: "50 Pièces (🪙)", premium: "Titre « [ Pulsion Néon ] »" },
+{ tier: 8, free: "1 💡 Projecteur", premium: "2 🌟 Novas Temporelles" },
+{ tier: 9, free: "100 Pièces (🪙)", premium: "200 Pièces (🪙)" },
+{ tier: 10, free: "1 🌟 Nova Temporelle", premium: "🎨 Thème de Grille Alternatif (Plasma)" },
+{ tier: 11, free: "60 Pièces (🪙)", premium: "120 Pièces (🪙)" },
+{ tier: 12, free: "1 ⏳ Blocage du Temps", premium: "1 💡 Projecteur" },
+{ tier: 13, free: "70 Pièces (🪙)", premium: "Titre « [ Spectre Cosmique ] »" },
+{ tier: 14, free: "1 ⚡ Joker Éclair", premium: "2 ⏳ Blocage du Temps" },
+{ tier: 15, free: "150 Pièces (🪙)", premium: "🐱 Avatar Animé Lottie : Chat Assistant" },
+{ tier: 16, free: "80 Pièces (🪙)", premium: "160 Pièces (🪙)" },
+{ tier: 17, free: "2 💡 Projecteur", premium: "2 🌟 Novas Temporelles" },
+{ tier: 18, free: "90 Pièces (🪙)", premium: "250 Pièces (🪙)" },
+{ tier: 19, free: "1 ⚡ Joker Éclair", premium: "1 📳 Séisme" },
+{ tier: 20, free: "100 Pièces (🪙)", premium: "🌈 Cadre Animé « Flux Chroma »" },
+{ tier: 21, free: "110 Pièces (🪙)", premium: "220 Pièces (🪙)" },
+{ tier: 22, free: "1 ⏳ Blocage du Temps", premium: "3 💡 Projecteur" },
+{ tier: 23, free: "120 Pièces (🪙)", premium: "Titre honorifique spécial" },
+{ tier: 24, free: "1 ⚡ Joker Éclair", premium: "300 Pièces (🪙)" },
+{ tier: 25, free: "150 Pièces (🪙)", premium: "✨ Cadre Animé « Prisme Solaire »" },
+{ tier: 26, free: "130 Pièces (🪙)", premium: "260 Pièces (🪙)" },
+{ tier: 27, free: "2 💡 Projecteur", premium: "4 🌟 Novas Temporelles" },
+{ tier: 28, free: "140 Pièces (🪙)", premium: "400 Pièces (🪙)" },
+{ tier: 29, free: "300 Pièces (🪙)", premium: "500 Pièces (🪙)" },
+{ tier: 30, free: "Titre suprême « [ ⚡ FÉLIN SUPRÊME ] » + 500 🪙", premium: "🏆 GRAND LOT : Avatar Animé Lottie : Chat Arc-en-ciel + 1000 🪙" }
+];
+function openBlitzPass() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } document.getElementById("modal-blitz-pass").style.display = "flex"; renderBlitzPass(); }
+function closeBlitzPass() { document.getElementById("modal-blitz-pass").style.display = "none"; }
+function showRewardPopUp(rewardName, rewardIcon) {
+let popup = document.getElementById("reward-popup-overlay");
+if (!popup) {
+popup = document.createElement("div");
+popup.id = "reward-popup-overlay";
+popup.className = "modal-overlay";
+popup.innerHTML = `<div class="modal-card" style="text-align:center; animation: victoryScalePop 0.5s cubic-bezier(0.175,0.885,0.32,1.275) forwards; border-color:#f8b500; box-shadow:0 0 40px rgba(248,181,0,0.8);">
+<div style="font-size:55px; margin-bottom:10px;" id="popup-reward-icon">🎁</div>
+<div style="font-size:10px; font-weight:900; color:#f8b500; letter-spacing:2px; margin-bottom:4px;">RÉCOMPENSE DÉBLOQUÉE</div>
+<div id="popup-reward-name" style="color:#fff; font-size:15px; font-weight:bold; margin-bottom:20px; line-height:1.4;">-</div>
+<button class="btn-main btn-gold" onclick="document.getElementById('reward-popup-overlay').style.display='none'" style="width:100%; margin-top:0;">Récupéré ! ⚡</button></div>`;
+document.body.appendChild(popup);
+}
+document.getElementById("popup-reward-icon").innerText = rewardIcon || "🎁";
+document.getElementById("popup-reward-name").innerText = rewardName;
+popup.style.display = "flex";
+SoundEngine.playVictory();
+}
+function renderBlitzPass() {
+const container = document.getElementById("blitz-pass-container");
+const isPremium = myProfile.blitzPassPremium;
+const claimed = myProfile.claimedPassTiers || {};
+container.innerHTML = `<div class="bp-header-banner">
+<div style="font-size:13px; font-weight:900; color:#f8b500; margin-bottom:2px;">🌟 SAISON 1 : PASSE DE COMBAT FÉLIN & NÉON</div>
+<div style="font-size:10px; color:#ccc; margin-bottom:6px;">${isPremium ? "✨ Passe Premium Actif !" : "Débloque le Passe Premium pour 1000 🪙"}</div>
+${!isPremium ? `<button class="btn-main btn-gold" onclick="buyBlitzPassPremium()" style="padding:6px 10px; font-size:11px; margin:0 auto; width:auto;">Acheter le Passe Premium (1000 🪙) ⭐</button>` : `<div style="color:#00ff88; font-weight:bold; font-size:10px;">Statut : VIP / Premium</div>`}</div>`;
+const listDiv = document.createElement("div");
+listDiv.style.cssText = "display:flex; flex-direction:column; gap:6px;";
+BLITZ_PASS_TIERS.forEach(t => {
+const freeKey = `${t.tier}_free`;
+const premKey = `${t.tier}_premium`;
+const isFreeClaimed = claimed[freeKey];
+const isPremClaimed = claimed[premKey];
+const premDisabled = isPremClaimed || !isPremium;
+const card = document.createElement("div");
+card.className = "bp-tier-card unlocked";
+card.innerHTML = `
+<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:3px;"><span style="font-weight:900; color:#f8b500; font-size:11px;">PALIER ${t.tier}</span><span style="font-size:9px; font-weight:bold; color:#00ff88;">Disponible ✅</span></div>
+<div class="bp-tracks-grid">
+<div class="bp-track-box"><div><span style="color:#38ef7d; font-weight:bold;">🟢 Gratuit :</span><br>${t.free}</div>
+<button class="power-btn ${isFreeClaimed ? "active" : "equip"}" style="margin-top:4px; font-size:9px; padding:3px; ${isFreeClaimed ? "opacity:0.5;" : ""}" ${isFreeClaimed ? "disabled" : ""} onclick="claimPassReward(${t.tier}, 'free')">${isFreeClaimed ? "Récupéré" : "Récupérer"}</button></div>
+<div class="bp-track-box"><div><span style="color:#00d2ff; font-weight:bold;">⭐ Premium :</span><br>${t.premium}</div>
+<button class="power-btn ${isPremClaimed ? "active" : "equip"}" style="margin-top:4px; font-size:9px; padding:3px; ${premDisabled ? "opacity:0.5;" : ""}" ${premDisabled ? "disabled" : ""} onclick="claimPassReward(${t.tier}, 'premium')">${isPremClaimed ? "Récupéré" : "Récupérer"}</button></div>
+</div>`;
+listDiv.appendChild(card);
+});
+container.appendChild(listDiv);
+}
+function buyBlitzPassPremium() { if (myProfile.coins < 1000) { showNotificationToast(i18n[currentLang].not_enough_coins, "announcement"); return; } socket.emit("buy_blitz_pass"); }
+function claimPassReward(tier, track) { if (track === "premium" && !myProfile.blitzPassPremium) { showNotificationToast("❌ Tu dois acheter le Passe Premium pour récupérer cette récompense !", "announcement"); return; } socket.emit("claim_pass_tier", { tier, track }); }
+socket.on("pass_tier_claimed", (data) => {
+const tier = data.tier, track = data.track;
+const tierData = BLITZ_PASS_TIERS.find(t => t.tier === tier);
+const rewardText = tierData ? (track === "premium" ? tierData.premium : tierData.free) : `Palier ${tier}`;
+const icon = (tier === 30 && track === "premium") ? "🌈" : (tier === 15 && track === "premium") ? "🐱" : "🌟";
+showRewardPopUp(rewardText, icon);
+renderBlitzPass();
+});
+socket.on("pass_claim_denied", (data) => {
+if (data.reason === "premium_required") showNotificationToast("❌ Tu dois acheter le Passe Premium pour récupérer cette récompense !", "announcement");
+else if (data.reason === "already_claimed") showNotificationToast("❌ Cette récompense a déjà été récupérée.", "announcement");
+renderBlitzPass();
+});
+
+/* ============================================================
+POUVOIRS / HUD
+============================================================ */
+function sanitizeEquippedPowers() {
+if (!myProfile.inventory) myProfile.inventory = {};
+if (myProfile.equippedPower && (myProfile.inventory[myProfile.equippedPower] || 0) <= 0) myProfile.equippedPower = null;
+if (myProfile.equippedPowers && myProfile.equippedPowers.length > 0) myProfile.equippedPowers = myProfile.equippedPowers.filter(p => (myProfile.inventory[p] || 0) > 0);
+if (selectedRankedItems && selectedRankedItems.length > 0) selectedRankedItems = selectedRankedItems.filter(p => (myProfile.inventory[p] || 0) > 0);
+}
+function preparePowerHUD() {
+const zone = document.getElementById('power-zone');
+zone.innerHTML = '';
+const isSolo = document.getElementById('hud-solo').style.display !== 'none';
+const charges = isSolo ? currentSoloCharges : currentMatchCharges;
+let usableCount = 0;
+for (const powerId in charges) {
+const remaining = charges[powerId] || 0;
+if (remaining > 0) {
+usableCount++;
+const powerInfo = i18n[currentLang].powers[powerId];
+const btn = document.createElement('button');
+btn.className = 'btn-power-hud';
+btn.innerHTML = `⚡ ${powerInfo ? powerInfo.name : powerId} (${remaining})`;
+btn.onclick = () => triggerSpecificPower(powerId, btn);
+zone.appendChild(btn);
+}
+}
+zone.style.display = usableCount > 0 ? 'block' : 'none';
+}
+function triggerSpecificPower(powerId, btnEl) {
+const isSolo = document.getElementById('hud-solo').style.display !== 'none';
+const charges = isSolo ? currentSoloCharges : currentMatchCharges;
+if ((charges[powerId] || 0) <= 0 || btnEl.disabled) return;
+charges[powerId]--;
+btnEl.disabled = true; btnEl.style.opacity = '0.5';
+socket.emit('use_power', powerId);
+const MALUS = ['quake', 'micro', 'eclipse', 'chaos'];
+if (MALUS.includes(powerId) && !isSolo) socket.emit('send_malus', { type: powerId });
+const currentTarget = parseInt(document.getElementById('game-target-giant').innerText) || 1;
+if (powerId === 'spotlight') {
+document.querySelectorAll('.tile').forEach(t => { if (parseInt(t.innerText) === currentTarget) { t.classList.add('highlight-target'); setTimeout(() => t.classList.remove('highlight-target'), 2000); } });
+} else if (powerId === 'joker') autoValidateTarget();
+else if (powerId === 'freeze') {
+isTimeFrozen = true;
+const timerEl = document.getElementById('game-timer');
+timerEl.classList.add('frozen');
+setTimeout(() => { isTimeFrozen = false; timerEl.classList.remove('frozen'); }, 3000);
+} else if (powerId === 'nova') {
+autoValidateTarget();
+setTimeout(() => autoValidateTarget(), 250);
+setTimeout(() => autoValidateTarget(), 500);
+}
+setTimeout(() => preparePowerHUD(), 100);
+}
+socket.on("power_used_success", () => { if (document.getElementById("screen-game").style.display === "block") preparePowerHUD(); });
+socket.on("power_use_denied", () => { if (document.getElementById("screen-game").style.display === "block") preparePowerHUD(); });
+function autoValidateTarget() {
+const is1v1 = document.getElementById("hud-1v1").style.display !== "none";
+if (is1v1) {
+const targetVal = parseInt(document.getElementById("game-target-giant").innerText) || 1;
+document.querySelectorAll("#grid .tile").forEach((t, idx) => { if (parseInt(t.innerText) === targetVal) handle1v1TileClick(targetVal, idx); });
+} else handleSoloTileClick(soloTarget);
+}
+socket.on("receive_malus", (data) => {
+const grid = document.getElementById("grid");
+SoundEngine.playError();
+showNotificationToast("💥 PIÈGE ADVERSAIRE REÇU !", "announcement");
+if (!grid) return;
+if (data.type === "quake") { grid.classList.add("effect-quake"); setTimeout(() => grid.classList.remove("effect-quake"), 2000); }
+else if (data.type === "micro") { grid.classList.add("effect-micro"); setTimeout(() => grid.classList.remove("effect-micro"), 2000); }
+else if (data.type === "eclipse") { grid.classList.add("effect-eclipse"); setTimeout(() => grid.classList.remove("effect-eclipse"), 1500); }
+else if (data.type === "chaos") {
+grid.classList.add("effect-quake");
+setTimeout(() => { grid.classList.remove("effect-quake"); grid.classList.add("effect-micro"); }, 1500);
+setTimeout(() => { grid.classList.remove("effect-micro"); grid.classList.add("effect-eclipse"); }, 3000);
+setTimeout(() => { grid.classList.remove("effect-eclipse"); }, 4500);
+}
+});
+
+/* ============================================================
+CLASSEMENT
+============================================================ */
+let currentLbCategory = "points";
+let currentLbScope = "regional";
+function openLeaderboard() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } document.getElementById("modal-leaderboard").style.display = "flex"; updateCombinedExplanationVisibility(); fetchLeaderboard(); }
+function closeLeaderboard() { document.getElementById("modal-leaderboard").style.display = "none"; }
+function setLbCategory(cat) {
+currentLbCategory = cat;
+["points", "trophies", "coins", "combined"].forEach(c => { const btn = document.getElementById(`lb-cat-${c}`); if (btn) btn.classList.toggle("active", c === cat); });
+updateCombinedExplanationVisibility();
+fetchLeaderboard();
+}
+function updateCombinedExplanationVisibility() { const el = document.getElementById("lb-combined-explanation"); if (el) el.style.display = (currentLbCategory === "combined") ? "block" : "none"; }
+function setLbScope(scope) {
+currentLbScope = scope;
+["regional", "national", "global"].forEach(s => { const btn = document.getElementById(`lb-scope-${s}`); if (btn) btn.classList.toggle("active", s === scope); });
+fetchLeaderboard();
+}
+function fetchLeaderboard() {
+const type = `${currentLbCategory}_${currentLbScope}`;
+document.getElementById("lb-list").innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;" data-i18n="loading">Chargement...</div>`;
+socket.emit("get_leaderboard", type);
+}
+socket.on("leaderboard_data", (res) => {
+const container = document.getElementById("lb-list");
+container.innerHTML = "";
+if (!res.data || res.data.length === 0) { container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">Aucun joueur.</div>`; return; }
+const category = res.type ? res.type.split("_")[0] : "points";
+const parsedList = res.data.map(p => parsePlayer(p));
+if (category === "combined") parsedList.sort((a, b) => { if ((b.trophies - a.trophies) !== 0) return b.trophies - a.trophies; return b.points - a.points; });
+parsedList.forEach((p, index) => {
+const row = document.createElement("div");
+row.className = "lb-row";
+const badgeHtml = getAvatarBadgeHTML(p.flag, p.avatar, null, p);
+const equippedTitle = p.inventory && p.inventory.__equipped && p.inventory.__equipped.title;
+const titleHtml = equippedTitle ? `<span style="font-size:8px; color:#f8b500; font-weight:bold; margin-left:4px;">[${TITLE_DISPLAY_NAMES[equippedTitle] || equippedTitle}]</span>` : "";
+let rightBadge = `<span class="lb-pts" style="color:#00ff88;">${p.points} pts</span>`;
+if (category === "coins") rightBadge = `<span class="lb-pts" style="color:#f8b500;">${p.coins} 🪙</span>`;
+else if (category === "trophies") rightBadge = `<span class="lb-pts" style="color:#fceabb;">${p.trophies} 🏆</span>`;
+else if (category === "combined") rightBadge = `<span class="lb-pts" style="color:#00d2ff; font-size:11px;">🏆${p.trophies} | ${p.points}pts</span>`;
+let rankDisplay = `#${index + 1}`, rankColor = "#00d2ff";
+if (index === 0) { rankDisplay = "🥇"; rankColor = "#f8b500"; }
+else if (index === 1) { rankDisplay = "🥈"; rankColor = "#e0e0e0"; }
+else if (index === 2) { rankDisplay = "🥉"; rankColor = "#cd7f32"; }
+row.innerHTML = `<span class="lb-rank" style="color:${rankColor};">${rankDisplay}</span>
+<div class="lb-user-info"><div class="lb-name-row">${badgeHtml}<span>${p.username}</span>${titleHtml}</div>
+<div class="lb-sub-details"><span>🏆 ${p.trophies}</span><span>🪙 ${p.coins}</span><span>⚔️ V:${p.wins}/D:${p.losses}</span></div></div>${rightBadge}`;
+container.appendChild(row);
+});
+});
+// ===== FIN PARTIE 4/5 =====
