@@ -2,16 +2,7 @@
 PANEL ADMIN
 ============================================================ */
 function openAdminPanel() {
-const modal = document.getElementById("admin-modal");
-const loginSec = document.getElementById("admin-login-section");
-const dashSec = document.getElementById("admin-dashboard-section");
-const passInput = document.getElementById("admin-password-input");
-const errEl = document.getElementById("admin-login-error");
-if (modal) { modal.style.display = "flex"; modal.style.zIndex = "10000"; }
-if (loginSec) loginSec.style.display = "block";
-if (dashSec) dashSec.style.display = "none";
-if (passInput) passInput.value = "";
-if (errEl) errEl.innerText = "";
+window.open("admin.html", "cb_admin", "width=430,height=780");
 }
 function closeAdminPanel() {
 const modal = document.getElementById("admin-modal");
