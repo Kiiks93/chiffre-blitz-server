@@ -1718,11 +1718,10 @@ overflow: hidden;
 }
 .combo-coin {
 position: absolute;
-top: -8%;
-animation: coinFall linear forwards;
+animation: coinFall cubic-bezier(0.25, 0.4, 0.6, 1) forwards;
 filter: drop-shadow(0 0 6px rgba(248, 181, 0, 0.8));
 }
 @keyframes coinFall {
-0% { transform: translateY(0) rotate(0deg); }
-100% { transform: translateY(125vh) rotate(720deg); }
+0% { transform: translateY(-110vh) rotate(0deg); }
+100% { transform: translateY(0) rotate(540deg); }
 }
