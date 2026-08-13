@@ -27,7 +27,7 @@ let lastComboTime = 0;
 let soloPerfection = false;
 let comboFXEnabled = false;
 let comboTimerInterval = null;
-const COMBO_WINDOW_MS = 2000;
+const COMBO_WINDOW_MS = 20000;
 function getComboColor() {
 const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
 if (theme === "theme_glacial") return "#7be8ff";
