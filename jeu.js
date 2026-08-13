@@ -147,6 +147,7 @@ if (g) g.classList.remove("combo-tier1", "combo-tier2");
 }
 lastComboTime = now;
 currentCombo++;
+if (comboFXEnabled && currentCombo >= 10) SoundEngine.playComboTick(currentCombo);
 if (!comboFXEnabled) return;
 updateComboHUD();
 const grid = document.getElementById("grid");
@@ -187,6 +188,7 @@ shakeScreen(0.2 + (i / crackCount) * 0.8);
 const boomTime = crackCount * 70 + 350;
 setTimeout(() => {
 flashScreen();
+SoundEngine.playExplosion();
 shatterExplosion();
 spawnExplosionParticles();
 shakeScreen(1.5);
@@ -298,6 +300,7 @@ svg.appendChild(branch);
 }
 layer.appendChild(svg);
 }
+SoundEngine.playCrack();
 function clearCracks() {
 const layer = document.getElementById("combo-cracks-layer");
 if (layer) layer.innerHTML = "";
