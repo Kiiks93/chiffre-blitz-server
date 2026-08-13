@@ -34,6 +34,9 @@ if (theme === "theme_glacial") return "#7be8ff";
 if (theme === "theme_alt") return "#f8b500";
 return "#00d2ff";
 }
+function getEquippedThemeId() {
+return (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme) || "";
+}
 function getComboEmojis() {
 const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
 if (theme === "theme_glacial") return ["❄️", "🧊", "✨", "💥"];
@@ -188,7 +191,7 @@ shakeScreen(0.2 + (i / crackCount) * 0.8);
 const boomTime = crackCount * 70 + 350;
 setTimeout(() => {
 flashScreen();
-SoundEngine.playExplosion();
+SoundEngine.playPerfectionBoom(getEquippedThemeId());
 shatterExplosion();
 spawnExplosionParticles();
 shakeScreen(1.5);
@@ -300,7 +303,7 @@ svg.appendChild(branch);
 }
 layer.appendChild(svg);
 }
-SoundEngine.playCrack();
+SoundEngine.playCrack(getEquippedThemeId());
 function clearCracks() {
 const layer = document.getElementById("combo-cracks-layer");
 if (layer) layer.innerHTML = "";
