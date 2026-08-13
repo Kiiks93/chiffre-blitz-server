@@ -213,7 +213,6 @@ SoundEngine.playVictory();
 }, boomTime);
 // PHASE 3 : récap + récompense
 setTimeout(() => { endSoloGame(); }, boomTime + 1000);
-}
 function spawnExplosionParticles() {
 const emojis = getComboEmojis();
 for (let i = 0; i < 40; i++) {
