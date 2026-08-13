@@ -33,6 +33,7 @@ if (theme === "theme_alt") return "#f8b500";
 return "#00d2ff";
 }
 function resetCombo() {
+clearCracks();
 if (soloPerfection) return;
 currentCombo = 0;
 const grid = document.getElementById("grid");
@@ -43,20 +44,12 @@ grid.style.setProperty("--combo-color", getComboColor());
 const banner = document.getElementById("combo-banner");
 if (banner) banner.remove();
 }
-function showComboBanner(text) {
-const banner = document.createElement("div");
-banner.id = "combo-banner";
-banner.style.color = getComboColor();
-banner.innerText = text;
-banner.style.animation = "comboPop 0.5s ease";
-document.body.appendChild(banner);
-setTimeout(() => banner.remove(), 1500);
-}
 function registerComboHit() {
 if (soloPerfection) return;
 const now = Date.now();
 if (now - lastComboTime > COMBO_WINDOW_MS) {
 currentCombo = 0;
+clearCracks();
 const g = document.getElementById("grid");
 if (g) g.classList.remove("combo-tier1", "combo-tier2");
 }
@@ -67,11 +60,15 @@ if (grid) grid.style.setProperty("--combo-color", getComboColor());
 if (currentCombo === 15) {
 if (grid) grid.classList.add("combo-tier1");
 showComboBanner("⚡ COMBO x15 !");
+spawnCrack();
 } else if (currentCombo === 30) {
 if (grid) { grid.classList.remove("combo-tier1"); grid.classList.add("combo-tier2"); }
 showComboBanner("🔥 COMBO x30 !!");
+spawnCrack();
 } else if (currentCombo >= 35) {
 triggerPerfection();
+} else if (currentCombo > 15) {
+spawnCrack();
 }
 }
 function triggerPerfection() {
@@ -80,7 +77,69 @@ soloPerfection = true;
 const grid = document.getElementById("grid");
 if (grid) { grid.classList.remove("combo-tier1", "combo-tier2"); grid.classList.add("combo-perfection"); }
 showComboBanner("💥 PERFECTION x35 !!!");
+for (let i = 0; i < 10; i++) setTimeout(() => spawnCrack(), i * 60);
 spawnExplosionParticles();
+SoundEngine.playVictory();
+if (soloTimerInterval) clearInterval(soloTimerInterval);
+if (avalancheTimerInterval) clearInterval(avalancheTimerInterval);
+if (avalancheInterval) clearInterval(avalancheInterval);
+setTimeout(() => { endSoloGame(); }, 1200);
+}
+ function getComboCrackStyle() {
+const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
+if (theme === "theme_glacial") return { color: "#7be8ff", width: 2, jag: 30 };
+if (theme === "theme_alt") return { color: "#f8b500", width: 3, jag: 18 };
+return { color: "#00d2ff", width: 2, jag: 38 };
+}
+function ensureCracksLayer() {
+let layer = document.getElementById("combo-cracks-layer");
+if (!layer) {
+layer = document.createElement("div");
+layer.id = "combo-cracks-layer";
+document.body.appendChild(layer);
+}
+return layer;
+}
+function spawnCrack() {
+const layer = ensureCracksLayer();
+if (layer.childElementCount > 24) layer.removeChild(layer.firstChild);
+const style = getComboCrackStyle();
+const w = window.innerWidth, h = window.innerHeight;
+const side = Math.floor(Math.random() * 4);
+let sx, sy;
+if (side === 0) { sx = Math.random() * w; sy = 0; }
+else if (side === 1) { sx = w; sy = Math.random() * h; }
+else if (side === 2) { sx = Math.random() * w; sy = h; }
+else { sx = 0; sy = Math.random() * h; }
+const tx = w * (0.25 + Math.random() * 0.5);
+const ty = h * (0.25 + Math.random() * 0.5);
+const steps = 6 + Math.floor(Math.random() * 5);
+let points = Math.round(sx) + "," + Math.round(sy);
+for (let i = 1; i <= steps; i++) {
+const t = i / steps;
+const j = style.jag * (1 - t * 0.5);
+const bx = sx + (tx - sx) * t + (Math.random() - 0.5) * j;
+const by = sy + (ty - sy) * t + (Math.random() - 0.5) * j;
+points += " " + Math.round(bx) + "," + Math.round(by);
+}
+const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+svg.setAttribute("class", "combo-crack");
+svg.setAttribute("width", w);
+svg.setAttribute("height", h);
+svg.style.color = style.color;
+const poly = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+poly.setAttribute("points", points);
+poly.setAttribute("fill", "none");
+poly.setAttribute("stroke", style.color);
+poly.setAttribute("stroke-width", style.width);
+poly.setAttribute("stroke-linecap", "round");
+svg.appendChild(poly);
+layer.appendChild(svg);
+}
+function clearCracks() {
+const layer = document.getElementById("combo-cracks-layer");
+if (layer) layer.innerHTML = "";
+} 
 SoundEngine.playVictory();
 if (soloTimerInterval) clearInterval(soloTimerInterval);
 if (avalancheTimerInterval) clearInterval(avalancheTimerInterval);
