@@ -775,7 +775,7 @@ if (!isProfileValid()) { checkAndShowProfileModal(); return; }
 activeTrainingMode = mode || "classic";
 hideAllScreens();
 soloTarget = (activeTrainingMode === "random") ? Math.floor(Math.random() * 50) + 1 : 1;
-soloScore = 0; soloTimeLeft = 30; isTimeFrozen = false;
+soloScore = 0; soloTimeLeft = 50; isTimeFrozen = false;
 currentSoloCharges = {};
 resetCombo();
 comboFXEnabled = true;
