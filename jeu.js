@@ -976,41 +976,38 @@ resetCombo();
 FIN DE PARTIE SOLO (version corrigée)
 ============================================================ */
 function endSoloGame() {
-    hideAllScreens();
-    const wasPerfection = soloPerfection;
-    const modal = document.getElementById("recap-modal");
-    rewardDoubled = false;
-    const doubleBtn = document.getElementById("btn-double-reward");
-    doubleBtn.disabled = false;
-    doubleBtn.style.opacity = "1";
-    doubleBtn.innerText = "📺 Doubler mes gains (Pub)";
-    const rematchBtn = document.getElementById("btn-rematch");
-    if (rematchBtn) rematchBtn.style.display = "none";
-    
-    socket.emit("claim_solo_reward", { score: soloScore, perfection: wasPerfection });
-    
-    document.getElementById("winner-cinematic-container").innerHTML = `
-        <div class="victory-avatar-showcase">
-            <div class="victory-badge-large">
-                <span style="font-size: 28px;">🏋️</span>
-            </div>
-        </div>`;
-    
-    if (wasPerfection) {
-        document.getElementById("recap-banner").innerText = "💥 PERFECTION x35 !";
-        document.getElementById("recap-banner").style.color = "#f8b500";
-        document.getElementById("recap-reason").innerText = "PERFECTION ! Récompense maximale + Succès 🏆";
-    } else {
-        document.getElementById("recap-banner").innerText = "🏋️ ENTRAÎNEMENT TERMINÉ";
-        document.getElementById("recap-banner").style.color = "#00d2ff";
-        document.getElementById("recap-reason").innerText = `Score : ${soloScore}`;
-    }
-    document.getElementById("recap-1v1-rows").style.display = "none";
-    document.getElementById("recap-my-score").innerText = soloScore;
-    SoundEngine.playVictory();
-    modal.style.display = "flex";
-    soloPerfection = false;
-    resetCombo();
+hideAllScreens();
+const wasPerfection = soloPerfection;
+const modal = document.getElementById("recap-modal");
+rewardDoubled = false;
+const doubleBtn = document.getElementById("btn-double-reward");
+doubleBtn.disabled = false;
+doubleBtn.style.opacity = "1";
+doubleBtn.innerText = "📺 Doubler mes gains (Pub)";
+const rematchBtn = document.getElementById("btn-rematch");
+if (rematchBtn) rematchBtn.style.display = "none";
+socket.emit("claim_solo_reward", { score: soloScore, perfection: wasPerfection });
+document.getElementById("winner-cinematic-container").innerHTML = `
+<div class="victory-avatar-showcase">
+<div class="victory-badge-large">
+<span style="font-size: 28px;">🏋️</span>
+</div>
+</div>`;
+if (wasPerfection) {
+document.getElementById("recap-banner").innerText = "💥 PERFECTION x35 !";
+document.getElementById("recap-banner").style.color = "#f8b500";
+document.getElementById("recap-reason").innerText = "PERFECTION ! Récompense maximale + Succès 🏆";
+} else {
+document.getElementById("recap-banner").innerText = "🏋️ ENTRAÎNEMENT TERMINÉ";
+document.getElementById("recap-banner").style.color = "#00d2ff";
+document.getElementById("recap-reason").innerText = `Score : ${soloScore}`;
+}
+document.getElementById("recap-1v1-rows").style.display = "none";
+document.getElementById("recap-my-score").innerText = soloScore;
+SoundEngine.playVictory();
+if (!wasPerfection) modal.style.display = "flex";
+soloPerfection = false;
+resetCombo();
 }
 
 /* ============================================================
