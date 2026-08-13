@@ -296,12 +296,10 @@ svg.appendChild(branch);
 }
 layer.appendChild(svg);
 }
-SoundEngine.playCrack(getEquippedThemeId());
+
 function clearCracks() {
-const layer = document.getElementById("combo-cracks-layer");
-if (layer) layer.innerHTML = "";
-const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
-SoundEngine.playCrack(theme || "");
+    const layer = document.getElementById("combo-cracks-layer");
+    if (layer) layer.innerHTML = "";
 }
 
 /* ============================================================
