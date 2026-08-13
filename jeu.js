@@ -8,7 +8,7 @@ let radarInterval = null;
 let activeTrainingMode = "classic";
 let soloTarget = 1;
 let soloScore = 0;
-let soloTimeLeft = 40;
+let soloTimeLeft = 30;
 let soloTimerInterval = null;
 let isTimeFrozen = false;
 let currentCoinsGained = 0;
@@ -114,11 +114,11 @@ if (currentCombo === 15) {
 if (grid) grid.classList.add("combo-tier1");
 showComboBanner("⚡ COMBO x15 !");
 spawnCrack();
-} else if (currentCombo === 30) {
+} else if (currentCombo === 20) {
 if (grid) { grid.classList.remove("combo-tier1"); grid.classList.add("combo-tier2"); }
 showComboBanner("🔥 COMBO x30 !!");
 spawnCrack();
-} else if (currentCombo >= 35) {
+} else if (currentCombo >= 20) {
 triggerPerfection();
 } else if (currentCombo > 15) {
 spawnCrack();
