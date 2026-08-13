@@ -64,145 +64,6 @@ osc.start(t); osc.stop(t + 0.25);
 }, i * 80);
 });
 },
-playCrack(theme) {
-if (this.isMuted) return;
-this.init();
-if (!this.ctx) return;
-const t = this.ctx.currentTime;
-if (theme === "theme_glacial") {
-for (let i = 0; i < 3; i++) {
-const osc = this.ctx.createOscillator();
-const g = this.ctx.createGain();
-osc.type = "triangle";
-osc.frequency.setValueAtTime(1800 + Math.random() * 2500, t + i * 0.03);
-g.gain.setValueAtTime(0.06, t + i * 0.03);
-g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.03 + 0.12);
-osc.connect(g); g.connect(this.ctx.destination);
-osc.start(t + i * 0.03); osc.stop(t + i * 0.03 + 0.12);
-}
-} else if (theme === "theme_alt") {
-const osc = this.ctx.createOscillator();
-const g = this.ctx.createGain();
-osc.type = "square";
-osc.frequency.setValueAtTime(1200 + Math.random() * 600, t);
-osc.frequency.exponentialRampToValueAtTime(2400, t + 0.06);
-g.gain.setValueAtTime(0.07, t);
-g.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
-osc.connect(g); g.connect(this.ctx.destination);
-osc.start(t); osc.stop(t + 0.1);
-} else {
-const osc = this.ctx.createOscillator();
-const g = this.ctx.createGain();
-osc.type = "sawtooth";
-osc.frequency.setValueAtTime(2200, t);
-osc.frequency.exponentialRampToValueAtTime(200, t + 0.08);
-g.gain.setValueAtTime(0.08, t);
-g.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
-osc.connect(g); g.connect(this.ctx.destination);
-osc.start(t); osc.stop(t + 0.08);
-}
-},
-playPerfectionBoom(theme) {
-if (this.isMuted) return;
-this.init();
-if (!this.ctx) return;
-const t = this.ctx.currentTime;
-if (theme === "theme_glacial") {
-this.boom(t, 0.5, 90);
-for (let i = 0; i < 24; i++) {
-const when = t + Math.random() * 0.5;
-const osc = this.ctx.createOscillator();
-const g = this.ctx.createGain();
-osc.type = "triangle";
-osc.frequency.setValueAtTime(1500 + Math.random() * 3500, when);
-g.gain.setValueAtTime(0.05, when);
-g.gain.exponentialRampToValueAtTime(0.0001, when + 0.15);
-osc.connect(g); g.connect(this.ctx.destination);
-osc.start(when); osc.stop(when + 0.15);
-}
-} else if (theme === "theme_alt") {
-for (let i = 0; i < 20; i++) {
-const when = t + i * 0.04;
-const osc = this.ctx.createOscillator();
-const g = this.ctx.createGain();
-osc.type = "square";
-osc.frequency.setValueAtTime(1000 + Math.random() * 1500, when);
-g.gain.setValueAtTime(0.05, when);
-g.gain.exponentialRampToValueAtTime(0.0001, when + 0.12);
-osc.connect(g); g.connect(this.ctx.destination);
-osc.start(when); osc.stop(when + 0.12);
-}
-[523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
-const when = t + 0.3 + i * 0.09;
-const osc = this.ctx.createOscillator();
-const g = this.ctx.createGain();
-osc.type = "square";
-osc.frequency.setValueAtTime(f, when);
-g.gain.setValueAtTime(0.09, when);
-g.gain.exponentialRampToValueAtTime(0.0001, when + 0.25);
-osc.connect(g); g.connect(this.ctx.destination);
-osc.start(when); osc.stop(when + 0.25);
-});
-} else {
-for (let i = 0; i < 5; i++) this.zap(t + Math.random() * 0.4);
-this.thunder(t + 0.35);
-}
-},
-boom(t, vol, freq) {
-const osc = this.ctx.createOscillator();
-const g = this.ctx.createGain();
-osc.type = "sine";
-osc.frequency.setValueAtTime(freq, t);
-osc.frequency.exponentialRampToValueAtTime(28, t + 0.7);
-g.gain.setValueAtTime(vol, t);
-g.gain.exponentialRampToValueAtTime(0.0001, t + 0.8);
-osc.connect(g); g.connect(this.ctx.destination);
-osc.start(t); osc.stop(t + 0.8);
-},
-zap(when) {
-const osc = this.ctx.createOscillator();
-const g = this.ctx.createGain();
-osc.type = "sawtooth";
-osc.frequency.setValueAtTime(3000, when);
-osc.frequency.exponentialRampToValueAtTime(150, when + 0.1);
-g.gain.setValueAtTime(0.09, when);
-g.gain.exponentialRampToValueAtTime(0.0001, when + 0.1);
-osc.connect(g); g.connect(this.ctx.destination);
-osc.start(when); osc.stop(when + 0.1);
-},
-thunder(when) {
-const dur = 1.6;
-const bufferSize = this.ctx.sampleRate * dur;
-const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-const data = buffer.getChannelData(0);
-for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 1.2);
-const noise = this.ctx.createBufferSource();
-noise.buffer = buffer;
-const filter = this.ctx.createBiquadFilter();
-filter.type = "lowpass";
-filter.frequency.setValueAtTime(900, when);
-filter.frequency.exponentialRampToValueAtTime(60, when + dur);
-const g = this.ctx.createGain();
-g.gain.setValueAtTime(0.55, when);
-g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
-noise.connect(filter); filter.connect(g); g.connect(this.ctx.destination);
-noise.start(when);
-},
-playComboTick(combo) {
-if (this.isMuted) return;
-this.init();
-if (!this.ctx) return;
-const t = this.ctx.currentTime;
-const freq = 400 + Math.min(combo, 35) * 40;
-const osc = this.ctx.createOscillator();
-const gain = this.ctx.createGain();
-osc.type = "sine";
-osc.frequency.setValueAtTime(freq, t);
-gain.gain.setValueAtTime(0.08, t);
-gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
-osc.connect(gain); gain.connect(this.ctx.destination);
-osc.start(t); osc.stop(t + 0.08);
-},
 stopMusic(clear = true) {
 if (this.timerId) clearInterval(this.timerId);
 this.timerId = null;
@@ -216,15 +77,16 @@ if (this.timerId && this.currentMode === mode) return;
 this.stopMusic(false);
 this.currentMode = mode;
 this.step = 0;
-this.bpm = (mode === "menu") ? 108 : 138;
+this.bpm = (mode === "menu") ? 108 : 150;
 const intervalMs = (60 / this.bpm / 4) * 1000;
 this.timerId = setInterval(() => {
 if (this.isMuted || !this.ctx || this.ctx.state !== "running") return;
-if (this.currentMode === "menu") this.tickMenu8Bit(this.step);
-else this.tickGeometryDash(this.step);
-this.step = (this.step + 1) % 128;
+if (this.currentMode === "menu") this.tickMenu8Bit(this.step % 128);
+else this.tickGameMusic(this.step);
+this.step = (this.step + 1) % 256;
 }, intervalMs);
 },
+/* ---------- MUSIQUE MENU (chill 8-bit) ---------- */
 tickMenu8Bit(step) {
 const t = this.ctx.currentTime;
 const bar = Math.floor(step / 16);
@@ -241,7 +103,7 @@ const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
 osc.type = 'sine';
 osc.frequency.setValueAtTime(150, t);
 osc.frequency.exponentialRampToValueAtTime(40, t + 0.1);
-gain.gain.setValueAtTime(0.16, t);
+gain.gain.setValueAtTime(0.14, t);
 gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
 osc.connect(gain); gain.connect(this.ctx.destination);
 osc.start(t); osc.stop(t + 0.12);
@@ -255,7 +117,7 @@ const noise = this.ctx.createBufferSource(); noise.buffer = buffer;
 const filter = this.ctx.createBiquadFilter();
 filter.type = 'highpass'; filter.frequency.setValueAtTime(6000, t);
 const gain = this.ctx.createGain();
-gain.gain.setValueAtTime(0.025, t);
+gain.gain.setValueAtTime(0.02, t);
 gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
 noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
 noise.start(t);
@@ -267,7 +129,7 @@ osc.frequency.setValueAtTime(chord.root, t);
 filter.type = 'lowpass';
 filter.frequency.setValueAtTime(600, t);
 filter.frequency.exponentialRampToValueAtTime(180, t + 0.1);
-gain.gain.setValueAtTime(0.055, t);
+gain.gain.setValueAtTime(0.045, t);
 gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
 osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
 osc.start(t); osc.stop(t + 0.11);
@@ -294,7 +156,7 @@ osc.frequency.setValueAtTime(note, t);
 filter.type = 'lowpass';
 filter.frequency.setValueAtTime(1600, t);
 filter.frequency.exponentialRampToValueAtTime(500, t + 0.22);
-gain.gain.setValueAtTime(0.04, t);
+gain.gain.setValueAtTime(0.035, t);
 gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
 osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
 osc.start(t); osc.stop(t + 0.32);
@@ -306,7 +168,7 @@ const o = this.ctx.createOscillator(), g = this.ctx.createGain();
 o.type = 'triangle';
 o.frequency.setValueAtTime(f, t);
 g.gain.setValueAtTime(0.0001, t);
-g.gain.linearRampToValueAtTime(0.015, t + 0.4);
+g.gain.linearRampToValueAtTime(0.012, t + 0.4);
 g.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
 o.connect(g); g.connect(this.ctx.destination);
 o.start(t); o.stop(t + 2.2);
@@ -318,48 +180,238 @@ setTimeout(() => { glow.style.opacity = '0.08'; }, 350);
 }
 }
 },
-tickGeometryDash(step) {
+/* ---------- MUSIQUE JEU « TRY HARD » (4 sections, ~26 s) ---------- */
+tickGameMusic(step) {
 const t = this.ctx.currentTime;
-if (step % 16 === 0) {
-const osc = this.ctx.createOscillator();
-const gain = this.ctx.createGain();
-osc.type = "sine";
-osc.frequency.setValueAtTime(160, t);
-osc.frequency.exponentialRampToValueAtTime(35, t + 0.12);
-gain.gain.setValueAtTime(0.28, t);
-gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
-osc.connect(gain); gain.connect(this.ctx.destination);
-osc.start(t); osc.stop(t + 0.13);
+const bar = Math.floor(step / 16);
+const inBar = step % 16;
+const section = Math.floor(step / 64);
+const progs = [
+[110.00, 87.31, 130.81, 98.00],
+[110.00, 87.31, 65.41, 98.00],
+[55.00, 87.31, 130.81, 98.00],
+[110.00, 130.81, 87.31, 98.00]
+];
+const root = progs[section][bar % 4];
+if (inBar % 4 === 0) this._kick(t, 0.28);
+if (inBar === 4 || inBar === 12) this._snare(t, section >= 2 ? 0.2 : 0.13);
+if (section >= 1 && inBar % 2 === 0) this._hat(t, inBar % 4 === 2 ? 0.05 : 0.03);
+if (section === 3 && inBar >= 14) this._snare(t, 0.08 + (inBar - 14) * 0.05);
+if (!(section === 3 && inBar >= 8)) {
+if (inBar % 2 === 0) this._bass(t, root, 0.14);
+else this._bass(t, root * 2, 0.09);
 }
-if (step % 16 === 8) {
-const bufferSize = this.ctx.sampleRate * 0.08;
+const leadNotes = [220, 261.63, 293.66, 329.63, 392, 440, 523.25, 587.33];
+if (section >= 1) {
+const patterns = [
+[0,-1,2,-1,3,-1,2,4,-1,3,-1,2,0,-1,-1,-1],
+[0,2,3,4,5,4,3,2,0,2,3,5,7,5,3,2],
+[7,5,4,3,5,4,3,2,4,3,2,0,2,3,4,5],
+[-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,0,2,3,4]
+];
+const idx = patterns[section][inBar];
+if (idx >= 0) this._lead(t, leadNotes[idx] * (section === 2 ? 2 : 1), 0.06);
+}
+if ((section === 0 || section === 3) && inBar === 0) this._pad(t, root);
+},
+_kick(t, vol) {
+const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
+osc.type = "sine";
+osc.frequency.setValueAtTime(150, t);
+osc.frequency.exponentialRampToValueAtTime(40, t + 0.1);
+g.gain.setValueAtTime(vol, t);
+g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+osc.connect(g); g.connect(this.ctx.destination);
+osc.start(t); osc.stop(t + 0.12);
+},
+_snare(t, vol) {
+const dur = 0.09;
+const bufferSize = this.ctx.sampleRate * dur;
 const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
 const data = buffer.getChannelData(0);
-for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+const src = this.ctx.createBufferSource(); src.buffer = buffer;
+const f = this.ctx.createBiquadFilter(); f.type = "highpass"; f.frequency.setValueAtTime(1800, t);
+const g = this.ctx.createGain(); g.gain.setValueAtTime(vol, t);
+g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+src.connect(f); f.connect(g); g.connect(this.ctx.destination);
+src.start(t);
+},
+_hat(t, vol) {
+const dur = 0.03;
+const bufferSize = this.ctx.sampleRate * dur;
+const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+const data = buffer.getChannelData(0);
+for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+const src = this.ctx.createBufferSource(); src.buffer = buffer;
+const f = this.ctx.createBiquadFilter(); f.type = "highpass"; f.frequency.setValueAtTime(7000, t);
+const g = this.ctx.createGain(); g.gain.setValueAtTime(vol, t);
+src.connect(f); f.connect(g); g.connect(this.ctx.destination);
+src.start(t);
+},
+_bass(t, freq, vol) {
+const osc = this.ctx.createOscillator(), f = this.ctx.createBiquadFilter(), g = this.ctx.createGain();
+osc.type = "sawtooth";
+osc.frequency.setValueAtTime(freq, t);
+f.type = "lowpass"; f.frequency.setValueAtTime(500, t);
+g.gain.setValueAtTime(vol, t);
+g.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
+osc.connect(f); f.connect(g); g.connect(this.ctx.destination);
+osc.start(t); osc.stop(t + 0.11);
+},
+_lead(t, freq, vol) {
+const osc = this.ctx.createOscillator(), f = this.ctx.createBiquadFilter(), g = this.ctx.createGain();
+osc.type = "square";
+osc.frequency.setValueAtTime(freq, t);
+f.type = "lowpass";
+f.frequency.setValueAtTime(2500, t);
+f.frequency.exponentialRampToValueAtTime(700, t + 0.18);
+g.gain.setValueAtTime(vol, t);
+g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+osc.connect(f); f.connect(g); g.connect(this.ctx.destination);
+osc.start(t); osc.stop(t + 0.2);
+},
+_pad(t, root) {
+[root * 2, root * 3, root * 4].forEach(fr => {
+const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+o.type = "triangle";
+o.frequency.setValueAtTime(fr, t);
+g.gain.setValueAtTime(0.0001, t);
+g.gain.linearRampToValueAtTime(0.02, t + 0.3);
+g.gain.exponentialRampToValueAtTime(0.0001, t + 2.0);
+o.connect(g); g.connect(this.ctx.destination);
+o.start(t); o.stop(t + 2.0);
+});
+},
+/* ---------- SONS DE COMBO (FORTS, par thème) ---------- */
+playCrack(theme) {
+if (this.isMuted) return;
+this.init();
+if (!this.ctx) return;
+const t = this.ctx.currentTime;
+if (theme === "theme_glacial") {
+for (let i = 0; i < 3; i++) {
+const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
+osc.type = "triangle";
+osc.frequency.setValueAtTime(1800 + Math.random() * 2500, t + i * 0.03);
+g.gain.setValueAtTime(0.14, t + i * 0.03);
+g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.03 + 0.12);
+osc.connect(g); g.connect(this.ctx.destination);
+osc.start(t + i * 0.03); osc.stop(t + i * 0.03 + 0.12);
+}
+} else if (theme === "theme_alt") {
+const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
+osc.type = "square";
+osc.frequency.setValueAtTime(1200 + Math.random() * 600, t);
+osc.frequency.exponentialRampToValueAtTime(2400, t + 0.06);
+g.gain.setValueAtTime(0.15, t);
+g.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+osc.connect(g); g.connect(this.ctx.destination);
+osc.start(t); osc.stop(t + 0.1);
+} else {
+const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
+osc.type = "sawtooth";
+osc.frequency.setValueAtTime(2200, t);
+osc.frequency.exponentialRampToValueAtTime(200, t + 0.08);
+g.gain.setValueAtTime(0.16, t);
+g.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+osc.connect(g); g.connect(this.ctx.destination);
+osc.start(t); osc.stop(t + 0.08);
+}
+},
+playComboTick(combo) {
+if (this.isMuted) return;
+this.init();
+if (!this.ctx) return;
+const t = this.ctx.currentTime;
+const freq = 400 + Math.min(combo, 35) * 40;
+const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+osc.type = "sine";
+osc.frequency.setValueAtTime(freq, t);
+gain.gain.setValueAtTime(0.13, t);
+gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+osc.connect(gain); gain.connect(this.ctx.destination);
+osc.start(t); osc.stop(t + 0.08);
+},
+playPerfectionBoom(theme) {
+if (this.isMuted) return;
+this.init();
+if (!this.ctx) return;
+const t = this.ctx.currentTime;
+if (theme === "theme_glacial") {
+this.boom(t, 0.6, 90);
+for (let i = 0; i < 24; i++) {
+const when = t + Math.random() * 0.5;
+const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
+osc.type = "triangle";
+osc.frequency.setValueAtTime(1500 + Math.random() * 3500, when);
+g.gain.setValueAtTime(0.11, when);
+g.gain.exponentialRampToValueAtTime(0.0001, when + 0.15);
+osc.connect(g); g.connect(this.ctx.destination);
+osc.start(when); osc.stop(when + 0.15);
+}
+} else if (theme === "theme_alt") {
+for (let i = 0; i < 20; i++) {
+const when = t + i * 0.04;
+const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
+osc.type = "square";
+osc.frequency.setValueAtTime(1000 + Math.random() * 1500, when);
+g.gain.setValueAtTime(0.11, when);
+g.gain.exponentialRampToValueAtTime(0.0001, when + 0.12);
+osc.connect(g); g.connect(this.ctx.destination);
+osc.start(when); osc.stop(when + 0.12);
+}
+[523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+const when = t + 0.3 + i * 0.09;
+const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
+osc.type = "square";
+osc.frequency.setValueAtTime(f, when);
+g.gain.setValueAtTime(0.14, when);
+g.gain.exponentialRampToValueAtTime(0.0001, when + 0.25);
+osc.connect(g); g.connect(this.ctx.destination);
+osc.start(when); osc.stop(when + 0.25);
+});
+} else {
+for (let i = 0; i < 5; i++) this.zap(t + Math.random() * 0.4);
+this.thunder(t + 0.35);
+}
+},
+boom(t, vol, freq) {
+const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
+osc.type = "sine";
+osc.frequency.setValueAtTime(freq, t);
+osc.frequency.exponentialRampToValueAtTime(28, t + 0.7);
+g.gain.setValueAtTime(vol, t);
+g.gain.exponentialRampToValueAtTime(0.0001, t + 0.8);
+osc.connect(g); g.connect(this.ctx.destination);
+osc.start(t); osc.stop(t + 0.8);
+},
+zap(when) {
+const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
+osc.type = "sawtooth";
+osc.frequency.setValueAtTime(3000, when);
+osc.frequency.exponentialRampToValueAtTime(150, when + 0.1);
+g.gain.setValueAtTime(0.15, when);
+g.gain.exponentialRampToValueAtTime(0.0001, when + 0.1);
+osc.connect(g); g.connect(this.ctx.destination);
+osc.start(when); osc.stop(when + 0.1);
+},
+thunder(when) {
+const dur = 1.6;
+const bufferSize = this.ctx.sampleRate * dur;
+const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+const data = buffer.getChannelData(0);
+for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 1.2);
 const noise = this.ctx.createBufferSource(); noise.buffer = buffer;
 const filter = this.ctx.createBiquadFilter();
-filter.type = "bandpass";
-filter.frequency.setValueAtTime(2500, t);
-filter.Q.setValueAtTime(2, t);
-const gain = this.ctx.createGain();
-gain.gain.setValueAtTime(0.18, t);
-gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
-noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-noise.start(t);
-}
-const gdNotes = [220, 261.63, 329.63, 440, 523.25, 659.25, 523.25, 440];
-const osc = this.ctx.createOscillator();
-const filter = this.ctx.createBiquadFilter();
-const gain = this.ctx.createGain();
-osc.type = "sawtooth";
-osc.frequency.setValueAtTime(gdNotes[step % gdNotes.length], t);
 filter.type = "lowpass";
-filter.frequency.setValueAtTime(1400, t);
-filter.frequency.exponentialRampToValueAtTime(300, t + 0.07);
-gain.gain.setValueAtTime(0.08, t);
-gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
-osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-osc.start(t); osc.stop(t + 0.07);
+filter.frequency.setValueAtTime(900, when);
+filter.frequency.exponentialRampToValueAtTime(60, when + dur);
+const g = this.ctx.createGain();
+g.gain.setValueAtTime(0.65, when);
+g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+noise.connect(filter); filter.connect(g); g.connect(this.ctx.destination);
+noise.start(when);
 }
 };
 function toggleMute() {
