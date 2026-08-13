@@ -1482,25 +1482,49 @@ CONTENEUR DES FISSURES DE COMBO
 }
 
 /* ============================================================
-PARTICULES DE COMBO (les petits émojis qui explosent)
+FISSURES DE COMBO (grosses fissures avec branches)
 ============================================================ */
-.combo-particle {
+#combo-cracks-layer {
     position: fixed;
-    font-size: 22px;
-    z-index: 9998;
+    inset: 0;
     pointer-events: none;
-    animation: comboParticleFly 0.95s ease-out forwards;
+    z-index: 55;
+    overflow: hidden;
 }
 
-@keyframes comboParticleFly {
-    0% {
-        transform: translate(0, 0) scale(0.5);
-        opacity: 1;
-    }
-    100% {
-        transform: translate(var(--dx), var(--dy)) scale(1.4);
-        opacity: 0;
-    }
+.combo-crack {
+    position: absolute;
+    top: 0;
+    left: 0;
+    filter: drop-shadow(0 0 8px currentColor);
+    opacity: 0.95;
+}
+
+/* Trait principal épais */
+.combo-crack .crack-main {
+    stroke-dasharray: 600;
+    stroke-dashoffset: 600;
+    animation: crackDraw 0.5s ease forwards;
+}
+
+/* Trait intérieur (crevasse claire) */
+.combo-crack .crack-inner {
+    stroke-dasharray: 600;
+    stroke-dashoffset: 600;
+    animation: crackDraw 0.5s 0.1s ease forwards;
+    opacity: 0.6;
+}
+
+/* Branches secondaires */
+.combo-crack .crack-branch {
+    stroke-dasharray: 200;
+    stroke-dashoffset: 200;
+    animation: crackDraw 0.4s 0.2s ease forwards;
+    opacity: 0.7;
+}
+
+@keyframes crackDraw {
+    to { stroke-dashoffset: 0; }
 }
 
 /* ============================================================
