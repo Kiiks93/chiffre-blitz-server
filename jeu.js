@@ -140,12 +140,7 @@ function clearCracks() {
 const layer = document.getElementById("combo-cracks-layer");
 if (layer) layer.innerHTML = "";
 } 
-SoundEngine.playVictory();
-if (soloTimerInterval) clearInterval(soloTimerInterval);
-if (avalancheTimerInterval) clearInterval(avalancheTimerInterval);
-if (avalancheInterval) clearInterval(avalancheInterval);
-setTimeout(() => { endSoloGame(); }, 1200);
-}
+
 function spawnExplosionParticles() {
 const emojis = ["⚡", "💥", "✨", "🔥"];
 for (let i = 0; i < 40; i++) {
