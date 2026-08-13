@@ -552,6 +552,7 @@ if (radarInterval) clearInterval(radarInterval);
 latest1v1StartData = data;
 currentMatchCharges = {};
 resetCombo();
+comboFXEnabled = false;
 let loadout = (myProfile.equippedPowers && myProfile.equippedPowers.length > 0) ? myProfile.equippedPowers : (myProfile.equippedPower ? [myProfile.equippedPower] : []);
 loadout.forEach(id => { const stock = myProfile.inventory[id] || 0; if (stock > 0) currentMatchCharges[id] = Math.min((currentMatchCharges[id] || 0) + 1, stock); });
 let oppData = extractOpponentInfo(data);
@@ -712,6 +713,7 @@ soloTarget = (activeTrainingMode === "random") ? Math.floor(Math.random() * 50) 
 soloScore = 0; soloTimeLeft = 30; isTimeFrozen = false;
 currentSoloCharges = {};
 resetCombo();
+comboFXEnabled = true;
 if (myProfile.equippedPower && (myProfile.inventory[myProfile.equippedPower] || 0) > 0) currentSoloCharges[myProfile.equippedPower] = 1;
 socket.emit("start_solo_training", { mode: activeTrainingMode, loadout: getOptionalLoadout ? getOptionalLoadout() : [] });
 document.getElementById("screen-game").style.display = "block";
@@ -793,6 +795,7 @@ soloScore = 0;
 avalancheTimeLeft = 30;
 isTimeFrozen = false;
 resetCombo();
+comboFXEnabled = true;
 currentSoloCharges = {};
 if (myProfile.equippedPower && (myProfile.inventory[myProfile.equippedPower] || 0) > 0) {
 currentSoloCharges[myProfile.equippedPower] = 1;
