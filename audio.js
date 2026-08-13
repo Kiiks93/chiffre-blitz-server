@@ -454,12 +454,22 @@ this._synthCrack(theme);
 };
 SoundEngine.playPerfectionBoom = function(theme) {
 if (this.isMuted) return;
+this.stopBoom();
 const file = BOOM_FILES[theme] || BOOM_FILES.default;
 if (file) {
 const a = new Audio(file);
 a.volume = 0.5;
+this._currentBoom = a;
+a.onended = () => { if (this._currentBoom === a) this._currentBoom = null; };
 a.play().catch(() => {});
 return;
 }
 this._synthBoom(theme);
+};
+SoundEngine.stopBoom = function() {
+if (this._currentBoom) {
+this._currentBoom.pause();
+this._currentBoom.currentTime = 0;
+this._currentBoom = null;
+}
 };
