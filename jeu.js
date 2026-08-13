@@ -258,30 +258,32 @@ document.body.appendChild(layer);
 }
 return layer;
 }
+
 function spawnCoin() {
 const layer = ensureCoinsLayer();
-if (layer.childElementCount > 60) layer.removeChild(layer.firstChild);
+if (layer.childElementCount > 180) layer.removeChild(layer.firstChild);
 const coin = document.createElement("div");
 coin.className = "combo-coin";
 coin.innerText = "🪙";
 coin.style.left = Math.random() * 100 + "%";
+coin.style.top = Math.random() * 100 + "%";
 coin.style.fontSize = (28 + Math.random() * 24) + "px";
-coin.style.animationDuration = (1.8 + Math.random() * 1.5) + "s";
+coin.style.animationDuration = (0.8 + Math.random() * 1) + "s";
 layer.appendChild(coin);
-setTimeout(() => coin.remove(), 3600);
 }
 function coinStorm() {
 const layer = ensureCoinsLayer();
 for (let i = 0; i < 150; i++) {
 setTimeout(() => {
+if (layer.childElementCount > 220) layer.removeChild(layer.firstChild);
 const coin = document.createElement("div");
 coin.className = "combo-coin";
 coin.innerText = Math.random() > 0.6 ? "💰" : "🪙";
 coin.style.left = Math.random() * 100 + "%";
+coin.style.top = Math.random() * 100 + "%";
 coin.style.fontSize = (32 + Math.random() * 32) + "px";
-coin.style.animationDuration = (1.5 + Math.random() * 2) + "s";
+coin.style.animationDuration = (0.9 + Math.random() * 1.4) + "s";
 layer.appendChild(coin);
-setTimeout(() => coin.remove(), 4000);
 }, i * 18);
 }
 }
