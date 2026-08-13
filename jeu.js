@@ -145,14 +145,16 @@ const now = Date.now();
 if (now - lastComboTime > COMBO_WINDOW_MS) {
 currentCombo = 0;
 clearCracks();
+hideComboHUD();
 const g = document.getElementById("grid");
 if (g) g.classList.remove("combo-tier1", "combo-tier2");
 }
 lastComboTime = now;
 currentCombo++;
-if (comboFXEnabled && currentCombo >= 10) SoundEngine.playComboTick(currentCombo);
-if (!comboFXEnabled) return;
+if (comboFXEnabled) {
 updateComboHUD();
+if (currentCombo >= 10) SoundEngine.playComboTick(currentCombo);
+}
 const grid = document.getElementById("grid");
 if (grid) grid.style.setProperty("--combo-color", getComboColor());
 if (currentCombo === 15) {
