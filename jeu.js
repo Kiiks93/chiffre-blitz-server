@@ -28,6 +28,15 @@ let soloPerfection = false;
 let comboFXEnabled = false;
 let comboTimerInterval = null;
 const COMBO_WINDOW_MS = 20000;
+let pendingRecapAfterPopup = false;
+function closeRewardPopUp() {
+const popup = document.getElementById("reward-popup-overlay");
+if (popup) popup.style.display = "none";
+if (pendingRecapAfterPopup) {
+pendingRecapAfterPopup = false;
+document.getElementById("recap-modal").style.display = "flex";
+}
+}
 function getComboColor() {
 const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
 if (theme === "theme_glacial") return "#7be8ff";
@@ -746,9 +755,14 @@ let htmlCoins = `+${data.baseCoins}`;
 if (data.rushBonus > 0) htmlCoins += `<span style="color:#ff8a00;">+${data.rushBonus}(RUSH)</span>`;
 document.getElementById("recap-coins-gained").innerHTML = htmlCoins;
 if (data.perfection) {
+pendingRecapAfterPopup = true;
+setTimeout(() => {
 showRewardPopUp("⚡ PERFECTION — Combo x35 atteint ! Récompense maximale + Succès 🏆 débloqué !", "🏆");
+const btn = document.querySelector("#reward-popup-overlay .btn-gold");
+if (btn) btn.onclick = closeRewardPopUp;
+}, 900);
 }
-if (data.triggerWheel) {
+if (data.triggerWheel && !data.perfection) {
 setTimeout(() => {
 document.getElementById("recap-modal").style.display = "none";
 document.getElementById("modal-jackpot-wheel").style.display = "flex";
