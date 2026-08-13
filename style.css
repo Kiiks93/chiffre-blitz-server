@@ -1611,39 +1611,38 @@ FOND COMBO (halo coloré selon le thème)
     100% { transform: scale(1.2) translateY(-4%); }
 }
 /* ============================================================
-COMBO HUD (compteur + chronomètre)
+COMBO HUD (intégré dans la barre CIBLE)
 ============================================================ */
 #combo-hud {
-position: fixed;
-top: 22%;
-left: 50%;
-transform: translateX(-50%);
-z-index: 60;
-pointer-events: none;
+position: absolute;
+right: 10px;
+top: 50%;
+transform: translateY(-50%);
 display: none;
-flex-direction: column;
 align-items: center;
-gap: 4px;
+gap: 6px;
+pointer-events: none;
+z-index: 5;
 }
 #combo-count {
-font-size: 30px;
+font-size: 16px;
 font-weight: 900;
 letter-spacing: 1px;
-text-shadow: 0 0 12px currentColor, 0 0 25px currentColor;
+text-shadow: 0 0 8px currentColor;
 }
 #combo-timer-bar {
-width: 130px;
-height: 7px;
+width: 60px;
+height: 5px;
 background: rgba(255,255,255,0.15);
-border-radius: 5px;
+border-radius: 4px;
 overflow: hidden;
 }
 #combo-timer-fill {
 height: 100%;
 width: 100%;
 background: currentColor;
-border-radius: 5px;
-box-shadow: 0 0 10px currentColor;
+border-radius: 4px;
+box-shadow: 0 0 6px currentColor;
 }
 
 /* ============================================================
