@@ -295,6 +295,8 @@ branch.setAttribute("stroke-linejoin", "round");
 svg.appendChild(branch);
 }
 layer.appendChild(svg);
+const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
+SoundEngine.playCrack(theme || "");
 }
 
 function clearCracks() {
