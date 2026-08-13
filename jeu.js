@@ -181,7 +181,11 @@ if (avalancheInterval) clearInterval(avalancheInterval);
 const grid = document.getElementById("grid");
 if (grid) { grid.classList.remove("combo-tier1", "combo-tier2"); grid.classList.add("combo-perfection"); }
 showComboBanner("💥 PERFECTION x35 !!!");
-// PHASE 1 : enchaînement massif de fissures + tremblement croissant
+
+// LANCE LE BOOM IMMÉDIATEMENT (pendant que les fractures s'enchaînent)
+SoundEngine.playPerfectionBoom(getEquippedThemeId());
+
+// PHASE 1 : 18 fractures qui s'enchaînent PENDANT le boom
 const crackCount = 18;
 for (let i = 0; i < crackCount; i++) {
 setTimeout(() => {
@@ -189,33 +193,20 @@ spawnCrack();
 shakeScreen(0.2 + (i / crackCount) * 0.8);
 }, i * 70);
 }
-// PHASE 2 : flash + explosion d'éclats + son du thème
-const boomTime = crackCount * 70 + 350;
+
+// PHASE 2 : flash + explosion d'éclats + émojis (quand le boom se termine)
+const explosionTime = crackCount * 70 + 350;
 setTimeout(() => {
 flashScreen();
-SoundEngine.playPerfectionBoom(getEquippedThemeId());
 shatterExplosion();
 spawnExplosionParticles();
 shakeScreen(1.5);
 clearCracks();
 SoundEngine.playVictory();
-}, boomTime);
+}, explosionTime);
+
 // PHASE 3 : récap + récompense
-setTimeout(() => { endSoloGame(); }, boomTime + 2500);
-}
-function spawnExplosionParticles() {
-const emojis = getComboEmojis();
-for (let i = 0; i < 40; i++) {
-const p = document.createElement("div");
-p.className = "explosion-particle";
-p.innerText = emojis[i % emojis.length];
-const angle = (Math.PI * 2 * i) / 40;
-const dist = 80 + Math.random() * 180;
-p.style.setProperty("--dx", Math.cos(angle) * dist + "px");
-p.style.setProperty("--dy", Math.sin(angle) * dist + "px");
-document.body.appendChild(p);
-setTimeout(() => p.remove(), 1200);
-}
+setTimeout(() => { endSoloGame(); }, explosionTime + 1000);
 }
 function getComboCrackStyle() {
 const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
