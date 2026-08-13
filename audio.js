@@ -420,3 +420,44 @@ const muteBtn = document.getElementById("mute-btn");
 if (muteBtn) muteBtn.innerText = muted ? "🔇" : "🔊";
 }
 document.addEventListener("click", () => { SoundEngine.init(); }, { once: true });
+
+/* ============================================================
+SONS LIBRES DE DROIT (fichiers dans le dossier "sound")
+============================================================ */
+const CRACK_FILES = {
+theme_glacial: "sound/crack-glace.mp3",
+theme_alt: "sound/crack-or.mp3",
+default: ""
+};
+const BOOM_FILES = {
+theme_glacial: "sound/boom-glace.mp3",
+theme_alt: "sound/boom-or.mp3",
+default: ""
+};
+// On garde les anciens sons synthétisés en secours
+SoundEngine._synthCrack = SoundEngine.playCrack;
+SoundEngine._synthBoom = SoundEngine.playPerfectionBoom;
+// Nouvelles versions : elles jouent tes fichiers
+SoundEngine.playCrack = function(theme) {
+if (this.isMuted) return;
+const file = CRACK_FILES[theme] || CRACK_FILES.default;
+if (file) {
+const a = new Audio(file);
+a.volume = 0.7;
+a.playbackRate = 0.9 + Math.random() * 0.25;
+a.play().catch(() => {});
+return;
+}
+this._synthCrack(theme);
+};
+SoundEngine.playPerfectionBoom = function(theme) {
+if (this.isMuted) return;
+const file = BOOM_FILES[theme] || BOOM_FILES.default;
+if (file) {
+const a = new Audio(file);
+a.volume = 0.9;
+a.play().catch(() => {});
+return;
+}
+this._synthBoom(theme);
+};
