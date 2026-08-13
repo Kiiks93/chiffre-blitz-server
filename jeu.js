@@ -101,40 +101,99 @@ document.body.appendChild(layer);
 return layer;
 }
 function spawnCrack() {
-const layer = ensureCracksLayer();
-if (layer.childElementCount > 24) layer.removeChild(layer.firstChild);
-const style = getComboCrackStyle();
-const w = window.innerWidth, h = window.innerHeight;
-const side = Math.floor(Math.random() * 4);
-let sx, sy;
-if (side === 0) { sx = Math.random() * w; sy = 0; }
-else if (side === 1) { sx = w; sy = Math.random() * h; }
-else if (side === 2) { sx = Math.random() * w; sy = h; }
-else { sx = 0; sy = Math.random() * h; }
-const tx = w * (0.25 + Math.random() * 0.5);
-const ty = h * (0.25 + Math.random() * 0.5);
-const steps = 6 + Math.floor(Math.random() * 5);
-let points = Math.round(sx) + "," + Math.round(sy);
-for (let i = 1; i <= steps; i++) {
-const t = i / steps;
-const j = style.jag * (1 - t * 0.5);
-const bx = sx + (tx - sx) * t + (Math.random() - 0.5) * j;
-const by = sy + (ty - sy) * t + (Math.random() - 0.5) * j;
-points += " " + Math.round(bx) + "," + Math.round(by);
-}
-const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-svg.setAttribute("class", "combo-crack");
-svg.setAttribute("width", w);
-svg.setAttribute("height", h);
-svg.style.color = style.color;
-const poly = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-poly.setAttribute("points", points);
-poly.setAttribute("fill", "none");
-poly.setAttribute("stroke", style.color);
-poly.setAttribute("stroke-width", style.width);
-poly.setAttribute("stroke-linecap", "round");
-svg.appendChild(poly);
-layer.appendChild(svg);
+    const layer = ensureCracksLayer();
+    if (layer.childElementCount > 20) layer.removeChild(layer.firstChild);
+    
+    const style = getComboCrackStyle();
+    const w = window.innerWidth, h = window.innerHeight;
+    
+    // Point de départ depuis un bord
+    const side = Math.floor(Math.random() * 4);
+    let sx, sy;
+    if (side === 0) { sx = Math.random() * w; sy = 0; }           // Haut
+    else if (side === 1) { sx = w; sy = Math.random() * h; }      // Droite
+    else if (side === 2) { sx = Math.random() * w; sy = h; }      // Bas
+    else { sx = 0; sy = Math.random() * h; }                      // Gauche
+    
+    // Point d'arrivée vers le centre
+    const tx = w * (0.3 + Math.random() * 0.4);
+    const ty = h * (0.3 + Math.random() * 0.4);
+    
+    const steps = 8 + Math.floor(Math.random() * 6);
+    let points = [];
+    
+    // Générer les points de la fissure principale
+    for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const jag = style.jag * (1 - t * 0.3);
+        const x = sx + (tx - sx) * t + (Math.random() - 0.5) * jag;
+        const y = sy + (ty - sy) * t + (Math.random() - 0.5) * jag;
+        points.push({ x: Math.round(x), y: Math.round(y) });
+    }
+    
+    const pointsStr = points.map(p => `${p.x},${p.y}`).join(' ');
+    
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "combo-crack");
+    svg.setAttribute("width", w);
+    svg.setAttribute("height", h);
+    svg.style.color = style.color;
+    
+    // Trait principal épais
+    const mainCrack = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+    mainCrack.setAttribute("class", "crack-main");
+    mainCrack.setAttribute("points", pointsStr);
+    mainCrack.setAttribute("fill", "none");
+    mainCrack.setAttribute("stroke", style.color);
+    mainCrack.setAttribute("stroke-width", style.width);
+    mainCrack.setAttribute("stroke-linecap", "round");
+    mainCrack.setAttribute("stroke-linejoin", "round");
+    svg.appendChild(mainCrack);
+    
+    // Trait intérieur (plus clair pour effet 3D)
+    const innerCrack = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+    innerCrack.setAttribute("class", "crack-inner");
+    innerCrack.setAttribute("points", pointsStr);
+    innerCrack.setAttribute("fill", "none");
+    innerCrack.setAttribute("stroke", "#ffffff");
+    innerCrack.setAttribute("stroke-width", style.width * 0.4);
+    innerCrack.setAttribute("stroke-linecap", "round");
+    innerCrack.setAttribute("stroke-linejoin", "round");
+    svg.appendChild(innerCrack);
+    
+    // Ajouter 2-4 branches secondaires
+    const branchCount = 2 + Math.floor(Math.random() * 3);
+    for (let b = 0; b < branchCount; b++) {
+        const branchStart = Math.floor(Math.random() * (points.length - 1));
+        const startPoint = points[branchStart];
+        
+        // Direction aléatoire pour la branche
+        const branchAngle = Math.random() * Math.PI * 2;
+        const branchLength = 40 + Math.random() * 80;
+        const branchSteps = 3 + Math.floor(Math.random() * 3);
+        
+        let branchPoints = [{ x: startPoint.x, y: startPoint.y }];
+        for (let i = 1; i <= branchSteps; i++) {
+            const t = i / branchSteps;
+            const x = startPoint.x + Math.cos(branchAngle) * branchLength * t + (Math.random() - 0.5) * 20;
+            const y = startPoint.y + Math.sin(branchAngle) * branchLength * t + (Math.random() - 0.5) * 20;
+            branchPoints.push({ x: Math.round(x), y: Math.round(y) });
+        }
+        
+        const branchPointsStr = branchPoints.map(p => `${p.x},${p.y}`).join(' ');
+        
+        const branch = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+        branch.setAttribute("class", "crack-branch");
+        branch.setAttribute("points", branchPointsStr);
+        branch.setAttribute("fill", "none");
+        branch.setAttribute("stroke", style.color);
+        branch.setAttribute("stroke-width", style.width * 0.6);
+        branch.setAttribute("stroke-linecap", "round");
+        branch.setAttribute("stroke-linejoin", "round");
+        svg.appendChild(branch);
+    }
+    
+    layer.appendChild(svg);
 }
 function clearCracks() {
 const layer = document.getElementById("combo-cracks-layer");
