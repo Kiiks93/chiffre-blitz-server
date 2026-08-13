@@ -217,6 +217,23 @@ SoundEngine.playVictory();
 // PHASE 3 : récap + récompense
 setTimeout(() => { endSoloGame(); }, explosionTime + 1000);
 }
+function spawnExplosionParticles() {
+const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
+let emojis = ["⚡", "💥", "✨", "🔥"];
+if (theme === "theme_glacial") emojis = ["❄️", "🧊", "✨", "💥"];
+if (theme === "theme_alt") emojis = ["✨", "🪙", "💰", "⚡"];
+for (let i = 0; i < 40; i++) {
+const p = document.createElement("div");
+p.className = "explosion-particle";
+p.innerText = emojis[i % emojis.length];
+const angle = (Math.PI * 2 * i) / 40;
+const dist = 80 + Math.random() * 180;
+p.style.setProperty("--dx", Math.cos(angle) * dist + "px");
+p.style.setProperty("--dy", Math.sin(angle) * dist + "px");
+document.body.appendChild(p);
+setTimeout(() => p.remove(), 1200);
+}
+}
 function getComboCrackStyle() {
 const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
 if (theme === "theme_glacial") return { color: "#7be8ff", width: 2, jag: 30 };
@@ -232,7 +249,46 @@ document.body.appendChild(layer);
 }
 return layer;
 }
+function ensureCoinsLayer() {
+let layer = document.getElementById("combo-coins-layer");
+if (!layer) {
+layer = document.createElement("div");
+layer.id = "combo-coins-layer";
+document.body.appendChild(layer);
+}
+return layer;
+}
+function spawnCoin() {
+const layer = ensureCoinsLayer();
+if (layer.childElementCount > 30) layer.removeChild(layer.firstChild);
+const coin = document.createElement("div");
+coin.className = "combo-coin";
+coin.innerText = "🪙";
+coin.style.left = Math.random() * 100 + "%";
+coin.style.fontSize = (14 + Math.random() * 14) + "px";
+coin.style.animationDuration = (1.2 + Math.random() * 1.2) + "s";
+layer.appendChild(coin);
+setTimeout(() => coin.remove(), 2600);
+}
+function coinStorm() {
+const layer = ensureCoinsLayer();
+for (let i = 0; i < 80; i++) {
+setTimeout(() => {
+const coin = document.createElement("div");
+coin.className = "combo-coin";
+coin.innerText = Math.random() > 0.7 ? "💰" : "🪙";
+coin.style.left = Math.random() * 100 + "%";
+coin.style.fontSize = (16 + Math.random() * 22) + "px";
+coin.style.animationDuration = (1 + Math.random() * 1.5) + "s";
+layer.appendChild(coin);
+setTimeout(() => coin.remove(), 3000);
+}, i * 25);
+}
+}
+
 function spawnCrack() {
+const themeNow = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
+if (themeNow === "theme_alt") { spawnCoin(); SoundEngine.playCrack(themeNow); return; }
 const layer = ensureCracksLayer();
 if (layer.childElementCount > 20) layer.removeChild(layer.firstChild);
 const style = getComboCrackStyle();
@@ -309,8 +365,10 @@ SoundEngine.playCrack(theme || "");
 }
 
 function clearCracks() {
-    const layer = document.getElementById("combo-cracks-layer");
-    if (layer) layer.innerHTML = "";
+const layer = document.getElementById("combo-cracks-layer");
+if (layer) layer.innerHTML = "";
+const coins = document.getElementById("combo-coins-layer");
+if (coins) coins.innerHTML = "";
 }
 
 /* ============================================================
