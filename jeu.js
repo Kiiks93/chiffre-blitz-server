@@ -811,6 +811,11 @@ document.getElementById("recap-coins-gained").innerHTML = htmlCoins;
 modal.style.display = "flex";
 registerIfPossible();
 }
+socket.on("solo_reward_result", (data) => {
+currentCoinsGained = data.earnedCoins;
+let htmlCoins = `+${data.baseCoins}`;
+if (data.rushBonus > 0) htmlCoins += `<span style="color:#ff8a00;">+${data.rushBonus}(RUSH)</span>`;
+document.getElementById("recap-coins-gained").innerHTML = htmlCoins;
 if (data.perfection) {
 pendingRecapAfterPopup = true;
 setTimeout(() => {
