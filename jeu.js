@@ -39,8 +39,15 @@ let hud = document.getElementById("combo-hud");
 if (!hud) {
 hud = document.createElement("div");
 hud.id = "combo-hud";
-hud.innerHTML = `<div id="combo-count">x0</div><div id="combo-timer-bar"><div id="combo-timer-fill"></div></div>`;
+hud.innerHTML = `<span id="combo-count">x0</span><div id="combo-timer-bar"><div id="combo-timer-fill"></div></div>`;
+const target = document.getElementById("game-target-giant");
+const parent = target ? target.parentElement : null;
+if (parent) {
+if (getComputedStyle(parent).position === "static") parent.style.position = "relative";
+parent.appendChild(hud);
+} else {
 document.body.appendChild(hud);
+}
 }
 return hud;
 }
