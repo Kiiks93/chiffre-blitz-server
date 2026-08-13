@@ -1456,11 +1456,15 @@ cursor: pointer;
 CONTENEUR DES FISSURES DE COMBO
 ============================================================ */
 #combo-cracks-layer {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 55;
-    overflow: hidden;
+position: fixed;
+inset: 0;
+pointer-events: none;
+z-index: 1;
+overflow: hidden;
+}
+#screen-game {
+position: relative;
+z-index: 2;
 }
 
 .combo-crack {
