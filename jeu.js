@@ -201,7 +201,7 @@ clearCracks();
 SoundEngine.playVictory();
 }, boomTime);
 // PHASE 3 : récap + récompense
-setTimeout(() => { endSoloGame(); }, boomTime + 1000);
+setTimeout(() => { endSoloGame(); }, boomTime + 2500);
 }
 function spawnExplosionParticles() {
 const emojis = getComboEmojis();
@@ -309,6 +309,8 @@ SoundEngine.playCrack(getEquippedThemeId());
 function clearCracks() {
 const layer = document.getElementById("combo-cracks-layer");
 if (layer) layer.innerHTML = "";
+const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
+SoundEngine.playCrack(theme || "");
 }
 
 /* ============================================================
