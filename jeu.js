@@ -260,35 +260,39 @@ return layer;
 }
 function spawnCoin() {
 const layer = ensureCoinsLayer();
-if (layer.childElementCount > 30) layer.removeChild(layer.firstChild);
+if (layer.childElementCount > 60) layer.removeChild(layer.firstChild);
 const coin = document.createElement("div");
 coin.className = "combo-coin";
 coin.innerText = "🪙";
 coin.style.left = Math.random() * 100 + "%";
-coin.style.fontSize = (14 + Math.random() * 14) + "px";
-coin.style.animationDuration = (1.2 + Math.random() * 1.2) + "s";
+coin.style.fontSize = (28 + Math.random() * 24) + "px";
+coin.style.animationDuration = (1.8 + Math.random() * 1.5) + "s";
 layer.appendChild(coin);
-setTimeout(() => coin.remove(), 2600);
+setTimeout(() => coin.remove(), 3600);
 }
 function coinStorm() {
 const layer = ensureCoinsLayer();
-for (let i = 0; i < 80; i++) {
+for (let i = 0; i < 150; i++) {
 setTimeout(() => {
 const coin = document.createElement("div");
 coin.className = "combo-coin";
-coin.innerText = Math.random() > 0.7 ? "💰" : "🪙";
+coin.innerText = Math.random() > 0.6 ? "💰" : "🪙";
 coin.style.left = Math.random() * 100 + "%";
-coin.style.fontSize = (16 + Math.random() * 22) + "px";
-coin.style.animationDuration = (1 + Math.random() * 1.5) + "s";
+coin.style.fontSize = (32 + Math.random() * 32) + "px";
+coin.style.animationDuration = (1.5 + Math.random() * 2) + "s";
 layer.appendChild(coin);
-setTimeout(() => coin.remove(), 3000);
-}, i * 25);
+setTimeout(() => coin.remove(), 4000);
+}, i * 18);
 }
 }
 
 function spawnCrack() {
 const themeNow = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
-if (themeNow === "theme_alt") { spawnCoin(); SoundEngine.playCrack(themeNow); return; }
+if (themeNow === "theme_alt") {
+for (let i = 0; i < 8; i++) setTimeout(() => spawnCoin(), i * 60);
+SoundEngine.playCrack(themeNow);
+return;
+}
 const layer = ensureCracksLayer();
 if (layer.childElementCount > 20) layer.removeChild(layer.firstChild);
 const style = getComboCrackStyle();
@@ -807,14 +811,10 @@ document.getElementById("recap-coins-gained").innerHTML = htmlCoins;
 modal.style.display = "flex";
 registerIfPossible();
 }
-socket.on("solo_reward_result", (data) => {
-currentCoinsGained = data.earnedCoins;
-let htmlCoins = `+${data.baseCoins}`;
-if (data.rushBonus > 0) htmlCoins += `<span style="color:#ff8a00;">+${data.rushBonus}(RUSH)</span>`;
-document.getElementById("recap-coins-gained").innerHTML = htmlCoins;
 if (data.perfection) {
 pendingRecapAfterPopup = true;
 setTimeout(() => {
+SoundEngine.stopBoom();
 showRewardPopUp("⚡ PERFECTION — Combo x35 atteint ! Récompense maximale + Succès 🏆 débloqué !", "🏆");
 const btn = document.querySelector("#reward-popup-overlay .btn-gold");
 if (btn) btn.onclick = closeRewardPopUp;
