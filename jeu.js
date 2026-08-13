@@ -20,11 +20,13 @@ let avalancheTimerInterval = null;
 let avalancheTimeLeft = 30;
 
 /* ============================================================
-SYSTÈME COMBO (solo) — paliers 15 / 30 / 35 (PERFECTION)
+SYSTÈME COMBO (solo) — 15 / 30 / 35 + compteur + chrono
 ============================================================ */
 let currentCombo = 0;
 let lastComboTime = 0;
 let soloPerfection = false;
+let comboFXEnabled = false;
+let comboTimerInterval = null;
 const COMBO_WINDOW_MS = 2000;
 function getComboColor() {
 const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
@@ -32,8 +34,41 @@ if (theme === "theme_glacial") return "#7be8ff";
 if (theme === "theme_alt") return "#f8b500";
 return "#00d2ff";
 }
+function ensureComboHUD() {
+let hud = document.getElementById("combo-hud");
+if (!hud) {
+hud = document.createElement("div");
+hud.id = "combo-hud";
+hud.innerHTML = `<div id="combo-count">x0</div><div id="combo-timer-bar"><div id="combo-timer-fill"></div></div>`;
+document.body.appendChild(hud);
+}
+return hud;
+}
+function updateComboHUD() {
+const hud = ensureComboHUD();
+hud.style.display = "flex";
+hud.style.color = getComboColor();
+document.getElementById("combo-count").innerText = "x" + currentCombo;
+startComboTimer();
+}
+function startComboTimer() {
+if (comboTimerInterval) clearInterval(comboTimerInterval);
+const start = Date.now();
+const fill = document.getElementById("combo-timer-fill");
+comboTimerInterval = setInterval(() => {
+const remaining = Math.max(0, 1 - (Date.now() - start) / COMBO_WINDOW_MS);
+if (fill) fill.style.width = (remaining * 100) + "%";
+if (remaining <= 0) { clearInterval(comboTimerInterval); comboTimerInterval = null; }
+}, 50);
+}
+function hideComboHUD() {
+if (comboTimerInterval) { clearInterval(comboTimerInterval); comboTimerInterval = null; }
+const hud = document.getElementById("combo-hud");
+if (hud) hud.style.display = "none";
+}
 function resetCombo() {
 clearCracks();
+hideComboHUD();
 if (soloPerfection) return;
 currentCombo = 0;
 const grid = document.getElementById("grid");
@@ -43,6 +78,15 @@ grid.style.setProperty("--combo-color", getComboColor());
 }
 const banner = document.getElementById("combo-banner");
 if (banner) banner.remove();
+}
+function showComboBanner(text) {
+const banner = document.createElement("div");
+banner.id = "combo-banner";
+banner.style.color = getComboColor();
+banner.innerText = text;
+banner.style.animation = "comboPop 0.5s ease";
+document.body.appendChild(banner);
+setTimeout(() => banner.remove(), 1500);
 }
 function registerComboHit() {
 if (soloPerfection) return;
@@ -55,6 +99,8 @@ if (g) g.classList.remove("combo-tier1", "combo-tier2");
 }
 lastComboTime = now;
 currentCombo++;
+if (!comboFXEnabled) return;
+updateComboHUD();
 const grid = document.getElementById("grid");
 if (grid) grid.style.setProperty("--combo-color", getComboColor());
 if (currentCombo === 15) {
@@ -85,7 +131,21 @@ if (avalancheTimerInterval) clearInterval(avalancheTimerInterval);
 if (avalancheInterval) clearInterval(avalancheInterval);
 setTimeout(() => { endSoloGame(); }, 1200);
 }
- function getComboCrackStyle() {
+function spawnExplosionParticles() {
+const emojis = ["⚡", "💥", "✨", "🔥"];
+for (let i = 0; i < 40; i++) {
+const p = document.createElement("div");
+p.className = "explosion-particle";
+p.innerText = emojis[i % emojis.length];
+const angle = (Math.PI * 2 * i) / 40;
+const dist = 80 + Math.random() * 180;
+p.style.setProperty("--dx", Math.cos(angle) * dist + "px");
+p.style.setProperty("--dy", Math.sin(angle) * dist + "px");
+document.body.appendChild(p);
+setTimeout(() => p.remove(), 1200);
+}
+}
+function getComboCrackStyle() {
 const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
 if (theme === "theme_glacial") return { color: "#7be8ff", width: 2, jag: 30 };
 if (theme === "theme_alt") return { color: "#f8b500", width: 3, jag: 18 };
@@ -101,118 +161,81 @@ document.body.appendChild(layer);
 return layer;
 }
 function spawnCrack() {
-    const layer = ensureCracksLayer();
-    if (layer.childElementCount > 20) layer.removeChild(layer.firstChild);
-    
-    const style = getComboCrackStyle();
-    const w = window.innerWidth, h = window.innerHeight;
-    
-    // Point de départ depuis un bord
-    const side = Math.floor(Math.random() * 4);
-    let sx, sy;
-    if (side === 0) { sx = Math.random() * w; sy = 0; }           // Haut
-    else if (side === 1) { sx = w; sy = Math.random() * h; }      // Droite
-    else if (side === 2) { sx = Math.random() * w; sy = h; }      // Bas
-    else { sx = 0; sy = Math.random() * h; }                      // Gauche
-    
-    // Point d'arrivée vers le centre
-    const tx = w * (0.3 + Math.random() * 0.4);
-    const ty = h * (0.3 + Math.random() * 0.4);
-    
-    const steps = 8 + Math.floor(Math.random() * 6);
-    let points = [];
-    
-    // Générer les points de la fissure principale
-    for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        const jag = style.jag * (1 - t * 0.3);
-        const x = sx + (tx - sx) * t + (Math.random() - 0.5) * jag;
-        const y = sy + (ty - sy) * t + (Math.random() - 0.5) * jag;
-        points.push({ x: Math.round(x), y: Math.round(y) });
-    }
-    
-    const pointsStr = points.map(p => `${p.x},${p.y}`).join(' ');
-    
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("class", "combo-crack");
-    svg.setAttribute("width", w);
-    svg.setAttribute("height", h);
-    svg.style.color = style.color;
-    
-    // Trait principal épais
-    const mainCrack = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-    mainCrack.setAttribute("class", "crack-main");
-    mainCrack.setAttribute("points", pointsStr);
-    mainCrack.setAttribute("fill", "none");
-    mainCrack.setAttribute("stroke", style.color);
-    mainCrack.setAttribute("stroke-width", style.width);
-    mainCrack.setAttribute("stroke-linecap", "round");
-    mainCrack.setAttribute("stroke-linejoin", "round");
-    svg.appendChild(mainCrack);
-    
-    // Trait intérieur (plus clair pour effet 3D)
-    const innerCrack = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-    innerCrack.setAttribute("class", "crack-inner");
-    innerCrack.setAttribute("points", pointsStr);
-    innerCrack.setAttribute("fill", "none");
-    innerCrack.setAttribute("stroke", "#ffffff");
-    innerCrack.setAttribute("stroke-width", style.width * 0.4);
-    innerCrack.setAttribute("stroke-linecap", "round");
-    innerCrack.setAttribute("stroke-linejoin", "round");
-    svg.appendChild(innerCrack);
-    
-    // Ajouter 2-4 branches secondaires
-    const branchCount = 2 + Math.floor(Math.random() * 3);
-    for (let b = 0; b < branchCount; b++) {
-        const branchStart = Math.floor(Math.random() * (points.length - 1));
-        const startPoint = points[branchStart];
-        
-        // Direction aléatoire pour la branche
-        const branchAngle = Math.random() * Math.PI * 2;
-        const branchLength = 40 + Math.random() * 80;
-        const branchSteps = 3 + Math.floor(Math.random() * 3);
-        
-        let branchPoints = [{ x: startPoint.x, y: startPoint.y }];
-        for (let i = 1; i <= branchSteps; i++) {
-            const t = i / branchSteps;
-            const x = startPoint.x + Math.cos(branchAngle) * branchLength * t + (Math.random() - 0.5) * 20;
-            const y = startPoint.y + Math.sin(branchAngle) * branchLength * t + (Math.random() - 0.5) * 20;
-            branchPoints.push({ x: Math.round(x), y: Math.round(y) });
-        }
-        
-        const branchPointsStr = branchPoints.map(p => `${p.x},${p.y}`).join(' ');
-        
-        const branch = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-        branch.setAttribute("class", "crack-branch");
-        branch.setAttribute("points", branchPointsStr);
-        branch.setAttribute("fill", "none");
-        branch.setAttribute("stroke", style.color);
-        branch.setAttribute("stroke-width", style.width * 0.6);
-        branch.setAttribute("stroke-linecap", "round");
-        branch.setAttribute("stroke-linejoin", "round");
-        svg.appendChild(branch);
-    }
-    
-    layer.appendChild(svg);
+const layer = ensureCracksLayer();
+if (layer.childElementCount > 20) layer.removeChild(layer.firstChild);
+const style = getComboCrackStyle();
+const w = window.innerWidth, h = window.innerHeight;
+const side = Math.floor(Math.random() * 4);
+let sx, sy;
+if (side === 0) { sx = Math.random() * w; sy = 0; }
+else if (side === 1) { sx = w; sy = Math.random() * h; }
+else if (side === 2) { sx = Math.random() * w; sy = h; }
+else { sx = 0; sy = Math.random() * h; }
+const tx = w * (0.3 + Math.random() * 0.4);
+const ty = h * (0.3 + Math.random() * 0.4);
+const steps = 8 + Math.floor(Math.random() * 6);
+let points = [];
+for (let i = 0; i <= steps; i++) {
+const t = i / steps;
+const jag = style.jag * (1 - t * 0.3);
+const x = sx + (tx - sx) * t + (Math.random() - 0.5) * jag;
+const y = sy + (ty - sy) * t + (Math.random() - 0.5) * jag;
+points.push({ x: Math.round(x), y: Math.round(y) });
+}
+const pointsStr = points.map(p => `${p.x},${p.y}`).join(' ');
+const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+svg.setAttribute("class", "combo-crack");
+svg.setAttribute("width", w);
+svg.setAttribute("height", h);
+svg.style.color = style.color;
+const mainCrack = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+mainCrack.setAttribute("class", "crack-main");
+mainCrack.setAttribute("points", pointsStr);
+mainCrack.setAttribute("fill", "none");
+mainCrack.setAttribute("stroke", style.color);
+mainCrack.setAttribute("stroke-width", style.width);
+mainCrack.setAttribute("stroke-linecap", "round");
+mainCrack.setAttribute("stroke-linejoin", "round");
+svg.appendChild(mainCrack);
+const innerCrack = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+innerCrack.setAttribute("class", "crack-inner");
+innerCrack.setAttribute("points", pointsStr);
+innerCrack.setAttribute("fill", "none");
+innerCrack.setAttribute("stroke", "#ffffff");
+innerCrack.setAttribute("stroke-width", style.width * 0.4);
+innerCrack.setAttribute("stroke-linecap", "round");
+innerCrack.setAttribute("stroke-linejoin", "round");
+svg.appendChild(innerCrack);
+const branchCount = 2 + Math.floor(Math.random() * 3);
+for (let b = 0; b < branchCount; b++) {
+const branchStart = Math.floor(Math.random() * (points.length - 1));
+const startPoint = points[branchStart];
+const branchAngle = Math.random() * Math.PI * 2;
+const branchLength = 40 + Math.random() * 80;
+const branchSteps = 3 + Math.floor(Math.random() * 3);
+let branchPoints = [{ x: startPoint.x, y: startPoint.y }];
+for (let i = 1; i <= branchSteps; i++) {
+const t = i / branchSteps;
+const x = startPoint.x + Math.cos(branchAngle) * branchLength * t + (Math.random() - 0.5) * 20;
+const y = startPoint.y + Math.sin(branchAngle) * branchLength * t + (Math.random() - 0.5) * 20;
+branchPoints.push({ x: Math.round(x), y: Math.round(y) });
+}
+const branchPointsStr = branchPoints.map(p => `${p.x},${p.y}`).join(' ');
+const branch = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+branch.setAttribute("class", "crack-branch");
+branch.setAttribute("points", branchPointsStr);
+branch.setAttribute("fill", "none");
+branch.setAttribute("stroke", style.color);
+branch.setAttribute("stroke-width", style.width * 0.6);
+branch.setAttribute("stroke-linecap", "round");
+branch.setAttribute("stroke-linejoin", "round");
+svg.appendChild(branch);
+}
+layer.appendChild(svg);
 }
 function clearCracks() {
 const layer = document.getElementById("combo-cracks-layer");
 if (layer) layer.innerHTML = "";
-} 
-
-function spawnExplosionParticles() {
-const emojis = ["⚡", "💥", "✨", "🔥"];
-for (let i = 0; i < 40; i++) {
-const p = document.createElement("div");
-p.className = "explosion-particle";
-p.innerText = emojis[i % emojis.length];
-const angle = (Math.PI * 2 * i) / 40;
-const dist = 80 + Math.random() * 180;
-p.style.setProperty("--dx", Math.cos(angle) * dist + "px");
-p.style.setProperty("--dy", Math.sin(angle) * dist + "px");
-document.body.appendChild(p);
-setTimeout(() => p.remove(), 1200);
-}
 }
 
 /* ============================================================
