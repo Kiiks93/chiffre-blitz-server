@@ -34,6 +34,47 @@ if (theme === "theme_glacial") return "#7be8ff";
 if (theme === "theme_alt") return "#f8b500";
 return "#00d2ff";
 }
+function getComboEmojis() {
+const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
+if (theme === "theme_glacial") return ["❄️", "🧊", "✨", "💥"];
+if (theme === "theme_alt") return ["✨", "🪙", "", "⚡"];
+return ["⚡", "", "✨", ""];
+}
+function shakeScreen(intensity) {
+const el = document.getElementById("screen-game") || document.body;
+const d = 12 * intensity;
+el.animate([
+{ transform: "translate(0, 0)" },
+{ transform: `translate(${(Math.random() - 0.5) * 2 * d}px, ${(Math.random() - 0.5) * 2 * d}px)` },
+{ transform: `translate(${(Math.random() - 0.5) * 2 * d}px, ${(Math.random() - 0.5) * 2 * d}px)` },
+{ transform: "translate(0, 0)" }
+], { duration: 160 });
+}
+function flashScreen() {
+const color = getComboColor();
+const flash = document.createElement("div");
+flash.className = "perfection-flash";
+flash.style.background = `radial-gradient(circle, rgba(255,255,255,0.95) 0%, ${color} 55%, transparent 100%)`;
+document.body.appendChild(flash);
+setTimeout(() => flash.remove(), 700);
+}
+function shatterExplosion() {
+const color = getComboColor();
+for (let i = 0; i < 50; i++) {
+const s = document.createElement("div");
+s.className = "shard-particle";
+s.style.background = i % 3 === 0 ? "#ffffff" : color;
+const angle = Math.random() * Math.PI * 2;
+const dist = 120 + Math.random() * 260;
+s.style.setProperty("--dx", Math.cos(angle) * dist + "px");
+s.style.setProperty("--dy", Math.sin(angle) * dist + "px");
+s.style.setProperty("--rot", (Math.random() - 0.5) * 720 + "deg");
+s.style.left = "50%";
+s.style.top = "50%";
+document.body.appendChild(s);
+setTimeout(() => s.remove(), 1200);
+}
+}
 function ensureComboHUD() {
 let hud = document.getElementById("combo-hud");
 if (!hud) {
@@ -114,11 +155,12 @@ if (currentCombo === 15) {
 if (grid) grid.classList.add("combo-tier1");
 showComboBanner("⚡ COMBO x15 !");
 spawnCrack();
-} else if (currentCombo === 20) {
+} else if (currentCombo === 30) {
 if (grid) { grid.classList.remove("combo-tier1"); grid.classList.add("combo-tier2"); }
 showComboBanner("🔥 COMBO x30 !!");
-spawnCrack();
-} else if (currentCombo >= 20) {
+for (let i = 0; i < 6; i++) setTimeout(() => spawnCrack(), i * 60);
+shakeScreen(0.5);
+} else if (currentCombo >= 35) {
 triggerPerfection();
 } else if (currentCombo > 15) {
 spawnCrack();
@@ -127,19 +169,35 @@ spawnCrack();
 function triggerPerfection() {
 if (soloPerfection) return;
 soloPerfection = true;
-const grid = document.getElementById("grid");
-if (grid) { grid.classList.remove("combo-tier1", "combo-tier2"); grid.classList.add("combo-perfection"); }
-showComboBanner("💥 PERFECTION x35 !!!");
-for (let i = 0; i < 10; i++) setTimeout(() => spawnCrack(), i * 60);
-spawnExplosionParticles();
-SoundEngine.playVictory();
 if (soloTimerInterval) clearInterval(soloTimerInterval);
 if (avalancheTimerInterval) clearInterval(avalancheTimerInterval);
 if (avalancheInterval) clearInterval(avalancheInterval);
-setTimeout(() => { endSoloGame(); }, 1200);
+const grid = document.getElementById("grid");
+if (grid) { grid.classList.remove("combo-tier1", "combo-tier2"); grid.classList.add("combo-perfection"); }
+showComboBanner("💥 PERFECTION x35 !!!");
+// PHASE 1 : enchaînement massif de fractures + tremblement croissant
+const crackCount = 18;
+for (let i = 0; i < crackCount; i++) {
+setTimeout(() => {
+spawnCrack();
+shakeScreen(0.2 + (i / crackCount) * 0.8);
+}, i * 70);
+}
+// PHASE 2 : flash + explosion d'éclats
+const boomTime = crackCount * 70 + 350;
+setTimeout(() => {
+flashScreen();
+shatterExplosion();
+spawnExplosionParticles();
+shakeScreen(1.5);
+clearCracks();
+SoundEngine.playVictory();
+}, boomTime);
+// PHASE 3 : récap + récompense
+setTimeout(() => { endSoloGame(); }, boomTime + 1000);
 }
 function spawnExplosionParticles() {
-const emojis = ["⚡", "💥", "✨", "🔥"];
+const emojis = getComboEmojis();
 for (let i = 0; i < 40; i++) {
 const p = document.createElement("div");
 p.className = "explosion-particle";
