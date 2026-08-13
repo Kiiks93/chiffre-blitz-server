@@ -181,6 +181,7 @@ if (avalancheInterval) clearInterval(avalancheInterval);
 const grid = document.getElementById("grid");
 if (grid) { grid.classList.remove("combo-tier1", "combo-tier2"); grid.classList.add("combo-perfection"); }
 showComboBanner("💥 PERFECTION x35 !!!");
+// PHASE 1 : enchaînement massif de fissures + tremblement croissant
 const crackCount = 18;
 for (let i = 0; i < crackCount; i++) {
 setTimeout(() => {
@@ -188,19 +189,7 @@ spawnCrack();
 shakeScreen(0.2 + (i / crackCount) * 0.8);
 }, i * 70);
 }
-const boomTime = crackCount * 70 + 350;
-setTimeout(() => {
-flashScreen();
-SoundEngine.playPerfectionBoom(getEquippedThemeId());
-shatterExplosion();
-spawnExplosionParticles();
-shakeScreen(1.5);
-clearCracks();
-SoundEngine.playVictory();
-}, boomTime);
-setTimeout(() => { endSoloGame(); }, boomTime + 1000);
-}
-// PHASE 2 : flash + explosion d'éclats
+// PHASE 2 : flash + explosion d'éclats + son du thème
 const boomTime = crackCount * 70 + 350;
 setTimeout(() => {
 flashScreen();
@@ -213,6 +202,7 @@ SoundEngine.playVictory();
 }, boomTime);
 // PHASE 3 : récap + récompense
 setTimeout(() => { endSoloGame(); }, boomTime + 1000);
+}
 function spawnExplosionParticles() {
 const emojis = getComboEmojis();
 for (let i = 0; i < 40; i++) {
