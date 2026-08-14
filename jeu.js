@@ -709,31 +709,32 @@ function fetchLeaderboard() {
 }
 
 socket.on("leaderboard_data", (res) => {
-  const container = document.getElementById("lb-list");
-  container.innerHTML = "";
-  if (!res.data || res.data.length === 0) { container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">Aucun joueur.</div>`; return; }
-  const category = res.type ? res.type.split("_")[0] : "points";
-  const parsedList = res.data.map(p => parsePlayer(p));
-  if (category === "combined") parsedList.sort((a, b) => { if ((b.trophies - a.trophies) !== 0) return b.trophies - a.trophies; return b.points - a.points; });
-  parsedList.forEach((p, index) => {
-    const row = document.createElement("div");
-    row.className = "lb-row";
-    const badgeHtml = getAvatarBadgeHTML(p.flag, p.avatar, null, p);
-    const equippedTitle = p.inventory && p.inventory.__equipped && p.inventory.__equipped.title;
-    const titleHtml = equippedTitle ? `<span style="font-size:8px; color:#f8b500; font-weight:bold; margin-left:4px;">[${TITLE_DISPLAY_NAMES[equippedTitle] || equippedTitle}]</span>` : "";
-    let rightBadge = `<span class="lb-pts" style="color:#00ff88;">${p.points} pts</span>`;
-    if (category === "coins") rightBadge = `<span class="lb-pts" style="color:#f8b500;">${p.coins} 🪙</span>`;
-    else if (category === "trophies") rightBadge = `<span class="lb-pts" style="color:#fceabb;">${p.trophies} 🏆</span>`;
-    else if (category === "combined") rightBadge = `<span class="lb-pts" style="color:#00d2ff; font-size:11px;">🏆${p.trophies} | ${p.points}pts</span>`;
-    let rankDisplay = `#${index + 1}`, rankColor = "#00d2ff";
-    if (index === 0) { rankDisplay = "🥇"; rankColor = "#f8b500"; }
-    else if (index === 1) { rankDisplay = "🥈"; rankColor = "#e0e0e0"; }
-    else if (index === 2) { rankDisplay = "🥉"; rankColor = "#cd7f32"; }
-    const safeName = p.username.replace(/'/g, "\\'");
+const container = document.getElementById("lb-list");
+container.innerHTML = "";
+if (!res.data || res.data.length === 0) { container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">Aucun joueur.</div>`; return; }
+const category = res.type ? res.type.split("_")[0] : "points";
+const parsedList = res.data.map(p => parsePlayer(p));
+if (category === "combined") parsedList.sort((a, b) => { if ((b.trophies - a.trophies) !== 0) return b.trophies - a.trophies; return b.points - a.points; });
+parsedList.forEach((p, index) => {
+const row = document.createElement("div");
+row.className = "lb-row";
+const badgeHtml = getAvatarBadgeHTML(p.flag, p.avatar, null, p);
+const equippedTitle = p.inventory && p.inventory.__equipped && p.inventory.__equipped.title;
+const titleHtml = equippedTitle ? `<span style="font-size:8px; color:#f8b500; font-weight:bold; margin-left:4px;">[${TITLE_DISPLAY_NAMES[equippedTitle] || equippedTitle}]</span>` : "";
+let rightBadge = `<span class="lb-pts" style="color:#00ff88;">${p.points} pts</span>`;
+if (category === "coins") rightBadge = `<span class="lb-pts" style="color:#f8b500;">${p.coins} 🪙</span>`;
+else if (category === "trophies") rightBadge = `<span class="lb-pts" style="color:#fceabb;">${p.trophies} 🏆</span>`;
+else if (category === "combined") rightBadge = `<span class="lb-pts" style="color:#00d2ff; font-size:11px;">🏆${p.trophies} | ${p.points}pts</span>`;
+let rankDisplay = `#${index + 1}`, rankColor = "#00d2ff";
+if (index === 0) { rankDisplay = "🥇"; rankColor = "#f8b500"; }
+else if (index === 1) { rankDisplay = "🥈"; rankColor = "#e0e0e0"; }
+else if (index === 2) { rankDisplay = "🥉"; rankColor = "#cd7f32"; }
+const safeName = String(p.username || "").replace(/'/g, "\\'");
 row.innerHTML = `<span class="lb-rank" style="color:${rankColor};">${rankDisplay}</span>
 <div class="lb-user-info"><div class="lb-name-row">${badgeHtml}<span class="lb-clickable-name" onclick="openPlayerActions('${safeName}', event)">${p.username}</span>${titleHtml}</div>
 <div class="lb-sub-details"><span>🏆 ${p.trophies}</span><span>🪙 ${p.coins}</span><span>⚔️ V:${p.wins}/D:${p.losses}</span></div></div>${rightBadge}`;
-  });
+container.appendChild(row);
+});
 });
 
 function openPlayerActions(username, e) {
