@@ -729,13 +729,34 @@ socket.on("leaderboard_data", (res) => {
     if (index === 0) { rankDisplay = "🥇"; rankColor = "#f8b500"; }
     else if (index === 1) { rankDisplay = "🥈"; rankColor = "#e0e0e0"; }
     else if (index === 2) { rankDisplay = "🥉"; rankColor = "#cd7f32"; }
-    row.innerHTML = `<span class="lb-rank" style="color:${rankColor};">${rankDisplay}</span>
-      <div class="lb-user-info"><div class="lb-name-row">${badgeHtml}<span>${p.username}</span>${titleHtml}</div>
-      <div class="lb-sub-details"><span>🏆 ${p.trophies}</span><span>🪙 ${p.coins}</span><span>⚔️ V:${p.wins}/D:${p.losses}</span></div></div>${rightBadge}`;
-    container.appendChild(row);
+    const safeName = p.username.replace(/'/g, "\\'");
+row.innerHTML = `<span class="lb-rank" style="color:${rankColor};">${rankDisplay}</span>
+<div class="lb-user-info"><div class="lb-name-row">${badgeHtml}<span class="lb-clickable-name" onclick="openPlayerActions('${safeName}', event)">${p.username}</span>${titleHtml}</div>
+<div class="lb-sub-details"><span>🏆 ${p.trophies}</span><span>🪙 ${p.coins}</span><span>⚔️ V:${p.wins}/D:${p.losses}</span></div></div>${rightBadge}`;
   });
 });
 
+function openPlayerActions(username, e) {
+closePlayerActions();
+const safeName = username.replace(/'/g, "\\'");
+const menu = document.createElement('div');
+menu.id = 'player-actions-menu';
+menu.style.cssText = 'position:fixed; z-index:10001; background:#0f051d; border:1px solid #00d2ff; border-radius:10px; padding:10px; box-shadow:0 0 20px rgba(0,210,255,0.5); min-width:170px;';
+menu.style.left = Math.min(e.clientX, window.innerWidth - 190) + 'px';
+menu.style.top = Math.min(e.clientY, window.innerHeight - 120) + 'px';
+const isMe = myProfile.username && myProfile.username.toLowerCase() === username.toLowerCase();
+menu.innerHTML = `
+<div style="font-size:12px; font-weight:900; color:#f8b500; margin-bottom:6px;">${username}</div>
+${!isMe ? `<button class="btn-main" style="width:100%; margin:2px 0; padding:8px; font-size:11px;" onclick="socket.emit('send_friend_request', '${safeName}'); showNotificationToast('🤝 Demande d\'ami envoyée !', 'gift'); closePlayerActions();">🤝 Demande d'ami</button>` : ''}
+<button class="btn-main" style="width:100%; margin:2px 0; padding:8px; font-size:11px;" onclick="openTrophyRoom('${safeName}'); closePlayerActions();">🏛️ Salle des trophées</button>
+`;
+document.body.appendChild(menu);
+setTimeout(() => document.addEventListener('click', closePlayerActions, { once: true }), 0);
+}
+function closePlayerActions() {
+const m = document.getElementById('player-actions-menu');
+if (m) m.remove();
+}
 /* ============================================================
 1V1 / ADVERSAIRE / RÉCAP
 ============================================================ */
