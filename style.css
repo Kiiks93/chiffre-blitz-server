@@ -1800,3 +1800,119 @@ animation: sparklePop 1s ease forwards;
 25% { opacity: 1; }
 100% { opacity: 0; }
 }
+/* ============================================================
+SALLE DES TROPHÉES — NÉON CYBER
+============================================================ */
+.trophy-room-card {
+  background: linear-gradient(135deg, #0f051d 0%, #1a0033 100%);
+  border: 2px solid #00d2ff;
+  border-radius: 16px;
+  padding: 20px;
+  max-width: 720px;
+  width: 92vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 0 40px rgba(0, 210, 255, 0.4);
+}
+.trophy-room-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(0,210,255,0.3);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+.trophy-room-owner {
+  display: flex;
+  align-items: center;
+}
+.trophy-shelf {
+  margin-bottom: 20px;
+}
+.trophy-shelf-title {
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: #00d2ff;
+  margin-bottom: 10px;
+  text-align: center;
+  text-shadow: 0 0 8px #00d2ff;
+}
+.trophy-shelf-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.trophy-vitrine {
+  position: relative;
+  aspect-ratio: 1;
+  background: linear-gradient(180deg, rgba(0,210,255,0.05) 0%, rgba(0,210,255,0.15) 100%);
+  border: 1px solid rgba(0,210,255,0.3);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+}
+.trophy-vitrine:hover {
+  transform: translateY(-3px) scale(1.03);
+}
+.trophy-vitrine.locked {
+  filter: grayscale(1) brightness(0.4);
+}
+.trophy-vitrine .trophy-emoji {
+  font-size: 32px;
+  filter: drop-shadow(0 0 6px currentColor);
+}
+.trophy-vitrine.locked .trophy-emoji {
+  filter: grayscale(1) brightness(0.5);
+}
+.trophy-vitrine .trophy-name {
+  font-size: 9px;
+  color: #fff;
+  margin-top: 4px;
+  text-align: center;
+  font-weight: 700;
+  padding: 0 4px;
+}
+.trophy-vitrine .trophy-lock {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 12px;
+}
+/* Raretés */
+.trophy-vitrine.rarity-bronze { box-shadow: 0 0 12px rgba(255, 138, 0, 0.5); border-color: #ff8a00; color: #ff8a00; }
+.trophy-vitrine.rarity-silver { box-shadow: 0 0 12px rgba(200, 230, 255, 0.6); border-color: #c8e6ff; color: #c8e6ff; }
+.trophy-vitrine.rarity-gold { box-shadow: 0 0 16px rgba(248, 181, 0, 0.7); border-color: #f8b500; color: #f8b500; }
+.trophy-vitrine.rarity-legendary {
+  box-shadow: 0 0 20px rgba(255, 0, 200, 0.8), 0 0 40px rgba(0, 210, 255, 0.4);
+  border-color: #ff00c8;
+  color: #ff00c8;
+  animation: legendaryPulse 2s infinite;
+}
+@keyframes legendaryPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 0, 200, 0.8), 0 0 40px rgba(0, 210, 255, 0.4); }
+  50% { box-shadow: 0 0 30px rgba(255, 0, 200, 1), 0 0 60px rgba(0, 210, 255, 0.7); }
+}
+@keyframes trophyBurst {
+  0% { transform: translateX(-50%) scale(0.3); opacity: 0; }
+  50% { transform: translateX(-50%) scale(1.15); opacity: 1; }
+  100% { transform: translateX(-50%) scale(1); opacity: 1; }
+}
+/* Tooltip fiche détail */
+.trophy-tooltip {
+  position: fixed;
+  background: #0f051d;
+  border: 1px solid #00d2ff;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 11px;
+  color: #fff;
+  z-index: 10000;
+  pointer-events: none;
+  max-width: 200px;
+  box-shadow: 0 0 20px rgba(0,210,255,0.5);
+}
