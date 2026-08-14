@@ -1730,7 +1730,7 @@ filter: drop-shadow(0 0 6px rgba(248, 181, 0, 0.8));
 GRILLE + HUD PROPORTIONNELS (PC & MOBILE — jamais rogné)
 ============================================================ */
 :root {
---game-width: min(94vw, 60vh, 470px);
+--game-width: min(94vw, 60vh, 400px);
 }
 #grid {
 display: grid !important;
