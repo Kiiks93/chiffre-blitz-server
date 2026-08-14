@@ -288,6 +288,85 @@ layer.appendChild(coin);
 }
 }
 
+function spawnIceCrack() {
+const layer = ensureCracksLayer();
+if (layer.childElementCount > 20) layer.removeChild(layer.firstChild);
+const w = window.innerWidth, h = window.innerHeight;
+const side = Math.floor(Math.random() * 4);
+let sx, sy;
+if (side === 0) { sx = Math.random() * w; sy = 0; }
+else if (side === 1) { sx = w; sy = Math.random() * h; }
+else if (side === 2) { sx = Math.random() * w; sy = h; }
+else { sx = 0; sy = Math.random() * h; }
+const tx = w * (0.3 + Math.random() * 0.4);
+const ty = h * (0.3 + Math.random() * 0.4);
+const steps = 5 + Math.floor(Math.random() * 4);
+let points = [];
+for (let i = 0; i <= steps; i++) {
+const t = i / steps;
+const jag = 50 * (1 - t * 0.25);
+const x = sx + (tx - sx) * t + (Math.random() - 0.5) * jag;
+const y = sy + (ty - sy) * t + (Math.random() - 0.5) * jag;
+points.push({ x: Math.round(x), y: Math.round(y) });
+}
+const pointsStr = points.map(p => `${p.x},${p.y}`).join(' ');
+const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+svg.setAttribute("class", "ice-crack");
+svg.setAttribute("width", w);
+svg.setAttribute("height", h);
+const makeLine = (cls, stroke, width) => {
+const line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+line.setAttribute("class", cls);
+line.setAttribute("points", pointsStr);
+line.setAttribute("fill", "none");
+line.setAttribute("stroke", stroke);
+line.setAttribute("stroke-width", width);
+line.setAttribute("stroke-linecap", "round");
+line.setAttribute("stroke-linejoin", "miter");
+svg.appendChild(line);
+};
+makeLine("ice-glow", "#7be8ff", 8);
+makeLine("ice-main", "#a8f4ff", 3);
+makeLine("ice-core", "#ffffff", 1.2);
+const branchCount = 2 + Math.floor(Math.random() * 3);
+for (let b = 0; b < branchCount; b++) {
+const startIdx = 1 + Math.floor(Math.random() * (points.length - 2));
+const sp = points[startIdx];
+const angle = Math.random() * Math.PI * 2;
+const len = 50 + Math.random() * 90;
+let bPts = [{ x: sp.x, y: sp.y }];
+const bSteps = 2 + Math.floor(Math.random() * 2);
+for (let i = 1; i <= bSteps; i++) {
+const t = i / bSteps;
+bPts.push({
+x: Math.round(sp.x + Math.cos(angle) * len * t + (Math.random() - 0.5) * 24),
+y: Math.round(sp.y + Math.sin(angle) * len * t + (Math.random() - 0.5) * 24)
+});
+}
+const bStr = bPts.map(p => `${p.x},${p.y}`).join(' ');
+const bl = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+bl.setAttribute("class", "ice-branch");
+bl.setAttribute("points", bStr);
+bl.setAttribute("fill", "none");
+bl.setAttribute("stroke", "#a8f4ff");
+bl.setAttribute("stroke-width", 1.6);
+bl.setAttribute("stroke-linecap", "round");
+svg.appendChild(bl);
+}
+points.forEach((p, i) => {
+if (i > 0 && i < points.length - 1 && Math.random() > 0.45) {
+const spark = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+spark.setAttribute("class", "ice-sparkle");
+spark.setAttribute("cx", p.x);
+spark.setAttribute("cy", p.y);
+spark.setAttribute("r", 1.5 + Math.random() * 2);
+spark.setAttribute("fill", "#ffffff");
+svg.appendChild(spark);
+}
+});
+layer.appendChild(svg);
+SoundEngine.playCrack("theme_glacial");
+}
 function spawnCrack() {
 const themeNow = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
 if (themeNow === "theme_alt") {
@@ -295,6 +374,7 @@ for (let i = 0; i < 8; i++) setTimeout(() => spawnCoin(), i * 60);
 SoundEngine.playCrack(themeNow);
 return;
 }
+if (themeNow === "theme_glacial") { spawnIceCrack(); return; }
 const layer = ensureCracksLayer();
 if (layer.childElementCount > 20) layer.removeChild(layer.firstChild);
 const style = getComboCrackStyle();
