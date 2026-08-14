@@ -684,7 +684,7 @@ CLASSEMENT
 let currentLbCategory = "points";
 let currentLbScope = "regional";
 
-function openLeaderboard() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } document.getElementById("modal-leaderboard").style.display = "flex"; updateCombinedExplanationVisibility(); fetchLeaderboard(); }
+function openLeaderboard() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } updateLbRegionLabel(); document.getElementById("modal-leaderboard").style.display = "flex"; updateCombinedExplanationVisibility(); fetchLeaderboard(); }
 function closeLeaderboard() { document.getElementById("modal-leaderboard").style.display = "none"; }
 
 function setLbCategory(cat) {
@@ -701,6 +701,12 @@ function setLbScope(scope) {
   ["regional", "national", "global"].forEach(s => { const btn = document.getElementById(`lb-scope-${s}`); if (btn) btn.classList.toggle("active", s === scope); });
   fetchLeaderboard();
 }
+
+function updateLbRegionLabel() {
+const btn = document.getElementById("lb-scope-regional");
+if (btn && myProfile && myProfile.region) btn.innerText = "Régional (" + myProfile.region + ")";
+}
+socket.on("player_registered", () => { updateLbRegionLabel(); });
 
 function fetchLeaderboard() {
   const type = `${currentLbCategory}_${currentLbScope}`;
