@@ -490,5 +490,31 @@
     <script src="social.js"></script>
     <script src="passe.js"></script>
     <script src="jeu.js"></script>
+    <!-- ============================================================
+MODAL SALLE DES TROPHÉES
+============================================================ -->
+<div id="modal-trophy-room" class="modal-overlay" style="display:none;">
+  <div class="trophy-room-card">
+    <div class="trophy-room-header">
+      <div class="trophy-room-owner">
+        <span id="trophy-room-flag" style="font-size:28px;">🇫🇷</span>
+        <span id="trophy-room-username" style="font-size:22px; font-weight:900; color:#fff; margin:0 8px;">Joueur</span>
+        <span id="trophy-room-count" style="font-size:13px; color:#f8b500;">0/16 🏆</span>
+      </div>
+      <button onclick="closeTrophyRoom()" class="modal-close">✕</button>
+    </div>
+    <div id="trophy-room-shelves"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+POPUP DÉBLOCAGE TROPHÉE
+============================================================ -->
+<div id="trophy-unlock-popup" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); z-index:9999; background:linear-gradient(135deg,#1a0033,#0f051d); border:2px solid #f8b500; border-radius:16px; padding:20px 40px; text-align:center; box-shadow:0 0 40px rgba(248,181,0,0.8); animation:trophyBurst 0.8s ease;">
+  <div style="font-size:11px; color:#f8b500; letter-spacing:2px; margin-bottom:8px;">🏆 NOUVEAU TROPHÉE DÉBLOQUÉ !</div>
+  <div id="trophy-unlock-emoji" style="font-size:64px; margin:8px 0;">🏆</div>
+  <div id="trophy-unlock-name" style="font-size:20px; font-weight:900; color:#fff;">Nom du trophée</div>
+  <div id="trophy-unlock-title" style="font-size:13px; color:#00d2ff; margin-top:6px;">Titre débloqué</div>
+</div>
 </body>
 </html>
