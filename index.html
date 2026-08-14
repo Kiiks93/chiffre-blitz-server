@@ -80,8 +80,13 @@
         <button class="btn-main btn-blue" onclick="openLaunchAdModal()" style="margin-top: 10px; width: 100%; font-size: 15px; padding: 12px;" data-i18n="btn_play">JOUER ⚡</button>
     </div>
 
-    <div id="screen-menu" class="menu-container" style="display:none; max-width: 380px;"><button onclick="openTrophyRoom()" class="btn-menu">🏛️ Salle des Trophées</button>
-        <div id="player-event-banner" class="event-banner"></div>
+    <div id="screen-menu" class="menu-container" style="display:none; max-width: 380px;">
+<button onclick="enterTrophyRoom()" class="btn-trophy-room">
+<span class="trophy-room-icon">🏛️</span>
+<span class="trophy-room-label">SALLE DES TROPHÉES</span>
+<span class="trophy-room-shine"></span>
+</button>
+    <div id="player-event-banner" class="event-banner"></div>
         
 
         <div onclick="openBlitzPass()" style="background: linear-gradient(135deg, rgba(248,181,0,0.18), rgba(255,65,108,0.18)); border: 2px solid #f8b500; border-radius: 14px; padding: 10px 14px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
