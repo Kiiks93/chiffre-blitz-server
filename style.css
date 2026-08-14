@@ -1917,3 +1917,74 @@ SALLE DES TROPHÉES — NÉON CYBER
   max-width: 200px;
   box-shadow: 0 0 20px rgba(0,210,255,0.5);
 }
+/* ============================================================
+BANDEAU SALLE DES TROPHÉES (néon doré + reflet)
+============================================================ */
+.btn-trophy-room {
+position: relative;
+width: 100%;
+margin: 10px 0;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 10px;
+padding: 14px 18px;
+background: linear-gradient(135deg, #1a0f00 0%, #2b1a00 50%, #1a0f00 100%);
+border: 2px solid #f8b500;
+border-radius: 14px;
+color: #f8b500;
+font-weight: 900;
+font-size: 15px;
+letter-spacing: 2px;
+cursor: pointer;
+overflow: hidden;
+animation: trophyBannerPulse 2.5s infinite;
+transition: transform 0.15s;
+}
+.btn-trophy-room:hover { transform: scale(1.03); }
+.btn-trophy-room .trophy-room-icon {
+font-size: 22px;
+filter: drop-shadow(0 0 6px rgba(248, 181, 0, 0.9));
+}
+.btn-trophy-room .trophy-room-shine {
+position: absolute;
+top: 0; left: -60%;
+width: 40%; height: 100%;
+background: linear-gradient(100deg, transparent, rgba(255, 230, 150, 0.35), transparent);
+transform: skewX(-20deg);
+animation: bannerShine 3s infinite;
+}
+@keyframes bannerShine {
+0% { left: -60%; }
+60%, 100% { left: 130%; }
+}
+@keyframes trophyBannerPulse {
+0%, 100% { box-shadow: 0 0 14px rgba(248,181,0,0.3), inset 0 0 20px rgba(248,181,0,0.06); }
+50% { box-shadow: 0 0 26px rgba(248,181,0,0.55), inset 0 0 28px rgba(248,181,0,0.12); }
+}
+/* ---------- ANIMATION D'ENTRÉE DANS LA SALLE ---------- */
+.trophy-enter-flash {
+position: fixed;
+inset: 0;
+z-index: 10002;
+background: radial-gradient(circle, #2b1a00 0%, #0f051d 70%);
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 90px;
+pointer-events: none;
+animation: enterRoom 1s ease forwards;
+}
+@keyframes enterRoom {
+0% { opacity: 0; transform: scale(0.5); }
+40% { opacity: 1; transform: scale(1); }
+70% { opacity: 1; }
+100% { opacity: 0; transform: scale(1.2); }
+}
+.trophy-room-card {
+animation: roomCardIn 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+@keyframes roomCardIn {
+0% { transform: scale(0.7) translateY(40px); opacity: 0; filter: blur(6px); }
+100% { transform: scale(1) translateY(0); opacity: 1; filter: blur(0); }
+}
