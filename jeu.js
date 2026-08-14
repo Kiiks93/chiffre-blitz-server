@@ -20,6 +20,119 @@ let avalancheTimerInterval = null;
 let avalancheTimeLeft = 30;
 
 /* ============================================================
+CATALOGUE TROPHÉES CLIENT
+============================================================ */
+const TROPHY_CATALOG_CLIENT = {
+  first_victory:    { name: "Première Victoire", emoji: "⚔️", shelf: "combat",      rarity: "bronze",    condition: "Gagner 1 match 1v1",        progress: p => `${Math.min(p.wins||0,1)}/1` },
+  unstoppable:      { name: "Inarrêtable",       emoji: "🔥", shelf: "combat",      rarity: "silver",    condition: "5 victoires d'affilée",       progress: p => `${Math.min(p.win_streak||0,5)}/5` },
+  gladiator:        { name: "Gladiateur",        emoji: "🛡️", shelf: "combat",      rarity: "silver",    condition: "Jouer 30 matchs 1v1",         progress: p => `${Math.min(p.matches_played||0,30)}/30` },
+  champion:         { name: "Champion",          emoji: "👑", shelf: "combat",      rarity: "gold",      condition: "Gagner un tournoi (bientôt !)", progress: () => "🔒 Bientôt", dormant: true },
+  awakening:        { name: "Éveil",             emoji: "⚡", shelf: "skill",       rarity: "bronze",    condition: "Combo x15",                   progress: p => `x${Math.min(p.best_combo||0,15)}/15` },
+  furnace:          { name: "Fournaise",         emoji: "💥", shelf: "skill",       rarity: "silver",    condition: "Combo x30",                   progress: p => `x${Math.min(p.best_combo||0,30)}/30` },
+  perfection:       { name: "PERFECTION",        emoji: "💎", shelf: "skill",       rarity: "legendary", condition: "Combo x35",                   progress: p => `x${Math.min(p.best_combo||0,35)}/35` },
+  avalanche_master: { name: "Maître Avalanche",  emoji: "🎯", shelf: "skill",       rarity: "gold",      condition: "Score 400 en Avalanche",      progress: p => `${Math.min(p.best_avalanche||0,400)}/400` },
+  combatant:        { name: "Combattant",        emoji: "🎖️", shelf: "progression", rarity: "bronze",    condition: "Pass Palier 15",              progress: () => "—" },
+  elite:            { name: "Élite",             emoji: "🏵️", shelf: "progression", rarity: "gold",      condition: "Pass Palier 30",              progress: () => "—" },
+  worker:           { name: "Travailleur",       emoji: "⛏️", shelf: "progression", rarity: "silver",    condition: "1000 🪙 gagnés en jeu",       progress: p => `${Math.min(p.total_coins_earned||0,1000)}/1000` },
+  rising_star:      { name: "Étoile Montante",   emoji: "⭐", shelf: "progression", rarity: "silver",    condition: "500 points au classement",    progress: p => `${Math.min(p.points||0,500)}/500` },
+  local_king:       { name: "Roi Local",         emoji: "🏰", shelf: "domination",  rarity: "gold",      condition: "N°1 régional en fin de saison", progress: () => "Fin de saison" },
+  midas:            { name: "Midas",             emoji: "💰", shelf: "domination",  rarity: "gold",      condition: "N°1 pièces en fin de saison", progress: () => "Fin de saison" },
+  dynasty:          { name: "Dynastie",          emoji: "🏛️", shelf: "domination",  rarity: "legendary", condition: "3 saisons N°1",               progress: p => `${p.season_n1_count||0}/3` },
+  world_n1:         { name: "N°1 Mondial",       emoji: "🌍", shelf: "domination",  rarity: "legendary", condition: "N°1 global fin de saison",    progress: () => "Fin de saison" }
+};
+const TROPHY_SHELVES = [
+  { id: "combat",      label: "⚔️ COMBAT",      color: "#ff4b2b" },
+  { id: "skill",       label: "💥 SKILL",       color: "#00d2ff" },
+  { id: "progression", label: "📈 PROGRESSION", color: "#00ff88" },
+  { id: "domination",  label: "👑 DOMINATION",  color: "#f8b500" }
+];
+
+function openTrophyRoom(targetUsername = null) {
+  document.getElementById('modal-trophy-room').style.display = 'flex';
+  if (targetUsername) socket.emit('get_trophy_room', targetUsername);
+  else socket.emit('get_my_trophy_room');
+}
+function closeTrophyRoom() {
+  document.getElementById('modal-trophy-room').style.display = 'none';
+}
+
+socket.on('trophy_room_data', (data) => {
+  if (!data || !data.ok) return;
+  document.getElementById('trophy-room-flag').innerText = data.flag || '🇫🇷';
+  document.getElementById('trophy-room-username').innerText = data.username;
+  const unlockedCount = Object.keys(data.trophies_collection || {}).length;
+  document.getElementById('trophy-room-count').innerText = `${unlockedCount}/16 🏆`;
+  
+  const shelvesContainer = document.getElementById('trophy-room-shelves');
+  shelvesContainer.innerHTML = '';
+  
+  TROPHY_SHELVES.forEach(shelf => {
+    const shelfEl = document.createElement('div');
+    shelfEl.className = 'trophy-shelf';
+    const shelfTrohpies = Object.entries(TROPHY_CATALOG_CLIENT).filter(([_, t]) => t.shelf === shelf.id);
+    
+    shelfEl.innerHTML = `<div class="trophy-shelf-title" style="color:${shelf.color}; text-shadow:0 0 8px ${shelf.color};">${shelf.label}</div>`;
+    const grid = document.createElement('div');
+    grid.className = 'trophy-shelf-grid';
+    
+    shelfTrohpies.forEach(([id, trophy]) => {
+      const isUnlocked = !!(data.trophies_collection && data.trophies_collection[id]);
+      const vitrine = document.createElement('div');
+      vitrine.className = `trophy-vitrine rarity-${trophy.rarity} ${!isUnlocked ? 'locked' : ''}`;
+      vitrine.innerHTML = `
+        <div class="trophy-emoji">${isUnlocked ? trophy.emoji : '❓'}</div>
+        <div class="trophy-name">${isUnlocked ? trophy.name : '???'}</div>
+        ${!isUnlocked ? '<div class="trophy-lock">🔒</div>' : ''}
+      `;
+      vitrine.onmouseenter = (e) => showTrophyTooltip(e, trophy, data, isUnlocked);
+      vitrine.onmousemove = (e) => moveTrophyTooltip(e);
+      vitrine.onmouseleave = hideTrophyTooltip;
+      grid.appendChild(vitrine);
+    });
+    
+    shelfEl.appendChild(grid);
+    shelvesContainer.appendChild(shelfEl);
+  });
+});
+
+let tooltipEl = null;
+function showTrophyTooltip(e, trophy, playerData, isUnlocked) {
+  hideTrophyTooltip();
+  tooltipEl = document.createElement('div');
+  tooltipEl.className = 'trophy-tooltip';
+  const progressText = trophy.progress(playerData);
+  tooltipEl.innerHTML = `
+    <div style="font-size:13px; font-weight:900; color:#f8b500;">${trophy.emoji} ${trophy.name}</div>
+    <div style="margin:6px 0; color:#00d2ff;">${trophy.condition}</div>
+    <div style="color:#fff;">Progrès : <b>${progressText}</b></div>
+    <div style="margin-top:6px; font-size:10px; color:${isUnlocked ? '#00ff88' : '#ff4b2b'};">${isUnlocked ? '✅ Débloqué' : '🔒 Verrouillé'}</div>
+  `;
+  document.body.appendChild(tooltipEl);
+  moveTrophyTooltip(e);
+}
+function moveTrophyTooltip(e) {
+  if (!tooltipEl) return;
+  tooltipEl.style.left = (e.clientX + 15) + 'px';
+  tooltipEl.style.top = (e.clientY + 15) + 'px';
+}
+function hideTrophyTooltip() {
+  if (tooltipEl) { tooltipEl.remove(); tooltipEl = null; }
+}
+
+socket.on('trophy_unlocked', (trophies) => {
+  trophies.forEach((t, i) => {
+    setTimeout(() => {
+      const popup = document.getElementById('trophy-unlock-popup');
+      document.getElementById('trophy-unlock-emoji').innerText = t.emoji;
+      document.getElementById('trophy-unlock-name').innerText = t.name;
+      document.getElementById('trophy-unlock-title').innerText = `Titre débloqué : ${t.title}`;
+      popup.style.display = 'block';
+      setTimeout(() => { popup.style.display = 'none'; }, 3500);
+    }, i * 800);
+  });
+});
+
+/* ============================================================
 SYSTÈME COMBO (solo) — 15 / 30 / 35 + compteur + chrono
 ============================================================ */
 let currentCombo = 0;
@@ -1131,7 +1244,12 @@ doubleBtn.style.opacity = "1";
 doubleBtn.innerText = "📺 Doubler mes gains (Pub)";
 const rematchBtn = document.getElementById("btn-rematch");
 if (rematchBtn) rematchBtn.style.display = "none";
-socket.emit("claim_solo_reward", { score: soloScore, perfection: wasPerfection });
+socket.emit("claim_solo_reward", { 
+  score: soloScore, 
+  perfection: wasPerfection, 
+  best_combo: currentCombo,
+  avalanche_score: activeTrainingMode === "avalanche" ? soloScore : 0
+});
 document.getElementById("winner-cinematic-container").innerHTML = `
 <div class="victory-avatar-showcase">
 <div class="victory-badge-large">
