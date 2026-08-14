@@ -53,6 +53,65 @@ title_supreme: { sources: ["pass"], type: "title", permanent: true },
 title_champion: { sources: ["pass"], type: "title", permanent: true }
 };
 
+/* ============================================================
+TROPHÉES — SALLE DES TROPHÉES (16 trophées)
+============================================================ */
+const TROPHY_CATALOG = {
+  // ⚔️ COMBAT
+  first_victory:   { name: "Première Victoire", emoji: "⚔️", shelf: "combat", rarity: "bronze",   title: "title_vainqueur" },
+  unstoppable:     { name: "Inarrêtable",       emoji: "🔥", shelf: "combat", rarity: "silver",   title: "title_inarrettable" },
+  gladiator:       { name: "Gladiateur",        emoji: "🛡️", shelf: "combat", rarity: "silver",   title: "title_gladiateur" },
+  champion:        { name: "Champion",          emoji: "👑", shelf: "combat", rarity: "gold",     title: "title_champion_trophy", dormant: true },
+  // 💥 SKILL
+  awakening:       { name: "Éveil",             emoji: "⚡", shelf: "skill",  rarity: "bronze",   title: "title_eveille" },
+  furnace:         { name: "Fournaise",         emoji: "💥", shelf: "skill",  rarity: "silver",   title: "title_flamme" },
+  perfection:      { name: "PERFECTION",        emoji: "💎", shelf: "skill",  rarity: "legendary",title: "title_parfait" },
+  avalanche_master:{ name: "Maître Avalanche",  emoji: "🎯", shelf: "skill",  rarity: "gold",     title: "title_maitre_avalanche" },
+  // 📈 PROGRESSION
+  combatant:       { name: "Combattant",        emoji: "🎖️", shelf: "progression", rarity: "bronze", title: "title_combattant" },
+  elite:           { name: "Élite",             emoji: "🏵️", shelf: "progression", rarity: "gold",   title: "title_elite" },
+  worker:          { name: "Travailleur",       emoji: "⛏️", shelf: "progression", rarity: "silver", title: "title_travailleur" },
+  rising_star:     { name: "Étoile Montante",   emoji: "⭐", shelf: "progression", rarity: "silver", title: "title_etoile" },
+  // 👑 DOMINATION (débloqués à la fin de saison)
+  local_king:      { name: "Roi Local",         emoji: "🏰", shelf: "domination", rarity: "gold",      title: "title_roi_local" },
+  midas:           { name: "Midas",             emoji: "💰", shelf: "domination", rarity: "gold",      title: "title_midas" },
+  dynasty:         { name: "Dynastie",          emoji: "🏛️", shelf: "domination", rarity: "legendary", title: "title_dynastie" },
+  world_n1:        { name: "N°1 Mondial",       emoji: "🌍", shelf: "domination", rarity: "legendary", title: "title_mondial" }
+};
+
+function checkAndUnlockTrophy(player, trophyId) {
+  const trophy = TROPHY_CATALOG[trophyId];
+  if (!trophy) return null;
+  if (trophy.dormant) return null; // Champion en attente du système tournoi
+  player.trophies_collection = player.trophies_collection || {};
+  if (player.trophies_collection[trophyId]) return null; // déjà débloqué
+  player.trophies_collection[trophyId] = { unlocked: true, unlockedAt: Date.now() };
+  player.unlocked_items = player.unlocked_items || [];
+  if (trophy.title && !player.unlocked_items.includes(trophy.title)) {
+    player.unlocked_items.push(trophy.title);
+  }
+  return trophy;
+}
+
+function evaluateTrophies(player) {
+  const unlocked = [];
+  // ⚔️ COMBAT
+  if ((player.wins || 0) >= 1)  { const t = checkAndUnlockTrophy(player, "first_victory"); if (t) unlocked.push(t); }
+  if ((player.win_streak || 0) >= 5) { const t = checkAndUnlockTrophy(player, "unstoppable"); if (t) unlocked.push(t); }
+  if ((player.matches_played || 0) >= 30) { const t = checkAndUnlockTrophy(player, "gladiator"); if (t) unlocked.push(t); }
+  // 💥 SKILL
+  if ((player.best_combo || 0) >= 15) { const t = checkAndUnlockTrophy(player, "awakening"); if (t) unlocked.push(t); }
+  if ((player.best_combo || 0) >= 30) { const t = checkAndUnlockTrophy(player, "furnace"); if (t) unlocked.push(t); }
+  if ((player.best_combo || 0) >= 35) { const t = checkAndUnlockTrophy(player, "perfection"); if (t) unlocked.push(t); }
+  if ((player.best_avalanche || 0) >= 400) { const t = checkAndUnlockTrophy(player, "avalanche_master"); if (t) unlocked.push(t); }
+  // 📈 PROGRESSION
+  if (player.claimedPassTiers && player.claimedPassTiers["15_free"]) { const t = checkAndUnlockTrophy(player, "combatant"); if (t) unlocked.push(t); }
+  if (player.claimedPassTiers && player.claimedPassTiers["30_free"]) { const t = checkAndUnlockTrophy(player, "elite"); if (t) unlocked.push(t); }
+  if ((player.total_coins_earned || 0) >= 1000) { const t = checkAndUnlockTrophy(player, "worker"); if (t) unlocked.push(t); }
+  if ((player.points || 0) >= 500) { const t = checkAndUnlockTrophy(player, "rising_star"); if (t) unlocked.push(t); }
+  return unlocked;
+}
+
 function hasSource(itemId, source) {
 const item = ITEM_CATALOG[itemId];
 return !!(item && Array.isArray(item.sources) && item.sources.includes(source));
@@ -104,14 +163,22 @@ if (changed) io.emit("events_state_update", globalEvents);
 app.get('/', (req, res) => { res.send('Chiffre Blitz Server is running ⚡'); });
 
 async function savePlayerToSupabase(socketId) {
-const p = activePlayers[socketId];
-if (!p) return;
-await supabase.from('players').update({
-points: p.points, coins: p.coins, trophies: p.trophies, wins: p.wins, losses: p.losses,
-inventory: p.inventory, equipped_power: p.equippedPower, region: p.region, avatar: p.avatar,
-flag: p.flag, unlocked_items: p.unlocked_items, blitz_pass_premium: p.blitzPassPremium,
-claimed_pass_tiers: p.claimedPassTiers
-}).eq('id', p.dbId);
+  const p = activePlayers[socketId];
+  if (!p) return;
+  await supabase.from('players').update({
+    points: p.points, coins: p.coins, trophies: p.trophies, wins: p.wins, losses: p.losses,
+    inventory: p.inventory, equipped_power: p.equippedPower, region: p.region, avatar: p.avatar,
+    flag: p.flag, unlocked_items: p.unlocked_items, blitz_pass_premium: p.blitzPassPremium,
+    claimed_pass_tiers: p.claimedPassTiers,
+    matches_played: p.matches_played || 0,
+    win_streak: p.win_streak || 0,
+    best_combo: p.best_combo || 0,
+    best_avalanche: p.best_avalanche || 0,
+    solo_games: p.solo_games || 0,
+    total_coins_earned: p.total_coins_earned || 0,
+    season_n1_count: p.season_n1_count || 0,
+    trophies_collection: p.trophies_collection || {}
+  }).eq('id', p.dbId);
 }
 
 /* ============================================================
@@ -150,6 +217,8 @@ avatar: data.avatar || 1, flag: data.flag || "🇫🇷",
 points: 0, coins: 100, trophies: 0, wins: 0, losses: 0,
 inventory: {}, equipped_power: null, unlocked_items: [],
 blitz_pass_premium: false, claimed_pass_tiers: {}
+matches_played: 0, win_streak: 0, best_combo: 0, best_avalanche: 0,
+solo_games: 0, total_coins_earned: 0, season_n1_count: 0, trophies_collection: {}
 };
 const { data: inserted, error: insertErr } = await supabase.from('players').insert([newRecord]).select().single();
 if (!insertErr && inserted) {
@@ -167,6 +236,14 @@ trophies: playerData.trophies || 0, wins: playerData.wins || 0, losses: playerDa
 inventory: playerData.inventory || {}, equippedPower: playerData.equipped_power || null,
 unlocked_items: playerData.unlocked_items || [], blitzPassPremium: playerData.blitz_pass_premium || false,
 claimedPassTiers: playerData.claimed_pass_tiers || {}
+matches_played: playerData.matches_played || 0,
+win_streak: playerData.win_streak || 0,
+best_combo: playerData.best_combo || 0,
+best_avalanche: playerData.best_avalanche || 0,
+solo_games: playerData.solo_games || 0,
+total_coins_earned: playerData.total_coins_earned || 0,
+season_n1_count: playerData.season_n1_count || 0,
+trophies_collection: playerData.trophies_collection || {}
 };
 socket.emit('register_result', { ok: true });
 socket.emit('player_registered', activePlayers[socket.id]);
