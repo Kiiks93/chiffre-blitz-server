@@ -266,6 +266,7 @@ io.on('connection', (socket) => {
         socketId: socket.id, dbId: playerData.id || socket.id, id: socket.id,
         username: playerData.username, region: playerData.region, avatar: playerData.avatar,
         flag: playerData.flag, points: playerData.points || 0, coins: playerData.coins || 0,
+        country: playerData.country || "FR",
         trophies: playerData.trophies || 0, wins: playerData.wins || 0, losses: playerData.losses || 0,
         inventory: playerData.inventory || {}, equippedPower: playerData.equipped_power || null,
         unlocked_items: playerData.unlocked_items || [], blitzPassPremium: playerData.blitz_pass_premium || false,
@@ -452,7 +453,7 @@ io.on('connection', (socket) => {
       let query = supabase.from('players').select('*');
       const player = activePlayers[socket.id];
       if (scope === 'regional' && player) query = query.eq('region', player.region);
-      if (scope === 'national' && player) query = query.eq('country', player.country || 'FR');
+      if (scope === 'national' && player) query = query.in('country', [player.country || 'FR', 'FR', '🇫🇷']);
       if (category === 'points') query = query.order('points', { ascending: false });
       else if (category === 'trophies') query = query.order('trophies', { ascending: false });
       else if (category === 'coins') query = query.order('coins', { ascending: false });
