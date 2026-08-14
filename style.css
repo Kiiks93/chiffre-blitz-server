@@ -1727,14 +1727,17 @@ filter: drop-shadow(0 0 6px rgba(248, 181, 0, 0.8));
 100% { transform: translateY(0) rotate(540deg); }
 }
 /* ============================================================
-GRILLE AGRANDIE + RESPONSIVE — VERSION RENFORCÉE
+GRILLE + HUD PROPORTIONNELS (PC & MOBILE — jamais rogné)
 ============================================================ */
+:root {
+--game-width: min(94vw, 60vh, 470px);
+}
 #grid {
 display: grid !important;
 grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-width: min(94vw, 62vh, 560px) !important;
+width: var(--game-width) !important;
 max-width: 94vw !important;
-gap: clamp(6px, 1.2vw, 12px) !important;
+gap: clamp(6px, 1.2vw, 10px) !important;
 margin: 12px auto !important;
 padding: 0 !important;
 box-sizing: border-box !important;
@@ -1745,8 +1748,14 @@ width: auto !important;
 min-width: 0 !important;
 height: auto !important;
 aspect-ratio: 4 / 3;
-font-size: clamp(16px, 3.2vw, 28px) !important;
+font-size: clamp(16px, 3.2vw, 26px) !important;
 border-radius: 12px !important;
+box-sizing: border-box !important;
+}
+#hud-solo,
+#hud-1v1 {
+width: var(--game-width) !important;
+margin: 0 auto !important;
 box-sizing: border-box !important;
 }
 body {
