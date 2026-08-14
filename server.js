@@ -187,6 +187,45 @@ SOCKET
 io.on('connection', (socket) => {
 console.log('Connexion : ' + socket.id);
 socket.emit('events_state_update', globalEvents);
+  
+/* ---------- SALLE DES TROPHÉES ---------- */
+socket.on('get_trophy_room', async (targetUsername) => {
+  try {
+    const cleanTarget = (targetUsername || '').trim();
+    if (!cleanTarget) { socket.emit('trophy_room_data', { ok: false }); return; }
+    const { data: matched, error } = await supabase.from('players').select('*').ilike('username', cleanTarget).limit(1);
+    if (error || !matched || matched.length === 0) { socket.emit('trophy_room_data', { ok: false }); return; }
+    const t = matched[0];
+    socket.emit('trophy_room_data', {
+      ok: true,
+      username: t.username,
+      avatar: t.avatar,
+      flag: t.flag,
+      region: t.region,
+      trophies_collection: t.trophies_collection || {},
+      wins: t.wins || 0, losses: t.losses || 0, points: t.points || 0, coins: t.coins || 0,
+      matches_played: t.matches_played || 0, win_streak: t.win_streak || 0,
+      best_combo: t.best_combo || 0, best_avalanche: t.best_avalanche || 0,
+      solo_games: t.solo_games || 0, total_coins_earned: t.total_coins_earned || 0
+    });
+  } catch (e) {
+    socket.emit('trophy_room_data', { ok: false });
+  }
+});
+
+socket.on('get_my_trophy_room', () => {
+  const p = activePlayers[socket.id];
+  if (!p) return;
+  socket.emit('trophy_room_data', {
+    ok: true,
+    username: p.username, avatar: p.avatar, flag: p.flag, region: p.region,
+    trophies_collection: p.trophies_collection || {},
+    wins: p.wins || 0, losses: p.losses || 0, points: p.points || 0, coins: p.coins || 0,
+    matches_played: p.matches_played || 0, win_streak: p.win_streak || 0,
+    best_combo: p.best_combo || 0, best_avalanche: p.best_avalanche || 0,
+    solo_games: p.solo_games || 0, total_coins_earned: p.total_coins_earned || 0
+  });
+});
 
 /* ---------- PROFIL / SUPABASE ---------- */
 socket.on('register_player', async (data) => {
@@ -330,6 +369,10 @@ if (player.claimedPassTiers[key]) { socket.emit('pass_claim_denied', { tier, tra
 if (track === 'premium' && !player.blitzPassPremium) { socket.emit('pass_claim_denied', { tier, track, reason: "premium_required" }); return; }
 player.claimedPassTiers[key] = true;
 applyPassReward(player, tier, track);
+const unlockedTrophies = evaluateTrophies(player);
+if (unlockedTrophies.length > 0) {
+  socket.emit('trophy_unlocked', unlockedTrophies.map(t => ({ id: Object.keys(TROPHY_CATALOG).find(k => TROPHY_CATALOG[k] === t), ...t })));
+}
 await savePlayerToSupabase(socket.id);
 socket.emit('player_registered', player);
 socket.emit('pass_tier_claimed', { tier, track });
@@ -590,6 +633,19 @@ let baseCoins = perfection ? 100 : Math.min(100, Math.floor(normalizedScore / 3)
 let rushBonus = globalEvents.coinRush ? baseCoins : 0;
 let earnedCoins = baseCoins + rushBonus;
 player.coins += earnedCoins;
+player.solo_games = (player.solo_games || 0) + 1;
+player.total_coins_earned = (player.total_coins_earned || 0) + earnedCoins;
+// Mettre à jour best_combo (envoyé par le client dans le payload)
+if (payload && typeof payload.best_combo === 'number') {
+  player.best_combo = Math.max(player.best_combo || 0, payload.best_combo);
+}
+if (payload && typeof payload.avalanche_score === 'number') {
+  player.best_avalanche = Math.max(player.best_avalanche || 0, payload.avalanche_score);
+}
+const unlockedTrophies = evaluateTrophies(player);
+if (unlockedTrophies.length > 0) {
+  socket.emit('trophy_unlocked', unlockedTrophies.map(t => ({ id: Object.keys(TROPHY_CATALOG).find(k => TROPHY_CATALOG[k] === t), ...t })));
+}
 lastMatchEarnings[socket.id] = earnedCoins;
 if (perfection) {
 player.unlocked_items = player.unlocked_items || [];
@@ -892,6 +948,22 @@ p2.wins = (p2.wins || 0) + 1; p2.points = (p2.points || 0) + 25; p1.losses = (p1
 if (!globalEvents.rankShield) p1.points = Math.max(0, (p1.points || 0) - 15);
 }
 }
+}
+// 🏆 TROPHÉES : incrémenter les stats 1v1
+for (let sId of [id1, id2]) {
+  const p = activePlayers[sId];
+  if (!p) continue;
+  p.matches_played = (p.matches_played || 0) + 1;
+  const isWinner = (winnerId === sId);
+  if (isWinner) {
+    p.win_streak = (p.win_streak || 0) + 1;
+  } else {
+    p.win_streak = 0;
+  }
+  const unlockedTrophies = evaluateTrophies(p);
+  if (unlockedTrophies.length > 0) {
+    io.to(sId).emit('trophy_unlocked', unlockedTrophies.map(t => ({ id: Object.keys(TROPHY_CATALOG).find(k => TROPHY_CATALOG[k] === t), ...t })));
+  }
 }
 await savePlayerToSupabase(id1);
 await savePlayerToSupabase(id2);
