@@ -18,7 +18,6 @@ let avalancheTarget = null;
 let avalancheInterval = null;
 let avalancheTimerInterval = null;
 let avalancheTimeLeft = 30;
-
 /* ============================================================
 SYSTÈME COMBO (solo) — 15 / 30 / 35 + compteur + chrono
 ============================================================ */
