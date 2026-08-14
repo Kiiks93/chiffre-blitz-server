@@ -1200,6 +1200,16 @@ function openTrophyRoom(targetUsername = null) {
   else socket.emit('get_my_trophy_room');
 }
 
+function enterTrophyRoom() {
+const flash = document.createElement('div');
+flash.className = 'trophy-enter-flash';
+flash.innerText = '🏛️';
+document.body.appendChild(flash);
+setTimeout(() => {
+openTrophyRoom();
+setTimeout(() => flash.remove(), 600);
+}, 450);
+}
 function closeTrophyRoom() {
   document.getElementById('modal-trophy-room').style.display = 'none';
 }
