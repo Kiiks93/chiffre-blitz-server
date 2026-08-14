@@ -1727,22 +1727,28 @@ filter: drop-shadow(0 0 6px rgba(248, 181, 0, 0.8));
 100% { transform: translateY(0) rotate(540deg); }
 }
 /* ============================================================
-GRILLE AGRANDIE + RESPONSIVE (PC & MOBILE — jamais rognée)
+GRILLE AGRANDIE + RESPONSIVE — VERSION RENFORCÉE
 ============================================================ */
 #grid {
-width: min(94vw, 66vh, 640px);
-max-width: 640px;
-gap: clamp(6px, 1.2vw, 14px);
-margin: 12px auto;
+display: grid !important;
+grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+width: min(94vw, 62vh, 560px) !important;
+max-width: 94vw !important;
+gap: clamp(6px, 1.2vw, 12px) !important;
+margin: 12px auto !important;
+padding: 0 !important;
+box-sizing: border-box !important;
 }
-#grid .tile {
-height: auto;
+#grid .tile,
+#grid .tile.empty {
+width: auto !important;
+min-width: 0 !important;
+height: auto !important;
 aspect-ratio: 4 / 3;
-font-size: clamp(18px, 4.6vw, 34px);
-font-weight: 900;
-border-radius: 12px;
+font-size: clamp(16px, 3.2vw, 28px) !important;
+border-radius: 12px !important;
+box-sizing: border-box !important;
 }
-#screen-game {
-overflow-y: auto;
-padding-bottom: 24px;
+body {
+overflow-x: hidden;
 }
