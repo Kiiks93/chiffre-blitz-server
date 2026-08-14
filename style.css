@@ -1761,3 +1761,42 @@ box-sizing: border-box !important;
 body {
 overflow-x: hidden;
 }
+/* ============================================================
+FISSURES GLACE « VERRE GIVRÉ » (thème Cryo)
+============================================================ */
+.ice-crack {
+position: absolute;
+top: 0;
+left: 0;
+filter: drop-shadow(0 0 9px rgba(123, 232, 255, 0.85));
+}
+.ice-crack .ice-glow {
+stroke-dasharray: 800;
+stroke-dashoffset: 800;
+animation: crackDraw 0.45s ease forwards;
+opacity: 0.3;
+}
+.ice-crack .ice-main {
+stroke-dasharray: 800;
+stroke-dashoffset: 800;
+animation: crackDraw 0.45s ease forwards;
+}
+.ice-crack .ice-core {
+stroke-dasharray: 800;
+stroke-dashoffset: 800;
+animation: crackDraw 0.5s 0.06s ease forwards;
+}
+.ice-crack .ice-branch {
+stroke-dasharray: 250;
+stroke-dashoffset: 250;
+animation: crackDraw 0.35s 0.18s ease forwards;
+opacity: 0.8;
+}
+.ice-sparkle {
+animation: sparklePop 1s ease forwards;
+}
+@keyframes sparklePop {
+0% { opacity: 0; }
+25% { opacity: 1; }
+100% { opacity: 0; }
+}
