@@ -158,22 +158,30 @@ setInterval(() => {
 app.get('/', (req, res) => { res.send('Chiffre Blitz Server is running ⚡'); });
 
 async function savePlayerToSupabase(socketId) {
-  const p = activePlayers[socketId];
-  if (!p) return;
-  await supabase.from('players').update({
-    points: p.points, coins: p.coins, trophies: p.trophies, wins: p.wins, losses: p.losses,
-    inventory: p.inventory, equipped_power: p.equippedPower, region: p.region, avatar: p.avatar,
-    flag: p.flag, unlocked_items: p.unlocked_items, blitz_pass_premium: p.blitzPassPremium,
-    claimed_pass_tiers: p.claimedPassTiers,
-    matches_played: p.matches_played || 0,
-    win_streak: p.win_streak || 0,
-    best_combo: p.best_combo || 0,
-    best_avalanche: p.best_avalanche || 0,
-    solo_games: p.solo_games || 0,
-    total_coins_earned: p.total_coins_earned || 0,
-    season_n1_count: p.season_n1_count || 0,
-    trophies_collection: p.trophies_collection || {}
-  }).eq('id', p.dbId);
+const p = activePlayers[socketId];
+if (!p) return;
+const core = {
+points: p.points, coins: p.coins, trophies: p.trophies, wins: p.wins, losses: p.losses,
+inventory: p.inventory, equipped_power: p.equippedPower, region: p.region, avatar: p.avatar,
+flag: p.flag, unlocked_items: p.unlocked_items, blitz_pass_premium: p.blitzPassPremium,
+claimed_pass_tiers: p.claimedPassTiers
+};
+const extra = {
+matches_played: p.matches_played || 0,
+win_streak: p.win_streak || 0,
+best_combo: p.best_combo || 0,
+best_avalanche: p.best_avalanche || 0,
+solo_games: p.solo_games || 0,
+total_coins_earned: p.total_coins_earned || 0,
+season_n1_count: p.season_n1_count || 0,
+trophies_collection: p.trophies_collection || {}
+};
+let { error } = await supabase.from('players').update({ ...core, ...extra }).eq('id', p.dbId);
+if (error) {
+console.error("⚠️ SAVE (colonnes trophées) ÉCHEC → fallback : ", error.message);
+const retry = await supabase.from('players').update(core).eq('id', p.dbId);
+if (retry.error) console.error("❌ SAVE CORE ÉCHEC : ", retry.error.message);
+}
 }
 
 /* ============================================================
