@@ -387,14 +387,29 @@ const code = (document.getElementById('account-code').value || '').trim();
 if (pseudo.length < 3) { alert('Pseudo : 3 caractères minimum.'); return; }
 if (code.length < 4) { alert('Code secret : 4 caractères minimum.'); return; }
 
-// 🔐 NE PAS sauvegarder dans localStorage tant que le serveur n'a pas dit OK
 myProfile.username = pseudo;
 myProfile.secretCode = code;
 if (!myProfile.region) myProfile.region = 'Hauts-de-France';
+if (!myProfile.avatar) myProfile.avatar = 1;
+if (!myProfile.flag) myProfile.flag = '🇫🇷';
 
-// On garde juste en mémoire temporaire pour le register
 pendingAccountLogin = true;
-registerIfPossible();
+
+// ✅ Émission DIRECTE (sans passer par registerIfPossible qui vérifie le localStorage)
+if (socket.connected) {
+socket.emit("register_player", {
+username: myProfile.username,
+region: myProfile.region,
+avatar: myProfile.avatar,
+flag: myProfile.flag,
+inventory: myProfile.inventory || {},
+secretCode: myProfile.secretCode,
+mode: 'login'
+});
+} else {
+alert('❌ Connexion au serveur perdue. Réessaie dans quelques secondes.');
+pendingAccountLogin = false;
+}
 }
 function startCreateAccount() {
 if (confirm('⚠️ Un nouveau compte repart de zéro.\n(Ton compte actuel reste sauvegardé.)\nContinuer ?')) switchAccount();
