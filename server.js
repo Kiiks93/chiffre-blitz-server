@@ -736,6 +736,7 @@ io.on('connection', (socket) => {
         io.to(sId).emit('player_registered', activePlayers[sId]);
         io.to(sId).emit('admin_gift_received', { currency, amount, message: msg });
       }
+      
     } else {
       const cleanTarget = targetUsername.trim().toLowerCase();
       let found = null;
@@ -756,7 +757,27 @@ io.on('connection', (socket) => {
       }
     }
   });
-
+socket.on('admin_set_region', async (data) => {
+if (!socket.isAdmin) return;
+const targetUsername = (data.targetUsername || '').trim();
+const newRegion = (data.newRegion || '').trim();
+if (!targetUsername || !newRegion) return;
+try {
+const { data: matched, error } = await supabase.from('players').select('*').ilike('username', targetUsername).limit(1);
+if (error || !matched || matched.length === 0) { socket.emit('admin_region_result', { ok: false, reason: 'not_found' }); return; }
+const t = matched[0];
+await supabase.from('players').update({ region: newRegion }).eq('id', t.id);
+for (let sId in activePlayers) {
+if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === t.username.toLowerCase()) {
+activePlayers[sId].region = newRegion;
+io.to(sId).emit('player_registered', activePlayers[sId]);
+}
+}
+socket.emit('admin_region_result', { ok: true, username: t.username, region: newRegion });
+} catch (e) {
+socket.emit('admin_region_result', { ok: false, reason: 'error' });
+}
+});
   /* ---------- DÉCONNEXION ---------- */
   socket.on('disconnect', async () => {
     leaveAllRooms(socket);
