@@ -309,9 +309,25 @@ return savedName && savedName.trim().length >= 3 && savedName !== "Profil" && sa
 COMPTE (roue crantée)
 ============================================================ */
 function switchAccount() {
+// Nettoyage complet du localStorage
 localStorage.removeItem('cb_username');
 localStorage.removeItem('cb_secret');
+localStorage.removeItem('cb_region');
+localStorage.removeItem('cb_avatar');
+localStorage.removeItem('cb_flag');
+localStorage.removeItem('cb_equipped_title');
+localStorage.removeItem('cb_equipped_frame');
+localStorage.removeItem('cb_equipped_theme');
+
+// Reset complet du profil
+myProfile.username = '';
 myProfile.secretCode = '';
+myProfile.region = 'Hauts-de-France';
+myProfile.avatar = 1;
+myProfile.flag = '🇫🇷';
+myProfile.inventory = { __equipped: {} };
+myProfile.unlocked_items = [];
+
 renderAccountContent();
 }
 function injectAccountGear() {
@@ -370,12 +386,13 @@ const pseudo = (document.getElementById('account-pseudo').value || '').trim();
 const code = (document.getElementById('account-code').value || '').trim();
 if (pseudo.length < 3) { alert('Pseudo : 3 caractères minimum.'); return; }
 if (code.length < 4) { alert('Code secret : 4 caractères minimum.'); return; }
+
+// 🔐 NE PAS sauvegarder dans localStorage tant que le serveur n'a pas dit OK
 myProfile.username = pseudo;
 myProfile.secretCode = code;
 if (!myProfile.region) myProfile.region = 'Hauts-de-France';
-localStorage.setItem('cb_username', pseudo);
-localStorage.setItem('cb_secret', code);
-localStorage.setItem('cb_region', myProfile.region);
+
+// On garde juste en mémoire temporaire pour le register
 pendingAccountLogin = true;
 registerIfPossible();
 }
@@ -513,6 +530,8 @@ mode: profileMode || 'login'
 socket.on("player_registered", (rawData) => {
 if (!rawData) return;
 const player = parsePlayer(rawData);
+
+// ✅ Reset complet avant de charger les nouvelles données
 myProfile.username = player.username;
 myProfile.region = player.region;
 myProfile.avatar = player.avatar;
@@ -522,20 +541,19 @@ myProfile.coins = player.coins;
 myProfile.trophies = player.trophies;
 myProfile.wins = player.wins;
 myProfile.losses = player.losses;
-const savedTitle = localStorage.getItem("cb_equipped_title");
-const savedFrame = localStorage.getItem("cb_equipped_frame");
-const savedTheme = localStorage.getItem("cb_equipped_theme");
+
+// 🔐 Les cosmétiques viennent DU SERVEUR, pas du localStorage
 myProfile.inventory = player.inventory || {};
 if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
-myProfile.inventory.__equipped.title = savedTitle || myProfile.inventory.__equipped.title || "";
-myProfile.inventory.__equipped.frame = savedFrame || myProfile.inventory.__equipped.frame || "";
-if (savedTheme) myProfile.inventory.__equipped.theme = savedTheme; else delete myProfile.inventory.__equipped.theme;
+
 myProfile.unlocked_items = player.unlocked_items || [];
 myProfile.equippedPower = player.equippedPower;
 myProfile.blitzPassPremium = player.blitzPassPremium;
 myProfile.claimedPassTiers = player.claimedPassTiers;
+
 sanitizeEquippedPowers();
 updateEconomyUI();
+
 if (document.getElementById("modal-shop").style.display === "flex") switchShopTab(currentShopTab);
 if (document.getElementById("modal-blitz-pass").style.display === "flex") renderBlitzPass();
 if (document.getElementById("screen-game").style.display === "block") preparePowerHUD();
@@ -543,13 +561,35 @@ if (document.getElementById("screen-game").style.display === "block") preparePow
 socket.on('register_result', (res) => {
 if (!res.ok) {
 pendingProfileValidation = false;
+
+// 🔐 NETTOYAGE COMPLET en cas d'échec
+localStorage.removeItem('cb_username');
+localStorage.removeItem('cb_secret');
+localStorage.removeItem('cb_region');
+localStorage.removeItem('cb_avatar');
+localStorage.removeItem('cb_flag');
+localStorage.removeItem('cb_equipped_title');
+localStorage.removeItem('cb_equipped_frame');
+localStorage.removeItem('cb_equipped_theme');
+
+// Reset complet du profil
+myProfile.username = '';
+myProfile.secretCode = '';
+myProfile.inventory = { __equipped: {} };
+
 if (res.reason === 'taken') alert('❌ Code secret incorrect pour ce pseudo.');
 else if (res.reason === 'nocode') alert('🔒 Choisis un code secret (4 caractères minimum).');
 else if (res.reason === 'short') alert('Ton pseudo doit contenir au moins 3 caractères !');
 else alert('❌ Erreur de connexion au serveur. Réessaie.');
-if (pendingAccountLogin) { pendingAccountLogin = false; renderAccountContent(); }
+
+if (pendingAccountLogin) {
+pendingAccountLogin = false;
+renderAccountContent();
+}
 return;
 }
+
+// ✅ Succès : maintenant on sauvegarde
 if (pendingAccountLogin) {
 pendingAccountLogin = false;
 saveLocalPreferences();
@@ -558,6 +598,7 @@ closeAccountModal();
 showTitleScreen();
 return;
 }
+
 if (pendingProfileValidation) {
 pendingProfileValidation = false;
 saveLocalPreferences();
