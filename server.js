@@ -238,10 +238,15 @@ io.on('connection', (socket) => {
           socket.emit('register_result', { ok: false, reason: 'taken' });
           return;
         }
-        const updates = { region: data.region || existing.region, avatar: data.avatar || existing.avatar, flag: data.flag || existing.flag };
-        if (!storedCode) updates.secret_code = secretCode;
-        const { data: updated } = await supabase.from('players').update(updates).eq('id', existing.id).select().single();
-        playerData = updated || existing;
+        // 🔐 LOGIN PROPRE : la personnalisation (région/avatar/drapeau) n'est PLUS JAMAIS écrasée à la connexion
+      const updates = {};
+      if (!storedCode) updates.secret_code = secretCode;
+      if (Object.keys(updates).length > 0) {
+      const { data: updated } = await supabase.from('players').update(updates).eq('id', existing.id).select().single();
+      playerData = updated || existing;
+      } else {
+      playerData = existing;
+      }
       } else {
         const newRecord = {
           username: rawUsername, secret_code: secretCode,
