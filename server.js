@@ -362,7 +362,7 @@ io.on('connection', (socket) => {
       await savePlayerToSupabase(socket.id);
       socket.emit('player_registered', player);
       socket.emit('blitz_pass_updated', { coins: player.coins, blitzPassPremium: player.blitzPassPremium, claimedPassTiers: player.claimedPassTiers });
-      socket.emit('pass_reward_received', { message: "Passe de Combat Premium active !" });
+      socket.emit('pass_reward_received', { message: "Passe de Saison Premium active !" });
     } else {
       socket.emit('room_error', "Tu n'as pas assez de pieces !");
     }
