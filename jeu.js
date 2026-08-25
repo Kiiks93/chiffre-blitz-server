@@ -432,7 +432,24 @@ function hideAllScreens() {
   if (avalancheTimerInterval) clearInterval(avalancheTimerInterval);
   isTimeFrozen = false;
 }
-
+function setGameModeBadge(text, color) {
+let badge = document.getElementById("game-mode-badge");
+if (!badge) {
+badge = document.createElement("div");
+badge.id = "game-mode-badge";
+badge.style.cssText = "position:fixed; top:8px; right:8px; z-index:50; background:rgba(15,5,29,0.9); border:1px solid " + color + "; color:" + color + "; font-size:10px; font-weight:900; letter-spacing:1px; padding:4px 10px; border-radius:20px; pointer-events:none;";
+document.body.appendChild(badge);
+}
+badge.innerText = text;
+badge.style.borderColor = color;
+badge.style.color = color;
+badge.style.boxShadow = "0 0 10px " + color + "66";
+badge.style.display = "block";
+}
+function hideGameModeBadge() {
+const badge = document.getElementById("game-mode-badge");
+if (badge) badge.style.display = "none";
+}
 function initMenuBackgroundFX() {
   if (document.getElementById('bg-fx')) return;
   const fx = document.createElement('div'); fx.id = 'bg-fx';
@@ -450,6 +467,8 @@ function initMenuBackgroundFX() {
 
 function setMenuFX(visible) { const fx = document.getElementById('bg-fx'); if (fx) fx.style.opacity = visible ? '1' : '0'; }
 
+if (activeTrainingMode === "random") setGameModeBadge("🎲 SOLO ALÉATOIRE", "#00ff88");
+else setGameModeBadge("🏋️ SOLO CLASSIQUE", "#00d2ff");
 function showTitleScreen() {
   hideAllScreens();
   window.history.replaceState({}, "", window.location.pathname);
@@ -797,6 +816,9 @@ socket.on("start_countdown", (data) => {
   currentMatchCharges = {};
   resetCombo();
   comboFXEnabled = false;
+  if (data.isRanked) setGameModeBadge("⚔️ CLASSÉ", "#f8b500");
+else if (data.isTugOfWar) setGameModeBadge("🪢 CORDE RAIDE", "#ff4b2b");
+else setGameModeBadge("⚔️ 1v1 AMICAL", "#00ff88");
   let loadout = (myProfile.equippedPowers && myProfile.equippedPowers.length > 0) ? myProfile.equippedPowers : (myProfile.equippedPower ? [myProfile.equippedPower] : []);
   loadout.forEach(id => { const stock = myProfile.inventory[id] || 0; if (stock > 0) currentMatchCharges[id] = Math.min((currentMatchCharges[id] || 0) + 1, stock); });
   let oppData = extractOpponentInfo(data);
@@ -899,7 +921,10 @@ function showGameOverRecap(data) {
   const doubleBtn = document.getElementById("btn-double-reward");
   doubleBtn.disabled = false; doubleBtn.style.opacity = "1"; doubleBtn.innerText = "📺 Doubler mes gains (Pub)";
   const rematchBtn = document.getElementById("btn-rematch");
-  if (rematchBtn) { rematchBtn.style.display = "block"; rematchBtn.disabled = false; rematchBtn.style.opacity = "1"; rematchBtn.innerText = "Revanche ⚔️"; }
+  if (rematchBtn) {
+  if (data.isRanked) { rematchBtn.style.display = "none"; }
+  else { rematchBtn.style.display = "block"; rematchBtn.disabled = false; rematchBtn.style.opacity = "1"; rematchBtn.innerText = "Revanche ⚔️"; }
+}
   const myReward = data.rewards && data.rewards[myId] ? data.rewards[myId] : { baseCoins: 30, rushBonus: 0, totalCoins: 30 };
   currentCoinsGained = myReward.totalCoins;
   const winnerId = data.winnerId;
@@ -989,6 +1014,8 @@ ENTRAÎNEMENT SOLO
 function startSoloTraining(mode) {
   if (!isProfileValid()) { checkAndShowProfileModal(); return; }
   activeTrainingMode = mode || "classic";
+  if (activeTrainingMode === "random") setGameModeBadge("🎲 SOLO ALÉATOIRE", "#00ff88");
+else setGameModeBadge("🏋️ SOLO CLASSIQUE", "#00d2ff");
   hideAllScreens();
   soloTarget = (activeTrainingMode === "random") ? Math.floor(Math.random() * 50) + 1 : 1;
   soloScore = 0; soloTimeLeft = 50; isTimeFrozen = false;
@@ -1080,6 +1107,7 @@ function startAvalancheGame(speed, initialCount) {
   isTimeFrozen = false;
   resetCombo();
   comboFXEnabled = true;
+  setGameModeBadge("🏔️ AVALANCHE", "#7be8ff");
   currentSoloCharges = {};
   if (myProfile.equippedPower && (myProfile.inventory[myProfile.equippedPower] || 0) > 0) {
     currentSoloCharges[myProfile.equippedPower] = 1;
