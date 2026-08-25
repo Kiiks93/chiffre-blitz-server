@@ -847,8 +847,8 @@ function startMatchBetween(id1, id2, isRanked = false, isOnline = true, isTugOfW
   };
   activeMatches[id1] = match;
   activeMatches[id2] = match;
-  io.to(id1).emit('start_countdown', { opponent: p2, timeLeft: match.timeLeft, myTarget: 1, myPool: match.players[id1].pool, isTugOfWar });
-  io.to(id2).emit('start_countdown', { opponent: p1, timeLeft: match.timeLeft, myTarget: 1, myPool: match.players[id2].pool, isTugOfWar });
+  io.to(id1).emit('start_countdown', { opponent: p2, timeLeft: match.timeLeft, myTarget: 1, myPool: match.players[id1].pool, isTugOfWar, isRanked });
+  io.to(id2).emit('start_countdown', { opponent: p1, timeLeft: match.timeLeft, myTarget: 1, myPool: match.players[id2].pool, isTugOfWar, isRanked });
   let chaosTimer = 0;
   const gameInterval = setInterval(() => {
     match.timeLeft--;
@@ -997,8 +997,8 @@ async function endMatch(id1, id2, matchData, isRanked) {
   await savePlayerToSupabase(id2);
   if (activePlayers[id1]) io.to(id1).emit('player_registered', activePlayers[id1]);
   if (activePlayers[id2]) io.to(id2).emit('player_registered', activePlayers[id2]);
-  io.to(id1).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents, rewards: matchRewards });
-  io.to(id2).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents, rewards: matchRewards });
+  io.to(id1).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents, rewards: matchRewards, isRanked });
+  io.to(id2).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents, rewards: matchRewards, isRanked });
 }
 
 /* ============================================================
