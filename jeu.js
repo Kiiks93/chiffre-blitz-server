@@ -18,6 +18,7 @@ let avalancheTarget = null;
 let avalancheInterval = null;
 let avalancheTimerInterval = null;
 let avalancheTimeLeft = 30;
+
 /* ============================================================
 SYSTÈME COMBO (solo) — 15 / 30 / 35 + compteur + chrono
 ============================================================ */
@@ -46,7 +47,7 @@ const TROPHY_CATALOG_CLIENT = {
   worker:           { name: "Travailleur",       emoji: "⛏️", shelf: "progression", rarity: "silver",    condition: "1000 🪙 gagnés en jeu",       progress: p => `${Math.min(p.total_coins_earned||0,1000)}/1000` },
   rising_star:      { name: "Étoile Montante",   emoji: "⭐", shelf: "progression", rarity: "silver",    condition: "500 points au classement",    progress: p => `${Math.min(p.points||0,500)}/500` },
   local_king:       { name: "Roi Local",         emoji: "🏰", shelf: "domination",  rarity: "gold",      condition: "N°1 régional en fin de saison", progress: () => "Fin de saison" },
-  midas:            { name: "Midas",             emoji: "💰", shelf: "domination",  rarity: "gold",      condition: "N°1 pièces en fin de saison", progress: () => "Fin de saison" },
+  midas:           { name: "Midas",             emoji: "💰", shelf: "domination",  rarity: "gold",      condition: "N°1 pièces en fin de saison", progress: () => "Fin de saison" },
   dynasty:          { name: "Dynastie",          emoji: "🏛️", shelf: "domination",  rarity: "legendary", condition: "3 saisons N°1",               progress: p => `${p.season_n1_count||0}/3` },
   world_n1:         { name: "N°1 Mondial",       emoji: "🌍", shelf: "domination",  rarity: "legendary", condition: "N°1 global fin de saison",    progress: () => "Fin de saison" }
 };
@@ -422,7 +423,7 @@ NAVIGATION / ÉCRANS
 ============================================================ */
 function hideAllScreens() {
   setMenuFX(false);
-  hideGameModeBadge();  // ← CETTE LIGNE MANQUAIT
+  hideGameModeBadge();
   resetCombo();
   ["screen-title","screen-menu","screen-solo-menu","screen-avalanche-menu","screen-1v1-hub","screen-1v1-lobby","screen-rooms","screen-join-custom","screen-room-waiting","screen-tournament","screen-game","recap-modal","modal-leaderboard","modal-shop","modal-blitz-pass","countdown-overlay","modal-create-room","modal-launch-ad","simulated-ad-overlay","modal-ranked-loadout","modal-jackpot-wheel","modal-friends","admin-modal"].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = "none"; });
   const rewardPopup = document.getElementById("reward-popup-overlay");
@@ -433,24 +434,27 @@ function hideAllScreens() {
   if (avalancheTimerInterval) clearInterval(avalancheTimerInterval);
   isTimeFrozen = false;
 }
+
 function setGameModeBadge(text, color) {
-let badge = document.getElementById("game-mode-badge");
-if (!badge) {
-badge = document.createElement("div");
-badge.id = "game-mode-badge";
-badge.style.cssText = "position:fixed; top:8px; right:8px; z-index:50; background:rgba(15,5,29,0.9); border:1px solid " + color + "; color:" + color + "; font-size:10px; font-weight:900; letter-spacing:1px; padding:4px 10px; border-radius:20px; pointer-events:none;";
-document.body.appendChild(badge);
+  let badge = document.getElementById("game-mode-badge");
+  if (!badge) {
+    badge = document.createElement("div");
+    badge.id = "game-mode-badge";
+    badge.style.cssText = "position:fixed; top:8px; right:8px; z-index:50; background:rgba(15,5,29,0.9); border:1px solid " + color + "; color:" + color + "; font-size:10px; font-weight:900; letter-spacing:1px; padding:4px 10px; border-radius:20px; pointer-events:none;";
+    document.body.appendChild(badge);
+  }
+  badge.innerText = text;
+  badge.style.borderColor = color;
+  badge.style.color = color;
+  badge.style.boxShadow = "0 0 10px " + color + "66";
+  badge.style.display = "block";
 }
-badge.innerText = text;
-badge.style.borderColor = color;
-badge.style.color = color;
-badge.style.boxShadow = "0 0 10px " + color + "66";
-badge.style.display = "block";
-}
+
 function hideGameModeBadge() {
-const badge = document.getElementById("game-mode-badge");
-if (badge) badge.style.display = "none";
+  const badge = document.getElementById("game-mode-badge");
+  if (badge) badge.style.display = "none";
 }
+
 function initMenuBackgroundFX() {
   if (document.getElementById('bg-fx')) return;
   const fx = document.createElement('div'); fx.id = 'bg-fx';
@@ -468,8 +472,6 @@ function initMenuBackgroundFX() {
 
 function setMenuFX(visible) { const fx = document.getElementById('bg-fx'); if (fx) fx.style.opacity = visible ? '1' : '0'; }
 
-if (activeTrainingMode === "random") setGameModeBadge("🎲 SOLO ALÉATOIRE", "#00ff88");
-else setGameModeBadge("🏋️ SOLO CLASSIQUE", "#00d2ff");
 function showTitleScreen() {
   hideAllScreens();
   window.history.replaceState({}, "", window.location.pathname);
@@ -723,8 +725,8 @@ function setLbScope(scope) {
 }
 
 function updateLbRegionLabel() {
-const btn = document.getElementById("lb-scope-regional");
-if (btn && myProfile && myProfile.region) btn.innerText = "Régional (" + myProfile.region + ")";
+  const btn = document.getElementById("lb-scope-regional");
+  if (btn && myProfile && myProfile.region) btn.innerText = "Régional (" + myProfile.region + ")";
 }
 socket.on("player_registered", () => { updateLbRegionLabel(); });
 
@@ -735,59 +737,60 @@ function fetchLeaderboard() {
 }
 
 socket.on("leaderboard_data", (res) => {
-const container = document.getElementById("lb-list");
-container.innerHTML = "";
-if (!res.data || res.data.length === 0) { container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">Aucun joueur.</div>`; return; }
-const category = res.type ? res.type.split("_")[0] : "points";
-const parsedList = res.data.map(p => parsePlayer(p));
-if (category === "combined") parsedList.sort((a, b) => { if ((b.trophies - a.trophies) !== 0) return b.trophies - a.trophies; return b.points - a.points; });
-parsedList.forEach((p, index) => {
-const row = document.createElement("div");
-row.className = "lb-row";
-const badgeHtml = getAvatarBadgeHTML(p.flag, p.avatar, null, p);
-const equippedTitle = p.inventory && p.inventory.__equipped && p.inventory.__equipped.title;
-const titleHtml = equippedTitle ? `<span style="font-size:8px; color:#f8b500; font-weight:bold; margin-left:4px;">[${TITLE_DISPLAY_NAMES[equippedTitle] || equippedTitle}]</span>` : "";
-let rightBadge = `<span class="lb-pts" style="color:#00ff88;">${p.points} pts</span>`;
-if (category === "coins") rightBadge = `<span class="lb-pts" style="color:#f8b500;">${p.coins} 🪙</span>`;
-else if (category === "trophies") rightBadge = `<span class="lb-pts" style="color:#fceabb;">${p.trophies} 🏆</span>`;
-else if (category === "combined") rightBadge = `<span class="lb-pts" style="color:#00d2ff; font-size:11px;">🏆${p.trophies} | ${p.points}pts</span>`;
-let rankDisplay = `#${index + 1}`, rankColor = "#00d2ff";
-if (index === 0) { rankDisplay = "🥇"; rankColor = "#f8b500"; }
-else if (index === 1) { rankDisplay = "🥈"; rankColor = "#e0e0e0"; }
-else if (index === 2) { rankDisplay = "🥉"; rankColor = "#cd7f32"; }
-const safeName = String(p.username || "").replace(/'/g, "\\'");
-row.innerHTML = `<span class="lb-rank" style="color:${rankColor};">${rankDisplay}</span>
-<div class="lb-user-info"><div class="lb-name-row">${badgeHtml}<span class="lb-clickable-name" onclick="openPlayerActions('${safeName}', event)">${p.username}</span>${titleHtml}</div>
-<div class="lb-sub-details"><span>🏆 ${p.trophies}</span><span>🪙 ${p.coins}</span><span>⚔️ V:${p.wins}/D:${p.losses}</span></div></div>${rightBadge}`;
-container.appendChild(row);
-});
+  const container = document.getElementById("lb-list");
+  container.innerHTML = "";
+  if (!res.data || res.data.length === 0) { container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">Aucun joueur.</div>`; return; }
+  const category = res.type ? res.type.split("_")[0] : "points";
+  const parsedList = res.data.map(p => parsePlayer(p));
+  if (category === "combined") parsedList.sort((a, b) => { if ((b.trophies - a.trophies) !== 0) return b.trophies - a.trophies; return b.points - a.points; });
+  parsedList.forEach((p, index) => {
+    const row = document.createElement("div");
+    row.className = "lb-row";
+    const badgeHtml = getAvatarBadgeHTML(p.flag, p.avatar, null, p);
+    const equippedTitle = p.inventory && p.inventory.__equipped && p.inventory.__equipped.title;
+    const titleHtml = equippedTitle ? `<span style="font-size:8px; color:#f8b500; font-weight:bold; margin-left:4px;">[${TITLE_DISPLAY_NAMES[equippedTitle] || equippedTitle}]</span>` : "";
+    let rightBadge = `<span class="lb-pts" style="color:#00ff88;">${p.points} pts</span>`;
+    if (category === "coins") rightBadge = `<span class="lb-pts" style="color:#f8b500;">${p.coins} 🪙</span>`;
+    else if (category === "trophies") rightBadge = `<span class="lb-pts" style="color:#fceabb;">${p.trophies} 🏆</span>`;
+    else if (category === "combined") rightBadge = `<span class="lb-pts" style="color:#00d2ff; font-size:11px;">🏆${p.trophies} | ${p.points}pts</span>`;
+    let rankDisplay = `#${index + 1}`, rankColor = "#00d2ff";
+    if (index === 0) { rankDisplay = "🥇"; rankColor = "#f8b500"; }
+    else if (index === 1) { rankDisplay = "🥈"; rankColor = "#e0e0e0"; }
+    else if (index === 2) { rankDisplay = "🥉"; rankColor = "#cd7f32"; }
+    const safeName = String(p.username || "").replace(/'/g, "\\'");
+    row.innerHTML = `<span class="lb-rank" style="color:${rankColor};">${rankDisplay}</span>
+      <div class="lb-user-info"><div class="lb-name-row">${badgeHtml}<span class="lb-clickable-name" onclick="openPlayerActions('${safeName}', event)">${p.username}</span>${titleHtml}</div>
+      <div class="lb-sub-details"><span>🏆 ${p.trophies}</span><span>🪙 ${p.coins}</span><span>⚔️ V:${p.wins}/D:${p.losses}</span></div></div>${rightBadge}`;
+    container.appendChild(row);
+  });
 });
 
 function openPlayerActions(username, e) {
-closePlayerActions();
-const safeName = String(username).replace(/'/g, "\\'");
-const menu = document.createElement('div');
-menu.id = 'player-actions-menu';
-menu.style.cssText = 'position:fixed; z-index:10001; background:#0f051d; border:1px solid #00d2ff; border-radius:10px; padding:10px; box-shadow:0 0 20px rgba(0,210,255,0.5); min-width:170px;';
-menu.style.left = Math.min(e.clientX, window.innerWidth - 190) + 'px';
-menu.style.top = Math.min(e.clientY, window.innerHeight - 120) + 'px';
-const isMe = myProfile.username && myProfile.username.toLowerCase() === username.toLowerCase();
-menu.innerHTML = `
-<div style="font-size:12px; font-weight:900; color:#f8b500; margin-bottom:6px;">${username}</div>
-${!isMe ? `<button class="btn-main" style="width:100%; margin:2px 0; padding:8px; font-size:11px;" onclick="requestFriendFromMenu('${safeName}')">🤝 Demande d'ami</button>` : ''}
-<button class="btn-main" style="width:100%; margin:2px 0; padding:8px; font-size:11px;" onclick="openTrophyRoom('${safeName}'); closePlayerActions();">🏛️ Salle des trophées</button>
-`;
-document.body.appendChild(menu);
-setTimeout(() => document.addEventListener('click', closePlayerActions, { once: true }), 0);
+  closePlayerActions();
+  const safeName = String(username).replace(/'/g, "\\'");
+  const menu = document.createElement('div');
+  menu.id = 'player-actions-menu';
+  menu.style.cssText = 'position:fixed; z-index:10001; background:#0f051d; border:1px solid #00d2ff; border-radius:10px; padding:10px; box-shadow:0 0 20px rgba(0,210,255,0.5); min-width:170px;';
+  menu.style.left = Math.min(e.clientX, window.innerWidth - 190) + 'px';
+  menu.style.top = Math.min(e.clientY, window.innerHeight - 120) + 'px';
+  const isMe = myProfile.username && myProfile.username.toLowerCase() === username.toLowerCase();
+  menu.innerHTML = `
+    <div style="font-size:12px; font-weight:900; color:#f8b500; margin-bottom:6px;">${username}</div>
+    ${!isMe ? `<button class="btn-main" style="width:100%; margin:2px 0; padding:8px; font-size:11px;" onclick="requestFriendFromMenu('${safeName}')">🤝 Demande d'ami</button>` : ''}
+    <button class="btn-main" style="width:100%; margin:2px 0; padding:8px; font-size:11px;" onclick="openTrophyRoom('${safeName}'); closePlayerActions();">🏛️ Salle des trophées</button>
+  `;
+  document.body.appendChild(menu);
+  setTimeout(() => document.addEventListener('click', closePlayerActions, { once: true }), 0);
 }
 function requestFriendFromMenu(username) {
-socket.emit('send_friend_request', username);
-closePlayerActions();
+  socket.emit('send_friend_request', username);
+  closePlayerActions();
 }
 function closePlayerActions() {
-const m = document.getElementById('player-actions-menu');
-if (m) m.remove();
+  const m = document.getElementById('player-actions-menu');
+  if (m) m.remove();
 }
+
 /* ============================================================
 1V1 / ADVERSAIRE / RÉCAP
 ============================================================ */
@@ -818,13 +821,13 @@ socket.on("start_countdown", (data) => {
   resetCombo();
   comboFXEnabled = false;
   let loadout = (myProfile.equippedPowers && myProfile.equippedPowers.length > 0) ? myProfile.equippedPowers : (myProfile.equippedPower ? [myProfile.equippedPower] : []);
-loadout.forEach(id => { const stock = myProfile.inventory[id] || 0; if (stock > 0) currentMatchCharges[id] = Math.min((currentMatchCharges[id] || 0) + 1, stock); });
-let oppData = extractOpponentInfo(data);
-if (oppData) updateOpponentDisplay(oppData);
-hideAllScreens();
-if (data.isRanked) setGameModeBadge("⚔️ CLASSÉ", "#f8b500");
-else if (data.isTugOfWar) setGameModeBadge("🪢 CORDE RAIDE", "#ff4b2b");
-else setGameModeBadge("⚔️ 1v1 AMICAL", "#00ff88");
+  loadout.forEach(id => { const stock = myProfile.inventory[id] || 0; if (stock > 0) currentMatchCharges[id] = Math.min((currentMatchCharges[id] || 0) + 1, stock); });
+  let oppData = extractOpponentInfo(data);
+  if (oppData) updateOpponentDisplay(oppData);
+  hideAllScreens();
+  if (data.isRanked) setGameModeBadge("⚔️ CLASSÉ", "#f8b500");
+  else if (data.isTugOfWar) setGameModeBadge("🪢 CORDE RAIDE", "#ff4b2b");
+  else setGameModeBadge("⚔️ 1v1 AMICAL", "#00ff88");
   document.getElementById("countdown-overlay").style.display = "flex";
   let count = 3;
   document.getElementById("countdown-number").innerText = count;
@@ -923,9 +926,9 @@ function showGameOverRecap(data) {
   doubleBtn.disabled = false; doubleBtn.style.opacity = "1"; doubleBtn.innerText = "📺 Doubler mes gains (Pub)";
   const rematchBtn = document.getElementById("btn-rematch");
   if (rematchBtn) {
-  if (data.isRanked) { rematchBtn.style.display = "none"; }
-  else { rematchBtn.style.display = "block"; rematchBtn.disabled = false; rematchBtn.style.opacity = "1"; rematchBtn.innerText = "Revanche ⚔️"; }
-}
+    if (data.isRanked) { rematchBtn.style.display = "none"; }
+    else { rematchBtn.style.display = "block"; rematchBtn.disabled = false; rematchBtn.style.opacity = "1"; rematchBtn.innerText = "Revanche ⚔️"; }
+  }
   const myReward = data.rewards && data.rewards[myId] ? data.rewards[myId] : { baseCoins: 30, rushBonus: 0, totalCoins: 30 };
   currentCoinsGained = myReward.totalCoins;
   const winnerId = data.winnerId;
@@ -955,7 +958,7 @@ function showGameOverRecap(data) {
 }
 
 /* ============================================================
-RÉCOMPENSES SOLO (handler socket.on bien formé)
+RÉCOMPENSES SOLO
 ============================================================ */
 socket.on("solo_reward_result", (data) => {
   currentCoinsGained = data.earnedCoins;
@@ -1012,10 +1015,12 @@ function handle1v1TileClick(num, index) {
 /* ============================================================
 ENTRAÎNEMENT SOLO
 ============================================================ */
-activeTrainingMode = mode || "classic";
-hideAllScreens();
-if (activeTrainingMode === "random") setGameModeBadge("🎲 SOLO ALÉATOIRE", "#00ff88");
-else setGameModeBadge("🏋️ SOLO CLASSIQUE", "#00d2ff");
+function startSoloTraining(mode) {
+  if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+  activeTrainingMode = mode || "classic";
+  hideAllScreens();
+  if (activeTrainingMode === "random") setGameModeBadge("🎲 SOLO ALÉATOIRE", "#00ff88");
+  else setGameModeBadge("🏋️ SOLO CLASSIQUE", "#00d2ff");
   soloTarget = (activeTrainingMode === "random") ? Math.floor(Math.random() * 50) + 1 : 1;
   soloScore = 0; soloTimeLeft = 50; isTimeFrozen = false;
   currentSoloCharges = {};
@@ -1097,6 +1102,7 @@ AVALANCHE
 function startAvalancheGame(speed, initialCount) {
   if (!isProfileValid()) { checkAndShowProfileModal(); return; }
   hideAllScreens();
+  setGameModeBadge("🏔️ AVALANCHE", "#7be8ff");
   document.getElementById("screen-game").style.display = "block";
   document.getElementById("hud-solo").style.display = "grid";
   document.getElementById("hud-1v1").style.display = "none";
@@ -1106,7 +1112,6 @@ function startAvalancheGame(speed, initialCount) {
   isTimeFrozen = false;
   resetCombo();
   comboFXEnabled = true;
-  setGameModeBadge("🏔️ AVALANCHE", "#7be8ff");
   currentSoloCharges = {};
   if (myProfile.equippedPower && (myProfile.inventory[myProfile.equippedPower] || 0) > 0) {
     currentSoloCharges[myProfile.equippedPower] = 1;
@@ -1208,7 +1213,7 @@ function handleAvalancheClick(val, idx) {
 }
 
 /* ============================================================
-FIN DE PARTIE SOLO (version corrigée avec envoi best_combo)
+FIN DE PARTIE SOLO
 ============================================================ */
 function endSoloGame() {
   hideAllScreens();
@@ -1221,8 +1226,8 @@ function endSoloGame() {
   doubleBtn.innerText = "📺 Doubler mes gains (Pub)";
   const rematchBtn = document.getElementById("btn-rematch");
   if (rematchBtn) rematchBtn.style.display = "none";
-  socket.emit("claim_solo_reward", { 
-    score: soloScore, 
+  socket.emit("claim_solo_reward", {
+    score: soloScore,
     perfection: wasPerfection,
     best_combo: currentCombo,
     avalanche_score: activeTrainingMode === "avalanche" ? soloScore : 0
@@ -1260,15 +1265,16 @@ function openTrophyRoom(targetUsername = null) {
 }
 
 function enterTrophyRoom() {
-const flash = document.createElement('div');
-flash.className = 'trophy-enter-flash';
-flash.innerText = '🏛️';
-document.body.appendChild(flash);
-setTimeout(() => {
-openTrophyRoom();
-setTimeout(() => flash.remove(), 600);
-}, 450);
+  const flash = document.createElement('div');
+  flash.className = 'trophy-enter-flash';
+  flash.innerText = '🏛️';
+  document.body.appendChild(flash);
+  setTimeout(() => {
+    openTrophyRoom();
+    setTimeout(() => flash.remove(), 600);
+  }, 450);
 }
+
 function closeTrophyRoom() {
   document.getElementById('modal-trophy-room').style.display = 'none';
 }
@@ -1279,19 +1285,19 @@ socket.on('trophy_room_data', (data) => {
   document.getElementById('trophy-room-username').innerText = data.username;
   const unlockedCount = Object.keys(data.trophies_collection || {}).length;
   document.getElementById('trophy-room-count').innerText = `${unlockedCount}/16 🏆`;
-  
+
   const shelvesContainer = document.getElementById('trophy-room-shelves');
   shelvesContainer.innerHTML = '';
-  
+
   TROPHY_SHELVES.forEach(shelf => {
     const shelfEl = document.createElement('div');
     shelfEl.className = 'trophy-shelf';
     const shelfTrophies = Object.entries(TROPHY_CATALOG_CLIENT).filter(([_, t]) => t.shelf === shelf.id);
-    
+
     shelfEl.innerHTML = `<div class="trophy-shelf-title" style="color:${shelf.color}; text-shadow:0 0 8px ${shelf.color};">${shelf.label}</div>`;
     const grid = document.createElement('div');
     grid.className = 'trophy-shelf-grid';
-    
+
     shelfTrophies.forEach(([id, trophy]) => {
       const isUnlocked = !!(data.trophies_collection && data.trophies_collection[id]);
       const vitrine = document.createElement('div');
@@ -1306,7 +1312,7 @@ socket.on('trophy_room_data', (data) => {
       vitrine.onmouseleave = hideTrophyTooltip;
       grid.appendChild(vitrine);
     });
-    
+
     shelfEl.appendChild(grid);
     shelvesContainer.appendChild(shelfEl);
   });
@@ -1358,4 +1364,4 @@ function renderGrid(pool, handler) {
   });
 }
 
-// ===== FIN PARTIE 7/7-B — FIN DU FICHIER =====
+// ===== FIN DU FICHIER jeu.js =====
