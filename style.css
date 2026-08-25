@@ -1996,3 +1996,19 @@ cursor: pointer;
 color: #f8b500;
 text-decoration: underline;
 }
+/* ---------- BADGE MODE DE JEU (centré + pulse) ---------- */
+@keyframes badgePulse {
+  0%, 100% { opacity: 0.95; transform: translateX(-50%) scale(1); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.03); }
+}
+#game-mode-badge {
+  font-family: inherit;
+}
+/* ---------- BADGE MODE DE JEU (centré + pulse) ---------- */
+@keyframes badgePulse {
+  0%, 100% { opacity: 0.95; transform: translateX(-50%) scale(1); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.03); }
+}
+#game-mode-badge {
+  font-family: inherit;
+}
