@@ -55,7 +55,7 @@ if (selectedRankedItems && selectedRankedItems.length > 0) selectedRankedItems =
 }
 
 /* ============================================================
-PASSE DE COMBAT
+PASSE DE SAISON
 ============================================================ */
 const BLITZ_PASS_TIERS = [
 { tier: 1, free: "50 Pièces (🪙)", premium: "Titre exclusif « [ Stalker Numérique ] »" },
@@ -114,7 +114,7 @@ const container = document.getElementById("blitz-pass-container");
 const isPremium = myProfile.blitzPassPremium;
 const claimed = myProfile.claimedPassTiers || {};
 container.innerHTML = `<div class="bp-header-banner">
-<div style="font-size:13px; font-weight:900; color:#f8b500; margin-bottom:2px;">🌟 SAISON 1 : PASSE DE COMBAT FÉLIN & NÉON</div>
+<div style="font-size:13px; font-weight:900; color:#f8b500; margin-bottom:2px;">🌟 SAISON 1 : PASSE DE SAISON FÉLIN & NÉON</div>
 <div style="font-size:10px; color:#ccc; margin-bottom:6px;">${isPremium ? "✨ Passe Premium Actif !" : "Débloque le Passe Premium pour 1000 🪙"}</div>
 ${!isPremium ? `<button class="btn-main btn-gold" onclick="buyBlitzPassPremium()" style="padding:6px 10px; font-size:11px; margin:0 auto; width:auto;">Acheter le Passe Premium (1000 🪙) </button>` : `<div style="color:#00ff88; font-weight:bold; font-size:10px;">Statut : VIP / Premium</div>`}</div>`;
 const listDiv = document.createElement("div");
