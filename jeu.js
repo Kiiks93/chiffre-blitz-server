@@ -422,6 +422,7 @@ NAVIGATION / ÉCRANS
 ============================================================ */
 function hideAllScreens() {
   setMenuFX(false);
+  hideGameModeBadge();  // ← CETTE LIGNE MANQUAIT
   resetCombo();
   ["screen-title","screen-menu","screen-solo-menu","screen-avalanche-menu","screen-1v1-hub","screen-1v1-lobby","screen-rooms","screen-join-custom","screen-room-waiting","screen-tournament","screen-game","recap-modal","modal-leaderboard","modal-shop","modal-blitz-pass","countdown-overlay","modal-create-room","modal-launch-ad","simulated-ad-overlay","modal-ranked-loadout","modal-jackpot-wheel","modal-friends","admin-modal"].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = "none"; });
   const rewardPopup = document.getElementById("reward-popup-overlay");
