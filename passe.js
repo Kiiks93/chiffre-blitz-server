@@ -67,7 +67,7 @@ const BLITZ_PASS_TIERS = [
 { tier: 7, free: "50 Pièces (🪙)", premium: "Titre « [ Pulsion Néon ] »" },
 { tier: 8, free: "1 💡 Projecteur", premium: "2 🌟 Novas Temporelles" },
 { tier: 9, free: "100 Pièces (🪙)", premium: "200 Pièces (🪙)" },
-{ tier: 10, free: "1 🌟 Nova Temporelle", premium: "🎨 Thème de Grille Alternatif (Plasma)" },
+{ tier: 10, free: "1 🌟 Nova Temporelle", premium: "🎨 Thème de Grille Alternatif (Doré)" },
 { tier: 11, free: "60 Pièces (🪙)", premium: "120 Pièces (🪙)" },
 { tier: 12, free: "1 ⏳ Blocage du Temps", premium: "1 💡 Projecteur" },
 { tier: 13, free: "70 Pièces (🪙)", premium: "Titre « [ Spectre Cosmique ] »" },
