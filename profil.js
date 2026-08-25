@@ -627,7 +627,7 @@ if (data.blitzPassPremium !== undefined) myProfile.blitzPassPremium = data.blitz
 if (data.claimedPassTiers) myProfile.claimedPassTiers = data.claimedPassTiers;
 updateEconomyUI();
 if (document.getElementById("modal-blitz-pass").style.display === "flex") renderBlitzPass();
-showNotificationToast("✨ Passe de combat mis à jour avec succès !", "gift");
+showNotificationToast("✨ Passe de Saison mis à jour avec succès !", "gift");
 });
 
 /* ============================================================
