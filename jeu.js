@@ -440,13 +440,28 @@ function setGameModeBadge(text, color) {
   if (!badge) {
     badge = document.createElement("div");
     badge.id = "game-mode-badge";
-    badge.style.cssText = "position:fixed; top:8px; right:8px; z-index:50; background:rgba(15,5,29,0.9); border:1px solid " + color + "; color:" + color + "; font-size:10px; font-weight:900; letter-spacing:1px; padding:4px 10px; border-radius:20px; pointer-events:none;";
     document.body.appendChild(badge);
   }
   badge.innerText = text;
-  badge.style.borderColor = color;
-  badge.style.color = color;
-  badge.style.boxShadow = "0 0 10px " + color + "66";
+  badge.style.cssText = `
+    position: fixed;
+    top: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    background: rgba(15, 5, 29, 0.92);
+    border: 1.5px solid ${color};
+    color: ${color};
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    padding: 5px 16px;
+    border-radius: 20px;
+    pointer-events: none;
+    box-shadow: 0 0 12px ${color}66, inset 0 0 8px ${color}22;
+    text-shadow: 0 0 6px ${color};
+    animation: badgePulse 2s infinite;
+  `;
   badge.style.display = "block";
 }
 
