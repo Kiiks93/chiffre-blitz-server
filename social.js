@@ -73,34 +73,69 @@ joinRoomDirect(roomCode, "");
 socket.on("friends_list_data", (friends) => {
 let allFriends = friends || [];
 const incomingRequests = allFriends.filter(f => f.status === "pending" && !f.isRequester);
+const outgoingRequests = allFriends.filter(f => f.status === "pending" && f.isRequester);
 window.lastRequestsCount = incomingRequests.length;
 updateFriendsBadge();
 if (currentFriendFilter === "invites") return;
 const container = document.getElementById("friends-list-container");
 container.innerHTML = "";
-let filtered = allFriends;
-if (currentFriendFilter === "all") filtered = allFriends.filter(f => f.status === "accepted");
-else if (currentFriendFilter === "requests") filtered = incomingRequests;
-if (!filtered || filtered.length === 0) { container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">Aucun ami pour le moment.</div>`; return; }
-filtered.forEach(f => {
+const makeLabel = (text) => {
+const d = document.createElement("div");
+d.style.cssText = "text-align:left; font-size:9px; letter-spacing:2px; color:#00d2ff; margin:8px 0 4px 2px; font-weight:bold;";
+d.innerText = text;
+return d;
+};
+const renderCard = (f) => {
 const row = document.createElement("div");
 row.className = "friend-card";
 const dotColor = f.isOnline ? "#38ef7d" : "#aaa";
 const statusText = f.isOnline ? "En ligne" : "Hors-ligne";
+const safeName = String(f.username || "").replace(/'/g, "\\'");
 let actionsHtml = "";
 if (f.status === "pending") {
-if (!f.isRequester) actionsHtml += `<button class="power-btn equip" onclick="acceptFriend('${f.id}')" style="font-size:10px; padding:4px 6px;">Accepter</button>`;
-else actionsHtml += `<span style="font-size:10px; color:#f8b500;">En attente</span>`;
-} else if (f.status === "accepted" && f.isOnline && f.targetSocketId) {
-actionsHtml += `<button class="power-btn buy" onclick="inviteFriend('${f.targetSocketId}')" style="font-size:10px; padding:4px 6px;">Inviter</button>`;
+if (!f.isRequester) {
+actionsHtml += `<button class="power-btn equip" onclick="acceptFriend('${f.id}')" style="font-size:10px; padding:4px 6px;">✅ Accepter</button>`;
+actionsHtml += `<button class="power-btn" onclick="removeFriend('${f.id}')" style="font-size:10px; padding:4px 6px; background:rgba(255,75,43,0.2); color:#ff4b2b; border:1px solid #ff4b2b;">✕</button>`;
+} else {
+actionsHtml += `<span style="font-size:10px; color:#f8b500;">⏳ En attente</span>`;
+actionsHtml += `<button class="power-btn" onclick="removeFriend('${f.id}')" style="font-size:10px; padding:4px 6px; background:rgba(255,75,43,0.2); color:#ff4b2b; border:1px solid #ff4b2b;" title="Annuler la demande">✕</button>`;
 }
-actionsHtml += `<button class="power-btn" onclick="removeFriend('${f.id}')" style="font-size:10px; padding:4px 6px; background:rgba(255,75,43,0.2); color:#ff4b2b; border:1px solid #ff4b2b;">Supprimer</button>`;
+} else {
+if (f.isOnline && f.targetSocketId) actionsHtml += `<button class="power-btn buy" onclick="inviteFriend('${f.targetSocketId}')" style="font-size:10px; padding:4px 6px;">Inviter</button>`;
+}
+actionsHtml += `<button class="power-btn" onclick="openTrophyRoom('${safeName}')" style="font-size:10px; padding:4px 6px; background:rgba(248,181,0,0.15); color:#f8b500; border:1px solid #f8b500;" title="Voir sa salle des trophées">🏛️</button>`;
+if (f.status === "accepted") actionsHtml += `<button class="power-btn" onclick="removeFriend('${f.id}')" style="font-size:10px; padding:4px 6px; background:rgba(255,75,43,0.2); color:#ff4b2b; border:1px solid #ff4b2b;">Supprimer</button>`;
+const subText = f.status === "pending" ? (f.isRequester ? "Demande envoyée" : "Veut être ton ami !") : statusText;
 row.innerHTML = `
-<div style="display:flex; align-items:center; gap:6px;"><span style="width:7px; height:7px; border-radius:50%; background:${dotColor}; box-shadow:0 0 5px ${dotColor};"></span><div style="text-align:left;"><div style="font-weight:bold; color:#fff; font-size:12px;">${f.username}</div><div style="font-size:9px; color:${dotColor};">${statusText}</div></div></div>
+<div style="display:flex; align-items:center; gap:6px;">
+<span style="width:7px; height:7px; border-radius:50%; background:${dotColor}; box-shadow:0 0 5px ${dotColor};"></span>
+<div style="text-align:left;">
+<div style="font-weight:bold; color:#fff; font-size:12px; cursor:pointer; text-decoration:underline dotted;" onclick="openTrophyRoom('${safeName}')" title="Voir sa salle des trophées">${f.username}</div>
+<div style="font-size:9px; color:${f.status === "pending" ? "#f8b500" : dotColor};">${subText}</div>
+</div></div>
 <div style="display:flex; gap:4px; align-items:center;">${actionsHtml}</div>`;
-container.appendChild(row);
+return row;
+};
+if (currentFriendFilter === "requests") {
+if (incomingRequests.length === 0 && outgoingRequests.length === 0) {
+container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">Aucune demande en attente.</div>`;
+return;
+}
+if (incomingRequests.length > 0) {
+container.appendChild(makeLabel("📥 REÇUES"));
+incomingRequests.forEach(f => container.appendChild(renderCard(f)));
+}
+if (outgoingRequests.length > 0) {
+container.appendChild(makeLabel("📤 ENVOYÉES"));
+outgoingRequests.forEach(f => container.appendChild(renderCard(f)));
+}
+return;
+}
+const accepted = allFriends.filter(f => f.status === "accepted");
+if (accepted.length === 0) { container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">Aucun ami pour le moment.</div>`; return; }
+accepted.forEach(f => container.appendChild(renderCard(f)));
 });
-});
+
 socket.on("friend_error", (msg) => { showNotificationToast("❌ " + msg, "announcement"); });
 socket.on("friend_success", (msg) => { showNotificationToast("✅ " + msg, "gift"); socket.emit("get_friends_list"); });
 socket.on("friend_updated", () => { socket.emit("get_friends_list"); });
