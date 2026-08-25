@@ -817,14 +817,14 @@ socket.on("start_countdown", (data) => {
   currentMatchCharges = {};
   resetCombo();
   comboFXEnabled = false;
-  if (data.isRanked) setGameModeBadge("⚔️ CLASSÉ", "#f8b500");
+  let loadout = (myProfile.equippedPowers && myProfile.equippedPowers.length > 0) ? myProfile.equippedPowers : (myProfile.equippedPower ? [myProfile.equippedPower] : []);
+loadout.forEach(id => { const stock = myProfile.inventory[id] || 0; if (stock > 0) currentMatchCharges[id] = Math.min((currentMatchCharges[id] || 0) + 1, stock); });
+let oppData = extractOpponentInfo(data);
+if (oppData) updateOpponentDisplay(oppData);
+hideAllScreens();
+if (data.isRanked) setGameModeBadge("⚔️ CLASSÉ", "#f8b500");
 else if (data.isTugOfWar) setGameModeBadge("🪢 CORDE RAIDE", "#ff4b2b");
 else setGameModeBadge("⚔️ 1v1 AMICAL", "#00ff88");
-  let loadout = (myProfile.equippedPowers && myProfile.equippedPowers.length > 0) ? myProfile.equippedPowers : (myProfile.equippedPower ? [myProfile.equippedPower] : []);
-  loadout.forEach(id => { const stock = myProfile.inventory[id] || 0; if (stock > 0) currentMatchCharges[id] = Math.min((currentMatchCharges[id] || 0) + 1, stock); });
-  let oppData = extractOpponentInfo(data);
-  if (oppData) updateOpponentDisplay(oppData);
-  hideAllScreens();
   document.getElementById("countdown-overlay").style.display = "flex";
   let count = 3;
   document.getElementById("countdown-number").innerText = count;
@@ -1012,12 +1012,10 @@ function handle1v1TileClick(num, index) {
 /* ============================================================
 ENTRAÎNEMENT SOLO
 ============================================================ */
-function startSoloTraining(mode) {
-  if (!isProfileValid()) { checkAndShowProfileModal(); return; }
-  activeTrainingMode = mode || "classic";
-  if (activeTrainingMode === "random") setGameModeBadge("🎲 SOLO ALÉATOIRE", "#00ff88");
+activeTrainingMode = mode || "classic";
+hideAllScreens();
+if (activeTrainingMode === "random") setGameModeBadge("🎲 SOLO ALÉATOIRE", "#00ff88");
 else setGameModeBadge("🏋️ SOLO CLASSIQUE", "#00d2ff");
-  hideAllScreens();
   soloTarget = (activeTrainingMode === "random") ? Math.floor(Math.random() * 50) + 1 : 1;
   soloScore = 0; soloTimeLeft = 50; isTimeFrozen = false;
   currentSoloCharges = {};
