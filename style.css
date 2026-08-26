@@ -1996,19 +1996,27 @@ cursor: pointer;
 color: #f8b500;
 text-decoration: underline;
 }
-/* ---------- BADGE MODE DE JEU (centré + pulse) ---------- */
-@keyframes badgePulse {
-  0%, 100% { opacity: 0.95; transform: translateX(-50%) scale(1); }
-  50% { opacity: 1; transform: translateX(-50%) scale(1.03); }
-}
+/* ---------- BADGE MODE DE JEU (intégré barre CIBLE + responsive) ---------- */
 #game-mode-badge {
-  font-family: inherit;
+font-family: inherit;
 }
-/* ---------- BADGE MODE DE JEU (centré + pulse) ---------- */
-@keyframes badgePulse {
-  0%, 100% { opacity: 0.95; transform: translateX(-50%) scale(1); }
-  50% { opacity: 1; transform: translateX(-50%) scale(1.03); }
-}
+@media (max-width: 480px) {
 #game-mode-badge {
-  font-family: inherit;
+font-size: 8px !important;
+padding: 3px 8px !important;
+letter-spacing: 0.5px !important;
+left: 6px !important;
+}
+}
+@media (min-width: 481px) and (max-width: 900px) {
+#game-mode-badge {
+font-size: 9px !important;
+padding: 4px 10px !important;
+}
+}
+@media (min-width: 901px) {
+#game-mode-badge {
+font-size: 10px !important;
+padding: 4px 12px !important;
+}
 }
