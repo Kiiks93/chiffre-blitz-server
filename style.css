@@ -2060,23 +2060,23 @@ padding: 5px 14px !important;
 }
 /* ---------- BARRE ÉCONOMIE ANIMÉE (gains/pertes flottants) ---------- */
 .user-stats {
-position: relative;
+  position: relative;
 }
 .stat-delta {
-position: absolute;
-top: -8px;
-left: 50%;
-font-size: 13px;
-font-weight: 900;
-pointer-events: none;
-z-index: 60;
-text-shadow: 0 0 8px currentColor;
-animation: deltaFloat 1.5s ease forwards;
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  font-size: 13px;
+  font-weight: 900;
+  pointer-events: none;
+  z-index: 60;
+  text-shadow: 0 0 8px currentColor;
+  animation: deltaFloat 1.5s ease forwards;
 }
 .stat-delta.up { color: #00ff88; }
 .stat-delta.down { color: #ff4b2b; }
 @keyframes deltaFloat {
-0% { opacity: 0; transform: translateX(-50%) translateY(6px) scale(0.8); }
-20% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.1); }
-100% { opacity: 0; transform: translateX(-50%) translateY(-24px) scale(1); }
+  0% { opacity: 0; transform: translateX(-50%) translateY(6px) scale(0.8); }
+  20% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.1); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-24px) scale(1); }
 }
