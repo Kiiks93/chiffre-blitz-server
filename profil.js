@@ -286,7 +286,7 @@ function saveLocalPreferences() {
 }
 
 let lastDisplayed = { coins: null, trophies: null, points: null };
-let recapActive = false;
+// recapActive est déjà déclaré en haut du fichier (ligne ~42)
 
 function tweenNumber(el, from, to, duration = 900) {
   if (!el) return;
