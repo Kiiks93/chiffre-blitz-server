@@ -1996,41 +1996,65 @@ cursor: pointer;
 color: #f8b500;
 text-decoration: underline;
 }
-/* ---------- BADGE MODE DE JEU (intégré barre CIBLE + responsive) ---------- */
+/* ---------- BADGE MODE DE JEU ---------- */
 #game-mode-badge {
 font-family: inherit;
 }
+
+/* ============================================================
+OPTIMISATION MOBILE : header équilibré + grande grille
+============================================================ */
 @media (max-width: 600px) {
-/* ---------- GRILLE PLUS GRANDE ---------- */
-#grid {
-width: 96vw !important;
-max-width: 96vw !important;
-gap: 10px !important;
+/* --- Titre du jeu PLUS GROS --- */
+h1 {
+font-size: 21px !important;
 }
-.tile {
-aspect-ratio: 1 / 1.12 !important;
-font-size: 30px !important;
+/* --- Avatar PLUS COMPACT (ne domine plus le header) --- */
+.tft-avatar-container {
+width: 40px !important;
+height: 40px !important;
 }
-/* ---------- BADGE MODE PLUS LISIBLE ---------- */
-#game-mode-badge {
+.tft-avatar-container .lottie-avatar-badge {
+width: 34px !important;
+height: 34px !important;
+}
+.tft-flag-overlay {
+width: 15px !important;
+height: 15px !important;
 font-size: 10px !important;
+}
+#user-name-display { max-width: 90px; }
+#user-title-display { font-size: 8px; }
+/* --- GRILLE PLUS GRANDE (remplit le vide en bas) --- */
+:root {
+--game-width: min(96vw, 78vh, 430px);
+}
+#grid {
+gap: 8px !important;
+}
+#grid .tile,
+#grid .tile.empty {
+aspect-ratio: 1 / 1.15 !important;
+font-size: clamp(26px, 8vw, 34px) !important;
+}
+/* --- Badge mode LISIBLE --- */
+#game-mode-badge {
+font-size: 11px !important;
 padding: 4px 12px !important;
 letter-spacing: 1px !important;
 }
-/* ---------- TITRE DU JEU PLUS PRÉSENT ---------- */
-h1 {
-font-size: 20px !important;
 }
-}
-@media (min-width: 481px) and (max-width: 900px) {
-#game-mode-badge {
-font-size: 9px !important;
-padding: 4px 10px !important;
-}
-}
-@media (min-width: 901px) {
+
+@media (min-width: 601px) and (max-width: 900px) {
 #game-mode-badge {
 font-size: 10px !important;
 padding: 4px 12px !important;
+}
+}
+
+@media (min-width: 901px) {
+#game-mode-badge {
+font-size: 11px !important;
+padding: 5px 14px !important;
 }
 }
