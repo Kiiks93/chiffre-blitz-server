@@ -36,6 +36,7 @@ let pendingProfileValidation = false;
 let pendingAccountLogin = false;
 let pendingCustomization = false;
 let adCallbackFunction = null;
+let recapActive = false;
 let selectedRankedItems = [];
 let latestGlobalEvents = {};
 let latest1v1StartData = null;
@@ -319,25 +320,34 @@ function updateEconomyUI() {
   
   if (rankEl) rankEl.innerText = getRankName(myProfile.points);
   
-  if (lastDisplayed.coins !== null && myProfile.coins !== lastDisplayed.coins) {
-    showDelta(myProfile.coins - lastDisplayed.coins, "🪙");
+  // 🎬 Si le récap est affiché → mise à jour SANS animation
+  if (recapActive) {
+    if (coinsEl) coinsEl.innerText = myProfile.coins;
+    if (trophiesEl) trophiesEl.innerText = myProfile.trophies;
+    if (pointsEl) pointsEl.innerText = myProfile.points;
+    // NE PAS mettre à jour lastDisplayed → le delta sera calculé au retour au menu
+  } else {
+    // 🎬 Animation complète (deltas + tween)
+    if (lastDisplayed.coins !== null && myProfile.coins !== lastDisplayed.coins) {
+      showDelta(myProfile.coins - lastDisplayed.coins, "🪙");
+    }
+    if (lastDisplayed.trophies !== null && myProfile.trophies !== lastDisplayed.trophies) {
+      showDelta(myProfile.trophies - lastDisplayed.trophies, "🏆");
+    }
+    if (lastDisplayed.points !== null && myProfile.points !== lastDisplayed.points) {
+      showDelta(myProfile.points - lastDisplayed.points, "pts");
+    }
+    
+    tweenNumber(coinsEl, lastDisplayed.coins, myProfile.coins);
+    tweenNumber(trophiesEl, lastDisplayed.trophies, myProfile.trophies);
+    tweenNumber(pointsEl, lastDisplayed.points, myProfile.points);
+    
+    lastDisplayed = { 
+      coins: myProfile.coins, 
+      trophies: myProfile.trophies, 
+      points: myProfile.points 
+    };
   }
-  if (lastDisplayed.trophies !== null && myProfile.trophies !== lastDisplayed.trophies) {
-    showDelta(myProfile.trophies - lastDisplayed.trophies, "🏆");
-  }
-  if (lastDisplayed.points !== null && myProfile.points !== lastDisplayed.points) {
-    showDelta(myProfile.points - lastDisplayed.points, "pts");
-  }
-  
-  tweenNumber(coinsEl, lastDisplayed.coins, myProfile.coins);
-  tweenNumber(trophiesEl, lastDisplayed.trophies, myProfile.trophies);
-  tweenNumber(pointsEl, lastDisplayed.points, myProfile.points);
-  
-  lastDisplayed = { 
-    coins: myProfile.coins, 
-    trophies: myProfile.trophies, 
-    points: myProfile.points 
-  };
   
   const equippedTitle = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.title;
   const titleEl = document.getElementById("user-title-display");
