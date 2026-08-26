@@ -21,21 +21,24 @@ select {
 }
 
 .header-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 400px;
-    margin: 0 auto 6px auto;
-    gap: 6px;
+display: grid;
+grid-template-columns: auto 1fr auto;
+align-items: center;
+gap: 6px;
+max-width: 400px;
+margin: 0 auto 6px auto;
 }
-
-h1 {
-    color: #00d2ff;
-    margin: 0;
-    font-size: 16px;
-    text-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
-    white-space: nowrap;
-    cursor: pointer;
+.header-bar h1 {
+order: 2;
+text-align: center;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+.header-bar .user-pill { order: 1; justify-self: start; }
+.header-bar .header-btns { order: 3; justify-self: end; }
+@media (min-width: 601px) {
+.header-bar { max-width: 520px; }
+h1 { font-size: 18px; }
 }
 
 .user-pill {
@@ -2087,37 +2090,16 @@ padding: 5px 14px !important;
 HEADER MOBILE : avatar gauche / titre centré / boutons droite
 ============================================================ */
 @media (max-width: 600px) {
-.header-bar {
-display: grid;
-grid-template-columns: auto 1fr auto;
-align-items: center;
-gap: 6px;
-max-width: 96vw;
-}
-.header-bar h1 {
-order: 2;
-text-align: center;
-font-size: 17px !important;
-white-space: nowrap;
-overflow: hidden;
-text-overflow: ellipsis;
-}
+.header-bar { max-width: 96vw; }
 .header-bar .user-pill {
-order: 1;
-justify-self: start;
 padding: 3px;
 border-radius: 50%;
 max-width: none;
 }
-/* Pill compacte : juste l'avatar rond */
-.user-pill > div:not(#user-avatar-badge) { display: none; }
+/* !important car le div a un style inline "display:flex" */
+.user-pill > div:not(#user-avatar-badge) { display: none !important; }
 .user-pill .tft-avatar-container { width: 40px; height: 40px; }
 .user-pill .tft-avatar-container .lottie-avatar-badge { width: 34px !important; height: 34px !important; }
-.header-bar .header-btns {
-order: 3;
-justify-self: end;
-}
-/* Langue/son/compte passent dans le centre de contrôle */
 #lang-btn, #mute-btn, #account-gear-btn { display: none; }
 #control-center-btn { display: flex; }
 }
