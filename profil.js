@@ -197,7 +197,12 @@ const TITLE_DISPLAY_NAMES = {
   "title_neon": "Pulsion Néon",
   "title_spectre": "Spectre Cosmique",
   "title_supreme": "⚡ FÉLIN SUPRÊME",
-  "title_champion": "🏅 Champion Éclair"
+  "title_champion": "🏅 Champion Éclair",
+  "title_combattant": "🎖️ Combattant",
+  "title_elite": "🏵️ Élite",
+  "title_eveille": "⚡ Éveil",
+  "title_flamme": "🔥 Fournaise",
+  "title_parfait": "💎 PERFECTION"
 };
 const FRAME_DISPLAY_NAMES = {
   "frame_silver": "🛡️ Cadre « Argenté »",
