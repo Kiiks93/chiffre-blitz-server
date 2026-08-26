@@ -317,17 +317,11 @@ function updateEconomyUI() {
   const trophiesEl = document.getElementById("user-trophies-display");
   const pointsEl = document.getElementById("user-points-display");
   const rankEl = document.getElementById("user-rank-display");
-  
-  if (rankEl) rankEl.innerText = getRankName(myProfile.points);
-  
-  // 🎬 Si le récap est affiché → mise à jour SANS animation
-  if (recapActive) {
-    if (coinsEl) coinsEl.innerText = myProfile.coins;
-    if (trophiesEl) trophiesEl.innerText = myProfile.trophies;
-    if (pointsEl) pointsEl.innerText = myProfile.points;
-    // NE PAS mettre à jour lastDisplayed → le delta sera calculé au retour au menu
-  } else {
-    // 🎬 Animation complète (deltas + tween)
+
+  // 🧊 Pendant le récap : compteurs FIGÉS (pas de spoiler en arrière-plan)
+  if (!recapActive) {
+    if (rankEl) rankEl.innerText = getRankName(myProfile.points);
+
     if (lastDisplayed.coins !== null && myProfile.coins !== lastDisplayed.coins) {
       showDelta(myProfile.coins - lastDisplayed.coins, "🪙");
     }
@@ -337,26 +331,26 @@ function updateEconomyUI() {
     if (lastDisplayed.points !== null && myProfile.points !== lastDisplayed.points) {
       showDelta(myProfile.points - lastDisplayed.points, "pts");
     }
-    
+
     tweenNumber(coinsEl, lastDisplayed.coins, myProfile.coins);
     tweenNumber(trophiesEl, lastDisplayed.trophies, myProfile.trophies);
     tweenNumber(pointsEl, lastDisplayed.points, myProfile.points);
-    
-    lastDisplayed = { 
-      coins: myProfile.coins, 
-      trophies: myProfile.trophies, 
-      points: myProfile.points 
+
+    lastDisplayed = {
+      coins: myProfile.coins,
+      trophies: myProfile.trophies,
+      points: myProfile.points
     };
   }
-  
+
   const equippedTitle = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.title;
   const titleEl = document.getElementById("user-title-display");
   if (titleEl) titleEl.innerText = equippedTitle ? `[ ${TITLE_DISPLAY_NAMES[equippedTitle] || equippedTitle} ]` : "";
-  
+
   document.getElementById("user-name-display").innerText = myProfile.username || "Définir";
   document.getElementById("user-avatar-badge").innerHTML = getAvatarBadgeHTML(myProfile.flag, myProfile.avatar);
   updateShopCoinsDisplay();
-}
+}}
 
 function updateShopCoinsDisplay() {
   const valEl = document.getElementById("shop-coins-val");
