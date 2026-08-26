@@ -502,6 +502,8 @@ function showTitleScreen() {
 }
 
 function showMainMenu() {
+  recapActive = false;
+  updateEconomyUI();
   leaveRoomIfInRoom();
   hideAllScreens();
   window.history.replaceState({}, "", window.location.pathname);
@@ -932,6 +934,7 @@ function getWinnerAvatarShowcaseHTML(playerObj) {
 }
 
 function showGameOverRecap(data) {
+  recapActive = true;
   hideAllScreens();
   window.history.replaceState({}, "", window.location.pathname);
   const modal = document.getElementById("recap-modal");
@@ -1237,6 +1240,7 @@ function handleAvalancheClick(val, idx) {
 FIN DE PARTIE SOLO
 ============================================================ */
 function endSoloGame() {
+  recapActive = true;
   hideAllScreens();
   const wasPerfection = soloPerfection;
   const modal = document.getElementById("recap-modal");
