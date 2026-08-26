@@ -2080,3 +2080,44 @@ padding: 5px 14px !important;
   20% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.1); }
   100% { opacity: 0; transform: translateX(-50%) translateY(-24px) scale(1); }
 }
+/* ---------- CENTRE DE CONTRÔLE : caché sur PC ---------- */
+#control-center-btn { display: none; }
+
+/* ============================================================
+HEADER MOBILE : avatar gauche / titre centré / boutons droite
+============================================================ */
+@media (max-width: 600px) {
+.header-bar {
+display: grid;
+grid-template-columns: auto 1fr auto;
+align-items: center;
+gap: 6px;
+max-width: 96vw;
+}
+.header-bar h1 {
+order: 2;
+text-align: center;
+font-size: 17px !important;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+.header-bar .user-pill {
+order: 1;
+justify-self: start;
+padding: 3px;
+border-radius: 50%;
+max-width: none;
+}
+/* Pill compacte : juste l'avatar rond */
+.user-pill > div:not(#user-avatar-badge) { display: none; }
+.user-pill .tft-avatar-container { width: 40px; height: 40px; }
+.user-pill .tft-avatar-container .lottie-avatar-badge { width: 34px !important; height: 34px !important; }
+.header-bar .header-btns {
+order: 3;
+justify-self: end;
+}
+/* Langue/son/compte passent dans le centre de contrôle */
+#lang-btn, #mute-btn, #account-gear-btn { display: none; }
+#control-center-btn { display: flex; }
+}
