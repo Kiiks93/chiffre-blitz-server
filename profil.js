@@ -491,11 +491,20 @@ const m = document.getElementById('modal-control-center');
 if (m) m.style.display = 'none';
 }
 function renderControlCenter() {
-const langLabel = document.getElementById('cc-lang-label');
-if (langLabel) langLabel.innerText = (typeof currentLang !== 'undefined' && currentLang === 'en') ? 'EN' : 'FR';
-const soundLabel = document.getElementById('cc-sound-label');
+const isEN = (typeof currentLang !== 'undefined' && currentLang === 'en');
+const titleEl = document.getElementById('cc-title');
+if (titleEl) titleEl.innerText = isEN ? "⚙️ SETTINGS MANAGEMENT" : "⚙️ GESTION DES PARAMÈTRES";
+const langEl = document.getElementById('cc-lang-text');
+if (langEl) langEl.innerText = (isEN ? "Language : " : "Langue : ") + (isEN ? "EN" : "FR");
+const soundEl = document.getElementById('cc-sound-text');
 const muteBtn = document.getElementById('mute-btn');
-if (soundLabel && muteBtn) soundLabel.innerText = muteBtn.innerText.includes('🔇') ? 'Coupé' : 'Activé';
+if (soundEl && muteBtn) soundEl.innerText = (isEN ? "Sound : " : "Son : ") + (muteBtn.innerText.includes('🔇') ? (isEN ? "Muted" : "Coupé") : (isEN ? "On" : "Activé"));
+const customEl = document.getElementById('cc-custom-btn');
+if (customEl) customEl.innerText = isEN ? "🎨 Customization" : "🎨 Personnalisation";
+const accountEl = document.getElementById('cc-account-btn');
+if (accountEl) accountEl.innerText = isEN ? "👤 Account management" : "👤 Gestion du compte";
+const btnLabel = document.getElementById('cc-btn-label');
+if (btnLabel) btnLabel.innerText = isEN ? "Settings" : "Paramètres";
 }
 /* ============================================================
 FENÊTRE PROFIL / PERSONNALISATION
