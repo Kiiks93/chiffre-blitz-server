@@ -482,7 +482,21 @@ socket.on('delete_account_result', (res) => {
     alert('❌ Code secret incorrect : compte NON supprimé.');
   }
 });
-
+function openControlCenter() {
+renderControlCenter();
+document.getElementById('modal-control-center').style.display = 'flex';
+}
+function closeControlCenter() {
+const m = document.getElementById('modal-control-center');
+if (m) m.style.display = 'none';
+}
+function renderControlCenter() {
+const langLabel = document.getElementById('cc-lang-label');
+if (langLabel) langLabel.innerText = (typeof currentLang !== 'undefined' && currentLang === 'en') ? 'EN' : 'FR';
+const soundLabel = document.getElementById('cc-sound-label');
+const muteBtn = document.getElementById('mute-btn');
+if (soundLabel && muteBtn) soundLabel.innerText = muteBtn.innerText.includes('🔇') ? 'Coupé' : 'Activé';
+}
 /* ============================================================
 FENÊTRE PROFIL / PERSONNALISATION
 ============================================================ */
