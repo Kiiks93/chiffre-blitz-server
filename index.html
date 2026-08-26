@@ -25,10 +25,10 @@
                 <span data-i18n="friends_btn">Amis</span>
                 <span id="friends-main-badge" style="display:none; position: absolute; top: -4px; right: -4px; background: #ff4b2b; color: #fff; border-radius: 50%; padding: 1px 5px; font-size: 9px; font-weight: bold;">0</span>
             </button>
-            <button id="lang-btn" class="icon-btn" onclick="toggleLanguage()">ENG</button>
+            <button id="lang-btn" class="icon-btn" onclick="toggleLanguage(); renderControlCenter();">ENG</button>
             <button id="mute-btn" class="icon-btn" onclick="toggleMute()">🔊</button>
             <button id="mute-btn" class="icon-btn" onclick="toggleMute()">🔊</button>
-            <button id="control-center-btn" class="icon-btn" onclick="openControlCenter()">🎛️</button>
+            <button id="control-center-btn" class="icon-btn" onclick="openControlCenter()" style="padding: 0 10px;">⚙️ <span id="cc-btn-label">Paramètres</span></button>
         </div>
     </div>
 
@@ -247,14 +247,14 @@
         </div>
         <button class="btn-secondary" onclick="showMainMenu()" data-i18n="back">⬅️ Retour Menu</button>
     </div>
-    <div id="modal-control-center" class="modal-overlay" style="display:none;">
+        <div id="modal-control-center" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="max-width:340px; text-align:center;">
-        <h3 style="color:#00d2ff; margin:0 0 10px 0;">🎛️ CENTRE DE CONTRÔLE</h3>
-        <button class="btn-main btn-blue" onclick="toggleLanguage(); renderControlCenter();" style="margin-bottom:6px;">🌐 Langue : <span id="cc-lang-label">FR</span></button>
-        <button class="btn-main btn-gold" onclick="toggleMute(); renderControlCenter();" style="margin-bottom:6px;">🔊 Son : <span id="cc-sound-label">Activé</span></button>
-        <button class="btn-main btn-shop" onclick="closeControlCenter(); promptProfileChange();" style="margin-bottom:6px;">🎨 Personnalisation</button>
-        <button class="btn-main" onclick="closeControlCenter(); openAccountModal();" style="margin-bottom:6px;">👤 Gestion du compte</button>
-        <button class="btn-secondary" onclick="closeControlCenter()">Fermer</button>
+        <h3 id="cc-title" style="color:#00d2ff; margin:0 0 10px 0;">⚙️ GESTION DES PARAMÈTRES</h3>
+        <button class="btn-main btn-blue" onclick="toggleLanguage(); renderControlCenter();" style="margin-bottom:6px;">🌐 <span id="cc-lang-text">Langue : FR</span></button>
+        <button class="btn-main btn-gold" onclick="toggleMute(); renderControlCenter();" style="margin-bottom:6px;">🔊 <span id="cc-sound-text">Son : Activé</span></button>
+        <button id="cc-custom-btn" class="btn-main btn-shop" onclick="closeControlCenter(); promptProfileChange();" style="margin-bottom:6px;">🎨 Personnalisation</button>
+        <button id="cc-account-btn" class="btn-main" onclick="closeControlCenter(); openAccountModal();" style="margin-bottom:6px;">👤 Gestion du compte</button>
+        <button class="btn-secondary" onclick="closeControlCenter()" data-i18n="close">Fermer</button>
         </div>
     </div>
     <div id="modal-username" class="modal-overlay" style="display:none;">
