@@ -38,9 +38,14 @@ text-overflow: ellipsis;
 .header-bar .header-btns { order: 3; justify-self: end; }
 @media (min-width: 601px) {
 .header-bar { max-width: 520px; }
-h1 { font-size: 18px; }
+h1 {
+color: #00d2ff;
+margin: 0;
+font-size: 16px;
+text-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
+white-space: nowrap;
+cursor: pointer;
 }
-
 .user-pill {
 background: rgba(255, 255, 255, 0.08);
 border: 1.5px solid rgba(255, 255, 255, 0.25);
@@ -2005,101 +2010,77 @@ font-family: inherit;
 }
 
 /* ============================================================
-OPTIMISATION MOBILE : header équilibré + grande grille
+BADGE MODE DE JEU
 ============================================================ */
-@media (max-width: 600px) {
-/* --- Titre du jeu PLUS GROS --- */
-h1 {
-font-size: 21px !important;
-}
-/* --- Avatar PLUS COMPACT (ne domine plus le header) --- */
-.tft-avatar-container {
-width: 40px !important;
-height: 40px !important;
-}
-.tft-avatar-container .lottie-avatar-badge {
-width: 34px !important;
-height: 34px !important;
-}
-.tft-flag-overlay {
-width: 15px !important;
-height: 15px !important;
-font-size: 10px !important;
-}
-#user-name-display { max-width: 90px; }
-#user-title-display { font-size: 8px; }
-/* --- GRILLE PLUS GRANDE (remplit le vide en bas) --- */
-:root {
---game-width: min(96vw, 78vh, 430px);
-}
-#grid {
-gap: 8px !important;
-}
-#grid .tile,
-#grid .tile.empty {
-aspect-ratio: 1 / 1.15 !important;
-font-size: clamp(26px, 8vw, 34px) !important;
-}
-/* --- Badge mode LISIBLE --- */
 #game-mode-badge {
-font-size: 11px !important;
-padding: 4px 12px !important;
-letter-spacing: 1px !important;
-}
+font-family: inherit;
 }
 
-@media (min-width: 601px) and (max-width: 900px) {
-#game-mode-badge {
-font-size: 10px !important;
-padding: 4px 12px !important;
-}
-}
-
-@media (min-width: 901px) {
-#game-mode-badge {
-font-size: 11px !important;
-padding: 5px 14px !important;
-}
-}
-/* ---------- BARRE ÉCONOMIE ANIMÉE (gains/pertes flottants) ---------- */
+/* ============================================================
+BARRE ÉCONOMIE ANIMÉE (gains/pertes flottants)
+============================================================ */
 .user-stats {
-  position: relative;
+position: relative;
 }
 .stat-delta {
-  position: absolute;
-  top: -8px;
-  left: 50%;
-  font-size: 13px;
-  font-weight: 900;
-  pointer-events: none;
-  z-index: 60;
-  text-shadow: 0 0 8px currentColor;
-  animation: deltaFloat 1.5s ease forwards;
+position: absolute;
+top: -8px;
+left: 50%;
+font-size: 13px;
+font-weight: 900;
+pointer-events: none;
+z-index: 60;
+text-shadow: 0 0 8px currentColor;
+animation: deltaFloat 1.5s ease forwards;
 }
 .stat-delta.up { color: #00ff88; }
 .stat-delta.down { color: #ff4b2b; }
 @keyframes deltaFloat {
-  0% { opacity: 0; transform: translateX(-50%) translateY(6px) scale(0.8); }
-  20% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.1); }
-  100% { opacity: 0; transform: translateX(-50%) translateY(-24px) scale(1); }
+0% { opacity: 0; transform: translateX(-50%) translateY(6px) scale(0.8); }
+20% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.1); }
+100% { opacity: 0; transform: translateX(-50%) translateY(-24px) scale(1); }
 }
-/* ---------- CENTRE DE CONTRÔLE : caché sur PC ---------- */
-#control-center-btn { display: none; }
 
 /* ============================================================
-HEADER MOBILE : avatar gauche / titre centré / boutons droite
+HEADER UNIFIÉ : « Paramètres » partout, boutons individuels cachés
 ============================================================ */
+#lang-btn, #mute-btn, #account-gear-btn { display: none; }
+#control-center-btn { display: flex; }
+
+/* ---------- PC / TABLETTE ---------- */
+@media (min-width: 601px) {
+.header-bar { max-width: 520px; }
+.header-bar h1 { font-size: 19px; }
+}
+
+/* ---------- MOBILE ---------- */
 @media (max-width: 600px) {
 .header-bar { max-width: 96vw; }
+.header-bar h1 { font-size: 17px; }
+/* Pill compacte : avatar rond seul */
 .header-bar .user-pill {
 padding: 3px;
 border-radius: 50%;
 max-width: none;
 }
-/* !important car le div a un style inline "display:flex" */
 .user-pill > div:not(#user-avatar-badge) { display: none !important; }
 .user-pill .tft-avatar-container { width: 40px; height: 40px; }
 .user-pill .tft-avatar-container .lottie-avatar-badge { width: 34px !important; height: 34px !important; }
-#lang-btn, #mute-btn, #account-gear-btn { display: none; }
-#control-center-btn { display: flex; }
+.user-pill .tft-flag-overlay { width: 15px; height: 15px; font-size: 10px; }
+/* Grille plus grande */
+:root { --game-width: min(96vw, 78vh, 430px); }
+#grid { gap: 8px !important; }
+#grid .tile, #grid .tile.empty {
+aspect-ratio: 1 / 1.15 !important;
+font-size: clamp(26px, 8vw, 34px) !important;
+}
+#game-mode-badge { font-size: 11px !important; padding: 4px 12px !important; letter-spacing: 1px !important; }
+}
+
+/* ---------- BADGE MODE selon écran ---------- */
+@media (min-width: 601px) and (max-width: 900px) {
+#game-mode-badge { font-size: 10px !important; padding: 4px 12px !important; }
+}
+@media (min-width: 901px) {
+#game-mode-badge { font-size: 11px !important; padding: 5px 14px !important; }
 }
