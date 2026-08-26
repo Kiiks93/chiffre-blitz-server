@@ -283,15 +283,50 @@ localStorage.setItem("cb_avatar", myProfile.avatar);
 localStorage.setItem("cb_flag", myProfile.flag);
 if (myProfile.secretCode) localStorage.setItem('cb_secret', myProfile.secretCode);
 }
+let lastDisplayed = { coins: null, trophies: null, points: null };
+
+function tweenNumber(el, from, to, duration = 900) {
+if (!el) return;
+if (from === null || from === to) { el.innerText = to; return; }
+const start = performance.now();
+const diff = to - from;
+function frame(now) {
+const t = Math.min(1, (now - start) / duration);
+const eased = 1 - Math.pow(1 - t, 3);
+el.innerText = Math.round(from + diff * eased);
+if (t < 1) requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+}
+
+function showDelta(value, icon) {
+if (!value) return;
+const bar = document.querySelector(".user-stats");
+if (!bar) return;
+const delta = document.createElement("span");
+delta.className = "stat-delta " + (value > 0 ? "up" : "down");
+delta.innerText = (value > 0 ? "+" : "") + value + " " + icon;
+bar.appendChild(delta);
+setTimeout(() => delta.remove(), 1600);
+}
+
 function updateEconomyUI() {
-document.getElementById("user-coins-display").innerText = myProfile.coins;
-document.getElementById("user-trophies-display").innerText = myProfile.trophies;
-document.getElementById("user-rank-display").innerText = getRankName(myProfile.points);
-document.getElementById("user-points-display").innerText = myProfile.points;
-document.getElementById("user-name-display").innerText = myProfile.username || "Définir";
+const coinsEl = document.getElementById("user-coins-display");
+const trophiesEl = document.getElementById("user-trophies-display");
+const pointsEl = document.getElementById("user-points-display");
+const rankEl = document.getElementById("user-rank-display");
+if (rankEl) rankEl.innerText = getRankName(myProfile.points);
+if (lastDisplayed.coins !== null && myProfile.coins !== lastDisplayed.coins) showDelta(myProfile.coins - lastDisplayed.coins, "🪙");
+if (lastDisplayed.trophies !== null && myProfile.trophies !== lastDisplayed.trophies) showDelta(myProfile.trophies - lastDisplayed.trophies, "🏆");
+if (lastDisplayed.points !== null && myProfile.points !== lastDisplayed.points) showDelta(myProfile.points - lastDisplayed.points, "pts");
+tweenNumber(coinsEl, lastDisplayed.coins, myProfile.coins);
+tweenNumber(trophiesEl, lastDisplayed.trophies, myProfile.trophies);
+tweenNumber(pointsEl, lastDisplayed.points, myProfile.points);
+lastDisplayed = { coins: myProfile.coins, trophies: myProfile.trophies, points: myProfile.points };
 const equippedTitle = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.title;
 const titleEl = document.getElementById("user-title-display");
 if (titleEl) titleEl.innerText = equippedTitle ? `[ ${TITLE_DISPLAY_NAMES[equippedTitle] || equippedTitle} ]` : "";
+document.getElementById("user-name-display").innerText = myProfile.username || "Définir";
 document.getElementById("user-avatar-badge").innerHTML = getAvatarBadgeHTML(myProfile.flag, myProfile.avatar);
 updateShopCoinsDisplay();
 }
