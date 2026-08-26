@@ -27,6 +27,8 @@
             </button>
             <button id="lang-btn" class="icon-btn" onclick="toggleLanguage()">ENG</button>
             <button id="mute-btn" class="icon-btn" onclick="toggleMute()">🔊</button>
+            <button id="mute-btn" class="icon-btn" onclick="toggleMute()">🔊</button>
+            <button id="control-center-btn" class="icon-btn" onclick="openControlCenter()">🎛️</button>
         </div>
     </div>
 
@@ -245,7 +247,16 @@
         </div>
         <button class="btn-secondary" onclick="showMainMenu()" data-i18n="back">⬅️ Retour Menu</button>
     </div>
-
+    <div id="modal-control-center" class="modal-overlay" style="display:none;">
+        <div class="modal-card" style="max-width:340px; text-align:center;">
+        <h3 style="color:#00d2ff; margin:0 0 10px 0;">🎛️ CENTRE DE CONTRÔLE</h3>
+        <button class="btn-main btn-blue" onclick="toggleLanguage(); renderControlCenter();" style="margin-bottom:6px;">🌐 Langue : <span id="cc-lang-label">FR</span></button>
+        <button class="btn-main btn-gold" onclick="toggleMute(); renderControlCenter();" style="margin-bottom:6px;">🔊 Son : <span id="cc-sound-label">Activé</span></button>
+        <button class="btn-main btn-shop" onclick="closeControlCenter(); promptProfileChange();" style="margin-bottom:6px;">🎨 Personnalisation</button>
+        <button class="btn-main" onclick="closeControlCenter(); openAccountModal();" style="margin-bottom:6px;">👤 Gestion du compte</button>
+        <button class="btn-secondary" onclick="closeControlCenter()">Fermer</button>
+        </div>
+    </div>
     <div id="modal-username" class="modal-overlay" style="display:none;">
         <div class="modal-card" style="text-align:center; max-width: 380px;">
             <div id="modal-avatar-preview"></div>
