@@ -286,6 +286,7 @@ function saveLocalPreferences() {
 }
 
 let lastDisplayed = { coins: null, trophies: null, points: null };
+let recapActive = false;
 
 function tweenNumber(el, from, to, duration = 900) {
   if (!el) return;
@@ -350,7 +351,7 @@ function updateEconomyUI() {
   document.getElementById("user-name-display").innerText = myProfile.username || "Définir";
   document.getElementById("user-avatar-badge").innerHTML = getAvatarBadgeHTML(myProfile.flag, myProfile.avatar);
   updateShopCoinsDisplay();
-}}
+}
 
 function updateShopCoinsDisplay() {
   const valEl = document.getElementById("shop-coins-val");
