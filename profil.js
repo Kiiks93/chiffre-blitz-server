@@ -337,6 +337,41 @@ function showDelta(value, icon) {
   setTimeout(() => delta.remove(), 1600);
 }
 
+let lastDisplayed = { coins: null, trophies: null, points: null };
+
+function tweenNumber(el, from, to, duration = 900) {
+  if (!el) return;
+  if (from === null || from === to) { el.innerText = to; return; }
+  const start = performance.now();
+  const diff = to - from;
+  function frame(now) {
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    el.innerText = Math.round(from + diff * eased);
+    if (t < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+function showDelta(value, icon) {
+  if (!value) return;
+  const bar = document.querySelector(".user-stats");
+  if (!bar) return;
+  
+  // Créer un conteneur flottant au-dessus de la barre
+  const delta = document.createElement("span");
+  delta.className = "stat-delta " + (value > 0 ? "up" : "down");
+  delta.innerText = (value > 0 ? "+" : "") + value + " " + icon;
+  delta.style.position = "absolute";
+  delta.style.top = "-8px";
+  delta.style.left = "50%";
+  delta.style.transform = "translateX(-50%)";
+  delta.style.pointerEvents = "none";
+  
+  bar.appendChild(delta);
+  setTimeout(() => delta.remove(), 1600);
+}
+
 function updateEconomyUI() {
   const coinsEl = document.getElementById("user-coins-display");
   const trophiesEl = document.getElementById("user-trophies-display");
