@@ -33,14 +33,14 @@ friends_title: "👥 Liste d'Amis", friends_btn: "👥 Amis", add_btn: "Ajouter"
 ad_title: "Soutenir le Créateur", ad_desc: "Chiffre Blitz est 100% gratuit. Une publicité de soutien va se lancer. Merci ! ❤️", ad_btn: "Lancer la partie ⚡", ad_sponsored: "VIDÉO SPONSORISÉE...",
 not_enough_coins: "Tu n'as pas assez de pièces 🪙 pour acheter cet objet !",
 powers: {
-spotlight: { name: "💡 Projecteur", desc: "Illumine la bonne tuile (2s)" },
-freeze: { name: "⏳ Blocage du Temps", desc: "Gèle le chrono pendant 3s" },
-joker: { name: "⚡ Joker Éclair", desc: "Valide la cible actuelle" },
-nova: { name: "🌟 Nova Temporelle", desc: "GIGA : Valide 3 cibles" },
-quake: { name: "📳 Séisme", desc: "Fait trembler l'adversaire (2s)" },
-micro: { name: "🐜 Micro-Tuiles", desc: "Rétrécit la grille adverse (2s)" },
-eclipse: { name: "🌑 Éclipse", desc: "Floute la grille adverse (1.5s)" },
-chaos: { name: "🌪️ Chaos Absolu", desc: "GIGA : Combo de malus (5s)" }
+spotlight: { name: "💡 Projecteur", desc: "Révèle la bonne tuile pendant 2s. Zéro hésitation." },
+freeze: { name: "⏳ Blocage du Temps", desc: "Gèle le chrono 3s. Respire, tu as le temps." },
+joker: { name: "⚡ Joker Éclair", desc: "Valide instantanément ta cible actuelle." },
+nova: { name: "🌟 Nova Temporelle", desc: "GIGA : enchaîne 3 validations automatiques." },
+quake: { name: "📳 Séisme", desc: "Secoue la grille adverse pendant 2s." },
+micro: { name: "🐜 Micro-Tuiles", desc: "Rétrécit les tuiles adverses pendant 2s." },
+eclipse: { name: "🌑 Éclipse", desc: "Plonge la grille adverse dans le flou (1,5s)." },
+chaos: { name: "🌪️ Chaos Absolu", desc: "GIGA : séisme + micro + éclipse en chaîne (5s)." }
 }
 },
 en: {
@@ -48,7 +48,7 @@ coins: "Coins", trophies: "Trophies", subtitle: "The ultimate math and reflex du
 rule1_title: "⚡ Game Rule", rule1_desc: "Click as fast as possible on the grid tiles in exact ascending order (1, then 2, 3, etc.).",
 rule2_title: "🏋️ Solo Training", rule2_desc: "Classic, Random or Avalanche modes to chain numbers and earn coins (🪙).",
 rule3_title: "⚔️ Online 1v1 Duel", rule3_desc: "Face an opponent in real time (unranked, ranked SBMM or private rooms).",
-rule5_title: "🏆 Ranks System", rule5_desc: "Earn points in ranked matches across 4 tiers: Novice 🌱, Cipher 🔢, Expert  and Calculator !",
+rule5_title: "🏆 Ranks System", rule5_desc: "Earn points in ranked matches across 4 tiers: Novice 🌱, Cipher 🔢, Expert 🧠 and Calculator ⚡ !",
 rule4_title: "🎯 Tournament Mode", rule4_desc: "Coming soon! Face the best players in an epic tournament (under consideration).",
 btn_play: "PLAY ⚡", menu_solo: "🏋️ TRAINING", menu_1v1: "⚔️ 1v1 DUEL", menu_tow: "🪢 Tug-of-War Mode",
 menu_friends: "👥 ROOMS", menu_shop: "🛍️ SHOP", menu_lb: "🏆 LEADERBOARD", menu_tourney: "🎯 TOURNAMENTS", menu_info: "ℹ️ Info & Rules",
@@ -77,14 +77,14 @@ friends_title: "👥 Friends List", friends_btn: "👥 Friends", add_btn: "Add",
 ad_title: "Support the Creator", ad_desc: "Chiffre Blitz is 100% free. A support advertisement will play. Thank you! ❤️", ad_btn: "Start Game ⚡", ad_sponsored: "SPONSORED VIDEO...",
 not_enough_coins: "You don't have enough coins 🪙 to buy this item!",
 powers: {
-spotlight: { name: "💡 Projecteur", desc: "Highlights the correct tile (2s)" },
-freeze: { name: "⏳ Blocage du Temps", desc: "Freezes the timer for 3s" },
-joker: { name: "⚡ Joker Éclair", desc: "Validates current target" },
-nova: { name: "🌟 Nova Temporelle", desc: "GIGA: Validates 3 targets" },
-quake: { name: "📳 Séisme", desc: "Shakes opponent grid (2s)" },
-micro: { name: "🐜 Micro-Tuiles", desc: "Shrinks opponent grid (2s)" },
-eclipse: { name: "🌑 Éclipse", desc: "Blurs opponent grid (1.5s)" },
-chaos: { name: "🌪️ Chaos Absolu", desc: "GIGA: Malus combo (5s)" }
+spotlight: { name: "💡 Spotlight", desc: "Reveals the correct tile for 2s. Zero hesitation." },
+freeze: { name: "⏳ Time Freeze", desc: "Freezes the timer for 3s. Breathe, you've got time." },
+joker: { name: "⚡ Lightning Joker", desc: "Instantly validates your current target." },
+nova: { name: "🌟 Time Nova", desc: "GIGA: chains 3 auto-validations." },
+quake: { name: "📳 Earthquake", desc: "Shakes the opponent's grid for 2s." },
+micro: { name: "🐜 Micro-Tiles", desc: "Shrinks the opponent's tiles for 2s." },
+eclipse: { name: "🌑 Eclipse", desc: "Blurs the opponent's grid (1.5s)." },
+chaos: { name: "🌪️ Absolute Chaos", desc: "GIGA: quake + micro + eclipse chained (5s)." }
 }
 }
 };
