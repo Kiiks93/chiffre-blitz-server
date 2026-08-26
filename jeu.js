@@ -440,29 +440,35 @@ let badge = document.getElementById("game-mode-badge");
 if (!badge) {
 badge = document.createElement("div");
 badge.id = "game-mode-badge";
-document.body.appendChild(badge);
 }
 badge.innerText = text;
 badge.style.cssText = `
-position: fixed;
-bottom: 14px;
-left: 50%;
-transform: translateX(-50%);
-z-index: 50;
+position: absolute;
+left: 10px;
+top: 50%;
+transform: translateY(-50%);
+z-index: 5;
 background: rgba(15, 5, 29, 0.92);
 border: 1.5px solid ${color};
 color: ${color};
-font-size: 11px;
+font-size: 9px;
 font-weight: 900;
-letter-spacing: 1.5px;
-padding: 5px 16px;
-border-radius: 20px;
+letter-spacing: 1px;
+padding: 4px 10px;
+border-radius: 14px;
 pointer-events: none;
-box-shadow: 0 0 12px ${color}66, inset 0 0 8px ${color}22;
-text-shadow: 0 0 6px ${color};
-animation: badgePulse 2s infinite;
+box-shadow: 0 0 10px ${color}55;
+text-shadow: 0 0 5px ${color};
 `;
 badge.style.display = "block";
+const target = document.getElementById("game-target-giant");
+if (target && target.parentElement) {
+const bar = target.parentElement;
+if (getComputedStyle(bar).position === "static") bar.style.position = "relative";
+if (badge.parentElement !== bar) bar.appendChild(badge);
+} else {
+document.body.appendChild(badge);
+}
 }
 
 function hideGameModeBadge() {
