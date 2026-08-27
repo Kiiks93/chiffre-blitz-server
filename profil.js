@@ -57,7 +57,14 @@ const POWERS_CATALOG = [
   { id: "chaos", price: 4000, type: "malus" },
   { id: "theme_glacial", price: 1200, type: "cosmetics" },
   { id: "frame_voltage", price: 2200, type: "cosmetics" },
-  { id: "frame_obsidian", price: 4500, type: "cosmetics" }
+  { id: "frame_obsidian", price: 4500, type: "cosmetics" },
+  { id: "theme_eclair", price: 1500, type: "cosmetics" },
+  { id: "frame_givre", price: 2200, type: "cosmetics" },
+  { id: "theme_alt", price: 1800, type: "cosmetics" },
+  { id: "frame_prism", price: 2600, type: "cosmetics" },
+  { id: "pack_haute_tension", price: 2900, type: "packs" },
+  { id: "pack_cryo", price: 2700, type: "packs" },
+  { id: "pack_solaire", price: 3200, type: "packs" }
 ];
 
 /* ============================================================
