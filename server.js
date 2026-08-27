@@ -39,6 +39,7 @@ const ITEM_CATALOG = {
   theme_glacial: { sources: ["shop"], type: "theme", price: 1200, permanent: true },
   frame_voltage: { sources: ["shop"], type: "frame", price: 2200, permanent: true },
   frame_obsidian: { sources: ["shop"], type: "frame", price: 4500, permanent: true },
+  theme_obsidian: { sources: ["shop"], type: "theme", price: 1800, permanent: true },
   theme_alt: { sources: ["pass"], type: "theme", permanent: true },
   frame_chroma: { sources: ["pass"], type: "frame", permanent: true },
   frame_prism: { sources: ["pass"], type: "frame", permanent: true },
@@ -57,6 +58,7 @@ const ITEM_CATALOG = {
   avatar_tigre: { sources: ["pass"], type: "avatar", permanent: true },
   pack_haute_tension: { sources: ["shop"], type: "pack", price: 2900, permanent: true, items: ["frame_voltage", "theme_eclair"] },
   pack_cryo: { sources: ["shop"], type: "pack", price: 2700, permanent: true, items: ["frame_givre", "theme_glacial"] },
+  pack_obsidienne: { sources: ["shop"], type: "pack", price: 5200, permanent: true, items: ["frame_obsidian", "theme_obsidian"] },
   pack_solaire: { sources: ["shop"], type: "pack", price: 3200, permanent: true, items: ["frame_prism", "theme_alt"] }
 };
 
