@@ -20,15 +20,17 @@ const cosmeticsDict = {
 theme_glacial: { name: "🧊 Grille Cryo", desc: "Grille aux reflets bleutés glacés" },
 theme_alt: { name: "🎨 Grille Rétro/Dorée", desc: "Tuiles dorées look rétro" },
 theme_eclair: { name: "⚡ Grille Éclair", desc: "Tuiles jaune électrique crépitantes" },
+theme_obsidian: { name: "🖤 Grille Obsidienne", desc: "Tuiles sombres striées de lueurs pourpres" },
 frame_voltage: { name: "⚡ Cadre Sous Tension", desc: "Éclairs électriques crépitants autour de l'avatar" },
 frame_obsidian: { name: "🖤 Cadre Obsidienne", desc: "Cadre sombre strié de lueurs pourpres" },
 frame_givre: { name: "🧊 Cadre Givre", desc: "Halo glacé aux reflets givrés" },
-frame_prism: { name: "✨ Cadre Prisme Solaire", desc: "Scintillements dorés éblouissants" }
+frame_prism: { name: "✨ Cadre Doré", desc: "Scintillements dorés éblouissants" }
 };
 const packsDict = {
 pack_haute_tension: { name: "⚡ PACK Haute Tension", desc: "Cadre Sous Tension + Grille Éclair", items: ["frame_voltage", "theme_eclair"], value: 3700 },
 pack_cryo: { name: "🧊 PACK Cryo", desc: "Cadre Givre + Grille Cryo", items: ["frame_givre", "theme_glacial"], value: 3400 },
-pack_solaire: { name: "✨ PACK Solaire", desc: "Cadre Prisme Solaire + Grille Dorée", items: ["frame_prism", "theme_alt"], value: 4400 }
+pack_obsidienne: { name: "🖤 PACK Obsidienne", desc: "Cadre Obsidienne + Grille Obsidienne", items: ["frame_obsidian", "theme_obsidian"], value: 6300 },
+pack_solaire: { name: "✨ PACK Doré", desc: "Cadre Doré + Grille Dorée", items: ["frame_prism", "theme_alt"], value: 4400 }
 };
 POWERS_CATALOG.filter(p => p.type === type).forEach(p => {
 const card = document.createElement("div");
@@ -40,7 +42,7 @@ card.className = "power-card";
 card.innerHTML = `<h4>${info.name}</h4><p>${info.desc}</p>
 <div style="font-size:9px; color:#aaa; margin-bottom:2px; text-decoration:line-through;">${info.value} 🪙 séparés</div>
 <div style="font-weight:bold; margin-bottom:4px; font-size:11px; color:#00ff88;">${p.price} 🪙 (-${reduc}%)</div>
-${ownedAll ? `<div style="font-size:10px; color:#00ff88; font-weight:bold;">Possédé ✅</div>` : `<button class="power-btn buy" onclick="buyItem('${p.id}')">Acheter</button>`}`;
+${ownedAll ? `<button class="power-btn equip" onclick="equipPack('${p.id}')">Équiper le pack ⚡</button>` : `<button class="power-btn buy" onclick="buyItem('${p.id}')">Acheter</button>`}
 } else if (type === "cosmetics") {
 const info = cosmeticsDict[p.id];
 const unlocked = myProfile.unlocked_items && myProfile.unlocked_items.includes(p.id);
@@ -73,7 +75,19 @@ if (myProfile.equippedPower && (myProfile.inventory[myProfile.equippedPower] || 
 if (myProfile.equippedPowers && myProfile.equippedPowers.length > 0) myProfile.equippedPowers = myProfile.equippedPowers.filter(p => (myProfile.inventory[p] || 0) > 0);
 if (selectedRankedItems && selectedRankedItems.length > 0) selectedRankedItems = selectedRankedItems.filter(p => (myProfile.inventory[p] || 0) > 0);
 }
-
+function equipPack(packId) {
+const packs = {
+pack_haute_tension: ["theme_eclair", "frame_voltage"],
+pack_cryo: ["theme_glacial", "frame_givre"],
+pack_solaire: ["theme_alt", "frame_prism"],
+pack_obsidienne: ["theme_obsidian", "frame_obsidian"]
+};
+const items = packs[packId];
+if (!items) return;
+equipCosmetic(items[0]);
+equipCosmetic(items[1]);
+showNotificationToast("✅ Pack équipé : grille + cadre !", "gift");
+}
 /* ============================================================
 PASSE DE SAISON
 ============================================================ */
