@@ -121,54 +121,54 @@ function getFrameClass(equippedFrame) {
   return FRAME_CLASS_MAP[equippedFrame] || "";
 }
 function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
-  const profile = playerObj || myProfile;
-  const equippedAvatar = overrideAvatarType || (profile.inventory && profile.inventory.__equipped && profile.inventory.__equipped.avatar);
-  const equippedFrame = profile.inventory && profile.inventory.__equipped && profile.inventory.__equipped.frame;
-  if (!playerObj) {
-    const pill = document.getElementById("user-pill");
-    if (pill) {
-      pill.classList.remove("silver-frame", "chroma-frame", "prism-frame", "voltage-frame", "obsidian-frame");
-      const frameClass = getFrameClass(equippedFrame);
-      if (frameClass) pill.classList.add(frameClass);
-    }
-  }
-  let avatarContent = avatarNum || 1;
-  let avatarTitle = `Avatar #${avatarNum || 1}`;
-  if (equippedAvatar === "avatar_lottie_palier30") {
-    avatarTitle = "Chat Arc-en-ciel (Palier 30 - Lottie)";
-    avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="black-rainbow-cat.json" style="width:32px; height:32px;"></div>`;
-  } else if (equippedAvatar === "avatar_lottie_palier15") {
-    avatarTitle = "Chat Assistant (Palier 15 - Lottie)";
-    avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="cat-assistant.json" style="width:32px; height:32px;"></div>`;
-  }
-  } else if (equippedAvatar === "avatar_tigre") {
+const profile = playerObj || myProfile;
+const equippedAvatar = overrideAvatarType || (profile.inventory && profile.inventory.__equipped && profile.inventory.__equipped.avatar);
+const equippedFrame = profile.inventory && profile.inventory.__equipped && profile.inventory.__equipped.frame;
+if (!playerObj) {
+const pill = document.getElementById("user-pill");
+if (pill) {
+pill.classList.remove("silver-frame", "chroma-frame", "prism-frame", "voltage-frame", "obsidian-frame");
+const frameClass = getFrameClass(equippedFrame);
+if (frameClass) pill.classList.add(frameClass);
+}
+}
+let avatarContent = avatarNum || 1;
+let avatarTitle = `Avatar #${avatarNum || 1}`;
+if (equippedAvatar === "avatar_lottie_palier30") {
+avatarTitle = "Chat Arc-en-ciel (Palier 30 - Lottie)";
+avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="black-rainbow-cat.json" style="width:32px; height:32px;"></div>`;
+} else if (equippedAvatar === "avatar_lottie_palier15") {
+avatarTitle = "Chat Assistant (Palier 15 - Lottie)";
+avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="cat-assistant.json" style="width:32px; height:32px;"></div>`;
+} else if (equippedAvatar === "avatar_tigre") {
 avatarTitle = "Tigre de Sibérie (GRAAL - Palier 30)";
 avatarContent = `<video class="tft-avatar-video" src="tiger-siberien.mp4" autoplay loop muted playsinline></video>`;
 }
-  const frameClass = getFrameClass(equippedFrame);
-  const html = `
-    <div class="tft-avatar-container ${frameClass}" title="${avatarTitle}">
-      <span class="tft-avatar-icon" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; ${typeof avatarContent === "number" ? "font-size:14px;" : ""}">${avatarContent}</span>
-      <span class="tft-flag-overlay">${flag || "🇫🇷"}</span>
-    </div>`;
-  setTimeout(() => initAllLottieBadges(), 50);
-  return html;
+const frameClass = getFrameClass(equippedFrame);
+const html = `
+<div class="tft-avatar-container ${frameClass}" title="${avatarTitle}">
+<span class="tft-avatar-icon" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; ${typeof avatarContent === "number" ? "font-size:14px;" : ""}">${avatarContent}</span>
+<span class="tft-flag-overlay">${flag || "🇫🇷"}</span>
+</div>`;
+setTimeout(() => initAllLottieBadges(), 50);
+return html;
 }
+
 function getLargeAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
-  const avatarType = overrideAvatarType || activeAvatarChoice || (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar);
-  const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
-  const frameClass = getFrameClass(equippedFrame);
-  let avatarContent = avatarNum || 1;
-  if (avatarType === "avatar_lottie_palier30") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="black-rainbow-cat.json" style="width:60px; height:60px;"></div>`;
-  else if (avatarType === "avatar_lottie_palier15") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="cat-assistant.json" style="width:60px; height:60px;"></div>`;
-  else if (avatarType === "avatar_tigre") avatarContent = `<video class="tft-avatar-video" src="tiger-siberien.mp4" autoplay loop muted playsinline></video>`;
-  const html = `
-    <div class="tft-avatar-large ${frameClass}">
-      <span class="tft-avatar-large-icon" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; ${typeof avatarContent === "number" ? "font-size:24px;" : ""}">${avatarContent}</span>
-      <span class="tft-flag-large-overlay">${flag || "🇫🇷"}</span>
-    </div>`;
-  setTimeout(() => initAllLottieBadges(), 50);
-  return html;
+const avatarType = overrideAvatarType || activeAvatarChoice || (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar);
+const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
+const frameClass = getFrameClass(equippedFrame);
+let avatarContent = avatarNum || 1;
+if (avatarType === "avatar_lottie_palier30") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="black-rainbow-cat.json" style="width:60px; height:60px;"></div>`;
+else if (avatarType === "avatar_lottie_palier15") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="cat-assistant.json" style="width:60px; height:60px;"></div>`;
+else if (avatarType === "avatar_tigre") avatarContent = `<video class="tft-avatar-video" src="tiger-siberien.mp4" autoplay loop muted playsinline></video>`;
+const html = `
+<div class="tft-avatar-large ${frameClass}">
+<span class="tft-avatar-large-icon" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; ${typeof avatarContent === "number" ? "font-size:24px;" : ""}">${avatarContent}</span>
+<span class="tft-flag-large-overlay">${flag || "🇫🇷"}</span>
+</div>`;
+setTimeout(() => initAllLottieBadges(), 50);
+return html;
 }
 function initAllLottieBadges() {
   if (typeof lottie === "undefined") return;
@@ -190,22 +190,22 @@ function updateProfilePreview() {
   if (previewContainer) previewContainer.innerHTML = getLargeAvatarBadgeHTML(flag, avatarNum, activeAvatarChoice);
 }
 function renderProfileAvatarSelector() {
-  const container = document.getElementById("profile-avatar-selector");
-  if (!container) return;
-  container.innerHTML = "";
-  const addAvatarOption = (id, icon, label) => {
-    const isActive = (activeAvatarChoice === id);
-    const card = document.createElement("div");
-    card.style.cssText = `flex:1; min-width:80px; background:${isActive ? "rgba(0,210,255,0.25)" : "rgba(255,255,255,0.05)"}; border:2px solid ${isActive ? "#00d2ff" : "rgba(255,255,255,0.1)"}; border-radius:8px; padding:4px; text-align:center; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px;`;
-    card.onclick = () => { activeAvatarChoice = id; renderProfileAvatarSelector(); updateProfilePreview(); };
-    card.innerHTML = `<span style="font-size:13px;">${icon}</span><div style="font-size:8px; font-weight:bold; color:#fff;">${label}</div>`;
-    container.appendChild(card);
-  };
-  addAvatarOption("standard", "🔢", "Standard");
-  const unlocked = myProfile.unlocked_items || [];
-  if (unlocked.includes("avatar_lottie_palier15")) addAvatarOption("avatar_lottie_palier15", "🐱", "Chat Assistant");
-  if (unlocked.includes("avatar_lottie_palier30")) addAvatarOption("avatar_lottie_palier30", "🌈", "Chat Arc-en-ciel");
-  if (unlocked.includes("avatar_tigre")) addAvatarOption("avatar_tigre", "🐯", "Tigre de Sibérie");
+const container = document.getElementById("profile-avatar-selector");
+if (!container) return;
+container.innerHTML = "";
+const addAvatarOption = (id, icon, label) => {
+const isActive = (activeAvatarChoice === id);
+const card = document.createElement("div");
+card.style.cssText = `flex:1; min-width:80px; background:${isActive ? "rgba(0,210,255,0.25)" : "rgba(255,255,255,0.05)"}; border:2px solid ${isActive ? "#00d2ff" : "rgba(255,255,255,0.1)"}; border-radius:8px; padding:4px; text-align:center; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px;`;
+card.onclick = () => { activeAvatarChoice = id; renderProfileAvatarSelector(); updateProfilePreview(); };
+card.innerHTML = `<span style="font-size:13px;">${icon}</span><div style="font-size:8px; font-weight:bold; color:#fff;">${label}</div>`;
+container.appendChild(card);
+};
+addAvatarOption("standard", "🔢", "Standard");
+const unlocked = myProfile.unlocked_items || [];
+if (unlocked.includes("avatar_lottie_palier15")) addAvatarOption("avatar_lottie_palier15", "🐱", "Chat Assistant");
+if (unlocked.includes("avatar_lottie_palier30")) addAvatarOption("avatar_lottie_palier30", "🌈", "Chat Arc-en-ciel");
+if (unlocked.includes("avatar_tigre")) addAvatarOption("avatar_tigre", "🐯", "Tigre de Sibérie");
 }
 const TITLE_DISPLAY_NAMES = {
   "title_stalker": "Stalker Numérique",
