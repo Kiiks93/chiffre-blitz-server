@@ -1542,29 +1542,4 @@ function gridCenter() {
   const r = g.getBoundingClientRect();
   return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
 }
-function hookElectricFx() {
-  const targetEl = document.getElementById("game-target-giant");
-  if (targetEl && !targetEl._fxHooked) {
-    targetEl._fxHooked = true;
-    new MutationObserver(() => {
-      if (!isElectricThemeEquipped()) return;
-      const c = gridCenter();
-      spawnLightningBurst(c.x + (Math.random() - 0.5) * 140, c.y + (Math.random() - 0.5) * 140, false);
-      playElectricArcSound();
-    }).observe(targetEl, { childList: true, characterData: true, subtree: true });
-  }
-  const grid = document.getElementById("grid");
-  if (grid && !grid._fxHooked) {
-    grid._fxHooked = true;
-    new MutationObserver(() => {
-      if (!isElectricThemeEquipped()) return;
-      if (grid.classList.contains("combo-perfection")) {
-        const c = gridCenter();
-        for (let i = 0; i < 4; i++) spawnLightningBurst(c.x + (Math.random() - 0.5) * 220, c.y + (Math.random() - 0.5) * 220, true);
-        playElectroExplosionSound();
-      }
-    }).observe(grid, { attributes: true, attributeFilter: ["class"] });
-  }
-}
-hookElectricFx();
 // ===== FIN DU FICHIER jeu.js =====
