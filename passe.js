@@ -18,7 +18,7 @@ container.innerHTML = "";
 const powersDict = i18n[currentLang].powers;
 const cosmeticsDict = {
 theme_glacial: { name: "🧊 Grille Cryo", desc: "Grille aux reflets bleutés glacés" },
-theme_alt: { name: "🎨 Grille Rétro/Dorée", desc: "Tuiles dorées look rétro" },
+theme_alt: { name: "🎨 Grille Rétro/Dorée", desc: "Tuiles dorées look rétro, pluie de pièces au combo" },
 theme_eclair: { name: "⚡ Grille Éclair", desc: "Tuiles jaune électrique crépitantes" },
 theme_obsidian: { name: "🖤 Grille Obsidienne", desc: "Tuiles sombres striées de lueurs pourpres" },
 frame_voltage: { name: "⚡ Cadre Sous Tension", desc: "Éclairs électriques crépitants autour de l'avatar" },
@@ -29,22 +29,24 @@ frame_prism: { name: "✨ Cadre Doré", desc: "Scintillements dorés éblouissan
 const packsDict = {
 pack_haute_tension: { name: "⚡ PACK Haute Tension", desc: "Cadre Sous Tension + Grille Éclair", items: ["frame_voltage", "theme_eclair"], value: 3700 },
 pack_cryo: { name: "🧊 PACK Cryo", desc: "Cadre Givre + Grille Cryo", items: ["frame_givre", "theme_glacial"], value: 3400 },
-pack_obsidienne: { name: "🖤 PACK Obsidienne", desc: "Cadre Obsidienne + Grille Obsidienne", items: ["frame_obsidian", "theme_obsidian"], value: 6300 },
-pack_solaire: { name: "✨ PACK Doré", desc: "Cadre Doré + Grille Dorée", items: ["frame_prism", "theme_alt"], value: 4400 }
+pack_solaire: { name: "✨ PACK Doré", desc: "Cadre Doré + Grille Dorée", items: ["frame_prism", "theme_alt"], value: 4400 },
+pack_obsidienne: { name: "🖤 PACK Obsidienne", desc: "Cadre Obsidienne + Grille Obsidienne", items: ["frame_obsidian", "theme_obsidian"], value: 6300 }
 };
 POWERS_CATALOG.filter(p => p.type === type).forEach(p => {
 const card = document.createElement("div");
 if (type === "packs") {
 const info = packsDict[p.id];
+if (!info) return;
 const ownedAll = info.items.every(i => (myProfile.unlocked_items || []).includes(i));
 const reduc = Math.round((1 - p.price / info.value) * 100);
 card.className = "power-card";
 card.innerHTML = `<h4>${info.name}</h4><p>${info.desc}</p>
 <div style="font-size:9px; color:#aaa; margin-bottom:2px; text-decoration:line-through;">${info.value} 🪙 séparés</div>
 <div style="font-weight:bold; margin-bottom:4px; font-size:11px; color:#00ff88;">${p.price} 🪙 (-${reduc}%)</div>
-${ownedAll ? `<button class="power-btn equip" onclick="equipPack('${p.id}')">Équiper le pack ⚡</button>` : `<button class="power-btn buy" onclick="buyItem('${p.id}')">Acheter</button>`}
+${ownedAll ? `<button class="power-btn equip" onclick="equipPack('${p.id}')">Équiper le pack ⚡</button>` : `<button class="power-btn buy" onclick="buyItem('${p.id}')">Acheter</button>`}`;
 } else if (type === "cosmetics") {
 const info = cosmeticsDict[p.id];
+if (!info) return;
 const unlocked = myProfile.unlocked_items && myProfile.unlocked_items.includes(p.id);
 const equipped = myProfile.inventory && myProfile.inventory.__equipped && Object.values(myProfile.inventory.__equipped).includes(p.id);
 card.className = `power-card ${equipped ? "equipped" : ""}`;
@@ -68,13 +70,6 @@ if (itemObj && myProfile.coins < itemObj.price) { SoundEngine.playError(); showN
 if (socket.connected) socket.emit("buy_item", id);
 }
 function equipCosmetic(id) { if (socket.connected) socket.emit("equip_cosmetic", id); }
-function equipPower(id) { if (socket.connected) socket.emit("equip_power", id); }
-function sanitizeEquippedPowers() {
-if (!myProfile.inventory) myProfile.inventory = {};
-if (myProfile.equippedPower && (myProfile.inventory[myProfile.equippedPower] || 0) <= 0) myProfile.equippedPower = null;
-if (myProfile.equippedPowers && myProfile.equippedPowers.length > 0) myProfile.equippedPowers = myProfile.equippedPowers.filter(p => (myProfile.inventory[p] || 0) > 0);
-if (selectedRankedItems && selectedRankedItems.length > 0) selectedRankedItems = selectedRankedItems.filter(p => (myProfile.inventory[p] || 0) > 0);
-}
 function equipPack(packId) {
 const packs = {
 pack_haute_tension: ["theme_eclair", "frame_voltage"],
@@ -88,8 +83,16 @@ equipCosmetic(items[0]);
 equipCosmetic(items[1]);
 showNotificationToast("✅ Pack équipé : grille + cadre !", "gift");
 }
+function equipPower(id) { if (socket.connected) socket.emit("equip_power", id); }
+function sanitizeEquippedPowers() {
+if (!myProfile.inventory) myProfile.inventory = {};
+if (myProfile.equippedPower && (myProfile.inventory[myProfile.equippedPower] || 0) <= 0) myProfile.equippedPower = null;
+if (myProfile.equippedPowers && myProfile.equippedPowers.length > 0) myProfile.equippedPowers = myProfile.equippedPowers.filter(p => (myProfile.inventory[p] || 0) > 0);
+if (selectedRankedItems && selectedRankedItems.length > 0) selectedRankedItems = selectedRankedItems.filter(p => (myProfile.inventory[p] || 0) > 0);
+}
+
 /* ============================================================
-PASSE DE SAISON
+PASSE DE SAISON « FELIN & NEON »
 ============================================================ */
 const BLITZ_PASS_TIERS = [
 { tier: 1, free: "50 Pièces (🪙)", premium: "Titre exclusif « [ Stalker Numérique ] »" },
