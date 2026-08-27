@@ -175,6 +175,7 @@ function hideComboHUD() {
 function resetCombo() {
   if (typeof clearElectricFx === "function") clearElectricFx();
   if (typeof clearObsidianFx === "function") clearObsidianFx();
+  if (typeof neonResetSpeed === "function") neonResetSpeed();
   clearCracks();
   hideComboHUD();
   if (soloPerfection) return;
@@ -210,6 +211,7 @@ function registerComboHit() {
   }
   lastComboTime = now;
   currentCombo++;
+  if (getEquippedThemeId() === "theme_neon" && typeof neonComboBoost === "function") neonComboBoost();
   if (comboFXEnabled) {
     updateComboHUD();
     if (currentCombo >= 10) SoundEngine.playComboTick(currentCombo);
@@ -251,6 +253,7 @@ function triggerPerfection() {
     for (let i = 0; i < 6; i++) setTimeout(() => spawnObsidianRock(), i * 80);
     setTimeout(() => shakeScreen(1.2), 500);
   }
+  else if (themeNow === "theme_neon") { neonHyperspace(); }
   const crackCount = 18;
   for (let i = 0; i < crackCount; i++) {
     setTimeout(() => {
@@ -361,7 +364,7 @@ function spawnCrack() {
     SoundEngine.playCrack(themeNow);
     return;
   }
-  
+  if (themeNow === "theme_neon") return;
   // ⚡ THÈME ÉCLAIR : arcs fractals (plein écran)
   if (themeNow === "theme_eclair") {
     spawnLightningBurst(false);
@@ -465,6 +468,7 @@ function hideAllScreens() {
   setMenuFX(false);
   hideGameModeBadge();
   resetCombo();
+  if (typeof stopNeonFx === "function") stopNeonFx();
   ["screen-title","screen-menu","screen-solo-menu","screen-avalanche-menu","screen-1v1-hub","screen-1v1-lobby","screen-rooms","screen-join-custom","screen-room-waiting","screen-tournament","screen-game","recap-modal","modal-leaderboard","modal-shop","modal-blitz-pass","countdown-overlay","modal-create-room","modal-launch-ad","simulated-ad-overlay","modal-ranked-loadout","modal-jackpot-wheel","modal-friends","admin-modal"].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = "none"; });
   const rewardPopup = document.getElementById("reward-popup-overlay");
   if (rewardPopup) rewardPopup.style.display = "none";
@@ -915,6 +919,7 @@ socket.on("start_countdown", (data) => {
       current1v1Time = latest1v1StartData ? latest1v1StartData.timeLeft : 30;
       isTimeFrozen = false;
       SoundEngine.startMusic("1v1");
+      if (getEquippedThemeId() === "theme_neon") startNeonFx();
     }
   }, 1000);
 });
@@ -1108,6 +1113,7 @@ function startSoloTraining(mode) {
   preparePowerHUD();
   generateSoloGrid();
   SoundEngine.startMusic("solo");
+  if (getEquippedThemeId() === "theme_neon") startNeonFx();
   soloTimerInterval = setInterval(() => { if (!isTimeFrozen) { soloTimeLeft--; document.getElementById("game-timer").innerText = Math.max(0, soloTimeLeft); if (soloTimeLeft <= 0) endSoloGame(); } }, 1000);
 }
 
@@ -1196,6 +1202,7 @@ function startAvalancheGame(speed, initialCount) {
   renderAvalancheGrid();
   preparePowerHUD();
   SoundEngine.startMusic("solo");
+  if (getEquippedThemeId() === "theme_neon") startNeonFx();
   avalancheTimerInterval = setInterval(() => {
     if (!isTimeFrozen) {
       avalancheTimeLeft--;
