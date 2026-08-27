@@ -558,7 +558,7 @@ function leaveRoomIfInRoom() {
 }
 
 function openLaunchAdModal() { SoundEngine.init(); document.getElementById("modal-launch-ad").style.display = "flex"; }
-function playLaunchAd() { document.getElementById("modal-launch-ad").style.display = "none"; simulateAd(() => { showMainMenu(); }); }
+function playLaunchAd() { document.getElementById("modal-launch-ad").style.display = "none"; simulateAd(() => { launchAdWatched = true; showMainMenu(); }); }
 
 function simulateAd(callback) {
   SoundEngine.stopMusic(false);
