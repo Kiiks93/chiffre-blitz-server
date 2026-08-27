@@ -261,3 +261,135 @@ function playObsidianExplosionSound() {
   noise.connect(filter).connect(noiseGain).connect(_obsAudioCtx.destination);
   noise.start(now); noise.stop(now + 0.6);
 }
+/* ============================================================
+FX 🌈 NÉON — hyperspace starfield (spec starwars_hyperspace)
+============================================================ */
+const NEON_PALETTE = ["#ff007f", "#00e5ff", "#76ff03", "#ffea00", "#9d75cb"];
+let _neonCanvas = null, _neonCtx = null, _neonStars = [], _neonActive = false;
+let _neonSpeed = 1.5, _neonTargetSpeed = 1.5, _neonBoostUntil = 0;
+let _neonAudioCtx = null, _neonPad = null;
+
+function initNeonFx() {
+  if (_neonCanvas) return;
+  _neonCanvas = document.createElement("canvas");
+  _neonCanvas.style.cssText = "position:fixed; inset:0; pointer-events:none; z-index:1;";
+  document.body.appendChild(_neonCanvas);
+  _neonCtx = _neonCanvas.getContext("2d");
+  const resize = () => { _neonCanvas.width = innerWidth; _neonCanvas.height = innerHeight; };
+  resize();
+  window.addEventListener("resize", resize);
+  for (let i = 0; i < 400; i++) _neonStars.push(_neonNewStar(true));
+  requestAnimationFrame(_neonLoop);
+}
+function _neonNewStar(full) {
+  return {
+    x: (Math.random() - 0.5) * 3000,
+    y: (Math.random() - 0.5) * 3000,
+    z: full ? 1 + Math.random() * 999 : 1000,
+    pz: 1000,
+    color: NEON_PALETTE[Math.floor(Math.random() * NEON_PALETTE.length)]
+  };
+}
+function _neonLoop() {
+  requestAnimationFrame(_neonLoop);
+  if (!_neonCtx) return;
+  const w = _neonCanvas.width, h = _neonCanvas.height;
+  if (!_neonActive) { _neonCtx.clearRect(0, 0, w, h); return; }
+  _neonCtx.fillStyle = "rgba(8, 0, 18, 0.4)";
+  _neonCtx.fillRect(0, 0, w, h);
+  const now = Date.now();
+  const target = (now < _neonBoostUntil) ? Math.max(_neonTargetSpeed, 8) : _neonTargetSpeed;
+  _neonSpeed += (target - _neonSpeed) * 0.06;
+  const cx = w / 2, cy = h / 2, f = 300;
+  for (let i = 0; i < _neonStars.length; i++) {
+    const s = _neonStars[i];
+    s.pz = s.z;
+    s.z -= _neonSpeed * 4;
+    if (s.z <= 1) { _neonStars[i] = _neonNewStar(false); continue; }
+    const sx = (s.x / s.z) * f + cx, sy = (s.y / s.z) * f + cy;
+    const px = (s.x / s.pz) * f + cx, py = (s.y / s.pz) * f + cy;
+    if (sx < -60 || sx > w + 60 || sy < -60 || sy > h + 60) { _neonStars[i] = _neonNewStar(false); continue; }
+    const t = 1 - s.z / 1000;
+    _neonCtx.strokeStyle = s.color;
+    _neonCtx.lineWidth = 1 + 2.5 * t;
+    _neonCtx.globalAlpha = 0.35 + 0.65 * t;
+    _neonCtx.beginPath();
+    _neonCtx.moveTo(px, py);
+    _neonCtx.lineTo(sx, sy);
+    _neonCtx.stroke();
+  }
+  _neonCtx.globalAlpha = 1;
+}
+function startNeonFx() {
+  initNeonFx();
+  _neonActive = true;
+  _neonSpeed = 1.5; _neonTargetSpeed = 1.5; _neonBoostUntil = 0;
+  _neonStartPad();
+}
+function stopNeonFx() { _neonActive = false; _neonStopPad(); }
+function neonResetSpeed() { _neonTargetSpeed = 1.5; _neonBoostUntil = 0; }
+function neonComboBoost() {
+  if (!_neonActive) return;
+  _neonTargetSpeed = Math.min(_neonTargetSpeed + 0.6, 14);
+  _neonBoostUntil = Date.now() + 600;
+  _neonSweepCombo();
+}
+function neonHyperspace() {
+  if (!_neonActive) startNeonFx();
+  _neonTargetSpeed = 90;
+  _neonBoostUntil = Date.now() + 3000;
+  _neonSweepHyper();
+}
+function _neonAudio() {
+  if (!_neonAudioCtx) _neonAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (_neonAudioCtx.state === "suspended") _neonAudioCtx.resume();
+  return _neonAudioCtx;
+}
+function _neonStartPad() {
+  if (isMuted() || _neonPad) return;
+  const ctx = _neonAudio();
+  const gain = ctx.createGain(); gain.gain.value = 0.05;
+  const filter = ctx.createBiquadFilter(); filter.type = "lowpass"; filter.frequency.value = 350;
+  const o1 = ctx.createOscillator(); o1.type = "sawtooth"; o1.frequency.value = 110;
+  const o2 = ctx.createOscillator(); o2.type = "sawtooth"; o2.frequency.value = 111.5;
+  o1.connect(filter); o2.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+  o1.start(); o2.start();
+  _neonPad = { o1, o2 };
+}
+function _neonStopPad() {
+  if (!_neonPad) return;
+  try { _neonPad.o1.stop(); _neonPad.o2.stop(); } catch (e) {}
+  _neonPad = null;
+}
+function _neonSweepCombo() {
+  if (isMuted()) return;
+  const ctx = _neonAudio(); const now = ctx.currentTime; const d = 0.6;
+  const osc = ctx.createOscillator(); osc.type = "sawtooth";
+  osc.frequency.setValueAtTime(150, now);
+  osc.frequency.linearRampToValueAtTime(600, now + d * 0.5);
+  osc.frequency.linearRampToValueAtTime(100, now + d);
+  const filter = ctx.createBiquadFilter(); filter.type = "lowpass";
+  filter.frequency.setValueAtTime(400, now);
+  filter.frequency.linearRampToValueAtTime(1800, now + d * 0.5);
+  filter.frequency.linearRampToValueAtTime(300, now + d);
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.18, now);
+  gain.gain.exponentialRampToValueAtTime(0.01, now + d);
+  osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+  osc.start(now); osc.stop(now + d);
+}
+function _neonSweepHyper() {
+  if (isMuted()) return;
+  const ctx = _neonAudio(); const now = ctx.currentTime; const d = 1.6;
+  const osc = ctx.createOscillator(); osc.type = "sawtooth";
+  osc.frequency.setValueAtTime(100, now);
+  osc.frequency.exponentialRampToValueAtTime(1500, now + d);
+  const filter = ctx.createBiquadFilter(); filter.type = "lowpass";
+  filter.frequency.setValueAtTime(300, now);
+  filter.frequency.exponentialRampToValueAtTime(4000, now + d);
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.35, now);
+  gain.gain.exponentialRampToValueAtTime(0.01, now + d);
+  osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+  osc.start(now); osc.stop(now + d);
+}
