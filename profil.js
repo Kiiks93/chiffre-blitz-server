@@ -58,13 +58,6 @@ const POWERS_CATALOG = [
   { id: "theme_glacial", price: 1200, type: "cosmetics" },
   { id: "frame_voltage", price: 2200, type: "cosmetics" },
   { id: "frame_obsidian", price: 4500, type: "cosmetics" }
-  { id: "theme_eclair", price: 1500, type: "cosmetics" },
-  { id: "frame_givre", price: 2200, type: "cosmetics" },
-  { id: "theme_alt", price: 1800, type: "cosmetics" },
-  { id: "frame_prism", price: 2600, type: "cosmetics" },
-  { id: "pack_haute_tension", price: 2900, type: "packs" },
-  { id: "pack_cryo", price: 2700, type: "packs" },
-  { id: "pack_solaire", price: 3200, type: "packs" }
 ];
 
 /* ============================================================
@@ -114,61 +107,57 @@ function getFrameClass(equippedFrame) {
     "frame_prism": "prism-frame",
     "frame_voltage": "voltage-frame",
     "frame_obsidian": "obsidian-frame"
-    "frame_givre": "🧊 Cadre « Givre »",
-    "theme_eclair": "⚡ Thème de Grille Éclair",
-    "theme_neon": "🌈 Thème de Grille Néon Synthwave"
   };
   return FRAME_CLASS_MAP[equippedFrame] || "";
 }
 function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
-const profile = playerObj || myProfile;
-const equippedAvatar = overrideAvatarType || (profile.inventory && profile.inventory.__equipped && profile.inventory.__equipped.avatar);
-const equippedFrame = profile.inventory && profile.inventory.__equipped && profile.inventory.__equipped.frame;
-if (!playerObj) {
-const pill = document.getElementById("user-pill");
-if (pill) {
-pill.classList.remove("silver-frame", "chroma-frame", "prism-frame", "voltage-frame", "obsidian-frame");
-const frameClass = getFrameClass(equippedFrame);
-if (frameClass) pill.classList.add(frameClass);
+  const profile = playerObj || myProfile;
+  const equippedAvatar = overrideAvatarType || (profile.inventory && profile.inventory.__equipped && profile.inventory.__equipped.avatar);
+  const equippedFrame = profile.inventory && profile.inventory.__equipped && profile.inventory.__equipped.frame;
+  if (!playerObj) {
+    const pill = document.getElementById("user-pill");
+    if (pill) {
+      pill.classList.remove("silver-frame", "chroma-frame", "prism-frame", "voltage-frame", "obsidian-frame");
+      const frameClass = getFrameClass(equippedFrame);
+      if (frameClass) pill.classList.add(frameClass);
+    }
+  }
+  let avatarContent = avatarNum || 1;
+  let avatarTitle = `Avatar #${avatarNum || 1}`;
+  if (equippedAvatar === "avatar_lottie_palier30") {
+    avatarTitle = "Chat Arc-en-ciel (Palier 30 - Lottie)";
+    avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="black-rainbow-cat.json" style="width:32px; height:32px;"></div>`;
+  } else if (equippedAvatar === "avatar_lottie_palier15") {
+    avatarTitle = "Chat Assistant (Palier 15 - Lottie)";
+    avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="cat-assistant.json" style="width:32px; height:32px;"></div>`;
+  } else if (equippedAvatar === "avatar_tigre") {
+    avatarTitle = "Tigre de Sibérie (GRAAL - Palier 30)";
+    avatarContent = `<video class="tft-avatar-video" src="tiger-siberien.mp4" autoplay loop muted playsinline></video>`;
+  }
+  const frameClass = getFrameClass(equippedFrame);
+  const html = `
+    <div class="tft-avatar-container ${frameClass}" title="${avatarTitle}">
+      <span class="tft-avatar-icon" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; ${typeof avatarContent === "number" ? "font-size:14px;" : ""}">${avatarContent}</span>
+      <span class="tft-flag-overlay">${flag || "🇫🇷"}</span>
+    </div>`;
+  setTimeout(() => initAllLottieBadges(), 50);
+  return html;
 }
-}
-let avatarContent = avatarNum || 1;
-let avatarTitle = `Avatar #${avatarNum || 1}`;
-if (equippedAvatar === "avatar_lottie_palier30") {
-avatarTitle = "Chat Arc-en-ciel (Palier 30 - Lottie)";
-avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="black-rainbow-cat.json" style="width:32px; height:32px;"></div>`;
-} else if (equippedAvatar === "avatar_lottie_palier15") {
-avatarTitle = "Chat Assistant (Palier 15 - Lottie)";
-avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="cat-assistant.json" style="width:32px; height:32px;"></div>`;
-} else if (equippedAvatar === "avatar_tigre") {
-avatarTitle = "Tigre de Sibérie (GRAAL - Palier 30)";
-avatarContent = `<video class="tft-avatar-video" src="tiger-siberien.mp4" autoplay loop muted playsinline></video>`;
-}
-const frameClass = getFrameClass(equippedFrame);
-const html = `
-<div class="tft-avatar-container ${frameClass}" title="${avatarTitle}">
-<span class="tft-avatar-icon" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; ${typeof avatarContent === "number" ? "font-size:14px;" : ""}">${avatarContent}</span>
-<span class="tft-flag-overlay">${flag || "🇫🇷"}</span>
-</div>`;
-setTimeout(() => initAllLottieBadges(), 50);
-return html;
-}
-
 function getLargeAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
-const avatarType = overrideAvatarType || activeAvatarChoice || (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar);
-const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
-const frameClass = getFrameClass(equippedFrame);
-let avatarContent = avatarNum || 1;
-if (avatarType === "avatar_lottie_palier30") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="black-rainbow-cat.json" style="width:60px; height:60px;"></div>`;
-else if (avatarType === "avatar_lottie_palier15") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="cat-assistant.json" style="width:60px; height:60px;"></div>`;
-else if (avatarType === "avatar_tigre") avatarContent = `<video class="tft-avatar-video" src="tiger-siberien.mp4" autoplay loop muted playsinline></video>`;
-const html = `
-<div class="tft-avatar-large ${frameClass}">
-<span class="tft-avatar-large-icon" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; ${typeof avatarContent === "number" ? "font-size:24px;" : ""}">${avatarContent}</span>
-<span class="tft-flag-large-overlay">${flag || "🇫🇷"}</span>
-</div>`;
-setTimeout(() => initAllLottieBadges(), 50);
-return html;
+  const avatarType = overrideAvatarType || activeAvatarChoice || (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar);
+  const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
+  const frameClass = getFrameClass(equippedFrame);
+  let avatarContent = avatarNum || 1;
+  if (avatarType === "avatar_lottie_palier30") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="black-rainbow-cat.json" style="width:60px; height:60px;"></div>`;
+  else if (avatarType === "avatar_lottie_palier15") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="cat-assistant.json" style="width:60px; height:60px;"></div>`;
+  else if (avatarType === "avatar_tigre") avatarContent = `<video class="tft-avatar-video" src="tiger-siberien.mp4" autoplay loop muted playsinline style="width:60px; height:60px;"></video>`;
+  const html = `
+    <div class="tft-avatar-large ${frameClass}">
+      <span class="tft-avatar-large-icon" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; ${typeof avatarContent === "number" ? "font-size:24px;" : ""}">${avatarContent}</span>
+      <span class="tft-flag-large-overlay">${flag || "🇫🇷"}</span>
+    </div>`;
+  setTimeout(() => initAllLottieBadges(), 50);
+  return html;
 }
 function initAllLottieBadges() {
   if (typeof lottie === "undefined") return;
@@ -190,22 +179,22 @@ function updateProfilePreview() {
   if (previewContainer) previewContainer.innerHTML = getLargeAvatarBadgeHTML(flag, avatarNum, activeAvatarChoice);
 }
 function renderProfileAvatarSelector() {
-const container = document.getElementById("profile-avatar-selector");
-if (!container) return;
-container.innerHTML = "";
-const addAvatarOption = (id, icon, label) => {
-const isActive = (activeAvatarChoice === id);
-const card = document.createElement("div");
-card.style.cssText = `flex:1; min-width:80px; background:${isActive ? "rgba(0,210,255,0.25)" : "rgba(255,255,255,0.05)"}; border:2px solid ${isActive ? "#00d2ff" : "rgba(255,255,255,0.1)"}; border-radius:8px; padding:4px; text-align:center; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px;`;
-card.onclick = () => { activeAvatarChoice = id; renderProfileAvatarSelector(); updateProfilePreview(); };
-card.innerHTML = `<span style="font-size:13px;">${icon}</span><div style="font-size:8px; font-weight:bold; color:#fff;">${label}</div>`;
-container.appendChild(card);
-};
-addAvatarOption("standard", "🔢", "Standard");
-const unlocked = myProfile.unlocked_items || [];
-if (unlocked.includes("avatar_lottie_palier15")) addAvatarOption("avatar_lottie_palier15", "🐱", "Chat Assistant");
-if (unlocked.includes("avatar_lottie_palier30")) addAvatarOption("avatar_lottie_palier30", "🌈", "Chat Arc-en-ciel");
-if (unlocked.includes("avatar_tigre")) addAvatarOption("avatar_tigre", "🐯", "Tigre de Sibérie");
+  const container = document.getElementById("profile-avatar-selector");
+  if (!container) return;
+  container.innerHTML = "";
+  const addAvatarOption = (id, icon, label) => {
+    const isActive = (activeAvatarChoice === id);
+    const card = document.createElement("div");
+    card.style.cssText = `flex:1; min-width:80px; background:${isActive ? "rgba(0,210,255,0.25)" : "rgba(255,255,255,0.05)"}; border:2px solid ${isActive ? "#00d2ff" : "rgba(255,255,255,0.1)"}; border-radius:8px; padding:4px; text-align:center; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px;`;
+    card.onclick = () => { activeAvatarChoice = id; renderProfileAvatarSelector(); updateProfilePreview(); };
+    card.innerHTML = `<span style="font-size:13px;">${icon}</span><div style="font-size:8px; font-weight:bold; color:#fff;">${label}</div>`;
+    container.appendChild(card);
+  };
+  addAvatarOption("standard", "🔢", "Standard");
+  const unlocked = myProfile.unlocked_items || [];
+  if (unlocked.includes("avatar_lottie_palier15")) addAvatarOption("avatar_lottie_palier15", "🐱", "Chat Assistant");
+  if (unlocked.includes("avatar_lottie_palier30")) addAvatarOption("avatar_lottie_palier30", "🌈", "Chat Arc-en-ciel");
+  if (unlocked.includes("avatar_tigre")) addAvatarOption("avatar_tigre", "🐯", "Tigre de Sibérie");
 }
 const TITLE_DISPLAY_NAMES = {
   "title_stalker": "Stalker Numérique",
@@ -307,7 +296,6 @@ function saveLocalPreferences() {
 }
 
 let lastDisplayed = { coins: null, trophies: null, points: null };
-// recapActive est déjà déclaré en haut du fichier (ligne ~42)
 
 function tweenNumber(el, from, to, duration = 900) {
   if (!el) return;
@@ -340,7 +328,6 @@ function updateEconomyUI() {
   const pointsEl = document.getElementById("user-points-display");
   const rankEl = document.getElementById("user-rank-display");
 
-  // 🧊 Pendant le récap : compteurs FIGÉS (pas de spoiler en arrière-plan)
   if (!recapActive) {
     if (rankEl) rankEl.innerText = getRankName(myProfile.points);
 
@@ -386,7 +373,7 @@ function isProfileValid() {
 }
 
 /* ============================================================
-COMPTE (roue crantée)
+COMPTE (roue crantée) + CENTRE DE CONTRÔLE
 ============================================================ */
 function switchAccount() {
   localStorage.removeItem('cb_username');
@@ -401,7 +388,7 @@ function switchAccount() {
   myProfile.secretCode = '';
   myProfile.region = 'Hauts-de-France';
   myProfile.avatar = 1;
-  myProfile.flag = '🇫🇷';
+  myProfile.flag = '🇫';
   myProfile.inventory = { __equipped: {} };
   myProfile.unlocked_items = [];
   renderAccountContent();
@@ -504,29 +491,30 @@ socket.on('delete_account_result', (res) => {
   }
 });
 function openControlCenter() {
-renderControlCenter();
-document.getElementById('modal-control-center').style.display = 'flex';
+  renderControlCenter();
+  document.getElementById('modal-control-center').style.display = 'flex';
 }
 function closeControlCenter() {
-const m = document.getElementById('modal-control-center');
-if (m) m.style.display = 'none';
+  const m = document.getElementById('modal-control-center');
+  if (m) m.style.display = 'none';
 }
 function renderControlCenter() {
-const isEN = (typeof currentLang !== 'undefined' && currentLang === 'en');
-const titleEl = document.getElementById('cc-title');
-if (titleEl) titleEl.innerText = isEN ? "⚙️ SETTINGS MANAGEMENT" : "⚙️ GESTION DES PARAMÈTRES";
-const langEl = document.getElementById('cc-lang-text');
-if (langEl) langEl.innerText = (isEN ? "Language : " : "Langue : ") + (isEN ? "EN" : "FR");
-const soundEl = document.getElementById('cc-sound-text');
-const muteBtn = document.getElementById('mute-btn');
-if (soundEl && muteBtn) soundEl.innerText = (isEN ? "Sound : " : "Son : ") + (muteBtn.innerText.includes('🔇') ? (isEN ? "Muted" : "Coupé") : (isEN ? "On" : "Activé"));
-const customEl = document.getElementById('cc-custom-btn');
-if (customEl) customEl.innerText = isEN ? "🎨 Customization" : "🎨 Personnalisation";
-const accountEl = document.getElementById('cc-account-btn');
-if (accountEl) accountEl.innerText = isEN ? "👤 Account management" : "👤 Gestion du compte";
-const btnLabel = document.getElementById('cc-btn-label');
-if (btnLabel) btnLabel.innerText = isEN ? "Settings" : "Paramètres";
+  const isEN = (typeof currentLang !== 'undefined' && currentLang === 'en');
+  const titleEl = document.getElementById('cc-title');
+  if (titleEl) titleEl.innerText = isEN ? "⚙️ SETTINGS MANAGEMENT" : "⚙️ GESTION DES PARAMÈTRES";
+  const langEl = document.getElementById('cc-lang-text');
+  if (langEl) langEl.innerText = (isEN ? "Language : " : "Langue : ") + (isEN ? "EN" : "FR");
+  const soundEl = document.getElementById('cc-sound-text');
+  const muteBtn = document.getElementById('mute-btn');
+  if (soundEl && muteBtn) soundEl.innerText = (isEN ? "Sound : " : "Son : ") + (muteBtn.innerText.includes('🔇') ? (isEN ? "Muted" : "Coupé") : (isEN ? "On" : "Activé"));
+  const customEl = document.getElementById('cc-custom-btn');
+  if (customEl) customEl.innerText = isEN ? "🎨 Customization" : "🎨 Personnalisation";
+  const accountEl = document.getElementById('cc-account-btn');
+  if (accountEl) accountEl.innerText = isEN ? "👤 Account management" : "👤 Gestion du compte";
+  const btnLabel = document.getElementById('cc-btn-label');
+  if (btnLabel) btnLabel.innerText = isEN ? "Settings" : "Paramètres";
 }
+
 /* ============================================================
 FENÊTRE PROFIL / PERSONNALISATION
 ============================================================ */
@@ -572,7 +560,7 @@ function promptProfileChange() {
   document.getElementById("username-input").disabled = true;
   if (myProfile.region) document.getElementById("region-input").value = myProfile.region;
   document.getElementById("avatar-input").value = myProfile.avatar || 1;
-  document.getElementById("flag-input").value = myProfile.flag || "🇫🇷";
+  document.getElementById("flag-input").value = myProfile.flag || "🇫";
   const equippedAvatar = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar;
   activeAvatarChoice = equippedAvatar || "standard";
   renderProfileCustomizationMenus();
