@@ -186,7 +186,11 @@ function updateProfilePreview() {
   const rawFlag = document.getElementById("flag-input").value;
   const flag = getFlagEmoji(rawFlag);
   const previewContainer = document.getElementById("modal-avatar-preview");
-  if (previewContainer) previewContainer.innerHTML = getLargeAvatarBadgeHTML(flag, avatarNum, activeAvatarChoice);
+  if (previewContainer) {
+    previewContainer.innerHTML = getLargeAvatarBadgeHTML(flag, avatarNum, activeAvatarChoice);
+    previewContainer.style.cursor = "zoom-in";
+    previewContainer.onclick = showAvatarZoom;
+  }
 }
 function renderProfileAvatarSelector() {
   const container = document.getElementById("profile-avatar-selector");
@@ -206,6 +210,76 @@ function renderProfileAvatarSelector() {
   if (unlocked.includes("avatar_lottie_palier30")) addAvatarOption("avatar_lottie_palier30", "🌈", "Chat Arc-en-ciel");
   if (unlocked.includes("avatar_tigre")) addAvatarOption("avatar_tigre", "🐯", "Tigre de Sibérie");
 }
+/* ---------- PACKS (grille + cadre en 1 clic) ---------- */
+const PACKS_LIST = [
+  { id: "pack_haute_tension", name: "⚡ Haute Tension", theme: "theme_eclair", frame: "frame_voltage" },
+  { id: "pack_cryo", name: "🧊 Cryo", theme: "theme_glacial", frame: "frame_givre" },
+  { id: "pack_solaire", name: "✨ Doré", theme: "theme_alt", frame: "frame_prism" },
+  { id: "pack_obsidienne", name: "🖤 Obsidienne", theme: "theme_obsidian", frame: "frame_obsidian" },
+  { id: "pack_neon", name: "🌈 Néon", theme: "theme_neon", frame: "frame_chroma" }
+];
+function ensurePackSelector() {
+  if (document.getElementById("profile-pack-selector")) return;
+  const avatarSel = document.getElementById("profile-avatar-selector");
+  if (!avatarSel || !avatarSel.parentElement) return;
+  const label = document.createElement("div");
+  label.style.cssText = "font-size:10px; font-weight:900; color:#00d2ff; margin:8px 0 4px 0;";
+  label.innerText = "🎁 PACKS (grille + cadre)";
+  const row = document.createElement("div");
+  row.id = "profile-pack-selector";
+  row.style.cssText = "display:flex; gap:4px; flex-wrap:wrap; margin-bottom:8px;";
+  avatarSel.parentElement.insertBefore(label, avatarSel.nextSibling);
+  avatarSel.parentElement.insertBefore(row, label.nextSibling);
+}
+function renderProfilePackSelector() {
+  const container = document.getElementById("profile-pack-selector");
+  if (!container) return;
+  container.innerHTML = "";
+  const unlocked = myProfile.unlocked_items || [];
+  const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
+  const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
+  PACKS_LIST.forEach(pack => {
+    const owned = unlocked.includes(pack.theme) && unlocked.includes(pack.frame);
+    const isActive = equippedTheme === pack.theme && equippedFrame === pack.frame;
+    const btn = document.createElement("div");
+    btn.style.cssText = `flex:1; min-width:70px; text-align:center; padding:6px 2px; border-radius:8px; cursor:${owned ? "pointer" : "not-allowed"}; background:${isActive ? "rgba(0,210,255,0.25)" : "rgba(255,255,255,0.05)"}; border:2px solid ${isActive ? "#00d2ff" : "rgba(255,255,255,0.1)"}; opacity:${owned ? "1" : "0.45"}; font-size:9px; font-weight:bold; color:#fff;`;
+    btn.innerHTML = `${owned ? "" : "🔒 "}${pack.name}`;
+    btn.onclick = () => {
+      if (!owned) { showNotificationToast("🔒 Pack non possédé ! Direction la boutique 🛍️", "announcement"); return; }
+      const themeSelect = document.getElementById("theme-input");
+      const frameSelect = document.getElementById("frame-input");
+      if (themeSelect) themeSelect.value = pack.theme;
+      if (frameSelect) frameSelect.value = pack.frame;
+      renderProfilePackSelector();
+      updateProfilePreview();
+    };
+    container.appendChild(btn);
+  });
+}
+
+/* ---------- AVATAR ZOOM (clic sur l'aperçu) ---------- */
+function showAvatarZoom() {
+  let overlay = document.getElementById("avatar-zoom-overlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "avatar-zoom-overlay";
+    overlay.className = "modal-overlay";
+    overlay.style.background = "rgba(0,0,0,0.88)";
+    overlay.onclick = () => { overlay.style.display = "none"; };
+    overlay.innerHTML = `<div style="text-align:center;">
+      <div id="avatar-zoom-content" style="transform:scale(2.1); pointer-events:none;"></div>
+      <div style="margin-top:90px; font-size:11px; color:#aaa; font-weight:bold;">🔍 Touche pour fermer</div>
+    </div>`;
+    document.body.appendChild(overlay);
+  }
+  const preview = document.getElementById("modal-avatar-preview");
+  const content = document.getElementById("avatar-zoom-content");
+  content.innerHTML = preview ? preview.innerHTML : "";
+  content.querySelectorAll("[data-lottie-loaded]").forEach(el => el.removeAttribute("data-lottie-loaded"));
+  overlay.style.display = "flex";
+  setTimeout(() => initAllLottieBadges(), 50);
+}
+
 const TITLE_DISPLAY_NAMES = {
   "title_stalker": "Stalker Numérique",
   "title_felin": "Réflexe Félin",
@@ -283,6 +357,8 @@ function renderProfileCustomizationMenus() {
     });
   }
   renderProfileAvatarSelector();
+  ensurePackSelector();
+  renderProfilePackSelector();
 }
 
 /* ============================================================
