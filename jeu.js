@@ -928,6 +928,7 @@ function getWinnerAvatarShowcaseHTML(playerObj) {
   let iconContent = playerObj.avatar || 1;
   if (equippedAvatar === "avatar_lottie_palier30") iconContent = `<div class="lottie-avatar-large" data-lottie-url="black-rainbow-cat.json" style="width:75px; height:75px;"></div>`;
   else if (equippedAvatar === "avatar_lottie_palier15") iconContent = `<div class="lottie-avatar-large" data-lottie-url="cat-assistant.json" style="width:75px; height:75px;"></div>`;
+  else if (equippedAvatar === "avatar_tigre") iconContent = `<video class="tft-avatar-video" src="tiger-siberien.mp4" autoplay loop muted playsinline style="width:75px; height:75px;"></video>`;
   const frameClass = getFrameClass(equippedFrame);
   setTimeout(() => initAllLottieBadges(), 50);
   return `<div class="victory-avatar-showcase"><div class="victory-badge-large ${frameClass}" style="display:flex; align-items:center; justify-content:center;"><span style="font-weight:900; color:#fff;">${iconContent}</span><span style="position:absolute; bottom:-2px; right:-2px; font-size:14px; background:#0f051d; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; border:2px solid #fff; z-index:3;">${playerObj.flag || "🇫🇷"}</span></div><div style="font-size:13px; font-weight:900; color:#f8b500; margin-top:4px;">${playerObj.username || "Joueur"} TRIOMPHE !</div></div>`;
