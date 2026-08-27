@@ -1075,3 +1075,23 @@ MOBILE : header compact + grille grande
 #grid .tile, #grid .tile.empty { aspect-ratio: 1 / 1.15 !important; font-size: clamp(26px, 8vw, 34px) !important; }
 #game-mode-badge { font-size: 11px !important; padding: 4px 12px !important; letter-spacing: 1px !important; }
 }
+/* ---------- FIX BONUS SUR TOUTES LES GRILLES ---------- */
+.tile.highlight-target {
+background: radial-gradient(circle, #00ff88 0%, #00d2ff 100%) !important;
+color: #000 !important;
+border-color: #00ff88 !important;
+box-shadow: 0 0 20px #00ff88, 0 0 40px rgba(0, 255, 136, 0.6) !important;
+transform: scale(1.15);
+animation: highlightPulse 0.5s ease infinite alternate;
+z-index: 10;
+position: relative;
+}
+@keyframes highlightPulse {
+0% { box-shadow: 0 0 20px #00ff88, 0 0 40px rgba(0, 255, 136, 0.4); }
+100% { box-shadow: 0 0 30px #00ff88, 0 0 60px rgba(0, 255, 136, 0.8); }
+}
+.tile.frozen, .game-timer.frozen {
+background: rgba(0, 210, 255, 0.3) !important;
+border-color: #00d2ff !important;
+box-shadow: 0 0 15px rgba(0, 210, 255, 0.6) !important;
+}
