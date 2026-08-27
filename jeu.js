@@ -370,6 +370,12 @@ function spawnCrack() {
     return;
   }
   
+  // 🖤 THÈME OBSIDIENNE : rochers qui tombent
+if (themeNow === "theme_obsidian") {
+  const c = gridCenter();
+  spawnObsidianRock(c.x, c.y);
+  return;
+}
   // Autres thèmes : fissures SVG
   const layer = ensureCracksLayer();
   if (layer.childElementCount > 20) layer.removeChild(layer.firstChild);
@@ -1541,5 +1547,197 @@ function gridCenter() {
   if (!g) return { x: innerWidth / 2, y: innerHeight / 2 };
   const r = g.getBoundingClientRect();
   return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+}
+/* ============================================================
+FX OBSIDIENNE (rochers + débris + sons synthétisés)
+============================================================ */
+let _obsCanvas = null, _obsCtx = null, _obsRocks = [], _obsDebris = [];
+let _obsAudioCtx = null;
+let _lastRockTime = 0;
+
+function isObsidianThemeEquipped() {
+  return !!(myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme === "theme_obsidian");
+}
+
+function initObsidianFx() {
+  if (_obsCanvas) return;
+  _obsCanvas = document.createElement("canvas");
+  _obsCanvas.style.cssText = "position:fixed; inset:0; pointer-events:none; z-index:1;";
+  document.body.appendChild(_obsCanvas);
+  _obsCtx = _obsCanvas.getContext("2d");
+  const resize = () => { _obsCanvas.width = innerWidth; _obsCanvas.height = innerHeight; };
+  resize();
+  window.addEventListener("resize", resize);
+  requestAnimationFrame(obsLoop);
+}
+
+function obsLoop() {
+  requestAnimationFrame(obsLoop);
+  if (!_obsCtx) return;
+  _obsCtx.clearRect(0, 0, _obsCanvas.width, _obsCanvas.height);
+  
+  // Update rocks
+  _obsRocks = _obsRocks.filter(r => r.active);
+  for (const r of _obsRocks) {
+    r.vy += 0.22; // gravity
+    r.y += r.vy;
+    r.rotation += r.rotationSpeed;
+    
+    // Draw rock
+    _obsCtx.save();
+    _obsCtx.translate(r.x, r.y);
+    _obsCtx.rotate(r.rotation);
+    _obsCtx.shadowColor = "#ff2a4d";
+    _obsCtx.shadowBlur = 20;
+    _obsCtx.beginPath();
+    _obsCtx.moveTo(-34, -42.5);
+    _obsCtx.lineTo(42.5, -34);
+    _obsCtx.lineTo(59.5, 17);
+    _obsCtx.lineTo(25.5, 42.5);
+    _obsCtx.lineTo(-34, 42.5);
+    _obsCtx.lineTo(-59.5, 0);
+    _obsCtx.closePath();
+    _obsCtx.fillStyle = "#14080a";
+    _obsCtx.fill();
+    _obsCtx.strokeStyle = "#ff2a4d";
+    _obsCtx.lineWidth = 3;
+    _obsCtx.stroke();
+    _obsCtx.restore();
+    
+    // Landing detection
+    if (r.y >= r.landingY && r.active) {
+      r.active = false;
+      spawnObsidianDebris(r.x, r.landingY);
+      playObsidianImpactSound();
+    }
+  }
+  
+  // Update debris
+  _obsDebris = _obsDebris.filter(d => d.alpha > 0.05);
+  for (const d of _obsDebris) {
+    d.vy += 0.15;
+    d.x += d.vx;
+    d.y += d.vy;
+    d.alpha -= 0.015;
+    _obsCtx.save();
+    _obsCtx.globalAlpha = d.alpha;
+    _obsCtx.fillStyle = "#ff2a4d";
+    _obsCtx.fillRect(d.x - d.size/2, d.y - d.size/2, d.size, d.size);
+    _obsCtx.restore();
+  }
+}
+
+function spawnObsidianRock(cx, cy) {
+  initObsidianFx();
+  const now = Date.now();
+  if (now - _lastRockTime < 120) return;
+  _lastRockTime = now;
+  
+  const rock = {
+    x: cx + (Math.random() - 0.5) * 200,
+    y: cy - 120,
+    vy: 0.4,
+    rotation: (Math.random() - 0.5) * 0.5,
+    rotationSpeed: (Math.random() - 0.5) * 0.03,
+    landingY: cy + (Math.random() - 0.5) * 100,
+    active: true
+  };
+  _obsRocks.push(rock);
+}
+
+function spawnObsidianDebris(x, y) {
+  for (let i = 0; i < 12; i++) {
+    _obsDebris.push({
+      x: x,
+      y: y,
+      vx: (Math.random() - 0.5) * 16,
+      vy: -6 + Math.random() * 5,
+      size: 2 + Math.random() * 5,
+      alpha: 1
+    });
+  }
+}
+
+function initObsidianAudio() {
+  if (!_obsAudioCtx) _obsAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (_obsAudioCtx.state === "suspended") _obsAudioCtx.resume();
+}
+
+function playObsidianImpactSound() {
+  if (isMuted()) return;
+  initObsidianAudio();
+  const now = _obsAudioCtx.currentTime;
+  
+  // Layer 1: heavy impact thud (sine 80Hz → 15Hz, 0.5s)
+  const osc1 = _obsAudioCtx.createOscillator();
+  const gain1 = _obsAudioCtx.createGain();
+  osc1.type = "sine";
+  osc1.frequency.setValueAtTime(80, now);
+  osc1.frequency.exponentialRampToValueAtTime(15, now + 0.5);
+  gain1.gain.setValueAtTime(0.6, now);
+  gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+  osc1.connect(gain1).connect(_obsAudioCtx.destination);
+  osc1.start(now);
+  osc1.stop(now + 0.5);
+  
+  // Layer 2: obsidian crystal click (triangle 2400Hz → 400Hz, 0.06s)
+  const osc2 = _obsAudioCtx.createOscillator();
+  const gain2 = _obsAudioCtx.createGain();
+  osc2.type = "triangle";
+  osc2.frequency.setValueAtTime(2400, now);
+  osc2.frequency.exponentialRampToValueAtTime(400, now + 0.06);
+  gain2.gain.setValueAtTime(0.4, now);
+  gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
+  osc2.connect(gain2).connect(_obsAudioCtx.destination);
+  osc2.start(now);
+  osc2.stop(now + 0.06);
+  
+  // Layer 3: explosion sub-bass (sine 120Hz → 20Hz, 0.9s)
+  const osc3 = _obsAudioCtx.createOscillator();
+  const gain3 = _obsAudioCtx.createGain();
+  osc3.type = "sine";
+  osc3.frequency.setValueAtTime(120, now);
+  osc3.frequency.exponentialRampToValueAtTime(20, now + 0.9);
+  gain3.gain.setValueAtTime(0.8, now);
+  gain3.gain.exponentialRampToValueAtTime(0.01, now + 0.9);
+  osc3.connect(gain3).connect(_obsAudioCtx.destination);
+  osc3.start(now);
+  osc3.stop(now + 0.9);
+}
+
+function playObsidianExplosionSound() {
+  if (isMuted()) return;
+  initObsidianAudio();
+  const now = _obsAudioCtx.currentTime;
+  
+  // Sub-bass explosion
+  const osc = _obsAudioCtx.createOscillator();
+  const gain = _obsAudioCtx.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(120, now);
+  osc.frequency.exponentialRampToValueAtTime(20, now + 0.9);
+  gain.gain.setValueAtTime(1.0, now);
+  gain.gain.exponentialRampToValueAtTime(0.01, now + 0.9);
+  osc.connect(gain).connect(_obsAudioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.9);
+  
+  // White noise burst (filtered)
+  const bufferSize = _obsAudioCtx.sampleRate * 0.6;
+  const buffer = _obsAudioCtx.createBuffer(1, bufferSize, _obsAudioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.5;
+  const noise = _obsAudioCtx.createBufferSource();
+  noise.buffer = buffer;
+  const noiseGain = _obsAudioCtx.createGain();
+  const filter = _obsAudioCtx.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.setValueAtTime(400, now);
+  filter.frequency.exponentialRampToValueAtTime(50, now + 0.6);
+  noiseGain.gain.setValueAtTime(0.8, now);
+  noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+  noise.connect(filter).connect(noiseGain).connect(_obsAudioCtx.destination);
+  noise.start(now);
+  noise.stop(now + 0.6);
 }
 // ===== FIN DU FICHIER jeu.js =====
