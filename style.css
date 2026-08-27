@@ -130,7 +130,15 @@ animation: prismShimmer 3s ease-in-out infinite;
 animation: electricPlasma 2s infinite linear !important;
 border-color: #00d2ff !important;
 }
-
+/* ---------- CADRE GIVRE ---------- */
+.user-pill.givre-frame, .user-pill:has(.tft-avatar-container.givre-frame) {
+border-color: #bfefff !important;
+box-shadow: 0 0 14px rgba(191, 239, 255, 0.8), inset 0 0 6px rgba(191, 239, 255, 0.4) !important;
+background: linear-gradient(135deg, rgba(10, 42, 77, 0.9), rgba(14, 165, 201, 0.9)) !important;
+}
+.tft-avatar-container.givre-frame { border-color: #bfefff !important; box-shadow: 0 0 14px rgba(191, 239, 255, 0.9) !important; background: linear-gradient(135deg, #0a2a4d, #0ea5c9); }
+.tft-avatar-large.givre-frame { border-color: #bfefff !important; box-shadow: 0 0 22px rgba(191, 239, 255, 0.9) !important; background: linear-gradient(135deg, #0a2a4d, #0ea5c9); }
+.victory-badge-large.givre-frame { background: linear-gradient(135deg, #0a2a4d, #bfefff); border-color: #bfefff; box-shadow: 0 0 30px rgba(191, 239, 255, 0.8), 0 0 15px #fff; }
 /* ============================================================
 AVATARS TFT
 ============================================================ */
@@ -656,7 +664,20 @@ transition: transform 0.4s ease-out, opacity 0.4s ease-out;
 .grid.effect-micro .tile { transform: scale(0.65); }
 .grid.effect-eclipse { filter: brightness(0) blur(8px); pointer-events: none; }
 #game-timer.frozen { color: #00d2ff !important; text-shadow: 0 0 8px #00d2ff; animation: pulseAudio 0.5s infinite; }
-
+/* ---------- THÈME ÉCLAIR ---------- */
+.tile.eclair-theme {
+background: linear-gradient(135deg, #282805, #fff34d) !important;
+border-color: #fff34d !important;
+color: #111 !important;
+box-shadow: 0 0 12px rgba(255, 243, 77, 0.6);
+}
+/* ---------- THÈME NÉON SYNTHWAVE ---------- */
+.tile.neon-theme {
+background: linear-gradient(135deg, #2b0033, #ff007f) !important;
+border-color: #ff00c8 !important;
+color: #fff !important;
+box-shadow: 0 0 12px rgba(255, 0, 200, 0.6);
+}
 /* ============================================================
 MATCHMAKING / COUNTDOWN / PUB
 ============================================================ */
