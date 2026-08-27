@@ -1535,4 +1535,3 @@ function playObsidianExplosionSound() {
   noise.start(now); noise.stop(now + 0.6);
 }
 // ===== FIN DU FICHIER jeu.js =====
-// ===== FIN DU FICHIER jeu.js =====
