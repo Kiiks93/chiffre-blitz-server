@@ -636,7 +636,6 @@ function saveProfileFromModal() {
   registerIfPossible();
   SoundEngine.init();
 }
-function saveAvatarChoiceOnly() { saveProfileFromModal(); }
 function registerIfPossible() {
   if (isProfileValid() && socket.connected) {
     socket.emit("register_player", {
