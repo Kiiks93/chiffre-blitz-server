@@ -50,7 +50,14 @@ const ITEM_CATALOG = {
   title_neon: { sources: ["pass"], type: "title", permanent: true },
   title_spectre: { sources: ["pass"], type: "title", permanent: true },
   title_supreme: { sources: ["pass"], type: "title", permanent: true },
-  title_champion: { sources: ["pass"], type: "title", permanent: true }
+  title_champion: { sources: ["pass"], type: "title", permanent: true },
+  theme_eclair: { sources: ["shop"], type: "theme", price: 1500, permanent: true },
+  frame_givre: { sources: ["shop"], type: "frame", price: 2200, permanent: true },
+  theme_neon: { sources: ["pass"], type: "theme", permanent: true },
+  avatar_tigre: { sources: ["pass"], type: "avatar", permanent: true },
+  pack_haute_tension: { sources: ["shop"], type: "pack", price: 2900, permanent: true, items: ["frame_voltage", "theme_eclair"] },
+  pack_cryo: { sources: ["shop"], type: "pack", price: 2700, permanent: true, items: ["frame_givre", "theme_glacial"] },
+  pack_solaire: { sources: ["shop"], type: "pack", price: 3200, permanent: true, items: ["frame_prism", "theme_alt"] }
 };
 
 /* ============================================================
@@ -119,6 +126,7 @@ function getCosmeticCategory(itemId) {
   if (itemId.startsWith("frame_")) return "frame";
   if (itemId.startsWith("title_")) return "title";
   if (itemId.startsWith("theme_")) return "theme";
+  if (itemId.startsWith("pack_")) return "pack";
   return null;
 }
 
@@ -303,24 +311,31 @@ io.on('connection', (socket) => {
 
   /* ---------- BOUTIQUE ---------- */
   socket.on('buy_item', async (itemId) => {
-    const player = activePlayers[socket.id];
-    if (!player) return;
-    const item = ITEM_CATALOG[itemId];
-    if (!item || !isShopItem(itemId)) { socket.emit('room_error', "Cet objet ne peut pas etre achete en boutique."); return; }
-    if (player.coins < item.price) { socket.emit('room_error', "Tu n'as pas assez de pieces !"); return; }
-    player.inventory = player.inventory || {};
-    player.unlocked_items = player.unlocked_items || [];
-    if (item.type === 'power') {
-      player.coins -= item.price;
-      player.inventory[itemId] = (player.inventory[itemId] || 0) + 1;
-    } else if (item.permanent) {
-      if (player.unlocked_items.includes(itemId)) { socket.emit('room_error', "Tu possedes deja cet objet."); return; }
-      player.coins -= item.price;
-      player.unlocked_items.push(itemId);
-    } else { return; }
-    await savePlayerToSupabase(socket.id);
-    socket.emit('player_registered', player);
-  });
+  const player = activePlayers[socket.id];
+  if (!player) return;
+  const item = ITEM_CATALOG[itemId];
+  if (!item || !isShopItem(itemId)) { socket.emit('room_error', "Cet objet ne peut pas etre achete en boutique."); return; }
+  if (player.coins < item.price) { socket.emit('room_error', "Tu n'as pas assez de pieces !"); return; }
+  player.inventory = player.inventory || {};
+  player.unlocked_items = player.unlocked_items || [];
+  if (item.type === 'power') {
+    player.coins -= item.price;
+    player.inventory[itemId] = (player.inventory[itemId] || 0) + 1;
+  } else if (item.type === 'pack') {
+    const ownedAll = item.items.every(i => player.unlocked_items.includes(i));
+    if (ownedAll) { socket.emit('room_error', "Tu possedes deja tous les objets de ce pack."); return; }
+    player.coins -= item.price;
+    item.items.forEach(i => {
+      if (!player.unlocked_items.includes(i)) player.unlocked_items.push(i);
+    });
+  } else if (item.permanent) {
+    if (player.unlocked_items.includes(itemId)) { socket.emit('room_error', "Tu possedes deja cet objet."); return; }
+    player.coins -= item.price;
+    player.unlocked_items.push(itemId);
+  } else { return; }
+  await savePlayerToSupabase(socket.id);
+  socket.emit('player_registered', player);
+});
 
   socket.on('equip_power', async (powerId) => {
     const player = activePlayers[socket.id];
@@ -908,7 +923,7 @@ function applyPassReward(p, tier, track) {
     else if (tier === 7) { if (!p.unlocked_items.includes('title_neon')) p.unlocked_items.push('title_neon'); }
     else if (tier === 8) p.inventory['nova'] = (p.inventory['nova'] || 0) + 2;
     else if (tier === 9) p.coins = (p.coins || 0) + 200;
-    else if (tier === 10) { if (!p.unlocked_items.includes('theme_alt')) p.unlocked_items.push('theme_alt'); }
+    else if (tier === 10) { if (!p.unlocked_items.includes('theme_neon')) p.unlocked_items.push('theme_neon'); }
     else if (tier === 11) p.coins = (p.coins || 0) + 120;
     else if (tier === 12) p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 1;
     else if (tier === 13) { if (!p.unlocked_items.includes('title_spectre')) p.unlocked_items.push('title_spectre'); }
@@ -923,12 +938,12 @@ function applyPassReward(p, tier, track) {
     else if (tier === 22) p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 3;
     else if (tier === 23) { if (!p.unlocked_items.includes('title_supreme')) p.unlocked_items.push('title_supreme'); }
     else if (tier === 24) p.coins = (p.coins || 0) + 300;
-    else if (tier === 25) { if (!p.unlocked_items.includes('frame_prism')) p.unlocked_items.push('frame_prism'); }
+    else if (tier === 25) { if (!p.unlocked_items.includes('avatar_lottie_palier30')) p.unlocked_items.push('avatar_lottie_palier30'); }
     else if (tier === 26) p.coins = (p.coins || 0) + 260;
     else if (tier === 27) p.inventory['nova'] = (p.inventory['nova'] || 0) + 4;
     else if (tier === 28) p.coins = (p.coins || 0) + 400;
     else if (tier === 29) p.coins = (p.coins || 0) + 500;
-    else if (tier === 30) { p.coins = (p.coins || 0) + 1000; if (!p.unlocked_items.includes('avatar_lottie_palier30')) p.unlocked_items.push('avatar_lottie_palier30'); }
+    else if (tier === 30) { p.coins = (p.coins || 0) + 1000; if (!p.unlocked_items.includes('avatar_tigre')) p.unlocked_items.push('avatar_tigre'); }
   }
 }
 
