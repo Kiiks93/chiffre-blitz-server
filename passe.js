@@ -11,17 +11,37 @@ document.getElementById("shop-tab-bonus").classList.toggle("active", type === "b
 document.getElementById("shop-tab-malus").classList.toggle("active", type === "malus");
 const cosmeticsTabBtn = document.getElementById("shop-tab-cosmetics");
 if (cosmeticsTabBtn) cosmeticsTabBtn.classList.toggle("active", type === "cosmetics");
+const packsTabBtn = document.getElementById("shop-tab-packs");
+if (packsTabBtn) packsTabBtn.classList.toggle("active", type === "packs");
 const container = document.getElementById("shop-container");
 container.innerHTML = "";
 const powersDict = i18n[currentLang].powers;
 const cosmeticsDict = {
-theme_glacial: { name: "🧊 Thème Cryo", desc: "Grille aux reflets bleutés glacés" },
+theme_glacial: { name: "🧊 Grille Cryo", desc: "Grille aux reflets bleutés glacés" },
+theme_alt: { name: "🎨 Grille Rétro/Dorée", desc: "Tuiles dorées look rétro" },
+theme_eclair: { name: "⚡ Grille Éclair", desc: "Tuiles jaune électrique crépitantes" },
 frame_voltage: { name: "⚡ Cadre Sous Tension", desc: "Éclairs électriques crépitants autour de l'avatar" },
-frame_obsidian: { name: "🖤 Cadre Obsidienne", desc: "Cadre sombre strié de lueurs pourpres" }
+frame_obsidian: { name: "🖤 Cadre Obsidienne", desc: "Cadre sombre strié de lueurs pourpres" },
+frame_givre: { name: "🧊 Cadre Givre", desc: "Halo glacé aux reflets givrés" },
+frame_prism: { name: "✨ Cadre Prisme Solaire", desc: "Scintillements dorés éblouissants" }
+};
+const packsDict = {
+pack_haute_tension: { name: "⚡ PACK Haute Tension", desc: "Cadre Sous Tension + Grille Éclair", items: ["frame_voltage", "theme_eclair"], value: 3700 },
+pack_cryo: { name: "🧊 PACK Cryo", desc: "Cadre Givre + Grille Cryo", items: ["frame_givre", "theme_glacial"], value: 3400 },
+pack_solaire: { name: "✨ PACK Solaire", desc: "Cadre Prisme Solaire + Grille Dorée", items: ["frame_prism", "theme_alt"], value: 4400 }
 };
 POWERS_CATALOG.filter(p => p.type === type).forEach(p => {
 const card = document.createElement("div");
-if (type === "cosmetics") {
+if (type === "packs") {
+const info = packsDict[p.id];
+const ownedAll = info.items.every(i => (myProfile.unlocked_items || []).includes(i));
+const reduc = Math.round((1 - p.price / info.value) * 100);
+card.className = "power-card";
+card.innerHTML = `<h4>${info.name}</h4><p>${info.desc}</p>
+<div style="font-size:9px; color:#aaa; margin-bottom:2px; text-decoration:line-through;">${info.value} 🪙 séparés</div>
+<div style="font-weight:bold; margin-bottom:4px; font-size:11px; color:#00ff88;">${p.price} 🪙 (-${reduc}%)</div>
+${ownedAll ? `<div style="font-size:10px; color:#00ff88; font-weight:bold;">Possédé ✅</div>` : `<button class="power-btn buy" onclick="buyItem('${p.id}')">Acheter</button>`}`;
+} else if (type === "cosmetics") {
 const info = cosmeticsDict[p.id];
 const unlocked = myProfile.unlocked_items && myProfile.unlocked_items.includes(p.id);
 const equipped = myProfile.inventory && myProfile.inventory.__equipped && Object.values(myProfile.inventory.__equipped).includes(p.id);
@@ -67,7 +87,7 @@ const BLITZ_PASS_TIERS = [
 { tier: 7, free: "50 Pièces (🪙)", premium: "Titre « [ Pulsion Néon ] »" },
 { tier: 8, free: "1 💡 Projecteur", premium: "2 🌟 Novas Temporelles" },
 { tier: 9, free: "100 Pièces (🪙)", premium: "200 Pièces (🪙)" },
-{ tier: 10, free: "1 🌟 Nova Temporelle", premium: "🎨 Thème de Grille Alternatif (Doré)" },
+{ tier: 10, free: "1 🌟 Nova Temporelle", premium: "🎨 Grille Néon Synthwave (EXCLUSIF pass)" },
 { tier: 11, free: "60 Pièces (🪙)", premium: "120 Pièces (🪙)" },
 { tier: 12, free: "1 ⏳ Blocage du Temps", premium: "1 💡 Projecteur" },
 { tier: 13, free: "70 Pièces (🪙)", premium: "Titre « [ Spectre Cosmique ] »" },
@@ -80,14 +100,14 @@ const BLITZ_PASS_TIERS = [
 { tier: 20, free: "100 Pièces (🪙)", premium: "🌈 Cadre Animé « Flux Chroma »" },
 { tier: 21, free: "110 Pièces (🪙)", premium: "220 Pièces (🪙)" },
 { tier: 22, free: "1 ⏳ Blocage du Temps", premium: "3 💡 Projecteur" },
-{ tier: 23, free: "120 Pièces (🪙)", premium: "Titre honorifique spécial" },
+{ tier: 23, free: "120 Pièces (🪙)", premium: "350 Pièces (🪙)" },
 { tier: 24, free: "1 ⚡ Joker Éclair", premium: "300 Pièces (🪙)" },
-{ tier: 25, free: "150 Pièces (🪙)", premium: "✨ Cadre Animé « Prisme Solaire »" },
+{ tier: 25, free: "150 Pièces (🪙)", premium: "🌈 Avatar Animé Lottie : Chat Arc-en-ciel" },
 { tier: 26, free: "130 Pièces (🪙)", premium: "260 Pièces (🪙)" },
 { tier: 27, free: "2 💡 Projecteur", premium: "4 🌟 Novas Temporelles" },
 { tier: 28, free: "140 Pièces (🪙)", premium: "400 Pièces (🪙)" },
 { tier: 29, free: "300 Pièces (🪙)", premium: "500 Pièces (🪙)" },
-{ tier: 30, free: "Titre suprême « [ ⚡ FÉLIN SUPRÊME ] » + 500 🪙", premium: "🏆 GRAND LOT : Avatar Animé Lottie : Chat Arc-en-ciel + 1000 🪙" }
+{ tier: 30, free: "Titre suprême « [ ⚡ FÉLIN SUPRÊME ] » + 500 🪙", premium: "🏆 GRAAL : 🐯 Avatar Tigre de Sibérie (Vidéo) + 1000 🪙" }
 ];
 function openBlitzPass() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } document.getElementById("modal-blitz-pass").style.display = "flex"; renderBlitzPass(); }
 function closeBlitzPass() { document.getElementById("modal-blitz-pass").style.display = "none"; }
@@ -145,7 +165,7 @@ socket.on("pass_tier_claimed", (data) => {
 const tier = data.tier, track = data.track;
 const tierData = BLITZ_PASS_TIERS.find(t => t.tier === tier);
 const rewardText = tierData ? (track === "premium" ? tierData.premium : tierData.free) : `Palier ${tier}`;
-const icon = (tier === 30 && track === "premium") ? "🌈" : (tier === 15 && track === "premium") ? "🐱" : "🌟";
+const icon = (tier === 30 && track === "premium") ? "🐯" : (tier === 25 && track === "premium") ? "🌈" : (tier === 15 && track === "premium") ? "🐱" : "🌟";
 showRewardPopUp(rewardText, icon);
 renderBlitzPass();
 });
