@@ -678,6 +678,13 @@ border-color: #ff00c8 !important;
 color: #fff !important;
 box-shadow: 0 0 12px rgba(255, 0, 200, 0.6);
 }
+/* ---------- THÈME OBSIDIENNE ---------- */
+.tile.obsidian-theme {
+background: linear-gradient(135deg, #0a050a, #23050f) !important;
+border-color: #7a0026 !important;
+color: #ff4d6d !important;
+box-shadow: 0 0 12px rgba(255, 0, 60, 0.5);
+}
 /* ============================================================
 MATCHMAKING / COUNTDOWN / PUB
 ============================================================ */
