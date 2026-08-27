@@ -173,6 +173,8 @@ function hideComboHUD() {
 }
 
 function resetCombo() {
+  clearObsidianFx();
+  _efxBolts = [];
   clearCracks();
   hideComboHUD();
   if (soloPerfection) return;
@@ -1491,8 +1493,8 @@ function efxLoop() {
   _efxCtx.clearRect(0, 0, _efxCanvas.width, _efxCanvas.height);
   if (_efxBolts.length === 0) return;
   _efxCtx.globalCompositeOperation = "lighter";
-  _efxBolts = _efxBolts.filter(b => b.alpha > 0.05);
-  for (const b of _efxBolts) { efxDrawBolt(b); b.alpha -= 0.08; }
+  _efxBolts = _efxBolts.filter(b => b.alpha > 0.02);
+  for (const b of _efxBolts) { efxDrawBolt(b); b.alpha -= 0.015; }
   _efxCtx.globalCompositeOperation = "source-over";
 }
 function efxMakeBolt(x1, y1, x2, y2, generations, amplitude) {
@@ -1561,7 +1563,7 @@ function gridCenter() {
 /* ============================================================
 FX OBSIDIENNE (rochers + débris + sons synthétisés)
 ============================================================ */
-let _obsCanvas = null, _obsCtx = null, _obsRocks = [], _obsDebris = [];
+let _obsCanvas = null, _obsCtx = null, _obsRocks = [], _obsDebris = [], _obsLandedRocks = [];
 let _obsAudioCtx = null;
 let _lastRockTime = 0;
 
@@ -1586,14 +1588,36 @@ function obsLoop() {
   if (!_obsCtx) return;
   _obsCtx.clearRect(0, 0, _obsCanvas.width, _obsCanvas.height);
   
-  // Update rocks
+  // Redraw landed rocks (persistants)
+  for (const r of _obsLandedRocks) {
+    _obsCtx.save();
+    _obsCtx.translate(r.x, r.y);
+    _obsCtx.rotate(r.rotation);
+    _obsCtx.shadowColor = "#ff2a4d";
+    _obsCtx.shadowBlur = 20;
+    _obsCtx.beginPath();
+    _obsCtx.moveTo(-34, -42.5);
+    _obsCtx.lineTo(42.5, -34);
+    _obsCtx.lineTo(59.5, 17);
+    _obsCtx.lineTo(25.5, 42.5);
+    _obsCtx.lineTo(-34, 42.5);
+    _obsCtx.lineTo(-59.5, 0);
+    _obsCtx.closePath();
+    _obsCtx.fillStyle = "#14080a";
+    _obsCtx.fill();
+    _obsCtx.strokeStyle = "#ff2a4d";
+    _obsCtx.lineWidth = 3;
+    _obsCtx.stroke();
+    _obsCtx.restore();
+  }
+  
+  // Update falling rocks
   _obsRocks = _obsRocks.filter(r => r.active);
   for (const r of _obsRocks) {
-    r.vy += 0.22; // gravity
+    r.vy += 0.22;
     r.y += r.vy;
     r.rotation += r.rotationSpeed;
     
-    // Draw rock
     _obsCtx.save();
     _obsCtx.translate(r.x, r.y);
     _obsCtx.rotate(r.rotation);
@@ -1614,21 +1638,21 @@ function obsLoop() {
     _obsCtx.stroke();
     _obsCtx.restore();
     
-    // Landing detection
     if (r.y >= r.landingY && r.active) {
       r.active = false;
+      _obsLandedRocks.push({ x: r.x, y: r.landingY, rotation: r.rotation });
       spawnObsidianDebris(r.x, r.landingY);
       playObsidianImpactSound();
     }
   }
   
-  // Update debris
-  _obsDebris = _obsDebris.filter(d => d.alpha > 0.05);
+  // Update debris (persistants)
+  _obsDebris = _obsDebris.filter(d => d.alpha > 0.02);
   for (const d of _obsDebris) {
     d.vy += 0.15;
     d.x += d.vx;
     d.y += d.vy;
-    d.alpha -= 0.015;
+    d.alpha -= 0.003;
     _obsCtx.save();
     _obsCtx.globalAlpha = d.alpha;
     _obsCtx.fillStyle = "#ff2a4d";
@@ -1668,6 +1692,12 @@ function spawnObsidianDebris(x, y) {
   }
 }
 
+function clearObsidianFx() {
+  _obsRocks = [];
+  _obsDebris = [];
+  _obsLandedRocks = [];
+}
+
 function initObsidianAudio() {
   if (!_obsAudioCtx) _obsAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (_obsAudioCtx.state === "suspended") _obsAudioCtx.resume();
@@ -1678,7 +1708,6 @@ function playObsidianImpactSound() {
   initObsidianAudio();
   const now = _obsAudioCtx.currentTime;
   
-  // Layer 1: heavy impact thud (sine 80Hz → 15Hz, 0.5s)
   const osc1 = _obsAudioCtx.createOscillator();
   const gain1 = _obsAudioCtx.createGain();
   osc1.type = "sine";
@@ -1690,7 +1719,6 @@ function playObsidianImpactSound() {
   osc1.start(now);
   osc1.stop(now + 0.5);
   
-  // Layer 2: obsidian crystal click (triangle 2400Hz → 400Hz, 0.06s)
   const osc2 = _obsAudioCtx.createOscillator();
   const gain2 = _obsAudioCtx.createGain();
   osc2.type = "triangle";
@@ -1702,7 +1730,6 @@ function playObsidianImpactSound() {
   osc2.start(now);
   osc2.stop(now + 0.06);
   
-  // Layer 3: explosion sub-bass (sine 120Hz → 20Hz, 0.9s)
   const osc3 = _obsAudioCtx.createOscillator();
   const gain3 = _obsAudioCtx.createGain();
   osc3.type = "sine";
@@ -1720,7 +1747,6 @@ function playObsidianExplosionSound() {
   initObsidianAudio();
   const now = _obsAudioCtx.currentTime;
   
-  // Sub-bass explosion
   const osc = _obsAudioCtx.createOscillator();
   const gain = _obsAudioCtx.createGain();
   osc.type = "sine";
@@ -1732,7 +1758,6 @@ function playObsidianExplosionSound() {
   osc.start(now);
   osc.stop(now + 0.9);
   
-  // White noise burst (filtered)
   const bufferSize = _obsAudioCtx.sampleRate * 0.6;
   const buffer = _obsAudioCtx.createBuffer(1, bufferSize, _obsAudioCtx.sampleRate);
   const data = buffer.getChannelData(0);
