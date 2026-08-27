@@ -71,6 +71,8 @@ function getComboColor() {
   const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
   if (theme === "theme_glacial") return "#7be8ff";
   if (theme === "theme_alt") return "#f8b500";
+  if (theme === "theme_neon") return "#ff00c8";
+  if (theme === "theme_eclair") return "#fff34d";
   return "#00d2ff";
 }
 
@@ -82,6 +84,8 @@ function getComboEmojis() {
   const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
   if (theme === "theme_glacial") return ["❄️", "🧊", "✨", "💥"];
   if (theme === "theme_alt") return ["✨", "🪙", "", "⚡"];
+  if (theme === "theme_neon") return ["💜", "", "✨", ""];
+  if (theme === "theme_eclair") return ["⚡", "💛", "✨", "⚡"];
   return ["⚡", "", "✨", ""];
 }
 
@@ -276,6 +280,8 @@ function getComboCrackStyle() {
   const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
   if (theme === "theme_glacial") return { color: "#7be8ff", width: 2, jag: 30 };
   if (theme === "theme_alt") return { color: "#f8b500", width: 3, jag: 18 };
+  if (theme === "theme_neon") return { color: "#ff00c8", width: 2, jag: 34 };
+  if (theme === "theme_eclair") return { color: "#fff34d", width: 3, jag: 20 };
   return { color: "#00d2ff", width: 2, jag: 38 };
 }
 
@@ -1206,7 +1212,9 @@ function renderAvalancheGrid() {
   avalancheGridData.forEach((val, idx) => {
     const tile = document.createElement("div");
     if (val !== null) {
-      tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""}`;
+      const isEclairTheme = equippedTheme === "theme_eclair";
+      const isNeonTheme = equippedTheme === "theme_neon";
+      tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""}`;
       tile.innerText = val;
       tile.onclick = () => handleAvalancheClick(val, idx);
     } else {
@@ -1383,7 +1391,9 @@ function renderGrid(pool, handler) {
   const isGlacialTheme = equippedTheme === "theme_glacial";
   pool.forEach((num, index) => {
     const tile = document.createElement("div");
-    tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""}`;
+    const isEclairTheme = equippedTheme === "theme_eclair";
+    const isNeonTheme = equippedTheme === "theme_neon";
+    tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""}`;
     tile.innerText = num;
     tile.onclick = () => handler(num, index);
     grid.appendChild(tile);
