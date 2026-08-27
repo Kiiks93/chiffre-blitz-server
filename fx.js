@@ -298,7 +298,7 @@ function _neonLoop() {
   _neonCtx.fillStyle = "rgba(8, 0, 18, 0.4)";
   _neonCtx.fillRect(0, 0, w, h);
   const now = Date.now();
-  const target = (now < _neonBoostUntil) ? Math.max(_neonTargetSpeed, 8) : _neonTargetSpeed;
+  const target = (now < _neonBoostUntil) ? Math.max(_neonTargetSpeed, 3.5) : _neonTargetSpeed;
   _neonSpeed += (target - _neonSpeed) * 0.06;
   const cx = w / 2, cy = h / 2, f = 300;
   for (let i = 0; i < _neonStars.length; i++) {
@@ -330,8 +330,8 @@ function stopNeonFx() { _neonActive = false; _neonStopPad(); }
 function neonResetSpeed() { _neonTargetSpeed = 1.5; _neonBoostUntil = 0; }
 function neonComboBoost() {
   if (!_neonActive) return;
-  _neonTargetSpeed = Math.min(_neonTargetSpeed + 0.6, 14);
-  _neonBoostUntil = Date.now() + 600;
+  _neonTargetSpeed = Math.min(_neonTargetSpeed + 0.3, 7);
+  _neonBoostUntil = Date.now() + 400;
   _neonSweepCombo();
 }
 function neonHyperspace() {
