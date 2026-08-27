@@ -253,7 +253,17 @@ function triggerPerfection() {
     }
     playElectroExplosionSound();
   }
-  
+  // 🖤 THÈME OBSIDIENNE : pluie de rochers + explosion
+if (themeNow === "theme_obsidian") {
+  const c = gridCenter();
+  for (let i = 0; i < 6; i++) {
+    setTimeout(() => spawnObsidianRock(c.x + (Math.random() - 0.5) * 180, c.y), i * 80);
+  }
+  setTimeout(() => {
+    playObsidianExplosionSound();
+    shakeScreen(1.2);
+  }, 500);
+}
   const crackCount = 18;
   for (let i = 0; i < crackCount; i++) {
     setTimeout(() => {
