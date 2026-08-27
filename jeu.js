@@ -173,8 +173,8 @@ function hideComboHUD() {
 }
 
 function resetCombo() {
-  clearElectricFx();
-  clearObsidianFx();
+  if (typeof clearElectricFx === "function") clearElectricFx();
+  if (typeof clearObsidianFx === "function") clearObsidianFx();
   clearCracks();
   hideComboHUD();
   if (soloPerfection) return;
@@ -524,7 +524,7 @@ function initMenuBackgroundFX() {
   const colors = ['#00d2ff','#ff007f','#ffe600','#00ff88'];
   for (let i = 0; i < 12; i++) {
     const s = document.createElement('div'); s.className = 'bg-shape'; s.innerText = shapes[i % shapes.length];
-    s.style.fontSize = (14 + Math.random() * 26) + 'px'; s.style.left = Math.random() * 100 + '%'; s.color = colors[i % colors.length];
+    s.style.fontSize = (14 + Math.random() * 26) + 'px'; s.style.left = Math.random() * 100 + '%'; s.style.color = colors[i % colors.length];
     s.style.animationDuration = (14 + Math.random() * 16) + 's'; s.style.animationDelay = (-Math.random() * 25) + 's';
     fx.appendChild(s);
   }
