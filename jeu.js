@@ -1404,5 +1404,141 @@ function renderGrid(pool, handler) {
     grid.appendChild(tile);
   });
 }
+/* ============================================================
+FX ÉCLAIR (fractal lightning — spec combo_lightning_effect)
+============================================================ */
+let _efxCanvas = null, _efxCtx = null, _efxBolts = [];
+let _arcAudio = null, _explosionAudio = null, _lastArcTime = 0;
 
+function isMuted() {
+  const muteBtn = document.getElementById("mute-btn");
+  return !!(muteBtn && muteBtn.innerText.includes("🔇"));
+}
+function playElectricArcSound() {
+  if (isMuted()) return;
+  const now = Date.now();
+  if (now - _lastArcTime < 90) return;
+  _lastArcTime = now;
+  if (!_arcAudio) _arcAudio = new Audio("sound/arc-electrical.mp3");
+  _arcAudio.currentTime = 0; _arcAudio.volume = 0.85;
+  _arcAudio.play().catch(() => {});
+}
+function playElectroExplosionSound() {
+  if (isMuted()) return;
+  if (!_explosionAudio) _explosionAudio = new Audio("sound/electro_explosion.wav");
+  _explosionAudio.currentTime = 0; _explosionAudio.volume = 0.9;
+  _explosionAudio.play().catch(() => {});
+}
+function isElectricThemeEquipped() {
+  return !!(myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme === "theme_eclair");
+}
+function initElectricFx() {
+  if (_efxCanvas) return;
+  _efxCanvas = document.createElement("canvas");
+  _efxCanvas.style.cssText = "position:fixed; inset:0; pointer-events:none; z-index:55;";
+  document.body.appendChild(_efxCanvas);
+  _efxCtx = _efxCanvas.getContext("2d");
+  const resize = () => { _efxCanvas.width = innerWidth; _efxCanvas.height = innerHeight; };
+  resize();
+  window.addEventListener("resize", resize);
+  requestAnimationFrame(efxLoop);
+}
+function efxLoop() {
+  requestAnimationFrame(efxLoop);
+  if (!_efxCtx) return;
+  _efxCtx.clearRect(0, 0, _efxCanvas.width, _efxCanvas.height);
+  if (_efxBolts.length === 0) return;
+  _efxCtx.globalCompositeOperation = "lighter";
+  _efxBolts = _efxBolts.filter(b => b.alpha > 0.05);
+  for (const b of _efxBolts) { efxDrawBolt(b); b.alpha -= 0.08; }
+  _efxCtx.globalCompositeOperation = "source-over";
+}
+function efxMakeBolt(x1, y1, x2, y2, generations, amplitude) {
+  let pts = [{ x: x1, y: y1 }, { x: x2, y: y2 }];
+  for (let g = 0; g < generations; g++) {
+    const next = [pts[0]];
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], c = pts[i + 1];
+      const mid = { x: (a.x + c.x) / 2, y: (a.y + c.y) / 2 };
+      const dx = c.x - a.x, dy = c.y - a.y;
+      const len = Math.sqrt(dx * dx + dy * dy) || 1;
+      const off = (Math.random() - 0.5) * 2 * amplitude / (g + 1);
+      mid.x += (-dy / len) * off; mid.y += (dx / len) * off;
+      next.push(mid, c);
+    }
+    pts = next;
+  }
+  return pts;
+}
+function efxStroke(pts, color, width) {
+  _efxCtx.strokeStyle = color;
+  _efxCtx.lineWidth = width;
+  _efxCtx.beginPath();
+  _efxCtx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) _efxCtx.lineTo(pts[i].x, pts[i].y);
+  _efxCtx.stroke();
+}
+function efxDrawBolt(b) {
+  _efxCtx.save();
+  _efxCtx.globalAlpha = b.alpha;
+  _efxCtx.shadowColor = "#FF8800";
+  _efxCtx.shadowBlur = 25;
+  efxStroke(b.pts, "#FF8800", 6);
+  efxStroke(b.pts, "#FFFFDD", 2);
+  for (const br of b.branches) {
+    efxStroke(br, "#FF8800", 3);
+    efxStroke(br, "#FFFFDD", 1);
+  }
+  _efxCtx.restore();
+}
+function spawnLightningBurst(cx, cy, big) {
+  initElectricFx();
+  const count = 2 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < count; i++) {
+    const ang = Math.random() * Math.PI * 2;
+    const len = (big ? 180 : 80) + Math.random() * (big ? 160 : 90);
+    const pts = efxMakeBolt(cx, cy, cx + Math.cos(ang) * len, cy + Math.sin(ang) * len, 4, 45);
+    const branches = [];
+    for (let j = 2; j < pts.length - 1; j += 3) {
+      if (Math.random() < 0.6) {
+        const p = pts[j];
+        const a2 = Math.random() * Math.PI * 2;
+        const l2 = 40 + Math.random() * 110;
+        branches.push(efxMakeBolt(p.x, p.y, p.x + Math.cos(a2) * l2, p.y + Math.sin(a2) * l2, 2, 25));
+      }
+    }
+    _efxBolts.push({ pts, branches, alpha: 1 });
+  }
+}
+function gridCenter() {
+  const g = document.getElementById("grid");
+  if (!g) return { x: innerWidth / 2, y: innerHeight / 2 };
+  const r = g.getBoundingClientRect();
+  return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+}
+function hookElectricFx() {
+  const targetEl = document.getElementById("game-target-giant");
+  if (targetEl && !targetEl._fxHooked) {
+    targetEl._fxHooked = true;
+    new MutationObserver(() => {
+      if (!isElectricThemeEquipped()) return;
+      const c = gridCenter();
+      spawnLightningBurst(c.x + (Math.random() - 0.5) * 140, c.y + (Math.random() - 0.5) * 140, false);
+      playElectricArcSound();
+    }).observe(targetEl, { childList: true, characterData: true, subtree: true });
+  }
+  const grid = document.getElementById("grid");
+  if (grid && !grid._fxHooked) {
+    grid._fxHooked = true;
+    new MutationObserver(() => {
+      if (!isElectricThemeEquipped()) return;
+      if (grid.classList.contains("combo-perfection")) {
+        const c = gridCenter();
+        for (let i = 0; i < 4; i++) spawnLightningBurst(c.x + (Math.random() - 0.5) * 220, c.y + (Math.random() - 0.5) * 220, true);
+        playElectroExplosionSound();
+      }
+    }).observe(grid, { attributes: true, attributeFilter: ["class"] });
+  }
+}
+hookElectricFx();
 // ===== FIN DU FICHIER jeu.js =====
