@@ -134,6 +134,16 @@ border-color: #00d2ff !important;
 /* ============================================================
 AVATARS TFT
 ============================================================ */
+
+/* ---------- AVATAR VIDÉO (Tigre de Sibérie) ---------- */
+.tft-avatar-video {
+width: 100%;
+height: 100%;
+object-fit: cover;
+border-radius: 50%;
+pointer-events: none;
+}
+
 .tft-avatar-container {
 position: relative;
 display: inline-flex;
