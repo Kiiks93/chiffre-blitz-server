@@ -47,7 +47,7 @@ const TROPHY_CATALOG_CLIENT = {
   worker:           { name: "Travailleur",       emoji: "⛏️", shelf: "progression", rarity: "silver",    condition: "1000 🪙 gagnés en jeu",       progress: p => `${Math.min(p.total_coins_earned||0,1000)}/1000` },
   rising_star:      { name: "Étoile Montante",   emoji: "⭐", shelf: "progression", rarity: "silver",    condition: "500 points au classement",    progress: p => `${Math.min(p.points||0,500)}/500` },
   local_king:       { name: "Roi Local",         emoji: "🏰", shelf: "domination",  rarity: "gold",      condition: "N°1 régional en fin de saison", progress: () => "Fin de saison" },
-  midas:           { name: "Midas",             emoji: "💰", shelf: "domination",  rarity: "gold",      condition: "N°1 pièces en fin de saison", progress: () => "Fin de saison" },
+  midas:            { name: "Midas",             emoji: "💰", shelf: "domination",  rarity: "gold",      condition: "N°1 pièces en fin de saison", progress: () => "Fin de saison" },
   dynasty:          { name: "Dynastie",          emoji: "🏛️", shelf: "domination",  rarity: "legendary", condition: "3 saisons N°1",               progress: p => `${p.season_n1_count||0}/3` },
   world_n1:         { name: "N°1 Mondial",       emoji: "🌍", shelf: "domination",  rarity: "legendary", condition: "N°1 global fin de saison",    progress: () => "Fin de saison" }
 };
@@ -239,14 +239,10 @@ function triggerPerfection() {
   const grid = document.getElementById("grid");
   if (grid) { grid.classList.remove("combo-tier1", "combo-tier2"); grid.classList.add("combo-perfection"); }
   showComboBanner("💥 PERFECTION x35 !!!");
-  
-  const themeNow = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
+  const themeNow = getEquippedThemeId();
   SoundEngine.playPerfectionBoom(themeNow);
-  
-  // 🔊 Son d'explosion spécifique par thème
   if (themeNow === "theme_eclair") playElectroExplosionSound();
   else if (themeNow === "theme_obsidian") playObsidianExplosionSound();
-  
   const crackCount = 18;
   for (let i = 0; i < crackCount; i++) {
     setTimeout(() => {
@@ -269,12 +265,12 @@ function triggerPerfection() {
 
 function spawnExplosionParticles() {
   const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
-  let emojis = ["⚡", "💥", "✨", "🔥"];
+  let emojis = ["⚡", "", "✨", ""];
   if (theme === "theme_glacial") emojis = ["❄️", "🧊", "✨", "💥"];
   if (theme === "theme_alt") emojis = ["✨", "🪙", "💰", "⚡"];
-  if (theme === "theme_eclair") emojis = ["⚡", "💛", "✨", "💥"];
-  if (theme === "theme_obsidian") emojis = ["🖤", "💀", "🔥", "💥"];
   if (theme === "theme_neon") emojis = ["💜", "💗", "✨", "💥"];
+  if (theme === "theme_eclair") emojis = ["⚡", "", "✨", "💥"];
+  if (theme === "theme_obsidian") emojis = ["🖤", "💀", "🔥", "💥"];
   for (let i = 0; i < 40; i++) {
     const p = document.createElement("div");
     p.className = "explosion-particle";
@@ -350,15 +346,11 @@ function coinStorm() {
 
 function spawnCrack() {
   const themeNow = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
-  
-  // 🪙 THÈME DORÉ : pluie de pièces (garde son système unique)
   if (themeNow === "theme_alt") {
     for (let i = 0; i < 8; i++) setTimeout(() => spawnCoin(), i * 60);
     SoundEngine.playCrack(themeNow);
     return;
   }
-  
-  // Tous les autres thèmes : fissures SVG plein écran
   const layer = ensureCracksLayer();
   if (layer.childElementCount > 20) layer.removeChild(layer.firstChild);
   const style = getComboCrackStyle();
@@ -430,30 +422,9 @@ function spawnCrack() {
     svg.appendChild(branch);
   }
   layer.appendChild(svg);
-  
-  // 🔊 Sons spécifiques par thème
-  if (themeNow === "theme_eclair") {
-    playElectricArcSound();
-  } else if (themeNow === "theme_obsidian") {
-    playObsidianImpactSound();
-  } else {
-    SoundEngine.playCrack(themeNow || "");
-  }
-}
-  
-  // ⚡ THÈME ÉCLAIR : arcs fractals
-  if (themeNow === "theme_eclair") {
-    const c = gridCenter();
-    spawnLightningBurst(c.x + (Math.random() - 0.5) * 140, c.y + (Math.random() - 0.5) * 140, false);
-    playElectricArcSound();
-    return;
-  }
-  
-  // 🖤 THÈME OBSIDIENNE : rochers qui tombent
-if (themeNow === "theme_obsidian") {
-  const c = gridCenter();
-  spawnObsidianRock(c.x, c.y);
-  return;
+  if (themeNow === "theme_eclair") playElectricArcSound();
+  else if (themeNow === "theme_obsidian") playObsidianImpactSound();
+  else SoundEngine.playCrack(themeNow || "");
 }
 
 function clearCracks() {
@@ -529,7 +500,7 @@ function initMenuBackgroundFX() {
   const colors = ['#00d2ff','#ff007f','#ffe600','#00ff88'];
   for (let i = 0; i < 12; i++) {
     const s = document.createElement('div'); s.className = 'bg-shape'; s.innerText = shapes[i % shapes.length];
-    s.style.fontSize = (14 + Math.random() * 26) + 'px'; s.style.left = Math.random() * 100 + '%'; s.style.color = colors[i % colors.length];
+    s.style.fontSize = (14 + Math.random() * 26) + 'px'; s.style.left = Math.random() * 100 + '%'; s.color = colors[i % colors.length];
     s.style.animationDuration = (14 + Math.random() * 16) + 's'; s.style.animationDelay = (-Math.random() * 25) + 's';
     fx.appendChild(s);
   }
@@ -877,7 +848,7 @@ function updateOpponentDisplay(opp) {
   cachedOpponent = parsePlayer(opp);
   document.getElementById("opp-profile-name").innerText = cachedOpponent.username;
   document.getElementById("opp-profile-badge").innerHTML = getAvatarBadgeHTML(cachedOpponent.flag, cachedOpponent.avatar);
-  const oppTitle = cachedOpponent.inventory && cachedOpponent.inventory.__equipped && cachedOpponent.inventory.__equipped.title;
+  const oppTitle = cachedOpponent.inventory && cachedOpponent.inventory.__equipped && cachedOpponent.title;
   const el = document.getElementById("opp-profile-title");
   if (el) el.innerText = oppTitle ? `[ ${TITLE_DISPLAY_NAMES[oppTitle] || oppTitle} ]` : "";
 }
@@ -893,8 +864,13 @@ socket.on("start_countdown", (data) => {
   let oppData = extractOpponentInfo(data);
   if (oppData) updateOpponentDisplay(oppData);
   hideAllScreens();
+  const roomCodeEl = document.getElementById("current-room-code");
+  const inRoom = roomCodeEl && roomCodeEl.innerText && roomCodeEl.innerText !== "----";
   if (data.isRanked) setGameModeBadge("⚔️ CLASSÉ", "#f8b500");
   else if (data.isTugOfWar) setGameModeBadge("🪢 CORDE RAIDE", "#ff4b2b");
+  else if (inRoom) setGameModeBadge("👥 SALON PRIVÉ", "#00d2ff");
+  else if (latestGlobalEvents.chaosMode) setGameModeBadge("🌪️ CHAOS MODE", "#ff007f");
+  else if (latestGlobalEvents.expressoMatch) setGameModeBadge("⚡ EXPRESSO 20s", "#ffe600");
   else setGameModeBadge("⚔️ 1v1 AMICAL", "#00ff88");
   document.getElementById("countdown-overlay").style.display = "flex";
   let count = 3;
@@ -950,7 +926,7 @@ socket.on("jackpot_wheel_result", (data) => {
   const resultText = document.getElementById("wheel-result-text");
   const randomSpin = 1440 + Math.floor(Math.random() * 360);
   wheelEl.style.transition = "transform 3.5s cubic-bezier(0.15,0.75,0.1,1)";
-  wheelEl.style.transform = `rotate(${data.targetAngle || randomSpin}deg)`;
+  wheelEl.style.transform = `rotate(${data.targetAngle || randomSpin}deg);`;
   setTimeout(() => {
     if (data.outcome === "jackpot") { resultText.innerHTML = `🎉 <span style="color:#f8b500;">JACKPOT ! +${data.coinDelta} Pièces 🪙</span>`; SoundEngine.playVictory(); }
     else if (data.outcome === "objet") { resultText.innerHTML = `🎁 <span style="color:#00c6ff;">OBJET GAGNÉ ! ⚡</span>`; SoundEngine.playVictory(); }
@@ -1248,13 +1224,13 @@ function renderAvalancheGrid() {
   const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
   const isAltTheme = equippedTheme === "theme_alt";
   const isGlacialTheme = equippedTheme === "theme_glacial";
+  const isEclairTheme = equippedTheme === "theme_eclair";
+  const isNeonTheme = equippedTheme === "theme_neon";
   const isObsidianTheme = equippedTheme === "theme_obsidian";
   avalancheGridData.forEach((val, idx) => {
     const tile = document.createElement("div");
     if (val !== null) {
-      const isEclairTheme = equippedTheme === "theme_eclair";
-      const isNeonTheme = equippedTheme === "theme_neon";
-      tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""}${isObsidianTheme ? "obsidian-theme" : ""}`;
+      tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""} ${isObsidianTheme ? "obsidian-theme" : ""}`;
       tile.innerText = val;
       tile.onclick = () => handleAvalancheClick(val, idx);
     } else {
@@ -1269,7 +1245,7 @@ function handleAvalancheClick(val, idx) {
   const tiles = document.querySelectorAll("#grid .tile");
   if (tiles[idx]) {
     tiles[idx].classList.add("ripple-active");
-    setTimeout(() => { tiles[idx].classList.remove("ripple-active"); }, 400);
+    setTimeout(() => tiles[idx].classList.remove("ripple-active"), 400);
   }
   if (val === avalancheTarget) {
     SoundEngine.playClick();
@@ -1402,7 +1378,7 @@ function showTrophyTooltip(e, trophy, playerData, isUnlocked) {
     <div style="font-size:13px; font-weight:900; color:#f8b500;">${trophy.emoji} ${trophy.name}</div>
     <div style="margin:6px 0; color:#00d2ff;">${trophy.condition}</div>
     <div style="color:#fff;">Progrès : <b>${progressText}</b></div>
-    <div style="margin-top:6px; font-size:10px; color:${isUnlocked ? '#00ff88' : '#ff4b2b'};">${isUnlocked ? '✅ Débloqué' : '🔒 Verrouillé'}</div>
+    <div style="margin-top:6px; font-size:10px; color:${isUnlocked ? "#00ff88" : "#ff4b2b"};">${isUnlocked ? "✅ Débloqué" : "🔒 Verrouillé"}</div>
   `;
   document.body.appendChild(tooltipEl);
   moveTrophyTooltip(e);
@@ -1429,17 +1405,18 @@ function renderGrid(pool, handler) {
   const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
   const isAltTheme = equippedTheme === "theme_alt";
   const isGlacialTheme = equippedTheme === "theme_glacial";
+  const isEclairTheme = equippedTheme === "theme_eclair";
+  const isNeonTheme = equippedTheme === "theme_neon";
   const isObsidianTheme = equippedTheme === "theme_obsidian";
   pool.forEach((num, index) => {
     const tile = document.createElement("div");
-    const isEclairTheme = equippedTheme === "theme_eclair";
-    const isNeonTheme = equippedTheme === "theme_neon";
-    tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""}${isObsidianTheme ? "obsidian-theme" : ""}`;
+    tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""} ${isObsidianTheme ? "obsidian-theme" : ""}`;
     tile.innerText = num;
     tile.onclick = () => handler(num, index);
     grid.appendChild(tile);
   });
 }
+
 /* ============================================================
 SONS SPÉCIFIQUES DES GRILLES (⚡ Éclair / 🖤 Obsidienne)
 ============================================================ */
@@ -1451,7 +1428,6 @@ function isMuted() {
   return !!(muteBtn && muteBtn.innerText.includes("🔇"));
 }
 
-/* ---------- ⚡ ÉCLAIR ---------- */
 function playElectricArcSound() {
   if (isMuted()) return;
   const now = Date.now();
@@ -1468,7 +1444,6 @@ function playElectroExplosionSound() {
   _explosionAudio.play().catch(() => {});
 }
 
-/* ---------- 🖤 OBSIDIENNE (sons synthétisés Web Audio) ---------- */
 function initObsidianAudio() {
   if (!_obsAudioCtx) _obsAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (_obsAudioCtx.state === "suspended") _obsAudioCtx.resume();
