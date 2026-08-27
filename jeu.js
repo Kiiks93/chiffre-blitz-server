@@ -245,27 +245,10 @@ function triggerPerfection() {
   const themeNow = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
   SoundEngine.playPerfectionBoom(themeNow);
   
-  // ⚡ THÈME ÉCLAIR : tempête d'éclairs + explosion sonore
-  if (themeNow === "theme_eclair") {
-    const c = gridCenter();
-    for (let i = 0; i < 4; i++) {
-      setTimeout(() => {
-        spawnLightningBurst(c.x + (Math.random() - 0.5) * 220, c.y + (Math.random() - 0.5) * 220, true);
-      }, i * 100);
-    }
-    playElectroExplosionSound();
-  }
-  // 🖤 THÈME OBSIDIENNE : pluie de rochers + explosion
-if (themeNow === "theme_obsidian") {
-  const c = gridCenter();
-  for (let i = 0; i < 6; i++) {
-    setTimeout(() => spawnObsidianRock(c.x + (Math.random() - 0.5) * 180, c.y), i * 80);
-  }
-  setTimeout(() => {
-    playObsidianExplosionSound();
-    shakeScreen(1.2);
-  }, 500);
-}
+  // 🔊 Son d'explosion spécifique par thème
+  if (themeNow === "theme_eclair") playElectroExplosionSound();
+  else if (themeNow === "theme_obsidian") playObsidianExplosionSound();
+  
   const crackCount = 18;
   for (let i = 0; i < crackCount; i++) {
     setTimeout(() => {
@@ -291,6 +274,9 @@ function spawnExplosionParticles() {
   let emojis = ["⚡", "💥", "✨", "🔥"];
   if (theme === "theme_glacial") emojis = ["❄️", "🧊", "✨", "💥"];
   if (theme === "theme_alt") emojis = ["✨", "🪙", "💰", "⚡"];
+  if (theme === "theme_eclair") emojis = ["⚡", "💛", "✨", "💥"];
+  if (theme === "theme_obsidian") emojis = ["🖤", "💀", "🔥", "💥"];
+  if (theme === "theme_neon") emojis = ["💜", "💗", "✨", "💥"];
   for (let i = 0; i < 40; i++) {
     const p = document.createElement("div");
     p.className = "explosion-particle";
@@ -367,28 +353,14 @@ function coinStorm() {
 function spawnCrack() {
   const themeNow = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
   
-  // 🪙 THÈME DORÉ : pluie de pièces
+  // 🪙 THÈME DORÉ : pluie de pièces (garde son système unique)
   if (themeNow === "theme_alt") {
     for (let i = 0; i < 8; i++) setTimeout(() => spawnCoin(), i * 60);
     SoundEngine.playCrack(themeNow);
     return;
   }
   
-  // ⚡ THÈME ÉCLAIR : arcs fractals
-  if (themeNow === "theme_eclair") {
-    const c = gridCenter();
-    spawnLightningBurst(c.x + (Math.random() - 0.5) * 140, c.y + (Math.random() - 0.5) * 140, false);
-    playElectricArcSound();
-    return;
-  }
-  
-  // 🖤 THÈME OBSIDIENNE : rochers qui tombent
-if (themeNow === "theme_obsidian") {
-  const c = gridCenter();
-  spawnObsidianRock(c.x, c.y);
-  return;
-}
-  // Autres thèmes : fissures SVG
+  // Tous les autres thèmes : fissures SVG plein écran
   const layer = ensureCracksLayer();
   if (layer.childElementCount > 20) layer.removeChild(layer.firstChild);
   const style = getComboCrackStyle();
@@ -460,8 +432,30 @@ if (themeNow === "theme_obsidian") {
     svg.appendChild(branch);
   }
   layer.appendChild(svg);
-  const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
-  SoundEngine.playCrack(theme || "");
+  
+  // 🔊 Sons spécifiques par thème
+  if (themeNow === "theme_eclair") {
+    playElectricArcSound();
+  } else if (themeNow === "theme_obsidian") {
+    playObsidianImpactSound();
+  } else {
+    SoundEngine.playCrack(themeNow || "");
+  }
+}
+  
+  // ⚡ THÈME ÉCLAIR : arcs fractals
+  if (themeNow === "theme_eclair") {
+    const c = gridCenter();
+    spawnLightningBurst(c.x + (Math.random() - 0.5) * 140, c.y + (Math.random() - 0.5) * 140, false);
+    playElectricArcSound();
+    return;
+  }
+  
+  // 🖤 THÈME OBSIDIENNE : rochers qui tombent
+if (themeNow === "theme_obsidian") {
+  const c = gridCenter();
+  spawnObsidianRock(c.x, c.y);
+  return;
 }
 
 function clearCracks() {
