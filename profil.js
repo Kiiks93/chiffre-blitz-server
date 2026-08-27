@@ -131,6 +131,10 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
     avatarTitle = "Chat Assistant (Palier 15 - Lottie)";
     avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="cat-assistant.json" style="width:32px; height:32px;"></div>`;
   }
+  } else if (equippedAvatar === "avatar_tigre") {
+avatarTitle = "Tigre de Sibérie (GRAAL - Palier 30)";
+avatarContent = `<video class="tft-avatar-video" src="tiger-siberien.mp4" autoplay loop muted playsinline></video>`;
+}
   const frameClass = getFrameClass(equippedFrame);
   const html = `
     <div class="tft-avatar-container ${frameClass}" title="${avatarTitle}">
@@ -147,6 +151,7 @@ function getLargeAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
   let avatarContent = avatarNum || 1;
   if (avatarType === "avatar_lottie_palier30") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="black-rainbow-cat.json" style="width:60px; height:60px;"></div>`;
   else if (avatarType === "avatar_lottie_palier15") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="cat-assistant.json" style="width:60px; height:60px;"></div>`;
+  else if (avatarType === "avatar_tigre") avatarContent = `<video class="tft-avatar-video" src="tiger-siberien.mp4" autoplay loop muted playsinline></video>`;
   const html = `
     <div class="tft-avatar-large ${frameClass}">
       <span class="tft-avatar-large-icon" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; ${typeof avatarContent === "number" ? "font-size:24px;" : ""}">${avatarContent}</span>
@@ -190,6 +195,7 @@ function renderProfileAvatarSelector() {
   const unlocked = myProfile.unlocked_items || [];
   if (unlocked.includes("avatar_lottie_palier15")) addAvatarOption("avatar_lottie_palier15", "🐱", "Chat Assistant");
   if (unlocked.includes("avatar_lottie_palier30")) addAvatarOption("avatar_lottie_palier30", "🌈", "Chat Arc-en-ciel");
+  if (unlocked.includes("avatar_tigre")) addAvatarOption("avatar_tigre", "🐯", "Tigre de Sibérie");
 }
 const TITLE_DISPLAY_NAMES = {
   "title_stalker": "Stalker Numérique",
