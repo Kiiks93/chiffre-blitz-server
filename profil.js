@@ -788,7 +788,8 @@ socket.on('register_result', (res) => {
     pendingProfileValidation = false;
     saveLocalPreferences();
     document.getElementById('modal-username').style.display = 'none';
-    showMainMenu();
+    if (launchAdWatched) showMainMenu();
+    else openLaunchAdModal();
   }
 });
 socket.on("blitz_pass_updated", (data) => {
