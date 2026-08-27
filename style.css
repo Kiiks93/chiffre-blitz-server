@@ -673,10 +673,17 @@ box-shadow: 0 0 12px rgba(255, 243, 77, 0.6);
 }
 /* ---------- THÈME NÉON SYNTHWAVE ---------- */
 .tile.neon-theme {
-background: linear-gradient(135deg, #2b0033, #ff007f) !important;
-border-color: #ff00c8 !important;
-color: #fff !important;
-box-shadow: 0 0 12px rgba(255, 0, 200, 0.6);
+background: linear-gradient(135deg, #ff007f, #00e5ff, #76ff03, #ffea00, #9d75cb) !important;
+background-size: 400% 400% !important;
+animation: neonShift 3s linear infinite !important;
+border-color: #00e5ff !important;
+color: #0a001a !important;
+box-shadow: 0 0 12px rgba(0, 229, 255, 0.6);
+}
+@keyframes neonShift {
+0% { background-position: 0% 50%; }
+50% { background-position: 100% 50%; }
+100% { background-position: 0% 50%; }
 }
 /* ---------- THÈME OBSIDIENNE ---------- */
 .tile.obsidian-theme {
