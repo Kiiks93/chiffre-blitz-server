@@ -33,6 +33,7 @@ let myProfile = {
 };
 let cachedOpponent = null;
 let pendingProfileValidation = false;
+let launchAdWatched = false;
 let pendingAccountLogin = false;
 let pendingCustomization = false;
 let adCallbackFunction = null;
