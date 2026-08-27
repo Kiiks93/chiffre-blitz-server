@@ -218,42 +218,44 @@ const PACKS_LIST = [
   { id: "pack_obsidienne", name: "🖤 Obsidienne", theme: "theme_obsidian", frame: "frame_obsidian" },
   { id: "pack_neon", name: "🌈 Néon", theme: "theme_neon", frame: "frame_chroma" }
 ];
+
+/* ---------- PACKS : menu déroulant (grille + cadre en 1 choix) ---------- */
 function ensurePackSelector() {
-  if (document.getElementById("profile-pack-selector")) return;
-  const avatarSel = document.getElementById("profile-avatar-selector");
-  if (!avatarSel || !avatarSel.parentElement) return;
-  const label = document.createElement("div");
-  label.style.cssText = "font-size:10px; font-weight:900; color:#00d2ff; margin:8px 0 4px 0;";
-  label.innerText = "🎁 PACKS (grille + cadre)";
-  const row = document.createElement("div");
-  row.id = "profile-pack-selector";
-  row.style.cssText = "display:flex; gap:4px; flex-wrap:wrap; margin-bottom:8px;";
-  avatarSel.parentElement.insertBefore(label, avatarSel.nextSibling);
-  avatarSel.parentElement.insertBefore(row, label.nextSibling);
+  if (document.getElementById("pack-input")) return;
+  const themeSelect = document.getElementById("theme-input");
+  if (!themeSelect || !themeSelect.parentElement) return;
+  const packSelect = document.createElement("select");
+  packSelect.id = "pack-input";
+  packSelect.className = themeSelect.className;
+  packSelect.style.cssText = themeSelect.style.cssText;
+  packSelect.onchange = () => {
+    const pack = PACKS_LIST.find(p => p.id === packSelect.value);
+    if (!pack) return;
+    const unlocked = myProfile.unlocked_items || [];
+    if (!(unlocked.includes(pack.theme) && unlocked.includes(pack.frame))) {
+      showNotificationToast("🔒 Pack non possédé ! Direction la boutique 🛍️", "announcement");
+      packSelect.value = "";
+      return;
+    }
+    const themeSel = document.getElementById("theme-input");
+    const frameSel = document.getElementById("frame-input");
+    if (themeSel) themeSel.value = pack.theme;
+    if (frameSel) frameSel.value = pack.frame;
+    updateProfilePreview();
+  };
+  themeSelect.parentElement.insertBefore(packSelect, themeSelect.nextSibling);
 }
 function renderProfilePackSelector() {
-  const container = document.getElementById("profile-pack-selector");
-  if (!container) return;
-  container.innerHTML = "";
+  const packSelect = document.getElementById("pack-input");
+  if (!packSelect) return;
   const unlocked = myProfile.unlocked_items || [];
-  const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
-  const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
+  packSelect.innerHTML = `<option value="">🎁 Packs (grille + cadre)</option>`;
   PACKS_LIST.forEach(pack => {
     const owned = unlocked.includes(pack.theme) && unlocked.includes(pack.frame);
-    const isActive = equippedTheme === pack.theme && equippedFrame === pack.frame;
-    const btn = document.createElement("div");
-    btn.style.cssText = `flex:1; min-width:70px; text-align:center; padding:6px 2px; border-radius:8px; cursor:${owned ? "pointer" : "not-allowed"}; background:${isActive ? "rgba(0,210,255,0.25)" : "rgba(255,255,255,0.05)"}; border:2px solid ${isActive ? "#00d2ff" : "rgba(255,255,255,0.1)"}; opacity:${owned ? "1" : "0.45"}; font-size:9px; font-weight:bold; color:#fff;`;
-    btn.innerHTML = `${owned ? "" : "🔒 "}${pack.name}`;
-    btn.onclick = () => {
-      if (!owned) { showNotificationToast("🔒 Pack non possédé ! Direction la boutique 🛍️", "announcement"); return; }
-      const themeSelect = document.getElementById("theme-input");
-      const frameSelect = document.getElementById("frame-input");
-      if (themeSelect) themeSelect.value = pack.theme;
-      if (frameSelect) frameSelect.value = pack.frame;
-      renderProfilePackSelector();
-      updateProfilePreview();
-    };
-    container.appendChild(btn);
+    const opt = document.createElement("option");
+    opt.value = pack.id;
+    opt.innerText = (owned ? "🎁 " : "🔒 ") + pack.name;
+    packSelect.appendChild(opt);
   });
 }
 
