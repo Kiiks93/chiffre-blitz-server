@@ -113,7 +113,8 @@ function getFrameClass(equippedFrame) {
     "frame_chroma": "chroma-frame",
     "frame_prism": "prism-frame",
     "frame_voltage": "voltage-frame",
-    "frame_obsidian": "obsidian-frame"
+    "frame_obsidian": "obsidian-frame",
+    "frame_givre": "givre-frame"
   };
   return FRAME_CLASS_MAP[equippedFrame] || "";
 }
@@ -221,11 +222,14 @@ const FRAME_DISPLAY_NAMES = {
   "frame_chroma": "🌈 Cadre « Flux Chroma »",
   "frame_prism": "✨ Cadre « Prisme Solaire »",
   "frame_voltage": "⚡ Cadre « Sous Tension »",
-  "frame_obsidian": "🖤 Cadre « Obsidienne »"
+  "frame_obsidian": "🖤 Cadre « Obsidienne »",
+  "frame_givre": "🧊 Cadre « Givre »"
 };
 const THEME_DISPLAY_NAMES = {
   "theme_alt": "🎨 Thème de Grille Rétro / Doré",
-  "theme_glacial": "🧊 Thème de Grille Cryo"
+  "theme_glacial": "🧊 Thème de Grille Cryo",
+  "theme_eclair": "⚡ Thème de Grille Éclair",
+  "theme_neon": "🌈 Thème de Grille Néon Synthwave"
 };
 function renderProfileCustomizationMenus() {
   const titleSelect = document.getElementById("title-input");
