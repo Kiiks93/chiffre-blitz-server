@@ -62,9 +62,11 @@ const POWERS_CATALOG = [
   { id: "frame_givre", price: 2200, type: "cosmetics" },
   { id: "theme_alt", price: 1800, type: "cosmetics" },
   { id: "frame_prism", price: 2600, type: "cosmetics" },
+  { id: "theme_obsidian", price: 1800, type: "cosmetics" },
   { id: "pack_haute_tension", price: 2900, type: "packs" },
   { id: "pack_cryo", price: 2700, type: "packs" },
-  { id: "pack_solaire", price: 3200, type: "packs" }
+  { id: "pack_solaire", price: 3200, type: "packs" },
+  { id: "pack_obsidienne", price: 5200, type: "packs" }
 ];
 
 /* ============================================================
@@ -215,12 +217,23 @@ const TITLE_DISPLAY_NAMES = {
   "title_elite": "🏵️ Élite",
   "title_eveille": "⚡ Éveil",
   "title_flamme": "🔥 Fournaise",
-  "title_parfait": "💎 PERFECTION"
+  "title_parfait": "💎 PERFECTION",
+  "title_vainqueur": "⚔️ Vainqueur",
+  "title_inarrettable": "🔥 Inarrêtable",
+  "title_gladiateur": "🛡️ Gladiateur",
+  "title_champion_trophy": "👑 Champion",
+  "title_maitre_avalanche": "🎯 Maître Avalanche",
+  "title_travailleur": "⛏️ Travailleur",
+  "title_etoile": "⭐ Étoile Montante",
+  "title_roi_local": "🏰 Roi Local",
+  "title_midas": "💰 Midas",
+  "title_dynastie": "🏛️ Dynastie",
+  "title_mondial": "🌍 N°1 Mondial"
 };
 const FRAME_DISPLAY_NAMES = {
   "frame_silver": "🛡️ Cadre « Argenté »",
   "frame_chroma": "🌈 Cadre « Flux Chroma »",
-  "frame_prism": "✨ Cadre « Prisme Solaire »",
+  "frame_prism": "✨ Cadre « Doré »",
   "frame_voltage": "⚡ Cadre « Sous Tension »",
   "frame_obsidian": "🖤 Cadre « Obsidienne »",
   "frame_givre": "🧊 Cadre « Givre »"
@@ -229,7 +242,8 @@ const THEME_DISPLAY_NAMES = {
   "theme_alt": "🎨 Thème de Grille Rétro / Doré",
   "theme_glacial": "🧊 Thème de Grille Cryo",
   "theme_eclair": "⚡ Thème de Grille Éclair",
-  "theme_neon": "🌈 Thème de Grille Néon Synthwave"
+  "theme_neon": "🌈 Thème de Grille Néon Synthwave",
+  "theme_obsidian": "🖤 Thème de Grille Obsidienne"
 };
 function renderProfileCustomizationMenus() {
   const titleSelect = document.getElementById("title-input");
@@ -696,7 +710,7 @@ socket.on('register_result', (res) => {
     pendingProfileValidation = false;
     saveLocalPreferences();
     document.getElementById('modal-username').style.display = 'none';
-    showTitleScreen();
+    showMainMenu();
   }
 });
 socket.on("blitz_pass_updated", (data) => {
