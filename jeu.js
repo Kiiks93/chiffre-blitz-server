@@ -239,7 +239,21 @@ function triggerPerfection() {
   const grid = document.getElementById("grid");
   if (grid) { grid.classList.remove("combo-tier1", "combo-tier2"); grid.classList.add("combo-perfection"); }
   showComboBanner("💥 PERFECTION x35 !!!");
-  SoundEngine.playPerfectionBoom(getEquippedThemeId());
+  
+  const themeNow = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
+  SoundEngine.playPerfectionBoom(themeNow);
+  
+  // ⚡ THÈME ÉCLAIR : tempête d'éclairs + explosion sonore
+  if (themeNow === "theme_eclair") {
+    const c = gridCenter();
+    for (let i = 0; i < 4; i++) {
+      setTimeout(() => {
+        spawnLightningBurst(c.x + (Math.random() - 0.5) * 220, c.y + (Math.random() - 0.5) * 220, true);
+      }, i * 100);
+    }
+    playElectroExplosionSound();
+  }
+  
   const crackCount = 18;
   for (let i = 0; i < crackCount; i++) {
     setTimeout(() => {
@@ -340,11 +354,23 @@ function coinStorm() {
 
 function spawnCrack() {
   const themeNow = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
+  
+  // 🪙 THÈME DORÉ : pluie de pièces
   if (themeNow === "theme_alt") {
     for (let i = 0; i < 8; i++) setTimeout(() => spawnCoin(), i * 60);
     SoundEngine.playCrack(themeNow);
     return;
   }
+  
+  // ⚡ THÈME ÉCLAIR : arcs fractals
+  if (themeNow === "theme_eclair") {
+    const c = gridCenter();
+    spawnLightningBurst(c.x + (Math.random() - 0.5) * 140, c.y + (Math.random() - 0.5) * 140, false);
+    playElectricArcSound();
+    return;
+  }
+  
+  // Autres thèmes : fissures SVG
   const layer = ensureCracksLayer();
   if (layer.childElementCount > 20) layer.removeChild(layer.firstChild);
   const style = getComboCrackStyle();
@@ -1435,7 +1461,7 @@ function isElectricThemeEquipped() {
 function initElectricFx() {
   if (_efxCanvas) return;
   _efxCanvas = document.createElement("canvas");
-  _efxCanvas.style.cssText = "position:fixed; inset:0; pointer-events:none; z-index:55;";
+  _efxCanvas.style.cssText = "position:fixed; inset:0; pointer-events:none; z-index:1;";
   document.body.appendChild(_efxCanvas);
   _efxCtx = _efxCanvas.getContext("2d");
   const resize = () => { _efxCanvas.width = innerWidth; _efxCanvas.height = innerHeight; };
