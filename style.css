@@ -164,6 +164,12 @@ PILL PROFIL + CADRES (user-pill)
 .tft-avatar-large.fantome-frame { border-color: #b06bff !important; box-shadow: 0 0 22px rgba(157, 47, 255, 0.9) !important; background: linear-gradient(135deg, #1a0033, #7b2ff7); }
 .victory-badge-large.fantome-frame { background: linear-gradient(135deg, #1a0033, #7b2ff7); border-color: #b06bff; box-shadow: 0 0 30px rgba(157, 47, 255, 0.8); }
 
+/* ---------- CADRE STANDARD ---------- */
+.user-pill.standard-frame, .user-pill:has(.tft-avatar-container.standard-frame) { border-color: rgba(0, 210, 255, 0.6) !important; box-shadow: 0 0 10px rgba(0, 210, 255, 0.4) !important; }
+.tft-avatar-container.standard-frame { border-color: rgba(0, 210, 255, 0.6) !important; box-shadow: 0 0 10px rgba(0, 210, 255, 0.5) !important; }
+.tft-avatar-large.standard-frame { border-color: rgba(0, 210, 255, 0.6) !important; box-shadow: 0 0 16px rgba(0, 210, 255, 0.5) !important; }
+.victory-badge-large.standard-frame { border-color: rgba(0, 210, 255, 0.6); box-shadow: 0 0 20px rgba(0, 210, 255, 0.5); }
+
 /* ============================================================
 AVATARS TFT
 ============================================================ */
