@@ -24,6 +24,8 @@ window.addEventListener("load", () => {
   if (typeof preloadGhostAnimation === "function") preloadGhostAnimation();
 });
 
+// Détection mobile/tablette → effets réduits pour éviter le lag
+window.IS_LOW_PERF = /Android|iPhone|iPad|iPod|Tablet|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 2 && Math.min(screen.width, screen.height) < 900);
 /* ============================================================
 SYSTÈME COMBO (solo) — 15 / 30 / 35 + compteur + chrono
 ============================================================ */
@@ -122,7 +124,8 @@ function flashScreen() {
 
 function shatterExplosion() {
   const color = getComboColor();
-  for (let i = 0; i < 50; i++) {
+    const shardCount = IS_LOW_PERF ? 15 : 50;
+    for (let i = 0; i < shardCount; i++) {
     const s = document.createElement("div");
     s.className = "shard-particle";
     s.style.background = i % 3 === 0 ? "#ffffff" : color;
@@ -246,7 +249,8 @@ function registerComboHit() {
   } else if (currentCombo === 30) {
     if (grid) { grid.classList.remove("combo-tier1"); grid.classList.add("combo-tier2"); }
     showComboBanner("🔥 COMBO x30 !!");
-    for (let i = 0; i < 6; i++) setTimeout(() => spawnCrack(), i * 60);
+    const burstCount = IS_LOW_PERF ? 2 : 6;
+    for (let i = 0; i < burstCount; i++) setTimeout(() => spawnCrack(), i * 60);
     shakeScreen(0.5);
   } else if (currentCombo >= 35) {
     triggerPerfection();
@@ -280,7 +284,7 @@ function triggerPerfection() {
   } else if (themeNow === "theme_fantome") {
     spawnGhostLotties(true); playGhostSound(); shakeScreen(1.2);
   }
-  const crackCount = 18;
+  const crackCount = IS_LOW_PERF ? 6 : 18;
   for (let i = 0; i < crackCount; i++) {
     setTimeout(() => {
       spawnCrack();
@@ -310,11 +314,12 @@ function spawnExplosionParticles() {
   if (theme === "theme_obsidian") emojis = ["🖤", "💀", "🔥", ""];
   if (theme === "theme_citrouille") emojis = ["🎃", "", "", "💀"];
   if (theme === "theme_fantome") emojis = ["👻", "", "💜", "✨"];
-  for (let i = 0; i < 40; i++) {
+    const partCount = IS_LOW_PERF ? 12 : 40;
+    for (let i = 0; i < partCount; i++) {
     const p = document.createElement("div");
     p.className = "explosion-particle";
     p.innerText = emojis[i % emojis.length];
-    const angle = (Math.PI * 2 * i) / 40;
+    const angle = (Math.PI * 2 * i) / partCount;
     const dist = 80 + Math.random() * 180;
     p.style.setProperty("--dx", Math.cos(angle) * dist + "px");
     p.style.setProperty("--dy", Math.sin(angle) * dist + "px");
