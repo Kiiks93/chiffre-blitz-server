@@ -192,7 +192,7 @@ function initAllLottieBadges() {
     if (url) {
       el.setAttribute("data-lottie-loaded", "true");
       el.innerHTML = "";
-      try { lottie.loadAnimation({ container: el, renderer: "svg", loop: true, autoplay: true, path: url }); } catch (e) {}
+      try { lottie.loadAnimation({ container: el, renderer: "svg", loop: true, autoplay: true, path: url, rendererSettings: { preserveAspectRatio: "xMidYMid slice" } }); } catch (e) {}
     }
   });
 }
