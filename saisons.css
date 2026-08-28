@@ -1,0 +1,28 @@
+/* ============================================================
+DA SAISONNIÈRE — HALLOWEEN 🎃 & NOËL 🎄
+(chargé APRÈS style.css pour passer par-dessus)
+============================================================ */
+
+/* ---------- SAISON 2 : HALLOWEEN ---------- */
+body.season-s2 { background: radial-gradient(circle at 50% 20%, #1a0033 0%, #0a001a 60%, #050008 100%); }
+body.season-s2 h1 { color: #ff8a00; text-shadow: 0 0 15px rgba(255, 138, 0, 0.5); }
+body.season-s2 #bg-glow { background: radial-gradient(circle, rgba(255, 138, 0, 0.12) 0%, rgba(123, 47, 247, 0.06) 40%, transparent 70%); }
+body.season-s2 .btn-main { background: linear-gradient(45deg, #ff8a00, #7b2ff7); box-shadow: 0 4px 15px rgba(255, 138, 0, 0.3); }
+body.season-s2 .btn-blue { background: linear-gradient(45deg, #7b2ff7, #b06bff); }
+body.season-s2 .modal-card { border-color: #ff8a00; background: #1a0033; }
+body.season-s2 .tile { background: #2a0a3d; border-color: #7b2ff7; }
+body.season-s2 .hud { background: rgba(123, 47, 247, 0.12); }
+body.season-s2 .user-pill { color: #ff8a00; }
+body.season-s2 .tab-btn.active { background: #ff8a00; }
+
+/* ---------- SAISON 3 : NOËL ---------- */
+body.season-s3 { background: radial-gradient(circle at 50% 20%, #0a2a4d 0%, #051525 60%, #020a12 100%); }
+body.season-s3 h1 { color: #7be8ff; text-shadow: 0 0 15px rgba(123, 232, 255, 0.5); }
+body.season-s3 #bg-glow { background: radial-gradient(circle, rgba(123, 232, 255, 0.12) 0%, rgba(255, 75, 43, 0.05) 40%, transparent 70%); }
+body.season-s3 .btn-main { background: linear-gradient(45deg, #ff4b2b, #38ef7d); box-shadow: 0 4px 15px rgba(56, 239, 125, 0.3); }
+body.season-s3 .btn-blue { background: linear-gradient(45deg, #0072ff, #7be8ff); }
+body.season-s3 .modal-card { border-color: #7be8ff; background: #0a2a4d; }
+body.season-s3 .tile { background: #14324d; border-color: #7be8ff; }
+body.season-s3 .hud { background: rgba(123, 232, 255, 0.1); }
+body.season-s3 .user-pill { color: #7be8ff; }
+body.season-s3 .tab-btn.active { background: #7be8ff; }
