@@ -9,6 +9,7 @@ function getCurrentSeasonId() {
   return window.CURRENT_SEASON || "s1";
 }
 
+/* ---------- FONCTION PRINCIPALE ---------- */
 function applySeasonDA() {
   const seasonId = getCurrentSeasonId();
 
@@ -17,14 +18,21 @@ function applySeasonDA() {
   document.body.classList.remove("season-s1", "season-s2", "season-s3");
   document.body.classList.add("season-" + seasonId);
 
+  // Scène de fond animée (Halloween)
+  if (seasonId === "s2") buildHalloweenScene();
+  else clearHalloweenScene();
+
+  // Décor vivant (toiles, araignée, ambiance)
+  setupHalloweenDecor(seasonId);
+
+  // Formes flottantes
   const fx = document.getElementById("bg-fx");
   if (!fx) return;
-
   fx.querySelectorAll(".bg-shape").forEach(s => s.remove());
 
   const shapes =
     seasonId === "s2"
-      ? ["🎃", "👻", "🦇", "🕸️"]
+      ? ["🎃", "", "🦇", "🕸️"]
       : seasonId === "s3"
         ? ["❄️", "⛄", "🎄", "🎁"]
         : ["◆", "▲", "■", "●"];
@@ -42,12 +50,89 @@ function applySeasonDA() {
     s.innerText = shapes[i % shapes.length];
     s.style.fontSize = (14 + Math.random() * 26) + "px";
     s.style.left = Math.random() * 100 + "%";
-    s.style.color = colors[i % colors.length];
+    s.color = colors[i % colors.length];
     s.style.animationDuration = (14 + Math.random() * 16) + "s";
     s.style.animationDelay = (-Math.random() * 25) + "s";
     fx.appendChild(s);
   }
-  /* ---------- DÉCOR VIVANT HALLOWEEN ---------- */
+}
+
+/* ---------- SCÈNE HALLOWEEN ANIMÉE ---------- */
+function buildHalloweenScene() {
+  let bg = document.getElementById("season-bg");
+  if (!bg) {
+    bg = document.createElement("div");
+    bg.id = "season-bg";
+    document.body.prepend(bg);
+  }
+  if (bg.dataset.built === "s2") return;
+  bg.dataset.built = "s2";
+  bg.innerHTML = `
+    <div class="hw-sky"></div>
+    <div class="hw-moon"></div>
+    <div class="hw-cloud hw-c1"></div>
+    <div class="hw-cloud hw-c2"></div>
+    <div class="hw-cloud hw-c3"></div>
+    <div class="hw-bat" style="top:12%; font-size:26px; animation-duration:16s;">🦇</div>
+    <div class="hw-bat" style="top:20%; font-size:18px; animation-duration:22s; animation-delay:4s;">🦇</div>
+    <div class="hw-bat" style="top:8%; font-size:14px; animation-duration:19s; animation-delay:9s;">🦇</div>
+    <div class="hw-bat" style="top:26%; font-size:22px; animation-duration:26s; animation-delay:13s;">🦇</div>
+    <div class="hw-castle">
+      <svg viewBox="0 0 400 200" preserveAspectRatio="none">
+        <g fill="#12001f">
+          <polygon points="55,200 55,115 72,78 89,115 89,200"/>
+          <rect x="89" y="135" width="55" height="65"/>
+          <polygon points="144,200 144,95 168,48 192,95 192,200"/>
+          <rect x="192" y="125" width="66" height="75"/>
+          <polygon points="258,200 258,105 274,70 290,105 290,200"/>
+          <rect x="290" y="145" width="55" height="55"/>
+          <polygon points="345,200 345,115 361,86 377,115 377,200"/>
+        </g>
+        <g fill="#ff8a00">
+          <rect class="win" x="68" y="125" width="7" height="11"/>
+          <rect class="win" x="164" y="105" width="8" height="13" style="animation-delay:1s"/>
+          <rect class="win" x="270" y="120" width="7" height="11" style="animation-delay:2s"/>
+          <rect class="win" x="312" y="155" width="6" height="10" style="animation-delay:0.5s"/>
+        </g>
+      </svg>
+    </div>
+    <div class="hw-tree hw-tree-left">
+      <svg viewBox="0 0 120 260" preserveAspectRatio="none">
+        <g stroke="#0d0016" fill="none" stroke-linecap="round">
+          <path d="M60,260 C58,200 50,160 30,120" stroke-width="14"/>
+          <path d="M55,190 C70,150 90,130 105,95" stroke-width="9"/>
+          <path d="M45,150 C35,120 25,105 10,80" stroke-width="7"/>
+          <path d="M100,110 C108,90 112,80 118,60" stroke-width="5"/>
+          <path d="M20,95 C14,80 12,70 8,55" stroke-width="4"/>
+        </g>
+      </svg>
+    </div>
+    <div class="hw-tree hw-tree-right">
+      <svg viewBox="0 0 120 260" preserveAspectRatio="none">
+        <g stroke="#0d0016" fill="none" stroke-linecap="round">
+          <path d="M60,260 C58,200 50,160 30,120" stroke-width="14"/>
+          <path d="M55,190 C70,150 90,130 105,95" stroke-width="9"/>
+          <path d="M45,150 C35,120 25,105 10,80" stroke-width="7"/>
+          <path d="M100,110 C108,90 112,80 118,60" stroke-width="5"/>
+        </g>
+      </svg>
+    </div>
+    <div class="hw-fence"></div>
+    <div class="hw-ground"></div>
+    <div class="hw-pumpkin" style="bottom:4%; left:6%; transform:scale(1.2);"><div class="lantern"><div class="face"><div class="eye-left"></div><div class="eye-right"></div><div class="mouth"></div></div></div></div>
+    <div class="hw-pumpkin" style="bottom:2%; left:20%; transform:scale(0.8);"><div class="lantern"><div class="face"><div class="eye-left"></div><div class="eye-right"></div><div class="mouth"></div></div></div></div>
+    <div class="hw-pumpkin" style="bottom:5%; right:8%; transform:scale(1.4);"><div class="lantern"><div class="face"><div class="eye-left"></div><div class="eye-right"></div><div class="mouth"></div></div></div></div>
+    <div class="hw-pumpkin" style="bottom:3%; right:24%; transform:scale(0.7);"><div class="lantern"><div class="face"><div class="eye-left"></div><div class="eye-right"></div><div class="mouth"></div></div></div></div>
+    <div class="hw-mist"></div>
+  `;
+}
+
+function clearHalloweenScene() {
+  const bg = document.getElementById("season-bg");
+  if (bg) { bg.innerHTML = ""; bg.dataset.built = ""; }
+}
+
+/* ---------- DÉCOR VIVANT HALLOWEEN ---------- */
 let halloweenAmbienceTimer = null;
 
 function setupHalloweenDecor(seasonId) {
@@ -124,13 +209,8 @@ function spawnAmbientBat() {
   fx.appendChild(s);
   setTimeout(() => s.remove(), 14000);
 }
-}
 
-/* ============================================================
-APPLICATION AUTOMATIQUE
-============================================================ */
-
-// Au chargement de la page
+/* ---------- APPLICATION AUTOMATIQUE ---------- */
 document.addEventListener("DOMContentLoaded", () => {
   setTimeout(() => {
     if (typeof initMenuBackgroundFX === "function") initMenuBackgroundFX();
@@ -138,26 +218,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }, 100);
 });
 
-// Quand le profil joueur est reçu / mis à jour
 if (typeof socket !== "undefined") {
   socket.on("player_registered", () => {
-    setTimeout(() => {
-      applySeasonDA();
-    }, 50);
+    setTimeout(() => { applySeasonDA(); }, 50);
   });
-
-  // Si ton admin envoie un événement de saison, ça permet de réagir aussi
   socket.on("season_updated", (data) => {
     if (data && data.seasonId) {
       window.CURRENT_SEASON = data.seasonId;
-      if (typeof myProfile !== "undefined" && myProfile) {
-        myProfile.currentSeasonId = data.seasonId;
-      }
+      if (typeof myProfile !== "undefined" && myProfile) myProfile.currentSeasonId = data.seasonId;
     }
-
-    setTimeout(() => {
-      applySeasonDA();
-    }, 50);
+    setTimeout(() => { applySeasonDA(); }, 50);
   });
 }
 /* ============================================================
