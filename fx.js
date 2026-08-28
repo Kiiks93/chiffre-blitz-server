@@ -465,23 +465,9 @@ function createLantern() {
 }
 
 /* ============================================================
-FX 👻 FANTÔMES OPTIMISÉS (canvas + préchargement + recyclage)
+FX 👻 ORBE FANTÔME (CSS pure, zéro lag)
 ============================================================ */
 let _ghostAudioCtx = null;
-let _ghostAnimationData = null;
-const _activeGhosts = [];
-const MAX_GHOSTS = 3;
-
-async function preloadGhostAnimation() {
-  if (_ghostAnimationData) return;
-  try {
-    const res = await fetch("fantome-combo.json");
-    _ghostAnimationData = await res.json();
-    console.log("✅ Animation fantôme préchargée");
-  } catch (e) {
-    console.warn("⚠️ Animation fantôme introuvable, fallback emoji");
-  }
-}
 
 function playGhostSound() {
   if (isMuted()) return;
@@ -513,67 +499,49 @@ function playGhostSound() {
 }
 
 function spawnGhostLotties(big) {
-  // Fallback emoji si JSON pas chargé
-  if (!_ghostAnimationData || typeof lottie === "undefined") {
-    const count = big ? 5 : 2;
-    for (let i = 0; i < count; i++) {
-      setTimeout(() => {
-        const g = document.createElement("div");
-        g.className = "ghost-particle";
-        g.innerText = "👻";
-        g.style.fontSize = (50 + Math.random() * 40) + "px";
-        g.style.left = Math.random() * 80 + 10 + "%";
-        g.style.top = Math.random() * 70 + 15 + "%";
-        g.style.animationDuration = (1.4 + Math.random() * 0.8) + "s";
-        document.body.appendChild(g);
-        setTimeout(() => g.remove(), 2500);
-      }, i * 120);
-    }
-    return;
-  }
-
-  // Recyclage : supprime les plus anciens
-  while (_activeGhosts.length >= MAX_GHOSTS) {
-    const oldest = _activeGhosts.shift();
-    if (oldest) {
-      if (oldest.anim) oldest.anim.destroy();
-      if (oldest.el && oldest.el.parentNode) oldest.el.remove();
-    }
-  }
-
-  const count = big ? 3 : 1 + Math.floor(Math.random() * 2);
+  const count = big ? 6 : 2 + Math.floor(Math.random() * 2);
   for (let i = 0; i < count; i++) {
-    setTimeout(() => {
-      const g = document.createElement("div");
-      g.className = "ghost-particle";
-      const size = 80 + Math.random() * 50;
-      g.style.width = size + "px";
-      g.style.height = size + "px";
-      g.style.left = Math.random() * 80 + 10 + "%";
-      g.style.top = Math.random() * 70 + 15 + "%";
-      g.style.animationDuration = "2.8s";
-      document.body.appendChild(g);
-
-      const anim = lottie.loadAnimation({
-        container: g,
-        renderer: "canvas",
-        loop: false,
-        autoplay: true,
-        animationData: _ghostAnimationData,
-        initialSegment: [0, 90] // ← joue seulement 3s sur les 12s
-      });
-
-      const ghostObj = { el: g, anim };
-      _activeGhosts.push(ghostObj);
-
-      setTimeout(() => {
-        if (anim) anim.destroy();
-        if (g.parentNode) g.remove();
-        const idx = _activeGhosts.indexOf(ghostObj);
-        if (idx !== -1) _activeGhosts.splice(idx, 1);
-      }, 3000);
-    }, i * 200);
+    setTimeout(() => createGhostOrb(), i * 180);
   }
 }
 
-preloadGhostAnimation();
+function createGhostOrb() {
+  const orb = document.createElement("div");
+  orb.className = "ghost-orb";
+  const size = 80 + Math.random() * 60;
+  orb.style.width = size + "px";
+  orb.style.height = size + "px";
+  orb.style.left = (Math.random() * 80 + 10) + "%";
+  orb.style.top = (Math.random() * 70 + 15) + "%";
+  orb.style.animationDuration = (2.4 + Math.random() * 0.8) + "s";
+
+  // Structure interne
+  orb.innerHTML = `
+    <div class="ghost-orb-halo"></div>
+    <div class="ghost-orb-body">
+      <div class="ghost-orb-face">
+        <div class="ghost-orb-eye left"></div>
+        <div class="ghost-orb-eye right"></div>
+        <div class="ghost-orb-mouth"></div>
+      </div>
+    </div>
+  `;
+
+  // Ajout d'étincelles flottantes autour
+  const sparkleCount = 4;
+  for (let i = 0; i < sparkleCount; i++) {
+    const sparkle = document.createElement("div");
+    sparkle.className = "ghost-orb-sparkle";
+    const angle = (i / sparkleCount) * Math.PI * 2;
+    const distance = 60 + Math.random() * 20;
+    sparkle.style.setProperty("--sx", Math.cos(angle) * distance + "px");
+    sparkle.style.setProperty("--sy", Math.sin(angle) * distance + "px");
+    sparkle.style.left = "50%";
+    sparkle.style.top = "50%";
+    sparkle.style.animationDelay = (i * 0.3) + "s";
+    orb.appendChild(sparkle);
+  }
+
+  document.body.appendChild(orb);
+  setTimeout(() => orb.remove(), 3500);
+}
