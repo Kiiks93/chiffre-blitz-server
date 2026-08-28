@@ -268,8 +268,7 @@ function triggerPerfection() {
   else if (themeNow === "theme_neon") {
   if (typeof neonHyperspace === "function") neonHyperspace();} 
   else if (themeNow === "theme_citrouille") { spawnLanterns(true); playLanternSound(); shakeScreen(1.2); }
-  else if (themeNow === "theme_fantome") { spawnGhosts(true); playFantomeSound(); shakeScreen(1.2); }
-
+  else if (themeNow === "theme_fantome") { spawnGhostLotties(true); playGhostSound(); shakeScreen(1.2); }
   const crackCount = 18;
   for (let i = 0; i < crackCount; i++) {
     setTimeout(() => {
@@ -393,7 +392,7 @@ function spawnCrack() {
   if (themeNow === "theme_citrouille") { spawnLanterns(false); playLanternSound(); return; }
   
   // 👻 THÈME FANTÔME : fantômes qui descendent
-  if (themeNow === "theme_fantome") { spawnGhosts(false); playFantomeSound(); return; }
+  if (themeNow === "theme_fantome") { spawnGhostLotties(false); playGhostSound(); return; }
   
   //  THÈME ÉCLAIR : arcs fractals
   if (themeNow === "theme_eclair") {
