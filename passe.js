@@ -21,10 +21,14 @@ theme_glacial: { name: "🧊 Grille Cryo", desc: "Grille aux reflets bleutés gl
 theme_alt: { name: "🎨 Grille Rétro/Dorée", desc: "Tuiles dorées look rétro, pluie de pièces au combo" },
 theme_eclair: { name: "⚡ Grille Éclair", desc: "Tuiles jaune électrique crépitantes" },
 theme_obsidian: { name: "🖤 Grille Obsidienne", desc: "Tuiles sombres striées de lueurs pourpres" },
+theme_neon: { name: "🌈 Grille Néon Synthwave", desc: "Dégradé multi-néons animé (EXCLUSIF pass S1)" },
+theme_citrouille: { name: "🎃 Grille Citrouille", desc: "Orange/noir, l'esprit d'Halloween (EXCLUSIF pass S2)" },
 frame_voltage: { name: "⚡ Cadre Sous Tension", desc: "Éclairs électriques crépitants autour de l'avatar" },
 frame_obsidian: { name: "🖤 Cadre Obsidienne", desc: "Cadre sombre strié de lueurs pourpres" },
 frame_givre: { name: "🧊 Cadre Givre", desc: "Halo glacé aux reflets givrés" },
-frame_prism: { name: "✨ Cadre Doré", desc: "Scintillements dorés éblouissants" }
+frame_prism: { name: "✨ Cadre Doré", desc: "Scintillements dorés éblouissants" },
+frame_osseux: { name: "🦴 Cadre Osseux", desc: "Os blanchis sous la lune (Halloween)" },
+frame_fantome: { name: "👻 Cadre Fantôme", desc: "Lueur pâle spectrale (Halloween)" }
 };
 const packsDict = {
 pack_haute_tension: { name: "⚡ PACK Haute Tension", desc: "Cadre Sous Tension + Grille Éclair", items: ["frame_voltage", "theme_eclair"], value: 3700 },
@@ -127,7 +131,7 @@ const SEASONS_CLIENT = [
     { tier: 29, free: "300 Pièces (🪙)", premium: "500 Pièces (🪙)" },
     { tier: 30, free: "Titre suprême « [ ⚡ FÉLIN SUPRÊME ] » + 500 🪙", premium: "🏆 GRAAL : 🐯 Avatar Tigre de Sibérie (Vidéo) + 1000 🪙" }
   ] },
-    { id: "s2", name: "HALLOWEEN", emoji: "🎃", start: "01/10/2026", end: "30/11/2026", tiers: [
+  { id: "s2", name: "HALLOWEEN", emoji: "🎃", start: "01/10/2026", end: "30/11/2026", tiers: [
     { tier: 1, free: "50 Pièces (🪙)", premium: "Titre « [ Chuchoteur de Fantômes ] » 👻" },
     { tier: 2, free: "1 💡 Projecteur", premium: "100 Pièces (🪙)" },
     { tier: 3, free: "50 Pièces (🪙)", premium: "Titre « [ Danse Macabre ] » 🦴" },
