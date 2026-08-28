@@ -506,40 +506,49 @@ function spawnGhostLotties(big) {
 }
 
 function createGhostOrb() {
+  const lite = (typeof IS_LOW_PERF !== "undefined") && IS_LOW_PERF;
   const orb = document.createElement("div");
   orb.className = "ghost-orb";
-  const size = 80 + Math.random() * 60;
+  const size = lite ? (60 + Math.random() * 30) : (80 + Math.random() * 60);
   orb.style.width = size + "px";
   orb.style.height = size + "px";
   orb.style.left = (Math.random() * 80 + 10) + "%";
   orb.style.top = (Math.random() * 70 + 15) + "%";
   orb.style.animationDuration = (2.4 + Math.random() * 0.8) + "s";
 
-  // Structure interne
-  orb.innerHTML = `
-    <div class="ghost-orb-halo"></div>
-    <div class="ghost-orb-body">
-      <div class="ghost-orb-face">
-        <div class="ghost-orb-eye left"></div>
-        <div class="ghost-orb-eye right"></div>
-        <div class="ghost-orb-mouth"></div>
-      </div>
-    </div>
-  `;
-
-  // Ajout d'étincelles flottantes autour
-  const sparkleCount = 4;
-  for (let i = 0; i < sparkleCount; i++) {
-    const sparkle = document.createElement("div");
-    sparkle.className = "ghost-orb-sparkle";
-    const angle = (i / sparkleCount) * Math.PI * 2;
-    const distance = 60 + Math.random() * 20;
-    sparkle.style.setProperty("--sx", Math.cos(angle) * distance + "px");
-    sparkle.style.setProperty("--sy", Math.sin(angle) * distance + "px");
-    sparkle.style.left = "50%";
-    sparkle.style.top = "50%";
-    sparkle.style.animationDelay = (i * 0.3) + "s";
-    orb.appendChild(sparkle);
+  if (lite) {
+    // 📱 MOBILE : corps + visage seulement (zéro halo, zéro étincelle)
+    orb.innerHTML = `
+      <div class="ghost-orb-body">
+        <div class="ghost-orb-face">
+          <div class="ghost-orb-eye left"></div>
+          <div class="ghost-orb-eye right"></div>
+          <div class="ghost-orb-mouth"></div>
+        </div>
+      </div>`;
+  } else {
+    // 💻 PC : version complète
+    orb.innerHTML = `
+      <div class="ghost-orb-halo"></div>
+      <div class="ghost-orb-body">
+        <div class="ghost-orb-face">
+          <div class="ghost-orb-eye left"></div>
+          <div class="ghost-orb-eye right"></div>
+          <div class="ghost-orb-mouth"></div>
+        </div>
+      </div>`;
+    for (let i = 0; i < 4; i++) {
+      const sparkle = document.createElement("div");
+      sparkle.className = "ghost-orb-sparkle";
+      const angle = (i / 4) * Math.PI * 2;
+      const distance = 60 + Math.random() * 20;
+      sparkle.style.setProperty("--sx", Math.cos(angle) * distance + "px");
+      sparkle.style.setProperty("--sy", Math.sin(angle) * distance + "px");
+      sparkle.style.left = "50%";
+      sparkle.style.top = "50%";
+      sparkle.style.animationDelay = (i * 0.3) + "s";
+      orb.appendChild(sparkle);
+    }
   }
 
   document.body.appendChild(orb);
