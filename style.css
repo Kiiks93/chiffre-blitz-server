@@ -1309,13 +1309,14 @@ RESPONSIVE MOBILE
 
 /* ---------- MOBILE : grille réduite + semi-transparente ---------- */
 @media (max-width: 600px) {
-  :root { --game-width: min(86vw, 70vh, 400px); }
-  .tile { background: rgba(42, 24, 69, 0.78); }
-  .tile.alt-theme { background: linear-gradient(135deg, rgba(248, 181, 0, 0.82), rgba(255, 138, 0, 0.82)) !important; }
-  .tile.glacial-theme { background: linear-gradient(135deg, rgba(10, 42, 77, 0.82), rgba(14, 165, 201, 0.82)) !important; }
-  .tile.eclair-theme { background: linear-gradient(135deg, rgba(40, 40, 5, 0.82), rgba(255, 243, 77, 0.82)) !important; }
-  .tile.neon-theme { background: linear-gradient(135deg, rgba(255, 0, 127, 0.82), rgba(0, 229, 255, 0.82), rgba(118, 255, 3, 0.82), rgba(255, 234, 0, 0.82), rgba(157, 117, 203, 0.82)) !important; }
-  .tile.obsidian-theme { background: linear-gradient(135deg, rgba(10, 5, 10, 0.82), rgba(35, 5, 15, 0.82)) !important; }
-  .tile.citrouille-theme { background: linear-gradient(135deg, rgba(26, 13, 0, 0.82), rgba(255, 138, 0, 0.82)) !important; }
-  .tile.fantome-theme { background: linear-gradient(135deg, rgba(26, 0, 51, 0.82), rgba(123, 47, 247, 0.82)) !important; }
+  :root { --game-width: min(82vw, 68vh, 380px) !important; }
+  #grid { width: var(--game-width) !important; }
+  .tile { background: rgba(42, 24, 69, 0.72) !important; }
+  .tile.alt-theme { background: linear-gradient(135deg, rgba(248, 181, 0, 0.75), rgba(255, 138, 0, 0.75)) !important; }
+  .tile.glacial-theme { background: linear-gradient(135deg, rgba(10, 42, 77, 0.75), rgba(14, 165, 201, 0.75)) !important; }
+  .tile.eclair-theme { background: linear-gradient(135deg, rgba(40, 40, 5, 0.75), rgba(255, 243, 77, 0.75)) !important; }
+  .tile.neon-theme { background: linear-gradient(135deg, rgba(255, 0, 127, 0.75), rgba(0, 229, 255, 0.75), rgba(118, 255, 3, 0.75), rgba(255, 234, 0, 0.75), rgba(157, 117, 203, 0.75)) !important; }
+  .tile.obsidian-theme { background: linear-gradient(135deg, rgba(10, 5, 10, 0.75), rgba(35, 5, 15, 0.75)) !important; }
+  .tile.citrouille-theme { background: linear-gradient(135deg, rgba(26, 13, 0, 0.75), rgba(255, 138, 0, 0.75)) !important; }
+  .tile.fantome-theme { background: linear-gradient(135deg, rgba(26, 0, 51, 0.75), rgba(123, 47, 247, 0.75)) !important; }
 }
