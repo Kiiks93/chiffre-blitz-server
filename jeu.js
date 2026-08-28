@@ -130,6 +130,16 @@ function shatterExplosion() {
     setTimeout(() => s.remove(), 1200);
   }
 }
+function ensureEquippedGrid() {
+  if (!myProfile.inventory) myProfile.inventory = {};
+  if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
+  const equipped = myProfile.inventory.__equipped.theme || "";
+  const unlocked = myProfile.unlocked_items || [];
+  if (equipped && !unlocked.includes(equipped)) {
+    delete myProfile.inventory.__equipped.theme;
+    if (socket.connected) socket.emit("equip_cosmetic", "none_theme");
+  }
+}
 
 function ensureComboHUD() {
   let hud = document.getElementById("combo-hud");
