@@ -10,7 +10,7 @@ function applySeasonDA() {
   const fx = document.getElementById("bg-fx");
   if (fx) {
     fx.querySelectorAll(".bg-shape").forEach(s => s.remove());
-    const shapes = seasonId === "s2" ? ["🎃", "👻", "🦇", "🕸️"] : seasonId === "s3" ? ["❄️", "⛄", "🎄", ""] : ["◆", "▲", "■", "●"];
+    const shapes = seasonId === "s2" ? ["🎃", "👻", "🦇", "🕸️"] : seasonId === "s3" ? ["❄️", "⛄", "🎄", "🎁"] : ["◆", "▲", "■", "●"];
     const colors = seasonId === "s2" ? ["#ff8a00", "#b06bff", "#ff4b2b", "#e8dcc0"] : seasonId === "s3" ? ["#ffffff", "#7be8ff", "#ff4b2b", "#38ef7d"] : ["#00d2ff", "#ff007f", "#ffe600", "#00ff88"];
     for (let i = 0; i < 12; i++) {
       const s = document.createElement("div");
