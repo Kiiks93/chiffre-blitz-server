@@ -464,11 +464,57 @@ function createLantern() {
   setTimeout(() => wrapper.remove(), duration * 1000);
 }
 
-/* ---------- 👻 SON FANTÔME (WAV, en attendant l'anim finale) ---------- */
-let _fantomeAudio = null;
-function playFantomeSound() {
+/* ============================================================
+FX 👻 FANTÔMES (grille Fantôme) — Lottie + « Houuuu » Web Audio
+============================================================ */
+let _ghostAudioCtx = null;
+
+function playGhostSound() {
   if (isMuted()) return;
-  if (!_fantomeAudio) _fantomeAudio = new Audio("sound/fantome-combo.wav");
-  _fantomeAudio.currentTime = 0; _fantomeAudio.volume = 0.9;
-  _fantomeAudio.play().catch(() => {});
+  try {
+    if (!_ghostAudioCtx) _ghostAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (_ghostAudioCtx.state === "suspended") _ghostAudioCtx.resume();
+    const ctx = _ghostAudioCtx;
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(220, t);
+    osc.frequency.linearRampToValueAtTime(180, t + 0.5);
+    osc.frequency.linearRampToValueAtTime(240, t + 1.0);
+    osc.frequency.linearRampToValueAtTime(150, t + 1.6);
+    gainNode.gain.setValueAtTime(0.001, t);
+    gainNode.gain.linearRampToValueAtTime(0.12, t + 0.3);
+    gainNode.gain.linearRampToValueAtTime(0.08, t + 1.0);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
+    const filter = ctx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(500, t);
+    osc.connect(filter);
+    filter.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 1.6);
+  } catch (e) {}
+}
+
+function spawnGhostLotties(big) {
+  const count = big ? 10 : 3 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const g = document.createElement("div");
+      g.className = "ghost-particle"; // réutilise la classe existante (lueur violette + descente)
+      const size = 70 + Math.random() * 60;
+      g.style.width = size + "px";
+      g.style.height = size + "px";
+      g.style.fontSize = ""; // pas d'emoji cette fois
+      g.style.left = Math.random() * 90 + 5 + "%";
+      g.style.animationDuration = (3 + Math.random() * 2.5) + "s";
+      document.body.appendChild(g);
+      if (typeof lottie !== "undefined") {
+        lottie.loadAnimation({ container: g, renderer: "svg", loop: true, autoplay: true, path: "fantome-combo.json" });
+      }
+      setTimeout(() => g.remove(), 6000);
+    }, i * 150);
+  }
 }
