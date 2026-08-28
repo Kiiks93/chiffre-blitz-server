@@ -3,6 +3,55 @@ DA SAISONNIÈRE — HALLOWEEN 🎃 & NOËL 🎄
 (chargé APRÈS style.css pour passer par-dessus)
 ============================================================ */
 
+/* ---------- ÉLÉMENTS LOTTIE DE LA SCÈNE HALLOWEEN ---------- */
+.hw-pumpkin-lottie {
+  position: absolute;
+  pointer-events: none;
+  filter: drop-shadow(0 0 12px rgba(255, 138, 0, 0.55));
+  animation: hwFlicker 1.8s steps(2, jump-none) infinite;
+}
+@keyframes hwFlicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.82; } }
+
+.hw-bat-lottie {
+  position: absolute;
+  left: -12%;
+  pointer-events: none;
+  animation: hwBatFly linear forwards;
+  opacity: 0;
+}
+@keyframes hwBatFly {
+  0% { transform: translateX(0) scale(0.3); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateX(118vw) scale(1.7); opacity: 0; }
+}
+
+.hw-ghost-lottie {
+  position: absolute;
+  pointer-events: none;
+  animation: hwGhostApproach ease-in forwards;
+  opacity: 0;
+}
+@keyframes hwGhostApproach {
+  0% { transform: scale(0.2); opacity: 0; }
+  20% { opacity: 0.95; }
+  80% { opacity: 0.95; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+.hw-spider-lottie {
+  position: absolute;
+  top: 0;
+  pointer-events: none;
+  animation: hwSpiderDrop 7s ease-in-out forwards;
+}
+@keyframes hwSpiderDrop {
+  0% { transform: translateY(-130%); }
+  40% { transform: translateY(32vh); }
+  60% { transform: translateY(32vh); }
+  100% { transform: translateY(-130%); }
+}
+
 /* ---------- LANTERNES HALLOWEEN (grille Citrouille) ---------- */
 .lantern-wrapper {
 position: fixed;
