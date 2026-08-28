@@ -20,7 +20,7 @@ let myProfile = {
   username: localStorage.getItem("cb_username") || "",
   region: localStorage.getItem("cb_region") || "Hauts-de-France",
   avatar: parseInt(localStorage.getItem("cb_avatar")) || 1,
-  flag: localStorage.getItem("cb_flag") || "🇫",
+  flag: localStorage.getItem("cb_flag") || "🇫🇷",
   secretCode: localStorage.getItem('cb_secret') || '',
   points: 0, coins: 0, trophies: 0, wins: 0, losses: 0,
   inventory: { __equipped: {
@@ -29,15 +29,15 @@ let myProfile = {
     theme: localStorage.getItem("cb_equipped_theme") || ""
   } },
   unlocked_items: [], equippedPower: null, equippedPowers: [],
-  blitzPassPremium: false, claimedPassTiers: {}
+  blitzPassPremium: false, claimedPassTiers: {}, currentSeasonId: "s1"
 };
 let cachedOpponent = null;
 let pendingProfileValidation = false;
-let launchAdWatched = false;
 let pendingAccountLogin = false;
 let pendingCustomization = false;
 let adCallbackFunction = null;
 let recapActive = false;
+let launchAdWatched = false;
 let selectedRankedItems = [];
 let latestGlobalEvents = {};
 let latest1v1StartData = null;
@@ -117,7 +117,9 @@ function getFrameClass(equippedFrame) {
     "frame_prism": "prism-frame",
     "frame_voltage": "voltage-frame",
     "frame_obsidian": "obsidian-frame",
-    "frame_givre": "givre-frame"
+    "frame_givre": "givre-frame",
+    "frame_osseux": "osseux-frame",
+    "frame_fantome": "fantome-frame"
   };
   return FRAME_CLASS_MAP[equippedFrame] || "";
 }
@@ -128,7 +130,7 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
   if (!playerObj) {
     const pill = document.getElementById("user-pill");
     if (pill) {
-      pill.classList.remove("silver-frame", "chroma-frame", "prism-frame", "voltage-frame", "obsidian-frame");
+      pill.classList.remove("silver-frame", "chroma-frame", "prism-frame", "voltage-frame", "obsidian-frame", "givre-frame", "osseux-frame", "fantome-frame");
       const frameClass = getFrameClass(equippedFrame);
       if (frameClass) pill.classList.add(frameClass);
     }
@@ -136,7 +138,7 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
   let avatarContent = avatarNum || 1;
   let avatarTitle = `Avatar #${avatarNum || 1}`;
   if (equippedAvatar === "avatar_lottie_palier30") {
-    avatarTitle = "Chat Arc-en-ciel (Palier 30 - Lottie)";
+    avatarTitle = "Chat Arc-en-ciel (Palier 25 - Lottie)";
     avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="black-rainbow-cat.json" style="width:32px; height:32px;"></div>`;
   } else if (equippedAvatar === "avatar_lottie_palier15") {
     avatarTitle = "Chat Assistant (Palier 15 - Lottie)";
@@ -144,17 +146,16 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
   } else if (equippedAvatar === "avatar_tigre") {
     avatarTitle = "Tigre de Sibérie (GRAAL - Palier 30)";
     avatarContent = `<video class="tft-avatar-video" src="tiger-siberien.mp4" autoplay loop muted playsinline></video>`;
-  }
   } else if (equippedAvatar === "avatar_s2_squelette") {
-  avatarTitle = "Squelette qui danse (Pass Halloween)";
-  avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="squelette-danse.json" style="width:32px; height:32px;"></div>`;
-} else if (equippedAvatar === "avatar_s2_chauve") {
-  avatarTitle = "Chauve-Souris (Pass Halloween)";
-  avatarContent = `<video class="tft-avatar-video" src="bat-halloween.mp4" autoplay loop muted playsinline></video>`;
-} else if (equippedAvatar === "avatar_s2_citrouille") {
-  avatarTitle = "Citrouille du Château (GRAAL Halloween)";
-  avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="citrouille-chateau.json" style="width:32px; height:32px;"></div>`;
-}
+    avatarTitle = "Squelette qui danse (Pass Halloween)";
+    avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="squelette-danse.json" style="width:32px; height:32px;"></div>`;
+  } else if (equippedAvatar === "avatar_s2_chauve") {
+    avatarTitle = "Chauve-Souris (Pass Halloween)";
+    avatarContent = `<video class="tft-avatar-video" src="bat-halloween.mp4" autoplay loop muted playsinline></video>`;
+  } else if (equippedAvatar === "avatar_s2_citrouille") {
+    avatarTitle = "Citrouille du Château (GRAAL Halloween)";
+    avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="citrouille-chateau.json" style="width:32px; height:32px;"></div>`;
+  }
   const frameClass = getFrameClass(equippedFrame);
   const html = `
     <div class="tft-avatar-container ${frameClass}" title="${avatarTitle}">
@@ -172,8 +173,9 @@ function getLargeAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
   if (avatarType === "avatar_lottie_palier30") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="black-rainbow-cat.json" style="width:60px; height:60px;"></div>`;
   else if (avatarType === "avatar_lottie_palier15") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="cat-assistant.json" style="width:60px; height:60px;"></div>`;
   else if (avatarType === "avatar_tigre") avatarContent = `<video class="tft-avatar-video" src="tiger-siberien.mp4" autoplay loop muted playsinline style="width:60px; height:60px;"></video>`;
-  else if (avatarType === "avatar_s2_chauve") avatarContent = `<video class="tft-avatar-video" src="bat-halloween.mp4a" autoplay loop muted playsinline style="width:60px; height:60px;"></video>`;
-  
+  else if (avatarType === "avatar_s2_squelette") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="squelette-danse.json" style="width:60px; height:60px;"></div>`;
+  else if (avatarType === "avatar_s2_chauve") avatarContent = `<video class="tft-avatar-video" src="bat-halloween.mp4" autoplay loop muted playsinline style="width:60px; height:60px;"></video>`;
+  else if (avatarType === "avatar_s2_citrouille") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="citrouille-chateau.json" style="width:60px; height:60px;"></div>`;
   const html = `
     <div class="tft-avatar-large ${frameClass}">
       <span class="tft-avatar-large-icon" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; ${typeof avatarContent === "number" ? "font-size:24px;" : ""}">${avatarContent}</span>
@@ -205,6 +207,27 @@ function updateProfilePreview() {
     previewContainer.onclick = showAvatarZoom;
   }
 }
+function showAvatarZoom() {
+  let overlay = document.getElementById("avatar-zoom-overlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "avatar-zoom-overlay";
+    overlay.className = "modal-overlay";
+    overlay.style.background = "rgba(0,0,0,0.88)";
+    overlay.onclick = () => { overlay.style.display = "none"; };
+    overlay.innerHTML = `<div style="text-align:center;">
+      <div id="avatar-zoom-content" style="transform:scale(2.1); pointer-events:none;"></div>
+      <div style="margin-top:90px; font-size:11px; color:#aaa; font-weight:bold;">🔍 Touche pour fermer</div>
+    </div>`;
+    document.body.appendChild(overlay);
+  }
+  const preview = document.getElementById("modal-avatar-preview");
+  const content = document.getElementById("avatar-zoom-content");
+  content.innerHTML = preview ? preview.innerHTML : "";
+  content.querySelectorAll("[data-lottie-loaded]").forEach(el => el.removeAttribute("data-lottie-loaded"));
+  overlay.style.display = "flex";
+  setTimeout(() => initAllLottieBadges(), 50);
+}
 function renderProfileAvatarSelector() {
   const container = document.getElementById("profile-avatar-selector");
   if (!container) return;
@@ -226,7 +249,55 @@ function renderProfileAvatarSelector() {
   if (unlocked.includes("avatar_s2_chauve")) addAvatarOption("avatar_s2_chauve", "🦇", "Chauve-Souris");
   if (unlocked.includes("avatar_s2_citrouille")) addAvatarOption("avatar_s2_citrouille", "🎃", "Citrouille");
 }
-/* ---------- PACKS (grille + cadre en 1 clic) ---------- */
+const TITLE_DISPLAY_NAMES = {
+  "title_stalker": "Stalker Numérique",
+  "title_felin": "Réflexe Félin",
+  "title_neon": "Pulsion Néon",
+  "title_spectre": "Spectre Cosmique",
+  "title_supreme": "⚡ FÉLIN SUPRÊME",
+  "title_champion": "🏅 Champion Éclair",
+  "title_combattant": "🎖️ Combattant",
+  "title_elite": "🏵️ Élite",
+  "title_eveille": "⚡ Éveil",
+  "title_flamme": "🔥 Fournaise",
+  "title_parfait": "💎 PERFECTION",
+  "title_vainqueur": "⚔️ Vainqueur",
+  "title_inarrettable": "🔥 Inarrêtable",
+  "title_gladiateur": "🛡️ Gladiateur",
+  "title_champion_trophy": "👑 Champion",
+  "title_maitre_avalanche": "🎯 Maître Avalanche",
+  "title_travailleur": "⛏️ Travailleur",
+  "title_etoile": "⭐ Étoile Montante",
+  "title_roi_local": "🏰 Roi Local",
+  "title_midas": "💰 Midas",
+  "title_dynastie": "🏛️ Dynastie",
+  "title_mondial": "🌍 N°1 Mondial",
+  "title_fantome": "👻 Chuchoteur de Fantômes",
+  "title_danse_macabre": "🦴 Danse Macabre",
+  "title_citrouille": "🎃 Pulsion Citrouille",
+  "title_spectre_automne": "🍂 Spectre d'Automne",
+  "title_roi_halloween": "🎃 ROI D'HALLOWEEN",
+  "title_esprit_halloween": "👻 Esprit d'Halloween"
+};
+const FRAME_DISPLAY_NAMES = {
+  "frame_silver": "🛡️ Cadre « Argenté »",
+  "frame_chroma": "🌈 Cadre « Flux Chroma »",
+  "frame_prism": "✨ Cadre « Doré »",
+  "frame_voltage": "⚡ Cadre « Sous Tension »",
+  "frame_obsidian": "🖤 Cadre « Obsidienne »",
+  "frame_givre": "🧊 Cadre « Givre »",
+  "frame_osseux": "🦴 Cadre « Osseux »",
+  "frame_fantome": "👻 Cadre « Fantôme »"
+};
+const THEME_DISPLAY_NAMES = {
+  "theme_alt": "🎨 Thème de Grille Rétro / Doré",
+  "theme_glacial": "🧊 Thème de Grille Cryo",
+  "theme_eclair": "⚡ Thème de Grille Éclair",
+  "theme_neon": "🌈 Thème de Grille Néon Synthwave",
+  "theme_obsidian": "🖤 Thème de Grille Obsidienne",
+  "theme_citrouille": "🎃 Thème de Grille Citrouille"
+};
+/* ---------- PACKS : menu déroulant (grille + cadre en 1 choix) ---------- */
 const PACKS_LIST = [
   { id: "pack_haute_tension", name: "⚡ Haute Tension", theme: "theme_eclair", frame: "frame_voltage" },
   { id: "pack_cryo", name: "🧊 Cryo", theme: "theme_glacial", frame: "frame_givre" },
@@ -234,8 +305,6 @@ const PACKS_LIST = [
   { id: "pack_obsidienne", name: "🖤 Obsidienne", theme: "theme_obsidian", frame: "frame_obsidian" },
   { id: "pack_neon", name: "🌈 Néon", theme: "theme_neon", frame: "frame_chroma" }
 ];
-
-/* ---------- PACKS : menu déroulant (grille + cadre en 1 choix) ---------- */
 function ensurePackSelector() {
   if (document.getElementById("pack-input")) return;
   const themeSelect = document.getElementById("theme-input");
@@ -274,78 +343,6 @@ function renderProfilePackSelector() {
     packSelect.appendChild(opt);
   });
 }
-
-/* ---------- AVATAR ZOOM (clic sur l'aperçu) ---------- */
-function showAvatarZoom() {
-  let overlay = document.getElementById("avatar-zoom-overlay");
-  if (!overlay) {
-    overlay = document.createElement("div");
-    overlay.id = "avatar-zoom-overlay";
-    overlay.className = "modal-overlay";
-    overlay.style.background = "rgba(0,0,0,0.88)";
-    overlay.onclick = () => { overlay.style.display = "none"; };
-    overlay.innerHTML = `<div style="text-align:center;">
-      <div id="avatar-zoom-content" style="transform:scale(2.1); pointer-events:none;"></div>
-      <div style="margin-top:90px; font-size:11px; color:#aaa; font-weight:bold;">🔍 Touche pour fermer</div>
-    </div>`;
-    document.body.appendChild(overlay);
-  }
-  const preview = document.getElementById("modal-avatar-preview");
-  const content = document.getElementById("avatar-zoom-content");
-  content.innerHTML = preview ? preview.innerHTML : "";
-  content.querySelectorAll("[data-lottie-loaded]").forEach(el => el.removeAttribute("data-lottie-loaded"));
-  overlay.style.display = "flex";
-  setTimeout(() => initAllLottieBadges(), 50);
-}
-
-const TITLE_DISPLAY_NAMES = {
-  "title_stalker": "Stalker Numérique",
-  "title_felin": "Réflexe Félin",
-  "title_neon": "Pulsion Néon",
-  "title_spectre": "Spectre Cosmique",
-  "title_supreme": "⚡ FÉLIN SUPRÊME",
-  "title_champion": "🏅 Champion Éclair",
-  "title_combattant": "🎖️ Combattant",
-  "title_elite": "🏵️ Élite",
-  "title_eveille": "⚡ Éveil",
-  "title_flamme": "🔥 Fournaise",
-  "title_parfait": "💎 PERFECTION",
-  "title_vainqueur": "⚔️ Vainqueur",
-  "title_inarrettable": "🔥 Inarrêtable",
-  "title_gladiateur": "🛡️ Gladiateur",
-  "title_champion_trophy": "👑 Champion",
-  "title_maitre_avalanche": "🎯 Maître Avalanche",
-  "title_travailleur": "⛏️ Travailleur",
-  "title_etoile": "⭐ Étoile Montante",
-  "title_roi_local": "🏰 Roi Local",
-  "title_midas": "💰 Midas",
-  "title_dynastie": "🏛️ Dynastie",
-  "title_mondial": "🌍 N°1 Mondial",
-  "title_fantome": "👻 Chuchoteur de Fantômes",
-  "title_danse_macabre": "🦴 Danse Macabre",
-  "title_citrouille": "🎃 Pulsion Citrouille",
-  "title_spectre_automne": "🍂 Spectre d'Automne",
-  "title_roi_halloween": "🎃 ROI D'HALLOWEEN",
-  "title_esprit_halloween": "👻 Esprit d'Halloween"
-};
-const FRAME_DISPLAY_NAMES = {
-  "frame_silver": "🛡️ Cadre « Argenté »",
-  "frame_chroma": "🌈 Cadre « Flux Chroma »",
-  "frame_prism": "✨ Cadre « Doré »",
-  "frame_voltage": "⚡ Cadre « Sous Tension »",
-  "frame_obsidian": "🖤 Cadre « Obsidienne »",
-  "frame_givre": "🧊 Cadre « Givre »",
-  "frame_osseux": "🦴 Cadre « Osseux »", 
-  "frame_fantome": "👻 Cadre « Fantôme »"
-};
-const THEME_DISPLAY_NAMES = {
-  "theme_alt": "🎨 Thème de Grille Rétro / Doré",
-  "theme_glacial": "🧊 Thème de Grille Cryo",
-  "theme_eclair": "⚡ Thème de Grille Éclair",
-  "theme_neon": "🌈 Thème de Grille Néon Synthwave",
-  "theme_obsidian": "🖤 Thème de Grille Obsidienne",
-  "theme_citrouille": "🎃 Thème de Grille Citrouille"
-};
 function renderProfileCustomizationMenus() {
   const titleSelect = document.getElementById("title-input");
   const equippedTitle = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.title;
@@ -516,7 +513,7 @@ function switchAccount() {
   myProfile.secretCode = '';
   myProfile.region = 'Hauts-de-France';
   myProfile.avatar = 1;
-  myProfile.flag = '🇫';
+  myProfile.flag = '🇫🇷';
   myProfile.inventory = { __equipped: {} };
   myProfile.unlocked_items = [];
   renderAccountContent();
@@ -581,7 +578,7 @@ function submitAccountForm() {
   myProfile.secretCode = code;
   if (!myProfile.region) myProfile.region = 'Hauts-de-France';
   if (!myProfile.avatar) myProfile.avatar = 1;
-  if (!myProfile.flag) myProfile.flag = '🇫🇷';
+  if (!myProfile.flag) myProfile.flag = '🇫';
   pendingAccountLogin = true;
   if (socket.connected) {
     socket.emit("register_player", {
@@ -653,7 +650,7 @@ function checkAndShowProfileModal() {
     myProfile.username = localStorage.getItem("cb_username");
     myProfile.region = localStorage.getItem("cb_region");
     myProfile.avatar = parseInt(localStorage.getItem("cb_avatar")) || 1;
-    myProfile.flag = getFlagEmoji(localStorage.getItem("cb_flag") || "🇫🇷");
+    myProfile.flag = getFlagEmoji(localStorage.getItem("cb_flag") || "🇫");
     const savedTitle = localStorage.getItem("cb_equipped_title");
     const savedFrame = localStorage.getItem("cb_equipped_frame");
     const savedTheme = localStorage.getItem("cb_equipped_theme");
@@ -688,7 +685,7 @@ function promptProfileChange() {
   document.getElementById("username-input").disabled = true;
   if (myProfile.region) document.getElementById("region-input").value = myProfile.region;
   document.getElementById("avatar-input").value = myProfile.avatar || 1;
-  document.getElementById("flag-input").value = myProfile.flag || "🇫";
+  document.getElementById("flag-input").value = myProfile.flag || "🇫🇷";
   const equippedAvatar = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar;
   activeAvatarChoice = equippedAvatar || "standard";
   renderProfileCustomizationMenus();
