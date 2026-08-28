@@ -15,6 +15,9 @@ DA SAISONNIÈRE — HALLOWEEN 🎃 & NOËL 🎄
 .tft-avatar-large.fantome-frame { border-color: #b06bff !important; box-shadow: 0 0 22px rgba(157, 47, 255, 0.9) !important; background: linear-gradient(135deg, #1a0033, #7b2ff7); }
 .victory-badge-large.fantome-frame { background: linear-gradient(135deg, #1a0033, #7b2ff7); border-color: #b06bff; box-shadow: 0 0 30px rgba(157, 47, 255, 0.8); }
 
+.tile.citrouille-theme { background: linear-gradient(135deg, #1a0d00, #ff8a00) !important; border-color: #ff8a00 !important; color: #fff !important; box-shadow: 0 0 12px rgba(255, 138, 0, 0.6); }
+.tile.fantome-theme { background: linear-gradient(135deg, #1a0033, #7b2ff7) !important; border-color: #b06bff !important; color: #fff !important; box-shadow: 0 0 12px rgba(157, 47, 255, 0.6); }
+
 /* ---------- SAISON 2 : HALLOWEEN ---------- */
 body.season-s2 { background: radial-gradient(circle at 50% 20%, #1a0033 0%, #0a001a 60%, #050008 100%); }
 body.season-s2 h1 { color: #ff8a00; text-shadow: 0 0 15px rgba(255, 138, 0, 0.5); }
