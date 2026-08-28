@@ -92,40 +92,57 @@ if (selectedRankedItems && selectedRankedItems.length > 0) selectedRankedItems =
 }
 
 /* ============================================================
-PASSE DE SAISON « FELIN & NEON »
+PASSE DE SAISON — MOTEUR MULTI-SAISONS
 ============================================================ */
-const BLITZ_PASS_TIERS = [
-{ tier: 1, free: "50 Pièces (🪙)", premium: "Titre exclusif « [ Stalker Numérique ] »" },
-{ tier: 2, free: "1 💡 Projecteur", premium: "100 Pièces (🪙)" },
-{ tier: 3, free: "50 Pièces (🪙)", premium: "Titre rare « [ Réflexe Félin ] »" },
-{ tier: 4, free: "1 ⏳ Blocage du Temps", premium: "🛡️ Cadre de Profil Argenté" },
-{ tier: 5, free: "75 Pièces (🪙)", premium: "150 Pièces (🪙)" },
-{ tier: 6, free: "1 ⚡ Joker Éclair", premium: "Pack de Consommables (Bonus)" },
-{ tier: 7, free: "50 Pièces (🪙)", premium: "Titre « [ Pulsion Néon ] »" },
-{ tier: 8, free: "1 💡 Projecteur", premium: "2 🌟 Novas Temporelles" },
-{ tier: 9, free: "100 Pièces (🪙)", premium: "200 Pièces (🪙)" },
-{ tier: 10, free: "1 🌟 Nova Temporelle", premium: "🎨 Grille Néon Synthwave (EXCLUSIF pass)" },
-{ tier: 11, free: "60 Pièces (🪙)", premium: "120 Pièces (🪙)" },
-{ tier: 12, free: "1 ⏳ Blocage du Temps", premium: "1 💡 Projecteur" },
-{ tier: 13, free: "70 Pièces (🪙)", premium: "Titre « [ Spectre Cosmique ] »" },
-{ tier: 14, free: "1 ⚡ Joker Éclair", premium: "2 ⏳ Blocage du Temps" },
-{ tier: 15, free: "150 Pièces (🪙)", premium: "🐱 Avatar Animé Lottie : Chat Assistant" },
-{ tier: 16, free: "80 Pièces (🪙)", premium: "160 Pièces (🪙)" },
-{ tier: 17, free: "2 💡 Projecteur", premium: "2 🌟 Novas Temporelles" },
-{ tier: 18, free: "90 Pièces (🪙)", premium: "250 Pièces (🪙)" },
-{ tier: 19, free: "1 ⚡ Joker Éclair", premium: "1 📳 Séisme" },
-{ tier: 20, free: "100 Pièces (🪙)", premium: "🌈 Cadre Animé « Flux Chroma »" },
-{ tier: 21, free: "110 Pièces (🪙)", premium: "220 Pièces (🪙)" },
-{ tier: 22, free: "1 ⏳ Blocage du Temps", premium: "3 💡 Projecteur" },
-{ tier: 23, free: "120 Pièces (🪙)", premium: "350 Pièces (🪙)" },
-{ tier: 24, free: "1 ⚡ Joker Éclair", premium: "300 Pièces (🪙)" },
-{ tier: 25, free: "150 Pièces (🪙)", premium: "🌈 Avatar Animé Lottie : Chat Arc-en-ciel" },
-{ tier: 26, free: "130 Pièces (🪙)", premium: "260 Pièces (🪙)" },
-{ tier: 27, free: "2 💡 Projecteur", premium: "4 🌟 Novas Temporelles" },
-{ tier: 28, free: "140 Pièces (🪙)", premium: "400 Pièces (🪙)" },
-{ tier: 29, free: "300 Pièces (🪙)", premium: "500 Pièces (🪙)" },
-{ tier: 30, free: "Titre suprême « [ ⚡ FÉLIN SUPRÊME ] » + 500 🪙", premium: "🏆 GRAAL : 🐯 Avatar Tigre de Sibérie (Vidéo) + 1000 🪙" }
+const SEASONS_CLIENT = [
+  { id: "s1", name: "FÉLIN & NÉON", emoji: "🐱", start: "01/06/2026", end: "30/09/2026", tiers: [
+    { tier: 1, free: "50 Pièces (🪙)", premium: "Titre exclusif « [ Stalker Numérique ] »" },
+    { tier: 2, free: "1 💡 Projecteur", premium: "100 Pièces (🪙)" },
+    { tier: 3, free: "50 Pièces (🪙)", premium: "Titre rare « [ Réflexe Félin ] »" },
+    { tier: 4, free: "1 ⏳ Blocage du Temps", premium: "🛡️ Cadre de Profil Argenté" },
+    { tier: 5, free: "75 Pièces (🪙)", premium: "150 Pièces (🪙)" },
+    { tier: 6, free: "1 ⚡ Joker Éclair", premium: "Pack de Consommables (Bonus)" },
+    { tier: 7, free: "50 Pièces (🪙)", premium: "Titre « [ Pulsion Néon ] »" },
+    { tier: 8, free: "1 💡 Projecteur", premium: "2 🌟 Novas Temporelles" },
+    { tier: 9, free: "100 Pièces (🪙)", premium: "200 Pièces (🪙)" },
+    { tier: 10, free: "1 🌟 Nova Temporelle", premium: "🎨 Grille Néon Synthwave (EXCLUSIF pass)" },
+    { tier: 11, free: "60 Pièces (🪙)", premium: "120 Pièces (🪙)" },
+    { tier: 12, free: "1 ⏳ Blocage du Temps", premium: "1 💡 Projecteur" },
+    { tier: 13, free: "70 Pièces (🪙)", premium: "Titre « [ Spectre Cosmique ] »" },
+    { tier: 14, free: "1 ⚡ Joker Éclair", premium: "2 ⏳ Blocage du Temps" },
+    { tier: 15, free: "150 Pièces (🪙)", premium: "🐱 Avatar Animé Lottie : Chat Assistant" },
+    { tier: 16, free: "80 Pièces (🪙)", premium: "160 Pièces (🪙)" },
+    { tier: 17, free: "2 💡 Projecteur", premium: "2 🌟 Novas Temporelles" },
+    { tier: 18, free: "90 Pièces (🪙)", premium: "250 Pièces (🪙)" },
+    { tier: 19, free: "1 ⚡ Joker Éclair", premium: "1 📳 Séisme" },
+    { tier: 20, free: "100 Pièces (🪙)", premium: "🌈 Cadre Animé « Flux Chroma »" },
+    { tier: 21, free: "110 Pièces (🪙)", premium: "220 Pièces (🪙)" },
+    { tier: 22, free: "1 ⏳ Blocage du Temps", premium: "3 💡 Projecteur" },
+    { tier: 23, free: "120 Pièces (🪙)", premium: "350 Pièces (🪙)" },
+    { tier: 24, free: "1 ⚡ Joker Éclair", premium: "300 Pièces (🪙)" },
+    { tier: 25, free: "150 Pièces (🪙)", premium: "🌈 Avatar Animé Lottie : Chat Arc-en-ciel" },
+    { tier: 26, free: "130 Pièces (🪙)", premium: "260 Pièces (🪙)" },
+    { tier: 27, free: "2 💡 Projecteur", premium: "4 🌟 Novas Temporelles" },
+    { tier: 28, free: "140 Pièces (🪙)", premium: "400 Pièces (🪙)" },
+    { tier: 29, free: "300 Pièces (🪙)", premium: "500 Pièces (🪙)" },
+    { tier: 30, free: "Titre suprême « [ ⚡ FÉLIN SUPRÊME ] » + 500 🪙", premium: "🏆 GRAAL : 🐯 Avatar Tigre de Sibérie (Vidéo) + 1000 🪙" }
+  ] },
+  { id: "s2", name: "HALLOWEEN", emoji: "🎃", start: "01/10/2026", end: "30/11/2026", tiers: [] },
+  { id: "s3", name: "NOËL", emoji: "🎄", start: "01/12/2026", end: "10/01/2027", tiers: [] }
 ];
+function getActiveSeason() {
+  if (myProfile.currentSeasonId) {
+    const s = SEASONS_CLIENT.find(x => x.id === myProfile.currentSeasonId);
+    if (s) return s;
+  }
+  const now = new Date();
+  for (const s of SEASONS_CLIENT) {
+    const [d1, m1, y1] = s.start.split("/").map(Number);
+    const [d2, m2, y2] = s.end.split("/").map(Number);
+    if (now >= new Date(y1, m1 - 1, d1) && now <= new Date(y2, m2 - 1, d2, 23, 59)) return s;
+  }
+  return SEASONS_CLIENT[SEASONS_CLIENT.length - 1];
+}
 function openBlitzPass() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } document.getElementById("modal-blitz-pass").style.display = "flex"; renderBlitzPass(); }
 function closeBlitzPass() { document.getElementById("modal-blitz-pass").style.display = "none"; }
 function showRewardPopUp(rewardName, rewardIcon) {
@@ -148,15 +165,22 @@ SoundEngine.playVictory();
 }
 function renderBlitzPass() {
 const container = document.getElementById("blitz-pass-container");
-const isPremium = myProfile.blitzPassPremium;
-const claimed = myProfile.claimedPassTiers || {};
+const season = getActiveSeason();
+const seasonData = (myProfile.claimedPassTiers || {})[season.id] || {};
+const isPremium = !!seasonData.premium || (season.id === "s1" && myProfile.blitzPassPremium);
+const claimed = seasonData;
 container.innerHTML = `<div class="bp-header-banner">
-<div style="font-size:13px; font-weight:900; color:#f8b500; margin-bottom:2px;">🌟 SAISON 1 : PASSE DE SAISON FÉLIN & NÉON</div>
+<div style="font-size:13px; font-weight:900; color:#f8b500; margin-bottom:2px;">${season.emoji} PASSE DE SAISON : ${season.name}</div>
+<div style="font-size:9px; color:#aaa; margin-bottom:4px;">📅 ${season.start} → ${season.end}</div>
 <div style="font-size:10px; color:#ccc; margin-bottom:6px;">${isPremium ? "✨ Passe Premium Actif !" : "Débloque le Passe Premium pour 1000 🪙"}</div>
 ${!isPremium ? `<button class="btn-main btn-gold" onclick="buyBlitzPassPremium()" style="padding:6px 10px; font-size:11px; margin:0 auto; width:auto;">Acheter le Passe Premium (1000 🪙) </button>` : `<div style="color:#00ff88; font-weight:bold; font-size:10px;">Statut : VIP / Premium</div>`}</div>`;
+if (!season.tiers || season.tiers.length === 0) {
+container.innerHTML += `<div style="text-align:center; color:#aaa; padding:20px; font-size:12px; font-weight:bold;">${season.emoji} Le contenu de la saison ${season.name} arrive bientôt !</div>`;
+return;
+}
 const listDiv = document.createElement("div");
 listDiv.style.cssText = "display:flex; flex-direction:column; gap:6px;";
-BLITZ_PASS_TIERS.forEach(t => {
+season.tiers.forEach(t => {
 const freeKey = `${t.tier}_free`;
 const premKey = `${t.tier}_premium`;
 const isFreeClaimed = claimed[freeKey];
@@ -180,7 +204,8 @@ function buyBlitzPassPremium() { if (myProfile.coins < 1000) { showNotificationT
 function claimPassReward(tier, track) { if (track === "premium" && !myProfile.blitzPassPremium) { showNotificationToast("❌ Tu dois acheter le Passe Premium pour récupérer cette récompense !", "announcement"); return; } socket.emit("claim_pass_tier", { tier, track }); }
 socket.on("pass_tier_claimed", (data) => {
 const tier = data.tier, track = data.track;
-const tierData = BLITZ_PASS_TIERS.find(t => t.tier === tier);
+const season = getActiveSeason();
+const tierData = season.tiers.find(t => t.tier === tier);
 const rewardText = tierData ? (track === "premium" ? tierData.premium : tierData.free) : `Palier ${tier}`;
 const icon = (tier === 30 && track === "premium") ? "🐯" : (tier === 25 && track === "premium") ? "🌈" : (tier === 15 && track === "premium") ? "🐱" : "🌟";
 showRewardPopUp(rewardText, icon);
