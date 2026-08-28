@@ -135,7 +135,7 @@ function ensureEquippedGrid() {
   if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
   const equipped = myProfile.inventory.__equipped.theme || "";
   const unlocked = myProfile.unlocked_items || [];
-  if (equipped && !unlocked.includes(equipped)) {
+  if (equipped && unlocked.length > 0 && !unlocked.includes(equipped)) {
     delete myProfile.inventory.__equipped.theme;
     if (socket.connected) socket.emit("equip_cosmetic", "none_theme");
   }
@@ -1287,15 +1287,7 @@ function renderGrid(pool, handler) {
   if (!grid) return;
   grid.innerHTML = "";
   if (!pool) return;
-  // Guard : si le thème équipé n'est pas possédé, on revient au standard
-  if (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme) {
-    const equipped = myProfile.inventory.__equipped.theme;
-    const unlocked = myProfile.unlocked_items || [];
-    if (!unlocked.includes(equipped)) {
-      delete myProfile.inventory.__equipped.theme;
-      if (socket.connected) socket.emit("equip_cosmetic", "none_theme");
-    }
-  }
+     }
   const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
   const isAltTheme = equippedTheme === "theme_alt";
   const isGlacialTheme = equippedTheme === "theme_glacial";
@@ -1477,16 +1469,7 @@ function renderGrid(pool, handler) {
   const grid = document.getElementById("grid");
   if (!grid) return;
   grid.innerHTML = "";
-  if (!pool) return;
-  // Guard : si le thème équipé n'est pas possédé, on revient au standard
-  if (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme) {
-    const equipped = myProfile.inventory.__equipped.theme;
-    const unlocked = myProfile.unlocked_items || [];
-    if (!unlocked.includes(equipped)) {
-      delete myProfile.inventory.__equipped.theme;
-      if (socket.connected) socket.emit("equip_cosmetic", "none_theme");
-    }
-  }
+  if (!pool) return;  
   const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
   const isAltTheme = equippedTheme === "theme_alt";
   const isGlacialTheme = equippedTheme === "theme_glacial";
