@@ -465,9 +465,24 @@ function createLantern() {
 }
 
 /* ============================================================
-FX 👻 FANTÔMES (grille Fantôme) — Lottie + « Houuuu » Web Audio
+FX 👻 FANTÔMES OPTIMISÉS (canvas + préchargement + recyclage)
 ============================================================ */
 let _ghostAudioCtx = null;
+let _ghostAnimationData = null; // JSON préchargé une seule fois
+const _activeGhosts = [];
+const MAX_GHOSTS = 6;
+
+// Précharge le JSON une seule fois au démarrage
+async function preloadGhostAnimation() {
+  if (_ghostAnimationData) return;
+  try {
+    const res = await fetch("fantome-combo.json");
+    _ghostAnimationData = await res.json();
+    console.log("✅ Animation fantôme préchargée");
+  } catch (e) {
+    console.warn("⚠️ Animation fantôme introuvable, fallback emoji");
+  }
+}
 
 function playGhostSound() {
   if (isMuted()) return;
@@ -499,25 +514,69 @@ function playGhostSound() {
 }
 
 function spawnGhostLotties(big) {
+  // Fallback emoji si le JSON n'est pas chargé
+  if (!_ghostAnimationData) {
+    const count = big ? 6 : 3;
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => {
+        const g = document.createElement("div");
+        g.className = "ghost-particle";
+        g.innerText = "👻";
+        g.style.fontSize = (50 + Math.random() * 40) + "px";
+        g.style.left = Math.random() * 80 + 10 + "%";
+        g.style.top = Math.random() * 70 + 15 + "%";
+        g.style.animationDuration = (1.4 + Math.random() * 0.8) + "s";
+        document.body.appendChild(g);
+        setTimeout(() => g.remove(), 2500);
+      }, i * 100);
+    }
+    return;
+  }
+
+  // Limite : supprime les plus anciens si trop de fantômes
+  while (_activeGhosts.length >= MAX_GHOSTS) {
+    const oldest = _activeGhosts.shift();
+    if (oldest && oldest.anim) {
+      oldest.anim.destroy();
+      if (oldest.el && oldest.el.parentNode) oldest.el.remove();
+    }
+  }
+
   const count = big ? 5 : 2 + Math.floor(Math.random() * 2);
   for (let i = 0; i < count; i++) {
     setTimeout(() => {
       const g = document.createElement("div");
       g.className = "ghost-particle";
-      const size = 60 + Math.random() * 40;
+      const size = 70 + Math.random() * 50;
       g.style.width = size + "px";
       g.style.height = size + "px";
+      g.style.fontSize = "";
       g.style.left = Math.random() * 80 + 10 + "%";
       g.style.top = Math.random() * 70 + 15 + "%";
-      g.style.animationDuration = (1.4 + Math.random() * 0.8) + "s";
-      // Juste un emoji 👻 au lieu de Lottie
-      g.innerText = "👻";
-      g.style.fontSize = size * 0.7 + "px";
-      g.style.display = "flex";
-      g.style.alignItems = "center";
-      g.style.justifyContent = "center";
+      g.style.animationDuration = (1.6 + Math.random() * 1.2) + "s";
       document.body.appendChild(g);
-      setTimeout(() => g.remove(), 2800);
-    }, i * 120);
+
+      // CANVAS au lieu de SVG → 10x plus rapide
+      const anim = lottie.loadAnimation({
+        container: g,
+        renderer: "canvas",  // ← LE CHANGEMENT CLÉ
+        loop: true,
+        autoplay: true,
+        animationData: _ghostAnimationData  // ← réutilise le JSON en mémoire
+      });
+
+      const ghostObj = { el: g, anim };
+      _activeGhosts.push(ghostObj);
+
+      setTimeout(() => {
+        if (anim) anim.destroy();
+        if (g.parentNode) g.remove();
+        const idx = _activeGhosts.indexOf(ghostObj);
+        if (idx !== -1) _activeGhosts.splice(idx, 1);
+      }, 3200);
+    }, i * 140);
   }
 }
+
+// Appel de préchargement (à lancer une fois)
+preloadGhostAnimation();
