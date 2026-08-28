@@ -310,7 +310,8 @@ const THEME_DISPLAY_NAMES = {
   "theme_eclair": "⚡ Thème de Grille Éclair",
   "theme_neon": "🌈 Thème de Grille Néon Synthwave",
   "theme_obsidian": "🖤 Thème de Grille Obsidienne",
-  "theme_citrouille": "🎃 Thème de Grille Citrouille"
+  "theme_citrouille": "🎃 Thème de Grille Lanterne",
+  "theme_fantome": "👻 Thème de Grille Fantôme",
 };
 /* ---------- PACKS : menu déroulant (grille + cadre en 1 choix) ---------- */
 const PACKS_LIST = [
@@ -320,8 +321,8 @@ const PACKS_LIST = [
   { id: "pack_solaire", name: "✨ Doré", theme: "theme_alt", frame: "frame_prism" },
   { id: "pack_obsidienne", name: "🖤 Obsidienne", theme: "theme_obsidian", frame: "frame_obsidian" },
   { id: "pack_neon", name: "🌈 Néon", theme: "theme_neon", frame: "frame_chroma" },
-  { id: "pack_halloween_osseux", name: "🎃 Citrouille + Lanterne", theme: "theme_citrouille", frame: "frame_osseux" },
-  { id: "pack_halloween_fantome", name: "👻 Citrouille + Fantôme", theme: "theme_citrouille", frame: "frame_fantome" },
+  { id: "pack_halloween_citrouille", name: "🎃 Pack Lanterne", theme: "theme_citrouille", frame: "frame_osseux" },
+  { id: "pack_halloween_fantome", name: "👻 Pack Fantôme", theme: "theme_fantome", frame: "frame_fantome" },
 ];
 function ensurePackSelector() {
   if (document.getElementById("pack-input")) return;
