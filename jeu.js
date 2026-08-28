@@ -267,8 +267,8 @@ function triggerPerfection() {
     setTimeout(() => shakeScreen(1.2), 500);} 
   else if (themeNow === "theme_neon") {
   if (typeof neonHyperspace === "function") neonHyperspace();} 
-  else if (themeNow === "theme_citrouille") { playComboVideo("lanterne-combo.mp4"); playLanterneSound(); shakeScreen(1.2); }
-  else if (themeNow === "theme_fantome") { playComboVideo("fantome-combo.mp4"); playFantomeSound(); shakeScreen(1.2); }
+  else if (themeNow === "theme_citrouille") { spawnLanterns(true); playLanternSound(); shakeScreen(1.2); }
+  else if (themeNow === "theme_fantome") { spawnGhosts(true); playFantomeSound(); shakeScreen(1.2); }
 
   const crackCount = 18;
   for (let i = 0; i < crackCount; i++) {
@@ -390,10 +390,10 @@ function spawnCrack() {
   if (themeNow === "theme_neon") return;
   
   //  THÈME CITROUILLE : pluie de citrouilles
-  if (themeNow === "theme_citrouille") { playComboVideo("lanterne-combo.mp4"); playLanterneSound(); return; }
+  if (themeNow === "theme_citrouille") { spawnLanterns(false); playLanternSound(); return; }
   
   // 👻 THÈME FANTÔME : fantômes qui descendent
-  if (themeNow === "theme_fantome") { playComboVideo("fantome-combo.mp4"); playFantomeSound(); return; }
+  if (themeNow === "theme_fantome") { spawnGhosts(false); playFantomeSound(); return; }
   
   //  THÈME ÉCLAIR : arcs fractals
   if (themeNow === "theme_eclair") {
