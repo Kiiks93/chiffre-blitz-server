@@ -468,11 +468,10 @@ function createLantern() {
 FX 👻 FANTÔMES OPTIMISÉS (canvas + préchargement + recyclage)
 ============================================================ */
 let _ghostAudioCtx = null;
-let _ghostAnimationData = null; // JSON préchargé une seule fois
+let _ghostAnimationData = null;
 const _activeGhosts = [];
-const MAX_GHOSTS = 6;
+const MAX_GHOSTS = 3;
 
-// Précharge le JSON une seule fois au démarrage
 async function preloadGhostAnimation() {
   if (_ghostAnimationData) return;
   try {
@@ -514,9 +513,9 @@ function playGhostSound() {
 }
 
 function spawnGhostLotties(big) {
-  // Fallback emoji si le JSON n'est pas chargé
-  if (!_ghostAnimationData) {
-    const count = big ? 6 : 3;
+  // Fallback emoji si JSON pas chargé
+  if (!_ghostAnimationData || typeof lottie === "undefined") {
+    const count = big ? 5 : 2;
     for (let i = 0; i < count; i++) {
       setTimeout(() => {
         const g = document.createElement("div");
@@ -528,41 +527,40 @@ function spawnGhostLotties(big) {
         g.style.animationDuration = (1.4 + Math.random() * 0.8) + "s";
         document.body.appendChild(g);
         setTimeout(() => g.remove(), 2500);
-      }, i * 100);
+      }, i * 120);
     }
     return;
   }
 
-  // Limite : supprime les plus anciens si trop de fantômes
+  // Recyclage : supprime les plus anciens
   while (_activeGhosts.length >= MAX_GHOSTS) {
     const oldest = _activeGhosts.shift();
-    if (oldest && oldest.anim) {
-      oldest.anim.destroy();
+    if (oldest) {
+      if (oldest.anim) oldest.anim.destroy();
       if (oldest.el && oldest.el.parentNode) oldest.el.remove();
     }
   }
 
-  const count = big ? 5 : 2 + Math.floor(Math.random() * 2);
+  const count = big ? 3 : 1 + Math.floor(Math.random() * 2);
   for (let i = 0; i < count; i++) {
     setTimeout(() => {
       const g = document.createElement("div");
       g.className = "ghost-particle";
-      const size = 70 + Math.random() * 50;
+      const size = 80 + Math.random() * 50;
       g.style.width = size + "px";
       g.style.height = size + "px";
-      g.style.fontSize = "";
       g.style.left = Math.random() * 80 + 10 + "%";
       g.style.top = Math.random() * 70 + 15 + "%";
-      g.style.animationDuration = (1.6 + Math.random() * 1.2) + "s";
+      g.style.animationDuration = "2.8s";
       document.body.appendChild(g);
 
-      // CANVAS au lieu de SVG → 10x plus rapide
       const anim = lottie.loadAnimation({
         container: g,
-        renderer: "canvas",  // ← LE CHANGEMENT CLÉ
-        loop: true,
+        renderer: "canvas",
+        loop: false,
         autoplay: true,
-        animationData: _ghostAnimationData  // ← réutilise le JSON en mémoire
+        animationData: _ghostAnimationData,
+        initialSegment: [0, 90] // ← joue seulement 3s sur les 12s
       });
 
       const ghostObj = { el: g, anim };
@@ -573,10 +571,9 @@ function spawnGhostLotties(big) {
         if (g.parentNode) g.remove();
         const idx = _activeGhosts.indexOf(ghostObj);
         if (idx !== -1) _activeGhosts.splice(idx, 1);
-      }, 3200);
-    }, i * 140);
+      }, 3000);
+    }, i * 200);
   }
 }
 
-// Appel de préchargement (à lancer une fois)
 preloadGhostAnimation();
