@@ -331,28 +331,26 @@ function ensurePackSelector() {
   packSelect.id = "pack-input";
   packSelect.className = themeSelect.className;
   packSelect.style.cssText = themeSelect.style.cssText;
- packSelect.onchange = () => {
+  packSelect.onchange = () => {
   const pack = PACKS_LIST.find(p => p.id === packSelect.value);
   if (!pack) return;
+  const unlocked = myProfile.unlocked_items || []; // <-- LA LIGNE QUI MANQUAIT
   const required = [pack.theme, pack.frame].filter(x => x !== "");
   const owned = pack.id === "pack_standard" ? true : required.every(i => unlocked.includes(i));
   if (!owned) {
-    showNotificationToast(" Pack non possédé ! Direction la boutique ️", "announcement");
+    showNotificationToast("🔒 Pack non possédé ! Direction la boutique 🛍️", "announcement");
     packSelect.value = "";
     return;
   }
   
-  // Met à jour les selects visuellement
   const themeSel = document.getElementById("theme-input");
   const frameSel = document.getElementById("frame-input");
   if (themeSel) themeSel.value = pack.theme;
   if (frameSel) frameSel.value = pack.frame;
   
-  // Applique IMMÉDIATEMENT (thème + cadre)
   if (!myProfile.inventory) myProfile.inventory = {};
   if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
   
-  // Thème
   if (pack.theme) {
     myProfile.inventory.__equipped.theme = pack.theme;
     localStorage.setItem("cb_equipped_theme", pack.theme);
@@ -363,7 +361,6 @@ function ensurePackSelector() {
     if (socket.connected) socket.emit("equip_cosmetic", "none_theme");
   }
   
-  // Cadre
   if (pack.frame) {
     myProfile.inventory.__equipped.frame = pack.frame;
     localStorage.setItem("cb_equipped_frame", pack.frame);
