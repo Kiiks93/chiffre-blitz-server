@@ -228,26 +228,39 @@ function showAvatarZoom() {
   overlay.style.display = "flex";
   setTimeout(() => initAllLottieBadges(), 50);
 }
+const AVATAR_DISPLAY_NAMES = {
+  "avatar_lottie_palier15": "🐱 Chat Assistant (Pass S1)",
+  "avatar_lottie_palier30": "🌈 Chat Arc-en-ciel (Pass S1)",
+  "avatar_tigre": "🐯 Tigre de Sibérie (GRAAL S1)",
+  "avatar_s2_squelette": "💀 Squelette qui danse (Pass S2)",
+  "avatar_s2_chauve": "🦇 Chauve-Souris (Pass S2)",
+  "avatar_s2_citrouille": "🎃 Citrouille du Château (GRAAL S2)"
+};
 function renderProfileAvatarSelector() {
   const container = document.getElementById("profile-avatar-selector");
   if (!container) return;
-  container.innerHTML = "";
-  const addAvatarOption = (id, icon, label) => {
-    const isActive = (activeAvatarChoice === id);
-    const card = document.createElement("div");
-    card.style.cssText = `flex:1; min-width:80px; background:${isActive ? "rgba(0,210,255,0.25)" : "rgba(255,255,255,0.05)"}; border:2px solid ${isActive ? "#00d2ff" : "rgba(255,255,255,0.1)"}; border-radius:8px; padding:4px; text-align:center; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px;`;
-    card.onclick = () => { activeAvatarChoice = id; renderProfileAvatarSelector(); updateProfilePreview(); };
-    card.innerHTML = `<span style="font-size:13px;">${icon}</span><div style="font-size:8px; font-weight:bold; color:#fff;">${label}</div>`;
-    container.appendChild(card);
-  };
-  addAvatarOption("standard", "🔢", "Standard");
   const unlocked = myProfile.unlocked_items || [];
-  if (unlocked.includes("avatar_lottie_palier15")) addAvatarOption("avatar_lottie_palier15", "🐱", "Chat Assistant");
-  if (unlocked.includes("avatar_lottie_palier30")) addAvatarOption("avatar_lottie_palier30", "🌈", "Chat Arc-en-ciel");
-  if (unlocked.includes("avatar_tigre")) addAvatarOption("avatar_tigre", "🐯", "Tigre de Sibérie");
-  if (unlocked.includes("avatar_s2_squelette")) addAvatarOption("avatar_s2_squelette", "💀", "Squelette");
-  if (unlocked.includes("avatar_s2_chauve")) addAvatarOption("avatar_s2_chauve", "🦇", "Chauve-Souris");
-  if (unlocked.includes("avatar_s2_citrouille")) addAvatarOption("avatar_s2_citrouille", "🎃", "Citrouille");
+  const refSelect = document.getElementById("title-input");
+  const sel = document.createElement("select");
+  sel.id = "avatar-select-input";
+  if (refSelect) { sel.className = refSelect.className; sel.style.cssText = refSelect.style.cssText; }
+  sel.onchange = () => { activeAvatarChoice = sel.value; updateProfilePreview(); };
+  const optStd = document.createElement("option");
+  optStd.value = "standard";
+  optStd.innerText = "🔢 Avatar Standard";
+  sel.appendChild(optStd);
+  for (const id in AVATAR_DISPLAY_NAMES) {
+    if (unlocked.includes(id)) {
+      const opt = document.createElement("option");
+      opt.value = id;
+      opt.innerText = AVATAR_DISPLAY_NAMES[id];
+      sel.appendChild(opt);
+    }
+  }
+  sel.value = activeAvatarChoice || "standard";
+  container.innerHTML = "";
+  container.style.cssText = "margin-bottom:8px;";
+  container.appendChild(sel);
 }
 const TITLE_DISPLAY_NAMES = {
   "title_stalker": "Stalker Numérique",
@@ -303,7 +316,9 @@ const PACKS_LIST = [
   { id: "pack_cryo", name: "🧊 Cryo", theme: "theme_glacial", frame: "frame_givre" },
   { id: "pack_solaire", name: "✨ Doré", theme: "theme_alt", frame: "frame_prism" },
   { id: "pack_obsidienne", name: "🖤 Obsidienne", theme: "theme_obsidian", frame: "frame_obsidian" },
-  { id: "pack_neon", name: "🌈 Néon", theme: "theme_neon", frame: "frame_chroma" }
+  { id: "pack_neon", name: "🌈 Néon", theme: "theme_neon", frame: "frame_chroma" },
+  { id: "pack_halloween_osseux", name: "🎃 Citrouille + Osseux", theme: "theme_citrouille", frame: "frame_osseux" },
+  { id: "pack_halloween_fantome", name: "👻 Citrouille + Fantôme", theme: "theme_citrouille", frame: "frame_fantome" }
 ];
 function ensurePackSelector() {
   if (document.getElementById("pack-input")) return;
