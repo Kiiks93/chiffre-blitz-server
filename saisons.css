@@ -192,88 +192,62 @@ will-change: transform, opacity;
 .tile.fantome-theme { background: linear-gradient(135deg, #1a0033, #7b2ff7) !important; border-color: #b06bff !important; color: #fff !important; box-shadow: 0 0 12px rgba(157, 47, 255, 0.6); }
 
 /* ---------- SAISON 2 : HALLOWEEN ---------- */
-body.season-s2 { background: radial-gradient(circle at 50% 30%, #0d0016 0%, #050008 55%, #000000 100%); }
-body.season-s2 h1 { color: #ff8a00; text-shadow: 0 0 15px rgba(255, 138, 0, 0.5); }
-body.season-s2 #bg-glow { background: radial-gradient(circle, rgba(255, 138, 0, 0.12) 0%, rgba(123, 47, 247, 0.06) 40%, transparent 70%); }
-body.season-s2 .btn-main { background: linear-gradient(45deg, #ff8a00, #7b2ff7); box-shadow: 0 4px 15px rgba(255, 138, 0, 0.3); }
-body.season-s2 .btn-blue { background: linear-gradient(45deg, #7b2ff7, #b06bff); }
-body.season-s2 .modal-card { border-color: #ff8a00; background: #1a0033; }
-body.season-s2 .tile { background: #2a0a3d; border-color: #7b2ff7; }
-body.season-s2 .hud { background: rgba(123, 47, 247, 0.12); }
-body.season-s2 .user-pill { color: #ff8a00; }
-body.season-s2 .tab-btn.active { background: #ff8a00; }
+/* ============================================================
+SCÈNE HALLOWEEN ANIMÉE (ciel, lune, château, citrouilles…)
+============================================================ */
+#season-bg { position: fixed; inset: 0; z-index: -2; overflow: hidden; opacity: 0; transition: opacity 1.2s ease; pointer-events: none; background: #000; }
+body.season-s2 #season-bg { opacity: 1; }
+#season-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(rgba(0,0,0,0) 40%, rgba(0,0,0,0.55) 75%, rgba(0,0,0,0.85) 100%); pointer-events: none; }
 
-/* ---------- LIGNE D'HORIZON + BRUME ---------- */
-body.season-s2::before {
-  content: '';
-  position: fixed;
-  left: 0; right: 0; top: 50%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 138, 0, 0.4) 25%, rgba(176, 107, 255, 0.5) 50%, rgba(255, 138, 0, 0.4) 75%, transparent 100%);
-  box-shadow: 0 0 18px rgba(255, 138, 0, 0.3), 0 0 40px rgba(176, 107, 255, 0.2);
-  z-index: 0;
-  pointer-events: none;
-}
-body.season-s2::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 55% 18% at 25% 58%, rgba(176, 107, 255, 0.10), transparent 70%),
-    radial-gradient(ellipse 45% 16% at 75% 62%, rgba(255, 138, 0, 0.07), transparent 70%),
-    radial-gradient(ellipse 90% 26% at 50% 105%, rgba(120, 60, 200, 0.14), transparent 70%);
-  animation: halloweenMist 16s ease-in-out infinite alternate;
-  pointer-events: none;
-  z-index: 0;
-}
-@keyframes halloweenMist {
-  0% { transform: translateX(-2.5%); opacity: 0.7; }
-  100% { transform: translateX(2.5%); opacity: 1; }
+/* Ciel crépusculaire */
+.hw-sky { position: absolute; inset: 0; background: linear-gradient(180deg, #1a0b3d 0%, #4a1a6b 28%, #b0307a 52%, #ff6a3d 68%, #2b0a45 76%, #0d0016 100%); }
+
+/* Lune pleine pulsante */
+.hw-moon { position: absolute; top: 9%; left: 20%; width: 90px; height: 90px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #fff6f0 0%, #ffd9e8 45%, #ff9ec7 75%, rgba(255,158,199,0) 100%); box-shadow: 0 0 40px 18px rgba(255,190,220,0.45), 0 0 90px 40px rgba(255,120,180,0.25); animation: hwMoon 6s ease-in-out infinite alternate; }
+@keyframes hwMoon { from { transform: scale(1); } to { transform: scale(1.06); } }
+
+/* Nuages qui dérivent */
+.hw-cloud { position: absolute; height: 60px; border-radius: 50%; background: rgba(30,10,60,0.85); filter: blur(18px); animation: hwDrift linear infinite; }
+.hw-c1 { top: 13%; width: 45%; left: -50%; animation-duration: 60s; }
+.hw-c2 { top: 26%; width: 55%; left: -60%; animation-duration: 85s; animation-delay: 20s; background: rgba(60,15,90,0.8); }
+.hw-c3 { top: 5%; width: 35%; left: -40%; animation-duration: 50s; animation-delay: 35s; }
+@keyframes hwDrift { from { transform: translateX(0); } to { transform: translateX(220vw); } }
+
+/* Chauves-souris qui traversent */
+.hw-bat { position: absolute; left: -6%; filter: drop-shadow(0 0 4px rgba(0,0,0,0.8)); animation: hwFly linear infinite; opacity: 0.9; }
+@keyframes hwFly {
+  0% { transform: translateX(0) translateY(0); }
+  25% { transform: translateX(30vw) translateY(-14px); }
+  50% { transform: translateX(60vw) translateY(8px); }
+  75% { transform: translateX(85vw) translateY(-10px); }
+  100% { transform: translateX(115vw) translateY(0); }
 }
 
-/* ---------- TOILES D'ARAIGNÉE + ARAIGNÉE QUI DESCEND ---------- */
-.halloween-web {
-  position: fixed;
-  font-size: 110px;
-  line-height: 1;
-  opacity: 0.22;
-  z-index: 1;
-  pointer-events: none;
-  filter: grayscale(1) brightness(2.2);
-}
-.halloween-web.tl { top: -14px; left: -14px; }
-.halloween-web.tr { top: -14px; right: -14px; transform: scaleX(-1); }
-.halloween-spider {
-  position: fixed;
-  top: 0;
-  z-index: 1;
-  pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  animation: spiderDescend 10s ease-in-out infinite alternate;
-}
-.halloween-spider .thread {
-  width: 1px;
-  height: 38vh;
-  background: linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.35));
-}
-.halloween-spider .spider {
-  font-size: 20px;
-  transform-origin: top center;
-  animation: spiderSway 3.2s ease-in-out infinite alternate;
-  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.25));
-}
-@keyframes spiderDescend { 0% { transform: translateY(-70%); } 100% { transform: translateY(15%); } }
-@keyframes spiderSway { 0% { transform: rotate(-7deg); } 100% { transform: rotate(7deg); } }
+/* Château hanté (fenêtres qui clignotent) */
+.hw-castle { position: absolute; bottom: 26%; left: 50%; transform: translateX(-50%); width: min(520px, 82%); height: 200px; }
+.hw-castle svg { width: 100%; height: 100%; }
+.hw-castle .win { animation: hwWindow 3s infinite; }
+@keyframes hwWindow { 0%, 100% { opacity: 0.85; } 40% { opacity: 0.35; } 60% { opacity: 0.9; } }
 
-/* ---------- CONTRASTE DES FORMES + LANTERNES POSSÉDÉES ---------- */
-body.season-s2 .bg-shape { opacity: 0.3; text-shadow: 0 0 10px currentColor, 0 0 26px currentColor; }
-.lantern.possessed { animation: possessedFlicker 0.18s infinite alternate; }
-@keyframes possessedFlicker {
-  0% { filter: hue-rotate(95deg) brightness(0.8); transform: scale(1); }
-  100% { filter: hue-rotate(95deg) brightness(1.25); transform: scale(1.03); }
-}
+/* Arbres tors */
+.hw-tree { position: absolute; bottom: 22%; width: 120px; height: 260px; }
+.hw-tree svg { width: 100%; height: 100%; }
+.hw-tree-left { left: -12px; }
+.hw-tree-right { right: -12px; transform: scaleX(-1); }
+
+/* Clôture */
+.hw-fence { position: absolute; bottom: 21%; left: 0; right: 0; height: 46px; opacity: 0.9; background: repeating-linear-gradient(90deg, #0d0016 0 10px, transparent 10px 26px), linear-gradient(#0d0016, #0d0016) center / 100% 6px no-repeat; }
+
+/* Sol */
+.hw-ground { position: absolute; bottom: 0; left: 0; right: 0; height: 30%; background: linear-gradient(180deg, rgba(13,0,22,0.2) 0%, #0d0016 40%, #050008 100%); }
+
+/* Citrouilles qui vacillent */
+.hw-pumpkin { position: absolute; }
+.hw-pumpkin .lantern { position: relative; }
+
+/* Brume au sol */
+.hw-mist { position: absolute; bottom: 16%; left: 0; right: 0; height: 24%; filter: blur(6px); background: radial-gradient(ellipse 60% 60% at 30% 60%, rgba(180,120,255,0.16), transparent 70%), radial-gradient(ellipse 50% 60% at 70% 50%, rgba(255,140,80,0.10), transparent 70%); animation: hwMist 12s ease-in-out infinite alternate; }
+@keyframes hwMist { from { transform: translateX(-3%); } to { transform: translateX(3%); } }
 
 /* ---------- SAISON 3 : NOËL ---------- */
 body.season-s3 { background: radial-gradient(circle at 50% 20%, #0a2a4d 0%, #051525 60%, #020a12 100%); }
