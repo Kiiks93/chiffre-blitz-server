@@ -19,6 +19,11 @@ let avalancheInterval = null;
 let avalancheTimerInterval = null;
 let avalancheTimeLeft = 30;
 
+// Précharge les animations lourdes au démarrage
+window.addEventListener("load", () => {
+  if (typeof preloadGhostAnimation === "function") preloadGhostAnimation();
+});
+
 /* ============================================================
 SYSTÈME COMBO (solo) — 15 / 30 / 35 + compteur + chrono
 ============================================================ */
