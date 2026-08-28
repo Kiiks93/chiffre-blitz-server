@@ -112,6 +112,7 @@ function getRankName(points) {
 }
 function getFrameClass(equippedFrame) {
   const FRAME_CLASS_MAP = {
+    "frame_standard": "standard-frame",
     "frame_silver": "silver-frame",
     "frame_chroma": "chroma-frame",
     "frame_prism": "prism-frame",
@@ -293,6 +294,7 @@ const TITLE_DISPLAY_NAMES = {
   "title_esprit_halloween": "👻 Esprit d'Halloween"
 };
 const FRAME_DISPLAY_NAMES = {
+  "frame_standard": "🔰 Cadre « Standard »",
   "frame_silver": "🛡️ Cadre « Argenté »",
   "frame_chroma": "🌈 Cadre « Flux Chroma »",
   "frame_prism": "✨ Cadre « Doré »",
@@ -312,6 +314,7 @@ const THEME_DISPLAY_NAMES = {
 };
 /* ---------- PACKS : menu déroulant (grille + cadre en 1 choix) ---------- */
 const PACKS_LIST = [
+  { id: "pack_standard", name: "🔰 Standard", theme: "", frame: "frame_standard" },
   { id: "pack_haute_tension", name: "⚡ Haute Tension", theme: "theme_eclair", frame: "frame_voltage" },
   { id: "pack_cryo", name: "🧊 Cryo", theme: "theme_glacial", frame: "frame_givre" },
   { id: "pack_solaire", name: "✨ Doré", theme: "theme_alt", frame: "frame_prism" },
