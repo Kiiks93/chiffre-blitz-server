@@ -156,7 +156,7 @@ const SEASONS_CLIENT = [
     { tier: 21, free: "110 Pièces (🪙)", premium: "220 Pièces (🪙)" },
     { tier: 22, free: "1 ⏳ Blocage du Temps", premium: "3 💡 Projecteur" },
     { tier: 23, free: "120 Pièces (🪙)", premium: "350 Pièces (🪙)" },
-    { tier: 10, free: "1 🌟 Nova Temporelle", premium: "🎨 Grille Lanterne (EXCLUSIF pass)" },
+    { tier: 24, free: "1 ⚡ Joker Éclair", premium: "🎨 Grille Fantôme (EXCLUSIF pass)" },
     { tier: 25, free: "150 Pièces (🪙)", premium: "🦇 Avatar Vidéo : Chauve-Souris" },
     { tier: 26, free: "130 Pièces (🪙)", premium: "260 Pièces (🪙)" },
     { tier: 27, free: "2 💡 Projecteur", premium: "4 🌟 Novas Temporelles" },
