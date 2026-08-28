@@ -692,6 +692,36 @@ border-color: #7a0026 !important;
 color: #ff4d6d !important;
 box-shadow: 0 0 12px rgba(255, 0, 60, 0.5);
 }
+/* ---------- GRILLE CITROUILLE ---------- */
+.tile.citrouille-theme {
+background: linear-gradient(135deg, #1a0d00, #ff8a00) !important;
+border-color: #ff8a00 !important;
+color: #fff !important;
+box-shadow: 0 0 12px rgba(255, 138, 0, 0.6);
+}
+/* ---------- CADRE OSSEUX ---------- */
+.user-pill.osseux-frame, .user-pill:has(.tft-avatar-container.osseux-frame) { border-color: #e8dcc0 !important; box-shadow: 0 0 14px rgba(232, 220, 192, 0.75) !important; background: linear-gradient(135deg, rgba(43,43,43,0.9), rgba(232,220,192,0.9)) !important; }
+.tft-avatar-container.osseux-frame { border-color: #e8dcc0 !important; box-shadow: 0 0 14px rgba(232,220,192,0.85) !important; background: linear-gradient(135deg, #2b2b2b, #e8dcc0); }
+.tft-avatar-large.osseux-frame { border-color: #e8dcc0 !important; box-shadow: 0 0 22px rgba(232,220,192,0.85) !important; background: linear-gradient(135deg, #2b2b2b, #e8dcc0); }
+.victory-badge-large.osseux-frame { background: linear-gradient(135deg, #2b2b2b, #e8dcc0); border-color: #e8dcc0; box-shadow: 0 0 30px rgba(232,220,192,0.8); }
+/* ---------- CADRE FANTÔME ---------- */
+.user-pill.fantome-frame, .user-pill:has(.tft-avatar-container.fantome-frame) { border-color: #c8ffe6 !important; box-shadow: 0 0 14px rgba(180, 255, 220, 0.75) !important; background: linear-gradient(135deg, rgba(10,42,29,0.9), rgba(184,255,217,0.9)) !important; }
+.tft-avatar-container.fantome-frame { border-color: #c8ffe6 !important; box-shadow: 0 0 14px rgba(180,255,220,0.85) !important; background: linear-gradient(135deg, #0a2a1d, #b8ffd9); }
+.tft-avatar-large.fantome-frame { border-color: #c8ffe6 !important; box-shadow: 0 0 22px rgba(180,255,220,0.85) !important; background: linear-gradient(135deg, #0a2a1d, #b8ffd9); }
+.victory-badge-large.fantome-frame { background: linear-gradient(135deg, #0a2a1d, #b8ffd9); border-color: #c8ffe6; box-shadow: 0 0 30px rgba(180,255,220,0.8); }
+/* ---------- CHAUVES-SOURIS ---------- */
+.bat-particle {
+position: fixed;
+z-index: 60;
+pointer-events: none;
+filter: drop-shadow(0 0 6px #ff8a00);
+animation: batFly 1.4s ease-in forwards;
+}
+@keyframes batFly {
+0% { transform: translateX(0) translateY(0) scale(0.8); opacity: 0; }
+15% { opacity: 1; }
+100% { transform: translateX(var(--bx)) translateY(var(--by)) scale(1.2); opacity: 0; }
+}
 /* ============================================================
 MATCHMAKING / COUNTDOWN / PUB
 ============================================================ */
