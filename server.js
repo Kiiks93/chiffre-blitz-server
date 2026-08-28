@@ -39,10 +39,9 @@ const ITEM_CATALOG = {
   theme_glacial: { sources: ["shop"], type: "theme", price: 1200, permanent: true },
   frame_voltage: { sources: ["shop"], type: "frame", price: 2200, permanent: true },
   frame_obsidian: { sources: ["shop"], type: "frame", price: 4500, permanent: true },
-  theme_obsidian: { sources: ["shop"], type: "theme", price: 1800, permanent: true },
-  theme_alt: { sources: ["pass"], type: "theme", permanent: true },
+  theme_alt: { sources: ["pass", "shop"], type: "theme", permanent: true },
   frame_chroma: { sources: ["pass"], type: "frame", permanent: true },
-  frame_prism: { sources: ["pass"], type: "frame", permanent: true },
+  frame_prism: { sources: ["pass", "shop"], type: "frame", permanent: true },
   frame_silver: { sources: ["pass"], type: "frame", permanent: true },
   avatar_lottie_palier15: { sources: ["pass"], type: "avatar", permanent: true },
   avatar_lottie_palier30: { sources: ["pass"], type: "avatar", permanent: true },
@@ -54,12 +53,13 @@ const ITEM_CATALOG = {
   title_champion: { sources: ["pass"], type: "title", permanent: true },
   theme_eclair: { sources: ["shop"], type: "theme", price: 1500, permanent: true },
   frame_givre: { sources: ["shop"], type: "frame", price: 2200, permanent: true },
+  theme_obsidian: { sources: ["shop"], type: "theme", price: 1800, permanent: true },
   theme_neon: { sources: ["pass"], type: "theme", permanent: true },
   avatar_tigre: { sources: ["pass"], type: "avatar", permanent: true },
   pack_haute_tension: { sources: ["shop"], type: "pack", price: 2900, permanent: true, items: ["frame_voltage", "theme_eclair"] },
   pack_cryo: { sources: ["shop"], type: "pack", price: 2700, permanent: true, items: ["frame_givre", "theme_glacial"] },
-  pack_obsidienne: { sources: ["shop"], type: "pack", price: 5200, permanent: true, items: ["frame_obsidian", "theme_obsidian"] },
-  pack_solaire: { sources: ["shop"], type: "pack", price: 3200, permanent: true, items: ["frame_prism", "theme_alt"] }
+  pack_solaire: { sources: ["shop"], type: "pack", price: 3200, permanent: true, items: ["frame_prism", "theme_alt"] },
+  pack_obsidienne: { sources: ["shop"], type: "pack", price: 5200, permanent: true, items: ["frame_obsidian", "theme_obsidian"] }
 };
 
 /* ============================================================
@@ -79,7 +79,7 @@ const TROPHY_CATALOG = {
   worker:          { name: "Travailleur",       emoji: "⛏️", shelf: "progression", rarity: "silver", title: "title_travailleur" },
   rising_star:     { name: "Étoile Montante",   emoji: "⭐", shelf: "progression", rarity: "silver", title: "title_etoile" },
   local_king:      { name: "Roi Local",         emoji: "🏰", shelf: "domination", rarity: "gold", title: "title_roi_local" },
-  midas:           { name: "Midas",             emoji: "💰", shelf: "domination", rarity: "gold", title: "title_midas" },
+  midas:            { name: "Midas",             emoji: "💰", shelf: "domination", rarity: "gold", title: "title_midas" },
   dynasty:         { name: "Dynastie",          emoji: "🏛️", shelf: "domination", rarity: "legendary", title: "title_dynastie" },
   world_n1:        { name: "N°1 Mondial",       emoji: "🌍", shelf: "domination", rarity: "legendary", title: "title_mondial" }
 };
@@ -111,6 +111,7 @@ function evaluateTrophies(player) {
   const s1data = cpt["s1"] || cpt;
   if (s1data["15_free"]) { const t = checkAndUnlockTrophy(player, "combatant"); if (t) unlocked.push(t); }
   if (s1data["30_free"]) { const t = checkAndUnlockTrophy(player, "elite"); if (t) unlocked.push(t); }
+  if ((player.total_coins_earned || 0) >= 1000) { const t = checkAndUnlockTrophy(player, "worker"); if (t) unlocked.push(t); }
   if ((player.points || 0) >= 500) { const t = checkAndUnlockTrophy(player, "rising_star"); if (t) unlocked.push(t); }
   return unlocked;
 }
@@ -129,9 +130,9 @@ function getCosmeticCategory(itemId) {
   if (itemId.startsWith("frame_")) return "frame";
   if (itemId.startsWith("title_")) return "title";
   if (itemId.startsWith("theme_")) return "theme";
-  if (itemId.startsWith("pack_")) return "pack";
   return null;
 }
+
 /* ============================================================
 SAISONS (moteur multi-saisons)
 ============================================================ */
@@ -156,6 +157,7 @@ function normalizeClaimedTiers(cpt) {
   }
   return cpt;
 }
+
 /* ============================================================
 ÉTAT SERVEUR
 ============================================================ */
@@ -280,15 +282,14 @@ io.on('connection', (socket) => {
           socket.emit('register_result', { ok: false, reason: 'taken' });
           return;
         }
-        // 🔐 LOGIN PROPRE : la personnalisation (région/avatar/drapeau) n'est PLUS JAMAIS écrasée à la connexion
-      const updates = {};
-      if (!storedCode) updates.secret_code = secretCode;
-      if (Object.keys(updates).length > 0) {
-      const { data: updated } = await supabase.from('players').update(updates).eq('id', existing.id).select().single();
-      playerData = updated || existing;
-      } else {
-      playerData = existing;
-      }
+        const updates = {};
+        if (!storedCode) updates.secret_code = secretCode;
+        if (Object.keys(updates).length > 0) {
+        const { data: updated } = await supabase.from('players').update(updates).eq('id', existing.id).select().single();
+        playerData = updated || existing;
+        } else {
+        playerData = existing;
+        }
       } else {
         const newRecord = {
           username: rawUsername, secret_code: secretCode,
@@ -340,31 +341,31 @@ io.on('connection', (socket) => {
 
   /* ---------- BOUTIQUE ---------- */
   socket.on('buy_item', async (itemId) => {
-  const player = activePlayers[socket.id];
-  if (!player) return;
-  const item = ITEM_CATALOG[itemId];
-  if (!item || !isShopItem(itemId)) { socket.emit('room_error', "Cet objet ne peut pas etre achete en boutique."); return; }
-  if (player.coins < item.price) { socket.emit('room_error', "Tu n'as pas assez de pieces !"); return; }
-  player.inventory = player.inventory || {};
-  player.unlocked_items = player.unlocked_items || [];
-  if (item.type === 'power') {
-    player.coins -= item.price;
-    player.inventory[itemId] = (player.inventory[itemId] || 0) + 1;
-  } else if (item.type === 'pack') {
-    const ownedAll = item.items.every(i => player.unlocked_items.includes(i));
-    if (ownedAll) { socket.emit('room_error', "Tu possedes deja tous les objets de ce pack."); return; }
-    player.coins -= item.price;
-    item.items.forEach(i => {
-      if (!player.unlocked_items.includes(i)) player.unlocked_items.push(i);
-    });
-  } else if (item.permanent) {
-    if (player.unlocked_items.includes(itemId)) { socket.emit('room_error', "Tu possedes deja cet objet."); return; }
-    player.coins -= item.price;
-    player.unlocked_items.push(itemId);
-  } else { return; }
-  await savePlayerToSupabase(socket.id);
-  socket.emit('player_registered', player);
-});
+    const player = activePlayers[socket.id];
+    if (!player) return;
+    const item = ITEM_CATALOG[itemId];
+    if (!item || !isShopItem(itemId)) { socket.emit('room_error', "Cet objet ne peut pas etre achete en boutique."); return; }
+    if (player.coins < item.price) { socket.emit('room_error', "Tu n'as pas assez de pieces !"); return; }
+    player.inventory = player.inventory || {};
+    player.unlocked_items = player.unlocked_items || [];
+    if (item.type === 'power') {
+      player.coins -= item.price;
+      player.inventory[itemId] = (player.inventory[itemId] || 0) + 1;
+    } else if (item.type === 'pack') {
+      const ownedAll = item.items.every(i => player.unlocked_items.includes(i));
+      if (ownedAll) { socket.emit('room_error', "Tu possedes deja tous les objets de ce pack."); return; }
+      player.coins -= item.price;
+      item.items.forEach(i => {
+        if (!player.unlocked_items.includes(i)) player.unlocked_items.push(i);
+      });
+    } else if (item.permanent) {
+      if (player.unlocked_items.includes(itemId)) { socket.emit('room_error', "Tu possedes deja cet objet."); return; }
+      player.coins -= item.price;
+      player.unlocked_items.push(itemId);
+    } else { return; }
+    await savePlayerToSupabase(socket.id);
+    socket.emit('player_registered', player);
+  });
 
   socket.on('equip_power', async (powerId) => {
     const player = activePlayers[socket.id];
@@ -396,56 +397,8 @@ io.on('connection', (socket) => {
     socket.emit('player_registered', player);
   });
 
-  /* ---------- PASSE DE COMBAT ---------- */
-   socket.on('buy_blitz_pass', async () => {
-    const player = activePlayers[socket.id];
-    if (!player) return;
-    const seasonId = getCurrentSeason().id;
-    player.claimedPassTiers = normalizeClaimedTiers(player.claimedPassTiers);
-    player.claimedPassTiers[seasonId] = player.claimedPassTiers[seasonId] || {};
-    if (player.claimedPassTiers[seasonId].premium) return;
-    if (player.coins >= 1000) {
-      player.coins -= 1000;
-      player.claimedPassTiers[seasonId].premium = true;
-      player.blitzPassPremium = true;
-      await savePlayerToSupabase(socket.id);
-      socket.emit('player_registered', player);
-      socket.emit('blitz_pass_updated', { coins: player.coins, blitzPassPremium: true, claimedPassTiers: player.claimedPassTiers });
-      socket.emit('pass_reward_received', { message: "Passe Premium « " + getCurrentSeason().name + " » activé !" });
-    } else {
-      socket.emit('room_error', "Tu n'as pas assez de pieces !");
-    }
-  });
-
-  socket.on('claim_pass_tier', async (data) => {
-    const player = activePlayers[socket.id];
-    if (!player) return;
-    const { tier, track } = data;
-    const seasonId = getCurrentSeason().id;
-    player.claimedPassTiers = normalizeClaimedTiers(player.claimedPassTiers);
-    player.claimedPassTiers[seasonId] = player.claimedPassTiers[seasonId] || {};
-    const seasonData = player.claimedPassTiers[seasonId];
-    const key = tier + "_" + track;
-    if (seasonData[key]) { socket.emit('pass_claim_denied', { tier, track, reason: "already_claimed" }); return; }
-    if (track === 'premium' && !seasonData.premium) { socket.emit('pass_claim_denied', { tier, track, reason: "premium_required" }); return; }
-    seasonData[key] = true;
-    player.blitzPassPremium = !!seasonData.premium;
-    function applyPassReward(p, tier, track, seasonId) {
-  if (seasonId !== "s1") return; // s2/s3 : contenu à venir
-  p.inventory = p.inventory || {};
-  p.unlocked_items = p.unlocked_items || [];
-  if (track === 'free') {
-    const unlockedTrophies = evaluateTrophies(player);
-    if (unlockedTrophies.length > 0) {
-      socket.emit('trophy_unlocked', unlockedTrophies.map(t => ({ id: Object.keys(TROPHY_CATALOG).find(k => TROPHY_CATALOG[k] === t), ...t })));
-    }
-    await savePlayerToSupabase(socket.id);
-    socket.emit('player_registered', player);
-    socket.emit('pass_tier_claimed', { tier, track });
-    socket.emit('pass_reward_received', { message: "Recompense du Palier " + tier + " (" + track + ") recuperee !" });
-  });
-
-    socket.on('buy_blitz_pass', async () => {
+  /* ---------- PASSE DE SAISON (multi-saisons) ---------- */
+  socket.on('buy_blitz_pass', async () => {
     const player = activePlayers[socket.id];
     if (!player) return;
     const seasonId = getCurrentSeason().id;
@@ -823,7 +776,7 @@ io.on('connection', (socket) => {
       if (ev.start && ev.end && now >= ev.start && now <= ev.end) shouldBeActive = true;
       if (globalEvents[key] !== shouldBeActive) { globalEvents[key] = shouldBeActive; changed = true; }
     }
-    if (changed) io.emit('events_state_update', globalEvents);
+    if (changed) io.emit("events_state_update", globalEvents);
     socket.emit('admin_schedule_saved', eventSchedules);
   });
 
@@ -845,7 +798,6 @@ io.on('connection', (socket) => {
         io.to(sId).emit('player_registered', activePlayers[sId]);
         io.to(sId).emit('admin_gift_received', { currency, amount, message: msg });
       }
-      
     } else {
       const cleanTarget = targetUsername.trim().toLowerCase();
       let found = null;
@@ -866,27 +818,29 @@ io.on('connection', (socket) => {
       }
     }
   });
-socket.on('admin_set_region', async (data) => {
-if (!socket.isAdmin) return;
-const targetUsername = (data.targetUsername || '').trim();
-const newRegion = (data.newRegion || '').trim();
-if (!targetUsername || !newRegion) return;
-try {
-const { data: matched, error } = await supabase.from('players').select('*').ilike('username', targetUsername).limit(1);
-if (error || !matched || matched.length === 0) { socket.emit('admin_region_result', { ok: false, reason: 'not_found' }); return; }
-const t = matched[0];
-await supabase.from('players').update({ region: newRegion }).eq('id', t.id);
-for (let sId in activePlayers) {
-if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === t.username.toLowerCase()) {
-activePlayers[sId].region = newRegion;
-io.to(sId).emit('player_registered', activePlayers[sId]);
-}
-}
-socket.emit('admin_region_result', { ok: true, username: t.username, region: newRegion });
-} catch (e) {
-socket.emit('admin_region_result', { ok: false, reason: 'error' });
-}
-});
+
+  socket.on('admin_set_region', async (data) => {
+    if (!socket.isAdmin) return;
+    const targetUsername = (data.targetUsername || '').trim();
+    const newRegion = (data.newRegion || '').trim();
+    if (!targetUsername || !newRegion) return;
+    try {
+      const { data: matched, error } = await supabase.from('players').select('*').ilike('username', targetUsername).limit(1);
+      if (error || !matched || matched.length === 0) { socket.emit('admin_region_result', { ok: false, reason: 'not_found' }); return; }
+      const t = matched[0];
+      await supabase.from('players').update({ region: newRegion }).eq('id', t.id);
+      for (let sId in activePlayers) {
+        if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === t.username.toLowerCase()) {
+          activePlayers[sId].region = newRegion;
+          io.to(sId).emit('player_registered', activePlayers[sId]);
+        }
+      }
+      socket.emit('admin_region_result', { ok: true, username: t.username, region: newRegion });
+    } catch (e) {
+      socket.emit('admin_region_result', { ok: false, reason: 'error' });
+    }
+  });
+
   /* ---------- DÉCONNEXION ---------- */
   socket.on('disconnect', async () => {
     leaveAllRooms(socket);
@@ -935,7 +889,7 @@ function buildMatchCharges(playerObj) {
 
 function startMatchBetween(id1, id2, isRanked = false, isOnline = true, isTugOfWar = false) {
   const p1 = activePlayers[id1] || { socketId: id1, username: "Joueur 1", avatar: 1, flag: "🇫🇷", points: 0 };
-  const p2 = activePlayers[id2] || { socketId: id2, username: "Joueur 2", avatar: 2, flag: "🇫", points: 0 };
+  const p2 = activePlayers[id2] || { socketId: id2, username: "Joueur 2", avatar: 2, flag: "🇫🇷", points: 0 };
   const isExpressoActive = globalEvents.expressoMatch && isOnline && !isRanked && !isTugOfWar;
   const match = {
     id1, id2,
@@ -981,9 +935,10 @@ function generatePool(target) {
 }
 
 /* ============================================================
-PASS REWARDS
+PASS REWARDS (multi-saisons)
 ============================================================ */
-function applyPassReward(p, tier, track) {
+function applyPassReward(p, tier, track, seasonId) {
+  if (seasonId !== "s1") return; // s2/s3 : contenu à venir
   p.inventory = p.inventory || {};
   p.unlocked_items = p.unlocked_items || [];
   if (track === 'free') {
