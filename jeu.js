@@ -389,18 +389,10 @@ function spawnCrack() {
   if (themeNow === "theme_neon") return;
   
   //  THÈME CITROUILLE : pluie de citrouilles
-  if (themeNow === "theme_citrouille") {
-    spawnPumpkins(false);
-    SoundEngine.playCrack(themeNow);
-    return;
-  }
+  if (themeNow === "theme_citrouille") { playComboVideo("lanterne-combo.mp4"); playLanterneSound(); return; }
   
   // 👻 THÈME FANTÔME : fantômes qui descendent
-  if (themeNow === "theme_fantome") {
-    spawnGhosts(false);
-    SoundEngine.playCrack(themeNow);
-    return;
-  }
+  if (themeNow === "theme_fantome") { playComboVideo("fantome-combo.mp4"); playFantomeSound(); return; }
   
   //  THÈME ÉCLAIR : arcs fractals
   if (themeNow === "theme_eclair") {
