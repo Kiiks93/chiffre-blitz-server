@@ -424,8 +424,8 @@ function playLanternSound() {
 }
 
 function spawnLanterns(big) {
-  const count = big ? 6 : 1 + Math.floor(Math.random() * 2);
-  for (let i = 0; i < count; i++) setTimeout(() => createLantern(), i * 120);
+  const count = big ? 14 : 3 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < count; i++) setTimeout(() => createLantern(), i * 90);
 }
 
 function createLantern() {
