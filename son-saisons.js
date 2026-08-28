@@ -11,7 +11,7 @@ SoundEngine.startMusicSeasonal = function(season) {
   this.stopMusic(false);
   this.currentMode = season;
   this.step = 0;
-  this.bpm = (season === "s2") ? 90 : 120;
+  this.bpm = (season === "s2") ? 75 : 120;
   const intervalMs = (60 / this.bpm / 4) * 1000;
   this.timerId = setInterval(() => {
     if (this.isMuted || !this.ctx || this.ctx.state !== "running") return;
