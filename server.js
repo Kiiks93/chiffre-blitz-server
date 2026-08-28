@@ -321,6 +321,9 @@ io.on('connection', (socket) => {
           points: 0, coins: 100, trophies: 0, wins: 0, losses: 0,
           inventory: { __equipped: { frame: "frame_standard" } }, equipped_power: null,
           unlocked_items: ["frame_standard"],
+          if (claimedNorm["s2"] && claimedNorm["s2"]["24_premium"] && !playerData.unlocked_items.includes("theme_fantome")) {
+          playerData.unlocked_items.push("theme_fantome");
+          }
           blitz_pass_premium: false, claimed_pass_tiers: {},
           matches_played: 0, win_streak: 0, best_combo: 0, best_avalanche: 0,
           solo_games: 0, total_coins_earned: 0, season_n1_count: 0, trophies_collection: {}
@@ -1021,7 +1024,7 @@ function applyPassReward(p, tier, track, seasonId) {
     else if (tier === 21) p.coins = (p.coins || 0) + 220;
     else if (tier === 22) p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 3;
     else if (tier === 23) { if (!p.unlocked_items.includes('title_supreme')) p.unlocked_items.push('title_supreme'); }
-    else if (tier === 24) p.coins = (p.coins || 0) + 300;
+    else if (tier === 24) { if (!p.unlocked_items.includes('theme_fantome')) p.unlocked_items.push('theme_fantome'); }
     else if (tier === 25) { if (!p.unlocked_items.includes('avatar_lottie_palier30')) p.unlocked_items.push('avatar_lottie_palier30'); }
     else if (tier === 26) p.coins = (p.coins || 0) + 260;
     else if (tier === 27) p.inventory['nova'] = (p.inventory['nova'] || 0) + 4;
