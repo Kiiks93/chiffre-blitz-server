@@ -152,18 +152,6 @@ PILL PROFIL + CADRES (user-pill)
   background: linear-gradient(135deg, rgba(10, 42, 77, 0.9), rgba(14, 165, 201, 0.9)) !important;
 }
 
-/* ---------- CADRE OSSEUX (orange) ---------- */
-.user-pill.osseux-frame, .user-pill:has(.tft-avatar-container.osseux-frame) { border-color: #ff8a00 !important; box-shadow: 0 0 14px rgba(255, 138, 0, 0.8), inset 0 0 6px rgba(255, 138, 0, 0.4) !important; background: linear-gradient(135deg, rgba(26, 13, 0, 0.9), rgba(255, 138, 0, 0.9)) !important; }
-.tft-avatar-container.osseux-frame { border-color: #ff8a00 !important; box-shadow: 0 0 14px rgba(255, 138, 0, 0.9) !important; background: linear-gradient(135deg, #1a0d00, #ff8a00); }
-.tft-avatar-large.osseux-frame { border-color: #ff8a00 !important; box-shadow: 0 0 22px rgba(255, 138, 0, 0.9) !important; background: linear-gradient(135deg, #1a0d00, #ff8a00); }
-.victory-badge-large.osseux-frame { background: linear-gradient(135deg, #1a0d00, #ff8a00); border-color: #ff8a00; box-shadow: 0 0 30px rgba(255, 138, 0, 0.8); }
-
-/* ---------- CADRE FANTÔME (violet) ---------- */
-.user-pill.fantome-frame, .user-pill:has(.tft-avatar-container.fantome-frame) { border-color: #b06bff !important; box-shadow: 0 0 14px rgba(157, 47, 255, 0.8), inset 0 0 6px rgba(157, 47, 255, 0.4) !important; background: linear-gradient(135deg, rgba(26, 0, 51, 0.9), rgba(123, 47, 247, 0.9)) !important; }
-.tft-avatar-container.fantome-frame { border-color: #b06bff !important; box-shadow: 0 0 14px rgba(157, 47, 255, 0.9) !important; background: linear-gradient(135deg, #1a0033, #7b2ff7); }
-.tft-avatar-large.fantome-frame { border-color: #b06bff !important; box-shadow: 0 0 22px rgba(157, 47, 255, 0.9) !important; background: linear-gradient(135deg, #1a0033, #7b2ff7); }
-.victory-badge-large.fantome-frame { background: linear-gradient(135deg, #1a0033, #7b2ff7); border-color: #b06bff; box-shadow: 0 0 30px rgba(157, 47, 255, 0.8); }
-
 /* ---------- CADRE STANDARD ---------- */
 .user-pill.standard-frame, .user-pill:has(.tft-avatar-container.standard-frame) { border-color: rgba(0, 210, 255, 0.6) !important; box-shadow: 0 0 10px rgba(0, 210, 255, 0.4) !important; }
 .tft-avatar-container.standard-frame { border-color: rgba(0, 210, 255, 0.6) !important; box-shadow: 0 0 10px rgba(0, 210, 255, 0.5) !important; }
