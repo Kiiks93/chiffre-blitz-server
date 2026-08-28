@@ -11,7 +11,7 @@ SoundEngine.startMusicSeasonal = function(season) {
   this.stopMusic(false);
   this.currentMode = season;
   this.step = 0;
-  this.bpm = (season === "s2") ? 90 : 120; // Halloween plus lent, Noël plus vif
+  this.bpm = (season === "s2") ? 90 : 120;
   const intervalMs = (60 / this.bpm / 4) * 1000;
   this.timerId = setInterval(() => {
     if (this.isMuted || !this.ctx || this.ctx.state !== "running") return;
@@ -27,14 +27,12 @@ SoundEngine.tickHalloween = function(step) {
   const bar = Math.floor(step / 16);
   const inBar = step % 16;
   const chords = [
-    { root: 55.00, notes: [110.00, 138.59, 164.81] }, // Am
-    { root: 51.91, notes: [103.83, 130.81, 155.56] }, // Ab
-    { root: 58.27, notes: [116.54, 146.83, 174.61] }, // Bb
-    { root: 49.00, notes: [98.00, 123.47, 146.83] }   // G
+    { root: 55.00, notes: [110.00, 138.59, 164.81] },
+    { root: 51.91, notes: [103.83, 130.81, 155.56] },
+    { root: 58.27, notes: [116.54, 146.83, 174.61] },
+    { root: 49.00, notes: [98.00, 123.47, 146.83] }
   ];
   const chord = chords[bar % 4];
-  
-  // Kick sourd et espacé
   if (inBar === 0 || inBar === 8) {
     const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
     osc.type = "sine";
@@ -45,8 +43,6 @@ SoundEngine.tickHalloween = function(step) {
     osc.connect(g); g.connect(this.ctx.destination);
     osc.start(t); osc.stop(t + 0.25);
   }
-  
-  // Drone basse continu
   if (inBar === 0) {
     chord.notes.forEach(freq => {
       const o = this.ctx.createOscillator(), g = this.ctx.createGain();
@@ -62,12 +58,10 @@ SoundEngine.tickHalloween = function(step) {
       o.start(t); o.stop(t + 3.5);
     });
   }
-  
-  // Triton dissonant (intervalle angoissant)
   if (inBar === 4 || inBar === 12) {
     const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
     osc.type = "sawtooth";
-    osc.frequency.setValueAtTime(chord.root * 1.414, t); // Triton = racine * sqrt(2)
+    osc.frequency.setValueAtTime(chord.root * 1.414, t);
     const f = this.ctx.createBiquadFilter();
     f.type = "bandpass";
     f.frequency.setValueAtTime(400, t);
@@ -76,8 +70,6 @@ SoundEngine.tickHalloween = function(step) {
     osc.connect(f); f.connect(g); g.connect(this.ctx.destination);
     osc.start(t); osc.stop(t + 0.8);
   }
-  
-  // Murmures fantômes (bruit filtré)
   if (inBar % 4 === 2) {
     const bufferSize = this.ctx.sampleRate * 0.6;
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
@@ -96,8 +88,6 @@ SoundEngine.tickHalloween = function(step) {
     noise.connect(f); f.connect(g); g.connect(this.ctx.destination);
     noise.start(t);
   }
-  
-  // Effet de glow visuel
   if (inBar === 0) {
     const glow = document.getElementById('bg-glow');
     if (glow) {
@@ -113,25 +103,21 @@ SoundEngine.tickNoel = function(step) {
   const bar = Math.floor(step / 16);
   const inBar = step % 16;
   const chords = [
-    { root: 130.81, notes: [261.63, 329.63, 392.00] }, // C
-    { root: 110.00, notes: [220.00, 261.63, 329.63] }, // Am
-    { root: 123.47, notes: [246.94, 293.66, 369.99] }, // B
-    { root: 98.00, notes: [196.00, 246.94, 293.66] }   // G
+    { root: 130.81, notes: [261.63, 329.63, 392.00] },
+    { root: 110.00, notes: [220.00, 261.63, 329.63] },
+    { root: 123.47, notes: [246.94, 293.66, 369.99] },
+    { root: 98.00, notes: [196.00, 246.94, 293.66] }
   ];
   const chord = chords[bar % 4];
-  
-  // Cloche douce
   if (inBar === 0 || inBar === 8) {
     const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
     osc.type = "sine";
-    osc.frequency.setValueAtTime(1046.50, t); // C6
+    osc.frequency.setValueAtTime(1046.50, t);
     g.gain.setValueAtTime(0.12, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
     osc.connect(g); g.connect(this.ctx.destination);
     osc.start(t); osc.stop(t + 1.2);
   }
-  
-  // Grelots (bruit aigu filtré)
   if (inBar % 2 === 0) {
     const bufferSize = this.ctx.sampleRate * 0.05;
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
@@ -148,8 +134,6 @@ SoundEngine.tickNoel = function(step) {
     noise.connect(f); f.connect(g); g.connect(this.ctx.destination);
     noise.start(t);
   }
-  
-  // Nappes chaudes
   if (inBar === 0) {
     chord.notes.forEach(freq => {
       const o = this.ctx.createOscillator(), g = this.ctx.createGain();
@@ -162,8 +146,6 @@ SoundEngine.tickNoel = function(step) {
       o.start(t); o.stop(t + 3.0);
     });
   }
-  
-  // Mélodie de carillon
   if (inBar % 4 === 0) {
     const melody = [523.25, 587.33, 659.25, 783.99, 659.25, 587.33, 523.25, 493.88];
     const note = melody[inBar / 2];
@@ -175,8 +157,6 @@ SoundEngine.tickNoel = function(step) {
     osc.connect(g); g.connect(this.ctx.destination);
     osc.start(t); osc.stop(t + 0.4);
   }
-  
-  // Effet de glow visuel
   if (inBar === 0) {
     const glow = document.getElementById('bg-glow');
     if (glow) {
@@ -192,10 +172,7 @@ SoundEngine.playCrack = function(theme) {
   if (this.isMuted) return;
   this.init();
   if (!this.ctx) return;
-  
-  // Sons spécifiques Halloween/Noël
   if (theme === "theme_citrouille" || theme === "theme_fantome") {
-    // Halloween : craquement sinistre
     const t = this.ctx.currentTime;
     const bufferSize = this.ctx.sampleRate * 0.15;
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
@@ -213,8 +190,6 @@ SoundEngine.playCrack = function(theme) {
     noise.start(t);
     return;
   }
-  
-  // Sinon, comportement original
   this._originalCrack.call(this, theme);
 };
 
@@ -223,19 +198,14 @@ SoundEngine.playPerfectionBoom = function(theme) {
   if (this.isMuted) return;
   this.init();
   if (!this.ctx) return;
-  
-  // Boom spécifique Halloween/Noël
   if (theme === "theme_citrouille" || theme === "theme_fantome") {
     this.stopBoom();
     const t = this.ctx.currentTime;
-    // Explosion sourde + écho
     this.boom(t, 0.7, 60);
     setTimeout(() => this.boom(t, 0.4, 80), 200);
     setTimeout(() => this.boom(t, 0.25, 100), 400);
     return;
   }
-  
-  // Sinon, comportement original
   this._originalBoom.call(this, theme);
 };
 
@@ -256,7 +226,6 @@ if (typeof window !== "undefined") {
   setInterval(() => {
     const current = window.CURRENT_SEASON || "s1";
     if (current !== lastSeason && SoundEngine.currentMode) {
-      // La saison a changé, on relance la musique appropriée
       const mode = SoundEngine.currentMode;
       SoundEngine.stopMusic(false);
       SoundEngine.startMusic(mode);
