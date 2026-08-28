@@ -27,74 +27,117 @@ SoundEngine.tickHalloween = function(step) {
   const bar = Math.floor(step / 16);
   const inBar = step % 16;
   const chords = [
-    { root: 55.00, notes: [110.00, 138.59, 164.81] },
-    { root: 51.91, notes: [103.83, 130.81, 155.56] },
-    { root: 58.27, notes: [116.54, 146.83, 174.61] },
-    { root: 49.00, notes: [98.00, 123.47, 146.83] }
+    { root: 55.00, pad: [110.00, 130.81, 164.81, 220.00] },
+    { root: 43.65, pad: [87.31, 110.00, 130.81, 174.61] },
+    { root: 36.71, pad: [73.42, 87.31, 110.00, 146.83] },
+    { root: 41.20, pad: [82.41, 103.83, 123.47, 164.81] }
   ];
   const chord = chords[bar % 4];
-  if (inBar === 0 || inBar === 8) {
-    const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(80, t);
-    osc.frequency.exponentialRampToValueAtTime(30, t + 0.2);
-    g.gain.setValueAtTime(0.18, t);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
-    osc.connect(g); g.connect(this.ctx.destination);
-    osc.start(t); osc.stop(t + 0.25);
-  }
+
+  if (inBar === 0) this._heart(t, 0.16);
+  if (inBar === 3) this._heart(t, 0.10);
+
   if (inBar === 0) {
-    chord.notes.forEach(freq => {
+    const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = "sine";
+    o.frequency.setValueAtTime(chord.root, t);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(0.05, t + 1.2);
+    g.gain.linearRampToValueAtTime(0.0001, t + 3.8);
+    o.connect(g); g.connect(this.ctx.destination);
+    o.start(t); o.stop(t + 3.8);
+  }
+
+  if (inBar === 0) {
+    chord.pad.forEach((f, i) => {
       const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-      o.type = "sawtooth";
-      o.frequency.setValueAtTime(freq, t);
-      const f = this.ctx.createBiquadFilter();
-      f.type = "lowpass";
-      f.frequency.setValueAtTime(300, t);
+      o.type = "triangle";
+      o.frequency.setValueAtTime(f, t);
+      o.detune.setValueAtTime(i % 2 === 0 ? -4 : 4, t);
+      const lp = this.ctx.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.setValueAtTime(900, t);
       g.gain.setValueAtTime(0.0001, t);
-      g.gain.linearRampToValueAtTime(0.04, t + 0.5);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 3.5);
-      o.connect(f); f.connect(g); g.connect(this.ctx.destination);
-      o.start(t); o.stop(t + 3.5);
+      g.gain.linearRampToValueAtTime(0.022, t + 1.0);
+      g.gain.linearRampToValueAtTime(0.0001, t + 3.6);
+      o.connect(lp); lp.connect(g); g.connect(this.ctx.destination);
+      o.start(t); o.stop(t + 3.6);
     });
   }
-  if (inBar === 4 || inBar === 12) {
-    const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
-    osc.type = "sawtooth";
-    osc.frequency.setValueAtTime(chord.root * 1.414, t);
-    const f = this.ctx.createBiquadFilter();
-    f.type = "bandpass";
-    f.frequency.setValueAtTime(400, t);
-    g.gain.setValueAtTime(0.08, t);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.8);
-    osc.connect(f); f.connect(g); g.connect(this.ctx.destination);
-    osc.start(t); osc.stop(t + 0.8);
+
+  if (inBar === 8) {
+    const f = chord.pad[2] * 2;
+    [f, f * 1.005].forEach(fr => {
+      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+      o.type = "sine";
+      o.frequency.setValueAtTime(fr, t);
+      g.gain.setValueAtTime(0.04, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 2.4);
+      o.connect(g); g.connect(this.ctx.destination);
+      o.start(t); o.stop(t + 2.4);
+    });
   }
-  if (inBar % 4 === 2) {
-    const bufferSize = this.ctx.sampleRate * 0.6;
+
+  const melodySteps = { 2: 0, 6: 2, 10: 4, 14: 3 };
+  if (melodySteps[inBar] !== undefined && bar % 2 === 1) {
+    const scale = [220.00, 261.63, 329.63, 349.23, 415.30, 440.00];
+    this._eerie(t, scale[melodySteps[inBar]], 0.05);
+  }
+
+  if (inBar === 6 || inBar === 12) {
+    const bufferSize = this.ctx.sampleRate * 1.2;
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.3;
+    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1);
     const noise = this.ctx.createBufferSource();
     noise.buffer = buffer;
     const f = this.ctx.createBiquadFilter();
     f.type = "bandpass";
-    f.frequency.setValueAtTime(800 + Math.random() * 400, t);
-    f.Q.setValueAtTime(8, t);
+    f.frequency.setValueAtTime(600 + Math.random() * 500, t);
+    f.Q.setValueAtTime(6, t);
     const g = this.ctx.createGain();
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(0.06, t + 0.1);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+    g.gain.linearRampToValueAtTime(0.03, t + 0.5);
+    g.gain.linearRampToValueAtTime(0.0001, t + 1.1);
     noise.connect(f); f.connect(g); g.connect(this.ctx.destination);
     noise.start(t);
   }
+
   if (inBar === 0) {
     const glow = document.getElementById('bg-glow');
     if (glow) {
-      glow.style.opacity = '0.18';
-      setTimeout(() => { glow.style.opacity = '0.06'; }, 500);
+      glow.style.opacity = '0.16';
+      setTimeout(() => { glow.style.opacity = '0.06'; }, 600);
     }
   }
+};
+
+SoundEngine._heart = function(t, vol) {
+  const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+  o.type = "sine";
+  o.frequency.setValueAtTime(55, t);
+  o.frequency.exponentialRampToValueAtTime(30, t + 0.12);
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+  o.connect(g); g.connect(this.ctx.destination);
+  o.start(t); o.stop(t + 0.16);
+};
+
+SoundEngine._eerie = function(t, freq, vol) {
+  const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+  o.type = "sine";
+  o.frequency.setValueAtTime(freq, t);
+  const vib = this.ctx.createOscillator();
+  const vibG = this.ctx.createGain();
+  vib.frequency.setValueAtTime(5.5, t);
+  vibG.gain.setValueAtTime(6, t);
+  vib.connect(vibG); vibG.connect(o.frequency);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(vol, t + 0.15);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
+  o.connect(g); g.connect(this.ctx.destination);
+  o.start(t); vib.start(t);
+  o.stop(t + 1.4); vib.stop(t + 1.4);
 };
 
 /* ---------- MUSIQUE NOËL (grelots, carillon, ambiance chaleureuse) ---------- */
