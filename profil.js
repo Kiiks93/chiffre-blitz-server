@@ -263,12 +263,14 @@ function renderProfileAvatarSelector() {
   container.appendChild(sel);
 }
 const TITLE_DISPLAY_NAMES = {
-  "title_stalker": "Stalker Numérique",
-  "title_felin": "Réflexe Félin",
-  "title_neon": "Pulsion Néon",
-  "title_spectre": "Spectre Cosmique",
+  // --- Pass S1 ---
+  "title_stalker": "🕵️ Stalker Numérique",
+  "title_felin": "🐱 Réflexe Félin",
+  "title_neon": "🌈 Pulsion Néon",
+  "title_spectre": "🌌 Spectre Cosmique",
   "title_supreme": "⚡ FÉLIN SUPRÊME",
   "title_champion": "🏅 Champion Éclair",
+  // --- Trophées ---
   "title_combattant": "🎖️ Combattant",
   "title_elite": "🏵️ Élite",
   "title_eveille": "⚡ Éveil",
@@ -285,6 +287,7 @@ const TITLE_DISPLAY_NAMES = {
   "title_midas": "💰 Midas",
   "title_dynastie": "🏛️ Dynastie",
   "title_mondial": "🌍 N°1 Mondial",
+  // --- Pass S2 ---
   "title_fantome": "👻 Chuchoteur de Fantômes",
   "title_danse_macabre": "🦴 Danse Macabre",
   "title_citrouille": "🎃 Pulsion Citrouille",
