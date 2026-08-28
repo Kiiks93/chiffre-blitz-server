@@ -299,7 +299,7 @@ const FRAME_DISPLAY_NAMES = {
   "frame_voltage": "⚡ Cadre « Sous Tension »",
   "frame_obsidian": "🖤 Cadre « Obsidienne »",
   "frame_givre": "🧊 Cadre « Givre »",
-  "frame_osseux": "🦴 Cadre « Osseux »",
+  "frame_osseux": "🎃 Cadre « Lanterne »",
   "frame_fantome": "👻 Cadre « Fantôme »"
 };
 const THEME_DISPLAY_NAMES = {
@@ -317,8 +317,8 @@ const PACKS_LIST = [
   { id: "pack_solaire", name: "✨ Doré", theme: "theme_alt", frame: "frame_prism" },
   { id: "pack_obsidienne", name: "🖤 Obsidienne", theme: "theme_obsidian", frame: "frame_obsidian" },
   { id: "pack_neon", name: "🌈 Néon", theme: "theme_neon", frame: "frame_chroma" },
-  { id: "pack_halloween_osseux", name: "🎃 Citrouille + Osseux", theme: "theme_citrouille", frame: "frame_osseux" },
-  { id: "pack_halloween_fantome", name: "👻 Citrouille + Fantôme", theme: "theme_citrouille", frame: "frame_fantome" }
+  { id: "pack_halloween_osseux", name: "🎃 Citrouille + Lanterne", theme: "theme_citrouille", frame: "frame_osseux" },
+  { id: "pack_halloween_fantome", name: "👻 Citrouille + Fantôme", theme: "theme_citrouille", frame: "frame_fantome" },
 ];
 function ensurePackSelector() {
   if (document.getElementById("pack-input")) return;
