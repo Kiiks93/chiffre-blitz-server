@@ -396,42 +396,76 @@ function _neonSweepHyper() {
   osc.start(now); osc.stop(now + d);
 }
 /* ============================================================
-FX 🎃/ — VIDÉOS COMBO (Lanterne & Fantôme)
+FX 🎃 LANTERNES (grille Citrouille) — lanternes 3D + drone angoissant
 ============================================================ */
-let _comboVideo = null;
-let _lanterneAudio = null, _fantomeAudio = null;
+let _lanternAudioCtx = null;
 
-function ensureComboVideo() {
-  if (_comboVideo) return _comboVideo;
-  _comboVideo = document.createElement("video");
-  _comboVideo.id = "combo-fx-video";
-  _comboVideo.style.cssText = "position:fixed; inset:0; width:100%; height:100%; object-fit:cover; pointer-events:none; z-index:1; opacity:0; transition:opacity 0.3s ease;";
-  _comboVideo.muted = true;
-  _comboVideo.playsInline = true;
-  _comboVideo.addEventListener("ended", () => { _comboVideo.style.opacity = "0"; });
-  document.body.appendChild(_comboVideo);
-  return _comboVideo;
-}
-
-function playComboVideo(src) {
-  const v = ensureComboVideo();
-  if (v.getAttribute("src") !== src) v.setAttribute("src", src);
-  v.style.opacity = "0.9";
-  v.currentTime = 0;
-  v.play().catch(() => {});
-}
-
-function stopComboVideo() {
-  if (_comboVideo) { _comboVideo.pause(); _comboVideo.style.opacity = "0"; }
-}
-
-function playLanterneSound() {
+function playLanternSound() {
   if (isMuted()) return;
-  if (!_lanterneAudio) _lanterneAudio = new Audio("sound/lanterne-combo.wav");
-  _lanterneAudio.currentTime = 0; _lanterneAudio.volume = 0.9;
-  _lanterneAudio.play().catch(() => {});
+  try {
+    if (!_lanternAudioCtx) _lanternAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (_lanternAudioCtx.state === "suspended") _lanternAudioCtx.resume();
+    const ctx = _lanternAudioCtx;
+    [110, 116.54].forEach(freq => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.8, ctx.currentTime + 1.2);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.5);
+      const filter = ctx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(300, ctx.currentTime);
+      osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+      osc.start(); osc.stop(ctx.currentTime + 1.5);
+    });
+  } catch (e) {}
 }
 
+function spawnLanterns(big) {
+  const count = big ? 6 : 1 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < count; i++) setTimeout(() => createLantern(), i * 120);
+}
+
+function createLantern() {
+  const wrapper = document.createElement("div");
+  wrapper.className = "lantern-wrapper";
+  wrapper.style.left = (Math.random() * (window.innerWidth - 120) + 60) + "px";
+  const duration = Math.random() * 1.0 + 3.2;
+  wrapper.style.animationDuration = duration + "s";
+  wrapper.style.setProperty("--drift", ((Math.random() - 0.5) * 100) + "px");
+  wrapper.style.setProperty("--rot", ((Math.random() - 0.5) * 120) + "deg");
+  const lantern = document.createElement("div");
+  lantern.className = "lantern";
+  const face = document.createElement("div");
+  face.className = "face";
+  const eyeLeft = document.createElement("div"); eyeLeft.className = "eye-left";
+  const eyeRight = document.createElement("div"); eyeRight.className = "eye-right";
+  const mouth = document.createElement("div"); mouth.className = "mouth";
+  face.appendChild(eyeLeft); face.appendChild(eyeRight); face.appendChild(mouth);
+  lantern.appendChild(face);
+  const particlesContainer = document.createElement("div");
+  particlesContainer.className = "lantern-particles";
+  for (let p = 0; p < 3; p++) {
+    const particle = document.createElement("div");
+    particle.className = "lantern-particle";
+    const size = Math.random() * 4 + 3;
+    particle.style.width = size + "px";
+    particle.style.height = size + "px";
+    particle.style.left = ((Math.random() - 0.5) * 15) + "px";
+    particle.style.top = (p * 12) + "px";
+    particle.style.animationDelay = (Math.random() * 0.4) + "s";
+    particlesContainer.appendChild(particle);
+  }
+  wrapper.appendChild(lantern);
+  wrapper.appendChild(particlesContainer);
+  document.body.appendChild(wrapper);
+  setTimeout(() => wrapper.remove(), duration * 1000);
+}
+
+/* ---------- 👻 SON FANTÔME (WAV, en attendant l'anim finale) ---------- */
+let _fantomeAudio = null;
 function playFantomeSound() {
   if (isMuted()) return;
   if (!_fantomeAudio) _fantomeAudio = new Audio("sound/fantome-combo.wav");
