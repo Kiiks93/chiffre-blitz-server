@@ -478,11 +478,7 @@ io.on('connection', (socket) => {
     if (track === 'premium' && !seasonData.premium) { socket.emit('pass_claim_denied', { tier, track, reason: "premium_required" }); return; }
     seasonData[key] = true;
     player.blitzPassPremium = !!seasonData.premium;
-    function applyPassReward(p, tier, track, seasonId) {
-  if (seasonId !== "s1") return; // s2/s3 : contenu à venir
-  p.inventory = p.inventory || {};
-  p.unlocked_items = p.unlocked_items || [];
-  if (track === 'free') {
+    applyPassReward(player, tier, track, seasonId);
     const unlockedTrophies = evaluateTrophies(player);
     if (unlockedTrophies.length > 0) {
       socket.emit('trophy_unlocked', unlockedTrophies.map(t => ({ id: Object.keys(TROPHY_CATALOG).find(k => TROPHY_CATALOG[k] === t), ...t })));
