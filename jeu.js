@@ -375,38 +375,48 @@ function coinStorm() {
 function spawnCrack() {
   const themeNow = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
   
-  // 🪙 THÈME DORÉ : pluie de pièces
+  // 🟦 PACK STANDARD : aucune animation, aucun son
+  if (!themeNow || themeNow === "") return;
+  
+  //  THÈME DORÉ : pluie de pièces
   if (themeNow === "theme_alt") {
     for (let i = 0; i < 8; i++) setTimeout(() => spawnCoin(), i * 60);
     SoundEngine.playCrack(themeNow);
     return;
   }
   
-  // 🌈 THÈME NÉON : hyperspace starfield (géré par registerComboHit)
+  // 🌈 THÈME NÉON : hyperspace starfield (géré par neonComboBoost dans registerComboHit)
   if (themeNow === "theme_neon") return;
   
-  // 🎃 THÈME CITROUILLE : envolée de chauves-souris
+  //  THÈME CITROUILLE : pluie de citrouilles
   if (themeNow === "theme_citrouille") {
-    if (typeof spawnBats === "function") spawnBats(false);
+    spawnPumpkins(false);
     SoundEngine.playCrack(themeNow);
     return;
   }
   
-  // ⚡ THÈME ÉCLAIR : arcs fractals (plein écran)
+  // 👻 THÈME FANTÔME : fantômes qui descendent
+  if (themeNow === "theme_fantome") {
+    spawnGhosts(false);
+    SoundEngine.playCrack(themeNow);
+    return;
+  }
+  
+  //  THÈME ÉCLAIR : arcs fractals
   if (themeNow === "theme_eclair") {
     spawnLightningBurst(false);
     playElectricArcSound();
     return;
   }
   
-  // 🖤 THÈME OBSIDIENNE : rochers + débris (plein écran)
+  // 🖤 THÈME OBSIDIENNE : rochers
   if (themeNow === "theme_obsidian") {
     spawnObsidianRock();
     playObsidianImpactSound();
     return;
   }
   
-  // Autres thèmes : fissures SVG plein écran
+  // ❄️ THÈME GLACIAL (Cryo) : fissures SVG bleues (seul thème "legacy" restant)
   const layer = ensureCracksLayer();
   if (layer.childElementCount > 20) layer.removeChild(layer.firstChild);
   const style = getComboCrackStyle();
