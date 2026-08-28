@@ -197,70 +197,72 @@ function clearObsidianFx() { _obsRocks = []; _obsDebris = []; _obsLanded = []; _
 function initObsidianAudio() {
   if (!_obsAudioCtx) _obsAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (_obsAudioCtx.state === "suspended") _obsAudioCtx.resume();
+  return _obsAudioCtx;
 }
 
 function playObsidianImpactSound() {
   if (isMuted()) return;
-  initObsidianAudio();
-  const now = _obsAudioCtx.currentTime;
-  const osc1 = _obsAudioCtx.createOscillator();
-  const gain1 = _obsAudioCtx.createGain();
+  const ctx = initObsidianAudio();
+  const now = ctx.currentTime;
+  const osc1 = ctx.createOscillator();
+  const gain1 = ctx.createGain();
   osc1.type = "sine";
   osc1.frequency.setValueAtTime(80, now);
   osc1.frequency.exponentialRampToValueAtTime(15, now + 0.5);
   gain1.gain.setValueAtTime(0.6, now);
   gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-  osc1.connect(gain1).connect(_obsAudioCtx.destination);
+  osc1.connect(gain1).connect(ctx.destination);
   osc1.start(now); osc1.stop(now + 0.5);
-  const osc2 = _obsAudioCtx.createOscillator();
-  const gain2 = _obsAudioCtx.createGain();
+  const osc2 = ctx.createOscillator();
+  const gain2 = ctx.createGain();
   osc2.type = "triangle";
   osc2.frequency.setValueAtTime(2400, now);
   osc2.frequency.exponentialRampToValueAtTime(400, now + 0.06);
   gain2.gain.setValueAtTime(0.4, now);
   gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
-  osc2.connect(gain2).connect(_obsAudioCtx.destination);
+  osc2.connect(gain2).connect(ctx.destination);
   osc2.start(now); osc2.stop(now + 0.06);
-  const osc3 = _obsAudioCtx.createOscillator();
-  const gain3 = _obsAudioCtx.createGain();
+  const osc3 = ctx.createOscillator();
+  const gain3 = ctx.createGain();
   osc3.type = "sine";
   osc3.frequency.setValueAtTime(120, now);
   osc3.frequency.exponentialRampToValueAtTime(20, now + 0.9);
   gain3.gain.setValueAtTime(0.8, now);
   gain3.gain.exponentialRampToValueAtTime(0.01, now + 0.9);
-  osc3.connect(gain3).connect(_obsAudioCtx.destination);
+  osc3.connect(gain3).connect(ctx.destination);
   osc3.start(now); osc3.stop(now + 0.9);
 }
 
 function playObsidianExplosionSound() {
   if (isMuted()) return;
-  initObsidianAudio();
-  const now = _obsAudioCtx.currentTime;
-  const osc = _obsAudioCtx.createOscillator();
-  const gain = _obsAudioCtx.createGain();
+  const ctx = initObsidianAudio();
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
   osc.type = "sine";
   osc.frequency.setValueAtTime(120, now);
   osc.frequency.exponentialRampToValueAtTime(20, now + 0.9);
   gain.gain.setValueAtTime(1.0, now);
   gain.gain.exponentialRampToValueAtTime(0.01, now + 0.9);
-  osc.connect(gain).connect(_obsAudioCtx.destination);
+  osc.connect(gain).connect(ctx.destination);
   osc.start(now); osc.stop(now + 0.9);
-  const bufferSize = _obsAudioCtx.sampleRate * 0.6;
-  const buffer = _obsAudioCtx.createBuffer(1, bufferSize, _obsAudioCtx.sampleRate);
+  const bufferSize = ctx.sampleRate * 0.6;
+  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
   const data = buffer.getChannelData(0);
   for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.5;
-  const noise = _obsAudioCtx.createBufferSource();
+  const noise = ctx.createBufferSource();
   noise.buffer = buffer;
-  const noiseGain = _obsAudioCtx.createGain();
-  const filter = _obsAudioCtx.createBiquadFilter();
+  const noiseGain = ctx.createGain();
+  const filter = ctx.createBiquadFilter();
   filter.type = "lowpass";
   filter.frequency.setValueAtTime(400, now);
   filter.frequency.exponentialRampToValueAtTime(50, now + 0.6);
   noiseGain.gain.setValueAtTime(0.8, now);
   noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
-  noise.connect(filter).connect(noiseGain).connect(_obsAudioCtx.destination);
+  noise.connect(filter).connect(noiseGain).connect(ctx.destination);
   noise.start(now); noise.stop(now + 0.6);
 }
+
 /* ============================================================
 FX 🌈 NÉON — hyperspace starfield (spec starwars_hyperspace)
 ============================================================ */
@@ -392,4 +394,24 @@ function _neonSweepHyper() {
   gain.gain.exponentialRampToValueAtTime(0.01, now + d);
   osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
   osc.start(now); osc.stop(now + d);
+}
+
+/* ============================================================
+FX 🦇 CHAUVES-SOURIS (Halloween)
+============================================================ */
+function spawnBats(big) {
+  const count = big ? 14 : 6;
+  for (let i = 0; i < count; i++) {
+    const b = document.createElement("div");
+    b.className = "bat-particle";
+    b.innerText = "🦇";
+    b.style.left = Math.random() * 90 + 5 + "%";
+    b.style.top = Math.random() * 70 + 15 + "%";
+    b.style.fontSize = (18 + Math.random() * 18) + "px";
+    const dir = Math.random() > 0.5 ? 1 : -1;
+    b.style.setProperty("--bx", dir * (200 + Math.random() * 250) + "px");
+    b.style.setProperty("--by", (Math.random() - 0.5) * 180 + "px");
+    document.body.appendChild(b);
+    setTimeout(() => b.remove(), 1500);
+  }
 }
