@@ -395,23 +395,46 @@ function _neonSweepHyper() {
   osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
   osc.start(now); osc.stop(now + d);
 }
-
 /* ============================================================
-FX 🦇 CHAUVES-SOURIS (Halloween)
+FX 🎃/ — VIDÉOS COMBO (Lanterne & Fantôme)
 ============================================================ */
-function spawnBats(big) {
-  const count = big ? 14 : 6;
-  for (let i = 0; i < count; i++) {
-    const b = document.createElement("div");
-    b.className = "bat-particle";
-    b.innerText = "🦇";
-    b.style.left = Math.random() * 90 + 5 + "%";
-    b.style.top = Math.random() * 70 + 15 + "%";
-    b.style.fontSize = (18 + Math.random() * 18) + "px";
-    const dir = Math.random() > 0.5 ? 1 : -1;
-    b.style.setProperty("--bx", dir * (200 + Math.random() * 250) + "px");
-    b.style.setProperty("--by", (Math.random() - 0.5) * 180 + "px");
-    document.body.appendChild(b);
-    setTimeout(() => b.remove(), 1500);
-  }
+let _comboVideo = null;
+let _lanterneAudio = null, _fantomeAudio = null;
+
+function ensureComboVideo() {
+  if (_comboVideo) return _comboVideo;
+  _comboVideo = document.createElement("video");
+  _comboVideo.id = "combo-fx-video";
+  _comboVideo.style.cssText = "position:fixed; inset:0; width:100%; height:100%; object-fit:cover; pointer-events:none; z-index:1; opacity:0; transition:opacity 0.3s ease;";
+  _comboVideo.muted = true;
+  _comboVideo.playsInline = true;
+  _comboVideo.addEventListener("ended", () => { _comboVideo.style.opacity = "0"; });
+  document.body.appendChild(_comboVideo);
+  return _comboVideo;
+}
+
+function playComboVideo(src) {
+  const v = ensureComboVideo();
+  if (v.getAttribute("src") !== src) v.setAttribute("src", src);
+  v.style.opacity = "0.9";
+  v.currentTime = 0;
+  v.play().catch(() => {});
+}
+
+function stopComboVideo() {
+  if (_comboVideo) { _comboVideo.pause(); _comboVideo.style.opacity = "0"; }
+}
+
+function playLanterneSound() {
+  if (isMuted()) return;
+  if (!_lanterneAudio) _lanterneAudio = new Audio("sound/lanterne-combo.wav");
+  _lanterneAudio.currentTime = 0; _lanterneAudio.volume = 0.9;
+  _lanterneAudio.play().catch(() => {});
+}
+
+function playFantomeSound() {
+  if (isMuted()) return;
+  if (!_fantomeAudio) _fantomeAudio = new Audio("sound/fantome-combo.wav");
+  _fantomeAudio.currentTime = 0; _fantomeAudio.volume = 0.9;
+  _fantomeAudio.play().catch(() => {});
 }
