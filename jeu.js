@@ -1307,7 +1307,6 @@ function renderGrid(pool, handler) {
     }
     grid.appendChild(tile);
   });
-}
 
 function handleAvalancheClick(val, idx) {
   const tiles = document.querySelectorAll("#grid .tile");
