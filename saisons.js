@@ -1,29 +1,87 @@
 /* ============================================================
 MODULE SAISONS — DA visuelle saisonnière
 ============================================================ */
+
+function getCurrentSeasonId() {
+  if (typeof myProfile !== "undefined" && myProfile) {
+    return myProfile.currentSeasonId || myProfile.seasonId || myProfile.season_id || "s1";
+  }
+  return window.CURRENT_SEASON || "s1";
+}
+
 function applySeasonDA() {
-  if (typeof myProfile === "undefined") return;
-  const seasonId = myProfile.currentSeasonId || "s1";
+  const seasonId = getCurrentSeasonId();
+
   window.CURRENT_SEASON = seasonId;
+
   document.body.classList.remove("season-s1", "season-s2", "season-s3");
   document.body.classList.add("season-" + seasonId);
+
   const fx = document.getElementById("bg-fx");
-  if (fx) {
-    fx.querySelectorAll(".bg-shape").forEach(s => s.remove());
-    const shapes = seasonId === "s2" ? ["🎃", "👻", "🦇", "🕸️"] : seasonId === "s3" ? ["❄️", "⛄", "🎄", "🎁"] : ["◆", "▲", "■", "●"];
-    const colors = seasonId === "s2" ? ["#ff8a00", "#b06bff", "#ff4b2b", "#e8dcc0"] : seasonId === "s3" ? ["#ffffff", "#7be8ff", "#ff4b2b", "#38ef7d"] : ["#00d2ff", "#ff007f", "#ffe600", "#00ff88"];
-    for (let i = 0; i < 12; i++) {
-      const s = document.createElement("div");
-      s.className = "bg-shape";
-      s.innerText = shapes[i % shapes.length];
-      s.style.fontSize = (14 + Math.random() * 26) + "px";
-      s.style.left = Math.random() * 100 + "%";
-      s.color = colors[i % colors.length];
-      s.style.animationDuration = (14 + Math.random() * 16) + "s";
-      s.style.animationDelay = (-Math.random() * 25) + "s";
-      fx.appendChild(s);
-    }
+  if (!fx) return;
+
+  fx.querySelectorAll(".bg-shape").forEach(s => s.remove());
+
+  const shapes =
+    seasonId === "s2"
+      ? ["🎃", "👻", "🦇", "🕸️"]
+      : seasonId === "s3"
+        ? ["❄️", "⛄", "🎄", "🎁"]
+        : ["◆", "▲", "■", "●"];
+
+  const colors =
+    seasonId === "s2"
+      ? ["#ff8a00", "#b06bff", "#ff4b2b", "#e8dcc0"]
+      : seasonId === "s3"
+        ? ["#ffffff", "#7be8ff", "#ff4b2b", "#38ef7d"]
+        : ["#00d2ff", "#ff007f", "#ffe600", "#00ff88"];
+
+  for (let i = 0; i < 12; i++) {
+    const s = document.createElement("div");
+    s.className = "bg-shape";
+    s.innerText = shapes[i % shapes.length];
+    s.style.fontSize = (14 + Math.random() * 26) + "px";
+    s.style.left = Math.random() * 100 + "%";
+    s.style.color = colors[i % colors.length];
+    s.style.animationDuration = (14 + Math.random() * 16) + "s";
+    s.style.animationDelay = (-Math.random() * 25) + "s";
+    fx.appendChild(s);
   }
+}
+
+/* ============================================================
+APPLICATION AUTOMATIQUE
+============================================================ */
+
+// Au chargement de la page
+document.addEventListener("DOMContentLoaded", () => {
+  setTimeout(() => {
+    if (typeof initMenuBackgroundFX === "function") initMenuBackgroundFX();
+    applySeasonDA();
+  }, 100);
+});
+
+// Quand le profil joueur est reçu / mis à jour
+if (typeof socket !== "undefined") {
+  socket.on("player_registered", () => {
+    setTimeout(() => {
+      applySeasonDA();
+    }, 50);
+  });
+
+  // Si ton admin envoie un événement de saison, ça permet de réagir aussi
+  socket.on("season_updated", (data) => {
+    if (data && data.seasonId) {
+      window.CURRENT_SEASON = data.seasonId;
+      if (typeof myProfile !== "undefined" && myProfile) {
+        myProfile.currentSeasonId = data.seasonId;
+      }
+    }
+
+    setTimeout(() => {
+      applySeasonDA();
+    }, 50);
+  });
 }
 /* ============================================================
 FX 🎃 LANTERNES (grille Citrouille) — lanternes 3D + drone angoissant
