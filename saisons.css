@@ -192,7 +192,7 @@ will-change: transform, opacity;
 .tile.fantome-theme { background: linear-gradient(135deg, #1a0033, #7b2ff7) !important; border-color: #b06bff !important; color: #fff !important; box-shadow: 0 0 12px rgba(157, 47, 255, 0.6); }
 
 /* ---------- SAISON 2 : HALLOWEEN ---------- */
-body.season-s2 { background: radial-gradient(circle at 50% 20%, #1a0033 0%, #0a001a 60%, #050008 100%); }
+body.season-s2 { background: radial-gradient(circle at 50% 30%, #0d0016 0%, #050008 55%, #000000 100%); }
 body.season-s2 h1 { color: #ff8a00; text-shadow: 0 0 15px rgba(255, 138, 0, 0.5); }
 body.season-s2 #bg-glow { background: radial-gradient(circle, rgba(255, 138, 0, 0.12) 0%, rgba(123, 47, 247, 0.06) 40%, transparent 70%); }
 body.season-s2 .btn-main { background: linear-gradient(45deg, #ff8a00, #7b2ff7); box-shadow: 0 4px 15px rgba(255, 138, 0, 0.3); }
@@ -202,6 +202,78 @@ body.season-s2 .tile { background: #2a0a3d; border-color: #7b2ff7; }
 body.season-s2 .hud { background: rgba(123, 47, 247, 0.12); }
 body.season-s2 .user-pill { color: #ff8a00; }
 body.season-s2 .tab-btn.active { background: #ff8a00; }
+
+/* ---------- LIGNE D'HORIZON + BRUME ---------- */
+body.season-s2::before {
+  content: '';
+  position: fixed;
+  left: 0; right: 0; top: 50%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 138, 0, 0.4) 25%, rgba(176, 107, 255, 0.5) 50%, rgba(255, 138, 0, 0.4) 75%, transparent 100%);
+  box-shadow: 0 0 18px rgba(255, 138, 0, 0.3), 0 0 40px rgba(176, 107, 255, 0.2);
+  z-index: 0;
+  pointer-events: none;
+}
+body.season-s2::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 55% 18% at 25% 58%, rgba(176, 107, 255, 0.10), transparent 70%),
+    radial-gradient(ellipse 45% 16% at 75% 62%, rgba(255, 138, 0, 0.07), transparent 70%),
+    radial-gradient(ellipse 90% 26% at 50% 105%, rgba(120, 60, 200, 0.14), transparent 70%);
+  animation: halloweenMist 16s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes halloweenMist {
+  0% { transform: translateX(-2.5%); opacity: 0.7; }
+  100% { transform: translateX(2.5%); opacity: 1; }
+}
+
+/* ---------- TOILES D'ARAIGNÉE + ARAIGNÉE QUI DESCEND ---------- */
+.halloween-web {
+  position: fixed;
+  font-size: 110px;
+  line-height: 1;
+  opacity: 0.22;
+  z-index: 1;
+  pointer-events: none;
+  filter: grayscale(1) brightness(2.2);
+}
+.halloween-web.tl { top: -14px; left: -14px; }
+.halloween-web.tr { top: -14px; right: -14px; transform: scaleX(-1); }
+.halloween-spider {
+  position: fixed;
+  top: 0;
+  z-index: 1;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: spiderDescend 10s ease-in-out infinite alternate;
+}
+.halloween-spider .thread {
+  width: 1px;
+  height: 38vh;
+  background: linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.35));
+}
+.halloween-spider .spider {
+  font-size: 20px;
+  transform-origin: top center;
+  animation: spiderSway 3.2s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.25));
+}
+@keyframes spiderDescend { 0% { transform: translateY(-70%); } 100% { transform: translateY(15%); } }
+@keyframes spiderSway { 0% { transform: rotate(-7deg); } 100% { transform: rotate(7deg); } }
+
+/* ---------- CONTRASTE DES FORMES + LANTERNES POSSÉDÉES ---------- */
+body.season-s2 .bg-shape { opacity: 0.3; text-shadow: 0 0 10px currentColor, 0 0 26px currentColor; }
+.lantern.possessed { animation: possessedFlicker 0.18s infinite alternate; }
+@keyframes possessedFlicker {
+  0% { filter: hue-rotate(95deg) brightness(0.8); transform: scale(1); }
+  100% { filter: hue-rotate(95deg) brightness(1.25); transform: scale(1.03); }
+}
 
 /* ---------- SAISON 3 : NOËL ---------- */
 body.season-s3 { background: radial-gradient(circle at 50% 20%, #0a2a4d 0%, #051525 60%, #020a12 100%); }
