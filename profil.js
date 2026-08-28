@@ -332,20 +332,21 @@ function ensurePackSelector() {
   packSelect.className = themeSelect.className;
   packSelect.style.cssText = themeSelect.style.cssText;
   packSelect.onchange = () => {
-    const pack = PACKS_LIST.find(p => p.id === packSelect.value);
-    if (!pack) return;
-    const unlocked = myProfile.unlocked_items || [];
-    if (!(unlocked.includes(pack.theme) && unlocked.includes(pack.frame))) {
-      showNotificationToast("🔒 Pack non possédé ! Direction la boutique 🛍️", "announcement");
-      packSelect.value = "";
-      return;
-    }
-    const themeSel = document.getElementById("theme-input");
-    const frameSel = document.getElementById("frame-input");
-    if (themeSel) themeSel.value = pack.theme;
-    if (frameSel) frameSel.value = pack.frame;
-    updateProfilePreview();
-  };
+  const pack = PACKS_LIST.find(p => p.id === packSelect.value);
+  if (!pack) return;
+  const required = [pack.theme, pack.frame].filter(x => x !== "");
+  const owned = pack.id === "pack_standard" ? true : required.every(i => unlocked.includes(i));
+  if (!owned) {
+    showNotificationToast("🔒 Pack non possédé ! Direction la boutique 🛍️", "announcement");
+    packSelect.value = "";
+    return;
+  }
+  const themeSel = document.getElementById("theme-input");
+  const frameSel = document.getElementById("frame-input");
+  if (themeSel) themeSel.value = pack.theme;
+  if (frameSel) frameSel.value = pack.frame;
+  updateProfilePreview();
+};
   themeSelect.parentElement.insertBefore(packSelect, themeSelect.nextSibling);
 }
 function renderProfilePackSelector() {
@@ -354,12 +355,13 @@ function renderProfilePackSelector() {
   const unlocked = myProfile.unlocked_items || [];
   packSelect.innerHTML = `<option value="">🎁 Packs (grille + cadre)</option>`;
   PACKS_LIST.forEach(pack => {
-    const owned = unlocked.includes(pack.theme) && unlocked.includes(pack.frame);
-    const opt = document.createElement("option");
-    opt.value = pack.id;
-    opt.innerText = (owned ? "🎁 " : "🔒 ") + pack.name;
-    packSelect.appendChild(opt);
-  });
+  const required = [pack.theme, pack.frame].filter(x => x !== "");
+  const owned = pack.id === "pack_standard" ? true : required.every(i => unlocked.includes(i));
+  const opt = document.createElement("option");
+  opt.value = pack.id;
+  opt.innerText = (owned ? "🎁 " : "🔒 ") + pack.name;
+  packSelect.appendChild(opt);
+});
 }
 function renderProfileCustomizationMenus() {
   const titleSelect = document.getElementById("title-input");
@@ -377,15 +379,17 @@ function renderProfileCustomizationMenus() {
   const frameSelect = document.getElementById("frame-input");
   const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
   if (frameSelect) {
-    frameSelect.innerHTML = `<option value="">Aucun cadre (Défaut)</option>`;
-    (myProfile.unlocked_items || []).filter(id => id.startsWith("frame_")).forEach(fId => {
-      const displayName = FRAME_DISPLAY_NAMES[fId] || fId;
-      const opt = document.createElement("option");
-      opt.value = fId; opt.innerText = displayName;
-      if (equippedFrame === fId) opt.selected = true;
-      frameSelect.appendChild(opt);
-    });
-  }
+  frameSelect.innerHTML = `<option value="">Aucun cadre (Défaut)</option>`;
+  const frames = (myProfile.unlocked_items || []).filter(id => id.startsWith("frame_"));
+  if (!frames.includes("frame_standard")) frames.unshift("frame_standard");
+  frames.forEach(fId => {
+    const displayName = FRAME_DISPLAY_NAMES[fId] || fId;
+    const opt = document.createElement("option");
+    opt.value = fId; opt.innerText = displayName;
+    if (equippedFrame === fId) opt.selected = true;
+    frameSelect.appendChild(opt);
+  });
+}
   const themeSelect = document.getElementById("theme-input");
   const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
   if (themeSelect) {
