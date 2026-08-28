@@ -499,23 +499,25 @@ function playGhostSound() {
 }
 
 function spawnGhostLotties(big) {
-  const count = big ? 10 : 3 + Math.floor(Math.random() * 3);
+  const count = big ? 5 : 2 + Math.floor(Math.random() * 2);
   for (let i = 0; i < count; i++) {
     setTimeout(() => {
       const g = document.createElement("div");
-      g.className = "ghost-particle"; // réutilise la classe existante (lueur violette + descente)
-      const size = 70 + Math.random() * 60;
+      g.className = "ghost-particle";
+      const size = 60 + Math.random() * 40;
       g.style.width = size + "px";
       g.style.height = size + "px";
-      g.style.fontSize = ""; // pas d'emoji cette fois
       g.style.left = Math.random() * 80 + 10 + "%";
       g.style.top = Math.random() * 70 + 15 + "%";
-      g.style.animationDuration = (1.6 + Math.random() * 1.2) + "s";
+      g.style.animationDuration = (1.4 + Math.random() * 0.8) + "s";
+      // Juste un emoji 👻 au lieu de Lottie
+      g.innerText = "👻";
+      g.style.fontSize = size * 0.7 + "px";
+      g.style.display = "flex";
+      g.style.alignItems = "center";
+      g.style.justifyContent = "center";
       document.body.appendChild(g);
-      if (typeof lottie !== "undefined") {
-        lottie.loadAnimation({ container: g, renderer: "svg", loop: true, autoplay: true, path: "fantome-combo.json" });
-      }
-      setTimeout(() => g.remove(), 6000);
-    }, i * 150);
+      setTimeout(() => g.remove(), 2800);
+    }, i * 120);
   }
 }
