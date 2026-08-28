@@ -32,7 +32,7 @@ function applySeasonDA() {
 
   const shapes =
     seasonId === "s2"
-      ? ["🎃", "", "🦇", "🕸️"]
+        ? ["🎃", "", "🦇", "💀"]
       : seasonId === "s3"
         ? ["❄️", "⛄", "🎄", "🎁"]
         : ["◆", "▲", "■", "●"];
@@ -136,6 +136,9 @@ let halloweenAmbienceTimer = null;
 
 function setupHalloweenDecor(seasonId) {
   document.querySelectorAll(".halloween-web, .halloween-spider").forEach(el => el.remove());
+  preloadHalloweenLotties();
+  const bgScene = document.getElementById("season-bg");
+  if (bgScene) addScenePumpkins(bgScene);
   if (halloweenAmbienceTimer) { clearInterval(halloweenAmbienceTimer); halloweenAmbienceTimer = null; }
   if (seasonId !== "s2") return;
 
@@ -413,9 +416,12 @@ function preloadHalloweenLotties() {
   _hlPreloaded = true;
   Object.keys(HALLOWEEN_LOTTIE_FILES).forEach(key => {
     fetch(HALLOWEEN_LOTTIE_FILES[key])
-      .then(r => r.json())
-      .then(data => { _hlData[key] = data; })
-      .catch(() => { _hlData[key] = null; });
+      .then(r => {
+        if (!r.ok) throw new Error(r.status);
+        return r.json();
+      })
+      .then(data => { _hlData[key] = data; console.log("✅ Lottie chargé : " + key); })
+      .catch(e => { _hlData[key] = null; console.log("❌ Lottie INTRouvable : " + HALLOWEEN_LOTTIE_FILES[key]); });
   });
 }
 
@@ -454,33 +460,37 @@ function addScenePumpkins(bg) {
     { right: "24%", bottom: "2%", size: 55 }
   ];
   const count = low ? 2 : 4;
-  for (let i = 0; i < count; i++) {
-    const s = spots[i];
-    const el = document.createElement("div");
-    el.className = "hw-pumpkin-lottie";
-    el.style.width = s.size + "px";
-    el.style.height = s.size + "px";
-    if (s.left) el.style.left = s.left;
-    if (s.right) el.style.right = s.right;
-    el.style.bottom = s.bottom;
-    bg.appendChild(el);
-    let anim = null;
-    const data = hlClone("citrouille");
-    if (data) {
-      anim = lottie.loadAnimation({ container: el, renderer: "canvas", loop: true, autoplay: true, animationData: data });
-    } else {
-      el.innerHTML = `<div class="lantern"><div class="face"><div class="eye-left"></div><div class="eye-right"></div><div class="mouth"></div></div></div>`;
-    }
-    _hlPumpkins.push({ el, anim });
-  }
-  // Retry une fois si le JSON arrive après le premier rendu
-  if (!_hlData.citrouille) {
-    setTimeout(() => {
-      if (window.CURRENT_SEASON === "s2" && _hlData.citrouille && _hlPumpkins.length && !_hlPumpkins[0].anim) {
-        const bg2 = document.getElementById("season-bg");
-        if (bg2 && bg2.dataset.built === "s2") addScenePumpkins(bg2);
+  const build = () => {
+    clearHalloweenPumpkins();
+    for (let i = 0; i < count; i++) {
+      const s = spots[i];
+      const el = document.createElement("div");
+      el.className = "hw-pumpkin-lottie";
+      el.style.width = s.size + "px";
+      el.style.height = s.size + "px";
+      if (s.left) el.style.left = s.left;
+      if (s.right) el.style.right = s.right;
+      el.style.bottom = s.bottom;
+      bg.appendChild(el);
+      let anim = null;
+      const data = hlClone("citrouille");
+      if (data) {
+        anim = lottie.loadAnimation({ container: el, renderer: "canvas", loop: true, autoplay: true, animationData: data });
+      } else {
+        el.innerHTML = `<div class="lantern"><div class="face"><div class="eye-left"></div><div class="eye-right"></div><div class="mouth"></div></div></div>`;
       }
-    }, 2000);
+      _hlPumpkins.push({ el, anim });
+    }
+  };
+  build(); // fallback CSS immédiat
+  if (!_hlData.citrouille) {
+    const retry = setInterval(() => {
+      if (_hlData.citrouille && window.CURRENT_SEASON === "s2" && document.getElementById("season-bg")) {
+        clearInterval(retry);
+        build(); // reconstruit avec le vrai Lottie dès qu'il arrive
+      }
+    }, 1000);
+    setTimeout(() => clearInterval(retry), 15000);
   }
 }
 
@@ -542,7 +552,7 @@ function spawnSceneSpider() {
   const size = 50 + Math.random() * 30;
   el.style.width = size + "px";
   el.style.height = size + "px";
-  el.style.left = (10 + Math.random() * 80) + "%";
+  el.style.left = (Math.random() < 0.5 ? (5 + Math.random() * 20) : (75 + Math.random() * 20)) + "%";
   (document.getElementById("season-bg") || document.body).appendChild(el);
   const data = hlClone("araignee");
   let anim = null;
