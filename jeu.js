@@ -941,7 +941,7 @@ socket.on("start_countdown", (data) => {
       document.getElementById("hud-solo").style.display = "none";
       const towHud = document.getElementById("hud-tow");
       if (data.isTugOfWar) { towHud.style.display = "block"; updateTugOfWarGauge(0); } else towHud.style.display = "none";
-      if (latest1v1StartData) { document.getElementById("game-target-giant").innerText = latest1v1StartData.myTarget || 1; renderGrid(latest1v1StartData.myPool, handle1v1TileClick); }
+      if (latest1v1StartData) ensureEquippedGrid(); { document.getElementById("game-target-giant").innerText = latest1v1StartData.myTarget || 1; renderGrid(latest1v1StartData.myPool, handle1v1TileClick); }
       preparePowerHUD();
       current1v1Time = latest1v1StartData ? latest1v1StartData.timeLeft : 30;
       isTimeFrozen = false;
@@ -1124,6 +1124,7 @@ function startSoloTraining(mode) {
   if (!isProfileValid()) { checkAndShowProfileModal(); return; }
   activeTrainingMode = mode || "classic";
   hideAllScreens();
+  ensureEquippedGrid();
   if (activeTrainingMode === "random") setGameModeBadge("🎲 SOLO ALÉATOIRE", "#00ff88");
   else setGameModeBadge("🏋️ SOLO CLASSIQUE", "#00d2ff");
   soloTarget = (activeTrainingMode === "random") ? Math.floor(Math.random() * 50) + 1 : 1;
@@ -1208,6 +1209,7 @@ AVALANCHE
 function startAvalancheGame(speed, initialCount) {
   if (!isProfileValid()) { checkAndShowProfileModal(); return; }
   hideAllScreens();
+  ensureEquippedGrid();
   setGameModeBadge("🏔️ AVALANCHE", "#7be8ff");
   document.getElementById("screen-game").style.display = "block";
   document.getElementById("hud-solo").style.display = "grid";
@@ -1278,10 +1280,20 @@ function updateAvalancheTarget() {
   }
 }
 
-function renderAvalancheGrid() {
+function renderGrid(pool, handler) {
   const grid = document.getElementById("grid");
   if (!grid) return;
   grid.innerHTML = "";
+  if (!pool) return;
+  // Guard : si le thème équipé n'est pas possédé, on revient au standard
+  if (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme) {
+    const equipped = myProfile.inventory.__equipped.theme;
+    const unlocked = myProfile.unlocked_items || [];
+    if (!unlocked.includes(equipped)) {
+      delete myProfile.inventory.__equipped.theme;
+      if (socket.connected) socket.emit("equip_cosmetic", "none_theme");
+    }
+  }
   const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
   const isAltTheme = equippedTheme === "theme_alt";
   const isGlacialTheme = equippedTheme === "theme_glacial";
@@ -1464,6 +1476,15 @@ function renderGrid(pool, handler) {
   if (!grid) return;
   grid.innerHTML = "";
   if (!pool) return;
+  // Guard : si le thème équipé n'est pas possédé, on revient au standard
+  if (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme) {
+    const equipped = myProfile.inventory.__equipped.theme;
+    const unlocked = myProfile.unlocked_items || [];
+    if (!unlocked.includes(equipped)) {
+      delete myProfile.inventory.__equipped.theme;
+      if (socket.connected) socket.emit("equip_cosmetic", "none_theme");
+    }
+  }
   const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
   const isAltTheme = equippedTheme === "theme_alt";
   const isGlacialTheme = equippedTheme === "theme_glacial";
