@@ -417,7 +417,7 @@ io.on('connection', (socket) => {
     else if (itemId === 'none_theme') delete player.inventory.__equipped.theme;
     else {
       const category = getCosmeticCategory(itemId);
-      const owned = player.unlocked_items && player.unlocked_items.includes(itemId);
+      const owned = itemId === "frame_standard" ? true : (player.unlocked_items && player.unlocked_items.includes(itemId));
       if (!category || !owned) { socket.emit('room_error', "Tu ne possedes pas cet objet cosmetique."); return; }
       player.inventory.__equipped[category] = itemId;
     }
