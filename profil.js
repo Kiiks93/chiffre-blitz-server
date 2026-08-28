@@ -407,11 +407,13 @@ function renderProfileCustomizationMenus() {
   if (frameSelect) {
   frameSelect.innerHTML = `<option value="">Aucun cadre (Défaut)</option>`;
   const frames = (myProfile.unlocked_items || []).filter(id => id.startsWith("frame_"));
+  // Toujours ajouter frame_standard en premier
   if (!frames.includes("frame_standard")) frames.unshift("frame_standard");
   frames.forEach(fId => {
     const displayName = FRAME_DISPLAY_NAMES[fId] || fId;
     const opt = document.createElement("option");
-    opt.value = fId; opt.innerText = displayName;
+    opt.value = fId; 
+    opt.innerText = displayName;
     if (equippedFrame === fId) opt.selected = true;
     frameSelect.appendChild(opt);
   });
