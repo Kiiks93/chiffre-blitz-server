@@ -713,6 +713,7 @@ HUD / GRILLE / TUILES
 @keyframes neonShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 .tile.obsidian-theme { background: linear-gradient(135deg, #0a050a, #23050f) !important; border-color: #7a0026 !important; color: #ff4d6d !important; box-shadow: 0 0 12px rgba(255, 0, 60, 0.5); }
 .tile.citrouille-theme { background: linear-gradient(135deg, #1a0d00, #ff8a00) !important; border-color: #ff8a00 !important; color: #fff !important; box-shadow: 0 0 12px rgba(255, 138, 0, 0.6); }
+.tile.fantome-theme { background: linear-gradient(135deg, #1a0033, #7b2ff7) !important; border-color: #b06bff !important; color: #fff !important; box-shadow: 0 0 12px rgba(157, 47, 255, 0.6); }
 
 /* --- Tuile Highlight (pouvoir spotlight) --- */
 .tile.highlight-target {
