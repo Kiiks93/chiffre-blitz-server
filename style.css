@@ -831,7 +831,6 @@ animation: lanternSparkle 0.6s infinite ease-in-out alternate;
 85% { opacity: 1; }
 100% { transform: translateY(calc(100vh + 180px)) translateX(var(--drift)) rotate(var(--rot)); opacity: 0; }
 }
-
 /* ---------- ORBE FANTÔME (grille Fantôme) ---------- */
 .ghost-orb {
   position: fixed;
