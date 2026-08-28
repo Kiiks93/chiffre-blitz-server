@@ -185,6 +185,7 @@ function hideComboHUD() {
 }
 
 function resetCombo() {
+  if (typeof stopComboVideo === "function") stopComboVideo();
   if (typeof clearElectricFx === "function") clearElectricFx();
   if (typeof clearObsidianFx === "function") clearObsidianFx();
   if (typeof neonResetSpeed === "function") neonResetSpeed();
@@ -259,16 +260,16 @@ function triggerPerfection() {
   SoundEngine.playPerfectionBoom(themeNow);
   if (themeNow === "theme_eclair") {
     playElectroExplosionSound();
-    for (let i = 0; i < 5; i++) setTimeout(() => spawnLightningBurst(true), i * 90);
-  } else if (themeNow === "theme_obsidian") {
+    for (let i = 0; i < 5; i++) setTimeout(() => spawnLightningBurst(true), i * 90);} 
+  else if (themeNow === "theme_obsidian") {
     playObsidianExplosionSound();
     for (let i = 0; i < 6; i++) setTimeout(() => spawnObsidianRock(), i * 80);
-    setTimeout(() => shakeScreen(1.2), 500);
-  } else if (themeNow === "theme_neon") {
-    if (typeof neonHyperspace === "function") neonHyperspace();
-  } else if (themeNow === "theme_citrouille") {
-    if (typeof spawnBats === "function") spawnBats(true);
-  }
+    setTimeout(() => shakeScreen(1.2), 500);} 
+  else if (themeNow === "theme_neon") {
+  if (typeof neonHyperspace === "function") neonHyperspace();} 
+  else if (themeNow === "theme_citrouille") { playComboVideo("lanterne-combo.mp4"); playLanterneSound(); shakeScreen(1.2); }
+  else if (themeNow === "theme_fantome") { playComboVideo("fantome-combo.mp4"); playFantomeSound(); shakeScreen(1.2); }
+
   const crackCount = 18;
   for (let i = 0; i < crackCount; i++) {
     setTimeout(() => {
