@@ -59,7 +59,19 @@ const ITEM_CATALOG = {
   pack_haute_tension: { sources: ["shop"], type: "pack", price: 2900, permanent: true, items: ["frame_voltage", "theme_eclair"] },
   pack_cryo: { sources: ["shop"], type: "pack", price: 2700, permanent: true, items: ["frame_givre", "theme_glacial"] },
   pack_solaire: { sources: ["shop"], type: "pack", price: 3200, permanent: true, items: ["frame_prism", "theme_alt"] },
-  pack_obsidienne: { sources: ["shop"], type: "pack", price: 5200, permanent: true, items: ["frame_obsidian", "theme_obsidian"] }
+  pack_obsidienne: { sources: ["shop"], type: "pack", price: 5200, permanent: true, items: ["frame_obsidian", "theme_obsidian"] },
+  title_fantome: { sources: ["pass"], type: "title", permanent: true },
+  title_danse_macabre: { sources: ["pass"], type: "title", permanent: true },
+  title_citrouille: { sources: ["pass"], type: "title", permanent: true },
+  title_spectre_automne: { sources: ["pass"], type: "title", permanent: true },
+  title_roi_halloween: { sources: ["pass"], type: "title", permanent: true },
+  title_esprit_halloween: { sources: ["pass"], type: "title", permanent: true },
+  frame_osseux: { sources: ["pass"], type: "frame", permanent: true },
+  frame_fantome: { sources: ["pass"], type: "frame", permanent: true },
+  theme_citrouille: { sources: ["pass"], type: "theme", permanent: true },
+  avatar_s2_squelette: { sources: ["pass"], type: "avatar", permanent: true },
+  avatar_s2_chauve: { sources: ["pass"], type: "avatar", permanent: true },
+  avatar_s2_citrouille: { sources: ["pass"], type: "avatar", permanent: true }
 };
 
 /* ============================================================
@@ -155,7 +167,6 @@ function normalizeClaimedTiers(cpt) {
   if (keys.length > 0 && !SEASONS.some(s => cpt[s.id] && typeof cpt[s.id] === "object")) {
     if (keys.some(k => /^\d+_(free|premium)$/.test(k))) {
       const migrated = Object.assign({}, cpt);
-      // Si des récompenses premium ont déjà été réclamées → le pass était acheté
       if (keys.some(k => k.endsWith("_premium") && cpt[k])) migrated.premium = true;
       return { s1: migrated };
     }
@@ -894,7 +905,7 @@ function buildMatchCharges(playerObj) {
 
 function startMatchBetween(id1, id2, isRanked = false, isOnline = true, isTugOfWar = false) {
   const p1 = activePlayers[id1] || { socketId: id1, username: "Joueur 1", avatar: 1, flag: "🇫🇷", points: 0 };
-  const p2 = activePlayers[id2] || { socketId: id2, username: "Joueur 2", avatar: 2, flag: "🇫🇷", points: 0 };
+  const p2 = activePlayers[id2] || { socketId: id2, username: "Joueur 2", avatar: 2, flag: "🇫", points: 0 };
   const isExpressoActive = globalEvents.expressoMatch && isOnline && !isRanked && !isTugOfWar;
   const match = {
     id1, id2,
@@ -943,9 +954,10 @@ function generatePool(target) {
 PASS REWARDS (multi-saisons)
 ============================================================ */
 function applyPassReward(p, tier, track, seasonId) {
-  if (seasonId !== "s1") return; // s2/s3 : contenu à venir
   p.inventory = p.inventory || {};
   p.unlocked_items = p.unlocked_items || [];
+  if (seasonId === "s2") { applyPassRewardS2(p, tier, track); return; }
+  if (seasonId !== "s1") return;
   if (track === 'free') {
     if ([1, 3, 7, 11, 13, 16, 18, 21, 23, 26, 28].includes(tier)) {
       const coinMap = { 1: 50, 3: 50, 7: 50, 11: 60, 13: 70, 16: 80, 18: 90, 21: 110, 23: 120, 26: 130, 28: 140 };
@@ -990,6 +1002,53 @@ function applyPassReward(p, tier, track, seasonId) {
     else if (tier === 28) p.coins = (p.coins || 0) + 400;
     else if (tier === 29) p.coins = (p.coins || 0) + 500;
     else if (tier === 30) { p.coins = (p.coins || 0) + 1000; if (!p.unlocked_items.includes('avatar_tigre')) p.unlocked_items.push('avatar_tigre'); }
+  }
+}
+
+function applyPassRewardS2(p, tier, track) {
+  if (track === 'free') {
+    if ([1, 3, 7, 11, 13, 16, 18, 21, 23, 26, 28].includes(tier)) {
+      const coinMap = { 1: 50, 3: 50, 7: 50, 11: 60, 13: 70, 16: 80, 18: 90, 21: 110, 23: 120, 26: 130, 28: 140 };
+      p.coins = (p.coins || 0) + (coinMap[tier] || 50);
+    } else if ([5, 9, 20].includes(tier)) p.coins = (p.coins || 0) + 100;
+    else if ([15, 25].includes(tier)) p.coins = (p.coins || 0) + 150;
+    else if (tier === 29) p.coins = (p.coins || 0) + 300;
+    else if (tier === 30) { p.coins = (p.coins || 0) + 500; if (!p.unlocked_items.includes('title_esprit_halloween')) p.unlocked_items.push('title_esprit_halloween'); }
+    else if ([2, 8, 17].includes(tier)) p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + (tier === 17 ? 2 : 1);
+    else if ([4, 12, 22].includes(tier)) p.inventory['freeze'] = (p.inventory['freeze'] || 0) + 1;
+    else if ([6, 14, 19, 24].includes(tier)) p.inventory['joker'] = (p.inventory['joker'] || 0) + 1;
+    else if (tier === 10 || tier === 27) p.inventory['nova'] = (p.inventory['nova'] || 0) + (tier === 27 ? 4 : 1);
+  } else if (track === 'premium') {
+    if (tier === 1) { if (!p.unlocked_items.includes('title_fantome')) p.unlocked_items.push('title_fantome'); }
+    else if (tier === 2) p.coins = (p.coins || 0) + 100;
+    else if (tier === 3) { if (!p.unlocked_items.includes('title_danse_macabre')) p.unlocked_items.push('title_danse_macabre'); }
+    else if (tier === 4) { if (!p.unlocked_items.includes('frame_osseux')) p.unlocked_items.push('frame_osseux'); }
+    else if (tier === 5) p.coins = (p.coins || 0) + 150;
+    else if (tier === 6) { p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 1; p.inventory['freeze'] = (p.inventory['freeze'] || 0) + 1; p.inventory['joker'] = (p.inventory['joker'] || 0) + 1; }
+    else if (tier === 7) { if (!p.unlocked_items.includes('title_citrouille')) p.unlocked_items.push('title_citrouille'); }
+    else if (tier === 8) p.inventory['nova'] = (p.inventory['nova'] || 0) + 2;
+    else if (tier === 9) p.coins = (p.coins || 0) + 200;
+    else if (tier === 10) { if (!p.unlocked_items.includes('theme_citrouille')) p.unlocked_items.push('theme_citrouille'); }
+    else if (tier === 11) p.coins = (p.coins || 0) + 120;
+    else if (tier === 12) p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 1;
+    else if (tier === 13) { if (!p.unlocked_items.includes('title_spectre_automne')) p.unlocked_items.push('title_spectre_automne'); }
+    else if (tier === 14) p.inventory['freeze'] = (p.inventory['freeze'] || 0) + 2;
+    else if (tier === 15) { if (!p.unlocked_items.includes('avatar_s2_squelette')) p.unlocked_items.push('avatar_s2_squelette'); }
+    else if (tier === 16) p.coins = (p.coins || 0) + 160;
+    else if (tier === 17) p.inventory['nova'] = (p.inventory['nova'] || 0) + 2;
+    else if (tier === 18) p.coins = (p.coins || 0) + 250;
+    else if (tier === 19) p.inventory['quake'] = (p.inventory['quake'] || 0) + 1;
+    else if (tier === 20) { if (!p.unlocked_items.includes('frame_fantome')) p.unlocked_items.push('frame_fantome'); }
+    else if (tier === 21) p.coins = (p.coins || 0) + 220;
+    else if (tier === 22) p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 3;
+    else if (tier === 23) p.coins = (p.coins || 0) + 350;
+    else if (tier === 24) p.coins = (p.coins || 0) + 300;
+    else if (tier === 25) { if (!p.unlocked_items.includes('avatar_s2_chauve')) p.unlocked_items.push('avatar_s2_chauve'); }
+    else if (tier === 26) p.coins = (p.coins || 0) + 260;
+    else if (tier === 27) p.inventory['nova'] = (p.inventory['nova'] || 0) + 4;
+    else if (tier === 28) p.coins = (p.coins || 0) + 400;
+    else if (tier === 29) p.coins = (p.coins || 0) + 500;
+    else if (tier === 30) { p.coins = (p.coins || 0) + 1000; if (!p.unlocked_items.includes('avatar_s2_citrouille')) p.unlocked_items.push('avatar_s2_citrouille'); if (!p.unlocked_items.includes('title_roi_halloween')) p.unlocked_items.push('title_roi_halloween'); }
   }
 }
 
