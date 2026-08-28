@@ -840,7 +840,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('admin_set_region', async (data) => {
+    socket.on('admin_set_region', async (data) => {
     if (!socket.isAdmin) return;
     const targetUsername = (data.targetUsername || '').trim();
     const newRegion = (data.newRegion || '').trim();
@@ -856,7 +856,13 @@ io.on('connection', (socket) => {
           io.to(sId).emit('player_registered', activePlayers[sId]);
         }
       }
-        socket.on('admin_set_season', (seasonId) => {
+      socket.emit('admin_region_result', { ok: true, username: t.username, region: newRegion });
+    } catch (e) {
+      socket.emit('admin_region_result', { ok: false, reason: 'error' });
+    }
+  });
+
+  socket.on('admin_set_season', (seasonId) => {
     if (!socket.isAdmin) return;
     seasonOverride = (seasonId && seasonId !== 'auto') ? seasonId : null;
     const seasonNow = getCurrentSeason();
@@ -868,11 +874,6 @@ io.on('connection', (socket) => {
       io.to(sId).emit('player_registered', p);
     }
     socket.emit('admin_season_result', { ok: true, season: seasonNow.id });
-  });
-      socket.emit('admin_region_result', { ok: true, username: t.username, region: newRegion });
-    } catch (e) {
-      socket.emit('admin_region_result', { ok: false, reason: 'error' });
-    }
   });
 
   /* ---------- DÉCONNEXION ---------- */
