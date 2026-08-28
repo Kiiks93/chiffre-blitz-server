@@ -95,7 +95,6 @@ if (myProfile.equippedPower && (myProfile.inventory[myProfile.equippedPower] || 
 if (myProfile.equippedPowers && myProfile.equippedPowers.length > 0) myProfile.equippedPowers = myProfile.equippedPowers.filter(p => (myProfile.inventory[p] || 0) > 0);
 if (selectedRankedItems && selectedRankedItems.length > 0) selectedRankedItems = selectedRankedItems.filter(p => (myProfile.inventory[p] || 0) > 0);
 }
-
 /* ============================================================
 PASSE DE SAISON — MOTEUR MULTI-SAISONS
 ============================================================ */
