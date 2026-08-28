@@ -107,9 +107,10 @@ function evaluateTrophies(player) {
   if ((player.best_combo || 0) >= 30) { const t = checkAndUnlockTrophy(player, "furnace"); if (t) unlocked.push(t); }
   if ((player.best_combo || 0) >= 35) { const t = checkAndUnlockTrophy(player, "perfection"); if (t) unlocked.push(t); }
   if ((player.best_avalanche || 0) >= 400) { const t = checkAndUnlockTrophy(player, "avalanche_master"); if (t) unlocked.push(t); }
-  if (player.claimedPassTiers && player.claimedPassTiers["15_free"]) { const t = checkAndUnlockTrophy(player, "combatant"); if (t) unlocked.push(t); }
-  if (player.claimedPassTiers && player.claimedPassTiers["30_free"]) { const t = checkAndUnlockTrophy(player, "elite"); if (t) unlocked.push(t); }
-  if ((player.total_coins_earned || 0) >= 1000) { const t = checkAndUnlockTrophy(player, "worker"); if (t) unlocked.push(t); }
+  const cpt = player.claimedPassTiers || {};
+  const s1data = cpt["s1"] || cpt;
+  if (s1data["15_free"]) { const t = checkAndUnlockTrophy(player, "combatant"); if (t) unlocked.push(t); }
+  if (s1data["30_free"]) { const t = checkAndUnlockTrophy(player, "elite"); if (t) unlocked.push(t); }
   if ((player.points || 0) >= 500) { const t = checkAndUnlockTrophy(player, "rising_star"); if (t) unlocked.push(t); }
   return unlocked;
 }
@@ -131,7 +132,30 @@ function getCosmeticCategory(itemId) {
   if (itemId.startsWith("pack_")) return "pack";
   return null;
 }
-
+/* ============================================================
+SAISONS (moteur multi-saisons)
+============================================================ */
+const SEASONS = [
+  { id: "s1", name: "Felin & Neon", start: "2026-06-01", end: "2026-09-30" },
+  { id: "s2", name: "Halloween", start: "2026-10-01", end: "2026-11-30" },
+  { id: "s3", name: "Noël", start: "2026-12-01", end: "2027-01-10" }
+];
+function getCurrentSeason() {
+  const now = new Date();
+  for (const s of SEASONS) {
+    if (now >= new Date(s.start + "T00:00:00Z") && now <= new Date(s.end + "T23:59:59Z")) return s;
+  }
+  if (now < new Date(SEASONS[0].start + "T00:00:00Z")) return SEASONS[0];
+  return SEASONS[SEASONS.length - 1];
+}
+function normalizeClaimedTiers(cpt) {
+  cpt = cpt || {};
+  const keys = Object.keys(cpt);
+  if (keys.length > 0 && !SEASONS.some(s => cpt[s.id] && typeof cpt[s.id] === "object")) {
+    if (keys.some(k => /^\d+_(free|premium)$/.test(k))) return { s1: cpt };
+  }
+  return cpt;
+}
 /* ============================================================
 ÉTAT SERVEUR
 ============================================================ */
@@ -285,6 +309,9 @@ io.on('connection', (socket) => {
           playerData = { ...newRecord, id: socket.id };
         }
       }
+      const claimedNorm = normalizeClaimedTiers(playerData.claimed_pass_tiers);
+      const seasonNow = getCurrentSeason();
+      const premNow = !!(claimedNorm[seasonNow.id] && claimedNorm[seasonNow.id].premium) || (seasonNow.id === "s1" && playerData.blitz_pass_premium);
       activePlayers[socket.id] = {
         socketId: socket.id, dbId: playerData.id || socket.id, id: socket.id,
         username: playerData.username, region: playerData.region, avatar: playerData.avatar,
@@ -292,8 +319,8 @@ io.on('connection', (socket) => {
         country: playerData.country || "FR",
         trophies: playerData.trophies || 0, wins: playerData.wins || 0, losses: playerData.losses || 0,
         inventory: playerData.inventory || {}, equippedPower: playerData.equipped_power || null,
-        unlocked_items: playerData.unlocked_items || [], blitzPassPremium: playerData.blitz_pass_premium || false,
-        claimedPassTiers: playerData.claimed_pass_tiers || {},
+        unlocked_items: playerData.unlocked_items || [], blitzPassPremium: premNow,
+        claimedPassTiers: claimedNorm, current_season: seasonNow.id,
         matches_played: playerData.matches_played || 0,
         win_streak: playerData.win_streak || 0,
         best_combo: playerData.best_combo || 0,
@@ -370,16 +397,21 @@ io.on('connection', (socket) => {
   });
 
   /* ---------- PASSE DE COMBAT ---------- */
-  socket.on('buy_blitz_pass', async () => {
+   socket.on('buy_blitz_pass', async () => {
     const player = activePlayers[socket.id];
-    if (!player || player.blitzPassPremium) return;
+    if (!player) return;
+    const seasonId = getCurrentSeason().id;
+    player.claimedPassTiers = normalizeClaimedTiers(player.claimedPassTiers);
+    player.claimedPassTiers[seasonId] = player.claimedPassTiers[seasonId] || {};
+    if (player.claimedPassTiers[seasonId].premium) return;
     if (player.coins >= 1000) {
       player.coins -= 1000;
+      player.claimedPassTiers[seasonId].premium = true;
       player.blitzPassPremium = true;
       await savePlayerToSupabase(socket.id);
       socket.emit('player_registered', player);
-      socket.emit('blitz_pass_updated', { coins: player.coins, blitzPassPremium: player.blitzPassPremium, claimedPassTiers: player.claimedPassTiers });
-      socket.emit('pass_reward_received', { message: "Passe de Saison Premium active !" });
+      socket.emit('blitz_pass_updated', { coins: player.coins, blitzPassPremium: true, claimedPassTiers: player.claimedPassTiers });
+      socket.emit('pass_reward_received', { message: "Passe Premium « " + getCurrentSeason().name + " » activé !" });
     } else {
       socket.emit('room_error', "Tu n'as pas assez de pieces !");
     }
@@ -389,12 +421,68 @@ io.on('connection', (socket) => {
     const player = activePlayers[socket.id];
     if (!player) return;
     const { tier, track } = data;
-    player.claimedPassTiers = player.claimedPassTiers || {};
+    const seasonId = getCurrentSeason().id;
+    player.claimedPassTiers = normalizeClaimedTiers(player.claimedPassTiers);
+    player.claimedPassTiers[seasonId] = player.claimedPassTiers[seasonId] || {};
+    const seasonData = player.claimedPassTiers[seasonId];
     const key = tier + "_" + track;
-    if (player.claimedPassTiers[key]) { socket.emit('pass_claim_denied', { tier, track, reason: "already_claimed" }); return; }
-    if (track === 'premium' && !player.blitzPassPremium) { socket.emit('pass_claim_denied', { tier, track, reason: "premium_required" }); return; }
-    player.claimedPassTiers[key] = true;
-    applyPassReward(player, tier, track);
+    if (seasonData[key]) { socket.emit('pass_claim_denied', { tier, track, reason: "already_claimed" }); return; }
+    if (track === 'premium' && !seasonData.premium) { socket.emit('pass_claim_denied', { tier, track, reason: "premium_required" }); return; }
+    seasonData[key] = true;
+    player.blitzPassPremium = !!seasonData.premium;
+    function applyPassReward(p, tier, track, seasonId) {
+  if (seasonId !== "s1") return; // s2/s3 : contenu à venir
+  p.inventory = p.inventory || {};
+  p.unlocked_items = p.unlocked_items || [];
+  if (track === 'free') {
+    const unlockedTrophies = evaluateTrophies(player);
+    if (unlockedTrophies.length > 0) {
+      socket.emit('trophy_unlocked', unlockedTrophies.map(t => ({ id: Object.keys(TROPHY_CATALOG).find(k => TROPHY_CATALOG[k] === t), ...t })));
+    }
+    await savePlayerToSupabase(socket.id);
+    socket.emit('player_registered', player);
+    socket.emit('pass_tier_claimed', { tier, track });
+    socket.emit('pass_reward_received', { message: "Recompense du Palier " + tier + " (" + track + ") recuperee !" });
+  });
+
+    socket.on('buy_blitz_pass', async () => {
+    const player = activePlayers[socket.id];
+    if (!player) return;
+    const seasonId = getCurrentSeason().id;
+    player.claimedPassTiers = normalizeClaimedTiers(player.claimedPassTiers);
+    player.claimedPassTiers[seasonId] = player.claimedPassTiers[seasonId] || {};
+    if (player.claimedPassTiers[seasonId].premium) return;
+    if (player.coins >= 1000) {
+      player.coins -= 1000;
+      player.claimedPassTiers[seasonId].premium = true;
+      player.blitzPassPremium = true;
+      await savePlayerToSupabase(socket.id);
+      socket.emit('player_registered', player);
+      socket.emit('blitz_pass_updated', { coins: player.coins, blitzPassPremium: true, claimedPassTiers: player.claimedPassTiers });
+      socket.emit('pass_reward_received', { message: "Passe Premium « " + getCurrentSeason().name + " » activé !" });
+    } else {
+      socket.emit('room_error', "Tu n'as pas assez de pieces !");
+    }
+  });
+
+  socket.on('claim_pass_tier', async (data) => {
+    const player = activePlayers[socket.id];
+    if (!player) return;
+    const { tier, track } = data;
+    const seasonId = getCurrentSeason().id;
+    player.claimedPassTiers = normalizeClaimedTiers(player.claimedPassTiers);
+    player.claimedPassTiers[seasonId] = player.claimedPassTiers[seasonId] || {};
+    const seasonData = player.claimedPassTiers[seasonId];
+    const key = tier + "_" + track;
+    if (seasonData[key]) { socket.emit('pass_claim_denied', { tier, track, reason: "already_claimed" }); return; }
+    if (track === 'premium' && !seasonData.premium) { socket.emit('pass_claim_denied', { tier, track, reason: "premium_required" }); return; }
+    seasonData[key] = true;
+    player.blitzPassPremium = !!seasonData.premium;
+    function applyPassReward(p, tier, track, seasonId) {
+  if (seasonId !== "s1") return; // s2/s3 : contenu à venir
+  p.inventory = p.inventory || {};
+  p.unlocked_items = p.unlocked_items || [];
+  if (track === 'free') {
     const unlockedTrophies = evaluateTrophies(player);
     if (unlockedTrophies.length > 0) {
       socket.emit('trophy_unlocked', unlockedTrophies.map(t => ({ id: Object.keys(TROPHY_CATALOG).find(k => TROPHY_CATALOG[k] === t), ...t })));
