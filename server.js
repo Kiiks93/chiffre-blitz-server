@@ -153,7 +153,12 @@ const SEASONS = [
   { id: "s2", name: "Halloween", start: "2026-10-01", end: "2026-11-30" },
   { id: "s3", name: "Noël", start: "2026-12-01", end: "2027-01-10" }
 ];
+let seasonOverride = null;
 function getCurrentSeason() {
+  if (seasonOverride) {
+    const s = SEASONS.find(x => x.id === seasonOverride);
+    if (s) return s;
+  }
   const now = new Date();
   for (const s of SEASONS) {
     if (now >= new Date(s.start + "T00:00:00Z") && now <= new Date(s.end + "T23:59:59Z")) return s;
@@ -851,6 +856,19 @@ io.on('connection', (socket) => {
           io.to(sId).emit('player_registered', activePlayers[sId]);
         }
       }
+        socket.on('admin_set_season', (seasonId) => {
+    if (!socket.isAdmin) return;
+    seasonOverride = (seasonId && seasonId !== 'auto') ? seasonId : null;
+    const seasonNow = getCurrentSeason();
+    for (let sId in activePlayers) {
+      const p = activePlayers[sId];
+      p.claimedPassTiers = normalizeClaimedTiers(p.claimedPassTiers);
+      p.current_season = seasonNow.id;
+      p.blitzPassPremium = !!(p.claimedPassTiers[seasonNow.id] && p.claimedPassTiers[seasonNow.id].premium);
+      io.to(sId).emit('player_registered', p);
+    }
+    socket.emit('admin_season_result', { ok: true, season: seasonNow.id });
+  });
       socket.emit('admin_region_result', { ok: true, username: t.username, region: newRegion });
     } catch (e) {
       socket.emit('admin_region_result', { ok: false, reason: 'error' });
