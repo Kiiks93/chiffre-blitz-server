@@ -74,6 +74,7 @@ function getComboColor() {
   if (theme === "theme_neon") return "#ff00c8";
   if (theme === "theme_eclair") return "#fff34d";
   if (theme === "theme_obsidian") return "#ff003c";
+  if (theme === "theme_citrouille") return "#ff8a00";
   return "#00d2ff";
 }
 
@@ -86,8 +87,9 @@ function getComboEmojis() {
   if (theme === "theme_glacial") return ["❄️", "🧊", "✨", "💥"];
   if (theme === "theme_alt") return ["✨", "🪙", "", "⚡"];
   if (theme === "theme_neon") return ["💜", "", "✨", ""];
-  if (theme === "theme_eclair") return ["⚡", "💛", "✨", "⚡"];
+  if (theme === "theme_eclair") return ["⚡", "", "✨", ""];
   if (theme === "theme_obsidian") return ["🖤", "", "🔥", "✨"];
+  if (theme === "theme_citrouille") return ["🎃", "", "", "💀"];
   return ["⚡", "", "✨", ""];
 }
 
@@ -252,8 +254,11 @@ function triggerPerfection() {
     playObsidianExplosionSound();
     for (let i = 0; i < 6; i++) setTimeout(() => spawnObsidianRock(), i * 80);
     setTimeout(() => shakeScreen(1.2), 500);
+  } else if (themeNow === "theme_neon") {
+    if (typeof neonHyperspace === "function") neonHyperspace();
+  } else if (themeNow === "theme_citrouille") {
+    if (typeof spawnBats === "function") spawnBats(true);
   }
-  else if (themeNow === "theme_neon") { neonHyperspace(); }
   const crackCount = 18;
   for (let i = 0; i < crackCount; i++) {
     setTimeout(() => {
@@ -279,9 +284,10 @@ function spawnExplosionParticles() {
   let emojis = ["⚡", "", "✨", ""];
   if (theme === "theme_glacial") emojis = ["❄️", "🧊", "✨", "💥"];
   if (theme === "theme_alt") emojis = ["✨", "🪙", "💰", "⚡"];
-  if (theme === "theme_neon") emojis = ["💜", "💗", "✨", "💥"];
+  if (theme === "theme_neon") emojis = ["💜", "", "✨", "💥"];
   if (theme === "theme_eclair") emojis = ["⚡", "", "✨", "💥"];
-  if (theme === "theme_obsidian") emojis = ["🖤", "💀", "🔥", "💥"];
+  if (theme === "theme_obsidian") emojis = ["🖤", "💀", "🔥", ""];
+  if (theme === "theme_citrouille") emojis = ["🎃", "", "", "💀"];
   for (let i = 0; i < 40; i++) {
     const p = document.createElement("div");
     p.className = "explosion-particle";
@@ -302,6 +308,7 @@ function getComboCrackStyle() {
   if (theme === "theme_neon") return { color: "#ff00c8", width: 2, jag: 34 };
   if (theme === "theme_eclair") return { color: "#fff34d", width: 3, jag: 20 };
   if (theme === "theme_obsidian") return { color: "#ff003c", width: 3, jag: 26 };
+  if (theme === "theme_citrouille") return { color: "#ff8a00", width: 3, jag: 24 };
   return { color: "#00d2ff", width: 2, jag: 38 };
 }
 
@@ -364,7 +371,17 @@ function spawnCrack() {
     SoundEngine.playCrack(themeNow);
     return;
   }
+  
+  // 🌈 THÈME NÉON : hyperspace starfield (géré par registerComboHit)
   if (themeNow === "theme_neon") return;
+  
+  // 🎃 THÈME CITROUILLE : envolée de chauves-souris
+  if (themeNow === "theme_citrouille") {
+    if (typeof spawnBats === "function") spawnBats(false);
+    SoundEngine.playCrack(themeNow);
+    return;
+  }
+  
   // ⚡ THÈME ÉCLAIR : arcs fractals (plein écran)
   if (themeNow === "theme_eclair") {
     spawnLightningBurst(false);
@@ -528,7 +545,7 @@ function initMenuBackgroundFX() {
   const colors = ['#00d2ff','#ff007f','#ffe600','#00ff88'];
   for (let i = 0; i < 12; i++) {
     const s = document.createElement('div'); s.className = 'bg-shape'; s.innerText = shapes[i % shapes.length];
-    s.style.fontSize = (14 + Math.random() * 26) + 'px'; s.style.left = Math.random() * 100 + '%'; s.style.color = colors[i % colors.length];
+    s.style.fontSize = (14 + Math.random() * 26) + 'px'; s.style.left = Math.random() * 100 + '%'; s.color = colors[i % colors.length];
     s.style.animationDuration = (14 + Math.random() * 16) + 's'; s.style.animationDelay = (-Math.random() * 25) + 's';
     fx.appendChild(s);
   }
@@ -628,7 +645,7 @@ function renderRankedLoadoutItems() {
   if (!container) return;
   container.innerHTML = "";
   const powersDict = i18n[currentLang].powers;
-  const ownedPowers = POWERS_CATALOG.filter(p => p.type !== "cosmetics" && (myProfile.inventory[p.id] || 0) > 0);
+  const ownedPowers = POWERS_CATALOG.filter(p => p.type !== "cosmetics" && p.type !== "packs" && (myProfile.inventory[p.id] || 0) > 0);
   if (ownedPowers.length === 0) { container.innerHTML = `<div style="grid-column: span 2; text-align:center; color:#aaa; padding:12px; font-size:11px;">Inventaire vide !</div>`; return; }
   const summary = document.createElement("div");
   summary.style.cssText = `grid-column: span 2; background: rgba(0,210,255,0.08); border: 1px solid #00d2ff; border-radius: 10px; padding: 8px; font-size: 11px; color: #fff; margin-bottom: 6px;`;
@@ -919,7 +936,7 @@ socket.on("start_countdown", (data) => {
       current1v1Time = latest1v1StartData ? latest1v1StartData.timeLeft : 30;
       isTimeFrozen = false;
       SoundEngine.startMusic("1v1");
-      if (getEquippedThemeId() === "theme_neon") startNeonFx();
+      if (getEquippedThemeId() === "theme_neon" && typeof startNeonFx === "function") startNeonFx();
     }
   }, 1000);
 });
@@ -979,6 +996,9 @@ let iconContent = playerObj.avatar || 1;
 if (equippedAvatar === "avatar_lottie_palier30") iconContent = `<div class="lottie-avatar-large" data-lottie-url="black-rainbow-cat.json" style="width:75px; height:75px;"></div>`;
 else if (equippedAvatar === "avatar_lottie_palier15") iconContent = `<div class="lottie-avatar-large" data-lottie-url="cat-assistant.json" style="width:75px; height:75px;"></div>`;
 else if (equippedAvatar === "avatar_tigre") iconContent = `<video class="tft-avatar-video" src="tiger-siberien.mp4" autoplay loop muted playsinline style="width:75px; height:75px;"></video>`;
+else if (equippedAvatar === "avatar_s2_squelette") iconContent = `<div class="lottie-avatar-large" data-lottie-url="squelette-danse.json" style="width:75px; height:75px;"></div>`;
+else if (equippedAvatar === "avatar_s2_chauve") iconContent = `<video class="tft-avatar-video" src="bat-halloween.mp4" autoplay loop muted playsinline style="width:75px; height:75px;"></video>`;
+else if (equippedAvatar === "avatar_s2_citrouille") iconContent = `<div class="lottie-avatar-large" data-lottie-url="citrouille-chateau.json" style="width:75px; height:75px;"></div>`;
 const frameClass = getFrameClass(equippedFrame);
 setTimeout(() => initAllLottieBadges(), 50);
 return `<div class="victory-avatar-showcase"><div class="victory-badge-large ${frameClass}" style="display:flex; align-items:center; justify-content:center;"><span style="font-weight:900; color:#fff;">${iconContent}</span><span style="position:absolute; bottom:-2px; right:-2px; font-size:14px; background:#0f051d; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; border:2px solid #fff; z-index:3;">${playerObj.flag || "🇫🇷"}</span></div><div style="font-size:13px; font-weight:900; color:#f8b500; margin-top:4px;">${playerObj.username || "Joueur"} TRIOMPHE !</div></div>`;
@@ -1113,7 +1133,7 @@ function startSoloTraining(mode) {
   preparePowerHUD();
   generateSoloGrid();
   SoundEngine.startMusic("solo");
-  if (getEquippedThemeId() === "theme_neon") startNeonFx();
+  if (getEquippedThemeId() === "theme_neon" && typeof startNeonFx === "function") startNeonFx();
   soloTimerInterval = setInterval(() => { if (!isTimeFrozen) { soloTimeLeft--; document.getElementById("game-timer").innerText = Math.max(0, soloTimeLeft); if (soloTimeLeft <= 0) endSoloGame(); } }, 1000);
 }
 
@@ -1202,7 +1222,7 @@ function startAvalancheGame(speed, initialCount) {
   renderAvalancheGrid();
   preparePowerHUD();
   SoundEngine.startMusic("solo");
-  if (getEquippedThemeId() === "theme_neon") startNeonFx();
+  if (getEquippedThemeId() === "theme_neon" && typeof startNeonFx === "function") startNeonFx();
   avalancheTimerInterval = setInterval(() => {
     if (!isTimeFrozen) {
       avalancheTimeLeft--;
@@ -1258,10 +1278,11 @@ function renderAvalancheGrid() {
   const isEclairTheme = equippedTheme === "theme_eclair";
   const isNeonTheme = equippedTheme === "theme_neon";
   const isObsidianTheme = equippedTheme === "theme_obsidian";
+  const isCitrouilleTheme = equippedTheme === "theme_citrouille";
   avalancheGridData.forEach((val, idx) => {
     const tile = document.createElement("div");
     if (val !== null) {
-      tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""} ${isObsidianTheme ? "obsidian-theme" : ""}`;
+      tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""} ${isObsidianTheme ? "obsidian-theme" : ""} ${isCitrouilleTheme ? "citrouille-theme" : ""}`;
       tile.innerText = val;
       tile.onclick = () => handleAvalancheClick(val, idx);
     } else {
@@ -1439,9 +1460,10 @@ function renderGrid(pool, handler) {
   const isEclairTheme = equippedTheme === "theme_eclair";
   const isNeonTheme = equippedTheme === "theme_neon";
   const isObsidianTheme = equippedTheme === "theme_obsidian";
+  const isCitrouilleTheme = equippedTheme === "theme_citrouille";
   pool.forEach((num, index) => {
     const tile = document.createElement("div");
-    tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""} ${isObsidianTheme ? "obsidian-theme" : ""}`;
+    tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""} ${isObsidianTheme ? "obsidian-theme" : ""} ${isCitrouilleTheme ? "citrouille-theme" : ""}`;
     tile.innerText = num;
     tile.onclick = () => handler(num, index);
     grid.appendChild(tile);
