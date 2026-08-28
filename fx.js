@@ -499,7 +499,7 @@ function playGhostSound() {
 }
 
 function spawnGhostLotties(big) {
-  const count = big ? 6 : 2 + Math.floor(Math.random() * 2);
+  const count = big ? (IS_LOW_PERF ? 3 : 6) : (IS_LOW_PERF ? 1 : 2 + Math.floor(Math.random() * 2));
   for (let i = 0; i < count; i++) {
     setTimeout(() => createGhostOrb(), i * 180);
   }
