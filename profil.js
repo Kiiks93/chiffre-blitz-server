@@ -746,6 +746,7 @@ socket.on("player_registered", (rawData) => {
   myProfile.equippedPower = player.equippedPower;
   myProfile.blitzPassPremium = player.blitzPassPremium;
   myProfile.claimedPassTiers = player.claimedPassTiers;
+  myProfile.currentSeasonId = rawData.current_season || rawData.currentSeasonId || "s1";
   sanitizeEquippedPowers();
   updateEconomyUI();
   if (document.getElementById("modal-shop").style.display === "flex") switchShopTab(currentShopTab);
