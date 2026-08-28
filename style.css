@@ -748,7 +748,7 @@ HUD / GRILLE / TUILES
 position: fixed;
 top: -150px;
 animation: lanternFall linear forwards;
-z-index: 50;
+z-index: 1;
 pointer-events: none;
 }
 .lantern {
