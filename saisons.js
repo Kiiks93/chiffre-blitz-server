@@ -47,6 +47,83 @@ function applySeasonDA() {
     s.style.animationDelay = (-Math.random() * 25) + "s";
     fx.appendChild(s);
   }
+  /* ---------- DÉCOR VIVANT HALLOWEEN ---------- */
+let halloweenAmbienceTimer = null;
+
+function setupHalloweenDecor(seasonId) {
+  document.querySelectorAll(".halloween-web, .halloween-spider").forEach(el => el.remove());
+  if (halloweenAmbienceTimer) { clearInterval(halloweenAmbienceTimer); halloweenAmbienceTimer = null; }
+  if (seasonId !== "s2") return;
+
+  const webTL = document.createElement("div");
+  webTL.className = "halloween-web tl";
+  webTL.innerText = "🕸️";
+  document.body.appendChild(webTL);
+
+  const webTR = document.createElement("div");
+  webTR.className = "halloween-web tr";
+  webTR.innerText = "🕸️";
+  document.body.appendChild(webTR);
+
+  const spider = document.createElement("div");
+  spider.className = "halloween-spider";
+  spider.style.right = "60px";
+  spider.innerHTML = `<div class="thread"></div><div class="spider">🕷️</div>`;
+  document.body.appendChild(spider);
+
+  halloweenAmbienceTimer = setInterval(() => {
+    const inGame = document.getElementById("screen-game") && document.getElementById("screen-game").style.display === "block";
+    if (inGame) return;
+    const roll = Math.random();
+    if (roll < 0.45) spawnAmbientGhost();
+    else if (roll < 0.75) spawnAmbientLantern();
+    else spawnAmbientBat();
+  }, 2600);
+}
+
+function spawnAmbientGhost() {
+  const orb = document.createElement("div");
+  orb.className = "ghost-orb";
+  const size = 50 + Math.random() * 40;
+  orb.style.width = size + "px";
+  orb.style.height = size + "px";
+  orb.style.left = (Math.random() * 80 + 10) + "%";
+  orb.style.top = (Math.random() * 70 + 15) + "%";
+  orb.style.animationDuration = (3.5 + Math.random() * 1.5) + "s";
+  orb.innerHTML = `
+    <div class="ghost-orb-body">
+      <div class="ghost-orb-face">
+        <div class="ghost-orb-eye left"></div>
+        <div class="ghost-orb-eye right"></div>
+        <div class="ghost-orb-mouth"></div>
+      </div>
+    </div>`;
+  document.body.appendChild(orb);
+  setTimeout(() => orb.remove(), 5200);
+}
+
+function spawnAmbientLantern() {
+  if (typeof createLantern !== "function") return;
+  createLantern();
+  const lans = document.querySelectorAll(".lantern");
+  const last = lans[lans.length - 1];
+  if (last) last.classList.add("possessed");
+}
+
+function spawnAmbientBat() {
+  const fx = document.getElementById("bg-fx");
+  if (!fx) return;
+  const colors = ["#7be8ff", "#ffe600", "#ff007f", "#00ff88"];
+  const s = document.createElement("div");
+  s.className = "bg-shape";
+  s.innerText = "🦇";
+  s.style.fontSize = (16 + Math.random() * 18) + "px";
+  s.style.left = Math.random() * 100 + "%";
+  s.color = colors[Math.floor(Math.random() * colors.length)];
+  s.style.animationDuration = (7 + Math.random() * 6) + "s";
+  fx.appendChild(s);
+  setTimeout(() => s.remove(), 14000);
+}
 }
 
 /* ============================================================
