@@ -153,7 +153,12 @@ function normalizeClaimedTiers(cpt) {
   cpt = cpt || {};
   const keys = Object.keys(cpt);
   if (keys.length > 0 && !SEASONS.some(s => cpt[s.id] && typeof cpt[s.id] === "object")) {
-    if (keys.some(k => /^\d+_(free|premium)$/.test(k))) return { s1: cpt };
+    if (keys.some(k => /^\d+_(free|premium)$/.test(k))) {
+      const migrated = Object.assign({}, cpt);
+      // Si des récompenses premium ont déjà été réclamées → le pass était acheté
+      if (keys.some(k => k.endsWith("_premium") && cpt[k])) migrated.premium = true;
+      return { s1: migrated };
+    }
   }
   return cpt;
 }
