@@ -135,7 +135,7 @@ const SEASONS_CLIENT = [
     { tier: 1, free: "50 Pièces (🪙)", premium: "Titre « [ Chuchoteur de Fantômes ] » 👻" },
     { tier: 2, free: "1 💡 Projecteur", premium: "100 Pièces (🪙)" },
     { tier: 3, free: "50 Pièces (🪙)", premium: "Titre « [ Danse Macabre ] » 🦴" },
-    { tier: 4, free: "1 ⏳ Blocage du Temps", premium: "🦴 Cadre « Osseux »" },
+    { tier: 4, free: "1 ⏳ Blocage du Temps", premium: "🎃 Cadre « Lanterne »" },
     { tier: 5, free: "75 Pièces (🪙)", premium: "150 Pièces (🪙)" },
     { tier: 6, free: "1 ⚡ Joker Éclair", premium: "Pack de Consommables (Bonus)" },
     { tier: 7, free: "50 Pièces (🪙)", premium: "Titre « [ Pulsion Citrouille ] » 🎃" },
