@@ -508,8 +508,9 @@ function spawnGhostLotties(big) {
       g.style.width = size + "px";
       g.style.height = size + "px";
       g.style.fontSize = ""; // pas d'emoji cette fois
-      g.style.left = Math.random() * 90 + 5 + "%";
-      g.style.animationDuration = (3 + Math.random() * 2.5) + "s";
+      g.style.left = Math.random() * 80 + 10 + "%";
+      g.style.top = Math.random() * 70 + 15 + "%";
+      g.style.animationDuration = (1.6 + Math.random() * 1.2) + "s";
       document.body.appendChild(g);
       if (typeof lottie !== "undefined") {
         lottie.loadAnimation({ container: g, renderer: "svg", loop: true, autoplay: true, path: "fantome-combo.json" });
