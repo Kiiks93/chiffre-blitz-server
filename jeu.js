@@ -75,6 +75,7 @@ function getComboColor() {
   if (theme === "theme_eclair") return "#fff34d";
   if (theme === "theme_obsidian") return "#ff003c";
   if (theme === "theme_citrouille") return "#ff8a00";
+  if (theme === "theme_fantome") return "#b06bff";
   return "#00d2ff";
 }
 
@@ -90,6 +91,7 @@ function getComboEmojis() {
   if (theme === "theme_eclair") return ["⚡", "", "✨", ""];
   if (theme === "theme_obsidian") return ["🖤", "", "🔥", "✨"];
   if (theme === "theme_citrouille") return ["🎃", "", "", "💀"];
+  if (theme === "theme_fantome") return ["👻", "", "💜", "✨"];
   return ["⚡", "", "✨", ""];
 }
 
@@ -130,6 +132,7 @@ function shatterExplosion() {
     setTimeout(() => s.remove(), 1200);
   }
 }
+
 function ensureEquippedGrid() {
   if (!myProfile.inventory) myProfile.inventory = {};
   if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
@@ -260,15 +263,18 @@ function triggerPerfection() {
   SoundEngine.playPerfectionBoom(themeNow);
   if (themeNow === "theme_eclair") {
     playElectroExplosionSound();
-    for (let i = 0; i < 5; i++) setTimeout(() => spawnLightningBurst(true), i * 90);} 
-  else if (themeNow === "theme_obsidian") {
+    for (let i = 0; i < 5; i++) setTimeout(() => spawnLightningBurst(true), i * 90);
+  } else if (themeNow === "theme_obsidian") {
     playObsidianExplosionSound();
     for (let i = 0; i < 6; i++) setTimeout(() => spawnObsidianRock(), i * 80);
-    setTimeout(() => shakeScreen(1.2), 500);} 
-  else if (themeNow === "theme_neon") {
-  if (typeof neonHyperspace === "function") neonHyperspace();} 
-  else if (themeNow === "theme_citrouille") { spawnLanterns(true); playLanternSound(); shakeScreen(1.2); }
-  else if (themeNow === "theme_fantome") { spawnGhostLotties(true); playGhostSound(); shakeScreen(1.2); }
+    setTimeout(() => shakeScreen(1.2), 500);
+  } else if (themeNow === "theme_neon") {
+    if (typeof neonHyperspace === "function") neonHyperspace();
+  } else if (themeNow === "theme_citrouille") {
+    spawnLanterns(true); playLanternSound(); shakeScreen(1.2);
+  } else if (themeNow === "theme_fantome") {
+    spawnGhostLotties(true); playGhostSound(); shakeScreen(1.2);
+  }
   const crackCount = 18;
   for (let i = 0; i < crackCount; i++) {
     setTimeout(() => {
@@ -298,6 +304,7 @@ function spawnExplosionParticles() {
   if (theme === "theme_eclair") emojis = ["⚡", "", "✨", "💥"];
   if (theme === "theme_obsidian") emojis = ["🖤", "💀", "🔥", ""];
   if (theme === "theme_citrouille") emojis = ["🎃", "", "", "💀"];
+  if (theme === "theme_fantome") emojis = ["👻", "", "💜", "✨"];
   for (let i = 0; i < 40; i++) {
     const p = document.createElement("div");
     p.className = "explosion-particle";
@@ -319,6 +326,7 @@ function getComboCrackStyle() {
   if (theme === "theme_eclair") return { color: "#fff34d", width: 3, jag: 20 };
   if (theme === "theme_obsidian") return { color: "#ff003c", width: 3, jag: 26 };
   if (theme === "theme_citrouille") return { color: "#ff8a00", width: 3, jag: 24 };
+  if (theme === "theme_fantome") return { color: "#b06bff", width: 2, jag: 30 };
   return { color: "#00d2ff", width: 2, jag: 38 };
 }
 
@@ -375,40 +383,32 @@ function coinStorm() {
 function spawnCrack() {
   const themeNow = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
   
-  // 🟦 PACK STANDARD : aucune animation, aucun son
   if (!themeNow || themeNow === "") return;
   
-  //  THÈME DORÉ : pluie de pièces
   if (themeNow === "theme_alt") {
     for (let i = 0; i < 8; i++) setTimeout(() => spawnCoin(), i * 60);
     SoundEngine.playCrack(themeNow);
     return;
   }
   
-  // 🌈 THÈME NÉON : hyperspace starfield (géré par neonComboBoost dans registerComboHit)
   if (themeNow === "theme_neon") return;
   
-  //  THÈME CITROUILLE : pluie de citrouilles
   if (themeNow === "theme_citrouille") { spawnLanterns(false); playLanternSound(); return; }
   
-  // 👻 THÈME FANTÔME : fantômes qui descendent
   if (themeNow === "theme_fantome") { spawnGhostLotties(false); playGhostSound(); return; }
   
-  //  THÈME ÉCLAIR : arcs fractals
   if (themeNow === "theme_eclair") {
     spawnLightningBurst(false);
     playElectricArcSound();
     return;
   }
   
-  // 🖤 THÈME OBSIDIENNE : rochers
   if (themeNow === "theme_obsidian") {
     spawnObsidianRock();
     playObsidianImpactSound();
     return;
   }
   
-  // ❄️ THÈME GLACIAL (Cryo) : fissures SVG bleues (seul thème "legacy" restant)
   const layer = ensureCracksLayer();
   if (layer.childElementCount > 20) layer.removeChild(layer.firstChild);
   const style = getComboCrackStyle();
@@ -509,39 +509,39 @@ function hideAllScreens() {
 }
 
 function setGameModeBadge(text, color) {
-let badge = document.getElementById("game-mode-badge");
-if (!badge) {
-badge = document.createElement("div");
-badge.id = "game-mode-badge";
-}
-badge.innerText = text;
-badge.style.cssText = `
-position: absolute;
-left: 10px;
-top: 50%;
-transform: translateY(-50%);
-z-index: 5;
-background: rgba(15, 5, 29, 0.92);
-border: 1.5px solid ${color};
-color: ${color};
-font-size: 9px;
-font-weight: 900;
-letter-spacing: 1px;
-padding: 4px 10px;
-border-radius: 14px;
-pointer-events: none;
-box-shadow: 0 0 10px ${color}55;
-text-shadow: 0 0 5px ${color};
-`;
-badge.style.display = "block";
-const target = document.getElementById("game-target-giant");
-if (target && target.parentElement) {
-const bar = target.parentElement;
-if (getComputedStyle(bar).position === "static") bar.style.position = "relative";
-if (badge.parentElement !== bar) bar.appendChild(badge);
-} else {
-document.body.appendChild(badge);
-}
+  let badge = document.getElementById("game-mode-badge");
+  if (!badge) {
+    badge = document.createElement("div");
+    badge.id = "game-mode-badge";
+  }
+  badge.innerText = text;
+  badge.style.cssText = `
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    background: rgba(15, 5, 29, 0.92);
+    border: 1.5px solid ${color};
+    color: ${color};
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border-radius: 14px;
+    pointer-events: none;
+    box-shadow: 0 0 10px ${color}55;
+    text-shadow: 0 0 5px ${color};
+  `;
+  badge.style.display = "block";
+  const target = document.getElementById("game-target-giant");
+  if (target && target.parentElement) {
+    const bar = target.parentElement;
+    if (getComputedStyle(bar).position === "static") bar.style.position = "relative";
+    if (badge.parentElement !== bar) bar.appendChild(badge);
+  } else {
+    document.body.appendChild(badge);
+  }
 }
 
 function hideGameModeBadge() {
@@ -943,7 +943,7 @@ socket.on("start_countdown", (data) => {
       document.getElementById("hud-solo").style.display = "none";
       const towHud = document.getElementById("hud-tow");
       if (data.isTugOfWar) { towHud.style.display = "block"; updateTugOfWarGauge(0); } else towHud.style.display = "none";
-      if (latest1v1StartData) ensureEquippedGrid(); { document.getElementById("game-target-giant").innerText = latest1v1StartData.myTarget || 1; renderGrid(latest1v1StartData.myPool, handle1v1TileClick); }
+      if (latest1v1StartData) { ensureEquippedGrid(); document.getElementById("game-target-giant").innerText = latest1v1StartData.myTarget || 1; renderGrid(latest1v1StartData.myPool, handle1v1TileClick); }
       preparePowerHUD();
       current1v1Time = latest1v1StartData ? latest1v1StartData.timeLeft : 30;
       isTimeFrozen = false;
@@ -1001,19 +1001,19 @@ socket.on("game_over_1v1", (data) => {
 });
 
 function getWinnerAvatarShowcaseHTML(playerObj) {
-if (!playerObj) return "";
-const equippedAvatar = playerObj.inventory && playerObj.inventory.__equipped && playerObj.inventory.__equipped.avatar;
-const equippedFrame = playerObj.inventory && playerObj.inventory.__equipped && playerObj.inventory.__equipped.frame;
-let iconContent = playerObj.avatar || 1;
-if (equippedAvatar === "avatar_lottie_palier30") iconContent = `<div class="lottie-avatar-large" data-lottie-url="black-rainbow-cat.json" style="width:75px; height:75px;"></div>`;
-else if (equippedAvatar === "avatar_lottie_palier15") iconContent = `<div class="lottie-avatar-large" data-lottie-url="cat-assistant.json" style="width:75px; height:75px;"></div>`;
-else if (equippedAvatar === "avatar_tigre") iconContent = `<video class="tft-avatar-video" src="tiger-siberien.mp4" autoplay loop muted playsinline style="width:75px; height:75px;"></video>`;
-else if (equippedAvatar === "avatar_s2_squelette") iconContent = `<div class="lottie-avatar-large" data-lottie-url="squelette-danse.json" style="width:75px; height:75px;"></div>`;
-else if (equippedAvatar === "avatar_s2_chauve") iconContent = `<video class="tft-avatar-video" src="bat-halloween.mp4" autoplay loop muted playsinline style="width:75px; height:75px;"></video>`;
-else if (equippedAvatar === "avatar_s2_citrouille") iconContent = `<div class="lottie-avatar-large" data-lottie-url="citrouille-chateau.json" style="width:75px; height:75px;"></div>`;
-const frameClass = getFrameClass(equippedFrame);
-setTimeout(() => initAllLottieBadges(), 50);
-return `<div class="victory-avatar-showcase"><div class="victory-badge-large ${frameClass}" style="display:flex; align-items:center; justify-content:center;"><span style="font-weight:900; color:#fff;">${iconContent}</span><span style="position:absolute; bottom:-2px; right:-2px; font-size:14px; background:#0f051d; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; border:2px solid #fff; z-index:3;">${playerObj.flag || "🇫🇷"}</span></div><div style="font-size:13px; font-weight:900; color:#f8b500; margin-top:4px;">${playerObj.username || "Joueur"} TRIOMPHE !</div></div>`;
+  if (!playerObj) return "";
+  const equippedAvatar = playerObj.inventory && playerObj.inventory.__equipped && playerObj.inventory.__equipped.avatar;
+  const equippedFrame = playerObj.inventory && playerObj.inventory.__equipped && playerObj.inventory.__equipped.frame;
+  let iconContent = playerObj.avatar || 1;
+  if (equippedAvatar === "avatar_lottie_palier30") iconContent = `<div class="lottie-avatar-large" data-lottie-url="black-rainbow-cat.json" style="width:75px; height:75px;"></div>`;
+  else if (equippedAvatar === "avatar_lottie_palier15") iconContent = `<div class="lottie-avatar-large" data-lottie-url="cat-assistant.json" style="width:75px; height:75px;"></div>`;
+  else if (equippedAvatar === "avatar_tigre") iconContent = `<video class="tft-avatar-video" src="tiger-siberien.mp4" autoplay loop muted playsinline style="width:75px; height:75px;"></video>`;
+  else if (equippedAvatar === "avatar_s2_squelette") iconContent = `<div class="lottie-avatar-large" data-lottie-url="squelette-danse.json" style="width:75px; height:75px;"></div>`;
+  else if (equippedAvatar === "avatar_s2_chauve") iconContent = `<video class="tft-avatar-video" src="bat-halloween.mp4" autoplay loop muted playsinline style="width:75px; height:75px;"></video>`;
+  else if (equippedAvatar === "avatar_s2_citrouille") iconContent = `<div class="lottie-avatar-large" data-lottie-url="citrouille-chateau.json" style="width:75px; height:75px;"></div>`;
+  const frameClass = getFrameClass(equippedFrame);
+  setTimeout(() => initAllLottieBadges(), 50);
+  return `<div class="victory-avatar-showcase"><div class="victory-badge-large ${frameClass}" style="display:flex; align-items:center; justify-content:center;"><span style="font-weight:900; color:#fff;">${iconContent}</span><span style="position:absolute; bottom:-2px; right:-2px; font-size:14px; background:#0f051d; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; border:2px solid #fff; z-index:3;">${playerObj.flag || "🇫🇷"}</span></div><div style="font-size:13px; font-weight:900; color:#f8b500; margin-top:4px;">${playerObj.username || "Joueur"} TRIOMPHE !</div></div>`;
 }
 
 function showGameOverRecap(data) {
@@ -1282,12 +1282,10 @@ function updateAvalancheTarget() {
   }
 }
 
-function renderGrid(pool, handler) {
+function renderAvalancheGrid() {
   const grid = document.getElementById("grid");
   if (!grid) return;
   grid.innerHTML = "";
-  if (!pool) return;
-     }
   const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
   const isAltTheme = equippedTheme === "theme_alt";
   const isGlacialTheme = equippedTheme === "theme_glacial";
@@ -1295,10 +1293,11 @@ function renderGrid(pool, handler) {
   const isNeonTheme = equippedTheme === "theme_neon";
   const isObsidianTheme = equippedTheme === "theme_obsidian";
   const isCitrouilleTheme = equippedTheme === "theme_citrouille";
+  const isFantomeTheme = equippedTheme === "theme_fantome";
   avalancheGridData.forEach((val, idx) => {
     const tile = document.createElement("div");
     if (val !== null) {
-      tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""} ${isObsidianTheme ? "obsidian-theme" : ""} ${isCitrouilleTheme ? "citrouille-theme" : ""}`;
+      tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""} ${isObsidianTheme ? "obsidian-theme" : ""} ${isCitrouilleTheme ? "citrouille-theme" : ""} ${isFantomeTheme ? "fantome-theme" : ""}`;
       tile.innerText = val;
       tile.onclick = () => handleAvalancheClick(val, idx);
     } else {
@@ -1307,6 +1306,7 @@ function renderGrid(pool, handler) {
     }
     grid.appendChild(tile);
   });
+}
 
 function handleAvalancheClick(val, idx) {
   const tiles = document.querySelectorAll("#grid .tile");
@@ -1476,9 +1476,10 @@ function renderGrid(pool, handler) {
   const isNeonTheme = equippedTheme === "theme_neon";
   const isObsidianTheme = equippedTheme === "theme_obsidian";
   const isCitrouilleTheme = equippedTheme === "theme_citrouille";
+  const isFantomeTheme = equippedTheme === "theme_fantome";
   pool.forEach((num, index) => {
     const tile = document.createElement("div");
-    tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""} ${isObsidianTheme ? "obsidian-theme" : ""} ${isCitrouilleTheme ? "citrouille-theme" : ""}`;
+    tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""} ${isObsidianTheme ? "obsidian-theme" : ""} ${isCitrouilleTheme ? "citrouille-theme" : ""} ${isFantomeTheme ? "fantome-theme" : ""}`;
     tile.innerText = num;
     tile.onclick = () => handler(num, index);
     grid.appendChild(tile);
