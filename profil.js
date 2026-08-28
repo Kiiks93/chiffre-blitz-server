@@ -145,6 +145,16 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
     avatarTitle = "Tigre de Sibérie (GRAAL - Palier 30)";
     avatarContent = `<video class="tft-avatar-video" src="tiger-siberien.mp4" autoplay loop muted playsinline></video>`;
   }
+  } else if (equippedAvatar === "avatar_s2_squelette") {
+  avatarTitle = "Squelette qui danse (Pass Halloween)";
+  avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="squelette-danse.json" style="width:32px; height:32px;"></div>`;
+} else if (equippedAvatar === "avatar_s2_chauve") {
+  avatarTitle = "Chauve-Souris (Pass Halloween)";
+  avatarContent = `<video class="tft-avatar-video" src="bat-halloween.mp4" autoplay loop muted playsinline></video>`;
+} else if (equippedAvatar === "avatar_s2_citrouille") {
+  avatarTitle = "Citrouille du Château (GRAAL Halloween)";
+  avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="citrouille-chateau.json" style="width:32px; height:32px;"></div>`;
+}
   const frameClass = getFrameClass(equippedFrame);
   const html = `
     <div class="tft-avatar-container ${frameClass}" title="${avatarTitle}">
@@ -162,6 +172,8 @@ function getLargeAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
   if (avatarType === "avatar_lottie_palier30") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="black-rainbow-cat.json" style="width:60px; height:60px;"></div>`;
   else if (avatarType === "avatar_lottie_palier15") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="cat-assistant.json" style="width:60px; height:60px;"></div>`;
   else if (avatarType === "avatar_tigre") avatarContent = `<video class="tft-avatar-video" src="tiger-siberien.mp4" autoplay loop muted playsinline style="width:60px; height:60px;"></video>`;
+  else if (avatarType === "avatar_s2_chauve") avatarContent = `<video class="tft-avatar-video" src="bat-halloween.mp4a" autoplay loop muted playsinline style="width:60px; height:60px;"></video>`;
+  
   const html = `
     <div class="tft-avatar-large ${frameClass}">
       <span class="tft-avatar-large-icon" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; ${typeof avatarContent === "number" ? "font-size:24px;" : ""}">${avatarContent}</span>
@@ -210,6 +222,9 @@ function renderProfileAvatarSelector() {
   if (unlocked.includes("avatar_lottie_palier15")) addAvatarOption("avatar_lottie_palier15", "🐱", "Chat Assistant");
   if (unlocked.includes("avatar_lottie_palier30")) addAvatarOption("avatar_lottie_palier30", "🌈", "Chat Arc-en-ciel");
   if (unlocked.includes("avatar_tigre")) addAvatarOption("avatar_tigre", "🐯", "Tigre de Sibérie");
+  if (unlocked.includes("avatar_s2_squelette")) addAvatarOption("avatar_s2_squelette", "💀", "Squelette");
+  if (unlocked.includes("avatar_s2_chauve")) addAvatarOption("avatar_s2_chauve", "🦇", "Chauve-Souris");
+  if (unlocked.includes("avatar_s2_citrouille")) addAvatarOption("avatar_s2_citrouille", "🎃", "Citrouille");
 }
 /* ---------- PACKS (grille + cadre en 1 clic) ---------- */
 const PACKS_LIST = [
@@ -305,7 +320,13 @@ const TITLE_DISPLAY_NAMES = {
   "title_roi_local": "🏰 Roi Local",
   "title_midas": "💰 Midas",
   "title_dynastie": "🏛️ Dynastie",
-  "title_mondial": "🌍 N°1 Mondial"
+  "title_mondial": "🌍 N°1 Mondial",
+  "title_fantome": "👻 Chuchoteur de Fantômes",
+  "title_danse_macabre": "🦴 Danse Macabre",
+  "title_citrouille": "🎃 Pulsion Citrouille",
+  "title_spectre_automne": "🍂 Spectre d'Automne",
+  "title_roi_halloween": "🎃 ROI D'HALLOWEEN",
+  "title_esprit_halloween": "👻 Esprit d'Halloween"
 };
 const FRAME_DISPLAY_NAMES = {
   "frame_silver": "🛡️ Cadre « Argenté »",
@@ -313,14 +334,17 @@ const FRAME_DISPLAY_NAMES = {
   "frame_prism": "✨ Cadre « Doré »",
   "frame_voltage": "⚡ Cadre « Sous Tension »",
   "frame_obsidian": "🖤 Cadre « Obsidienne »",
-  "frame_givre": "🧊 Cadre « Givre »"
+  "frame_givre": "🧊 Cadre « Givre »",
+  "frame_osseux": "🦴 Cadre « Osseux »", 
+  "frame_fantome": "👻 Cadre « Fantôme »"
 };
 const THEME_DISPLAY_NAMES = {
   "theme_alt": "🎨 Thème de Grille Rétro / Doré",
   "theme_glacial": "🧊 Thème de Grille Cryo",
   "theme_eclair": "⚡ Thème de Grille Éclair",
   "theme_neon": "🌈 Thème de Grille Néon Synthwave",
-  "theme_obsidian": "🖤 Thème de Grille Obsidienne"
+  "theme_obsidian": "🖤 Thème de Grille Obsidienne",
+  "theme_citrouille": "🎃 Thème de Grille Citrouille"
 };
 function renderProfileCustomizationMenus() {
   const titleSelect = document.getElementById("title-input");
