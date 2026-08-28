@@ -37,13 +37,13 @@ const ITEM_CATALOG = {
   eclipse: { sources: ["shop", "pass"], type: "power", price: 1500 },
   chaos: { sources: ["shop", "pass"], type: "power", price: 4000 },
   theme_glacial: { sources: ["shop"], type: "theme", price: 1200, permanent: true },
-  frame_standard: { sources: ["default"], type: "frame", permanent: true },
   frame_voltage: { sources: ["shop"], type: "frame", price: 2200, permanent: true },
   frame_obsidian: { sources: ["shop"], type: "frame", price: 4500, permanent: true },
   theme_alt: { sources: ["pass", "shop"], type: "theme", permanent: true },
   frame_chroma: { sources: ["pass"], type: "frame", permanent: true },
   frame_prism: { sources: ["pass", "shop"], type: "frame", permanent: true },
   frame_silver: { sources: ["pass"], type: "frame", permanent: true },
+  frame_standard: { sources: ["default"], type: "frame", permanent: true },
   avatar_lottie_palier15: { sources: ["pass"], type: "avatar", permanent: true },
   avatar_lottie_palier30: { sources: ["pass"], type: "avatar", permanent: true },
   title_stalker: { sources: ["pass"], type: "title", permanent: true },
@@ -70,6 +70,7 @@ const ITEM_CATALOG = {
   frame_osseux: { sources: ["pass"], type: "frame", permanent: true },
   frame_fantome: { sources: ["pass"], type: "frame", permanent: true },
   theme_citrouille: { sources: ["pass"], type: "theme", permanent: true },
+  theme_fantome: { sources: ["pass"], type: "theme", permanent: true },
   avatar_s2_squelette: { sources: ["pass"], type: "avatar", permanent: true },
   avatar_s2_chauve: { sources: ["pass"], type: "avatar", permanent: true },
   avatar_s2_citrouille: { sources: ["pass"], type: "avatar", permanent: true }
@@ -248,7 +249,7 @@ SOCKET
 io.on('connection', (socket) => {
   console.log('Connexion : ' + socket.id);
   socket.emit('events_state_update', globalEvents);
-  
+
   /* ---------- SALLE DES TROPHÉES ---------- */
   socket.on('get_trophy_room', async (targetUsername) => {
     try {
@@ -321,9 +322,6 @@ io.on('connection', (socket) => {
           points: 0, coins: 100, trophies: 0, wins: 0, losses: 0,
           inventory: { __equipped: { frame: "frame_standard" } }, equipped_power: null,
           unlocked_items: ["frame_standard"],
-          if (claimedNorm["s2"] && claimedNorm["s2"]["24_premium"] && !playerData.unlocked_items.includes("theme_fantome")) {
-          playerData.unlocked_items.push("theme_fantome");
-          }
           blitz_pass_premium: false, claimed_pass_tiers: {},
           matches_played: 0, win_streak: 0, best_combo: 0, best_avalanche: 0,
           solo_games: 0, total_coins_earned: 0, season_n1_count: 0, trophies_collection: {}
@@ -337,11 +335,16 @@ io.on('connection', (socket) => {
         }
       }
       const claimedNorm = normalizeClaimedTiers(playerData.claimed_pass_tiers);
+      // Migration : tout le monde possède le cadre Standard
       playerData.unlocked_items = playerData.unlocked_items || [];
       if (!playerData.unlocked_items.includes("frame_standard")) playerData.unlocked_items.push("frame_standard");
       playerData.inventory = playerData.inventory || {};
       playerData.inventory.__equipped = playerData.inventory.__equipped || {};
       if (!playerData.inventory.__equipped.frame) playerData.inventory.__equipped.frame = "frame_standard";
+      // Rattrapage : palier 24 S2 réclamé avant l'ajout de la grille Fantôme
+      if (claimedNorm["s2"] && claimedNorm["s2"]["24_premium"] && !playerData.unlocked_items.includes("theme_fantome")) {
+        playerData.unlocked_items.push("theme_fantome");
+      }
       const seasonNow = getCurrentSeason();
       const premNow = !!(claimedNorm[seasonNow.id] && claimedNorm[seasonNow.id].premium) || (seasonNow.id === "s1" && playerData.blitz_pass_premium);
       activePlayers[socket.id] = {
@@ -350,8 +353,8 @@ io.on('connection', (socket) => {
         flag: playerData.flag, points: playerData.points || 0, coins: playerData.coins || 0,
         country: playerData.country || "FR",
         trophies: playerData.trophies || 0, wins: playerData.wins || 0, losses: playerData.losses || 0,
-        inventory: playerData.inventory || {}, equippedPower: playerData.equipped_power || null,
-        unlocked_items: playerData.unlocked_items || [], blitzPassPremium: premNow,
+        inventory: playerData.inventory, equippedPower: playerData.equipped_power || null,
+        unlocked_items: playerData.unlocked_items, blitzPassPremium: premNow,
         claimedPassTiers: claimedNorm, current_season: seasonNow.id,
         matches_played: playerData.matches_played || 0,
         win_streak: playerData.win_streak || 0,
@@ -850,7 +853,7 @@ io.on('connection', (socket) => {
     }
   });
 
-    socket.on('admin_set_region', async (data) => {
+  socket.on('admin_set_region', async (data) => {
     if (!socket.isAdmin) return;
     const targetUsername = (data.targetUsername || '').trim();
     const newRegion = (data.newRegion || '').trim();
@@ -934,7 +937,7 @@ function buildMatchCharges(playerObj) {
 
 function startMatchBetween(id1, id2, isRanked = false, isOnline = true, isTugOfWar = false) {
   const p1 = activePlayers[id1] || { socketId: id1, username: "Joueur 1", avatar: 1, flag: "🇫🇷", points: 0 };
-  const p2 = activePlayers[id2] || { socketId: id2, username: "Joueur 2", avatar: 2, flag: "🇫", points: 0 };
+  const p2 = activePlayers[id2] || { socketId: id2, username: "Joueur 2", avatar: 2, flag: "🇫🇷", points: 0 };
   const isExpressoActive = globalEvents.expressoMatch && isOnline && !isRanked && !isTugOfWar;
   const match = {
     id1, id2,
@@ -1024,7 +1027,7 @@ function applyPassReward(p, tier, track, seasonId) {
     else if (tier === 21) p.coins = (p.coins || 0) + 220;
     else if (tier === 22) p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 3;
     else if (tier === 23) { if (!p.unlocked_items.includes('title_supreme')) p.unlocked_items.push('title_supreme'); }
-    else if (tier === 24) { if (!p.unlocked_items.includes('theme_fantome')) p.unlocked_items.push('theme_fantome'); }
+    else if (tier === 24) p.coins = (p.coins || 0) + 300;
     else if (tier === 25) { if (!p.unlocked_items.includes('avatar_lottie_palier30')) p.unlocked_items.push('avatar_lottie_palier30'); }
     else if (tier === 26) p.coins = (p.coins || 0) + 260;
     else if (tier === 27) p.inventory['nova'] = (p.inventory['nova'] || 0) + 4;
@@ -1071,7 +1074,7 @@ function applyPassRewardS2(p, tier, track) {
     else if (tier === 21) p.coins = (p.coins || 0) + 220;
     else if (tier === 22) p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + 3;
     else if (tier === 23) p.coins = (p.coins || 0) + 350;
-    else if (tier === 24) p.coins = (p.coins || 0) + 300;
+    else if (tier === 24) { if (!p.unlocked_items.includes('theme_fantome')) p.unlocked_items.push('theme_fantome'); }
     else if (tier === 25) { if (!p.unlocked_items.includes('avatar_s2_chauve')) p.unlocked_items.push('avatar_s2_chauve'); }
     else if (tier === 26) p.coins = (p.coins || 0) + 260;
     else if (tier === 27) p.inventory['nova'] = (p.inventory['nova'] || 0) + 4;
