@@ -37,6 +37,7 @@ const ITEM_CATALOG = {
   eclipse: { sources: ["shop", "pass"], type: "power", price: 1500 },
   chaos: { sources: ["shop", "pass"], type: "power", price: 4000 },
   theme_glacial: { sources: ["shop"], type: "theme", price: 1200, permanent: true },
+  frame_standard: { sources: ["default"], type: "frame", permanent: true },
   frame_voltage: { sources: ["shop"], type: "frame", price: 2200, permanent: true },
   frame_obsidian: { sources: ["shop"], type: "frame", price: 4500, permanent: true },
   theme_alt: { sources: ["pass", "shop"], type: "theme", permanent: true },
@@ -318,7 +319,8 @@ io.on('connection', (socket) => {
           country: data.flag ? data.flag.replace(/['"]/g, '').trim() : "FR",
           avatar: data.avatar || 1, flag: data.flag || "🇫🇷",
           points: 0, coins: 100, trophies: 0, wins: 0, losses: 0,
-          inventory: {}, equipped_power: null, unlocked_items: [],
+          inventory: { __equipped: { frame: "frame_standard" } }, equipped_power: null,
+          unlocked_items: ["frame_standard"],
           blitz_pass_premium: false, claimed_pass_tiers: {},
           matches_played: 0, win_streak: 0, best_combo: 0, best_avalanche: 0,
           solo_games: 0, total_coins_earned: 0, season_n1_count: 0, trophies_collection: {}
@@ -332,6 +334,11 @@ io.on('connection', (socket) => {
         }
       }
       const claimedNorm = normalizeClaimedTiers(playerData.claimed_pass_tiers);
+      playerData.unlocked_items = playerData.unlocked_items || [];
+      if (!playerData.unlocked_items.includes("frame_standard")) playerData.unlocked_items.push("frame_standard");
+      playerData.inventory = playerData.inventory || {};
+      playerData.inventory.__equipped = playerData.inventory.__equipped || {};
+      if (!playerData.inventory.__equipped.frame) playerData.inventory.__equipped.frame = "frame_standard";
       const seasonNow = getCurrentSeason();
       const premNow = !!(claimedNorm[seasonNow.id] && claimedNorm[seasonNow.id].premium) || (seasonNow.id === "s1" && playerData.blitz_pass_premium);
       activePlayers[socket.id] = {
