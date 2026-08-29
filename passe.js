@@ -192,8 +192,8 @@ const SEASONS_CLIENT = [
     { tier: 26, free: "130 Pièces (🪙)", premium: "260 Pièces (🪙)" },
     { tier: 27, free: "2 💡 Projecteur", premium: "4 🌟 Novas Temporelles" },
     { tier: 28, free: "140 Pièces (🪙)", premium: "Titre « [ Magie de Noël ] » ✨" },
-    { tier: 29, free: "300 Pièces (🪙)", premium: "🍪 Cadre « Pain d'épice »" },
-    { tier: 30, free: "Titre « [ 🎄 Esprit de Noël ] » + 500 🪙", premium: "🏆 GRAAL : 🍪 Grille Pain d'épice + 1000 🪙" }
+    { tier: 29, free: "300 Pièces (🪙)", premium: "🧝 Cadre « Lutin »" },
+    { tier: 30, free: "Titre « [ 🎄 Esprit de Noël ] » + 500 🪙", premium: "🏆 GRAAL : 🧝 Grille Lutin + 1000 🪙" }
   ] }
 ];
 function getActiveSeason() {
