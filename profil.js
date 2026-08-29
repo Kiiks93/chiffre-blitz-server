@@ -356,6 +356,9 @@ const PACKS_LIST = [
   { id: "pack_neon", name: "🌈 Néon", theme: "theme_neon", frame: "frame_chroma" },
   { id: "pack_halloween_citrouille", name: "🎃 Pack Lanterne", theme: "theme_citrouille", frame: "frame_osseux" },
   { id: "pack_halloween_fantome", name: "👻 Pack Fantôme", theme: "theme_fantome", frame: "frame_fantome" },
+  { id: "pack_noel_bonbon", name: "🍭 Pack Bonbon", theme: "theme_bonbon", frame: "frame_bonbon" },
+  { id: "pack_noel_sapin", name: "🎄 Pack Sapin", theme: "theme_sapin", frame: "frame_guirlande" },
+  { id: "pack_noel_gingerbread", name: "🍪 Pack Pain d'épice", theme: "theme_gingerbread", frame: "frame_gingerbread" },
 ];
 function ensurePackSelector() {
   if (document.getElementById("pack-input")) return;
