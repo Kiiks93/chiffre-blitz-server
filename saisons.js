@@ -233,10 +233,10 @@ function hlRegister(type, obj, lifetime) {
 function addScenePumpkins(bg) {
   clearHalloweenPumpkins();
   const low = (typeof IS_LOW_PERF !== "undefined") && IS_LOW_PERF;
-  const spots = low
+    const spots = low
     ? [
-        { left: "-2%", bottom: "-2%", size: 240 },
-        { right: "-3%", bottom: "-1%", size: 280 }
+        { left: "-4%", bottom: "-2%", size: 150 },
+        { right: "-4%", bottom: "-1%", size: 170 }
       ]
     : [
         { left: "-2%", bottom: "-2%", size: 280 },
