@@ -317,42 +317,42 @@ SoundEngine.playCrack = function(theme) {
   if (this.isMuted) return;
   this.init();
   if (!this.ctx) return;
-  if (theme === "theme_citrouille" || theme === "theme_fantome") {
-    const t = this.ctx.currentTime;
-    const bufferSize = this.ctx.sampleRate * 0.15;
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
-    const noise = this.ctx.createBufferSource();
-    noise.buffer = buffer;
-    const f = this.ctx.createBiquadFilter();
-    f.type = "bandpass";
-    f.frequency.setValueAtTime(1200, t);
-    const g = this.ctx.createGain();
-    g.gain.setValueAtTime(0.2, t);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
-    noise.connect(f); f.connect(g); g.connect(this.ctx.destination);
-    noise.start(t);
+  if (theme === "theme_bonbon" || theme === "theme_sapin" || theme === "theme_lutin") {
+  const t = this.ctx.currentTime;
+  // Grelots de Noël (clochettes aiguës)
+    for (let i = 0; i < 3; i++) {
+      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+      o.type = "triangle";
+      o.frequency.setValueAtTime(1800 + Math.random() * 1200, t + i * 0.04);
+      g.gain.setValueAtTime(0.12, t + i * 0.04);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.04 + 0.15);
+      o.connect(g); g.connect(this.ctx.destination);
+      o.start(t + i * 0.04); o.stop(t + i * 0.04 + 0.15);
+    }
     return;
   }
+  if (theme === "theme_citrouille" || theme === "theme_fantome") {
   this._originalCrack.call(this, theme);
 };
 
 SoundEngine._originalBoom = SoundEngine.playPerfectionBoom;
 SoundEngine.playPerfectionBoom = function(theme) {
-  if (this.isMuted) return;
-  this.init();
-  if (!this.ctx) return;
-  if (theme === "theme_citrouille" || theme === "theme_fantome") {
+    if (theme === "theme_bonbon" || theme === "theme_sapin" || theme === "theme_lutin") {
     this.stopBoom();
     const t = this.ctx.currentTime;
-    this.boom(t, 0.7, 60);
-    setTimeout(() => this.boom(t, 0.4, 80), 200);
-    setTimeout(() => this.boom(t, 0.25, 100), 400);
+    // Jingle bells + carillon chaud
+    [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => {
+      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+      o.type = "triangle";
+      o.frequency.setValueAtTime(f, t + i * 0.09);
+      g.gain.setValueAtTime(0.14, t + i * 0.09);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.09 + 0.4);
+      o.connect(g); g.connect(this.ctx.destination);
+      o.start(t + i * 0.09); o.stop(t + i * 0.09 + 0.4);
+    });
     return;
   }
-  this._originalBoom.call(this, theme);
-};
+  if (theme === "theme_citrouille" || theme === "theme_fantome") {
 
 /* ---------- OVERRIDE startMusic : menu vs game ---------- */
 SoundEngine._originalStartMusic = SoundEngine.startMusic;
