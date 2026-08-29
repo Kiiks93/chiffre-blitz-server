@@ -13,7 +13,7 @@ SoundEngine.startMusicSeasonal = function(key) {
   this.stopMusic(false);
   this.currentMode = key;
   this.step = 0;
-  const bpms = { s2menu: 75, s2game: 100, s3menu: 84, s3game: 126 };
+  const bpms = { s2menu: 75, s2game: 100, s3menu: 70, s3game: 126 };
   this.bpm = bpms[key] || 100;
   const intervalMs = (60 / this.bpm / 4) * 1000;
   this.timerId = setInterval(() => {
@@ -257,57 +257,18 @@ SoundEngine._voice = function(t, f, vol, dur) {
 
 SoundEngine.tickNoelMenu = function(step) {
   const t = this.ctx.currentTime;
-  const bar = Math.floor(step / 12);
-  const beat = step % 12;
-  const stepSec = 60 / this.bpm / 4;
-  const bb = bar % 8;
-  const G4=392.00, C5=523.25, D5=587.33, E5=659.25, F5=698.46, G5=783.99;
-  const chords = [
-    {root:130.81,pad:[261.63,329.63,392.00]},
-    {root:130.81,pad:[261.63,329.63,392.00]},
-    {root:130.81,pad:[261.63,329.63,392.00]},
-    {root:130.81,pad:[261.63,329.63,392.00]},
-    {root:130.81,pad:[261.63,329.63,392.00]},
-    {root:87.31,pad:[174.61,261.63,349.23]},
-    {root:98.00,pad:[196.00,246.94,293.66]},
-    {root:130.81,pad:[261.63,329.63,392.00]}
-  ];
-  const chord = chords[bb];
-
-  // Valse douce (basse + accords légers)
-  if (beat === 0) {
-    const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-    o.type = "sine"; o.frequency.setValueAtTime(chord.root, t);
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.045, t + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.5);
-    o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 1.5);
+  const bar = Math.floor(step / 16);
+  const inBar = step % 16;
+  const E4=329.63,G4=392.00,C4=261.63,D4=293.66,F4=349.23,E5=659.25,G5=783.99,C5=523.25,D5=587.33,F5=698.46;
+  const chords=[{root:130.81,pad:[261.63,329.63,392]},{root:130.81,pad:[261.63,329.63,392]},{root:130.81,pad:[261.63,329.63,392]},{root:87.31,pad:[174.61,261.63,349.23]},{root:130.81,pad:[261.63,329.63,392]},{root:98,pad:[196,246.94,293.66]},{root:98,pad:[196,246.94,293.66]},{root:130.81,pad:[261.63,329.63,392]}];
+  const chord=chords[bar%8];
+  if(inBar===0){ // nappe douce continue
+    chord.pad.forEach((f,i)=>{const o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type="triangle";o.frequency.setValueAtTime(f,t);o.detune.setValueAtTime(i%2?3:-3,t);const lp=this.ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.setValueAtTime(800,t);g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.02,t+0.8);g.gain.linearRampToValueAtTime(0.0001,t+4.4);o.connect(lp);lp.connect(g);g.connect(this.ctx.destination);o.start(t);o.stop(t+4.4);});
+    const o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type="sine";o.frequency.setValueAtTime(chord.root,t);g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.05,t+0.1);g.gain.exponentialRampToValueAtTime(0.0001,t+1.8);o.connect(g);g.connect(this.ctx.destination);o.start(t);o.stop(t+1.8);
   }
-  if (beat === 4 || beat === 8) {
-    chord.pad.forEach((f) => {
-      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-      o.type = "triangle"; o.frequency.setValueAtTime(f, t);
-      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.011, t + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.8);
-      o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 0.8);
-    });
-  }
-
-  // VRAIE mélodie « Mon beau sapin » avec tenues (legato)
-  const M = {
-    0: [{s:8,f:G4,d:4}],
-    1: [{s:0,f:C5,d:4},{s:4,f:C5,d:4},{s:8,f:C5,d:4}],
-    2: [{s:0,f:C5,d:4},{s:4,f:D5,d:4},{s:8,f:E5,d:4}],
-    3: [{s:0,f:E5,d:8},{s:8,f:E5,d:4}],
-    4: [{s:0,f:E5,d:4},{s:4,f:D5,d:4},{s:8,f:E5,d:4}],
-    5: [{s:0,f:F5,d:4},{s:4,f:G5,d:8}],
-    6: [{s:0,f:D5,d:8}],
-    7: [{s:0,f:C5,d:12}]
-  };
-  const evts = M[bb] || [];
-  for (const ev of evts) {
-    if (ev.s === beat) {
-      const soft = bar >= 8 ? 0.05 : 0.07;   // 2e passage plus doux
-      this._voice(t, ev.f, soft, ev.d * stepSec * 1.15 + 0.25);
-    }
-  }
+  const low={0:{0:E4,4:E4,8:E4},1:{0:E4,4:E4,8:E4},2:{0:E4,4:G4,8:C4,10:D4,12:E4},3:{0:F4,4:F4,8:F4,12:F4},4:{0:F4,4:E4,8:E4,12:E4},5:{0:E4,4:D4,8:D4,12:E4},6:{0:D4,8:G4},7:{0:E4,8:C4}};
+  const m=low[bar%8];
+  if(m&&m[inBar]!==undefined) this._voice(t,m[inBar], bar<8?0.06:0.045, 1.6); // legato, 2e passage plus doux
 };
 
 SoundEngine.tickNoelGame = function(step) {
