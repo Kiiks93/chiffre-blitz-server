@@ -613,14 +613,8 @@ document.addEventListener("DOMContentLoaded", () => {
   setTimeout(() => {
     if (typeof initMenuBackgroundFX === "function") initMenuBackgroundFX();
     applySeasonDA();
+    _watchScreenGame();
   }, 100);
-  document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(() => {
-    if (typeof initMenuBackgroundFX === "function") initMenuBackgroundFX();
-    applySeasonDA();
-    _watchScreenGame();   // ← ajoute cette ligne
-  }, 100);
-});
 });
 
 if (typeof socket !== "undefined") {
