@@ -13,7 +13,7 @@ SoundEngine.startMusicSeasonal = function(key) {
   this.stopMusic(false);
   this.currentMode = key;
   this.step = 0;
-  const bpms = { s2menu: 75, s2game: 100, s3menu: 110, s3game: 132 };
+  const bpms = { s2menu: 75, s2game: 100, s3menu: 66, s3game: 132 };
   this.bpm = bpms[key] || 100;
   const intervalMs = (60 / this.bpm / 4) * 1000;
   this.timerId = setInterval(() => {
@@ -236,71 +236,66 @@ SoundEngine.tickNoelMenu = function(step) {
   const t = this.ctx.currentTime;
   const bar = Math.floor(step / 16);
   const inBar = step % 16;
-  const chords = [
-    { root: 130.81, notes: [261.63, 329.63, 392.00] },
-    { root: 110.00, notes: [220.00, 261.63, 329.63] },
-    { root: 123.47, notes: [246.94, 293.66, 369.99] },
-    { root: 98.00, notes: [196.00, 246.94, 293.66] }
+  const prog = [
+    { root: 130.81, pad: [261.63, 329.63, 392.00, 493.88] },
+    { root: 98.00,  pad: [196.00, 246.94, 293.66, 369.99] },
+    { root: 110.00, pad: [220.00, 261.63, 329.63, 440.00] },
+    { root: 87.31,  pad: [174.61, 220.00, 261.63, 349.23] },
+    { root: 130.81, pad: [261.63, 329.63, 392.00, 493.88] },
+    { root: 98.00,  pad: [196.00, 246.94, 293.66, 369.99] },
+    { root: 87.31,  pad: [174.61, 220.00, 261.63, 349.23] },
+    { root: 130.81, pad: [261.63, 329.63, 392.00, 523.25] }
   ];
-  const chord = chords[bar % 4];
-
-  if (inBar === 0 || inBar === 8) {
-    const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(1046.50, t);
-    g.gain.setValueAtTime(0.12, t);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
-    osc.connect(g); g.connect(this.ctx.destination);
-    osc.start(t); osc.stop(t + 1.2);
-  }
-
-  if (inBar % 2 === 0) {
-    const bufferSize = this.ctx.sampleRate * 0.05;
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-    const noise = this.ctx.createBufferSource();
-    noise.buffer = buffer;
-    const f = this.ctx.createBiquadFilter();
-    f.type = "highpass"; f.frequency.setValueAtTime(5000, t);
-    const g = this.ctx.createGain();
-    g.gain.setValueAtTime(0.08, t);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
-    noise.connect(f); f.connect(g); g.connect(this.ctx.destination);
-    noise.start(t);
-  }
+  const chord = prog[bar % 8];
 
   if (inBar === 0) {
-    chord.notes.forEach(freq => {
-      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-      o.type = "triangle";
-      o.frequency.setValueAtTime(freq, t);
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.linearRampToValueAtTime(0.03, t + 0.4);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 3.0);
-      o.connect(g); g.connect(this.ctx.destination);
-      o.start(t); o.stop(t + 3.0);
+    const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = "sine"; o.frequency.setValueAtTime(chord.root, t);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.045, t + 1.0); g.gain.linearRampToValueAtTime(0.0001, t + 4.2);
+    o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 4.2);
+    chord.pad.forEach((f, i) => {
+      const oo = this.ctx.createOscillator(), gg = this.ctx.createGain();
+      oo.type = "triangle"; oo.frequency.setValueAtTime(f, t); oo.detune.setValueAtTime(i % 2 ? 3 : -3, t);
+      gg.gain.setValueAtTime(0.0001, t); gg.gain.linearRampToValueAtTime(0.016, t + 1.2); gg.gain.linearRampToValueAtTime(0.0001, t + 4.0);
+      oo.connect(gg); gg.connect(this.ctx.destination); oo.start(t); oo.stop(t + 4.0);
     });
   }
 
-  if (inBar % 4 === 0) {
-    const melody = [523.25, 587.33, 659.25, 783.99, 659.25, 587.33, 523.25, 493.88];
-    const note = melody[inBar / 2];
-    const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(note, t);
-    g.gain.setValueAtTime(0.1, t);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
-    osc.connect(g); g.connect(this.ctx.destination);
-    osc.start(t); osc.stop(t + 0.4);
+  // Mélodie boîte à musique (douce, rêveuse)
+  const melody = [
+    [659.25, 783.99, 659.25, 523.25],
+    [587.33, 783.99, 493.88, 587.33],
+    [523.25, 659.25, 440.00, 523.25],
+    [440.00, 523.25, 698.46, 523.25],
+    [659.25, 523.25, 392.00, 659.25],
+    [493.88, 587.33, 783.99, 587.33],
+    [440.00, 523.25, 698.46, 523.25],
+    [392.00, 659.25, 523.25, 783.99]
+  ];
+  const notes = melody[bar % 8];
+  const pos = [0, 4, 8, 12];
+  const idx = pos.indexOf(inBar);
+  if (idx !== -1 && notes[idx]) {
+    const f = notes[idx];
+    [0, 0.005].forEach((delay, k) => {
+      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+      o.type = "sine"; o.frequency.setValueAtTime(f * 2, t + delay);
+      const vol = k === 0 ? 0.06 : 0.02;
+      g.gain.setValueAtTime(0.0001, t + delay); g.gain.linearRampToValueAtTime(vol, t + delay + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + delay + 1.4);
+      o.connect(g); g.connect(this.ctx.destination); o.start(t + delay); o.stop(t + delay + 1.4);
+    });
   }
 
-  if (inBar === 0) {
-    const glow = document.getElementById('bg-glow');
-    if (glow) {
-      glow.style.opacity = '0.2';
-      setTimeout(() => { glow.style.opacity = '0.08'; }, 400);
-    }
+  // Grelots très discrets
+  if (inBar === 8 && bar % 2 === 0) {
+    const bufferSize = this.ctx.sampleRate * 0.04;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const n = this.ctx.createBufferSource(); n.buffer = buffer;
+    const f = this.ctx.createBiquadFilter(); f.type = "highpass"; f.frequency.setValueAtTime(6000, t);
+    const g = this.ctx.createGain(); g.gain.setValueAtTime(0.03, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+    n.connect(f); f.connect(g); g.connect(this.ctx.destination); n.start(t);
   }
 };
 
