@@ -305,44 +305,17 @@ CADRES NOËL 🎄 (S3) — version magique
   box-shadow: 0 0 30px rgba(56,239,125,0.8);
 }
 
-/* --- Cadre Pain d'épice : biscuit texturé + glaçage épais + bonbons --- */
-.user-pill.gingerbread-frame, .user-pill:has(.tft-avatar-container.gingerbread-frame) {
-  border: 3px solid #fff !important;
-  border-radius: 14px;
-  background: radial-gradient(circle at 20% 40%, rgba(90,40,10,0.8) 2px, transparent 3px),
-    radial-gradient(circle at 60% 60%, rgba(90,40,10,0.8) 2px, transparent 3px),
-    radial-gradient(circle at 80% 30%, #ff4b4b 2px, transparent 3px),
-    radial-gradient(circle at 40% 25%, #4bb3ff 2px, transparent 3px),
-    linear-gradient(160deg, rgba(192,122,58,0.97), rgba(138,75,31,0.97)) !important;
-  box-shadow: 0 0 0 2px rgba(255,255,255,0.55), 0 0 16px rgba(217,160,102,0.85), inset 0 0 8px rgba(90,40,10,0.6) !important;
+/* ---------- CADRE LUTIN 🧝 (rouge + pompons) ---------- */
+.user-pill.lutin-frame, .user-pill:has(.tft-avatar-container.lutin-frame) {
+  border-color: #fbbf24 !important;
+  background: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.7) 2.5px, transparent 3.5px),
+    radial-gradient(circle at 80% 70%, rgba(56,239,125,0.6) 2.5px, transparent 3.5px),
+    linear-gradient(135deg, rgba(185,28,28,0.95), rgba(127,29,29,0.95)) !important;
+  box-shadow: 0 0 16px rgba(185,28,28,0.8) !important;
 }
-.tft-avatar-container.gingerbread-frame {
-  border: 3px solid #fff;
-  border-radius: 12px;
-  background: radial-gradient(circle at 30% 40%, rgba(90,40,10,0.8) 2px, transparent 3px),
-    radial-gradient(circle at 70% 60%, rgba(90,40,10,0.8) 2px, transparent 3px),
-    radial-gradient(circle at 55% 25%, #ff4b4b 2px, transparent 3px),
-    linear-gradient(160deg, #c07a3a, #8a4b1f);
-  box-shadow: 0 0 0 2px rgba(255,255,255,0.55), 0 0 14px rgba(217,160,102,0.9), inset 0 0 6px rgba(90,40,10,0.6);
-}
-.tft-avatar-large.gingerbread-frame {
-  border: 3px solid #fff;
-  border-radius: 14px;
-  background: radial-gradient(circle at 30% 40%, rgba(90,40,10,0.8) 3px, transparent 4px),
-    radial-gradient(circle at 70% 60%, rgba(90,40,10,0.8) 3px, transparent 4px),
-    radial-gradient(circle at 50% 20%, #ff4b4b 2.5px, transparent 3.5px),
-    linear-gradient(160deg, #c07a3a, #8a4b1f);
-  box-shadow: 0 0 0 2px rgba(255,255,255,0.55), 0 0 22px rgba(217,160,102,0.9), inset 0 0 8px rgba(90,40,10,0.6);
-}
-.victory-badge-large.gingerbread-frame {
-  border: 3px solid #fff;
-  border-radius: 14px;
-  background: radial-gradient(circle at 30% 40%, rgba(90,40,10,0.8) 3px, transparent 4px),
-    radial-gradient(circle at 70% 60%, #ff4b4b 2.5px, transparent 3.5px),
-    linear-gradient(160deg, #c07a3a, #8a4b1f);
-  box-shadow: 0 0 0 2px rgba(255,255,255,0.55), 0 0 30px rgba(217,160,102,0.85);
-}
-
+.tft-avatar-container.lutin-frame { border-color: #fbbf24; background: linear-gradient(160deg, #b91c1c, #7f1d1d); box-shadow: 0 0 14px rgba(185,28,28,0.9); }
+.tft-avatar-large.lutin-frame { border-color: #fbbf24; background: linear-gradient(160deg, #b91c1c, #7f1d1d); box-shadow: 0 0 22px rgba(185,28,28,0.9); }
+.victory-badge-large.lutin-frame { background: linear-gradient(160deg, #b91c1c, #7f1d1d); border-color: #fbbf24; box-shadow: 0 0 30px rgba(185,28,28,0.8); }
 /* ============================================================
 THÈMES DE GRILLE NOËL 🎄 (S3) — version magique
 ============================================================ */
@@ -368,15 +341,16 @@ THÈMES DE GRILLE NOËL 🎄 (S3) — version magique
   box-shadow: 0 0 12px rgba(56,239,125,0.5);
 }
 
-/* ---------- THÈME LUTIN 🧝 (vert/rouge, sans fond dénaturant) ---------- */
+/* ---------- COUTOUR LUTIN 🧝 (costume rouge + ceinture dorée) ---------- */
 .tile.lutin-theme {
-  background: radial-gradient(circle at 25% 30%, rgba(255,75,75,0.5) 3px, transparent 4px),
-    radial-gradient(circle at 75% 70%, rgba(255,255,255,0.4) 2px, transparent 3px),
-    linear-gradient(135deg, #14532d, #166534) !important;
-  border-color: #ef4444 !important;
+  background: radial-gradient(circle at 25% 25%, rgba(255,255,255,0.85) 3px, transparent 4px),
+    radial-gradient(circle at 75% 72%, rgba(56,239,125,0.7) 3px, transparent 4px),
+    linear-gradient(180deg, transparent 44%, rgba(251,191,36,0.85) 44% 56%, transparent 56%),
+    linear-gradient(160deg, #b91c1c, #7f1d1d) !important;
+  border-color: #fbbf24 !important;
   color: #fff !important;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-  box-shadow: 0 0 12px rgba(239,68,68,0.5);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.85);
+  box-shadow: 0 0 12px rgba(185,28,28,0.6);
 }
 
 /* ---------- CONTOUR SAPIN : guirlande d'ampoules suspendues ---------- */
@@ -412,16 +386,6 @@ THÈMES DE GRILLE NOËL 🎄 (S3) — version magique
 }
 @keyframes garlandTwinkle { from { opacity: 0.7; } to { opacity: 1; } }}
 
-/* ---------- THÈME LUTIN 🧝 (vert/rouge, sans fond dénaturant) ---------- */
-.tile.lutin-theme {
-  background: radial-gradient(circle at 25% 30%, rgba(255,75,75,0.5) 3px, transparent 4px),
-    radial-gradient(circle at 75% 70%, rgba(255,255,255,0.4) 2px, transparent 3px),
-    linear-gradient(135deg, #14532d, #166534) !important;
-  border-color: #ef4444 !important;
-  color: #fff !important;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-  box-shadow: 0 0 12px rgba(239,68,68,0.5);
-}
 /* ---------- MOBILE : scène allégée ---------- */
 @media (max-width: 600px) {
   .hw-tree { width: 120px; height: 220px; bottom: 18%; }
