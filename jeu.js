@@ -281,8 +281,14 @@ function triggerPerfection() {
     if (typeof neonHyperspace === "function") neonHyperspace();
   } else if (themeNow === "theme_citrouille") {
     spawnLanterns(true); playLanternSound(); shakeScreen(1.2);
-  } else if (themeNow === "theme_fantome") {
+   } else if (themeNow === "theme_fantome") {
     spawnGhostLotties(true); playGhostSound(); shakeScreen(1.2);
+  } else if (themeNow === "theme_bonbon") {
+    spawnBonbons(true); playBonbonSound(); shakeScreen(1.0);
+  } else if (themeNow === "theme_sapin") {
+    spawnSapinSparkles(true); playSapinSound(); shakeScreen(1.0);
+  } else if (themeNow === "theme_lutin") {
+    spawnLutins(true); playLutinSound(); shakeScreen(1.0);
   }
   const crackCount = IS_LOW_PERF ? 6 : 18;
   for (let i = 0; i < crackCount; i++) {
@@ -406,6 +412,12 @@ function spawnCrack() {
   if (themeNow === "theme_citrouille") { spawnLanterns(false); playLanternSound(); return; }
   
   if (themeNow === "theme_fantome") { spawnGhostLotties(false); playGhostSound(); return; }
+  
+  if (themeNow === "theme_bonbon") { spawnBonbons(false); playBonbonSound(); return; }
+  
+  if (themeNow === "theme_sapin") { spawnSapinSparkles(false); playSapinSound(); return; }
+  
+  if (themeNow === "theme_lutin") { spawnLutins(false); playLutinSound(); return; }
   
   if (themeNow === "theme_eclair") {
     spawnLightningBurst(false);
