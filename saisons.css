@@ -240,34 +240,38 @@ body.season-s3 .user-pill { color: #7be8ff; }
 body.season-s3 .tab-btn.active { background: #7be8ff; }
 
 /* ============================================================
-SCÈNE NOËL ANIMÉE ❄️ (S3)
+SCÈNE NOËL ANIMÉE ❄️ (S3) — féerique
 ============================================================ */
 body.season-s3 #season-bg { opacity: 1; }
-body.season-s3 #season-bg::after { background: linear-gradient(rgba(0,0,0,0) 55%, rgba(2,10,25,0.4) 100%); }
+body.season-s3 #season-bg::after { background: linear-gradient(rgba(0,0,0,0) 55%, rgba(2,10,25,0.35) 100%); }
 .nx-sky { position: absolute; inset: 0; background: linear-gradient(180deg, #02091f 0%, #0a1a3f 40%, #14306b 75%, #1d3f7a 100%); }
 .nx-star { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fff; animation: nxTwinkle 2s ease-in-out infinite alternate; }
 @keyframes nxTwinkle { from { opacity: 0.3; } to { opacity: 1; } }
 .nx-moon { position: absolute; top: 8%; left: 15%; width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #eaf6ff 0%, #bcd9f2 50%, #8fb8dd 100%); box-shadow: 0 0 40px 15px rgba(180,220,255,0.4); }
-.nx-village { position: absolute; bottom: 20%; left: 50%; transform: translateX(-50%); width: min(520px, 90%); height: 160px; }
+.nx-village { position: absolute; bottom: 16%; left: 50%; transform: translateX(-50%); width: min(640px, 94%); height: 200px; filter: drop-shadow(0 0 18px rgba(255,200,120,0.25)); }
 .nx-village svg { width: 100%; height: 100%; }
-.nx-ground { position: absolute; bottom: 0; left: 0; right: 0; height: 24%; background: linear-gradient(180deg, rgba(255,255,255,0.95), #dceaf7 40%, #b8cfe6 100%); border-radius: 50% 50% 0 0 / 18% 18% 0 0; }
-.nx-guirlandes { position: absolute; top: 0; left: 0; right: 0; height: 120px; pointer-events: none; }
-.nx-sapin { position: absolute; bottom: 10%; width: 220px; height: 300px; pointer-events: none; }
-.nx-sapin-left { left: -30px; }
-.nx-sapin-right { right: -30px; }
-.nx-bonhomme { position: absolute; bottom: 21%; left: 60%; width: 90px; height: 100px; pointer-events: none; }
-.nx-flocons { position: absolute; inset: 0; pointer-events: none; }
-.nx-sleigh { position: absolute; width: 200px; height: 110px; pointer-events: none; }
-.nx-sleigh.lr { left: -220px; animation: nxFlyLR linear forwards; }
-.nx-sleigh.rl { left: 100%; animation: nxFlyRL linear forwards; }
-.nx-sleigh.rl svg { transform: scaleX(-1); }
-@keyframes nxFlyLR { from { transform: translateX(0); } to { transform: translateX(calc(100vw + 240px)); } }
-@keyframes nxFlyRL { from { transform: translateX(0); } to { transform: translateX(calc(-100vw - 240px)); } }
+.nx-ground { position: absolute; bottom: 0; left: 0; right: 0; height: 22%; background: linear-gradient(180deg, rgba(255,255,255,0.95), #dceaf7 40%, #b8cfe6 100%); border-radius: 50% 50% 0 0 / 16% 16% 0 0; }
+/* Guirlandes aux 2 coins, grandes */
+.nx-guirlande { position: absolute; top: -12px; width: 440px; height: 280px; pointer-events: none; }
+.nx-guirlande-tl { left: -24px; }
+.nx-guirlande-tr { right: -24px; transform: scaleX(-1); }
+/* Sapins géants */
+.nx-sapin { position: absolute; bottom: 6%; width: 400px; height: 560px; pointer-events: none; }
+.nx-sapin-left { left: -70px; }
+.nx-sapin-right { right: -70px; }
+/* Bonhomme proportionné, près du sapin gauche */
+.nx-bonhomme { position: absolute; bottom: 10%; left: 25%; width: 160px; height: 190px; pointer-events: none; }
+.nx-flocons { position: absolute; inset: 0; pointer-events: none; opacity: 0.8; }
+/* Traîneau gauche→droite, traverse tout l'écran */
+.nx-sleigh { position: absolute; left: -240px; width: 220px; height: 120px; pointer-events: none; animation: nxFlyLR linear forwards; }
+@keyframes nxFlyLR { from { transform: translateX(0); } to { transform: translateX(calc(100vw + 260px)); } }
 @media (max-width: 600px) {
-  .nx-sapin { width: 120px; height: 170px; }
-  .nx-sapin-left { left: -50px; } .nx-sapin-right { right: -50px; }
-  .nx-bonhomme { width: 60px; height: 70px; }
-  .nx-sleigh { width: 130px; height: 72px; }
+  .nx-sapin { width: 200px; height: 300px; }
+  .nx-sapin-left { left: -60px; } .nx-sapin-right { right: -60px; }
+  .nx-guirlande { width: 240px; height: 160px; }
+  .nx-bonhomme { left: 30%; width: 90px; height: 110px; }
+  .nx-sleigh { width: 140px; height: 76px; }
+  .nx-village { height: 150px; }
 }
 
 /* ============================================================
