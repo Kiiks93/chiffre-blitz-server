@@ -33,16 +33,14 @@ body.season-s2 #season-bg { opacity: 1; }
 .hw-c3 { top: 5%; width: 35%; left: -40%; animation-duration: 50s; animation-delay: 35s; }
 @keyframes hwDrift { from { transform: translateX(0); } to { transform: translateX(220vw); } }
 
-.hw-castle { position: absolute; bottom: 26%; left: 50%; transform: translateX(-50%); width: min(520px, 82%); height: 200px; }
+.hw-castle { position: absolute; bottom: 24%; left: 50%; transform: translateX(-50%); width: min(920px, 94%); height: 300px; }
 .hw-castle svg { width: 100%; height: 100%; }
 .hw-castle .win { animation: hwWindow 3s infinite; }
-@keyframes hwWindow { 0%, 100% { opacity: 0.85; } 40% { opacity: 0.35; } 60% { opacity: 0.9; } }
-
-.hw-tree { position: absolute; bottom: 22%; width: 120px; height: 260px; }
+.hw-tree { position: absolute; bottom: 18%; width: 220px; height: 430px; }
 .hw-tree svg { width: 100%; height: 100%; }
-.hw-tree-left { left: -12px; }
-.hw-tree-right { right: -12px; transform: scaleX(-1); }
-
+.hw-tree-left { left: -30px; }
+.hw-tree-right { right: -30px; transform: scaleX(-1); }
+@keyframes hwWindow { 0%, 100% { opacity: 0.85; } 40% { opacity: 0.35; } 60% { opacity: 0.9; } }
 .hw-fence { position: absolute; bottom: 21%; left: 0; right: 0; height: 46px; opacity: 0.9; background: repeating-linear-gradient(90deg, #0d0016 0 10px, transparent 10px 26px), linear-gradient(#0d0016, #0d0016) center / 100% 6px no-repeat; }
 
 .hw-ground { position: absolute; bottom: 0; left: 0; right: 0; height: 30%; background: linear-gradient(180deg, rgba(13,0,22,0.2) 0%, #0d0016 40%, #050008 100%); }
@@ -129,7 +127,7 @@ body.season-s2 #season-bg { opacity: 1; }
 .halloween-web.tr { top: -14px; right: -14px; transform: scaleX(-1); }
 
 /* ---------- FANTÔME CSS (identique au JSON, sans fond noir) ---------- */
-.scene-ghost { position: relative; width: 100%; height: 100%; filter: drop-shadow(0 0 16px rgba(255, 255, 255, 0.4)); }
+.scene-ghost { position: relative; width: 100%; height: 100%; filter: drop-shadow(0 0 18px rgba(176, 107, 255, 0.55));}
 .sg-body {
   position: absolute;
   inset: 0;
@@ -143,26 +141,26 @@ body.season-s2 #season-bg { opacity: 1; }
   background-size: 20% 100%;
   background-repeat: repeat-x;
 }
-.sg-eye { position: absolute; width: 11%; height: 16%; border-radius: 50%; background: #262636; top: 34%; }
-.sg-eye.l { left: 30%; }
-.sg-eye.r { left: 59%; }
+.sg-eye {
+  position: absolute;
+  width: 13%; height: 24%;
+  border-radius: 50%;
+  background: #05050f;
+  box-shadow: 0 0 8px rgba(255, 0, 60, 0.55), inset 0 0 4px rgba(255, 0, 60, 0.4);
+  top: 30%;
+  transform: rotate(-12deg);
+}
+.sg-eye.l { left: 28%; }
+.sg-eye.r { left: 58%; transform: rotate(12deg); }
+.sg-mouth {
+  position: absolute;
+  width: 16%; height: 24%;
+  border-radius: 50%;
+  background: #05050f;
+  box-shadow: inset 0 0 6px rgba(255, 0, 60, 0.35);
+  top: 55%; left: 42%;
+}
 .sg-mouth { position: absolute; width: 9%; height: 13%; border-radius: 50%; background: #262636; top: 54%; left: 45.5%; }
-.sg-bubble {
-  position: absolute;
-  top: -6%; left: -20%; width: 38%; height: 24%;
-  background: #3a3f4d;
-  border-radius: 6px;
-  display: flex; align-items: center; justify-content: center; gap: 3px;
-}
-.sg-bubble::after {
-  content: '';
-  position: absolute;
-  bottom: -4px; left: 20%;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 6px solid #3a3f4d;
-}
-.sg-dot { width: 4px; height: 4px; border-radius: 50%; background: #cfd4e0; }
 
 /* ============================================================
 LANTERNES HALLOWEEN (grille Citrouille)
