@@ -425,7 +425,8 @@ LUTINS COMBO 🧝 (4 variantes 3D) — bloc complet
 .lutin-body.v-cerf { background: var(--svg-lutin-cerf) center / contain no-repeat; }
 
 /* Lutin qui court */
-.lutin-runner { position: fixed; left: 0; pointer-events: none; z-index: 5; }
+#screen-game { position: relative; z-index: 2; }
+.lutin-runner { position: fixed; left: 0; pointer-events: none; z-index: 1; }
 .lutin-runner.lr { animation: lutinRunLR linear forwards; }
 .lutin-runner.rl { animation: lutinRunRL linear forwards; }
 .lutin-flip { width: 100%; height: 100%; }
@@ -435,7 +436,7 @@ LUTINS COMBO 🧝 (4 variantes 3D) — bloc complet
 @keyframes lutinBob { from { transform: translateY(0) rotate(-5deg); } to { transform: translateY(-12px) rotate(5deg); } }
 
 /* Lutin qui descend du haut */
-.lutin-peek { position: fixed; top: 0; pointer-events: none; z-index: 5; animation: lutinPeek 3s ease-in-out forwards; }
+.lutin-peek { position: fixed; top: 0; pointer-events: none; z-index: 1; animation: lutinPeek 3s ease-in-out forwards; }
 @keyframes lutinPeek {
   0% { transform: translateY(-110%); }
   35% { transform: translateY(-8%) rotate(8deg); }
