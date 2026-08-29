@@ -10,6 +10,19 @@ DA SAISONNIÈRE — HALLOWEEN 🎃 & NOËL 🎄
   filter: drop-shadow(0 0 12px rgba(255, 138, 0, 0.55));
   animation: hwFlicker 1.8s steps(2, jump-none) infinite;
 }
+.hw-pumpkin-lottie,
+.hw-bat-lottie,
+.hw-ghost-lottie,
+.hw-spider-lottie {
+  background: transparent !important;
+}
+.hw-pumpkin-lottie canvas,
+.hw-bat-lottie canvas,
+.hw-ghost-lottie canvas,
+.hw-spider-lottie canvas {
+  filter: drop-shadow(0 0 14px rgba(255, 138, 0, 0.5)) drop-shadow(0 0 28px rgba(176, 107, 255, 0.3));
+  background: transparent !important;
+}
 @keyframes hwFlicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.82; } }
 
 .hw-bat-lottie {
