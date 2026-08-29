@@ -172,22 +172,6 @@ function setupHalloweenDecor(seasonId) {
   if (halloweenAmbienceTimer) { clearInterval(halloweenAmbienceTimer); halloweenAmbienceTimer = null; }
   if (seasonId !== "s2") return;
 
-  const webTL = document.createElement("div");
-  webTL.className = "halloween-web tl";
-  webTL.innerText = "🕸️";
-  document.body.appendChild(webTL);
-
-  const webTR = document.createElement("div");
-  webTR.className = "halloween-web tr";
-  webTR.innerText = "🕸️";
-  document.body.appendChild(webTR);
-
-  const spider = document.createElement("div");
-  spider.className = "halloween-spider";
-  spider.style.right = "60px";
-  spider.innerHTML = `<div class="thread"></div><div class="spider">🕷️</div>`;
-  document.body.appendChild(spider);
-
   halloweenAmbienceTimer = setInterval(() => {
     const inGame = document.getElementById("screen-game") && document.getElementById("screen-game").style.display === "block";
     if (inGame) return;
