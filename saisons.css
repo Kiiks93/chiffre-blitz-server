@@ -239,6 +239,34 @@ body.season-s3 .hud { background: rgba(123, 232, 255, 0.1); }
 body.season-s3 .user-pill { color: #7be8ff; }
 body.season-s3 .tab-btn.active { background: #7be8ff; }
 
+/* ============================================================
+CADRES NOËL 🎄 (S3)
+============================================================ */
+/* --- Cadre Bonbon (canne rouge/blanc) --- */
+.user-pill.bonbon-frame, .user-pill:has(.tft-avatar-container.bonbon-frame) { border-color: #ff4b4b !important; box-shadow: 0 0 14px rgba(255,75,75,0.8), inset 0 0 6px rgba(255,255,255,0.4) !important; background: repeating-linear-gradient(45deg, rgba(217,43,59,0.9) 0 8px, rgba(255,255,255,0.9) 8px 16px) !important; }
+.tft-avatar-container.bonbon-frame { border-color: #ff4b4b !important; box-shadow: 0 0 14px rgba(255,75,75,0.9) !important; background: repeating-linear-gradient(45deg, #d92b3b 0 6px, #ffffff 6px 12px); }
+.tft-avatar-large.bonbon-frame { border-color: #ff4b4b !important; box-shadow: 0 0 22px rgba(255,75,75,0.9) !important; background: repeating-linear-gradient(45deg, #d92b3b 0 6px, #ffffff 6px 12px); }
+.victory-badge-large.bonbon-frame { background: repeating-linear-gradient(45deg, #d92b3b 0 6px, #ffffff 6px 12px); border-color: #ff4b4b; box-shadow: 0 0 30px rgba(255,75,75,0.8); }
+
+/* --- Cadre Guirlande (vert + lumières) --- */
+.user-pill.guirlande-frame, .user-pill:has(.tft-avatar-container.guirlande-frame) { border-color: #38ef7d !important; box-shadow: 0 0 14px rgba(56,239,125,0.8), 0 0 6px rgba(255,80,80,0.6), inset 0 0 6px rgba(255,200,0,0.4) !important; background: linear-gradient(135deg, rgba(11,61,31,0.9), rgba(20,90,44,0.9)) !important; }
+.tft-avatar-container.guirlande-frame { border-color: #38ef7d !important; box-shadow: 0 0 14px rgba(56,239,125,0.9), 0 0 8px rgba(255,80,80,0.5) !important; background: linear-gradient(135deg, #0b3d1f, #145a2c); }
+.tft-avatar-large.guirlande-frame { border-color: #38ef7d !important; box-shadow: 0 0 22px rgba(56,239,125,0.9), 0 0 10px rgba(255,80,80,0.5) !important; background: linear-gradient(135deg, #0b3d1f, #145a2c); }
+.victory-badge-large.guirlande-frame { background: linear-gradient(135deg, #0b3d1f, #145a2c); border-color: #38ef7d; box-shadow: 0 0 30px rgba(56,239,125,0.8); }
+
+/* --- Cadre Pain d'épice (biscuit + glaçage) --- */
+.user-pill.gingerbread-frame, .user-pill:has(.tft-avatar-container.gingerbread-frame) { border-color: #ffffff !important; box-shadow: 0 0 14px rgba(217,160,102,0.8), inset 0 0 6px rgba(255,255,255,0.4) !important; background: linear-gradient(135deg, rgba(138,75,31,0.9), rgba(107,52,16,0.9)) !important; }
+.tft-avatar-container.gingerbread-frame { border-color: #ffffff !important; box-shadow: 0 0 14px rgba(217,160,102,0.9) !important; background: linear-gradient(180deg, #ffffff 0 4px, #8a4b1f 4px); }
+.tft-avatar-large.gingerbread-frame { border-color: #ffffff !important; box-shadow: 0 0 22px rgba(217,160,102,0.9) !important; background: linear-gradient(180deg, #ffffff 0 5px, #8a4b1f 5px); }
+.victory-badge-large.gingerbread-frame { background: linear-gradient(180deg, #ffffff 0 5px, #8a4b1f 5px); border-color: #ffffff; box-shadow: 0 0 30px rgba(217,160,102,0.8); }
+
+/* ============================================================
+THÈMES DE GRILLE NOËL 🎄 (S3)
+============================================================ */
+.tile.bonbon-theme { background: linear-gradient(rgba(120,0,10,0.5), rgba(120,0,10,0.5)), repeating-linear-gradient(135deg, #ff4b4b 0 10px, #ffffff 10px 20px) !important; border-color: #ff4b4b !important; color: #fff !important; box-shadow: 0 0 12px rgba(255,75,75,0.6); }
+.tile.sapin-theme { background: radial-gradient(circle at 25% 30%, rgba(255,200,0,0.6) 2px, transparent 3px), radial-gradient(circle at 70% 65%, rgba(255,80,80,0.6) 2px, transparent 3px), radial-gradient(circle at 50% 45%, rgba(120,200,255,0.5) 2px, transparent 3px), linear-gradient(135deg, #0b3d1f, #145a2c) !important; border-color: #38ef7d !important; color: #fff !important; box-shadow: 0 0 12px rgba(56,239,125,0.5); }
+.tile.gingerbread-theme { background: linear-gradient(180deg, rgba(255,255,255,0.85) 0 4px, transparent 4px), linear-gradient(135deg, #8a4b1f, #6b3410) !important; border-color: #d9a066 !important; color: #fff !important; box-shadow: 0 0 12px rgba(217,160,102,0.6); }
+
 /* ---------- MOBILE : scène allégée ---------- */
 @media (max-width: 600px) {
   .hw-tree { width: 120px; height: 220px; bottom: 18%; }
