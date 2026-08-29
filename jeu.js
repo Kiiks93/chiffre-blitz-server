@@ -1304,10 +1304,13 @@ function renderAvalancheGrid() {
   const isObsidianTheme = equippedTheme === "theme_obsidian";
   const isCitrouilleTheme = equippedTheme === "theme_citrouille";
   const isFantomeTheme = equippedTheme === "theme_fantome";
+  const isBonbonTheme = equippedTheme === "theme_bonbon";
+  const isSapinTheme = equippedTheme === "theme_sapin";
+  const isGingerbreadTheme = equippedTheme === "theme_gingerbread";
   avalancheGridData.forEach((val, idx) => {
     const tile = document.createElement("div");
     if (val !== null) {
-      tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""} ${isObsidianTheme ? "obsidian-theme" : ""} ${isCitrouilleTheme ? "citrouille-theme" : ""} ${isFantomeTheme ? "fantome-theme" : ""}`;
+      tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""} ${isObsidianTheme ? "obsidian-theme" : ""} ${isCitrouilleTheme ? "citrouille-theme" : ""} ${isFantomeTheme ? "fantome-theme" : ""} ${isBonbonTheme ? "bonbon-theme" : ""} ${isSapinTheme ? "sapin-theme" : ""} ${isGingerbreadTheme ? "gingerbread-theme" : ""}`;
       tile.innerText = val;
       tile.onclick = () => handleAvalancheClick(val, idx);
     } else {
@@ -1480,6 +1483,7 @@ function renderGrid(pool, handler) {
   grid.innerHTML = "";
   if (!pool) return;  
   const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
+
   const isAltTheme = equippedTheme === "theme_alt";
   const isGlacialTheme = equippedTheme === "theme_glacial";
   const isEclairTheme = equippedTheme === "theme_eclair";
@@ -1487,9 +1491,12 @@ function renderGrid(pool, handler) {
   const isObsidianTheme = equippedTheme === "theme_obsidian";
   const isCitrouilleTheme = equippedTheme === "theme_citrouille";
   const isFantomeTheme = equippedTheme === "theme_fantome";
+  const isBonbonTheme = equippedTheme === "theme_bonbon";
+  const isSapinTheme = equippedTheme === "theme_sapin";
+  const isGingerbreadTheme = equippedTheme === "theme_gingerbread";
   pool.forEach((num, index) => {
     const tile = document.createElement("div");
-    tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""} ${isObsidianTheme ? "obsidian-theme" : ""} ${isCitrouilleTheme ? "citrouille-theme" : ""} ${isFantomeTheme ? "fantome-theme" : ""}`;
+    tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""} ${isObsidianTheme ? "obsidian-theme" : ""} ${isCitrouilleTheme ? "citrouille-theme" : ""} ${isFantomeTheme ? "fantome-theme" : ""} ${isBonbonTheme ? "bonbon-theme" : ""} ${isSapinTheme ? "sapin-theme" : ""} ${isGingerbreadTheme ? "gingerbread-theme" : ""}`;
     tile.innerText = num;
     tile.onclick = () => handler(num, index);
     grid.appendChild(tile);
