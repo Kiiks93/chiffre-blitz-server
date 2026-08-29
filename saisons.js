@@ -713,24 +713,32 @@ function buildNoelScene() {
     <div class="nx-sky"></div>${stars}<div class="nx-moon"></div>
     <div class="nx-village">
       <svg viewBox="0 0 400 160" preserveAspectRatio="none">
-        <rect x="150" y="70" width="100" height="70" fill="#7a2c2c"/>
-        <polygon points="140,70 200,20 260,70" fill="#5a1f1f"/>
-        <polygon points="140,70 200,20 260,70 250,70 200,30 150,70" fill="#fff"/>
-        <rect x="185" y="100" width="30" height="40" fill="#3a1414"/>
-        <rect x="160" y="85" width="20" height="18" fill="#ffd76b"/>
-        <rect x="220" y="85" width="20" height="18" fill="#ffd76b"/>
-        <rect x="230" y="30" width="12" height="25" fill="#5a1f1f"/>
-        <rect x="228" y="26" width="16" height="6" fill="#fff"/>
-        <rect x="40" y="95" width="60" height="45" fill="#31456b"/>
-        <polygon points="35,95 70,65 105,95" fill="#fff"/>
-        <rect x="55" y="108" width="14" height="12" fill="#ffd76b"/>
-        <rect x="300" y="95" width="60" height="45" fill="#31456b"/>
-        <polygon points="295,95 330,65 365,95" fill="#fff"/>
-        <rect x="320" y="108" width="14" height="12" fill="#ffd76b"/>
+        <defs>
+          <linearGradient id='hred' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#a83232'/><stop offset='1' stop-color='#6e1f1f'/></linearGradient>
+          <linearGradient id='hblue' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#3d5a86'/><stop offset='1' stop-color='#243b5c'/></linearGradient>
+          <linearGradient id='hgreen' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#2f6b4f'/><stop offset='1' stop-color='#1c4433'/></linearGradient>
+          <radialGradient id='win' cx='0.5' cy='0.5' r='0.6'><stop offset='0' stop-color='#fff3c4'/><stop offset='1' stop-color='#ffb347'/></radialGradient>
+        </defs>
+        <rect x='30' y='92' width='70' height='50' fill='url(#hblue)'/><polygon points='24,92 65,58 106,92' fill='#e8f4ff'/>
+        <rect x='45' y='105' width='16' height='14' fill='url(#win)'/><rect x='70' y='105' width='16' height='14' fill='url(#win)'/>
+        <rect x='300' y='92' width='70' height='50' fill='url(#hgreen)'/><polygon points='294,92 335,58 376,92' fill='#e8f4ff'/>
+        <rect x='315' y='105' width='16' height='14' fill='url(#win)'/><rect x='340' y='105' width='16' height='14' fill='url(#win)'/>
+        <rect x='140' y='62' width='120' height='80' fill='url(#hred)'/><polygon points='130,62 200,14 270,62' fill='#f4faff'/>
+        <polygon points='130,62 200,14 270,62 258,62 200,24 142,62' fill='#ffffff'/>
+        <rect x='182' y='100' width='36' height='42' fill='#4a1717'/><circle cx='200' cy='80' r='10' fill='url(#win)'/>
+        <rect x='152' y='78' width='20' height='18' fill='url(#win)'/><rect x='228' y='78' width='20' height='18' fill='url(#win)'/>
+        <rect x='236' y='24' width='14' height='28' fill='#6e1f1f'/><rect x='233' y='20' width='20' height='7' fill='#fff'/>
+        <circle cx='243' cy='12' r='5' fill='#fff' opacity='0.5'/><circle cx='248' cy='5' r='4' fill='#fff' opacity='0.35'/>
+        <circle cx='150' cy='52' r='2.5' fill='#ffd76b'/><circle cx='170' cy='40' r='2.5' fill='#7be8ff'/><circle cx='190' cy='30' r='2.5' fill='#ff8ae2'/><circle cx='210' cy='30' r='2.5' fill='#7be8ff'/><circle cx='230' cy='40' r='2.5' fill='#ffd76b'/><circle cx='250' cy='52' r='2.5' fill='#ff8ae2'/>
+        <polygon points='200,96 178,132 222,132' fill='#1c4433'/><polygon points='200,84 182,116 218,116' fill='#2f6b4f'/><polygon points='200,74 186,100 214,100' fill='#3a7d5c'/>
+        <circle cx='193' cy='110' r='2' fill='#ffd76b'/><circle cx='207' cy='120' r='2' fill='#ff8ae2'/><circle cx='200' cy='92' r='2' fill='#7be8ff'/>
+        <polygon points='200,64 203,71 210,72 205,77 206,84 200,80 194,84 195,77 190,72 197,71' fill='#ffd76b'/>
+        <circle cx='60' cy='40' r='1.5' fill='#fff' opacity='0.8'/><circle cx='340' cy='36' r='1.5' fill='#fff' opacity='0.8'/><circle cx='120' cy='30' r='1.2' fill='#fff' opacity='0.6'/><circle cx='290' cy='26' r='1.2' fill='#fff' opacity='0.6'/>
       </svg>
     </div>
     <div class="nx-ground"></div>
-    <div class="nx-guirlandes"></div>
+    <div class="nx-guirlande nx-guirlande-tl"></div>
+    <div class="nx-guirlande nx-guirlande-tr"></div>
     <div class="nx-sapin nx-sapin-left"></div>
     <div class="nx-sapin nx-sapin-right"></div>
     <div class="nx-bonhomme"></div>
@@ -751,7 +759,8 @@ function attachNoelLotties(bg) {
     if (_nxData[key]) load();
     else { const r = setInterval(() => { if (_nxData[key]) { clearInterval(r); load(); } }, 1000); setTimeout(() => clearInterval(r), 15000); }
   };
-  put(".nx-guirlandes", "guirlandes");
+  put(".nx-guirlande-tl", "guirlandes");
+  put(".nx-guirlande-tr", "guirlandes");
   put(".nx-sapin-left", "sapin");
   put(".nx-sapin-right", "sapin");
   put(".nx-bonhomme", "bonhomme");
@@ -761,26 +770,26 @@ function attachNoelLotties(bg) {
 function setupNoelDecor(seasonId) {
   if (noelSleighTimer) { clearInterval(noelSleighTimer); noelSleighTimer = null; }
   if (seasonId !== "s3") return;
-  setTimeout(() => spawnNoelSleigh(false), 1500);
+  setTimeout(() => spawnNoelSleigh(), 1500);
   noelSleighTimer = setInterval(() => {
     const inGame = document.getElementById("screen-game") && document.getElementById("screen-game").style.display === "block";
     if (inGame) return;
-    spawnNoelSleigh(Math.random() < 0.5);
+    spawnNoelSleigh();
   }, 7000);
 }
 
-function spawnNoelSleigh(lr) {
+function spawnNoelSleigh() {
   const el = document.createElement("div");
-  el.className = "nx-sleigh " + (lr ? "lr" : "rl");
-  el.style.top = (10 + Math.random() * 20) + "%";
-  el.style.animationDuration = (7 + Math.random() * 4) + "s";
+  el.className = "nx-sleigh";
+  el.style.top = (8 + Math.random() * 18) + "%";
+  el.style.animationDuration = (13 + Math.random() * 5) + "s";
   (document.getElementById("season-bg") || document.body).appendChild(el);
   const data = nxClone("perenoel");
   let anim = null;
   if (data) anim = lottie.loadAnimation({ container: el, renderer: "svg", loop: true, autoplay: true, animationData: data });
   else el.innerText = "🎅";
   _nxAnims.push({ el, anim });
-  setTimeout(() => { if (anim) anim.destroy(); if (el.parentNode) el.remove(); }, 12000);
+  setTimeout(() => { if (anim) anim.destroy(); if (el.parentNode) el.remove(); }, 19000);
 }
 /* ============================================================
 APPLICATION AUTOMATIQUE
