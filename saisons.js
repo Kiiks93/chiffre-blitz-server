@@ -730,9 +730,6 @@ function buildNoelScene() {
         <rect x='236' y='24' width='14' height='28' fill='#6e1f1f'/><rect x='233' y='20' width='20' height='7' fill='#fff'/>
         <circle cx='243' cy='12' r='5' fill='#fff' opacity='0.5'/><circle cx='248' cy='5' r='4' fill='#fff' opacity='0.35'/>
         <circle cx='150' cy='52' r='2.5' fill='#ffd76b'/><circle cx='170' cy='40' r='2.5' fill='#7be8ff'/><circle cx='190' cy='30' r='2.5' fill='#ff8ae2'/><circle cx='210' cy='30' r='2.5' fill='#7be8ff'/><circle cx='230' cy='40' r='2.5' fill='#ffd76b'/><circle cx='250' cy='52' r='2.5' fill='#ff8ae2'/>
-        <polygon points='200,96 178,132 222,132' fill='#1c4433'/><polygon points='200,84 182,116 218,116' fill='#2f6b4f'/><polygon points='200,74 186,100 214,100' fill='#3a7d5c'/>
-        <circle cx='193' cy='110' r='2' fill='#ffd76b'/><circle cx='207' cy='120' r='2' fill='#ff8ae2'/><circle cx='200' cy='92' r='2' fill='#7be8ff'/>
-        <polygon points='200,64 203,71 210,72 205,77 206,84 200,80 194,84 195,77 190,72 197,71' fill='#ffd76b'/>
         <circle cx='60' cy='40' r='1.5' fill='#fff' opacity='0.8'/><circle cx='340' cy='36' r='1.5' fill='#fff' opacity='0.8'/><circle cx='120' cy='30' r='1.2' fill='#fff' opacity='0.6'/><circle cx='290' cy='26' r='1.2' fill='#fff' opacity='0.6'/>
       </svg>
     </div>
