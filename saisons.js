@@ -32,6 +32,11 @@ function applySeasonDA() {
 
   document.body.classList.remove("season-s1", "season-s2", "season-s3");
   document.body.classList.add("season-" + seasonId);
+    // Force le changement de musique si la saison a changé
+  if (lastAppliedSeason !== seasonId) {
+    lastAppliedSeason = seasonId;
+    restartSeasonMusic();
+  }
 
   if (seasonId === "s2") buildHalloweenScene();
   else clearHalloweenScene();
@@ -588,6 +593,19 @@ function createLutin() {
   document.body.appendChild(l);
   setTimeout(() => l.remove(), 1000);
 }
+// Relance la musique quand on entre/sort du jeu (pour passer menu↔game)
+function _watchScreenGame() {
+  const gameScreen = document.getElementById("screen-game");
+  if (!gameScreen) return;
+  const observer = new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      if (m.attributeName === "style") {
+        restartSeasonMusic();
+      }
+    }
+  });
+  observer.observe(gameScreen, { attributes: true, attributeFilter: ["style"] });
+}
 /* ============================================================
 APPLICATION AUTOMATIQUE
 ============================================================ */
@@ -596,6 +614,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (typeof initMenuBackgroundFX === "function") initMenuBackgroundFX();
     applySeasonDA();
   }, 100);
+  document.addEventListener("DOMContentLoaded", () => {
+  setTimeout(() => {
+    if (typeof initMenuBackgroundFX === "function") initMenuBackgroundFX();
+    applySeasonDA();
+    _watchScreenGame();   // ← ajoute cette ligne
+  }, 100);
+});
 });
 
 if (typeof socket !== "undefined") {
