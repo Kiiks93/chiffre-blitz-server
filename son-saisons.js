@@ -25,6 +25,21 @@ SoundEngine.startMusicSeasonal = function(key) {
   }, intervalMs);
 };
 
+/* ---------- OVERRIDE startMusic : route vers la saison en cours ---------- */
+SoundEngine._originalStartMusic = SoundEngine.startMusic;
+SoundEngine.startMusic = function(mode) {
+  this._baseMode = mode;
+  const season = (typeof window !== "undefined") ? (window.CURRENT_SEASON || "s1") : "s1";
+  if (season === "s2") {
+    if (mode === "menu") return this.startMusicSeasonal("s2menu");
+    return this.startMusicSeasonal("s2game");
+  }
+  if (season === "s3") {
+    if (mode === "menu") return this.startMusicSeasonal("s3menu");
+    return this.startMusicSeasonal("s3game");
+  }
+  this._originalStartMusic.call(this, mode);
+};
 /* ============================================================
 HALLOWEEN MENU : chill-horreur LONG (~51s, 2 moitiés)
 ============================================================ */
