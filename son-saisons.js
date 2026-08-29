@@ -379,4 +379,3 @@ if (typeof window !== "undefined") {
     }
   }, 500);
 }
-}
