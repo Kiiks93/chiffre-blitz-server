@@ -9,11 +9,21 @@ function getCurrentSeasonId() {
   return window.CURRENT_SEASON || "s1";
 }
 
+let lastAppliedSeason = null;
 function applySeasonDA() {
   const seasonId = getCurrentSeasonId();
   window.CURRENT_SEASON = seasonId;
 
   document.body.classList.remove("season-s1", "season-s2", "season-s3");
+    // Force le changement de musique si la saison a changé
+  if (lastAppliedSeason !== seasonId) {
+    lastAppliedSeason = seasonId;
+    if (typeof SoundEngine !== "undefined" && SoundEngine.currentMode) {
+      const base = SoundEngine._baseMode || "menu";
+      SoundEngine.stopMusic(false);
+      SoundEngine.startMusic(base);
+    }
+  }
   document.body.classList.add("season-" + seasonId);
 
   if (seasonId === "s2") buildHalloweenScene();
