@@ -255,43 +255,46 @@ SoundEngine.tickNoelMenu = function(step) {
   const t = this.ctx.currentTime;
   const bar = Math.floor(step / 16);
   const inBar = step % 16;
-  const C4=261.63,D4=293.66,E4=329.63,F4=349.23,G4=392.00;
-  const C5=523.25,D5=587.33,E5=659.25,F5=698.46,G5=783.99;
+  const G4=392.00, A4=440.00, B4=493.88, C5=523.25;
   const chords = [
     { root:130.81, pad:[261.63,329.63,392.00] },
     { root:130.81, pad:[261.63,329.63,392.00] },
     { root:130.81, pad:[261.63,329.63,392.00] },
-    { root:87.31,  pad:[174.61,261.63,349.23] },
     { root:130.81, pad:[261.63,329.63,392.00] },
-    { root:98.00,  pad:[196.00,246.94,293.66] },
+    { root:130.81, pad:[261.63,329.63,392.00] },
+    { root:130.81, pad:[261.63,329.63,392.00] },
     { root:98.00,  pad:[196.00,246.94,293.66] },
     { root:130.81, pad:[261.63,329.63,392.00] }
   ];
   const chord = chords[bar % 8];
-  const low = {0:{0:E4,4:E4,8:E4},1:{0:E4,4:E4,8:E4},2:{0:E4,4:G4,8:C4,10:D4,12:E4},3:{0:F4,4:F4,8:F4,12:F4},4:{0:F4,4:E4,8:E4,12:E4},5:{0:E4,4:D4,8:D4,12:E4},6:{0:D4,8:G4},7:{0:E4,8:C4}};
-  const high = {0:{0:E5,4:E5,8:E5},1:{0:E5,4:E5,8:E5},2:{0:E5,4:G5,8:C5,10:D5,12:E5},3:{0:F5,4:F5,8:F5,12:F5},4:{0:F5,4:E5,8:E5,12:E5},5:{0:E5,4:D5,8:D5,12:E5},6:{0:D5,8:G5},7:{0:E5,8:C5}};
-  const seq = bar < 8 ? low : high;
-
+  // Valse 3 temps : "oum-pa-pa" (basse + 2 accords doux)
   if (inBar === 0) {
-    chord.pad.forEach((f, i) => {
-      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-      o.type = "triangle"; o.frequency.setValueAtTime(f, t); o.detune.setValueAtTime(i % 2 ? 3 : -3, t);
-      const lp = this.ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.setValueAtTime(700, t);
-      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.022, t + 0.6); g.gain.linearRampToValueAtTime(0.0001, t + 4.4);
-      o.connect(lp); lp.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 4.4);
-    });
-  }
-  if (inBar === 0 || inBar === 8) {
     const o = this.ctx.createOscillator(), g = this.ctx.createGain();
     o.type = "sine"; o.frequency.setValueAtTime(chord.root, t);
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.05, t + 0.1); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.8);
-    o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 1.8);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.05, t + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
+    o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 1.2);
   }
-  // Arpèges fluides aux contretemps
-  if ([2, 6, 10, 14].includes(inBar)) this._voice(t, chord.pad[Math.floor(inBar / 2) % 3], 0.022, 1.0);
-  // Mélodie legato (durée longue = ça se fond)
+  if (inBar === 5 || inBar === 10) {
+    chord.pad.forEach((f) => {
+      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+      o.type = "triangle"; o.frequency.setValueAtTime(f, t);
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.014, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+      o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 0.5);
+    });
+  }
+  // Mélodie « Mon beau sapin » (valse, legato)
+  const seq = {
+    0: { 0: G4, 5: C5, 10: C5 },
+    1: { 0: G4, 5: C5, 10: C5 },
+    2: { 0: G4, 5: A4, 10: B4 },
+    3: { 0: C5, 5: B4, 10: A4 },
+    4: { 0: G4, 5: C5, 10: C5 },
+    5: { 0: G4, 5: C5, 10: C5 },
+    6: { 0: A4, 5: B4, 10: C5 },
+    7: { 0: C5 }
+  };
   const m = seq[bar % 8];
-  if (m && m[inBar] !== undefined) this._voice(t, m[inBar], 0.06, 1.3);
+  if (m && m[inBar] !== undefined) this._voice(t, m[inBar], 0.06, 1.4);
 };
 
 SoundEngine.tickNoelGame = function(step) {
