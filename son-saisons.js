@@ -369,7 +369,73 @@ SoundEngine.startMusic = function(mode) {
   }
   this._originalStartMusic.call(this, mode);
 };
+/* ============================================================
+SONS COMBO NOËL 🎄 (S3)
+============================================================ */
+/* --- Bonbon : grelots aigus "tintement sucre" --- */
+function playBonbonSound() {
+  if (isMuted()) return;
+  try {
+    const ctx = SoundEngine.ctx;
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume();
+    const t = ctx.currentTime;
+    [2200, 2800, 3400].forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "triangle";
+      o.frequency.setValueAtTime(f, t + i * 0.03);
+      g.gain.setValueAtTime(0.11, t + i * 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.03 + 0.18);
+      const hp = ctx.createBiquadFilter();
+      hp.type = "highpass"; hp.frequency.setValueAtTime(1800, t);
+      o.connect(hp); hp.connect(g); g.connect(ctx.destination);
+      o.start(t + i * 0.03); o.stop(t + i * 0.03 + 0.18);
+    });
+  } catch (e) {}
+}
 
+/* --- Sapin : jingle bells (cloches chaudes) --- */
+function playSapinSound() {
+  if (isMuted()) return;
+  try {
+    const ctx = SoundEngine.ctx;
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume();
+    const t = ctx.currentTime;
+    [783.99, 987.77, 1174.66].forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "triangle";
+      o.frequency.setValueAtTime(f, t + i * 0.08);
+      g.gain.setValueAtTime(0.13, t + i * 0.08);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.08 + 0.5);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t + i * 0.08); o.stop(t + i * 0.08 + 0.5);
+    });
+  } catch (e) {}
+}
+
+/* --- Lutin : "hihihi" aigu rigolo --- */
+function playLutinSound() {
+  if (isMuted()) return;
+  try {
+    const ctx = SoundEngine.ctx;
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume();
+    const t = ctx.currentTime;
+    [880, 1108, 1318, 1567, 1760].forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "square";
+      o.frequency.setValueAtTime(f, t + i * 0.07);
+      g.gain.setValueAtTime(0.07, t + i * 0.07);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.07 + 0.15);
+      const bp = ctx.createBiquadFilter();
+      bp.type = "bandpass"; bp.frequency.setValueAtTime(f, t); bp.Q.setValueAtTime(8, t);
+      o.connect(bp); bp.connect(g); g.connect(ctx.destination);
+      o.start(t + i * 0.07); o.stop(t + i * 0.07 + 0.15);
+    });
+  } catch (e) {}
+}
+    
 /* ---------- RECHARGE AUTO AU CHANGEMENT DE SAISON ---------- */
 if (typeof window !== "undefined") {
   let lastSeason = window.CURRENT_SEASON || null;
