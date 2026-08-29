@@ -3,10 +3,12 @@ MODULE SONS SAISONNIERS — Halloween 🎃 & Noël 🎄
 (MENU = ambiance longue / GAME = version tendue)
 ============================================================ */
 
+/* ---------- DÉMARRAGE MUSIQUE SAISONNIÈRE ---------- */
 SoundEngine.startMusicSeasonal = function(key) {
   if (this.isMuted) return;
   this.init();
   if (!this.ctx) return;
+  if (this.ctx.state === "suspended") this.ctx.resume();
   if (this.timerId && this.currentMode === key) return;
   this.stopMusic(false);
   this.currentMode = key;
@@ -18,13 +20,14 @@ SoundEngine.startMusicSeasonal = function(key) {
     if (this.isMuted || !this.ctx || this.ctx.state !== "running") return;
     if (key === "s2menu") this.tickHalloweenMenu(this.step % 256);
     else if (key === "s2game") this.tickHalloweenGame(this.step % 128);
-    else if (key === "s3menu") this.tickNoel(this.step % 128);
-    else if (key === "s3game") this.tickNoel(this.step % 128);
+    else if (key === "s3menu" || key === "s3game") this.tickNoel(this.step % 128);
     this.step = (this.step + 1) % 256;
   }, intervalMs);
 };
 
-/* ---------- HALLOWEEN MENU : chill-horreur LONG (~51s, 2 moitiés) ---------- */
+/* ============================================================
+HALLOWEEN MENU : chill-horreur LONG (~51s, 2 moitiés)
+============================================================ */
 SoundEngine.tickHalloweenMenu = function(step) {
   const t = this.ctx.currentTime;
   const bar = Math.floor(step / 16);
@@ -65,8 +68,7 @@ SoundEngine.tickHalloweenMenu = function(step) {
       o.frequency.setValueAtTime(f, t);
       o.detune.setValueAtTime(i % 2 === 0 ? -4 : 4, t);
       const lp = this.ctx.createBiquadFilter();
-      lp.type = "lowpass";
-      lp.frequency.setValueAtTime(900, t);
+      lp.type = "lowpass"; lp.frequency.setValueAtTime(900, t);
       g.gain.setValueAtTime(0.0001, t);
       g.gain.linearRampToValueAtTime(0.022, t + 1.0);
       g.gain.linearRampToValueAtTime(0.0001, t + 3.6);
@@ -104,9 +106,7 @@ SoundEngine.tickHalloweenMenu = function(step) {
     const noise = this.ctx.createBufferSource();
     noise.buffer = buffer;
     const f = this.ctx.createBiquadFilter();
-    f.type = "bandpass";
-    f.frequency.setValueAtTime(600 + Math.random() * 500, t);
-    f.Q.setValueAtTime(6, t);
+    f.type = "bandpass"; f.frequency.setValueAtTime(600 + Math.random() * 500, t); f.Q.setValueAtTime(6, t);
     const g = this.ctx.createGain();
     g.gain.setValueAtTime(0.0001, t);
     g.gain.linearRampToValueAtTime(0.03, t + 0.5);
@@ -154,7 +154,9 @@ SoundEngine.tickHalloweenMenu = function(step) {
   }
 };
 
-/* ---------- HALLOWEEN GAME : tendu, pulsé ---------- */
+/* ============================================================
+HALLOWEEN GAME : tendu, pulsé
+============================================================ */
 SoundEngine.tickHalloweenGame = function(step) {
   const t = this.ctx.currentTime;
   const bar = Math.floor(step / 16);
@@ -173,8 +175,7 @@ SoundEngine.tickHalloweenGame = function(step) {
     const o = this.ctx.createOscillator(), g = this.ctx.createGain(), f = this.ctx.createBiquadFilter();
     o.type = "sawtooth";
     o.frequency.setValueAtTime(chord.root * 2, t);
-    f.type = "lowpass";
-    f.frequency.setValueAtTime(700, t);
+    f.type = "lowpass"; f.frequency.setValueAtTime(700, t);
     g.gain.setValueAtTime(0.09, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
     o.connect(f); f.connect(g); g.connect(this.ctx.destination);
@@ -204,8 +205,7 @@ SoundEngine.tickHalloweenGame = function(step) {
     const o = this.ctx.createOscillator(), g = this.ctx.createGain(), f = this.ctx.createBiquadFilter();
     o.type = "sawtooth";
     o.frequency.setValueAtTime(chord.root * 1.414 * 4, t);
-    f.type = "bandpass";
-    f.frequency.setValueAtTime(900, t);
+    f.type = "bandpass"; f.frequency.setValueAtTime(900, t);
     g.gain.setValueAtTime(0.05, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
     o.connect(f); f.connect(g); g.connect(this.ctx.destination);
@@ -213,7 +213,9 @@ SoundEngine.tickHalloweenGame = function(step) {
   }
 };
 
-/* ---------- NOËL MENU (grelots, carillon) ---------- */
+/* ============================================================
+NOËL (menu + game partagent le même tick)
+============================================================ */
 SoundEngine.tickNoel = function(step) {
   const t = this.ctx.currentTime;
   const bar = Math.floor(step / 16);
@@ -225,6 +227,7 @@ SoundEngine.tickNoel = function(step) {
     { root: 98.00, notes: [196.00, 246.94, 293.66] }
   ];
   const chord = chords[bar % 4];
+
   if (inBar === 0 || inBar === 8) {
     const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
     osc.type = "sine";
@@ -234,6 +237,7 @@ SoundEngine.tickNoel = function(step) {
     osc.connect(g); g.connect(this.ctx.destination);
     osc.start(t); osc.stop(t + 1.2);
   }
+
   if (inBar % 2 === 0) {
     const bufferSize = this.ctx.sampleRate * 0.05;
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
@@ -242,14 +246,14 @@ SoundEngine.tickNoel = function(step) {
     const noise = this.ctx.createBufferSource();
     noise.buffer = buffer;
     const f = this.ctx.createBiquadFilter();
-    f.type = "highpass";
-    f.frequency.setValueAtTime(5000, t);
+    f.type = "highpass"; f.frequency.setValueAtTime(5000, t);
     const g = this.ctx.createGain();
     g.gain.setValueAtTime(0.08, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
     noise.connect(f); f.connect(g); g.connect(this.ctx.destination);
     noise.start(t);
   }
+
   if (inBar === 0) {
     chord.notes.forEach(freq => {
       const o = this.ctx.createOscillator(), g = this.ctx.createGain();
@@ -262,6 +266,7 @@ SoundEngine.tickNoel = function(step) {
       o.start(t); o.stop(t + 3.0);
     });
   }
+
   if (inBar % 4 === 0) {
     const melody = [523.25, 587.33, 659.25, 783.99, 659.25, 587.33, 523.25, 493.88];
     const note = melody[inBar / 2];
@@ -273,6 +278,7 @@ SoundEngine.tickNoel = function(step) {
     osc.connect(g); g.connect(this.ctx.destination);
     osc.start(t); osc.stop(t + 0.4);
   }
+
   if (inBar === 0) {
     const glow = document.getElementById('bg-glow');
     if (glow) {
@@ -282,7 +288,9 @@ SoundEngine.tickNoel = function(step) {
   }
 };
 
-/* ---------- HELPERS ---------- */
+/* ============================================================
+HELPERS (réutilisables)
+============================================================ */
 SoundEngine._heart = function(t, vol) {
   const o = this.ctx.createOscillator(), g = this.ctx.createGain();
   o.type = "sine";
@@ -311,26 +319,18 @@ SoundEngine._eerie = function(t, freq, vol) {
   o.stop(t + 1.4); vib.stop(t + 1.4);
 };
 
-/* ---------- SONS COMBO THÉMATIQUES ---------- */
+/* ============================================================
+OVERRIDES THÉMATIQUES (combo crack + perfection)
+============================================================ */
 SoundEngine._originalCrack = SoundEngine.playCrack;
 SoundEngine.playCrack = function(theme) {
   if (this.isMuted) return;
   this.init();
   if (!this.ctx) return;
-  if (theme === "theme_bonbon" || theme === "theme_sapin" || theme === "theme_lutin") {
-    const t = this.ctx.currentTime;
-    // Grelots de Noël (clochettes aiguës)
-    for (let i = 0; i < 3; i++) {
-      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-      o.type = "triangle";
-      o.frequency.setValueAtTime(1800 + Math.random() * 1200, t + i * 0.04);
-      g.gain.setValueAtTime(0.12, t + i * 0.04);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.04 + 0.15);
-      o.connect(g); g.connect(this.ctx.destination);
-      o.start(t + i * 0.04); o.stop(t + i * 0.04 + 0.15);
-    }
-    return;
-  }
+  if (this.ctx.state === "suspended") this.ctx.resume();
+  if (theme === "theme_bonbon") { playBonbonSound(); return; }
+  if (theme === "theme_sapin") { playSapinSound(); return; }
+  if (theme === "theme_lutin") { playLutinSound(); return; }
   if (theme === "theme_citrouille" || theme === "theme_fantome") {
     this._originalCrack.call(this, theme);
     return;
@@ -343,10 +343,10 @@ SoundEngine.playPerfectionBoom = function(theme) {
   if (this.isMuted) return;
   this.init();
   if (!this.ctx) return;
+  if (this.ctx.state === "suspended") this.ctx.resume();
   if (theme === "theme_bonbon" || theme === "theme_sapin" || theme === "theme_lutin") {
     this.stopBoom();
     const t = this.ctx.currentTime;
-    // Jingle bells + carillon chaud
     [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => {
       const o = this.ctx.createOscillator(), g = this.ctx.createGain();
       o.type = "triangle";
@@ -363,10 +363,71 @@ SoundEngine.playPerfectionBoom = function(theme) {
     return;
   }
   this._originalBoom.call(this, theme);
-};  
+};
 
-/* ---------- RECHARGE AUTO AU CHANGEMENT DE SAISON ---------- */
-if (typeof window !== "undefined") {
-  let lastSeason = ...
-  setInterval(() => { ... }, 500);
+/* ============================================================
+SONS COMBO NOËL 🎄 (S3) — fonctions dédiées
+============================================================ */
+function playBonbonSound() {
+  if (isMuted()) return;
+  try {
+    SoundEngine.init();
+    const ctx = SoundEngine.ctx;
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume();
+    const t = ctx.currentTime;
+    [2200, 2800, 3400].forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "triangle";
+      o.frequency.setValueAtTime(f, t + i * 0.03);
+      g.gain.setValueAtTime(0.11, t + i * 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.03 + 0.18);
+      const hp = ctx.createBiquadFilter();
+      hp.type = "highpass"; hp.frequency.setValueAtTime(1800, t);
+      o.connect(hp); hp.connect(g); g.connect(ctx.destination);
+      o.start(t + i * 0.03); o.stop(t + i * 0.03 + 0.18);
+    });
+  } catch (e) {}
+}
+
+function playSapinSound() {
+  if (isMuted()) return;
+  try {
+    SoundEngine.init();
+    const ctx = SoundEngine.ctx;
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume();
+    const t = ctx.currentTime;
+    [783.99, 987.77, 1174.66].forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "triangle";
+      o.frequency.setValueAtTime(f, t + i * 0.08);
+      g.gain.setValueAtTime(0.13, t + i * 0.08);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.08 + 0.5);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t + i * 0.08); o.stop(t + i * 0.08 + 0.5);
+    });
+  } catch (e) {}
+}
+
+function playLutinSound() {
+  if (isMuted()) return;
+  try {
+    SoundEngine.init();
+    const ctx = SoundEngine.ctx;
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume();
+    const t = ctx.currentTime;
+    [880, 1108, 1318, 1567, 1760].forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "square";
+      o.frequency.setValueAtTime(f, t + i * 0.07);
+      g.gain.setValueAtTime(0.07, t + i * 0.07);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.07 + 0.15);
+      const bp = ctx.createBiquadFilter();
+      bp.type = "bandpass"; bp.frequency.setValueAtTime(f, t); bp.Q.setValueAtTime(8, t);
+      o.connect(bp); bp.connect(g); g.connect(ctx.destination);
+      o.start(t + i * 0.07); o.stop(t + i * 0.07 + 0.15);
+    });
+  } catch (e) {}
 }
