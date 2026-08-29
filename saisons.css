@@ -305,35 +305,42 @@ CADRES NOËL 🎄 (S3) — version magique
   box-shadow: 0 0 30px rgba(56,239,125,0.8);
 }
 
-/* --- Cadre Pain d'épice : texture biscuit + glaçage --- */
+/* --- Cadre Pain d'épice : biscuit texturé + glaçage épais + bonbons --- */
 .user-pill.gingerbread-frame, .user-pill:has(.tft-avatar-container.gingerbread-frame) {
-  border-color: #ffffff !important;
-  background: radial-gradient(circle at 25% 35%, rgba(90,40,10,0.9) 2px, transparent 3px),
-    radial-gradient(circle at 65% 55%, rgba(90,40,10,0.9) 2px, transparent 3px),
-    radial-gradient(circle at 45% 80%, rgba(255,255,255,0.5) 1.5px, transparent 2px),
-    linear-gradient(180deg, #ffffff 0 5px, rgba(160,92,44,0.95) 5px) !important;
-  box-shadow: 0 0 16px rgba(217,160,102,0.8) !important;
+  border: 3px solid #fff !important;
+  border-radius: 14px;
+  background: radial-gradient(circle at 20% 40%, rgba(90,40,10,0.8) 2px, transparent 3px),
+    radial-gradient(circle at 60% 60%, rgba(90,40,10,0.8) 2px, transparent 3px),
+    radial-gradient(circle at 80% 30%, #ff4b4b 2px, transparent 3px),
+    radial-gradient(circle at 40% 25%, #4bb3ff 2px, transparent 3px),
+    linear-gradient(160deg, rgba(192,122,58,0.97), rgba(138,75,31,0.97)) !important;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.55), 0 0 16px rgba(217,160,102,0.85), inset 0 0 8px rgba(90,40,10,0.6) !important;
 }
 .tft-avatar-container.gingerbread-frame {
-  border-color: #fff;
-  background: radial-gradient(circle at 25% 30%, rgba(90,40,10,0.9) 2px, transparent 3px),
-    radial-gradient(circle at 65% 55%, rgba(90,40,10,0.9) 2px, transparent 3px),
-    radial-gradient(circle at 40% 75%, rgba(255,255,255,0.5) 1.5px, transparent 2px),
-    linear-gradient(180deg, #fff 0 5px, #a05c2c 5px, #8a4b1f);
-  box-shadow: 0 0 14px rgba(217,160,102,0.9);
+  border: 3px solid #fff;
+  border-radius: 12px;
+  background: radial-gradient(circle at 30% 40%, rgba(90,40,10,0.8) 2px, transparent 3px),
+    radial-gradient(circle at 70% 60%, rgba(90,40,10,0.8) 2px, transparent 3px),
+    radial-gradient(circle at 55% 25%, #ff4b4b 2px, transparent 3px),
+    linear-gradient(160deg, #c07a3a, #8a4b1f);
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.55), 0 0 14px rgba(217,160,102,0.9), inset 0 0 6px rgba(90,40,10,0.6);
 }
 .tft-avatar-large.gingerbread-frame {
-  border-color: #fff;
-  background: radial-gradient(circle at 25% 30%, rgba(90,40,10,0.9) 3px, transparent 4px),
-    radial-gradient(circle at 65% 55%, rgba(90,40,10,0.9) 3px, transparent 4px),
-    linear-gradient(180deg, #fff 0 6px, #a05c2c 6px, #8a4b1f);
-  box-shadow: 0 0 22px rgba(217,160,102,0.9);
+  border: 3px solid #fff;
+  border-radius: 14px;
+  background: radial-gradient(circle at 30% 40%, rgba(90,40,10,0.8) 3px, transparent 4px),
+    radial-gradient(circle at 70% 60%, rgba(90,40,10,0.8) 3px, transparent 4px),
+    radial-gradient(circle at 50% 20%, #ff4b4b 2.5px, transparent 3.5px),
+    linear-gradient(160deg, #c07a3a, #8a4b1f);
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.55), 0 0 22px rgba(217,160,102,0.9), inset 0 0 8px rgba(90,40,10,0.6);
 }
 .victory-badge-large.gingerbread-frame {
-  background: radial-gradient(circle at 25% 30%, rgba(90,40,10,0.9) 3px, transparent 4px),
-    linear-gradient(180deg, #fff 0 6px, #a05c2c 6px, #8a4b1f);
-  border-color: #fff;
-  box-shadow: 0 0 30px rgba(217,160,102,0.8);
+  border: 3px solid #fff;
+  border-radius: 14px;
+  background: radial-gradient(circle at 30% 40%, rgba(90,40,10,0.8) 3px, transparent 4px),
+    radial-gradient(circle at 70% 60%, #ff4b4b 2.5px, transparent 3.5px),
+    linear-gradient(160deg, #c07a3a, #8a4b1f);
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.55), 0 0 30px rgba(217,160,102,0.85);
 }
 
 /* ============================================================
@@ -374,19 +381,38 @@ THÈMES DE GRILLE NOËL 🎄 (S3) — version magique
   box-shadow: 0 0 10px rgba(217,160,102,0.5);
 }
 
-/* ---------- CONTOUR SAPIN : guirlande LED scintillante ---------- */
+/* ---------- CONTOUR SAPIN : guirlande d'ampoules suspendues ---------- */
 #grid:has(.sapin-theme) { position: relative; }
+/* Le fil noir qui fait le tour */
 #grid:has(.sapin-theme)::before {
   content: '';
   position: absolute;
-  inset: -8px;
+  left: -6px; right: -6px; top: -16px; bottom: -6px;
+  border: 2px solid rgba(25,25,25,0.95);
+  border-radius: 14px;
   z-index: -1;
-  border-radius: 18px;
-  background: repeating-linear-gradient(90deg, #ff4b4b 0 12px, #ffd700 12px 24px, #4bb3ff 24px 36px, #38ef7d 36px 48px, #ff8ae2 48px 60px);
-  animation: ledGarland 1s linear infinite;
-  filter: drop-shadow(0 0 7px rgba(255,255,255,0.6));
+  pointer-events: none;
 }
-@keyframes ledGarland { from { background-position: 0 0; } to { background-position: 60px 0; } }
+/* Les ampoules colorées qui pendent + halo */
+#grid:has(.sapin-theme)::after {
+  content: '';
+  position: absolute;
+  left: -4px; right: -4px; top: -15px;
+  height: 28px;
+  pointer-events: none;
+  z-index: 2;
+  background:
+    radial-gradient(ellipse 5px 9px at 12px 13px, #ff2d78 55%, rgba(255,45,120,0.35) 70%, transparent 80%),
+    radial-gradient(ellipse 5px 9px at 34px 15px, #ffb400 55%, rgba(255,180,0,0.35) 70%, transparent 80%),
+    radial-gradient(ellipse 5px 9px at 56px 13px, #00a6ff 55%, rgba(0,166,255,0.35) 70%, transparent 80%),
+    radial-gradient(ellipse 5px 9px at 78px 15px, #22dd44 55%, rgba(34,221,68,0.35) 70%, transparent 80%),
+    radial-gradient(ellipse 5px 9px at 100px 13px, #ff5500 55%, rgba(255,85,0,0.35) 70%, transparent 80%),
+    radial-gradient(ellipse 5px 9px at 122px 15px, #ffdd00 55%, rgba(255,221,0,0.35) 70%, transparent 80%);
+  background-size: 132px 28px;
+  background-repeat: repeat-x;
+  animation: garlandTwinkle 1.4s ease-in-out infinite alternate;
+}
+@keyframes garlandTwinkle { from { opacity: 0.7; } to { opacity: 1; } }}
 
 /* ---------- CONTOUR PAIN D'ÉPICE : nuage de lait ---------- */
 #grid:has(.gingerbread-theme) { position: relative; }
