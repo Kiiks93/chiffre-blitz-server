@@ -244,6 +244,9 @@ SCÈNE NOËL ANIMÉE ❄️ (S3) — féerique
 ============================================================ */
 body.season-s3 #season-bg { opacity: 1; }
 body.season-s3 #season-bg::after { background: linear-gradient(rgba(0,0,0,0) 55%, rgba(2,10,25,0.35) 100%); }
+.nx-shoot { position: absolute; width: 140px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, #ffffff, rgba(255,255,255,0)); pointer-events: none; opacity: 0; animation: nxShoot linear forwards; filter: drop-shadow(0 0 6px rgba(255,255,255,0.7)); }
+.nx-shoot::before { content: ''; position: absolute; left: -3px; top: -2px; width: 6px; height: 6px; border-radius: 50%; background: #fff; box-shadow: 0 0 12px 4px rgba(255,255,255,0.85); }
+@keyframes nxShoot { 0% { transform: rotate(18deg) translateX(0); opacity: 0; } 8% { opacity: 1; } 100% { transform: rotate(18deg) translateX(-60vw); opacity: 0; } }
 .nx-sky { position: absolute; inset: 0; background: linear-gradient(180deg, #02091f 0%, #0a1a3f 40%, #14306b 75%, #1d3f7a 100%); }
 .nx-star { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fff; animation: nxTwinkle 2s ease-in-out infinite alternate; }
 @keyframes nxTwinkle { from { opacity: 0.3; } to { opacity: 1; } }
