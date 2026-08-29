@@ -165,21 +165,19 @@ function clearHalloweenScene() {
 let halloweenAmbienceTimer = null;
 
 function setupHalloweenDecor(seasonId) {
-  document.querySelectorAll(".halloween-web, .halloween-spider").forEach(el => el.remove());
-  preloadHalloweenLotties();
-  const bgScene = document.getElementById("season-bg");
+     const bgScene = document.getElementById("season-bg");
   if (bgScene) addScenePumpkins(bgScene);
   if (halloweenAmbienceTimer) { clearInterval(halloweenAmbienceTimer); halloweenAmbienceTimer = null; }
   if (seasonId !== "s2") return;
 
-  halloweenAmbienceTimer = setInterval(() => {
+    halloweenAmbienceTimer = setInterval(() => {
     const inGame = document.getElementById("screen-game") && document.getElementById("screen-game").style.display === "block";
     if (inGame) return;
     const roll = Math.random();
-    if (roll < 0.4) spawnSceneGhost();
-    else if (roll < 0.75) spawnSceneBat();
+    if (roll < 0.25) spawnSceneGhost();
+    else if (roll < 0.6) spawnSceneBat();
     else spawnSceneSpider();
-  }, 1800);
+  }, 1500);
 }
 
 function spawnAmbientGhost() {
@@ -421,7 +419,7 @@ const _hlActive = { chauve: [], fantome: [], araignee: [] };
 
 function hlMax(type) {
   const low = (typeof IS_LOW_PERF !== "undefined") && IS_LOW_PERF;
-  if (type === "araignee") return low ? 1 : 2;
+    if (type === "araignee") return low ? 2 : 3;
   return low ? 2 : 3;
 }
 
@@ -492,7 +490,7 @@ function addScenePumpkins(bg) {
       if (data) {
         anim = lottie.loadAnimation({
           container: el,
-          renderer: "canvas",
+          anim = lottie.loadAnimation({ container: el, renderer: "svg", loop: true, autoplay: true, animationData: data });
           loop: true,
           autoplay: true,
           animationData: data,
@@ -564,7 +562,7 @@ function spawnSceneGhost() {
   hlRecycle("fantome");
   const el = document.createElement("div");
   el.className = "hw-ghost-lottie";
-  const size = 110 + Math.random() * 60;
+    const size = 120 + Math.random() * 60;
   el.style.width = size + "px";
   el.style.height = size + "px";
   el.style.left = (10 + Math.random() * 80) + "%";
@@ -595,7 +593,7 @@ function spawnSceneSpider() {
   hlRecycle("araignee");
   const el = document.createElement("div");
   el.className = "hw-spider-lottie";
-  const size = 50 + Math.random() * 30;
+    const size = 80 + Math.random() * 40;
   el.style.width = size + "px";
   el.style.height = size + "px";
   el.style.left = (10 + Math.random() * 80) + "%";
