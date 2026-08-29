@@ -2,7 +2,7 @@
 DA SAISONNIÈRE — HALLOWEEN 🎃 & NOËL 🎄
 (chargé APRÈS style.css pour passer par-dessus)
 ============================================================ */
-
+:root { color-scheme: dark; }
 /* ---------- SAISON 2 : HALLOWEEN (couleurs & boutons) ---------- */
 body.season-s2 { background: #000000; }
 body.season-s2 h1 { color: #ff8a00; text-shadow: 0 0 15px rgba(255, 138, 0, 0.5); }
@@ -238,3 +238,13 @@ body.season-s3 .tile { background: #14324d; border-color: #7be8ff; }
 body.season-s3 .hud { background: rgba(123, 232, 255, 0.1); }
 body.season-s3 .user-pill { color: #7be8ff; }
 body.season-s3 .tab-btn.active { background: #7be8ff; }
+
+/* ---------- MOBILE : scène allégée ---------- */
+@media (max-width: 600px) {
+  .hw-tree { width: 120px; height: 220px; bottom: 18%; }
+  .hw-tree-left { left: -55px; }
+  .hw-tree-right { right: -55px; }
+  .hw-castle { width: 100%; height: 190px; bottom: 22%; }
+  .hw-moon { width: 60px; height: 60px; top: 6%; left: 12%; }
+  .halloween-web { font-size: 70px; }
+}
