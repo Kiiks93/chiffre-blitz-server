@@ -1306,11 +1306,11 @@ function renderAvalancheGrid() {
   const isFantomeTheme = equippedTheme === "theme_fantome";
   const isBonbonTheme = equippedTheme === "theme_bonbon";
   const isSapinTheme = equippedTheme === "theme_sapin";
-  const isGingerbreadTheme = equippedTheme === "theme_gingerbread";
+    const isLutinTheme = equippedTheme === "theme_lutin";
   avalancheGridData.forEach((val, idx) => {
     const tile = document.createElement("div");
     if (val !== null) {
-      tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""} ${isObsidianTheme ? "obsidian-theme" : ""} ${isCitrouilleTheme ? "citrouille-theme" : ""} ${isFantomeTheme ? "fantome-theme" : ""} ${isBonbonTheme ? "bonbon-theme" : ""} ${isSapinTheme ? "sapin-theme" : ""} ${isGingerbreadTheme ? "gingerbread-theme" : ""}`;
+      tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""} ${isObsidianTheme ? "obsidian-theme" : ""} ${isCitrouilleTheme ? "citrouille-theme" : ""} ${isFantomeTheme ? "fantome-theme" : ""} ${isBonbonTheme ? "bonbon-theme" : ""} ${isSapinTheme ? "sapin-theme" : ""} ${isLutinTheme ? "lutin-theme" : ""}`;
       tile.innerText = val;
       tile.onclick = () => handleAvalancheClick(val, idx);
     } else {
@@ -1493,10 +1493,10 @@ function renderGrid(pool, handler) {
   const isFantomeTheme = equippedTheme === "theme_fantome";
   const isBonbonTheme = equippedTheme === "theme_bonbon";
   const isSapinTheme = equippedTheme === "theme_sapin";
-  const isGingerbreadTheme = equippedTheme === "theme_gingerbread";
+  const isLutinTheme = equippedTheme === "theme_lutin";
   pool.forEach((num, index) => {
     const tile = document.createElement("div");
-    tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""} ${isObsidianTheme ? "obsidian-theme" : ""} ${isCitrouilleTheme ? "citrouille-theme" : ""} ${isFantomeTheme ? "fantome-theme" : ""} ${isBonbonTheme ? "bonbon-theme" : ""} ${isSapinTheme ? "sapin-theme" : ""} ${isGingerbreadTheme ? "gingerbread-theme" : ""}`;
+    tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""} ${isObsidianTheme ? "obsidian-theme" : ""} ${isCitrouilleTheme ? "citrouille-theme" : ""} ${isFantomeTheme ? "fantome-theme" : ""} ${isBonbonTheme ? "bonbon-theme" : ""} ${isSapinTheme ? "sapin-theme" : ""} ${isLutinTheme ? "lutin-theme" : ""}`;
     tile.innerText = num;
     tile.onclick = () => handler(num, index);
     grid.appendChild(tile);
