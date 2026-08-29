@@ -361,13 +361,24 @@ ANIMATIONS COMBO NOËL 🎄 (S3)
   100% { transform: translateY(calc(100vh + 100px)); opacity: 0; }
 }
 
-/* --- Lutin : petits lutins qui sautent --- */
-.lutin-jump { position: fixed; bottom: 18%; width: 46px; height: 40px; z-index: 1; pointer-events: none; animation: lutinJump 0.9s ease-in-out forwards; background: var(--svg-hat-lutin) center / contain no-repeat; }
-@keyframes lutinJump {
-  0% { transform: translateY(40px) scale(0.6); opacity: 0; }
-  40% { transform: translateY(-30px) scale(1.1); opacity: 1; }
-  70% { transform: translateY(0) scale(1); opacity: 1; }
-  100% { transform: translateY(20px) scale(0.9); opacity: 0; }
+/* --- Lutin complet avec allure aléatoire --- */
+.lutin-character {
+  position: fixed;
+  width: 60px;
+  height: 70px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 70'%3E%3Cpath d='M20 15 C20 5 40 5 40 15 L40 25 L20 25 Z' fill='%2322aa44'/%3E%3Ccircle cx='30' cy='30' r='12' fill='%23fce7c3'/%3E%3Ccircle cx='26' cy='28' r='1.5' fill='%23222'/%3E%3Ccircle cx='34' cy='28' r='1.5' fill='%23222'/%3E%3Cpath d='M26 33 Q30 36 34 33' stroke='%23222' stroke-width='1.5' fill='none'/%3E%3Cpath d='M18 42 L18 55 L15 58 L12 58 L12 55 L15 52 L15 42 Z' fill='%23cc2222'/%3E%3Cpath d='M42 42 L42 55 L45 58 L48 58 L48 55 L45 52 L45 42 Z' fill='%23cc2222'/%3E%3Cpath d='M25 42 L35 42 L36 58 L24 58 Z' fill='%23cc2222'/%3E%3Cpath d='M24 58 L22 65 L18 65 L20 58 Z' fill='%2322aa44'/%3E%3Cpath d='M36 58 L38 65 L42 65 L40 58 Z' fill='%2322aa44'/%3E%3Ccircle cx='18' cy='65' r='2' fill='%23cc2222'/%3E%3Ccircle cx='42' cy='65' r='2' fill='%23cc2222'/%3E%3Ccircle cx='30' cy='8' r='3' fill='%23f5f0e6'/%3E%3C/svg%3E") center / contain no-repeat;
+  animation: lutinJumpRandom 1.2s ease-in-out forwards;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes lutinJumpRandom {
+  0% { transform: translateY(100vh) rotate(var(--rot-start)) scale(0.5); opacity: 0; }
+  20% { transform: translateY(60vh) rotate(var(--rot-mid)) scale(0.8); opacity: 1; }
+  50% { transform: translateY(30vh) rotate(var(--rot-end)) scale(1); }
+  70% { transform: translateY(40vh) rotate(calc(var(--rot-end) + 15deg)) scale(0.95); }
+  85% { transform: translateY(50vh) rotate(var(--rot-end)) scale(1); }
+  100% { transform: translateY(80vh) rotate(var(--rot-start)) scale(0.8); opacity: 0; }
 }
 /* ---------- MOBILE : scène allégée ---------- */
 @media (max-width: 600px) {
