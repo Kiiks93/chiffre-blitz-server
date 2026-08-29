@@ -608,15 +608,25 @@ function createSapinSparkle(color) {
 }
 
 function spawnLutins(big) {
-  const count = big ? 8 : 2 + Math.floor(Math.random() * 2);
-  for (let i = 0; i < count; i++) setTimeout(() => createLutin(), i * 120);
+  const count = big ? 10 : 3 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < count; i++) setTimeout(() => createLutin(), i * 100);
 }
 function createLutin() {
   const l = document.createElement("div");
-  l.className = "lutin-jump";
-  l.style.left = (Math.random() * (window.innerWidth - 80) + 40) + "px";
+  l.className = "lutin-character";
+  l.style.left = (Math.random() * (window.innerWidth - 100) + 50) + "px";
+  
+  // Rotation aléatoire pour l'allure filou
+  const rotStart = Math.floor(Math.random() * 60 - 30);
+  const rotMid = Math.floor(Math.random() * 40 - 20);
+  const rotEnd = Math.floor(Math.random() * 90 - 45);
+  
+  l.style.setProperty("--rot-start", rotStart + "deg");
+  l.style.setProperty("--rot-mid", rotMid + "deg");
+  l.style.setProperty("--rot-end", rotEnd + "deg");
+  
   document.body.appendChild(l);
-  setTimeout(() => l.remove(), 1000);
+  setTimeout(() => l.remove(), 1300);
 }
 
 // Relance la musique quand on entre/sort du jeu (pour passer menu↔game)
