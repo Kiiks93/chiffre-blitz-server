@@ -64,9 +64,11 @@ function applySeasonDA() {
   }
 
   if (seasonId === "s2") buildHalloweenScene();
-  else clearHalloweenScene();
+  else if (seasonId === "s3") buildNoelScene();
+  else { clearHalloweenScene(); clearNoelScene(); }
 
   setupHalloweenDecor(seasonId);
+  setupNoelDecor(seasonId);
 
   const fx = document.getElementById("bg-fx");
   if (!fx) return;
@@ -103,6 +105,7 @@ function buildHalloweenScene() {
   }
   if (bg.dataset.built === "s2") return;
   bg.dataset.built = "s2";
+  clearNoelLotties();
   bg.innerHTML = `
     <div class="hw-sky"></div>
     <div class="hw-moon"></div>
@@ -657,7 +660,128 @@ function _watchScreenGame() {
   });
   observer.observe(gameScreen, { attributes: true, attributeFilter: ["style"] });
 }
+/* ============================================================
+SCÈNE NOËL ️ (S3) — Lottie + traîneau
+============================================================ */
+const NOEL_LOTTIE_FILES = {
+  flocon: "flocon-decors.json",
+  guirlandes: "guirlandes-decors.json",
+  perenoel: "pere-noel-decors.json",
+  sapin: "sapin-decors.json",
+  bonhomme: "bonhomme-de-neige-avatar.json"
+};
+let _nxData = {};
+let _nxPreloaded = false;
+let _nxAnims = [];
+let noelSleighTimer = null;
 
+function preloadNoelLotties() {
+  if (_nxPreloaded || typeof lottie === "undefined") return;
+  _nxPreloaded = true;
+  Object.keys(NOEL_LOTTIE_FILES).forEach(key => {
+    fetch(NOEL_LOTTIE_FILES[key])
+      .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(d => { _nxData[key] = d; })
+      .catch(() => { _nxData[key] = null; });
+  });
+}
+function nxClone(key) {
+  const d = _nxData[key];
+  if (!d) return null;
+  return (typeof structuredClone === "function") ? structuredClone(d) : JSON.parse(JSON.stringify(d));
+}
+function clearNoelLotties() {
+  _nxAnims.forEach(a => { if (a.anim) a.anim.destroy(); if (a.el && a.el.parentNode) a.el.remove(); });
+  _nxAnims = [];
+}
+function clearNoelScene() {
+  const bg = document.getElementById("season-bg");
+  if (bg && bg.dataset.built === "s3") { bg.innerHTML = ""; bg.dataset.built = ""; }
+  clearNoelLotties();
+  if (noelSleighTimer) { clearInterval(noelSleighTimer); noelSleighTimer = null; }
+}
+
+function buildNoelScene() {
+  let bg = document.getElementById("season-bg");
+  if (!bg) { bg = document.createElement("div"); bg.id = "season-bg"; document.body.prepend(bg); }
+  if (bg.dataset.built === "s3") return;
+  clearHalloweenLotties();
+  bg.dataset.built = "s3";
+  let stars = "";
+  for (let i = 0; i < 40; i++) stars += `<div class="nx-star" style="left:${Math.random()*100}%; top:${Math.random()*55}%; animation-delay:${Math.random()*2}s;"></div>`;
+  bg.innerHTML = `
+    <div class="nx-sky"></div>${stars}<div class="nx-moon"></div>
+    <div class="nx-village">
+      <svg viewBox="0 0 400 160" preserveAspectRatio="none">
+        <rect x="150" y="70" width="100" height="70" fill="#7a2c2c"/>
+        <polygon points="140,70 200,20 260,70" fill="#5a1f1f"/>
+        <polygon points="140,70 200,20 260,70 250,70 200,30 150,70" fill="#fff"/>
+        <rect x="185" y="100" width="30" height="40" fill="#3a1414"/>
+        <rect x="160" y="85" width="20" height="18" fill="#ffd76b"/>
+        <rect x="220" y="85" width="20" height="18" fill="#ffd76b"/>
+        <rect x="230" y="30" width="12" height="25" fill="#5a1f1f"/>
+        <rect x="228" y="26" width="16" height="6" fill="#fff"/>
+        <rect x="40" y="95" width="60" height="45" fill="#31456b"/>
+        <polygon points="35,95 70,65 105,95" fill="#fff"/>
+        <rect x="55" y="108" width="14" height="12" fill="#ffd76b"/>
+        <rect x="300" y="95" width="60" height="45" fill="#31456b"/>
+        <polygon points="295,95 330,65 365,95" fill="#fff"/>
+        <rect x="320" y="108" width="14" height="12" fill="#ffd76b"/>
+      </svg>
+    </div>
+    <div class="nx-ground"></div>
+    <div class="nx-guirlandes"></div>
+    <div class="nx-sapin nx-sapin-left"></div>
+    <div class="nx-sapin nx-sapin-right"></div>
+    <div class="nx-bonhomme"></div>
+    <div class="nx-flocons"></div>
+  `;
+  preloadNoelLotties();
+  attachNoelLotties(bg);
+}
+
+function attachNoelLotties(bg) {
+  const put = (sel, key) => {
+    const el = bg.querySelector(sel);
+    if (!el) return;
+    const load = () => {
+      const data = nxClone(key);
+      if (data) { const anim = lottie.loadAnimation({ container: el, renderer: "svg", loop: true, autoplay: true, animationData: data }); _nxAnims.push({ el, anim }); }
+    };
+    if (_nxData[key]) load();
+    else { const r = setInterval(() => { if (_nxData[key]) { clearInterval(r); load(); } }, 1000); setTimeout(() => clearInterval(r), 15000); }
+  };
+  put(".nx-guirlandes", "guirlandes");
+  put(".nx-sapin-left", "sapin");
+  put(".nx-sapin-right", "sapin");
+  put(".nx-bonhomme", "bonhomme");
+  put(".nx-flocons", "flocon");
+}
+
+function setupNoelDecor(seasonId) {
+  if (noelSleighTimer) { clearInterval(noelSleighTimer); noelSleighTimer = null; }
+  if (seasonId !== "s3") return;
+  setTimeout(() => spawnNoelSleigh(false), 1500);
+  noelSleighTimer = setInterval(() => {
+    const inGame = document.getElementById("screen-game") && document.getElementById("screen-game").style.display === "block";
+    if (inGame) return;
+    spawnNoelSleigh(Math.random() < 0.5);
+  }, 7000);
+}
+
+function spawnNoelSleigh(lr) {
+  const el = document.createElement("div");
+  el.className = "nx-sleigh " + (lr ? "lr" : "rl");
+  el.style.top = (10 + Math.random() * 20) + "%";
+  el.style.animationDuration = (7 + Math.random() * 4) + "s";
+  (document.getElementById("season-bg") || document.body).appendChild(el);
+  const data = nxClone("perenoel");
+  let anim = null;
+  if (data) anim = lottie.loadAnimation({ container: el, renderer: "svg", loop: true, autoplay: true, animationData: data });
+  else el.innerText = "🎅";
+  _nxAnims.push({ el, anim });
+  setTimeout(() => { if (anim) anim.destroy(); if (el.parentNode) el.remove(); }, 12000);
+}
 /* ============================================================
 APPLICATION AUTOMATIQUE
 ============================================================ */
