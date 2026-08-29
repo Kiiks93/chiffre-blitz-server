@@ -316,6 +316,40 @@ CADRES NOËL 🎄 (S3) — version magique
 .tft-avatar-container.lutin-frame { border-color: #fbbf24; background: linear-gradient(160deg, #b91c1c, #7f1d1d); box-shadow: 0 0 14px rgba(185,28,28,0.9); }
 .tft-avatar-large.lutin-frame { border-color: #fbbf24; background: linear-gradient(160deg, #b91c1c, #7f1d1d); box-shadow: 0 0 22px rgba(185,28,28,0.9); }
 .victory-badge-large.lutin-frame { background: linear-gradient(160deg, #b91c1c, #7f1d1d); border-color: #fbbf24; box-shadow: 0 0 30px rgba(185,28,28,0.8); }
+
+/* ---------- MINI-LUTIN DANS LE CADRE ---------- */
+.tft-avatar-container.lutin-frame { position: relative; overflow: visible; }
+.tft-avatar-container.lutin-frame::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  right: -8px;
+  width: 18px;
+  height: 22px;
+  background: radial-gradient(circle at 50% 30%, #fce7c3 0 40%, #b91c1c 40% 100%);
+  border-radius: 50% 50% 40% 40%;
+  box-shadow: 0 -8px 0 -3px #b91c1c, 0 -14px 0 -6px #fff;
+  filter: drop-shadow(0 0 4px rgba(0,0,0,0.6));
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Version grande du cadre (aperçu + zoom) */
+.tft-avatar-large.lutin-frame { position: relative; overflow: visible; }
+.tft-avatar-large.lutin-frame::after {
+  content: '';
+  position: absolute;
+  top: -14px;
+  right: -10px;
+  width: 24px;
+  height: 30px;
+  background: radial-gradient(circle at 50% 30%, #fce7c3 0 40%, #b91c1c 40% 100%);
+  border-radius: 50% 50% 40% 40%;
+  box-shadow: 0 -10px 0 -3px #b91c1c, 0 -18px 0 -7px #fff;
+  filter: drop-shadow(0 0 5px rgba(0,0,0,0.6));
+  z-index: 3;
+  pointer-events: none;
+}
 /* ============================================================
 THÈMES DE GRILLE NOËL 🎄 (S3) — version magique
 ============================================================ */
@@ -351,7 +385,65 @@ THÈMES DE GRILLE NOËL 🎄 (S3) — version magique
   color: #fff !important;
   text-shadow: 0 1px 3px rgba(0,0,0,0.85);
   box-shadow: 0 0 12px rgba(185,28,28,0.6);
+  #grid:has(.lutin-theme) { position: relative; overflow: visible; }
+  }
+
+/* Chapeau de lutin en haut de la grille */
+#grid:has(.lutin-theme)::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -28px;
+  transform: translateX(-50%);
+  width: 46px;
+  height: 26px;
+  background: linear-gradient(180deg, #b91c1c 0%, #7f1d1d 100%);
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+  filter: drop-shadow(0 0 4px rgba(185,28,28,0.7));
+  z-index: 2;
 }
+/* Pompon blanc + base du chapeau */
+#grid:has(.lutin-theme)::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -22px;
+  transform: translateX(-50%);
+  width: 52px;
+  height: 18px;
+  background: linear-gradient(180deg, #7f1d1d 0%, #b91c1c 100%);
+  border-radius: 50% 50% 0 0;
+  box-shadow: -60px 0 0 -2px #fff, 60px 0 0 -2px #fff;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  z-index: 2;
+}
+
+/* Chaussures pointues aux 2 coins du bas */
+#grid:has(.lutin-theme) .tile:first-child::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  bottom: -16px;
+  width: 26px;
+  height: 14px;
+  background: #b91c1c;
+  border-radius: 0 50% 50% 0;
+  box-shadow: 20px -2px 0 -4px #fff;
+  transform: rotate(-15deg);
+}
+#grid:has(.lutin-theme) .tile:last-child::before {
+  content: '';
+  position: absolute;
+  right: -20px;
+  bottom: -16px;
+  width: 26px;
+  height: 14px;
+  background: #b91c1c;
+  border-radius: 50% 0 0 50%;
+  box-shadow: -20px -2px 0 -4px #fff;
+  transform: rotate(15deg);
+}
+
 
 /* ---------- CONTOUR SAPIN : guirlande d'ampoules suspendues ---------- */
 #grid:has(.sapin-theme) { position: relative; }
