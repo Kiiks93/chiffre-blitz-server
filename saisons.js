@@ -612,29 +612,33 @@ function spawnLutins(big) {
   for (let i = 0; i < count; i++) setTimeout(() => createLutin(), i * 150);
 }
 function createLutin() {
+  const variants = ["v-grimace", "v-kdo", "v-bonnet", "v-cerf"];
+  const variant = variants[Math.floor(Math.random() * variants.length)];
+  const isCerf = variant === "v-cerf";
   const mode = Math.random();
+
   if (mode < 0.6) {
-    // 🏃 Lutin qui court (bien visible, gros)
+    // 🏃 Court (gros + visible)
     const l = document.createElement("div");
     const dirLR = Math.random() < 0.5;
-    const size = 110 + Math.random() * 50;
+    const size = (isCerf ? 150 : 110) + Math.random() * 50;
     l.className = "lutin-runner " + (dirLR ? "lr" : "rl");
     l.style.width = size + "px";
-    l.style.height = (size * 1.3) + "px";
+    l.style.height = (size * (isCerf ? 0.8 : 1.3)) + "px";
     l.style.bottom = (10 + Math.random() * 20) + "%";
     l.style.animationDuration = (2.5 + Math.random() * 2) + "s";
-    l.innerHTML = `<div class="lutin-flip${dirLR ? "" : " flip"}"><div class="lutin-body"></div></div>`;
+    l.innerHTML = `<div class="lutin-flip${dirLR ? "" : " flip"}"><div class="lutin-body ${variant}"></div></div>`;
     document.body.appendChild(l);
     setTimeout(() => l.remove(), 5000);
   } else {
-    // 🙃 Lutin qui descend sa tête du haut
+    // 🙃 Descend sa tête du haut
     const l = document.createElement("div");
-    const size = 100 + Math.random() * 50;
+    const size = (isCerf ? 140 : 100) + Math.random() * 50;
     l.className = "lutin-peek";
     l.style.width = size + "px";
-    l.style.height = (size * 1.3) + "px";
+    l.style.height = (size * (isCerf ? 0.8 : 1.3)) + "px";
     l.style.left = (5 + Math.random() * 85) + "%";
-    l.innerHTML = `<div class="lutin-body"></div>`;
+    l.innerHTML = `<div class="lutin-body ${variant}"></div>`;
     document.body.appendChild(l);
     setTimeout(() => l.remove(), 3200);
   }
