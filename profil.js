@@ -119,7 +119,10 @@ function getFrameClass(equippedFrame) {
     "frame_obsidian": "obsidian-frame",
     "frame_givre": "givre-frame",
     "frame_osseux": "osseux-frame",
-    "frame_fantome": "fantome-frame"
+    "frame_fantome": "fantome-frame",
+    "frame_bonbon": "bonbon-frame",
+    "frame_guirlande": "guirlande-frame",
+    "frame_gingerbread": "gingerbread-frame"
   };
   return FRAME_CLASS_MAP[equippedFrame] || "";
 }
@@ -152,9 +155,18 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
   } else if (equippedAvatar === "avatar_s2_chauve") {
     avatarTitle = "Chauve-Souris (Pass Halloween)";
     avatarContent = `<video class="tft-avatar-video" src="bat-halloween.mp4" autoplay loop muted playsinline></video>`;
-  } else if (equippedAvatar === "avatar_s2_citrouille") {
+    } else if (equippedAvatar === "avatar_s2_citrouille") {
     avatarTitle = "Citrouille du Château (GRAAL Halloween)";
     avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="citrouille-chateau.json" style="width:32px; height:32px;"></div>`;
+  } else if (equippedAvatar === "avatar_s3_bonhomme") {
+    avatarTitle = "Bonhomme de neige (Pass S3)";
+    avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="bonhomme-de-neige-avatar.json" style="width:32px; height:32px;"></div>`;
+  } else if (equippedAvatar === "avatar_s3_boule") {
+    avatarTitle = "Boule de neige (Pass S3)";
+    avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="boule-de-neige-avatar.json" style="width:32px; height:32px;"></div>`;
+  } else if (equippedAvatar === "avatar_s3_perenoel") {
+    avatarTitle = "Père Noël (Pass S3)";
+    avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="pere-noel-avatar.json" style="width:32px; height:32px;"></div>`;
   }
   const frameClass = getFrameClass(equippedFrame);
   const html = `
@@ -176,6 +188,9 @@ function getLargeAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
   else if (avatarType === "avatar_s2_squelette") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="squelette-danse.json" style="width:60px; height:60px;"></div>`;
   else if (avatarType === "avatar_s2_chauve") avatarContent = `<video class="tft-avatar-video" src="bat-halloween.mp4" autoplay loop muted playsinline style="width:60px; height:60px;"></video>`;
   else if (avatarType === "avatar_s2_citrouille") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="citrouille-chateau.json" style="width:60px; height:60px;"></div>`;
+  else if (avatarType === "avatar_s3_bonhomme") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="bonhomme-de-neige-avatar.json" style="width:60px; height:60px;"></div>`;
+  else if (avatarType === "avatar_s3_boule") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="boule-de-neige-avatar.json" style="width:60px; height:60px;"></div>`;
+  else if (avatarType === "avatar_s3_perenoel") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="pere-noel-avatar.json" style="width:60px; height:60px;"></div>`;
   const html = `
     <div class="tft-avatar-large ${frameClass}">
       <span class="tft-avatar-large-icon" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; ${typeof avatarContent === "number" ? "font-size:24px;" : ""}">${avatarContent}</span>
@@ -234,7 +249,10 @@ const AVATAR_DISPLAY_NAMES = {
   "avatar_tigre": "🐯 Tigre de Sibérie (GRAAL S1)",
   "avatar_s2_squelette": "💀 Squelette qui danse (Pass S2)",
   "avatar_s2_chauve": "🦇 Chauve-Souris (Pass S2)",
-  "avatar_s2_citrouille": "🎃 Citrouille du Château (GRAAL S2)"
+  "avatar_s2_citrouille": "🎃 Citrouille du Château (GRAAL S2)",
+  "avatar_s3_bonhomme": "⛄ Bonhomme de neige (Pass S3)",
+  "avatar_s3_boule": "🔮 Boule de neige (Pass S3)",
+  "avatar_s3_perenoel": "🎅 Père Noël (Pass S3)"
 };
 function renderProfileAvatarSelector() {
   const container = document.getElementById("profile-avatar-selector");
@@ -293,7 +311,14 @@ const TITLE_DISPLAY_NAMES = {
   "title_citrouille": "🎃 Pulsion Citrouille",
   "title_spectre_automne": "🍂 Spectre d'Automne",
   "title_roi_halloween": "🎃 ROI D'HALLOWEEN",
-  "title_esprit_halloween": "👻 Esprit d'Halloween"
+  "title_esprit_halloween": "👻 Esprit d'Halloween",
+  // --- Pass S3 ---
+  "title_lutin": "🧝 Lutin espiègle",
+  "title_traineau": "🛷 Pilote de traîneau",
+  "title_rennes": "🦌 Dompteur de rennes",
+  "title_assistant_noel": "🎅 Assistant du Père Noël",
+  "title_magie_noel": "✨ Magie de Noël",
+  "title_esprit_noel": "🎄 Esprit de Noël"
 };
 const FRAME_DISPLAY_NAMES = {
   "frame_standard": "🔰 Cadre « Standard »",
@@ -304,7 +329,10 @@ const FRAME_DISPLAY_NAMES = {
   "frame_obsidian": "🖤 Cadre « Obsidienne »",
   "frame_givre": "🧊 Cadre « Givre »",
   "frame_osseux": "🎃 Cadre « Lanterne »",
-  "frame_fantome": "👻 Cadre « Fantôme »"
+  "frame_fantome": "👻 Cadre « Fantôme »",
+  "frame_bonbon": "🍭 Cadre « Bonbon »",
+  "frame_guirlande": "🎄 Cadre « Guirlande »",
+  "frame_gingerbread": "🍪 Cadre « Pain d'épice »"
 };
 const THEME_DISPLAY_NAMES = {
   "theme_alt": "🎨 Thème de Grille Rétro / Doré",
@@ -314,6 +342,9 @@ const THEME_DISPLAY_NAMES = {
   "theme_obsidian": "🖤 Thème de Grille Obsidienne",
   "theme_citrouille": "🎃 Thème de Grille Lanterne",
   "theme_fantome": "👻 Thème de Grille Fantôme",
+  "theme_bonbon": "🍭 Thème de Grille Bonbon Canne",
+  "theme_sapin": "🎄 Thème de Grille Sapin de Noël",
+  "theme_gingerbread": "🍪 Thème de Grille Pain d'épice"
 };
 /* ---------- PACKS : menu déroulant (grille + cadre en 1 choix) ---------- */
 const PACKS_LIST = [
