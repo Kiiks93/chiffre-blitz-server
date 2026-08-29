@@ -525,6 +525,53 @@ function createGhostOrb() {
 }
 
 /* ============================================================
+FX 🎄 COMBOS NOËL (S3) — bonbons / boules / lutins
+============================================================ */
+function spawnBonbons(big) {
+  const count = big ? 14 : 3 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < count; i++) setTimeout(() => createBonbon(), i * 90);
+}
+function createBonbon() {
+  const w = document.createElement("div");
+  w.className = "bonbon-wrapper";
+  w.style.left = (Math.random() * (window.innerWidth - 80) + 40) + "px";
+  const d = Math.random() * 1 + 2.6;
+  w.style.animationDuration = d + "s";
+  w.style.setProperty("--drift", ((Math.random() - 0.5) * 120) + "px");
+  w.style.setProperty("--rot", ((Math.random() - 0.5) * 360) + "deg");
+  w.innerHTML = `<div class="bonbon"></div>`;
+  document.body.appendChild(w);
+  setTimeout(() => w.remove(), d * 1000);
+}
+
+function spawnSapinSparkles(big) {
+  const count = big ? 14 : 3 + Math.floor(Math.random() * 3);
+  const colors = ["#ff4b4b", "#ffd700", "#4bb3ff", "#38ef7d", "#ff8ae2"];
+  for (let i = 0; i < count; i++) setTimeout(() => createSapinSparkle(colors[i % colors.length]), i * 90);
+}
+function createSapinSparkle(color) {
+  const s = document.createElement("div");
+  s.className = "sapin-sparkle";
+  s.style.left = (Math.random() * (window.innerWidth - 60) + 30) + "px";
+  const d = Math.random() * 1 + 2.4;
+  s.style.animationDuration = d + "s";
+  s.innerHTML = `<div class="sapin-boule" style="--c:${color}"></div>`;
+  document.body.appendChild(s);
+  setTimeout(() => s.remove(), d * 1000);
+}
+
+function spawnLutins(big) {
+  const count = big ? 8 : 2 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < count; i++) setTimeout(() => createLutin(), i * 120);
+}
+function createLutin() {
+  const l = document.createElement("div");
+  l.className = "lutin-jump";
+  l.style.left = (Math.random() * (window.innerWidth - 80) + 40) + "px";
+  document.body.appendChild(l);
+  setTimeout(() => l.remove(), 1000);
+}
+/* ============================================================
 APPLICATION AUTOMATIQUE
 ============================================================ */
 document.addEventListener("DOMContentLoaded", () => {
