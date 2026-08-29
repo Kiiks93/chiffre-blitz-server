@@ -746,22 +746,26 @@ function buildNoelScene() {
 }
 
 function attachNoelLotties(bg) {
-  const put = (sel, key) => {
+  const put = (sel, key, speed) => {
     const el = bg.querySelector(sel);
     if (!el) return;
     const load = () => {
       const data = nxClone(key);
-      if (data) { const anim = lottie.loadAnimation({ container: el, renderer: "svg", loop: true, autoplay: true, animationData: data }); _nxAnims.push({ el, anim }); }
+      if (data) {
+        const anim = lottie.loadAnimation({ container: el, renderer: "svg", loop: true, autoplay: true, animationData: data });
+        if (speed && typeof anim.setSpeed === "function") anim.setSpeed(speed);
+        _nxAnims.push({ el, anim });
+      }
     };
     if (_nxData[key]) load();
     else { const r = setInterval(() => { if (_nxData[key]) { clearInterval(r); load(); } }, 1000); setTimeout(() => clearInterval(r), 15000); }
   };
-  put(".nx-guirlande-tl", "guirlandes");
-  put(".nx-guirlande-tr", "guirlandes");
-  put(".nx-sapin-left", "sapin");
-  put(".nx-sapin-right", "sapin");
-  put(".nx-bonhomme", "bonhomme");
-  put(".nx-flocons", "flocon");
+  put(".nx-guirlande-tl", "guirlandes", 1);
+  put(".nx-guirlande-tr", "guirlandes", 1);
+  put(".nx-sapin-left", "sapin", 1);
+  put(".nx-sapin-right", "sapin", 1);
+  put(".nx-bonhomme", "bonhomme", 1);
+  put(".nx-flocons", "flocon", 0.35);  // ← ralenti à 35% (douceur réaliste)
 }
 
 function setupNoelDecor(seasonId) {
