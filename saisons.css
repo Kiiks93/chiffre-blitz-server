@@ -278,45 +278,30 @@ DÉCORS DE CONTOUR DE GRILLE
   --svg-chauss-lutin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 60'%3E%3Cg%3E%3Cpath d='M15 55 C6 40 10 22 22 18 C28 16 30 26 40 30 L62 30 L62 55 Z' fill='%2322aa44'/%3E%3Ccircle cx='20' cy='14' r='7' fill='%23cc2222'/%3E%3Cpath d='M44 10 L66 10 L66 30 L60 23 L55 31 L50 23 L45 29 Z' fill='%23cc2222'/%3E%3Ccircle cx='55' cy='29' r='3' fill='%23e6c71e'/%3E%3Ccircle cx='63' cy='27' r='3' fill='%23e6c71e'/%3E%3C/g%3E%3Cg transform='translate(200,0) scale(-1,1)'%3E%3Cpath d='M15 55 C6 40 10 22 22 18 C28 16 30 26 40 30 L62 30 L62 55 Z' fill='%2322aa44'/%3E%3Ccircle cx='20' cy='14' r='7' fill='%23cc2222'/%3E%3Cpath d='M44 10 L66 10 L66 30 L60 23 L55 31 L50 23 L45 29 Z' fill='%23cc2222'/%3E%3Ccircle cx='55' cy='29' r='3' fill='%23e6c71e'/%3E%3Ccircle cx='63' cy='27' r='3' fill='%23e6c71e'/%3E%3C/g%3E%3C/svg%3E");
 }
 
-/* ---------- Décor lutin : collé à la grille, écart poussé à l'extérieur ---------- */
-#grid:has(.lutin-theme) {
-  position: relative;
-  margin-top: 54px;    /* écart entre CIBLE et chapeau */
-  margin-bottom: 40px; /* écart entre chaussures et émoticones */
-}
+/* ---------- Décor lutin : rangées internes, collées aux tuiles ---------- */
+#grid:has(.lutin-theme) { position: relative; }
 
-/* Chapeau COLLÉ au-dessus de la grille */
+/* Chapeau = 1ère rangée, collé aux tuiles */
 #grid:has(.lutin-theme)::before {
   content: '';
-  position: absolute;
-  left: 50%;
-  bottom: 100%;          /* touche le haut de la grille */
-  transform: translateX(-50%);
-  width: 92px;
+  grid-column: 1 / -1;
   height: 52px;
-  margin-bottom: -2px;   /* léger chevauchement = effet "posé sur la grille" */
+  margin-bottom: -14px;   /* supprime le gap → touche la grille */
   background: var(--svg-hat-lutin) center / contain no-repeat;
-  z-index: 3;
   pointer-events: none;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.45));
 }
 
-/* Chaussures COLLÉES en dessous de la grille */
+/* Chaussures = dernière rangée, collées aux tuiles */
 #grid:has(.lutin-theme)::after {
   content: '';
-  position: absolute;
-  left: 50%;
-  top: 100%;             /* touche le bas de la grille */
-  transform: translateX(-50%);
-  width: 150px;
-  height: 34px;
-  margin-top: -2px;
+  grid-column: 1 / -1;
+  height: 36px;
+  margin-top: -14px;      /* supprime le gap → touche la grille */
   background: var(--svg-chauss-lutin) center / contain no-repeat;
-  z-index: 3;
   pointer-events: none;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.45));
 }
-
 
 /* ---------- Lutin du cadre : même chapeau + mêmes chaussures ---------- */
 .user-pill.lutin-frame, .user-pill:has(.tft-avatar-container.lutin-frame) { border-color: #fbbf24 !important; background: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.7) 2.5px, transparent 3.5px), radial-gradient(circle at 80% 70%, rgba(56,239,125,0.6) 2.5px, transparent 3.5px), linear-gradient(135deg, rgba(185,28,28,0.95), rgba(127,29,29,0.95)) !important; box-shadow: 0 0 16px rgba(185,28,28,0.8) !important; }
@@ -354,7 +339,6 @@ DÉCORS DE CONTOUR DE GRILLE
   .hw-castle { width: 100%; height: 190px; bottom: 22%; }
   .hw-moon { width: 60px; height: 60px; top: 6%; left: 12%; }
   .halloween-web { font-size: 70px; }
-  #grid:has(.lutin-theme) { margin-top: 40px; margin-bottom: 30px; }
-  #grid:has(.lutin-theme)::before { width: 66px; height: 38px; }
-  #grid:has(.lutin-theme)::after { width: 110px; height: 26px; }
+  #grid:has(.lutin-theme)::before { height: 40px; margin-bottom: -10px; }
+  #grid:has(.lutin-theme)::after { height: 26px; margin-top: -10px; }
 }
