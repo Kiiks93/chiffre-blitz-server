@@ -364,18 +364,9 @@ SoundEngine.playPerfectionBoom = function(theme) {
   }
   this._originalBoom.call(this, theme);
 };  
+
 /* ---------- RECHARGE AUTO AU CHANGEMENT DE SAISON ---------- */
 if (typeof window !== "undefined") {
-  let lastSeason = window.CURRENT_SEASON || null;
-  setInterval(() => {
-    const current = window.CURRENT_SEASON || "s1";
-    if (current !== lastSeason) {
-      lastSeason = current;
-      if (SoundEngine.currentMode) {
-        const base = SoundEngine._baseMode || "menu";
-        SoundEngine.stopMusic(false);
-        SoundEngine.startMusic(base);
-      }
-    }
-  }, 500);
+  let lastSeason = ...
+  setInterval(() => { ... }, 500);
 }
