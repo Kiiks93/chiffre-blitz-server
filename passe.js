@@ -163,7 +163,38 @@ const SEASONS_CLIENT = [
     { tier: 29, free: "300 Pièces (🪙)", premium: "500 Pièces (🪙)" },
     { tier: 30, free: "Titre « [ 👻 Esprit d'Halloween ] » + 500 🪙", premium: "🏆 GRAAL : 🎃 Avatar Citrouille du Château + 1000 🪙 + Titre « [ ROI D'HALLOWEEN ] »" }
   ] },
-  { id: "s3", name: "NOËL", emoji: "🎄", start: "01/12/2026", end: "10/01/2027", tiers: [] }
+    { id: "s3", name: "NOËL", emoji: "🎄", start: "01/12/2026", end: "10/01/2027", tiers: [
+    { tier: 1, free: "50 Pièces (🪙)", premium: "Titre « [ Lutin espiègle ] » 🧝" },
+    { tier: 2, free: "1 💡 Projecteur", premium: "100 Pièces (🪙)" },
+    { tier: 3, free: "50 Pièces (🪙)", premium: "Titre « [ Pilote de traîneau ] » 🛷" },
+    { tier: 4, free: "1 ⏳ Blocage du Temps", premium: "🍭 Cadre « Bonbon »" },
+    { tier: 5, free: "75 Pièces (🪙)", premium: "⛄ Avatar Animé Lottie : Bonhomme de Neige" },
+    { tier: 6, free: "1 ⚡ Joker Éclair", premium: "Pack de Consommables (Bonus)" },
+    { tier: 7, free: "50 Pièces (🪙)", premium: "Titre « [ Dompteur de rennes ] » 🦌" },
+    { tier: 8, free: "1 💡 Projecteur", premium: "2 🌟 Novas Temporelles" },
+    { tier: 9, free: "100 Pièces (🪙)", premium: "200 Pièces (🪙)" },
+    { tier: 10, free: "1 🌟 Nova Temporelle", premium: "🍭 Grille Bonbon Canne (EXCLUSIF pass)" },
+    { tier: 11, free: "60 Pièces (🪙)", premium: "120 Pièces (🪙)" },
+    { tier: 12, free: "1 ⏳ Blocage du Temps", premium: "1 💡 Projecteur" },
+    { tier: 13, free: "70 Pièces (🪙)", premium: "Titre « [ Assistant du Père Noël ] » 🎅" },
+    { tier: 14, free: "1 ⚡ Joker Éclair", premium: "2 ⏳ Blocage du Temps" },
+    { tier: 15, free: "150 Pièces (🪙)", premium: "🔮 Avatar Animé Lottie : Boule de Neige" },
+    { tier: 16, free: "80 Pièces (🪙)", premium: "160 Pièces (🪙)" },
+    { tier: 17, free: "2 💡 Projecteur", premium: "2 🌟 Novas Temporelles" },
+    { tier: 18, free: "90 Pièces (🪙)", premium: "250 Pièces (🪙)" },
+    { tier: 19, free: "1 ⚡ Joker Éclair", premium: "1 📳 Séisme" },
+    { tier: 20, free: "100 Pièces (🪙)", premium: "🎄 Cadre « Guirlande »" },
+    { tier: 21, free: "110 Pièces (🪙)", premium: "220 Pièces (🪙)" },
+    { tier: 22, free: "1 ⏳ Blocage du Temps", premium: "3 💡 Projecteur" },
+    { tier: 23, free: "120 Pièces (🪙)", premium: "350 Pièces (🪙)" },
+    { tier: 24, free: "1 ⚡ Joker Éclair", premium: "🎄 Grille Sapin de Noël (EXCLUSIF pass)" },
+    { tier: 25, free: "150 Pièces (🪙)", premium: "🎅 Avatar Animé Lottie : Père Noël" },
+    { tier: 26, free: "130 Pièces (🪙)", premium: "260 Pièces (🪙)" },
+    { tier: 27, free: "2 💡 Projecteur", premium: "4 🌟 Novas Temporelles" },
+    { tier: 28, free: "140 Pièces (🪙)", premium: "Titre « [ Magie de Noël ] » ✨" },
+    { tier: 29, free: "300 Pièces (🪙)", premium: "🍪 Cadre « Pain d'épice »" },
+    { tier: 30, free: "Titre « [ 🎄 Esprit de Noël ] » + 500 🪙", premium: "🏆 GRAAL : 🍪 Grille Pain d'épice + 1000 🪙" }
+  ] }
 ];
 function getActiveSeason() {
   if (myProfile.currentSeasonId) {
@@ -244,6 +275,7 @@ const tierData = season.tiers.find(t => t.tier === tier);
 const rewardText = tierData ? (track === "premium" ? tierData.premium : tierData.free) : `Palier ${tier}`;
 let icon = "🌟";
 if (season.id === "s2") icon = (tier === 30 && track === "premium") ? "🎃" : (tier === 25 && track === "premium") ? "🦇" : (tier === 15 && track === "premium") ? "💀" : "🎃";
+else if (season.id === "s3") icon = (tier === 30 && track === "premium") ? "🍪" : (tier === 25 && track === "premium") ? "🎅" : (tier === 15 && track === "premium") ? "🔮" : (tier === 5 && track === "premium") ? "⛄" : "🎄";
 else icon = (tier === 30 && track === "premium") ? "🐯" : (tier === 25 && track === "premium") ? "🌈" : (tier === 15 && track === "premium") ? "🐱" : "🌟";
 showRewardPopUp(rewardText, icon);
 renderBlitzPass();
