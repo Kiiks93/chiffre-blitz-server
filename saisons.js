@@ -674,6 +674,20 @@ let _nxData = {};
 let _nxPreloaded = false;
 let _nxAnims = [];
 let noelSleighTimer = null;
+let noelStarTimer = null;
+
+function spawnShootingStar() {
+  const bg = document.getElementById("season-bg");
+  if (!bg) return;
+  const s = document.createElement("div");
+  s.className = "nx-shoot";
+  s.style.top = (5 + Math.random() * 30) + "%";
+  s.style.left = (40 + Math.random() * 55) + "%";
+  const dur = 1.2 + Math.random() * 1.2;
+  s.style.animationDuration = dur + "s";
+  bg.appendChild(s);
+  setTimeout(() => s.remove(), dur * 1000 + 200);
+}
 
 function preloadNoelLotties() {
   if (_nxPreloaded || typeof lottie === "undefined") return;
@@ -699,6 +713,7 @@ function clearNoelScene() {
   if (bg && bg.dataset.built === "s3") { bg.innerHTML = ""; bg.dataset.built = ""; }
   clearNoelLotties();
   if (noelSleighTimer) { clearInterval(noelSleighTimer); noelSleighTimer = null; }
+  if (noelStarTimer) { clearInterval(noelStarTimer); noelStarTimer = null; }
 }
 
 function buildNoelScene() {
@@ -777,6 +792,9 @@ function setupNoelDecor(seasonId) {
     if (inGame) return;
     spawnNoelSleigh();
   }, 7000);
+    noelStarTimer = setInterval(() => {
+    if (Math.random() < 0.6) spawnShootingStar();
+  }, 4000);
 }
 
 function spawnNoelSleigh() {
