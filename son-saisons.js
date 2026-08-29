@@ -268,14 +268,14 @@ SoundEngine.tickNoelMenu = function(step) {
     { root:130.81, pad:[261.63,329.63,392.00] }
   ];
   const chord = chords[bar % 8];
-  const low = {0:{0:E4,6:E4,12:E4},1:{0:E4,6:E4,12:E4},2:{0:E4,4:G4,8:C4,10:D4,12:E4},3:{0:F4,4:F4,8:F4,12:F4},4:{0:F4,4:E4,8:E4,12:E4},5:{0:E4,4:D4,8:D4,12:E4},6:{0:D4,8:G4},7:{0:E4,8:C4}};
-  const high = {0:{0:E5,6:E5,12:E5},1:{0:E5,6:E5,12:E5},2:{0:E5,4:G5,8:C5,10:D5,12:E5},3:{0:F5,4:F5,8:F5,12:F5},4:{0:F5,4:E5,8:E5,12:E5},5:{0:E5,4:D5,8:D5,12:E5},6:{0:D5,8:G5},7:{0:E5,8:C5}};
+  const low = {0:{0:E4,4:E4,8:E4},1:{0:E4,4:E4,8:E4},2:{0:E4,4:G4,8:C4,10:D4,12:E4},3:{0:F4,4:F4,8:F4,12:F4},4:{0:F4,4:E4,8:E4,12:E4},5:{0:E4,4:D4,8:D4,12:E4},6:{0:D4,8:G4},7:{0:E4,8:C4}};
+  const high = {0:{0:E5,4:E5,8:E5},1:{0:E5,4:E5,8:E5},2:{0:E5,4:G5,8:C5,10:D5,12:E5},3:{0:F5,4:F5,8:F5,12:F5},4:{0:F5,4:E5,8:E5,12:E5},5:{0:E5,4:D5,8:D5,12:E5},6:{0:D5,8:G5},7:{0:E5,8:C5}};
   const seq = bar < 8 ? low : high;
 
   if (inBar === 0) {
     chord.pad.forEach((f, i) => {
       const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-      o.type = "triangle"; o.frequency.setValueAtTime(f / 2, t); o.detune.setValueAtTime(i % 2 ? 3 : -3, t);
+      o.type = "triangle"; o.frequency.setValueAtTime(f, t); o.detune.setValueAtTime(i % 2 ? 3 : -3, t)
       const lp = this.ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.setValueAtTime(700, t);
       g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.022, t + 0.6); g.gain.linearRampToValueAtTime(0.0001, t + 4.4);
       o.connect(lp); lp.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 4.4);
