@@ -19,6 +19,7 @@ DA SAISONNIÈRE — HALLOWEEN 🎃 & NOËL 🎄
 .hw-pumpkin-lottie canvas,
 .hw-bat-lottie canvas,
 .hw-ghost-lottie canvas,
+mix-blend-mode: screen;
 .hw-spider-lottie canvas {
   filter: drop-shadow(0 0 14px rgba(255, 138, 0, 0.5)) drop-shadow(0 0 28px rgba(176, 107, 255, 0.3));
   background: transparent !important;
@@ -46,23 +47,23 @@ DA SAISONNIÈRE — HALLOWEEN 🎃 & NOËL 🎄
   opacity: 0;
 }
 @keyframes hwGhostApproach {
-  0% { transform: scale(0.2); opacity: 0; }
+  0% { transform: scale(0.35); opacity: 0; }
   20% { opacity: 0.95; }
   80% { opacity: 0.95; }
-  100% { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(1.6); opacity: 0; }
 }
 
 .hw-spider-lottie {
   position: absolute;
   top: 0;
   pointer-events: none;
-  animation: hwSpiderDrop 7s ease-in-out forwards;
+  animation: hwSpiderDrop 8s ease-in-out forwards;
 }
 @keyframes hwSpiderDrop {
-  0% { transform: translateY(-130%); }
-  40% { transform: translateY(32vh); }
-  60% { transform: translateY(32vh); }
-  100% { transform: translateY(-130%); }
+  0% { transform: translateY(-160%); }
+  45% { transform: translateY(20vh); }
+  62% { transform: translateY(20vh); }
+  100% { transform: translateY(-160%); }
 }
 
 /* ---------- LANTERNES HALLOWEEN (grille Citrouille) ---------- */
@@ -310,6 +311,19 @@ body.season-s2 #season-bg { opacity: 1; }
 /* Brume au sol */
 .hw-mist { position: absolute; bottom: 16%; left: 0; right: 0; height: 24%; filter: blur(6px); background: radial-gradient(ellipse 60% 60% at 30% 60%, rgba(180,120,255,0.16), transparent 70%), radial-gradient(ellipse 50% 60% at 70% 50%, rgba(255,140,80,0.10), transparent 70%); animation: hwMist 12s ease-in-out infinite alternate; }
 @keyframes hwMist { from { transform: translateX(-3%); } to { transform: translateX(3%); } }
+
+/* ---------- TOILES D'ARAIGNÉE DES COINS ---------- */
+.halloween-web {
+  position: fixed;
+  font-size: 110px;
+  line-height: 1;
+  opacity: 0.22;
+  z-index: 1;
+  pointer-events: none;
+  filter: grayscale(1) brightness(2.2);
+}
+.halloween-web.tl { top: -14px; left: -14px; }
+.halloween-web.tr { top: -14px; right: -14px; transform: scaleX(-1); }
 
 /* ---------- SAISON 3 : NOËL ---------- */
 body.season-s3 { background: radial-gradient(circle at 50% 20%, #0a2a4d 0%, #051525 60%, #020a12 100%); }
