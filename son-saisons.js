@@ -13,14 +13,14 @@ SoundEngine.startMusicSeasonal = function(key) {
   this.stopMusic(false);
   this.currentMode = key;
   this.step = 0;
-  const bpms = { s2menu: 75, s2game: 100, s3menu: 100, s3game: 126 };
+  const bpms = { s2menu: 75, s2game: 100, s3menu: 84, s3game: 126 };
   this.bpm = bpms[key] || 100;
   const intervalMs = (60 / this.bpm / 4) * 1000;
   this.timerId = setInterval(() => {
     if (this.isMuted || !this.ctx || this.ctx.state !== "running") return;
     if (key === "s2menu") this.tickHalloweenMenu(this.step % 256);
     else if (key === "s2game") this.tickHalloweenGame(this.step % 128);
-    else if (key === "s3menu") this.tickNoelMenu(this.step % 256);
+    else if (key === "s3menu") this.tickNoelMenu(this.step % 192);
     else if (key === "s3game") this.tickNoelGame(this.step % 256);
     this.step = (this.step + 1) % 256;
   }, intervalMs);
@@ -253,48 +253,50 @@ SoundEngine._voice = function(t, f, vol, dur) {
 
 SoundEngine.tickNoelMenu = function(step) {
   const t = this.ctx.currentTime;
-  const bar = Math.floor(step / 16);
-  const inBar = step % 16;
-  const G4=392.00, A4=440.00, B4=493.88, C5=523.25;
+  const bar = Math.floor(step / 12);
+  const beat = step % 12;
+  const G4=392.00, C5=523.25, D5=587.33, E5=659.25, F5=698.46, G5=783.99, A5=880.00;
   const chords = [
-    { root:130.81, pad:[261.63,329.63,392.00] },
-    { root:130.81, pad:[261.63,329.63,392.00] },
-    { root:130.81, pad:[261.63,329.63,392.00] },
-    { root:130.81, pad:[261.63,329.63,392.00] },
-    { root:130.81, pad:[261.63,329.63,392.00] },
-    { root:130.81, pad:[261.63,329.63,392.00] },
-    { root:98.00,  pad:[196.00,246.94,293.66] },
-    { root:130.81, pad:[261.63,329.63,392.00] }
+    {root:130.81,pad:[261.63,329.63,392.00]},{root:130.81,pad:[261.63,329.63,392.00]},
+    {root:130.81,pad:[261.63,329.63,392.00]},{root:130.81,pad:[261.63,329.63,392.00]},
+    {root:98.00,pad:[196.00,246.94,293.66]},{root:130.81,pad:[261.63,329.63,392.00]},
+    {root:130.81,pad:[261.63,329.63,392.00]},{root:130.81,pad:[261.63,329.63,392.00]},
+    {root:130.81,pad:[261.63,329.63,392.00]},{root:130.81,pad:[261.63,329.63,392.00]},
+    {root:130.81,pad:[261.63,329.63,392.00]},{root:130.81,pad:[261.63,329.63,392.00]},
+    {root:130.81,pad:[261.63,329.63,392.00]},{root:98.00,pad:[196.00,246.94,293.66]},
+    {root:87.31,pad:[174.61,261.63,349.23]},{root:130.81,pad:[261.63,329.63,392.00]}
   ];
-  const chord = chords[bar % 8];
-  // Valse 3 temps : "oum-pa-pa" (basse + 2 accords doux)
-  if (inBar === 0) {
+  const chord = chords[bar % 16];
+
+  // Valse "oum-pa-pa" douce
+  if (beat === 0) {
     const o = this.ctx.createOscillator(), g = this.ctx.createGain();
     o.type = "sine"; o.frequency.setValueAtTime(chord.root, t);
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.05, t + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
-    o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 1.2);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.05, t + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
+    o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 1.4);
   }
-  if (inBar === 5 || inBar === 10) {
+  if (beat === 4 || beat === 8) {
     chord.pad.forEach((f) => {
       const o = this.ctx.createOscillator(), g = this.ctx.createGain();
       o.type = "triangle"; o.frequency.setValueAtTime(f, t);
-      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.014, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
-      o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 0.5);
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.013, t + 0.04); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+      o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 0.7);
     });
   }
-  // Mélodie « Mon beau sapin » (valse, legato)
+
+  // VRAIE mélodie « Mon beau sapin » (legato, dure longtemps)
   const seq = {
-    0: { 0: G4, 5: C5, 10: C5 },
-    1: { 0: G4, 5: C5, 10: C5 },
-    2: { 0: G4, 5: A4, 10: B4 },
-    3: { 0: C5, 5: B4, 10: A4 },
-    4: { 0: G4, 5: C5, 10: C5 },
-    5: { 0: G4, 5: C5, 10: C5 },
-    6: { 0: A4, 5: B4, 10: C5 },
-    7: { 0: C5 }
+    0: {0:G4,4:C5,8:C5}, 1: {0:C5,4:D5,8:E5}, 2: {0:E5,4:E5,8:E5}, 3: {0:E5,4:D5,8:E5},
+    4: {0:F5,8:G5},      5: {0:C5},
+    6: {0:G4,4:C5,8:C5}, 7: {0:C5,4:D5,8:E5}, 8: {0:E5,4:E5,8:E5}, 9: {0:E5,4:D5,8:E5},
+    10:{0:F5,8:G5},      11:{0:C5},
+    12:{0:G5,4:G5,8:E5}, 13:{0:A5,4:G5,8:G5}, 14:{0:F5,4:F5,8:D5}, 15:{0:G5,4:E5,8:C5}
   };
-  const m = seq[bar % 8];
-  if (m && m[inBar] !== undefined) this._voice(t, m[inBar], 0.06, 1.4);
+  const m = seq[bar % 16];
+  if (m && m[beat] !== undefined) {
+    const isHold = (bar%16===5||bar%16===11) && beat===0;
+    this._voice(t, m[beat], 0.06, isHold ? 2.2 : 1.1);
+  }
 };
 
 SoundEngine.tickNoelGame = function(step) {
