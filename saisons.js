@@ -10,20 +10,27 @@ function getCurrentSeasonId() {
 }
 
 let lastAppliedSeason = null;
+let _musicRestartTimer = null;
+
+function restartSeasonMusic() {
+  if (typeof SoundEngine === "undefined") return;
+  if (_musicRestartTimer) clearTimeout(_musicRestartTimer);
+  _musicRestartTimer = setTimeout(() => {
+    if (typeof SoundEngine.startMusic !== "function") return;
+    // Détermine si on est en jeu ou au menu
+    const inGame = document.getElementById("screen-game") && document.getElementById("screen-game").style.display === "block";
+    const mode = inGame ? "game" : "menu";
+    try {
+      SoundEngine.stopMusic(false);
+      SoundEngine.startMusic(mode);
+    } catch (e) {}
+  }, 150);
+}
 function applySeasonDA() {
   const seasonId = getCurrentSeasonId();
   window.CURRENT_SEASON = seasonId;
 
   document.body.classList.remove("season-s1", "season-s2", "season-s3");
-    // Force le changement de musique si la saison a changé
-  if (lastAppliedSeason !== seasonId) {
-    lastAppliedSeason = seasonId;
-    if (typeof SoundEngine !== "undefined" && SoundEngine.currentMode) {
-      const base = SoundEngine._baseMode || "menu";
-      SoundEngine.stopMusic(false);
-      SoundEngine.startMusic(base);
-    }
-  }
   document.body.classList.add("season-" + seasonId);
 
   if (seasonId === "s2") buildHalloweenScene();
