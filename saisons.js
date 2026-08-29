@@ -608,25 +608,36 @@ function createSapinSparkle(color) {
 }
 
 function spawnLutins(big) {
-  const count = big ? 10 : 3 + Math.floor(Math.random() * 2);
-  for (let i = 0; i < count; i++) setTimeout(() => createLutin(), i * 100);
+  const count = big ? 8 : 3 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < count; i++) setTimeout(() => createLutin(), i * 150);
 }
 function createLutin() {
-  const l = document.createElement("div");
-  l.className = "lutin-character";
-  l.style.left = (Math.random() * (window.innerWidth - 100) + 50) + "px";
-  
-  // Rotation aléatoire pour l'allure filou
-  const rotStart = Math.floor(Math.random() * 60 - 30);
-  const rotMid = Math.floor(Math.random() * 40 - 20);
-  const rotEnd = Math.floor(Math.random() * 90 - 45);
-  
-  l.style.setProperty("--rot-start", rotStart + "deg");
-  l.style.setProperty("--rot-mid", rotMid + "deg");
-  l.style.setProperty("--rot-end", rotEnd + "deg");
-  
-  document.body.appendChild(l);
-  setTimeout(() => l.remove(), 1300);
+  const mode = Math.random();
+  if (mode < 0.6) {
+    // 🏃 Lutin qui court (bien visible, gros)
+    const l = document.createElement("div");
+    const dirLR = Math.random() < 0.5;
+    const size = 110 + Math.random() * 50;
+    l.className = "lutin-runner " + (dirLR ? "lr" : "rl");
+    l.style.width = size + "px";
+    l.style.height = (size * 1.3) + "px";
+    l.style.bottom = (10 + Math.random() * 20) + "%";
+    l.style.animationDuration = (2.5 + Math.random() * 2) + "s";
+    l.innerHTML = `<div class="lutin-flip${dirLR ? "" : " flip"}"><div class="lutin-body"></div></div>`;
+    document.body.appendChild(l);
+    setTimeout(() => l.remove(), 5000);
+  } else {
+    // 🙃 Lutin qui descend sa tête du haut
+    const l = document.createElement("div");
+    const size = 100 + Math.random() * 50;
+    l.className = "lutin-peek";
+    l.style.width = size + "px";
+    l.style.height = (size * 1.3) + "px";
+    l.style.left = (5 + Math.random() * 85) + "%";
+    l.innerHTML = `<div class="lutin-body"></div>`;
+    document.body.appendChild(l);
+    setTimeout(() => l.remove(), 3200);
+  }
 }
 
 // Relance la musique quand on entre/sort du jeu (pour passer menu↔game)
