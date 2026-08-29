@@ -68,6 +68,7 @@ function applySeasonDA() {
 }
 
 /* ---------- SCÈNE HALLOWEEN ANIMÉE ---------- */
+
 function buildHalloweenScene() {
   let bg = document.getElementById("season-bg");
   if (!bg) {
@@ -78,54 +79,71 @@ function buildHalloweenScene() {
   if (bg.dataset.built === "s2") return;
   bg.dataset.built = "s2";
   bg.innerHTML = `
-    preloadHalloweenLotties();
-    addScenePumpkins(bg);
     <div class="hw-sky"></div>
     <div class="hw-moon"></div>
     <div class="hw-cloud hw-c1"></div>
     <div class="hw-cloud hw-c2"></div>
     <div class="hw-cloud hw-c3"></div>
-    <div class="hw-bat" style="top:12%; font-size:26px; animation-duration:16s;">🦇</div>
-    <div class="hw-bat" style="top:20%; font-size:18px; animation-duration:22s; animation-delay:4s;">🦇</div>
-    <div class="hw-bat" style="top:8%; font-size:14px; animation-duration:19s; animation-delay:9s;">🦇</div>
-    <div class="hw-bat" style="top:26%; font-size:22px; animation-duration:26s; animation-delay:13s;">🦇</div>
     <div class="hw-castle">
       <svg viewBox="0 0 400 200" preserveAspectRatio="none">
-        <g fill="#12001f">
-          <polygon points="55,200 55,115 72,78 89,115 89,200"/>
+        <defs>
+          <linearGradient id="castleGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1a0033"/>
+            <stop offset="100%" stop-color="#0a001a"/>
+          </linearGradient>
+        </defs>
+        <g fill="url(#castleGrad)" stroke="#2a0a4d" stroke-width="1">
+          <polygon points="55,200 55,115 62,100 72,78 82,100 89,115 89,200"/>
           <rect x="89" y="135" width="55" height="65"/>
-          <polygon points="144,200 144,95 168,48 192,95 192,200"/>
+          <polygon points="144,200 144,95 156,70 168,48 180,70 192,95 192,200"/>
           <rect x="192" y="125" width="66" height="75"/>
-          <polygon points="258,200 258,105 274,70 290,105 290,200"/>
+          <polygon points="258,200 258,105 266,85 274,70 282,85 290,105 290,200"/>
           <rect x="290" y="145" width="55" height="55"/>
-          <polygon points="345,200 345,115 361,86 377,115 377,200"/>
+          <polygon points="345,200 345,115 353,100 361,86 369,100 377,115 377,200"/>
+          <rect x="155" y="165" width="18" height="35"/>
+          <rect x="215" y="160" width="22" height="40"/>
         </g>
         <g fill="#ff8a00">
           <rect class="win" x="68" y="125" width="7" height="11"/>
           <rect class="win" x="164" y="105" width="8" height="13" style="animation-delay:1s"/>
+          <rect class="win" x="164" y="130" width="8" height="13" style="animation-delay:1.3s"/>
+          <rect class="win" x="220" y="140" width="10" height="14" style="animation-delay:0.4s"/>
+          <rect class="win" x="245" y="140" width="10" height="14" style="animation-delay:0.8s"/>
           <rect class="win" x="270" y="120" width="7" height="11" style="animation-delay:2s"/>
           <rect class="win" x="312" y="155" width="6" height="10" style="animation-delay:0.5s"/>
+        </g>
+        <g stroke="#0a001a" stroke-width="1.5" fill="none" opacity="0.4">
+          <line x1="55" y1="150" x2="89" y2="150"/>
+          <line x1="144" y1="140" x2="192" y2="140"/>
+          <line x1="258" y1="150" x2="290" y2="150"/>
         </g>
       </svg>
     </div>
     <div class="hw-tree hw-tree-left">
       <svg viewBox="0 0 120 260" preserveAspectRatio="none">
         <g stroke="#0d0016" fill="none" stroke-linecap="round">
-          <path d="M60,260 C58,200 50,160 30,120" stroke-width="14"/>
-          <path d="M55,190 C70,150 90,130 105,95" stroke-width="9"/>
-          <path d="M45,150 C35,120 25,105 10,80" stroke-width="7"/>
-          <path d="M100,110 C108,90 112,80 118,60" stroke-width="5"/>
-          <path d="M20,95 C14,80 12,70 8,55" stroke-width="4"/>
+          <path d="M60,260 C58,210 52,170 35,125 C25,95 30,70 35,45" stroke-width="16"/>
+          <path d="M58,220 C75,185 95,160 110,120 C118,95 115,70 110,50" stroke-width="10"/>
+          <path d="M42,170 C30,140 20,115 5,85 C0,70 5,55 10,40" stroke-width="8"/>
+          <path d="M90,150 C105,125 115,100 118,70" stroke-width="6"/>
+          <path d="M20,115 C12,95 8,75 4,55" stroke-width="5"/>
+          <path d="M100,130 C108,105 115,85 118,65" stroke-width="4"/>
+          <path d="M35,140 C22,115 15,95 8,75" stroke-width="4"/>
+          <path d="M65,180 C50,160 45,140 50,120" stroke-width="3"/>
+          <path d="M80,145 C90,125 95,105 98,85" stroke-width="3"/>
         </g>
       </svg>
     </div>
     <div class="hw-tree hw-tree-right">
       <svg viewBox="0 0 120 260" preserveAspectRatio="none">
         <g stroke="#0d0016" fill="none" stroke-linecap="round">
-          <path d="M60,260 C58,200 50,160 30,120" stroke-width="14"/>
-          <path d="M55,190 C70,150 90,130 105,95" stroke-width="9"/>
-          <path d="M45,150 C35,120 25,105 10,80" stroke-width="7"/>
-          <path d="M100,110 C108,90 112,80 118,60" stroke-width="5"/>
+          <path d="M60,260 C58,210 52,170 35,125 C25,95 30,70 35,45" stroke-width="16"/>
+          <path d="M58,220 C75,185 95,160 110,120 C118,95 115,70 110,50" stroke-width="10"/>
+          <path d="M42,170 C30,140 20,115 5,85 C0,70 5,55 10,40" stroke-width="8"/>
+          <path d="M90,150 C105,125 115,100 118,70" stroke-width="6"/>
+          <path d="M20,115 C12,95 8,75 4,55" stroke-width="5"/>
+          <path d="M100,130 C108,105 115,85 118,65" stroke-width="4"/>
+          <path d="M35,140 C22,115 15,95 8,75" stroke-width="4"/>
         </g>
       </svg>
     </div>
@@ -133,6 +151,8 @@ function buildHalloweenScene() {
     <div class="hw-ground"></div>
     <div class="hw-mist"></div>
   `;
+  preloadHalloweenLotties();
+  addScenePumpkins(bg);
 }
 
 function clearHalloweenScene() {
