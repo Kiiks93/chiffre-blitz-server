@@ -232,6 +232,23 @@ SoundEngine.tickHalloweenGame = function(step) {
 /* ============================================================
 NOËL (menu + game partagent le même tick)
 ============================================================ */
+SoundEngine._harp = function(t, f, vol) {
+  const partials = [1, 2, 2.98, 4.2];
+  const gains = [1, 0.5, 0.25, 0.12];
+  partials.forEach((p, i) => {
+    const dur = 1.8 - i * 0.3;
+    const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = "sine"; o.frequency.setValueAtTime(f * p, t);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol * gains[i], t + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + dur + 0.1);
+    // écho doux pour la fluidité
+    const o2 = this.ctx.createOscillator(), g2 = this.ctx.createGain();
+    o2.type = "sine"; o2.frequency.setValueAtTime(f * p, t + 0.28);
+    g2.gain.setValueAtTime(0.0001, t + 0.28); g2.gain.linearRampToValueAtTime(vol * gains[i] * 0.3, t + 0.3); g2.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
+    o2.connect(g2); g2.connect(this.ctx.destination); o2.start(t + 0.28); o2.stop(t + 1.6);
+  });
+};
+
 SoundEngine.tickNoelMenu = function(step) {
   const t = this.ctx.currentTime;
   const bar = Math.floor(step / 16);
@@ -248,17 +265,17 @@ SoundEngine.tickNoelMenu = function(step) {
   ];
   const chord = chords[bar % 8];
 
-  // Nappe chaude (pad doux filtré) en début de mesure
+  // Nappe chaude en début de mesure
   if (inBar === 0) {
     chord.pad.forEach((f, i) => {
       const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-      o.type = "triangle"; o.frequency.setValueAtTime(f, t); o.detune.setValueAtTime(i % 2 ? 3 : -3, t);
-      const lp = this.ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.setValueAtTime(900, t);
-      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.02, t + 0.8); g.gain.linearRampToValueAtTime(0.0001, t + 4.0);
+      o.type = "triangle"; o.frequency.setValueAtTime(f / 2, t); o.detune.setValueAtTime(i % 2 ? 3 : -3, t);
+      const lp = this.ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.setValueAtTime(700, t);
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.022, t + 0.8); g.gain.linearRampToValueAtTime(0.0001, t + 4.0);
       o.connect(lp); lp.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 4.0);
     });
   }
-  // Basse ronde et rassurante
+  // Basse ronde
   if (inBar === 0 || inBar === 8) {
     const o = this.ctx.createOscillator(), g = this.ctx.createGain();
     o.type = "sine"; o.frequency.setValueAtTime(chord.root, t);
@@ -266,7 +283,13 @@ SoundEngine.tickNoelMenu = function(step) {
     o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 1.6);
   }
 
-  // Mélodie « Vive le vent » (chaude, médium, AUCUN ding aigu)
+  // Arpèges de harpe qui coulent (contretemps) → fluidité
+  if ([2, 6, 10, 14].includes(inBar)) {
+    const arp = chord.pad[Math.floor(inBar / 2) % chord.pad.length];
+    this._harp(t, arp, 0.028);
+  }
+
+  // Mélodie « Vive le vent » en harpe
   const C4=261.63, D4=293.66, E4=329.63, F4=349.23, G4=392.00;
   const seq = {
     0: { 0: E4, 6: E4, 12: E4 },
@@ -279,20 +302,9 @@ SoundEngine.tickNoelMenu = function(step) {
     7: { 0: E4, 8: C4 }
   };
   const m = seq[bar % 8];
-  if (m && m[inBar] !== undefined) {
-    const f = m[inBar];
-    const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-    o.type = "triangle"; o.frequency.setValueAtTime(f, t);
-    const lp = this.ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.setValueAtTime(1400, t);
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.055, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
-    o.connect(lp); lp.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 0.9);
-    const o2 = this.ctx.createOscillator(), g2 = this.ctx.createGain();
-    o2.type = "sine"; o2.frequency.setValueAtTime(f / 2, t);
-    g2.gain.setValueAtTime(0.0001, t); g2.gain.linearRampToValueAtTime(0.02, t + 0.03); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
-    o2.connect(g2); g2.connect(this.ctx.destination); o2.start(t); o2.stop(t + 0.9);
-  }
+  if (m && m[inBar] !== undefined) this._harp(t, m[inBar], 0.07);
 
-  // Grelots TRÈS discrets (shaker doux, pas de ding)
+  // Grelots très discrets
   if (inBar % 4 === 2) {
     const bufferSize = this.ctx.sampleRate * 0.03;
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
