@@ -159,14 +159,11 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
     avatarTitle = "Citrouille du Château (GRAAL Halloween)";
     avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="citrouille-chateau.json" style="width:32px; height:32px;"></div>`;
   } else if (equippedAvatar === "avatar_s3_bonhomme") {
-    avatarTitle = "Bonhomme de neige (Pass S3)";
-    avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="bonhomme-de-neige-avatar.json" style="width:32px; height:32px;"></div>`;
+    avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="bonhomme-de-neige-avatar.json" style="width:40px; height:40px;"></div>`;
   } else if (equippedAvatar === "avatar_s3_boule") {
-    avatarTitle = "Boule de neige (Pass S3)";
-    avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="boule-de-neige-avatar.json" style="width:32px; height:32px;"></div>`;
+    avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="boule-de-neige-avatar.json" style="width:40px; height:40px;"></div>`;
   } else if (equippedAvatar === "avatar_s3_perenoel") {
-    avatarTitle = "Père Noël (Pass S3)";
-    avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="pere-noel-avatar.json" style="width:32px; height:32px;"></div>`;
+    avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="pere-noel-avatar.json" style="width:40px; height:40px;"></div>`;
   }
   const frameClass = getFrameClass(equippedFrame);
   const html = `
@@ -188,9 +185,9 @@ function getLargeAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
   else if (avatarType === "avatar_s2_squelette") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="squelette-danse.json" style="width:60px; height:60px;"></div>`;
   else if (avatarType === "avatar_s2_chauve") avatarContent = `<video class="tft-avatar-video" src="bat-halloween.mp4" autoplay loop muted playsinline style="width:60px; height:60px;"></video>`;
   else if (avatarType === "avatar_s2_citrouille") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="citrouille-chateau.json" style="width:60px; height:60px;"></div>`;
-  else if (avatarType === "avatar_s3_bonhomme") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="bonhomme-de-neige-avatar.json" style="width:60px; height:60px;"></div>`;
-  else if (avatarType === "avatar_s3_boule") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="boule-de-neige-avatar.json" style="width:60px; height:60px;"></div>`;
-  else if (avatarType === "avatar_s3_perenoel") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="pere-noel-avatar.json" style="width:60px; height:60px;"></div>`;
+  else if (avatarType === "avatar_s3_bonhomme") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="bonhomme-de-neige-avatar.json" style="width:74px; height:74px;"></div>`;
+  else if (avatarType === "avatar_s3_boule") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="boule-de-neige-avatar.json" style="width:74px; height:74px;"></div>`;
+  else if (avatarType === "avatar_s3_perenoel") avatarContent = `<div class="lottie-avatar-large" data-lottie-url="pere-noel-avatar.json" style="width:74px; height:74px;"></div>`;
   const html = `
     <div class="tft-avatar-large ${frameClass}">
       <span class="tft-avatar-large-icon" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; ${typeof avatarContent === "number" ? "font-size:24px;" : ""}">${avatarContent}</span>
