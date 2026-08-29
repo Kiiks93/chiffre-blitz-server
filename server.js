@@ -82,10 +82,10 @@ const ITEM_CATALOG = {
   title_esprit_noel: { sources: ["pass"], type: "title", permanent: true },
   frame_bonbon: { sources: ["pass"], type: "frame", permanent: true },
   frame_guirlande: { sources: ["pass"], type: "frame", permanent: true },
-  frame_gingerbread: { sources: ["pass"], type: "frame", permanent: true },
+  frame_lutin: { sources: ["pass"], type: "frame", permanent: true },
   theme_bonbon: { sources: ["pass"], type: "theme", permanent: true },
   theme_sapin: { sources: ["pass"], type: "theme", permanent: true },
-  theme_gingerbread: { sources: ["pass"], type: "theme", permanent: true },
+  theme_lutin: { sources: ["pass"], type: "theme", permanent: true },
   avatar_s3_bonhomme: { sources: ["pass"], type: "avatar", permanent: true },
   avatar_s3_boule: { sources: ["pass"], type: "avatar", permanent: true },
   avatar_s3_perenoel: { sources: ["pass"], type: "avatar", permanent: true }
@@ -1142,8 +1142,8 @@ function applyPassRewardS3(p, tier, track) {
     else if (tier === 26) p.coins = (p.coins || 0) + 260;
     else if (tier === 27) p.inventory['nova'] = (p.inventory['nova'] || 0) + 4;
     else if (tier === 28) { if (!p.unlocked_items.includes('title_magie_noel')) p.unlocked_items.push('title_magie_noel'); }
-    else if (tier === 29) { if (!p.unlocked_items.includes('frame_gingerbread')) p.unlocked_items.push('frame_gingerbread'); }
-    else if (tier === 30) { p.coins = (p.coins || 0) + 1000; if (!p.unlocked_items.includes('theme_gingerbread')) p.unlocked_items.push('theme_gingerbread'); }
+    else if (tier === 29) { if (!p.unlocked_items.includes('frame_lutin')) p.unlocked_items.push('frame_lutin'); }
+    else if (tier === 30) { p.coins = (p.coins || 0) + 1000; if (!p.unlocked_items.includes('theme_lutin')) p.unlocked_items.push('theme_lutin'); }
   }
 }
 
