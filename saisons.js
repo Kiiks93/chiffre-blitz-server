@@ -618,13 +618,14 @@ function createLutin() {
   const variants = ["v-grimace", "v-kdo", "v-bonnet", "v-cerf"];
   const variant = variants[Math.floor(Math.random() * variants.length)];
   const isCerf = variant === "v-cerf";
+  const isMobile = window.innerWidth <= 600;
+  const scale = isMobile ? 0.6 : 1;
   const mode = Math.random();
 
   if (mode < 0.6) {
-    // 🏃 Court (gros + visible)
     const l = document.createElement("div");
     const dirLR = Math.random() < 0.5;
-    const size = (isCerf ? 150 : 110) + Math.random() * 50;
+    const size = ((isCerf ? 150 : 110) + Math.random() * 50) * scale;
     l.className = "lutin-runner " + (dirLR ? "lr" : "rl");
     l.style.width = size + "px";
     l.style.height = (size * (isCerf ? 0.8 : 1.3)) + "px";
@@ -634,9 +635,8 @@ function createLutin() {
     document.body.appendChild(l);
     setTimeout(() => l.remove(), 5000);
   } else {
-    // 🙃 Descend sa tête du haut
     const l = document.createElement("div");
-    const size = (isCerf ? 140 : 100) + Math.random() * 50;
+    const size = ((isCerf ? 140 : 100) + Math.random() * 50) * scale;
     l.className = "lutin-peek";
     l.style.width = size + "px";
     l.style.height = (size * (isCerf ? 0.8 : 1.3)) + "px";
