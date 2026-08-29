@@ -122,7 +122,7 @@ function getFrameClass(equippedFrame) {
     "frame_fantome": "fantome-frame",
     "frame_bonbon": "bonbon-frame",
     "frame_guirlande": "guirlande-frame",
-    "frame_gingerbread": "gingerbread-frame"
+    "frame_lutin": "lutin-frame"
   };
   return FRAME_CLASS_MAP[equippedFrame] || "";
 }
@@ -332,7 +332,7 @@ const FRAME_DISPLAY_NAMES = {
   "frame_fantome": "👻 Cadre « Fantôme »",
   "frame_bonbon": "🍭 Cadre « Bonbon »",
   "frame_guirlande": "🎄 Cadre « Guirlande »",
-  "frame_gingerbread": "🍪 Cadre « Pain d'épice »"
+  "frame_lutin": "🧝 Cadre « Lutin »"
 };
 const THEME_DISPLAY_NAMES = {
   "theme_alt": "🎨 Thème de Grille Rétro / Doré",
@@ -344,7 +344,7 @@ const THEME_DISPLAY_NAMES = {
   "theme_fantome": "👻 Thème de Grille Fantôme",
   "theme_bonbon": "🍭 Thème de Grille Bonbon Canne",
   "theme_sapin": "🎄 Thème de Grille Sapin de Noël",
-  "theme_gingerbread": "🍪 Thème de Grille Pain d'épice"
+  "theme_lutin": "🧝 Thème de Grille Lutin"
 };
 /* ---------- PACKS : menu déroulant (grille + cadre en 1 choix) ---------- */
 const PACKS_LIST = [
@@ -358,7 +358,7 @@ const PACKS_LIST = [
   { id: "pack_halloween_fantome", name: "👻 Pack Fantôme", theme: "theme_fantome", frame: "frame_fantome" },
   { id: "pack_noel_bonbon", name: "🍭 Pack Bonbon", theme: "theme_bonbon", frame: "frame_bonbon" },
   { id: "pack_noel_sapin", name: "🎄 Pack Sapin", theme: "theme_sapin", frame: "frame_guirlande" },
-  { id: "pack_noel_gingerbread", name: "🍪 Pack Pain d'épice", theme: "theme_gingerbread", frame: "frame_gingerbread" },
+  { id: "pack_noel_lutin", name: "🧝 Pack Lutin", theme: "theme_lutin", frame: "frame_lutin" },
 ];
 function ensurePackSelector() {
   if (document.getElementById("pack-input")) return;
