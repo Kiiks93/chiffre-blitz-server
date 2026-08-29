@@ -261,7 +261,7 @@ body.season-s3 #season-bg::after { background: linear-gradient(rgba(0,0,0,0) 55%
 .nx-sapin-right { right: -70px; }
 /* Bonhomme proportionné, près du sapin gauche */
 .nx-bonhomme { position: absolute; bottom: 9%; left: 24%; width: 220px; height: 260px; pointer-events: none; }
-.nx-flocons { position: absolute; inset: 0; pointer-events: none; opacity: 0.8; }
+.nx-flocons { position: absolute; inset: 0; pointer-events: none; opacity: 0.5; }
 /* Traîneau gauche→droite, traverse tout l'écran */
 .nx-sleigh { position: absolute; left: -340px; width: 320px; height: 175px; pointer-events: none; animation: nxFlyLR linear forwards; }
 @keyframes nxFlyLR { from { transform: translateX(0); } to { transform: translateX(calc(100vw + 360px)); } }
