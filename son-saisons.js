@@ -13,7 +13,7 @@ SoundEngine.startMusicSeasonal = function(key) {
   this.stopMusic(false);
   this.currentMode = key;
   this.step = 0;
-  const bpms = { s2menu: 75, s2game: 100, s3menu: 66, s3game: 132 };
+  const bpms = { s2menu: 75, s2game: 100, s3menu: 84, s3game: 132 };
   this.bpm = bpms[key] || 100;
   const intervalMs = (60 / this.bpm / 4) * 1000;
   this.timerId = setInterval(() => {
@@ -236,65 +236,71 @@ SoundEngine.tickNoelMenu = function(step) {
   const t = this.ctx.currentTime;
   const bar = Math.floor(step / 16);
   const inBar = step % 16;
-  const prog = [
-    { root: 130.81, pad: [261.63, 329.63, 392.00, 493.88] },
-    { root: 98.00,  pad: [196.00, 246.94, 293.66, 369.99] },
-    { root: 110.00, pad: [220.00, 261.63, 329.63, 440.00] },
-    { root: 87.31,  pad: [174.61, 220.00, 261.63, 349.23] },
-    { root: 130.81, pad: [261.63, 329.63, 392.00, 493.88] },
-    { root: 98.00,  pad: [196.00, 246.94, 293.66, 369.99] },
-    { root: 87.31,  pad: [174.61, 220.00, 261.63, 349.23] },
-    { root: 130.81, pad: [261.63, 329.63, 392.00, 523.25] }
+  const chords = [
+    { root: 130.81, pad: [261.63, 329.63, 392.00] },
+    { root: 130.81, pad: [261.63, 329.63, 392.00] },
+    { root: 130.81, pad: [261.63, 329.63, 392.00] },
+    { root: 87.31,  pad: [174.61, 261.63, 349.23] },
+    { root: 130.81, pad: [261.63, 329.63, 392.00] },
+    { root: 98.00,  pad: [196.00, 246.94, 293.66] },
+    { root: 98.00,  pad: [196.00, 246.94, 293.66] },
+    { root: 130.81, pad: [261.63, 329.63, 392.00] }
   ];
-  const chord = prog[bar % 8];
+  const chord = chords[bar % 8];
 
+  // Nappe chaude (pad doux filtré) en début de mesure
   if (inBar === 0) {
+    chord.pad.forEach((f, i) => {
+      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+      o.type = "triangle"; o.frequency.setValueAtTime(f, t); o.detune.setValueAtTime(i % 2 ? 3 : -3, t);
+      const lp = this.ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.setValueAtTime(900, t);
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.02, t + 0.8); g.gain.linearRampToValueAtTime(0.0001, t + 4.0);
+      o.connect(lp); lp.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 4.0);
+    });
+  }
+  // Basse ronde et rassurante
+  if (inBar === 0 || inBar === 8) {
     const o = this.ctx.createOscillator(), g = this.ctx.createGain();
     o.type = "sine"; o.frequency.setValueAtTime(chord.root, t);
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.045, t + 1.0); g.gain.linearRampToValueAtTime(0.0001, t + 4.2);
-    o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 4.2);
-    chord.pad.forEach((f, i) => {
-      const oo = this.ctx.createOscillator(), gg = this.ctx.createGain();
-      oo.type = "triangle"; oo.frequency.setValueAtTime(f, t); oo.detune.setValueAtTime(i % 2 ? 3 : -3, t);
-      gg.gain.setValueAtTime(0.0001, t); gg.gain.linearRampToValueAtTime(0.016, t + 1.2); gg.gain.linearRampToValueAtTime(0.0001, t + 4.0);
-      oo.connect(gg); gg.connect(this.ctx.destination); oo.start(t); oo.stop(t + 4.0);
-    });
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.05, t + 0.1); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
+    o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 1.6);
   }
 
-  // Mélodie boîte à musique (douce, rêveuse)
-  const melody = [
-    [659.25, 783.99, 659.25, 523.25],
-    [587.33, 783.99, 493.88, 587.33],
-    [523.25, 659.25, 440.00, 523.25],
-    [440.00, 523.25, 698.46, 523.25],
-    [659.25, 523.25, 392.00, 659.25],
-    [493.88, 587.33, 783.99, 587.33],
-    [440.00, 523.25, 698.46, 523.25],
-    [392.00, 659.25, 523.25, 783.99]
-  ];
-  const notes = melody[bar % 8];
-  const pos = [0, 4, 8, 12];
-  const idx = pos.indexOf(inBar);
-  if (idx !== -1 && notes[idx]) {
-    const f = notes[idx];
-    [0, 0.005].forEach((delay, k) => {
-      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-      o.type = "sine"; o.frequency.setValueAtTime(f * 2, t + delay);
-      const vol = k === 0 ? 0.06 : 0.02;
-      g.gain.setValueAtTime(0.0001, t + delay); g.gain.linearRampToValueAtTime(vol, t + delay + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + delay + 1.4);
-      o.connect(g); g.connect(this.ctx.destination); o.start(t + delay); o.stop(t + delay + 1.4);
-    });
+  // Mélodie « Vive le vent » (chaude, médium, AUCUN ding aigu)
+  const C4=261.63, D4=293.66, E4=329.63, F4=349.23, G4=392.00;
+  const seq = {
+    0: { 0: E4, 6: E4, 12: E4 },
+    1: { 0: E4, 6: E4, 12: E4 },
+    2: { 0: E4, 4: G4, 8: C4, 10: D4, 12: E4 },
+    3: { 0: F4, 4: F4, 8: F4, 12: F4 },
+    4: { 0: F4, 4: E4, 8: E4, 12: E4 },
+    5: { 0: E4, 4: D4, 8: D4, 12: E4 },
+    6: { 0: D4, 8: G4 },
+    7: { 0: E4, 8: C4 }
+  };
+  const m = seq[bar % 8];
+  if (m && m[inBar] !== undefined) {
+    const f = m[inBar];
+    const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = "triangle"; o.frequency.setValueAtTime(f, t);
+    const lp = this.ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.setValueAtTime(1400, t);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.055, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+    o.connect(lp); lp.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 0.9);
+    const o2 = this.ctx.createOscillator(), g2 = this.ctx.createGain();
+    o2.type = "sine"; o2.frequency.setValueAtTime(f / 2, t);
+    g2.gain.setValueAtTime(0.0001, t); g2.gain.linearRampToValueAtTime(0.02, t + 0.03); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+    o2.connect(g2); g2.connect(this.ctx.destination); o2.start(t); o2.stop(t + 0.9);
   }
 
-  // Grelots très discrets
-  if (inBar === 8 && bar % 2 === 0) {
-    const bufferSize = this.ctx.sampleRate * 0.04;
+  // Grelots TRÈS discrets (shaker doux, pas de ding)
+  if (inBar % 4 === 2) {
+    const bufferSize = this.ctx.sampleRate * 0.03;
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
     const n = this.ctx.createBufferSource(); n.buffer = buffer;
-    const f = this.ctx.createBiquadFilter(); f.type = "highpass"; f.frequency.setValueAtTime(6000, t);
-    const g = this.ctx.createGain(); g.gain.setValueAtTime(0.03, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+    const f = this.ctx.createBiquadFilter(); f.type = "bandpass"; f.frequency.setValueAtTime(3000, t); f.Q.setValueAtTime(1, t);
+    const g = this.ctx.createGain(); g.gain.setValueAtTime(0.015, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
     n.connect(f); f.connect(g); g.connect(this.ctx.destination); n.start(t);
   }
 };
