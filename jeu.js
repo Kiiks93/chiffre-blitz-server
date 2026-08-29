@@ -283,12 +283,18 @@ function triggerPerfection() {
     spawnLanterns(true); playLanternSound(); shakeScreen(1.2);
    } else if (themeNow === "theme_fantome") {
     spawnGhostLotties(true); playGhostSound(); shakeScreen(1.2);
-  } else if (themeNow === "theme_bonbon") {
-    spawnBonbons(true); playBonbonSound(); shakeScreen(1.0);
+    } else if (themeNow === "theme_bonbon") {
+    if (typeof spawnBonbons === "function") spawnBonbons(true);
+    if (typeof playBonbonSound === "function") playBonbonSound();
+    shakeScreen(1.0);
   } else if (themeNow === "theme_sapin") {
-    spawnSapinSparkles(true); playSapinSound(); shakeScreen(1.0);
+    if (typeof spawnSapinSparkles === "function") spawnSapinSparkles(true);
+    if (typeof playSapinSound === "function") playSapinSound();
+    shakeScreen(1.0);
   } else if (themeNow === "theme_lutin") {
-    spawnLutins(true); playLutinSound(); shakeScreen(1.0);
+    if (typeof spawnLutins === "function") spawnLutins(true);
+    if (typeof playLutinSound === "function") playLutinSound();
+    shakeScreen(1.0);
   }
   const crackCount = IS_LOW_PERF ? 6 : 18;
   for (let i = 0; i < crackCount; i++) {
@@ -413,11 +419,11 @@ function spawnCrack() {
   
   if (themeNow === "theme_fantome") { spawnGhostLotties(false); playGhostSound(); return; }
   
-  if (themeNow === "theme_bonbon") { spawnBonbons(false); playBonbonSound(); return; }
+  if (themeNow === "theme_bonbon") { if (typeof spawnBonbons === "function") spawnBonbons(false); if (typeof playBonbonSound === "function") playBonbonSound(); return; }
   
-  if (themeNow === "theme_sapin") { spawnSapinSparkles(false); playSapinSound(); return; }
+  if (themeNow === "theme_sapin") { if (typeof spawnSapinSparkles === "function") spawnSapinSparkles(false); if (typeof playSapinSound === "function") playSapinSound(); return; }
   
-  if (themeNow === "theme_lutin") { spawnLutins(false); playLutinSound(); return; }
+  if (themeNow === "theme_lutin") { if (typeof spawnLutins === "function") spawnLutins(false); if (typeof playLutinSound === "function") playLutinSound(); return; }
   
   if (themeNow === "theme_eclair") {
     spawnLightningBurst(false);
