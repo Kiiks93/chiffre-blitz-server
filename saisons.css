@@ -330,7 +330,45 @@ DÉCORS DE CONTOUR DE GRILLE
   background: var(--svg-chauss-lutin) center / contain no-repeat;
   z-index: 4; pointer-events: none;
 }
+/* ============================================================
+ANIMATIONS COMBO NOËL 🎄 (S3)
+============================================================ */
+/* --- Bonbon : sucres rayés qui tombent en tournant --- */
+.bonbon-wrapper { position: fixed; top: -60px; animation: bonbonFall linear forwards; z-index: 1; pointer-events: none; }
+.bonbon {
+  width: 42px; height: 42px; border-radius: 50%;
+  background: repeating-linear-gradient(45deg, #ff043c 0 6px, #ffffff 6px 12px);
+  box-shadow: 0 0 14px rgba(255,4,60,0.7), inset 0 0 8px rgba(255,255,255,0.6);
+  animation: bonbonSpin 0.9s linear infinite;
+}
+@keyframes bonbonSpin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+@keyframes bonbonFall {
+  0% { transform: translateY(0) translateX(0) rotate(0); opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateY(calc(100vh + 120px)) translateX(var(--drift)) rotate(var(--rot)); opacity: 0; }
+}
 
+/* --- Sapin : boules colorées qui scintillent en tombant --- */
+.sapin-sparkle { position: fixed; top: -50px; animation: sapinFall ease-in forwards; z-index: 1; pointer-events: none; }
+.sapin-boule { width: 32px; height: 32px; border-radius: 50%; position: relative; background: radial-gradient(circle at 35% 30%, #fff 0 15%, var(--c) 45%); box-shadow: 0 0 12px var(--c); animation: sapinTwinkle 0.5s ease-in-out infinite alternate; }
+.sapin-boule::before { content: ''; position: absolute; top: -7px; left: 50%; transform: translateX(-50%); width: 9px; height: 7px; background: #ffd700; border-radius: 2px; }
+@keyframes sapinTwinkle { from { filter: brightness(0.9); } to { filter: brightness(1.4); } }
+@keyframes sapinFall {
+  0% { transform: translateY(0); opacity: 0; }
+  15% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(calc(100vh + 100px)); opacity: 0; }
+}
+
+/* --- Lutin : petits lutins qui sautent --- */
+.lutin-jump { position: fixed; bottom: 18%; width: 46px; height: 40px; z-index: 1; pointer-events: none; animation: lutinJump 0.9s ease-in-out forwards; background: var(--svg-hat-lutin) center / contain no-repeat; }
+@keyframes lutinJump {
+  0% { transform: translateY(40px) scale(0.6); opacity: 0; }
+  40% { transform: translateY(-30px) scale(1.1); opacity: 1; }
+  70% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(20px) scale(0.9); opacity: 0; }
+}
 /* ---------- MOBILE : scène allégée ---------- */
 @media (max-width: 600px) {
   .hw-tree { width: 120px; height: 220px; bottom: 18%; }
