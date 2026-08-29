@@ -9,50 +9,27 @@ function getCurrentSeasonId() {
   return window.CURRENT_SEASON || "s1";
 }
 
-/* ---------- FONCTION PRINCIPALE ---------- */
 function applySeasonDA() {
   const seasonId = getCurrentSeasonId();
-
   window.CURRENT_SEASON = seasonId;
 
   document.body.classList.remove("season-s1", "season-s2", "season-s3");
   document.body.classList.add("season-" + seasonId);
 
-  // Scène de fond animée (Halloween)
   if (seasonId === "s2") buildHalloweenScene();
   else clearHalloweenScene();
 
-  // Décor vivant (toiles, araignée, ambiance)
   setupHalloweenDecor(seasonId);
 
-  // En S2, on utilise uniquement les Lottie animées → pas d'émojis flottants
   const fx = document.getElementById("bg-fx");
   if (!fx) return;
   fx.querySelectorAll(".bg-shape").forEach(s => s.remove());
+  if (seasonId === "s2") return;
 
-  if (seasonId === "s2") return; // S2 = Lottie seulement, on sort
-
-  const shapes =
-    seasonId === "s3"
-      ? ["❄️", "⛄", "🎄", "🎁"]
-      : ["◆", "▲", "■", "●"];
-
-  const colors =
-    seasonId === "s3"
-      ? ["#ffffff", "#7be8ff", "#ff4b2b", "#38ef7d"]
-      : ["#00d2ff", "#ff007f", "#ffe600", "#00ff88"];
-
-  for (let i = 0; i < 12; i++) {
-    const s = document.createElement("div");
-    s.className = "bg-shape";
-    s.innerText = shapes[i % shapes.length];
-    s.style.fontSize = (14 + Math.random() * 26) + "px";
-    s.style.left = Math.random() * 100 + "%";
-    s.color = colors[i % colors.length];
-    s.style.animationDuration = (14 + Math.random() * 16) + "s";
-    s.style.animationDelay = (-Math.random() * 25) + "s";
-    fx.appendChild(s);
-  }
+  const shapes = seasonId === "s3" ? ["❄️", "⛄", "🎄", ""] : ["◆", "▲", "■", "●"];
+  const colors = seasonId === "s3"
+    ? ["#ffffff", "#7be8ff", "#ff4b2b", "#38ef7d"]
+    : ["#00d2ff", "#ff007f", "#ffe600", "#00ff88"];
 
   for (let i = 0; i < 12; i++) {
     const s = document.createElement("div");
@@ -67,8 +44,9 @@ function applySeasonDA() {
   }
 }
 
-/* ---------- SCÈNE HALLOWEEN ANIMÉE ---------- */
-
+/* ============================================================
+SCÈNE HALLOWEEN ANIMÉE
+============================================================ */
 function buildHalloweenScene() {
   let bg = document.getElementById("season-bg");
   if (!bg) {
@@ -158,19 +136,30 @@ function buildHalloweenScene() {
 function clearHalloweenScene() {
   const bg = document.getElementById("season-bg");
   if (bg) { bg.innerHTML = ""; bg.dataset.built = ""; }
-    clearHalloweenLotties();  
+  clearHalloweenLotties();
 }
 
-/* ---------- DÉCOR VIVANT HALLOWEEN ---------- */
+/* ============================================================
+DÉCOR VIVANT HALLOWEEN (toiles + spawner)
+============================================================ */
 let halloweenAmbienceTimer = null;
 
 function setupHalloweenDecor(seasonId) {
-     const bgScene = document.getElementById("season-bg");
-  if (bgScene) addScenePumpkins(bgScene);
+  document.querySelectorAll(".halloween-web").forEach(el => el.remove());
   if (halloweenAmbienceTimer) { clearInterval(halloweenAmbienceTimer); halloweenAmbienceTimer = null; }
   if (seasonId !== "s2") return;
 
-    halloweenAmbienceTimer = setInterval(() => {
+  const webTL = document.createElement("div");
+  webTL.className = "halloween-web tl";
+  webTL.innerText = "🕸️";
+  document.body.appendChild(webTL);
+
+  const webTR = document.createElement("div");
+  webTR.className = "halloween-web tr";
+  webTR.innerText = "🕸️";
+  document.body.appendChild(webTR);
+
+  halloweenAmbienceTimer = setInterval(() => {
     const inGame = document.getElementById("screen-game") && document.getElementById("screen-game").style.display === "block";
     if (inGame) return;
     const roll = Math.random();
@@ -180,72 +169,191 @@ function setupHalloweenDecor(seasonId) {
   }, 1500);
 }
 
-function spawnAmbientGhost() {
-  const orb = document.createElement("div");
-  orb.className = "ghost-orb";
-  const size = 50 + Math.random() * 40;
-  orb.style.width = size + "px";
-  orb.style.height = size + "px";
-  orb.style.left = (Math.random() * 80 + 10) + "%";
-  orb.style.top = (Math.random() * 70 + 15) + "%";
-  orb.style.animationDuration = (3.5 + Math.random() * 1.5) + "s";
-  orb.innerHTML = `
-    <div class="ghost-orb-body">
-      <div class="ghost-orb-face">
-        <div class="ghost-orb-eye left"></div>
-        <div class="ghost-orb-eye right"></div>
-        <div class="ghost-orb-mouth"></div>
-      </div>
-    </div>`;
-  document.body.appendChild(orb);
-  setTimeout(() => orb.remove(), 5200);
+/* ============================================================
+LOTTIE HALLOWEEN — préchargé + recyclage (zéro lag)
+============================================================ */
+const HALLOWEEN_LOTTIE_FILES = {
+  citrouille: "CITROUILLE.json",
+  fantome: "fantome.json",
+  chauve: "chauve-souris.json",
+  araignee: "araignée.json"
+};
+let _hlData = {};
+let _hlPreloaded = false;
+let _hlPumpkins = [];
+const _hlActive = { chauve: [], fantome: [], araignee: [] };
+
+function hlMax(type) {
+  const low = (typeof IS_LOW_PERF !== "undefined") && IS_LOW_PERF;
+  if (type === "araignee") return low ? 2 : 3;
+  return low ? 2 : 3;
 }
 
-function spawnAmbientLantern() {
-  if (typeof createLantern !== "function") return;
-  createLantern();
-  const lans = document.querySelectorAll(".lantern");
-  const last = lans[lans.length - 1];
-  if (last) last.classList.add("possessed");
+function preloadHalloweenLotties() {
+  if (_hlPreloaded || typeof lottie === "undefined") return;
+  _hlPreloaded = true;
+  Object.keys(HALLOWEEN_LOTTIE_FILES).forEach(key => {
+    fetch(HALLOWEEN_LOTTIE_FILES[key])
+      .then(r => {
+        if (!r.ok) throw new Error(r.status);
+        return r.json();
+      })
+      .then(data => { _hlData[key] = data; console.log("✅ Lottie chargé : " + key); })
+      .catch(() => { _hlData[key] = null; console.log("❌ Lottie introuvable : " + HALLOWEEN_LOTTIE_FILES[key]); });
+  });
 }
 
-function spawnAmbientBat() {
-  const fx = document.getElementById("bg-fx");
-  if (!fx) return;
-  const colors = ["#7be8ff", "#ffe600", "#ff007f", "#00ff88"];
-  const s = document.createElement("div");
-  s.className = "bg-shape";
-  s.innerText = "🦇";
-  s.style.fontSize = (16 + Math.random() * 18) + "px";
-  s.style.left = Math.random() * 100 + "%";
-  s.color = colors[Math.floor(Math.random() * colors.length)];
-  s.style.animationDuration = (7 + Math.random() * 6) + "s";
-  fx.appendChild(s);
-  setTimeout(() => s.remove(), 14000);
+function hlClone(key) {
+  const d = _hlData[key];
+  if (!d) return null;
+  return (typeof structuredClone === "function") ? structuredClone(d) : JSON.parse(JSON.stringify(d));
 }
 
-/* ---------- APPLICATION AUTOMATIQUE ---------- */
-document.addEventListener("DOMContentLoaded", () => {
+function hlRecycle(type) {
+  const arr = _hlActive[type];
+  while (arr.length >= hlMax(type)) {
+    const old = arr.shift();
+    if (old) { if (old.anim) old.anim.destroy(); if (old.el && old.el.parentNode) old.el.remove(); }
+  }
+}
+
+function hlRegister(type, obj, lifetime) {
+  _hlActive[type].push(obj);
   setTimeout(() => {
-    if (typeof initMenuBackgroundFX === "function") initMenuBackgroundFX();
-    applySeasonDA();
-  }, 100);
-});
+    if (obj.anim) obj.anim.destroy();
+    if (obj.el && obj.el.parentNode) obj.el.remove();
+    const idx = _hlActive[type].indexOf(obj);
+    if (idx !== -1) _hlActive[type].splice(idx, 1);
+  }, lifetime);
+}
 
-if (typeof socket !== "undefined") {
-  socket.on("player_registered", () => {
-    setTimeout(() => { applySeasonDA(); }, 50);
-  });
-  socket.on("season_updated", (data) => {
-    if (data && data.seasonId) {
-      window.CURRENT_SEASON = data.seasonId;
-      if (typeof myProfile !== "undefined" && myProfile) myProfile.currentSeasonId = data.seasonId;
+/* ---------- CITROUILLES EN BAS (SVG = fusions respectées) ---------- */
+function addScenePumpkins(bg) {
+  clearHalloweenPumpkins();
+  const low = (typeof IS_LOW_PERF !== "undefined") && IS_LOW_PERF;
+  const spots = [
+    { left: "2%", bottom: "2%", size: 150 },
+    { left: "18%", bottom: "1%", size: 110 },
+    { right: "2%", bottom: "3%", size: 170 },
+    { right: "20%", bottom: "1%", size: 100 }
+  ];
+  const count = low ? 2 : 4;
+  const build = () => {
+    clearHalloweenPumpkins();
+    for (let i = 0; i < count; i++) {
+      const s = spots[i];
+      const el = document.createElement("div");
+      el.className = "hw-pumpkin-lottie";
+      el.style.width = s.size + "px";
+      el.style.height = s.size + "px";
+      if (s.left) el.style.left = s.left;
+      if (s.right) el.style.right = s.right;
+      el.style.bottom = s.bottom;
+      bg.appendChild(el);
+      let anim = null;
+      const data = hlClone("citrouille");
+      if (data) {
+        anim = lottie.loadAnimation({ container: el, renderer: "svg", loop: true, autoplay: true, animationData: data });
+      } else {
+        el.innerHTML = `<div class="lantern"><div class="face"><div class="eye-left"></div><div class="eye-right"></div><div class="mouth"></div></div></div>`;
+      }
+      _hlPumpkins.push({ el, anim });
     }
-    setTimeout(() => { applySeasonDA(); }, 50);
+  };
+  build();
+  if (!_hlData.citrouille) {
+    const retry = setInterval(() => {
+      if (_hlData.citrouille && window.CURRENT_SEASON === "s2" && document.getElementById("season-bg")) {
+        clearInterval(retry);
+        build();
+      }
+    }, 1000);
+    setTimeout(() => clearInterval(retry), 15000);
+  }
+}
+
+function clearHalloweenPumpkins() {
+  _hlPumpkins.forEach(p => { if (p.anim) p.anim.destroy(); if (p.el && p.el.parentNode) p.el.remove(); });
+  _hlPumpkins = [];
+}
+
+function clearHalloweenLotties() {
+  clearHalloweenPumpkins();
+  Object.keys(_hlActive).forEach(type => {
+    _hlActive[type].forEach(o => { if (o.anim) o.anim.destroy(); if (o.el && o.el.parentNode) o.el.remove(); });
+    _hlActive[type] = [];
   });
 }
+
+/* ---------- CHAUVE-SOURIS : traverse + fonce vers nous ---------- */
+function spawnSceneBat() {
+  hlRecycle("chauve");
+  const el = document.createElement("div");
+  el.className = "hw-bat-lottie";
+  const size = 90 + Math.random() * 60;
+  el.style.width = size + "px";
+  el.style.height = size + "px";
+  el.style.top = (5 + Math.random() * 28) + "%";
+  el.style.animationDuration = (4 + Math.random() * 3) + "s";
+  (document.getElementById("season-bg") || document.body).appendChild(el);
+  const data = hlClone("chauve");
+  let anim = null;
+  if (data) {
+    anim = lottie.loadAnimation({ container: el, renderer: "canvas", loop: true, autoplay: true, animationData: data, rendererSettings: { dpr: window.devicePixelRatio || 2, clearCanvas: true } });
+  } else {
+    el.innerText = "🦇";
+    el.style.fontSize = size * 0.6 + "px";
+  }
+  hlRegister("chauve", { el, anim }, 8000);
+}
+
+/* ---------- FANTÔMES : du fond vers nous (fond noir masqué) ---------- */
+function spawnSceneGhost() {
+  hlRecycle("fantome");
+  const el = document.createElement("div");
+  el.className = "hw-ghost-lottie";
+  const size = 120 + Math.random() * 60;
+  el.style.width = size + "px";
+  el.style.height = size + "px";
+  el.style.left = (10 + Math.random() * 80) + "%";
+  el.style.top = (15 + Math.random() * 60) + "%";
+  el.style.animationDuration = (3.5 + Math.random() * 1.5) + "s";
+  (document.getElementById("season-bg") || document.body).appendChild(el);
+  const data = hlClone("fantome");
+  let anim = null;
+  if (data) {
+    anim = lottie.loadAnimation({ container: el, renderer: "canvas", loop: true, autoplay: true, animationData: data, rendererSettings: { dpr: window.devicePixelRatio || 2, clearCanvas: true } });
+  } else {
+    el.innerText = "👻";
+    el.style.fontSize = size * 0.6 + "px";
+  }
+  hlRegister("fantome", { el, anim }, 5500);
+}
+
+/* ---------- ARAIGNÉES : descendent du haut puis remontent ---------- */
+function spawnSceneSpider() {
+  hlRecycle("araignee");
+  const el = document.createElement("div");
+  el.className = "hw-spider-lottie";
+  const size = 80 + Math.random() * 40;
+  el.style.width = size + "px";
+  el.style.height = size + "px";
+  el.style.left = (10 + Math.random() * 80) + "%";
+  (document.getElementById("season-bg") || document.body).appendChild(el);
+  const data = hlClone("araignee");
+  let anim = null;
+  if (data) {
+    anim = lottie.loadAnimation({ container: el, renderer: "canvas", loop: true, autoplay: true, animationData: data, rendererSettings: { dpr: window.devicePixelRatio || 2, clearCanvas: true } });
+  } else {
+    el.innerText = "🕷️";
+    el.style.fontSize = size * 0.6 + "px";
+  }
+  hlRegister("araignee", { el, anim }, 8500);
+}
+
 /* ============================================================
 FX 🎃 LANTERNES (grille Citrouille) — lanternes 3D + drone angoissant
+(utilisé en jeu, pas seulement au menu)
 ============================================================ */
 let _lanternAudioCtx = null;
 
@@ -315,6 +423,7 @@ function createLantern() {
 
 /* ============================================================
 FX 👻 ORBE FANTÔME (CSS pure, zéro lag)
+(utilisé en jeu, pas seulement au menu)
 ============================================================ */
 let _ghostAudioCtx = null;
 
@@ -366,7 +475,6 @@ function createGhostOrb() {
   orb.style.animationDuration = (2.4 + Math.random() * 0.8) + "s";
 
   if (lite) {
-    // 📱 MOBILE : corps + visage seulement (zéro halo, zéro étincelle)
     orb.innerHTML = `
       <div class="ghost-orb-body">
         <div class="ghost-orb-face">
@@ -376,7 +484,6 @@ function createGhostOrb() {
         </div>
       </div>`;
   } else {
-    // 💻 PC : version complète
     orb.innerHTML = `
       <div class="ghost-orb-halo"></div>
       <div class="ghost-orb-body">
@@ -403,204 +510,26 @@ function createGhostOrb() {
   document.body.appendChild(orb);
   setTimeout(() => orb.remove(), 3500);
 }
+
 /* ============================================================
-LOTTIE HALLOWEEN — préchargé + canvas + recyclage (zéro lag)
+APPLICATION AUTOMATIQUE
 ============================================================ */
-const HALLOWEEN_LOTTIE_FILES = {
-  citrouille: "CITROUILLE.json",
-  fantome: "fantome.json",
-  chauve: "chauve-souris.json",
-  araignee: "araignée.json"
-};
-let _hlData = {};
-let _hlPreloaded = false;
-let _hlPumpkins = [];
-const _hlActive = { chauve: [], fantome: [], araignee: [] };
-
-function hlMax(type) {
-  const low = (typeof IS_LOW_PERF !== "undefined") && IS_LOW_PERF;
-    if (type === "araignee") return low ? 2 : 3;
-  return low ? 2 : 3;
-}
-
-function preloadHalloweenLotties() {
-  if (_hlPreloaded || typeof lottie === "undefined") return;
-  _hlPreloaded = true;
-  Object.keys(HALLOWEEN_LOTTIE_FILES).forEach(key => {
-    fetch(HALLOWEEN_LOTTIE_FILES[key])
-      .then(r => {
-        if (!r.ok) throw new Error(r.status);
-        return r.json();
-      })
-      .then(data => { _hlData[key] = data; console.log("✅ Lottie chargé : " + key); })
-      .catch(e => { _hlData[key] = null; console.log("❌ Lottie INTRouvable : " + HALLOWEEN_LOTTIE_FILES[key]); });
-  });
-}
-
-function hlClone(key) {
-  const d = _hlData[key];
-  if (!d) return null;
-  return (typeof structuredClone === "function") ? structuredClone(d) : JSON.parse(JSON.stringify(d));
-}
-
-function hlRecycle(type) {
-  const arr = _hlActive[type];
-  while (arr.length >= hlMax(type)) {
-    const old = arr.shift();
-    if (old) { if (old.anim) old.anim.destroy(); if (old.el && old.el.parentNode) old.el.remove(); }
-  }
-}
-
-function hlRegister(type, obj, lifetime) {
-  _hlActive[type].push(obj);
+document.addEventListener("DOMContentLoaded", () => {
   setTimeout(() => {
-    if (obj.anim) obj.anim.destroy();
-    if (obj.el && obj.el.parentNode) obj.el.remove();
-    const idx = _hlActive[type].indexOf(obj);
-    if (idx !== -1) _hlActive[type].splice(idx, 1);
-  }, lifetime);
-}
+    if (typeof initMenuBackgroundFX === "function") initMenuBackgroundFX();
+    applySeasonDA();
+  }, 100);
+});
 
-/* ---------- CITROUILLES EN BAS (scintillantes) ---------- */
-function addScenePumpkins(bg) {
-  clearHalloweenPumpkins();
-  const low = (typeof IS_LOW_PERF !== "undefined") && IS_LOW_PERF;
-  const spots = [
-    { left: "2%", bottom: "2%", size: 150 },
-    { left: "18%", bottom: "1%", size: 110 },
-    { right: "2%", bottom: "3%", size: 170 },
-    { right: "20%", bottom: "1%", size: 100 }
-  ];
-  const count = low ? 2 : 4;
-  const build = () => {
-    clearHalloweenPumpkins();
-    for (let i = 0; i < count; i++) {
-      const s = spots[i];
-      const el = document.createElement("div");
-      el.className = "hw-pumpkin-lottie";
-      el.style.width = s.size + "px";
-      el.style.height = s.size + "px";
-      if (s.left) el.style.left = s.left;
-      if (s.right) el.style.right = s.right;
-      el.style.bottom = s.bottom;
-      el.style.background = "transparent";
-      bg.appendChild(el);
-      let anim = null;
-      const data = hlClone("citrouille");
-      if (data) {
-        anim = lottie.loadAnimation({
-          container: el,
-          anim = lottie.loadAnimation({ container: el, renderer: "svg", loop: true, autoplay: true, animationData: data });
-          loop: true,
-          autoplay: true,
-          animationData: data,
-          rendererSettings: { dpr: window.devicePixelRatio || 2, clearCanvas: true, progressiveLoad: true }
-        });
-      } else {
-        el.innerHTML = `<div class="lantern"><div class="face"><div class="eye-left"></div><div class="eye-right"></div><div class="mouth"></div></div></div>`;
-      }
-      _hlPumpkins.push({ el, anim });
-    }
-  };
-  build();
-  if (!_hlData.citrouille) {
-    const retry = setInterval(() => {
-      if (_hlData.citrouille && window.CURRENT_SEASON === "s2" && document.getElementById("season-bg")) {
-        clearInterval(retry);
-        build();
-      }
-    }, 1000);
-    setTimeout(() => clearInterval(retry), 15000);
-  }
-}
-
-function clearHalloweenPumpkins() {
-  _hlPumpkins.forEach(p => { if (p.anim) p.anim.destroy(); if (p.el && p.el.parentNode) p.el.remove(); });
-  _hlPumpkins = [];
-}
-
-function clearHalloweenLotties() {
-  clearHalloweenPumpkins();
-  Object.keys(_hlActive).forEach(type => {
-    _hlActive[type].forEach(o => { if (o.anim) o.anim.destroy(); if (o.el && o.el.parentNode) o.el.remove(); });
-    _hlActive[type] = [];
+if (typeof socket !== "undefined") {
+  socket.on("player_registered", () => {
+    setTimeout(() => { applySeasonDA(); }, 50);
   });
-}
-
-/* ---------- CHAUVE-SOURIS : traverse + fonce vers nous ---------- */
-function spawnSceneBat() {
-  hlRecycle("chauve");
-  const el = document.createElement("div");
-  el.className = "hw-bat-lottie";
-  const size = 90 + Math.random() * 60;
-  el.style.width = size + "px";
-  el.style.height = size + "px";
-  el.style.top = (5 + Math.random() * 28) + "%";
-  el.style.animationDuration = (4 + Math.random() * 3) + "s";
-  el.style.background = "transparent";
-  (document.getElementById("season-bg") || document.body).appendChild(el);
-  const data = hlClone("chauve");
-  let anim = null;
-  if (data) {
-    anim = lottie.loadAnimation({
-      container: el,
-      renderer: "canvas",
-      loop: true,
-      autoplay: true,
-      animationData: data,
-      rendererSettings: { dpr: window.devicePixelRatio || 2, clearCanvas: true, progressiveLoad: true }
-    });
-  } else {
-    el.innerText = "🦇";
-    el.style.fontSize = size * 0.6 + "px";
-  }
-  hlRegister("chauve", { el, anim }, 8000);
-}
-
-/* ---------- FANTÔMES : du fond vers nous ---------- */
-function spawnSceneGhost() {
-  hlRecycle("fantome");
-  const el = document.createElement("div");
-  el.className = "hw-ghost-lottie";
-    const size = 120 + Math.random() * 60;
-  el.style.width = size + "px";
-  el.style.height = size + "px";
-  el.style.left = (10 + Math.random() * 80) + "%";
-  el.style.top = (15 + Math.random() * 60) + "%";
-  el.style.animationDuration = (3.5 + Math.random() * 1.5) + "s";
-  el.style.background = "transparent";
-  (document.getElementById("season-bg") || document.body).appendChild(el);
-  const data = hlClone("fantome");
-  let anim = null;
-  if (data) {
-    anim = lottie.loadAnimation({
-      container: el,
-      renderer: "canvas",
-      loop: true,
-      autoplay: true,
-      animationData: data,
-      rendererSettings: { dpr: window.devicePixelRatio || 2, clearCanvas: true, progressiveLoad: true }
-    });
-  } else {
-    el.innerText = "👻";
-    el.style.fontSize = size * 0.6 + "px";
-  }
-  hlRegister("fantome", { el, anim }, 5500);
-}
-
-/* ---------- ARAIGNÉES : descendent puis remontent se cacher ---------- */
-function spawnSceneSpider() {
-  hlRecycle("araignee");
-  const el = document.createElement("div");
-  el.className = "hw-spider-lottie";
-    const size = 80 + Math.random() * 40;
-  el.style.width = size + "px";
-  el.style.height = size + "px";
-  el.style.left = (10 + Math.random() * 80) + "%";
-  (document.getElementById("season-bg") || document.body).appendChild(el);
-  const data = hlClone("araignee");
-  let anim = null;
-  if (data) anim = lottie.loadAnimation({ container: el, renderer: "canvas", loop: true, autoplay: true, animationData: data });
-  else { el.innerText = "🕷️"; el.style.fontSize = size * 0.6 + "px"; }
-  hlRegister("araignee", { el, anim }, 8000);
+  socket.on("season_updated", (data) => {
+    if (data && data.seasonId) {
+      window.CURRENT_SEASON = data.seasonId;
+      if (typeof myProfile !== "undefined" && myProfile) myProfile.currentSeasonId = data.seasonId;
+    }
+    setTimeout(() => { applySeasonDA(); }, 50);
+  });
 }
