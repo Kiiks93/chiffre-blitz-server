@@ -56,6 +56,7 @@ body.season-s2 #season-bg { opacity: 1; }
 .hw-pumpkin-lottie {
   position: absolute;
   pointer-events: none;
+  z-index: 2;
   filter: drop-shadow(0 0 12px rgba(255, 138, 0, 0.55));
   animation: hwFlicker 1.8s steps(2, jump-none) infinite;
   background: transparent !important;
@@ -95,14 +96,14 @@ body.season-s2 #season-bg { opacity: 1; }
   position: absolute;
   top: 0;
   pointer-events: none;
-  animation: hwSpiderDrop 8s ease-in-out forwards;
   background: transparent !important;
+  animation: hwSpiderFade 9s ease-in-out forwards;
 }
-@keyframes hwSpiderDrop {
-  0% { transform: translateY(-160%); }
-  45% { transform: translateY(20vh); }
-  62% { transform: translateY(20vh); }
-  100% { transform: translateY(-160%); }
+@keyframes hwSpiderFade {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 .hw-pumpkin-lottie canvas, .hw-pumpkin-lottie svg,
@@ -126,6 +127,42 @@ body.season-s2 #season-bg { opacity: 1; }
 }
 .halloween-web.tl { top: -14px; left: -14px; }
 .halloween-web.tr { top: -14px; right: -14px; transform: scaleX(-1); }
+
+/* ---------- FANTÔME CSS (identique au JSON, sans fond noir) ---------- */
+.scene-ghost { position: relative; width: 100%; height: 100%; filter: drop-shadow(0 0 16px rgba(255, 255, 255, 0.4)); }
+.sg-body {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #ffffff 0%, #dfe7f0 100%);
+  border-radius: 45% 45% 0 0;
+}
+.sg-fringe {
+  position: absolute;
+  left: 0; right: 0; bottom: -11%; height: 14%;
+  background: radial-gradient(circle at 50% 0, #dfe7f0 0 68%, transparent 72%);
+  background-size: 20% 100%;
+  background-repeat: repeat-x;
+}
+.sg-eye { position: absolute; width: 11%; height: 16%; border-radius: 50%; background: #262636; top: 34%; }
+.sg-eye.l { left: 30%; }
+.sg-eye.r { left: 59%; }
+.sg-mouth { position: absolute; width: 9%; height: 13%; border-radius: 50%; background: #262636; top: 54%; left: 45.5%; }
+.sg-bubble {
+  position: absolute;
+  top: -6%; left: -20%; width: 38%; height: 24%;
+  background: #3a3f4d;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center; gap: 3px;
+}
+.sg-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -4px; left: 20%;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid #3a3f4d;
+}
+.sg-dot { width: 4px; height: 4px; border-radius: 50%; background: #cfd4e0; }
 
 /* ============================================================
 LANTERNES HALLOWEEN (grille Citrouille)
