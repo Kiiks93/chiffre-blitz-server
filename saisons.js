@@ -14,18 +14,43 @@ let _musicRestartTimer = null;
 
 function restartSeasonMusic() {
   if (typeof SoundEngine === "undefined") return;
+
   if (_musicRestartTimer) clearTimeout(_musicRestartTimer);
+
   _musicRestartTimer = setTimeout(() => {
-    if (typeof SoundEngine.startMusic !== "function") return;
-    // Détermine si on est en jeu ou au menu
-    const inGame = document.getElementById("screen-game") && document.getElementById("screen-game").style.display === "block";
+    const seasonId = window.CURRENT_SEASON || getCurrentSeasonId();
+
+    const gameScreen = document.getElementById("screen-game");
+    const inGame = gameScreen && gameScreen.style.display === "block";
     const mode = inGame ? "game" : "menu";
+
     try {
-      SoundEngine.stopMusic(false);
-      SoundEngine.startMusic(mode);
-    } catch (e) {}
+      if (typeof SoundEngine.stopMusic === "function") {
+        SoundEngine.stopMusic(false);
+      }
+
+      // IMPORTANT : on lance directement la musique saisonnière.
+      // Comme ça, on ne dépend pas de l'override SoundEngine.startMusic.
+      if (seasonId === "s2" && typeof SoundEngine.startMusicSeasonal === "function") {
+        SoundEngine.startMusicSeasonal(mode === "game" ? "s2game" : "s2menu");
+        return;
+      }
+
+      if (seasonId === "s3" && typeof SoundEngine.startMusicSeasonal === "function") {
+        SoundEngine.startMusicSeasonal(mode === "game" ? "s3game" : "s3menu");
+        return;
+      }
+
+      // Saison 1 : musique normale
+      if (typeof SoundEngine.startMusic === "function") {
+        SoundEngine.startMusic(mode);
+      }
+    } catch (e) {
+      console.warn("Erreur restartSeasonMusic:", e);
+    }
   }, 150);
 }
+
 function applySeasonDA() {
   const seasonId = getCurrentSeasonId();
   window.CURRENT_SEASON = seasonId;
@@ -59,7 +84,7 @@ function applySeasonDA() {
     s.innerText = shapes[i % shapes.length];
     s.style.fontSize = (14 + Math.random() * 26) + "px";
     s.style.left = Math.random() * 100 + "%";
-    s.color = colors[i % colors.length];
+    s.style.color = colors[i % colors.length];
     s.style.animationDuration = (14 + Math.random() * 16) + "s";
     s.style.animationDelay = (-Math.random() * 25) + "s";
     fx.appendChild(s);
@@ -593,6 +618,7 @@ function createLutin() {
   document.body.appendChild(l);
   setTimeout(() => l.remove(), 1000);
 }
+
 // Relance la musique quand on entre/sort du jeu (pour passer menu↔game)
 function _watchScreenGame() {
   const gameScreen = document.getElementById("screen-game");
@@ -606,6 +632,7 @@ function _watchScreenGame() {
   });
   observer.observe(gameScreen, { attributes: true, attributeFilter: ["style"] });
 }
+
 /* ============================================================
 APPLICATION AUTOMATIQUE
 ============================================================ */
@@ -624,8 +651,16 @@ if (typeof socket !== "undefined") {
   socket.on("season_updated", (data) => {
     if (data && data.seasonId) {
       window.CURRENT_SEASON = data.seasonId;
-      if (typeof myProfile !== "undefined" && myProfile) myProfile.currentSeasonId = data.seasonId;
+      if (typeof myProfile !== "undefined" && myProfile) {
+        myProfile.currentSeasonId = data.seasonId;
+        myProfile.seasonId = data.seasonId;
+        myProfile.season_id = data.seasonId;
+      }
     }
-    setTimeout(() => { applySeasonDA(); }, 50);
+
+    setTimeout(() => {
+      applySeasonDA();
+      restartSeasonMusic();
+    }, 50);
   });
 }
