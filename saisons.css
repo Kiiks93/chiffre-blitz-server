@@ -368,17 +368,15 @@ THÈMES DE GRILLE NOËL 🎄 (S3) — version magique
   box-shadow: 0 0 12px rgba(56,239,125,0.5);
 }
 
-/* --- Pain d'épice : forme gâteau + pépites --- */
-.tile.gingerbread-theme {
-  background: radial-gradient(circle at 30% 35%, rgba(70,30,8,0.9) 3px, transparent 4px),
-    radial-gradient(circle at 70% 60%, rgba(70,30,8,0.9) 3px, transparent 4px),
-    radial-gradient(circle at 50% 82%, rgba(255,255,255,0.6) 2px, transparent 3px),
-    linear-gradient(180deg, #b06c35, #8a4b1f) !important;
-  border-radius: 14px;
-  border-color: #fff !important;
+/* ---------- THÈME LUTIN 🧝 (vert/rouge, sans fond dénaturant) ---------- */
+.tile.lutin-theme {
+  background: radial-gradient(circle at 25% 30%, rgba(255,75,75,0.5) 3px, transparent 4px),
+    radial-gradient(circle at 75% 70%, rgba(255,255,255,0.4) 2px, transparent 3px),
+    linear-gradient(135deg, #14532d, #166534) !important;
+  border-color: #ef4444 !important;
   color: #fff !important;
-  text-shadow: 0 1px 2px rgba(70,30,8,0.9);
-  box-shadow: 0 0 10px rgba(217,160,102,0.5);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  box-shadow: 0 0 12px rgba(239,68,68,0.5);
 }
 
 /* ---------- CONTOUR SAPIN : guirlande d'ampoules suspendues ---------- */
@@ -414,16 +412,15 @@ THÈMES DE GRILLE NOËL 🎄 (S3) — version magique
 }
 @keyframes garlandTwinkle { from { opacity: 0.7; } to { opacity: 1; } }}
 
-/* ---------- CONTOUR PAIN D'ÉPICE : nuage de lait ---------- */
-#grid:has(.gingerbread-theme) { position: relative; }
-#grid:has(.gingerbread-theme)::before {
-  content: '';
-  position: absolute;
-  inset: -9px;
-  z-index: -1;
-  border-radius: 28px;
-  background: #fff;
-  box-shadow: 0 0 20px rgba(255,255,255,0.75), 0 5px 16px rgba(138,75,31,0.5);
+/* ---------- THÈME LUTIN 🧝 (vert/rouge, sans fond dénaturant) ---------- */
+.tile.lutin-theme {
+  background: radial-gradient(circle at 25% 30%, rgba(255,75,75,0.5) 3px, transparent 4px),
+    radial-gradient(circle at 75% 70%, rgba(255,255,255,0.4) 2px, transparent 3px),
+    linear-gradient(135deg, #14532d, #166534) !important;
+  border-color: #ef4444 !important;
+  color: #fff !important;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  box-shadow: 0 0 12px rgba(239,68,68,0.5);
 }
 /* ---------- MOBILE : scène allégée ---------- */
 @media (max-width: 600px) {
