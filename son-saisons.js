@@ -20,7 +20,8 @@ SoundEngine.startMusicSeasonal = function(key) {
     if (this.isMuted || !this.ctx || this.ctx.state !== "running") return;
     if (key === "s2menu") this.tickHalloweenMenu(this.step % 256);
     else if (key === "s2game") this.tickHalloweenGame(this.step % 128);
-    else if (key === "s3menu" || key === "s3game") this.tickNoel(this.step % 128);
+    else if (key === "s3menu") this.tickNoelMenu(this.step % 128);
+    else if (key === "s3game") this.tickNoelGame(this.step % 128);
     this.step = (this.step + 1) % 256;
   }, intervalMs);
 };
@@ -231,7 +232,7 @@ SoundEngine.tickHalloweenGame = function(step) {
 /* ============================================================
 NOËL (menu + game partagent le même tick)
 ============================================================ */
-SoundEngine.tickNoel = function(step) {
+SoundEngine.tickNoelMenu = function(step) {
   const t = this.ctx.currentTime;
   const bar = Math.floor(step / 16);
   const inBar = step % 16;
@@ -303,6 +304,39 @@ SoundEngine.tickNoel = function(step) {
   }
 };
 
+SoundEngine.tickNoelGame = function(step) {
+  const t = this.ctx.currentTime;
+  const bar = Math.floor(step / 16);
+  const inBar = step % 16;
+  const bass = [65.41, 65.41, 87.31, 98.00][bar % 4];
+  if (inBar % 4 === 0) this._heart(t, 0.2);
+  if (inBar % 2 === 0) {
+    const bufferSize = this.ctx.sampleRate * 0.03;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const n = this.ctx.createBufferSource(); n.buffer = buffer;
+    const f = this.ctx.createBiquadFilter(); f.type = "highpass"; f.frequency.setValueAtTime(6000, t);
+    const g = this.ctx.createGain(); g.gain.setValueAtTime(0.06, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+    n.connect(f); f.connect(g); g.connect(this.ctx.destination); n.start(t);
+  }
+  if (inBar % 8 === 0) {
+    const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = "triangle"; o.frequency.setValueAtTime(bass, t);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.06, t + 0.1); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
+    o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 1.2);
+  }
+  const mel  = { 0: 329.63, 2: 329.63, 4: 329.63, 6: 329.63, 8: 329.63, 10: 329.63, 12: 329.63, 14: 392.00 };
+  const mel2 = { 0: 261.63, 2: 293.66, 4: 329.63, 6: 349.23, 8: 392.00, 10: 392.00, 12: 392.00, 14: 392.00 };
+  const m = (bar % 2 === 0) ? mel : mel2;
+  if (m[inBar]) {
+    const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = "square"; o.frequency.setValueAtTime(m[inBar], t);
+    g.gain.setValueAtTime(0.05, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+    const lp = this.ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.setValueAtTime(2500, t);
+    o.connect(lp); lp.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 0.18);
+  }
+};
 /* ============================================================
 HELPERS (réutilisables)
 ============================================================ */
