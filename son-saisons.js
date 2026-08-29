@@ -418,16 +418,36 @@ function playLutinSound() {
     if (!ctx) return;
     if (ctx.state === "suspended") ctx.resume();
     const t = ctx.currentTime;
-    [880, 1108, 1318, 1567, 1760].forEach((f, i) => {
+    
+    // Pattern "hi hi hi hi" rapide et aigu
+    const laughPattern = [
+      { freq: 2200, time: 0.0, dur: 0.08 },
+      { freq: 2400, time: 0.12, dur: 0.08 },
+      { freq: 2600, time: 0.24, dur: 0.08 },
+      { freq: 2800, time: 0.4, dur: 0.1 },
+      { freq: 2200, time: 0.55, dur: 0.08 },
+      { freq: 2400, time: 0.67, dur: 0.08 }
+    ];
+    
+    laughPattern.forEach(note => {
       const o = ctx.createOscillator(), g = ctx.createGain();
       o.type = "square";
-      o.frequency.setValueAtTime(f, t + i * 0.07);
-      g.gain.setValueAtTime(0.07, t + i * 0.07);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.07 + 0.15);
+      o.frequency.setValueAtTime(note.freq, t + note.time);
+      o.frequency.exponentialRampToValueAtTime(note.freq * 0.9, t + note.time + note.dur);
+      
+      g.gain.setValueAtTime(0.09, t + note.time);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + note.time + note.dur);
+      
       const bp = ctx.createBiquadFilter();
-      bp.type = "bandpass"; bp.frequency.setValueAtTime(f, t); bp.Q.setValueAtTime(8, t);
-      o.connect(bp); bp.connect(g); g.connect(ctx.destination);
-      o.start(t + i * 0.07); o.stop(t + i * 0.07 + 0.15);
+      bp.type = "bandpass";
+      bp.frequency.setValueAtTime(note.freq, t + note.time);
+      bp.Q.setValueAtTime(12, t + note.time);
+      
+      o.connect(bp);
+      bp.connect(g);
+      g.connect(ctx.destination);
+      o.start(t + note.time);
+      o.stop(t + note.time + note.dur + 0.01);
     });
   } catch (e) {}
 }
