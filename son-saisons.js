@@ -376,9 +376,9 @@ SONS COMBO NOËL 🎄 (S3)
 function playBonbonSound() {
   if (isMuted()) return;
   try {
+    SoundEngine.init();
     const ctx = SoundEngine.ctx;
     if (!ctx) return;
-    if (ctx.state === "suspended") ctx.resume();
     const t = ctx.currentTime;
     [2200, 2800, 3400].forEach((f, i) => {
       const o = ctx.createOscillator(), g = ctx.createGain();
@@ -394,13 +394,12 @@ function playBonbonSound() {
   } catch (e) {}
 }
 
-/* --- Sapin : jingle bells (cloches chaudes) --- */
 function playSapinSound() {
   if (isMuted()) return;
   try {
+    SoundEngine.init();
     const ctx = SoundEngine.ctx;
     if (!ctx) return;
-    if (ctx.state === "suspended") ctx.resume();
     const t = ctx.currentTime;
     [783.99, 987.77, 1174.66].forEach((f, i) => {
       const o = ctx.createOscillator(), g = ctx.createGain();
@@ -414,13 +413,12 @@ function playSapinSound() {
   } catch (e) {}
 }
 
-/* --- Lutin : "hihihi" aigu rigolo --- */
 function playLutinSound() {
   if (isMuted()) return;
   try {
+    SoundEngine.init();
     const ctx = SoundEngine.ctx;
     if (!ctx) return;
-    if (ctx.state === "suspended") ctx.resume();
     const t = ctx.currentTime;
     [880, 1108, 1318, 1567, 1760].forEach((f, i) => {
       const o = ctx.createOscillator(), g = ctx.createGain();
