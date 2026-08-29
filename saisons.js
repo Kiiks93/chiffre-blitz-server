@@ -323,9 +323,8 @@ function spawnSceneGhost() {
   el.style.left = (10 + Math.random() * 80) + "%";
   el.style.top = (15 + Math.random() * 55) + "%";
   el.style.animationDuration = (3.5 + Math.random() * 1.5) + "s";
-  el.innerHTML = `
+    el.innerHTML = `
     <div class="scene-ghost">
-      <div class="sg-bubble"><div class="sg-dot"></div><div class="sg-dot"></div><div class="sg-dot"></div></div>
       <div class="sg-body"></div>
       <div class="sg-fringe"></div>
       <div class="sg-eye l"></div>
