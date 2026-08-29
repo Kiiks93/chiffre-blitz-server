@@ -231,13 +231,18 @@ function hlRegister(type, obj, lifetime) {
 function addScenePumpkins(bg) {
   clearHalloweenPumpkins();
   const low = (typeof IS_LOW_PERF !== "undefined") && IS_LOW_PERF;
-  const spots = [
-    { left: "2%", bottom: "2%", size: 150 },
-    { left: "18%", bottom: "1%", size: 110 },
-    { right: "2%", bottom: "3%", size: 170 },
-    { right: "20%", bottom: "1%", size: 100 }
-  ];
-  const count = low ? 2 : 4;
+  const spots = low
+    ? [
+        { left: "-2%", bottom: "-2%", size: 240 },
+        { right: "-3%", bottom: "-1%", size: 280 }
+      ]
+    : [
+        { left: "-2%", bottom: "-2%", size: 280 },
+        { left: "16%", bottom: "-4%", size: 190 },
+        { right: "-3%", bottom: "-1%", size: 320 },
+        { right: "22%", bottom: "-4%", size: 170 }
+      ];
+  const count = spots.length;
   const build = () => {
     clearHalloweenPumpkins();
     for (let i = 0; i < count; i++) {
@@ -255,7 +260,7 @@ function addScenePumpkins(bg) {
       if (data) {
         anim = lottie.loadAnimation({ container: el, renderer: "svg", loop: true, autoplay: true, animationData: data });
       } else {
-        el.innerHTML = `<div class="lantern"><div class="face"><div class="eye-left"></div><div class="eye-right"></div><div class="mouth"></div></div></div>`;
+        el.innerHTML = `<div class="lantern" style="width:100%;height:100%;"><div class="face"><div class="eye-left"></div><div class="eye-right"></div><div class="mouth"></div></div></div>`;
       }
       _hlPumpkins.push({ el, anim });
     }
@@ -312,22 +317,23 @@ function spawnSceneGhost() {
   hlRecycle("fantome");
   const el = document.createElement("div");
   el.className = "hw-ghost-lottie";
-  const size = 120 + Math.random() * 60;
+  const size = 110 + Math.random() * 70;
   el.style.width = size + "px";
   el.style.height = size + "px";
   el.style.left = (10 + Math.random() * 80) + "%";
-  el.style.top = (15 + Math.random() * 60) + "%";
+  el.style.top = (15 + Math.random() * 55) + "%";
   el.style.animationDuration = (3.5 + Math.random() * 1.5) + "s";
+  el.innerHTML = `
+    <div class="scene-ghost">
+      <div class="sg-bubble"><div class="sg-dot"></div><div class="sg-dot"></div><div class="sg-dot"></div></div>
+      <div class="sg-body"></div>
+      <div class="sg-fringe"></div>
+      <div class="sg-eye l"></div>
+      <div class="sg-eye r"></div>
+      <div class="sg-mouth"></div>
+    </div>`;
   (document.getElementById("season-bg") || document.body).appendChild(el);
-  const data = hlClone("fantome");
-  let anim = null;
-  if (data) {
-    anim = lottie.loadAnimation({ container: el, renderer: "canvas", loop: true, autoplay: true, animationData: data, rendererSettings: { dpr: window.devicePixelRatio || 2, clearCanvas: true } });
-  } else {
-    el.innerText = "👻";
-    el.style.fontSize = size * 0.6 + "px";
-  }
-  hlRegister("fantome", { el, anim }, 5500);
+  hlRegister("fantome", { el, anim: null }, 5500);
 }
 
 /* ---------- ARAIGNÉES : descendent du haut puis remontent ---------- */
@@ -335,20 +341,26 @@ function spawnSceneSpider() {
   hlRecycle("araignee");
   const el = document.createElement("div");
   el.className = "hw-spider-lottie";
-  const size = 80 + Math.random() * 40;
-  el.style.width = size + "px";
-  el.style.height = size + "px";
-  el.style.left = (10 + Math.random() * 80) + "%";
+  const w = 160 + Math.random() * 90;
+  el.style.width = w + "px";
+  el.style.height = (50 + Math.random() * 15) + "vh";
+  el.style.left = (8 + Math.random() * 84) + "%";
   (document.getElementById("season-bg") || document.body).appendChild(el);
   const data = hlClone("araignee");
   let anim = null;
   if (data) {
-    anim = lottie.loadAnimation({ container: el, renderer: "canvas", loop: true, autoplay: true, animationData: data, rendererSettings: { dpr: window.devicePixelRatio || 2, clearCanvas: true } });
+    anim = lottie.loadAnimation({
+      container: el,
+      renderer: "canvas",
+      loop: false,
+      autoplay: true,
+      animationData: data,
+      rendererSettings: { dpr: window.devicePixelRatio || 2, clearCanvas: true, preserveAspectRatio: "xMidYMin meet" }
+    });
   } else {
-    el.innerText = "🕷️";
-    el.style.fontSize = size * 0.6 + "px";
+    el.innerHTML = `<div style="position:absolute;top:0;left:50%;width:1.5px;height:60%;background:linear-gradient(rgba(255,255,255,0),rgba(255,255,255,0.4));"></div><div style="position:absolute;top:60%;left:50%;transform:translateX(-50%);font-size:46px;">🕷️</div>`;
   }
-  hlRegister("araignee", { el, anim }, 8500);
+  hlRegister("araignee", { el, anim }, 9000);
 }
 
 /* ============================================================
