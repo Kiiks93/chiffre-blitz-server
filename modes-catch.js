@@ -100,15 +100,14 @@ function spawnCatchItem() {
     el.style.fontSize = (52 + Math.random() * 26) + 'px';
     el.style.top = '-80px';
     el.style.animationDuration = catchState.speed + 's';
-    el.onclick = () => { applyCatch(type, el); el.remove(); };
+    el.onclick = (e) => { applyCatch(type, e.clientX, e.clientY); el.remove(); };
     el.addEventListener('animationend', () => el.remove());
     field.appendChild(el);
-  } else {
+    } else {
+    if (catchState.items.length > 12) return;
     el.style.fontSize = (40 + Math.random() * 16) + 'px';
-    el.style.top = '0px';
+    el.style.left = '0px'; el.style.top = '0px';
     field.appendChild(el);
-    catchState.items.push({ el, type, x: (xPct / 100) * innerWidth, y: -60, vy: 2.2 + Math.random() * 1.5 + (30 - catchState.timeLeft) * 0.05 });
-  }
 }
 function noelLoop() {
   if (!catchState || !catchState.active || catchState.theme !== 'noel') return;
@@ -116,15 +115,15 @@ function noelLoop() {
   for (let i = catchState.items.length - 1; i >= 0; i--) {
     const it = catchState.items[i];
     it.y += it.vy;
-    it.el.style.top = it.y + 'px';
-    it.el.style.left = it.x + 'px';
-    if (it.y >= hutTop - 30 && it.y <= hutTop + 40 && Math.abs(it.x - catchState.hutX) < 60) {
-      applyCatch(it.type, it.el); it.el.remove(); catchState.items.splice(i, 1);
+    it.el.style.transform = 'translate3d(' + it.x + 'px,' + it.y + 'px,0)';
+    const w = it.type === 'good' ? 70 : (it.type === 'bad' ? 45 : 60);
+    if (it.y >= hutTop - 45 && it.y <= hutTop + 50 && Math.abs(it.x - catchState.hutX) < w) {
+      applyCatch(it.type, it.x, it.y); it.el.remove(); catchState.items.splice(i, 1);
     } else if (it.y > innerHeight + 60) { it.el.remove(); catchState.items.splice(i, 1); }
   }
   catchState.raf = requestAnimationFrame(noelLoop);
 }
-function applyCatch(type, el) {
+function applyCatch(type, fx, fy) {
   if (!catchState || !catchState.active) return;
   let delta;
   if (type === 'good') delta = 10;
@@ -132,16 +131,15 @@ function applyCatch(type, el) {
   else { const r = Math.random(); delta = r < 0.4 ? 20 : (r < 0.7 ? 0 : -10); }
   catchState.score = Math.max(0, catchState.score + delta);
   updateCatchHUD();
-  if (el) floatCatch(delta, el);
+  if (fx !== undefined) floatCatch(delta, fx, fy);
   if (delta >= 0) SoundEngine.playClick(); else SoundEngine.playError();
   if (catchState.is1v1) socket.emit('catch_click', { delta });
 }
-function floatCatch(delta, el) {
-  const r = el.getBoundingClientRect();
+function floatCatch(delta, x, y) {
   const f = document.createElement('div');
   f.className = 'catch-float'; f.style.color = delta >= 0 ? '#00ff88' : '#ff4b2b';
   f.innerText = (delta > 0 ? '+' : '') + delta;
-  f.style.left = r.left + 'px'; f.style.top = r.top + 'px';
+  f.style.left = x + 'px'; f.style.top = y + 'px';
   document.getElementById('catch-arena').appendChild(f);
   setTimeout(() => f.remove(), 900);
 }
