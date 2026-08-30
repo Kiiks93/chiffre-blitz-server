@@ -389,7 +389,9 @@ const EVENT_NAMES = {
   expressoMatch: "⚡ Expresso Match (20s)",
   chaosMode: "🌪️ Chaos Mode (Malus auto)",
   jackpotEclair: "🎁 Jackpot Éclair",
-  tugOfWarMode: "🪢 Mode Corde Raide (Tug-of-War)"
+  tugOfWarMode: "🪢 Mode Corde Raide (Tug-of-War)",
+  halloweenMode: "🎃 Mode Exclusif Halloween (Chasse Hantée)",
+  noelMode: "🎄 Mode Exclusif Noël (Course aux Cadeaux)"
 };
 
 function renderAdminSchedules(schedules) {
@@ -427,8 +429,10 @@ function saveAdminSchedules() {
     "rankShield",
     "expressoMatch",
     "chaosMode",
-    "jackpotEclair",
-    "tugOfWarMode"
+    "jackpotEclair", 
+    "tugOfWarMode", 
+    "halloweenMode", 
+    "noelMode"
   ];
 
   const schedulesData = {};
