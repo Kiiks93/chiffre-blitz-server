@@ -95,8 +95,8 @@ function spawnCatchItem() {
   const cfg = CATCH_CONFIG[catchState.theme];
   const r = Math.random();
   let type;
-  if (Date.now() - (catchState.lastHappy || 0) > 5000) type = 'happy';
-  else if (r < 0.55) type = 'good'; else if (r < 0.72) type = 'bad'; else if (r < 0.92) type = 'happy'; else type = 'mean';
+  if (Date.now() - (catchState.lastHappy || 0) > 7000) type = 'happy';
+  else if (r < 0.62) type = 'good'; else if (r < 0.84) type = 'bad'; else if (r < 0.95) type = 'happy'; else type = 'mean';
   if (type === 'happy') catchState.lastHappy = Date.now();
   const el = document.createElement('div');
   el.className = 'catch-item';
