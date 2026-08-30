@@ -60,7 +60,7 @@ function beginCatch(theme, is1v1, opponent) {
   const cfg = CATCH_CONFIG[theme];
   const arena = document.createElement('div');
   arena.id = 'catch-arena'; arena.className = theme;
-    const extra = theme === 'noel' ? '<div id="catch-santa"></div>' : '<div id="catch-backdrop">🏰</div>';
+  const extra = theme === 'noel' ? '<div id="catch-santa"></div>' : '<div id="catch-backdrop">🏰</div>';
   arena.innerHTML = `${extra}
     <div id="catch-hud"><div>⭐ <span id="catch-score">0</span></div><div id="catch-timer" style="color:#ff007f;">30</div><div>${is1v1 ? '🆚 <span id="catch-opp">0</span>' : ''}</div></div>
     <div style="text-align:center;font-weight:900;color:#fff;">${cfg.label}</div>
@@ -78,18 +78,23 @@ function beginCatch(theme, is1v1, opponent) {
   if (!is1v1) catchState.timerInterval = setInterval(() => { catchState.timeLeft--; updateCatchHUD(); if (catchState.timeLeft <= 0) endCatchSolo(); }, 1000);
   scheduleSpawn();
 }
+
 function scheduleSpawn() {
   if (!catchState || !catchState.active) return;
   spawnCatchItem();
   const elapsed = 30 - catchState.timeLeft;
-  catchState.spawnDelay = Math.max(400, 800 - elapsed * 13);
+  if (catchState.theme === 'noel') catchState.spawnDelay = Math.max(650, 1000 - elapsed * 10);
+  else catchState.spawnDelay = Math.max(400, 800 - elapsed * 13);
   catchState.spawnTimeout = setTimeout(scheduleSpawn, catchState.spawnDelay);
 }
+
 function spawnCatchItem() {
   const field = document.getElementById('catch-field'); if (!field || !catchState) return;
   const cfg = CATCH_CONFIG[catchState.theme];
   const r = Math.random();
-  const type = r < 0.6 ? 'good' : (r < 0.85 ? 'bad' : 'gamble');
+  const pGood = catchState.theme === 'noel' ? 0.70 : 0.60;
+  const pBad = catchState.theme === 'noel' ? 0.88 : 0.85;
+  const type = r < pGood ? 'good' : (r < pBad ? 'bad' : 'gamble');
   const el = document.createElement('div');
   el.className = 'catch-item';
   el.innerText = cfg[type];
@@ -109,7 +114,10 @@ function spawnCatchItem() {
     el.style.fontSize = (40 + Math.random() * 16) + 'px';
     el.style.left = '0px'; el.style.top = '0px';
     field.appendChild(el);
+    catchState.items.push({ el, type, x: (xPct / 100) * innerWidth, y: -60, vy: 1.2 + Math.random() * 0.8 + (30 - catchState.timeLeft) * 0.03 });
+  }
 }
+
 function noelLoop() {
   if (!catchState || !catchState.active || catchState.theme !== 'noel') return;
   const hutTop = innerHeight - 110;
@@ -124,6 +132,7 @@ function noelLoop() {
   }
   catchState.raf = requestAnimationFrame(noelLoop);
 }
+
 function applyCatch(type, fx, fy) {
   if (!catchState || !catchState.active) return;
   let delta;
@@ -136,6 +145,7 @@ function applyCatch(type, fx, fy) {
   if (delta >= 0) SoundEngine.playClick(); else SoundEngine.playError();
   if (catchState.is1v1) socket.emit('catch_click', { delta });
 }
+
 function floatCatch(delta, x, y) {
   const f = document.createElement('div');
   f.className = 'catch-float'; f.style.color = delta >= 0 ? '#00ff88' : '#ff4b2b';
@@ -144,6 +154,7 @@ function floatCatch(delta, x, y) {
   document.getElementById('catch-arena').appendChild(f);
   setTimeout(() => f.remove(), 900);
 }
+
 function updateCatchHUD() {
   const s = document.getElementById('catch-score'); if (s) s.innerText = catchState.score;
   const t = document.getElementById('catch-timer'); if (t) t.innerText = Math.max(0, catchState.timeLeft);
