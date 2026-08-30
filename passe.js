@@ -265,6 +265,7 @@ card.innerHTML = `
 listDiv.appendChild(card);
 });
 container.appendChild(listDiv);
+updatePassSeasonLabels();
 }
 function buyBlitzPassPremium() { if (myProfile.coins < 1000) { showNotificationToast(i18n[currentLang].not_enough_coins, "announcement"); return; } socket.emit("buy_blitz_pass"); }
 function claimPassReward(tier, track) { if (track === "premium" && !myProfile.blitzPassPremium) { showNotificationToast("❌ Tu dois acheter le Passe Premium pour récupérer cette récompense !", "announcement"); return; } socket.emit("claim_pass_tier", { tier, track }); }
