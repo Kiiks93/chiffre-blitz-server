@@ -31,15 +31,7 @@ function restartSeasonMusic() {
 
       // IMPORTANT : on lance directement la musique saisonnière.
       // Comme ça, on ne dépend pas de l'override SoundEngine.startMusic.
-      if (seasonId === "s2" && typeof SoundEngine.startMusicSeasonal === "function") {
-        SoundEngine.startMusicSeasonal(mode === "game" ? "s2game" : "s2menu");
-        return;
-      }
-
-      if (seasonId === "s3" && typeof SoundEngine.startMusicSeasonal === "function") {
-        SoundEngine.startMusicSeasonal(mode === "game" ? "s3game" : "s3menu");
-        return;
-      }
+      if (typeof SoundEngine.startMusic === "function") SoundEngine.startMusic(mode);
 
       // Saison 1 : musique normale
       if (typeof SoundEngine.startMusic === "function") {
