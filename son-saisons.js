@@ -32,11 +32,11 @@ SoundEngine.startMusic = function(mode) {
   this._baseMode = mode;
   let season = (typeof window !== "undefined") ? (window.CURRENT_SEASON || "s1") : "s1";
   const pref = localStorage.getItem('cb_music_season');
-  if (pref && getReleasedSeasons().some(s => s.id === pref)) season = pref;
-  if (season === "s2") { if (mode === "menu") return this.startMusicSeasonal("s2menu"); return this.startMusicSeasonal("s2game"); }
-  if (season === "s3") { if (mode === "menu") return this.startMusicSeasonal("s3menu"); return this.startMusicSeasonal("s3game"); }
-  this._originalStartMusic.call(this, mode);
-};
+  const ctx = localStorage.getItem('cb_music_season_ctx');
+  if (pref) {
+    if (ctx !== season) { localStorage.removeItem('cb_music_season'); localStorage.removeItem('cb_music_season_ctx'); }
+    else if (getReleasedSeasons().some(s => s.id === pref)) season = pref;
+  }
 /* ============================================================
 HALLOWEEN MENU : chill-horreur LONG (~51s, 2 moitiés)
 ============================================================ */
@@ -517,7 +517,8 @@ function openMusicChooser() {
 }
 function closeMusicChooser() { const o = document.getElementById('music-chooser'); if (o) o.remove(); }
 function setMusicSeason(id) {
-  if (id === 'auto') localStorage.removeItem('cb_music_season'); else localStorage.setItem('cb_music_season', id);
+  if (id === 'auto') { localStorage.removeItem('cb_music_season'); localStorage.removeItem('cb_music_season_ctx'); }
+  else { localStorage.setItem('cb_music_season', id); localStorage.setItem('cb_music_season_ctx', (window.CURRENT_SEASON || 's1')); }
   closeMusicChooser();
   if (typeof restartSeasonMusic === "function") restartSeasonMusic();
 }
