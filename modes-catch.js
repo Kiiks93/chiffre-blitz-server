@@ -95,9 +95,11 @@ function spawnCatchItem() {
   if (r < 0.55) type = 'good'; else if (r < 0.75) type = 'bad'; else if (r < 0.90) type = 'happy'; else type = 'mean';
   const el = document.createElement('div');
   el.className = 'catch-item';
-  if (type === 'happy') el.classList.add('happy');
-  if (type === 'mean') el.classList.add('mean');
-  el.innerHTML = cfg[type] + (type === 'happy' ? '<span class="mood">😊</span>' : type === 'mean' ? '<span class="mood">😈</span>' : '');
+  if (type === 'happy' || type === 'mean') {
+    el.classList.add((catchState.theme === 'halloween' ? 'ci-pump-' : 'ci-elf-') + (type === 'happy' ? 'happy' : 'mean'));
+  } else {
+    el.innerText = cfg[type];
+  }
   if (catchState.theme === 'halloween') {
     if (field.childElementCount > 14) return;
     el.classList.add('fall');
