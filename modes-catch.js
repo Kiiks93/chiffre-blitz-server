@@ -1,9 +1,11 @@
 /* ============================================================
-MODES SAISONNIERS "ATTRAPE" — Halloween 🎃 & Noël 🎄
+MODES SAISONNIERS — Halloween 🎃 (cliquer) & Noël 🎄 (attraper)
 ============================================================ */
 const CATCH_CONFIG = {
-  halloween: { good: "🦇", bad: "👻", gamble: "🎃", label: "🎃 CHASSE HANTÉE" },
-  noel: { good: "🍭", bad: "🎄", gamble: "🧝", label: "🎄 COURSE AUX CADEAUX" }
+  halloween: { good: "🦇", bad: "👻", gamble: "🎃", label: "🎃 CHASSE HANTÉE",
+    rules: "Clique les 🦇 <b style='color:#00ff88'>(+10)</b> avant qu'elles ne tombent ! Évite les 👻 <b style='color:#ff4b2b'>(−15)</b>. Les 🎃 sont un pari : <b>+20 / 0 / −10</b>." },
+  noel: { good: "🍭", bad: "🎄", gamble: "🧝", label: "🎄 COURSE AUX CADEAUX",
+    rules: "Déplace la <b>hutte</b> avec ton doigt / ta souris pour attraper les 🍭 <b style='color:#00ff88'>(+10)</b> dans le sac ! Évite les 🎄 <b style='color:#ff4b2b'>(−15)</b>. Les 🧝 sont un pari : <b>+20 / 0 / −10</b>." }
 };
 let catchState = null;
 
@@ -12,10 +14,14 @@ function startNoelQueue() { openCatchChoice("noel"); }
 
 function openCatchChoice(theme) {
   closeCatchChoice();
+  const cfg = CATCH_CONFIG[theme];
   const ov = document.createElement('div');
   ov.id = 'catch-choice-overlay'; ov.className = 'modal-overlay';
-  ov.innerHTML = `<div class="modal-card" style="max-width:320px;text-align:center;">
-    <h2 style="color:#f8b500;margin:0 0 10px 0;">${CATCH_CONFIG[theme].label}</h2>
+  ov.innerHTML = `<div class="modal-card" style="max-width:340px;text-align:center;">
+    <h2 style="color:#f8b500;margin:0 0 8px 0;">${cfg.label}</h2>
+    <div style="background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:10px;font-size:11px;color:#ddd;line-height:1.5;margin-bottom:10px;text-align:left;">
+      <b style="color:#00d2ff;">📖 COMMENT JOUER :</b><br>${cfg.rules}
+    </div>
     <button class="btn-main btn-blue" onclick="launchCatch('${theme}',false)">🏋️ Solo</button>
     <button class="btn-main btn-gold" onclick="launchCatch('${theme}',true)">⚔️ Duel 1v1</button>
     <button class="btn-secondary" onclick="closeCatchChoice()">⬅️ Retour</button>
@@ -30,18 +36,15 @@ function launchCatch(theme, is1v1) {
     hideAllScreens();
     document.getElementById('screen-1v1-lobby').style.display = 'flex';
     socket.emit(theme === 'halloween' ? 'find_halloween_match' : 'find_noel_match');
-  } else {
-    beginCatch(theme, false, null);
-  }
+  } else beginCatch(theme, false, null);
 }
 
-/* ---------- Réception serveur ---------- */
+/* ---------- Serveur ---------- */
 socket.on('start_catch', (data) => {
   hideAllScreens();
   document.getElementById('countdown-overlay').style.display = 'flex';
   let c = 3; document.getElementById('countdown-number').innerText = c;
-  const t = setInterval(() => {
-    c--;
+  const t = setInterval(() => { c--;
     if (c > 0) document.getElementById('countdown-number').innerText = c;
     else { clearInterval(t); document.getElementById('countdown-overlay').style.display = 'none'; beginCatch(data.theme, true, data.opponent); }
   }, 1000);
@@ -53,23 +56,26 @@ socket.on('game_over_1v1', (data) => { if (data.isCatch) catchState = null; });
 /* ---------- Moteur ---------- */
 function beginCatch(theme, is1v1, opponent) {
   clearCatchArena();
-  catchState = { theme, is1v1, opponent, score: 0, oppScore: 0, timeLeft: 30, active: true, spawnDelay: 800, speed: 2.2 };
+  catchState = { theme, is1v1, opponent, score: 0, oppScore: 0, timeLeft: 30, active: true, items: [], hutX: innerWidth / 2, spawnDelay: 800, speed: 3.2 };
   const cfg = CATCH_CONFIG[theme];
   const arena = document.createElement('div');
   arena.id = 'catch-arena'; arena.className = theme;
-  arena.innerHTML = `
-    <div id="catch-backdrop">${theme === 'noel' ? '🛖' : '🏰'}</div>
-    <div id="catch-hud">
-      <div>⭐ <span id="catch-score">0</span></div>
-      <div id="catch-timer" style="color:#ff007f;">30</div>
-      <div>${is1v1 ? '🆚 <span id="catch-opp">0</span>' : ''}</div>
-    </div>
+  const extra = theme === 'noel' ? '<div id="catch-hut">🛖</div>' : '<div id="catch-backdrop">🏰</div>';
+  arena.innerHTML = `${extra}
+    <div id="catch-hud"><div>⭐ <span id="catch-score">0</span></div><div id="catch-timer" style="color:#ff007f;">30</div><div>${is1v1 ? '🆚 <span id="catch-opp">0</span>' : ''}</div></div>
     <div style="text-align:center;font-weight:900;color:#fff;">${cfg.label}</div>
     <div id="catch-field"></div>`;
   document.body.appendChild(arena);
-  if (!is1v1) {
-    catchState.timerInterval = setInterval(() => { catchState.timeLeft--; updateCatchHUD(); if (catchState.timeLeft <= 0) endCatchSolo(); }, 1000);
+
+  if (theme === 'noel') {
+    const hut = document.getElementById('catch-hut');
+    const move = (x) => { catchState.hutX = Math.max(40, Math.min(innerWidth - 40, x)); hut.style.left = catchState.hutX + 'px'; };
+    arena.addEventListener('pointermove', (e) => move(e.clientX));
+    arena.addEventListener('touchmove', (e) => { if (e.touches[0]) move(e.touches[0].clientX); e.preventDefault(); }, { passive: false });
+    move(innerWidth / 2);
+    catchState.raf = requestAnimationFrame(noelLoop);
   }
+  if (!is1v1) catchState.timerInterval = setInterval(() => { catchState.timeLeft--; updateCatchHUD(); if (catchState.timeLeft <= 0) endCatchSolo(); }, 1000);
   scheduleSpawn();
 }
 function scheduleSpawn() {
@@ -77,7 +83,6 @@ function scheduleSpawn() {
   spawnCatchItem();
   const elapsed = 30 - catchState.timeLeft;
   catchState.spawnDelay = Math.max(400, 800 - elapsed * 13);
-  catchState.speed = Math.max(1.2, 2.2 - elapsed * 0.03);
   catchState.spawnTimeout = setTimeout(scheduleSpawn, catchState.spawnDelay);
 }
 function spawnCatchItem() {
@@ -88,32 +93,55 @@ function spawnCatchItem() {
   const el = document.createElement('div');
   el.className = 'catch-item';
   el.innerText = cfg[type];
-  el.style.left = (8 + Math.random() * 80) + '%';
-  el.style.top = (5 + Math.random() * 40) + '%';
-  el.style.fontSize = (30 + Math.random() * 20) + 'px';
-  el.style.animationDuration = catchState.speed + 's';
-  el.onclick = () => hitCatchItem(type, el);
-  field.appendChild(el);
-  el.addEventListener('animationend', () => el.remove());
+  const xPct = 6 + Math.random() * 86;
+  el.style.left = xPct + '%';
+  if (catchState.theme === 'halloween') {
+    el.classList.add('fall');
+    el.style.fontSize = (52 + Math.random() * 26) + 'px';
+    el.style.top = '-80px';
+    el.style.animationDuration = catchState.speed + 's';
+    el.onclick = () => { applyCatch(type, el); el.remove(); };
+    el.addEventListener('animationend', () => el.remove());
+    field.appendChild(el);
+  } else {
+    el.style.fontSize = (40 + Math.random() * 16) + 'px';
+    el.style.top = '0px';
+    field.appendChild(el);
+    catchState.items.push({ el, type, x: (xPct / 100) * innerWidth, y: -60, vy: 2.2 + Math.random() * 1.5 + (30 - catchState.timeLeft) * 0.05 });
+  }
 }
-function hitCatchItem(type, el) {
+function noelLoop() {
+  if (!catchState || !catchState.active || catchState.theme !== 'noel') return;
+  const hutTop = innerHeight - 110;
+  for (let i = catchState.items.length - 1; i >= 0; i--) {
+    const it = catchState.items[i];
+    it.y += it.vy;
+    it.el.style.top = it.y + 'px';
+    it.el.style.left = it.x + 'px';
+    if (it.y >= hutTop - 30 && it.y <= hutTop + 40 && Math.abs(it.x - catchState.hutX) < 60) {
+      applyCatch(it.type, it.el); it.el.remove(); catchState.items.splice(i, 1);
+    } else if (it.y > innerHeight + 60) { it.el.remove(); catchState.items.splice(i, 1); }
+  }
+  catchState.raf = requestAnimationFrame(noelLoop);
+}
+function applyCatch(type, el) {
   if (!catchState || !catchState.active) return;
-  let delta = 0;
+  let delta;
   if (type === 'good') delta = 10;
   else if (type === 'bad') delta = -15;
   else { const r = Math.random(); delta = r < 0.4 ? 20 : (r < 0.7 ? 0 : -10); }
   catchState.score = Math.max(0, catchState.score + delta);
   updateCatchHUD();
-  floatCatch(delta, el);
+  if (el) floatCatch(delta, el);
   if (delta >= 0) SoundEngine.playClick(); else SoundEngine.playError();
-  el.remove();
   if (catchState.is1v1) socket.emit('catch_click', { delta });
 }
 function floatCatch(delta, el) {
+  const r = el.getBoundingClientRect();
   const f = document.createElement('div');
   f.className = 'catch-float'; f.style.color = delta >= 0 ? '#00ff88' : '#ff4b2b';
   f.innerText = (delta > 0 ? '+' : '') + delta;
-  f.style.left = el.style.left; f.style.top = el.style.top;
+  f.style.left = r.left + 'px'; f.style.top = r.top + 'px';
   document.getElementById('catch-arena').appendChild(f);
   setTimeout(() => f.remove(), 900);
 }
@@ -124,20 +152,19 @@ function updateCatchHUD() {
 }
 function stopCatchSpawning() { if (catchState) clearTimeout(catchState.spawnTimeout); }
 function clearCatchArena() {
-  if (catchState) { clearTimeout(catchState.spawnTimeout); clearInterval(catchState.timerInterval); }
+  if (catchState) { clearTimeout(catchState.spawnTimeout); clearInterval(catchState.timerInterval); if (catchState.raf) cancelAnimationFrame(catchState.raf); catchState.items = []; }
   const a = document.getElementById('catch-arena'); if (a) a.remove();
 }
 function endCatchSolo() {
   if (!catchState) return;
   catchState.active = false;
-  stopCatchSpawning(); clearInterval(catchState.timerInterval);
+  stopCatchSpawning(); clearInterval(catchState.timerInterval); if (catchState.raf) cancelAnimationFrame(catchState.raf);
   socket.emit('claim_catch_solo', { score: catchState.score });
 }
 socket.on('catch_solo_result', (data) => {
   const score = catchState ? catchState.score : 0;
   clearCatchArena(); catchState = null;
   hideAllScreens();
-  const modal = document.getElementById('recap-modal');
   document.getElementById('recap-1v1-rows').style.display = 'none';
   document.getElementById('recap-banner').innerText = '🎯 MODE SAISONNIER TERMINÉ';
   document.getElementById('recap-banner').style.color = '#00d2ff';
@@ -145,11 +172,11 @@ socket.on('catch_solo_result', (data) => {
   document.getElementById('recap-my-score').innerText = score;
   document.getElementById('recap-coins-gained').innerHTML = `+${data.baseCoins}${data.rushBonus > 0 ? ` <span style="color:#ff8a00;">+${data.rushBonus}(RUSH)</span>` : ''}`;
   document.getElementById('winner-cinematic-container').innerHTML = '';
-  modal.style.display = 'flex';
+  document.getElementById('recap-modal').style.display = 'flex';
   SoundEngine.playVictory();
 });
 
-/* ---------- Visibilité des boutons menu ---------- */
+/* ---------- Visibilité boutons ---------- */
 function refreshCatchButtons() {
   const season = (typeof getCurrentSeasonId === "function") ? getCurrentSeasonId() : (window.CURRENT_SEASON || "s1");
   const hb = document.getElementById('btn-halloween-menu');
