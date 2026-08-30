@@ -134,7 +134,9 @@ function renderAdminSchedules(schedules) {
     expressoMatch: "⚡ Expresso Match (20s)",
     chaosMode: "🌪️ Chaos Mode (Malus auto)",
     jackpotEclair: "🎁 Jackpot Éclair",
-    tugOfWarMode: "🪢 Mode Corde Raide (Tug-of-War)"
+    tugOfWarMode: "🪢 Mode Corde Raide (Tug-of-War)",
+    halloweenMode: "🎃 Mode Exclusif Halloween (Chasse Hantée)",
+    noelMode: "🎄 Mode Exclusif Noël (Course aux Cadeaux)"
   };
   for (let key in EVENT_NAMES) {
     const s = schedules[key] || { manual: false, start: null, end: null };
@@ -164,7 +166,7 @@ function renderAdminSchedules(schedules) {
 }
 
 function saveAdminSchedules() {
-  const EVENT_KEYS = ["coinRush", "rankShield", "expressoMatch", "chaosMode", "jackpotEclair", "tugOfWarMode"];
+  const EVENT_KEYS = ["coinRush", "rankShield", "expressoMatch", "chaosMode", "jackpotEclair", "tugOfWarMode","halloweenMode", "noelMode"];
   const schedulesData = {};
   EVENT_KEYS.forEach(key => {
     const manualEl = document.getElementById(`admin-manual-${key}`);
