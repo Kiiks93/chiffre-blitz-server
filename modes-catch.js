@@ -3,9 +3,9 @@ MODES SAISONNIERS — base (100🪙) + bonus (100🪙, non doublé x2)
 ============================================================ */
 const CATCH_CONFIG = {
   halloween: { good: "🦇", bad: "👻", happy: "🎃", mean: "🎃", label: "🎃 CHASSE HANTÉE",
-    rules: "Clique les 🦇 <b style='color:#00ff88'>(+10)</b> ! Évite les 👻 <b style='color:#ff4b2b'>(−15)</b>. 🎃 qui sourit = <b>+20 bonus</b>, 🎃 énervée = <b>−20</b>. Le bonus (max 100🪙) n'est PAS doublé par le x2." },
+    rules: "Clique les 🦇 <b style='color:#00ff88'>(+10)</b> ! Évite les 👻 <b style='color:#ff4b2b'>(−15)</b>. Citrouilles : la <b style='color:#00ff88'>SOURIANTE = +20 bonus</b>, l'<b style='color:#ff4b2b'>ÉNERVÉE = −20</b>. Le bonus (max 100🪙) n'est PAS doublé par le x2." },
   noel: { good: "🎁", bad: "🎄", happy: "🧝", mean: "🧝", label: "🎄 HOTTE DU PÈRE NOËL",
-    rules: "Attrape les 🎁 <b style='color:#00ff88'>(+10)</b> ! Évite les 🎄 <b style='color:#ff4b2b'>(−15)</b>. 🧝 qui sourit = <b>+20 bonus</b>, 🧝 énervé = <b>−20</b>. Le bonus (max 100🪙) n'est PAS doublé par le x2." }
+    rules: "Attrape les 🎁 <b style='color:#00ff88'>(+10)</b> ! Évite les 🎄 <b style='color:#ff4b2b'>(−15)</b>. Lutins : le <b style='color:#00ff88'>SOURiant = +20 bonus</b>, l'<b style='color:#ff4b2b'>ÉNERVÉ = −20</b>. Le bonus (max 100🪙) n'est PAS doublé par le x2." }
 };
 let catchState = null;
 
@@ -54,7 +54,7 @@ socket.on('game_over_1v1', (data) => { if (data.isCatch) catchState = null; });
 
 function beginCatch(theme, is1v1, opponent) {
   clearCatchArena();
-  catchState = { theme, is1v1, opponent, score: 0, bonus: 0, oppScore: 0, timeLeft: 30, active: true, items: [], hutX: innerWidth / 2, spawnDelay: 800, speed: theme === 'halloween' ? 2.6 : 3.2 };
+  catchState = { theme, is1v1, opponent, score: 0, bonus: 0, oppScore: 0, timeLeft: 30, active: true, items: [], hutX: innerWidth / 2, spawnDelay: 800, speed: theme === 'halloween' ? 2.6 : 3.2, lastHappy: Date.now() };;
   const cfg = CATCH_CONFIG[theme];
   const arena = document.createElement('div');
   arena.id = 'catch-arena'; arena.className = theme;
@@ -65,6 +65,7 @@ function beginCatch(theme, is1v1, opponent) {
     <div id="catch-field"></div>`;
   document.body.appendChild(arena);
   document.body.style.overflow = 'hidden';
+  if (typeof SoundEngine !== "undefined" && typeof SoundEngine.startMusicSeasonal === "function") SoundEngine.startMusicSeasonal(theme === 'halloween' ? 's2game' : 's3game');
 
   if (theme === 'noel') {
     const hut = document.getElementById('catch-santa');
@@ -92,7 +93,9 @@ function spawnCatchItem() {
   const cfg = CATCH_CONFIG[catchState.theme];
   const r = Math.random();
   let type;
-  if (r < 0.55) type = 'good'; else if (r < 0.75) type = 'bad'; else if (r < 0.90) type = 'happy'; else type = 'mean';
+  if (Date.now() - (catchState.lastHappy || 0) > 5000) type = 'happy';
+  else if (r < 0.55) type = 'good'; else if (r < 0.72) type = 'bad'; else if (r < 0.92) type = 'happy'; else type = 'mean';
+  if (type === 'happy') catchState.lastHappy = Date.now();
   const el = document.createElement('div');
   el.className = 'catch-item';
   if (type === 'happy' || type === 'mean') {
@@ -183,6 +186,7 @@ function clearCatchArena() {
   if (catchState) { clearTimeout(catchState.spawnTimeout); clearInterval(catchState.timerInterval); if (catchState.raf) cancelAnimationFrame(catchState.raf); catchState.items = []; }
   const a = document.getElementById('catch-arena'); if (a) a.remove();
   document.body.style.overflow = '';
+  if (typeof restartSeasonMusic === "function") restartSeasonMusic();
 }
 function endCatchSolo() {
   if (!catchState) return;
