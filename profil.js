@@ -720,6 +720,8 @@ function renderControlCenter() {
   if (customEl) customEl.innerText = isEN ? "🎨 Customization" : "🎨 Personnalisation";
   const accountEl = document.getElementById('cc-account-btn');
   if (accountEl) accountEl.innerText = isEN ? "👤 Account management" : "👤 Gestion du compte";
+  const musEl = document.getElementById('cc-music-text');
+  if (musEl) { const p = localStorage.getItem('cb_music_season'); musEl.innerText = 'Bande son : ' + (p ? 'Saison ' + p.replace('s', '') : 'Auto'); }
   const btnLabel = document.getElementById('cc-btn-label');
   if (btnLabel) btnLabel.innerText = isEN ? "Settings" : "Paramètres";
 }
