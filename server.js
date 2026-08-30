@@ -1102,11 +1102,13 @@ function applyPassRewardS2(p, tier, track) {
 
 function applyPassRewardS3(p, tier, track) {
   if (track === 'free') {
-    if ([1, 3, 7, 11, 13, 16, 18, 21, 23, 26, 28].includes(tier)) {
+    // 🎁 CADEAU DE NOËL : boule de neige pour TOUS au palier 15 (gratuit + premium)
+    if (tier === 15) { if (!p.unlocked_items.includes('avatar_s3_boule')) p.unlocked_items.push('avatar_s3_boule'); }
+    else if ([1, 3, 7, 11, 13, 16, 18, 21, 23, 26, 28].includes(tier)) {
       const coinMap = { 1: 50, 3: 50, 7: 50, 11: 60, 13: 70, 16: 80, 18: 90, 21: 110, 23: 120, 26: 130, 28: 140 };
       p.coins = (p.coins || 0) + (coinMap[tier] || 50);
     } else if ([5, 9, 20].includes(tier)) p.coins = (p.coins || 0) + 100;
-    else if ([15, 25].includes(tier)) p.coins = (p.coins || 0) + 150;
+    else if (tier === 25) p.coins = (p.coins || 0) + 150;
     else if (tier === 29) p.coins = (p.coins || 0) + 300;
     else if (tier === 30) { p.coins = (p.coins || 0) + 500; if (!p.unlocked_items.includes('title_esprit_noel')) p.unlocked_items.push('title_esprit_noel'); }
     else if ([2, 8, 17].includes(tier)) p.inventory['spotlight'] = (p.inventory['spotlight'] || 0) + (tier === 17 ? 2 : 1);
