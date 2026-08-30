@@ -57,7 +57,7 @@ socket.on('game_over_1v1', (data) => { if (data.isCatch) catchState = null; });
 
 function beginCatch(theme, is1v1, opponent) {
   clearCatchArena();
-  catchState = { theme, is1v1, opponent, score: 0, bonus: 0, oppScore: 0, timeLeft: 30, active: true, items: [], hutX: innerWidth / 2, spawnDelay: 800, speed: theme === 'halloween' ? (isCatchMobile() ? 2.1 : 2.6) : 3.2, lastHappy: Date.now(), hard: isCatchMobile() ? 1.3 : 1 };
+  catchState = { theme, is1v1, opponent, score: 0, bonus: 0, oppScore: 0, timeLeft: 30, active: true, items: [], hutX: innerWidth / 2, spawnDelay: 800, speed: theme === 'halloween' ? 2.1 : 3.2, lastHappy: Date.now(), hard: 1.3 };
   const cfg = CATCH_CONFIG[theme];
   const arena = document.createElement('div');
   arena.id = 'catch-arena'; arena.className = theme;
