@@ -291,7 +291,7 @@ renderBlitzPass();
 NOM DU PASS DYNAMIQUE (s'adapte à la saison active)
 ============================================================ */
 const SEASON_PASS_SUBTITLES = {
-  s1: "Sphère Dorée Ultime & Récompenses 🌟",
+  s1: "Néon Félin & Récompenses 🐱",
   s2: "Frisson d'Halloween & Récompenses 🎃",
   s3: "Magie de Noël & Récompenses 🎄"
 };
