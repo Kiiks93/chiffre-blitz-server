@@ -512,6 +512,12 @@ function renderProfileCustomizationMenus() {
   }
   renderProfileAvatarSelector();
   ensurePackSelector();
+  const holder = document.getElementById('frame-input')?.parentElement;
+  if (holder && !document.getElementById('cp-open-btn')) {
+    const b=document.createElement('button'); b.id='cp-open-btn'; b.className='btn-main btn-blue';
+    b.style.cssText='width:100%;margin:6px 0;'; b.innerText='👁️ Prévisualiser (cadre / titre)';
+    b.onclick=openCosmeticPreview; holder.appendChild(b);
+  }
   renderProfilePackSelector();
 }
 
@@ -1037,3 +1043,47 @@ document.addEventListener("DOMContentLoaded", () => {
   const targetRoom = urlParams.get("room");
   if (targetRoom) setTimeout(() => { if (isProfileValid()) openJoinCustomScreen(targetRoom.toUpperCase()); }, 1000);
 });
+
+/* ============================================================
+Fenêtre de prévisualisation (style Fortnite / Rocket League)
+============================================================ */
+function previewMannequinHTML(frame, title) {
+  const avatarNum = parseInt(document.getElementById('avatar-input')?.value) || myProfile.avatar || 1;
+  const flag = getFlagEmoji(document.getElementById('flag-input')?.value || myProfile.flag);
+  return `<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+    <div class="tft-avatar-large ${getFrameClass(frame)}"><span class="tft-avatar-large-icon" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:24px;">${avatarNum}</span><span class="tft-flag-large-overlay">${flag}</span></div>
+    <div style="font-size:12px;font-weight:bold;color:#f8b500;">${TITLE_DISPLAY_NAMES[title] || (title || 'Sans titre')}</div>
+  </div>`;
+}
+function closeCosmeticPreview(){ const o=document.getElementById('cosmetic-preview-overlay'); if(o)o.remove(); }
+function openCosmeticPreview(){
+  closeCosmeticPreview();
+  const eq=(myProfile.inventory&&myProfile.inventory.__equipped)||{};
+  const ov=document.createElement('div'); ov.id='cosmetic-preview-overlay'; ov.className='modal-overlay';
+  ov.innerHTML=`<div class="modal-card" style="max-width:340px;text-align:center;">
+    <h2 style="color:#00d2ff;margin:0 0 10px 0;">👁️ PRÉVISUALISATION</h2>
+    <div id="cp-mannequin" style="margin-bottom:10px;"></div>
+    <select id="cp-frame" style="width:100%;margin-bottom:6px;"></select>
+    <select id="cp-title" style="width:100%;margin-bottom:10px;"></select>
+    <button class="btn-main btn-gold" id="cp-equip" style="width:100%;">✅ Équiper</button>
+    <button class="btn-secondary" onclick="closeCosmeticPreview()" style="width:100%;">Fermer</button>
+  </div>`;
+  document.body.appendChild(ov);
+  const fSel=ov.querySelector('#cp-frame'), tSel=ov.querySelector('#cp-title');
+  const frames=["frame_standard",...(myProfile.unlocked_items||[]).filter(i=>i.startsWith("frame_")&&i!=="frame_standard")];
+  fSel.innerHTML=frames.map(f=>`<option value="${f}">${FRAME_DISPLAY_NAMES[f]||f}</option>`).join("");
+  fSel.value=eq.frame||"frame_standard";
+  const titles=["",...(myProfile.unlocked_items||[]).filter(i=>i.startsWith("title_"))];
+  tSel.innerHTML=titles.map(t=>`<option value="${t}">${t?(TITLE_DISPLAY_NAMES[t]||t):"Sans titre"}</option>`).join("");
+  tSel.value=eq.title||"";
+  const render=()=>{ ov.querySelector('#cp-mannequin').innerHTML=previewMannequinHTML(fSel.value,tSel.value); };
+  fSel.onchange=render; tSel.onchange=render; render();
+  ov.querySelector('#cp-equip').onclick=()=>{
+    if(!myProfile.inventory)myProfile.inventory={}; if(!myProfile.inventory.__equipped)myProfile.inventory.__equipped={};
+    if(fSel.value){ myProfile.inventory.__equipped.frame=fSel.value; localStorage.setItem("cb_equipped_frame",fSel.value); socket.emit("equip_cosmetic",fSel.value); }
+    if(tSel.value){ myProfile.inventory.__equipped.title=tSel.value; localStorage.setItem("cb_equipped_title",tSel.value); socket.emit("equip_cosmetic",tSel.value); }
+    else { delete myProfile.inventory.__equipped.title; localStorage.removeItem("cb_equipped_title"); socket.emit("equip_cosmetic","none_title"); }
+    updateProfilePreview(); renderProfileCustomizationMenus(); closeCosmeticPreview();
+    showNotificationToast("✅ Cosmétiques équipés !","gift");
+  };
+}
