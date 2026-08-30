@@ -293,12 +293,6 @@ function renderBlitzPass() {
 function buyBlitzPassPremium() { if (myProfile.coins < 1000) { showNotificationToast(i18n[currentLang].not_enough_coins, "announcement"); return; } socket.emit("buy_blitz_pass"); }
 let lastClaimTime = 0;
 function claimPassReward(tier, track) {
-  const now = Date.now();
-  if (now - lastClaimTime < 800) {
-    showNotificationToast("⏳ Un peu de patience entre deux récompenses !", "announcement");
-    return;
-  }
-  lastClaimTime = now;
   if (track === "premium" && !myProfile.blitzPassPremium) {
     showNotificationToast("❌ Tu dois acheter le Passe Premium pour récupérer cette récompense !", "announcement");
     return;
