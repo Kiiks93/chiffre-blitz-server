@@ -760,7 +760,7 @@ io.on('connection', (socket) => {
     socket.on('catch_click', (data) => {
     const match = activeMatches[socket.id];
     if (!match || !match.isCatch || match.ended) return;
-    const allowed = [10, -15, 20, 0, -10, -5];
+    const allowed = [10, -15, 20, -20, 0, -5];
     const delta = parseInt(data.delta);
     if (!allowed.includes(delta)) return;
     const pData = match.players[socket.id];
@@ -774,15 +774,17 @@ io.on('connection', (socket) => {
     const player = activePlayers[socket.id];
     if (!player) return;
     const score = Math.max(0, Math.min(20000, Number(payload && payload.score) || 0));
+    const bonus = Math.max(0, Math.min(20000, Number(payload && payload.bonus) || 0));
     const baseCoins = Math.min(100, Math.floor(score / 3));
+    const bonusCoins = Math.min(100, Math.floor(bonus / 3));
     const rushBonus = globalEvents.coinRush ? baseCoins : 0;
-    const earned = baseCoins + rushBonus;
+    const earned = baseCoins + bonusCoins + rushBonus;
     player.coins += earned;
     player.solo_games = (player.solo_games || 0) + 1;
     player.total_coins_earned = (player.total_coins_earned || 0) + earned;
     await savePlayerToSupabase(socket.id);
     socket.emit('player_registered', player);
-    socket.emit('catch_solo_result', { baseCoins, rushBonus, earnedCoins: earned });
+    socket.emit('catch_solo_result', { baseCoins, bonusCoins, rushBonus, earnedCoins: earned });
   });
 
   /* ---------- RÉCOMPENSES SOLO ---------- */
