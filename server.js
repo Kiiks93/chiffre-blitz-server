@@ -204,17 +204,21 @@ const rooms = {};
 const matchmakingQueue = [];
 const rankedQueue = [];
 let tugOfWarQueue = [];
+let halloweenQueue = [];
+let noelQueue = [];
 const activeMatches = {};
 const lastMatchEarnings = {};
 
-let globalEvents = { coinRush: false, rankShield: false, expressoMatch: false, chaosMode: false, jackpotEclair: false, tugOfWarMode: false };
+let globalEvents = { coinRush: false, rankShield: false, expressoMatch: false, chaosMode: false, jackpotEclair: false, tugOfWarMode: false, halloweenMode: false, noelMode: false };
 let eventSchedules = {
   coinRush: { manual: false, start: null, end: null },
   rankShield: { manual: false, start: null, end: null },
   expressoMatch: { manual: false, start: null, end: null },
   chaosMode: { manual: false, start: null, end: null },
   jackpotEclair: { manual: false, start: null, end: null },
-  tugOfWarMode: { manual: false, start: null, end: null }
+  tugOfWarMode: { manual: false, start: null, end: null },
+  halloweenMode: { manual: false, start: null, end: null },
+  noelMode: { manual: false, start: null, end: null }
 };
 
 setInterval(() => {
