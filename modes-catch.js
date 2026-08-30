@@ -7,6 +7,9 @@ const CATCH_CONFIG = {
   noel: { good: "🎁", bad: "🎄", happy: "🧝", mean: "🧝", label: "🎄 HOTTE DU PÈRE NOËL",
     rules: "Attrape les 🎁 <b style='color:#00ff88'>(+10)</b> ! Évite les 🎄 <b style='color:#ff4b2b'>(−15)</b>. Lutins : le <b style='color:#00ff88'>SOURiant = +20 bonus</b>, l'<b style='color:#ff4b2b'>ÉNERVÉ = −20</b>. Le bonus (max 100🪙) n'est PAS doublé par le x2." }
 };
+function isCatchMobile() {
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 2 && Math.min(screen.width, screen.height) < 900);
+}
 let catchState = null;
 
 function startHalloweenQueue() { openCatchChoice("halloween"); }
@@ -54,7 +57,7 @@ socket.on('game_over_1v1', (data) => { if (data.isCatch) catchState = null; });
 
 function beginCatch(theme, is1v1, opponent) {
   clearCatchArena();
-  catchState = { theme, is1v1, opponent, score: 0, bonus: 0, oppScore: 0, timeLeft: 30, active: true, items: [], hutX: innerWidth / 2, spawnDelay: 800, speed: theme === 'halloween' ? 2.6 : 3.2, lastHappy: Date.now() };;
+  catchState = { theme, is1v1, opponent, score: 0, bonus: 0, oppScore: 0, timeLeft: 30, active: true, items: [], hutX: innerWidth / 2, spawnDelay: 800, speed: theme === 'halloween' ? (isCatchMobile() ? 2.1 : 2.6) : 3.2, lastHappy: Date.now(), hard: isCatchMobile() ? 1.3 : 1 };
   const cfg = CATCH_CONFIG[theme];
   const arena = document.createElement('div');
   arena.id = 'catch-arena'; arena.className = theme;
@@ -85,8 +88,9 @@ function scheduleSpawn() {
   if (!catchState || !catchState.active) return;
   spawnCatchItem();
   const elapsed = 30 - catchState.timeLeft;
-  if (catchState.theme === 'noel') catchState.spawnDelay = Math.max(500, 850 - elapsed * 12);
-  else { catchState.spawnDelay = Math.max(400, 800 - elapsed * 13); catchState.speed = Math.max(1.4, 2.6 - elapsed * 0.04); }
+  const H = catchState.hard || 1;
+  if (catchState.theme === 'noel') catchState.spawnDelay = Math.max(500 / H, (850 - elapsed * 12) / H);
+  else { catchState.spawnDelay = Math.max(400 / H, (800 - elapsed * 13) / H); catchState.speed = Math.max(1.4 / H, (2.6 - elapsed * 0.04) / H); }
   catchState.spawnTimeout = setTimeout(scheduleSpawn, catchState.spawnDelay);
 }
 
@@ -121,7 +125,7 @@ function spawnCatchItem() {
     el.style.left = '0px'; el.style.top = '0px';
     field.appendChild(el);
     const bx = 30 + Math.random() * Math.max(60, innerWidth - 70);
-    catchState.items.push({ el, type, bx, x: bx, y: -60, ph: Math.random() * 6.28, vy: 2.4 + Math.random() * 1.4 + (30 - catchState.timeLeft) * 0.05 });
+    catchState.items.push({ el, type, bx, x: bx, y: -60, ph: Math.random() * 6.28, vy: (2.4 + Math.random() * 1.4 + (30 - catchState.timeLeft) * 0.05) * (catchState.hard || 1) });
   }
 }
 
@@ -131,9 +135,9 @@ function noelLoop() {
   for (let i = catchState.items.length - 1; i >= 0; i--) {
     const it = catchState.items[i];
     it.y += it.vy;
-    it.x = Math.max(20, Math.min(innerWidth - 20, it.bx + Math.sin(it.y * 0.02 + it.ph) * 28));
+    it.x = Math.max(20, Math.min(innerWidth - 20, it.bx + Math.sin(it.y * 0.02 + it.ph) * 28 * (catchState.hard || 1)));
     it.el.style.transform = 'translate3d(' + it.x + 'px,' + it.y + 'px,0)';
-    const w = (it.type === 'good' || it.type === 'happy') ? 55 : 40;
+    const w = ((it.type === 'good' || it.type === 'happy') ? 55 : 40) / (catchState.hard || 1);
     if (it.y >= hutTop - 45 && it.y <= hutTop + 50 && Math.abs(it.x - catchState.hutX) < w) {
       applyCatch(it.type, it.x, it.y); it.el.remove(); catchState.items.splice(i, 1);
     } else if (it.y > innerHeight + 60) {
