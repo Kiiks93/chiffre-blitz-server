@@ -135,7 +135,8 @@ function noelLoop() {
     it.y += it.vy;
     it.x = Math.max(20, Math.min(innerWidth - 20, it.bx + Math.sin(it.y * 0.02 + it.ph) * 28 * (catchState.hard || 1)));
     it.el.style.transform = 'translate3d(' + it.x + 'px,' + it.y + 'px,0)';
-    const w = ((it.type === 'good' || it.type === 'happy') ? 55 : 40) / (catchState.hard || 1);
+    const base = (it.type === 'good' || it.type === 'happy') ? 65 : 45;
+    const w = isCatchMobile() ? base / (catchState.hard || 1) : base;
     if (it.y >= hutTop - 45 && it.y <= hutTop + 50 && Math.abs(it.x - catchState.hutX) < w) {
       applyCatch(it.type, it.x, it.y); it.el.remove(); catchState.items.splice(i, 1);
     } else if (it.y > innerHeight + 60) {
