@@ -178,7 +178,7 @@ const SEASONS_CLIENT = [
     { tier: 12, free: "1 ⏳ Blocage du Temps", premium: "1 💡 Projecteur" },
     { tier: 13, free: "70 Pièces (🪙)", premium: "Titre « [ Assistant du Père Noël ] » 🎅" },
     { tier: 14, free: "1 ⚡ Joker Éclair", premium: "2 ⏳ Blocage du Temps" },
-    { tier: 15, free: "150 Pièces (🪙)", premium: "🔮 Avatar Animé Lottie : Boule de Neige" },
+    { tier: 15, free: "🔮 Avatar Boule de Neige (Cadeau 🎁)", premium: "🔮 Avatar Animé Lottie : Boule de Neige" },,
     { tier: 16, free: "80 Pièces (🪙)", premium: "160 Pièces (🪙)" },
     { tier: 17, free: "2 💡 Projecteur", premium: "2 🌟 Novas Temporelles" },
     { tier: 18, free: "90 Pièces (🪙)", premium: "250 Pièces (🪙)" },
