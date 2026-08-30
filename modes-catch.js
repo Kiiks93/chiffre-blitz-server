@@ -56,7 +56,7 @@ socket.on('game_over_1v1', (data) => { if (data.isCatch) catchState = null; });
 /* ---------- Moteur ---------- */
 function beginCatch(theme, is1v1, opponent) {
   clearCatchArena();
-  catchState = { theme, is1v1, opponent, score: 0, oppScore: 0, timeLeft: 30, active: true, items: [], hutX: innerWidth / 2, spawnDelay: 800, speed: 3.2 };
+  catchState = { theme, is1v1, opponent, score: 0, oppScore: 0, timeLeft: 30, active: true, items: [], hutX: innerWidth / 2, spawnDelay: 800, speed: theme === 'halloween' ? 2.6 : 3.2 };
   const cfg = CATCH_CONFIG[theme];
   const arena = document.createElement('div');
   arena.id = 'catch-arena'; arena.className = theme;
@@ -85,7 +85,7 @@ function scheduleSpawn() {
   spawnCatchItem();
   const elapsed = 30 - catchState.timeLeft;
   if (catchState.theme === 'noel') catchState.spawnDelay = Math.max(500, 850 - elapsed * 12);
-  else catchState.spawnDelay = Math.max(400, 800 - elapsed * 13);
+    else { catchState.spawnDelay = Math.max(400, 800 - elapsed * 13); catchState.speed = Math.max(1.4, 2.6 - elapsed * 0.04); }
   catchState.spawnTimeout = setTimeout(scheduleSpawn, catchState.spawnDelay);
 }
 
@@ -107,15 +107,15 @@ function spawnCatchItem() {
     el.style.top = '-80px';
     el.style.animationDuration = catchState.speed + 's';
     el.addEventListener('pointerdown', (e) => { e.preventDefault(); applyCatch(type, e.clientX, e.clientY); el.remove(); }, { once: true });
-    el.addEventListener('animationend', () => el.remove());
+    el.addEventListener('animationend', () => { if (type === 'good') penaltyMiss(el); el.remove(); });
     field.appendChild(el);
   } else {
     if (catchState.items.length > 12) return;
     el.style.fontSize = (40 + Math.random() * 16) + 'px';
     el.style.left = '0px'; el.style.top = '0px';
     field.appendChild(el);
-    const x = 30 + Math.random() * Math.max(60, innerWidth - 70);
-    catchState.items.push({ el, type, x, y: -60, vy: 2.0 + Math.random() * 1.2 + (30 - catchState.timeLeft) * 0.04 });
+    const bx = 30 + Math.random() * Math.max(60, innerWidth - 70);
+    catchState.items.push({ el, type, bx, x: bx, y: -60, ph: Math.random() * 6.28, vy: 2.4 + Math.random() * 1.4 + (30 - catchState.timeLeft) * 0.05 });
   }
 }
 
@@ -125,11 +125,15 @@ function noelLoop() {
   for (let i = catchState.items.length - 1; i >= 0; i--) {
     const it = catchState.items[i];
     it.y += it.vy;
+    it.x = Math.max(20, Math.min(innerWidth - 20, it.bx + Math.sin(it.y * 0.02 + it.ph) * 28));
     it.el.style.transform = 'translate3d(' + it.x + 'px,' + it.y + 'px,0)';
-    const w = it.type === 'good' ? 70 : (it.type === 'bad' ? 45 : 60);
+    const w = it.type === 'good' ? 55 : (it.type === 'bad' ? 40 : 55);
     if (it.y >= hutTop - 45 && it.y <= hutTop + 50 && Math.abs(it.x - catchState.hutX) < w) {
       applyCatch(it.type, it.x, it.y); it.el.remove(); catchState.items.splice(i, 1);
-    } else if (it.y > innerHeight + 60) { it.el.remove(); catchState.items.splice(i, 1); }
+    } else if (it.y > innerHeight + 60) {
+      if (it.type === 'good') penaltyMiss(it.el);
+      it.el.remove(); catchState.items.splice(i, 1);
+    }
   }
   catchState.raf = requestAnimationFrame(noelLoop);
 }
@@ -146,7 +150,14 @@ function applyCatch(type, fx, fy) {
   if (delta >= 0) SoundEngine.playClick(); else SoundEngine.playError();
   if (catchState.is1v1) socket.emit('catch_click', { delta });
 }
-
+function penaltyMiss(el) {
+  if (!catchState || !catchState.active) return;
+  catchState.score = Math.max(0, catchState.score - 5);
+  updateCatchHUD();
+  const r = el.getBoundingClientRect();
+  floatCatch(-5, r.left, r.top);
+  if (catchState.is1v1) socket.emit('catch_click', { delta: -5 });
+}
 function floatCatch(delta, x, y) {
   const f = document.createElement('div');
   f.className = 'catch-float'; f.style.color = delta >= 0 ? '#00ff88' : '#ff4b2b';
