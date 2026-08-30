@@ -760,7 +760,7 @@ io.on('connection', (socket) => {
     socket.on('catch_click', (data) => {
     const match = activeMatches[socket.id];
     if (!match || !match.isCatch || match.ended) return;
-    const allowed = [10, -15, 20, 0, -10];
+    const allowed = [10, -15, 20, 0, -10, -5];
     const delta = parseInt(data.delta);
     if (!allowed.includes(delta)) return;
     const pData = match.players[socket.id];
