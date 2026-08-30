@@ -22,7 +22,7 @@ function openCatchChoice(theme) {
   ov.id = 'catch-choice-overlay'; ov.className = 'modal-overlay';
   ov.innerHTML = `<div class="modal-card" style="max-width:340px;text-align:center;">
     <h2 style="color:#f8b500;margin:0 0 8px 0;">${cfg.label}</h2>
-    <div style="background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:10px;font-size:11px;color:#ddd;line-height:1.5;margin-bottom:10px;text-align:left;">
+    <div style="background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px;font-size:14px;color:#eee;line-height:1.6;margin-bottom:10px;text-align:left;">
       <b style="color:#00d2ff;">📖 COMMENT JOUER :</b><br>${cfg.rules}
     </div>
     <button class="btn-main btn-blue" onclick="launchCatch('${theme}',false)">🏋️ Solo</button>
@@ -99,9 +99,7 @@ function spawnCatchItem() {
   const cfg = CATCH_CONFIG[catchState.theme];
   const r = Math.random();
   let type;
-  if (Date.now() - (catchState.lastHappy || 0) > 7000) type = 'happy';
-  else if (r < 0.62) type = 'good'; else if (r < 0.84) type = 'bad'; else if (r < 0.95) type = 'happy'; else type = 'mean';
-  if (type === 'happy') catchState.lastHappy = Date.now();
+  if (r < 0.62) type = 'good'; else if (r < 0.84) type = 'bad'; else if (r < 0.92) type = 'happy'; else type = 'mean';
   const el = document.createElement('div');
   el.className = 'catch-item';
   if (type === 'happy' || type === 'mean') {
