@@ -10,7 +10,8 @@ SoundEngine.startMusicSeasonal = function(key) {
   if (!this.ctx) return;
   if (this.ctx.state === "suspended") this.ctx.resume();
   if (this.timerId && this.currentMode === key) return;
-  this.stopMusic(false);
+  if (this.timerId) { clearInterval(this.timerId); this.timerId = null; }
+  if (typeof this.stopMusic === "function") this.stopMusic(false);
   this.currentMode = key;
   this.step = 0;
   const bpms = { s2menu: 75, s2game: 100, s3menu: 100, s3game: 126 };
