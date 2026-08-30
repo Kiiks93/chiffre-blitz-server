@@ -285,3 +285,30 @@ if (data.reason === "premium_required") showNotificationToast("❌ Tu dois achet
 else if (data.reason === "already_claimed") showNotificationToast("❌ Cette récompense a déjà été récupérée.", "announcement");
 renderBlitzPass();
 });
+
+/* ============================================================
+NOM DU PASS DYNAMIQUE (s'adapte à la saison active)
+============================================================ */
+const SEASON_PASS_SUBTITLES = {
+  s1: "Sphère Dorée Ultime & Récompenses 🌟",
+  s2: "Frisson d'Halloween & Récompenses 🎃",
+  s3: "Magie de Noël & Récompenses 🎄"
+};
+
+function updatePassSeasonLabels() {
+  const season = getActiveSeason();
+  const num = season.id.replace("s", "");
+  const titleEl = document.getElementById("pass-menu-title");
+  if (titleEl) titleEl.innerText = `PASSE DE SAISON • SAISON ${num} ${season.emoji} ${season.name}`;
+  const subEl = document.getElementById("pass-menu-sub");
+  if (subEl) subEl.innerText = SEASON_PASS_SUBTITLES[season.id] || "Récompenses 🌟";
+  const badgeEl = document.getElementById("pass-modal-season");
+  if (badgeEl) badgeEl.innerText = `Saison ${num} • ${season.emoji} ${season.name}`;
+}
+
+// Met à jour dès que le profil / la saison change
+if (typeof socket !== "undefined") {
+  socket.on("player_registered", () => setTimeout(updatePassSeasonLabels, 60));
+  socket.on("season_updated", () => setTimeout(updatePassSeasonLabels, 60));
+}
+document.addEventListener("DOMContentLoaded", () => setTimeout(updatePassSeasonLabels, 150));
