@@ -65,6 +65,8 @@ function beginCatch(theme, is1v1, opponent) {
     <div id="catch-field"></div>`;
   document.body.appendChild(arena);
   document.body.style.overflow = 'hidden';
+  catchState.prevSeason = window.CURRENT_SEASON;
+  window.CURRENT_SEASON = (theme === 'halloween' ? 's2' : 's3');
   if (typeof SoundEngine !== "undefined" && typeof SoundEngine.startMusicSeasonal === "function") SoundEngine.startMusicSeasonal(theme === 'halloween' ? 's2game' : 's3game');
 
   if (theme === 'noel') {
@@ -186,6 +188,7 @@ function clearCatchArena() {
   if (catchState) { clearTimeout(catchState.spawnTimeout); clearInterval(catchState.timerInterval); if (catchState.raf) cancelAnimationFrame(catchState.raf); catchState.items = []; }
   const a = document.getElementById('catch-arena'); if (a) a.remove();
   document.body.style.overflow = '';
+  if (catchState && catchState.prevSeason) window.CURRENT_SEASON = catchState.prevSeason;
   if (typeof restartSeasonMusic === "function") restartSeasonMusic();
 }
 function endCatchSolo() {
