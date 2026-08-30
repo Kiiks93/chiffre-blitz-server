@@ -696,6 +696,20 @@ io.on('connection', (socket) => {
     if (tugOfWarQueue.length >= 2) startMatchBetween(tugOfWarQueue.shift(), tugOfWarQueue.shift(), false, true, true);
   });
 
+    socket.on('find_halloween_match', () => {
+    if (!globalEvents.halloweenMode) return;
+    halloweenQueue = halloweenQueue.filter(s => s !== socket.id);
+    halloweenQueue.push(socket.id);
+    if (halloweenQueue.length >= 2) startCatchMatch(halloweenQueue.shift(), halloweenQueue.shift(), 'halloween');
+  });
+
+  socket.on('find_noel_match', () => {
+    if (!globalEvents.noelMode) return;
+    noelQueue = noelQueue.filter(s => s !== socket.id);
+    noelQueue.push(socket.id);
+    if (noelQueue.length >= 2) startCatchMatch(noelQueue.shift(), noelQueue.shift(), 'noel');
+  });
+
   socket.on('request_rematch', () => {
     const match = activeMatches[socket.id];
     if (!match) return;
@@ -735,6 +749,34 @@ io.on('connection', (socket) => {
     } else {
       socket.emit('my_grid_updated', { target: pData.target, newPool: pData.pool, success: false, score: pData.score });
     }
+  });
+
+    socket.on('catch_click', (data) => {
+    const match = activeMatches[socket.id];
+    if (!match || !match.isCatch || match.ended) return;
+    const allowed = [10, -15, 20, 0, -10];
+    const delta = parseInt(data.delta);
+    if (!allowed.includes(delta)) return;
+    const pData = match.players[socket.id];
+    if (!pData) return;
+    pData.score = Math.max(0, pData.score + delta);
+    const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
+    io.to(oppId).emit('catch_opp_score', { score: pData.score });
+  });
+
+  socket.on('claim_catch_solo', async (payload) => {
+    const player = activePlayers[socket.id];
+    if (!player) return;
+    const score = Math.max(0, Math.min(20000, Number(payload && payload.score) || 0));
+    const baseCoins = Math.min(100, Math.floor(score / 3));
+    const rushBonus = globalEvents.coinRush ? baseCoins : 0;
+    const earned = baseCoins + rushBonus;
+    player.coins += earned;
+    player.solo_games = (player.solo_games || 0) + 1;
+    player.total_coins_earned = (player.total_coins_earned || 0) + earned;
+    await savePlayerToSupabase(socket.id);
+    socket.emit('player_registered', player);
+    socket.emit('catch_solo_result', { baseCoins, rushBonus, earnedCoins: earned });
   });
 
   /* ---------- RÉCOMPENSES SOLO ---------- */
@@ -916,6 +958,8 @@ io.on('connection', (socket) => {
     const rIdx = rankedQueue.indexOf(socket.id);
     if (rIdx !== -1) rankedQueue.splice(rIdx, 1);
     tugOfWarQueue = tugOfWarQueue.filter(id => id !== socket.id);
+    halloweenQueue = halloweenQueue.filter(id => id !== socket.id);
+    noelQueue = noelQueue.filter(id => id !== socket.id);
     delete activeMatches[socket.id];
     delete lastMatchEarnings[socket.id];
     await savePlayerToSupabase(socket.id);
@@ -989,6 +1033,28 @@ function startMatchBetween(id1, id2, isRanked = false, isOnline = true, isTugOfW
     if (match.timeLeft <= 0 || match.ended) {
       clearInterval(gameInterval);
       if (!match.ended) { match.ended = true; endMatch(id1, id2, match, isRanked); }
+    }
+  }, 1000);
+}
+
+function startCatchMatch(id1, id2, theme) {
+  const p1 = activePlayers[id1] || { socketId: id1, username: "Joueur 1", avatar: 1, flag: "🇫🇷" };
+  const p2 = activePlayers[id2] || { socketId: id2, username: "Joueur 2", avatar: 2, flag: "🇫🇷" };
+  const match = {
+    id1, id2, timeLeft: 30, isCatch: true, catchTheme: theme, ended: false, rematchVotes: {},
+    players: { [id1]: { score: 0 }, [id2]: { score: 0 } }
+  };
+  activeMatches[id1] = match;
+  activeMatches[id2] = match;
+  io.to(id1).emit('start_catch', { theme, opponent: p2, timeLeft: 30 });
+  io.to(id2).emit('start_catch', { theme, opponent: p1, timeLeft: 30 });
+  const gameInterval = setInterval(() => {
+    match.timeLeft--;
+    io.to(id1).emit('catch_timer', match.timeLeft);
+    io.to(id2).emit('catch_timer', match.timeLeft);
+    if (match.timeLeft <= 0 || match.ended) {
+      clearInterval(gameInterval);
+      if (!match.ended) { match.ended = true; endMatch(id1, id2, match, false); }
     }
   }, 1000);
 }
@@ -1199,6 +1265,14 @@ async function endMatch(id1, id2, matchData, isRanked) {
       }
     }
   }
+    if (matchData.isCatch && !matchData.isTugOfWar) {
+    const p1 = activePlayers[id1];
+    const p2 = activePlayers[id2];
+    if (p1 && p2) {
+      if (winnerId === id1) { p1.wins = (p1.wins || 0) + 1; p2.losses = (p2.losses || 0) + 1; }
+      else if (winnerId === id2) { p2.wins = (p2.wins || 0) + 1; p1.losses = (p1.losses || 0) + 1; }
+    }
+  }
   for (let sId of [id1, id2]) {
     const p = activePlayers[sId];
     if (!p) continue;
@@ -1218,8 +1292,8 @@ async function endMatch(id1, id2, matchData, isRanked) {
   await savePlayerToSupabase(id2);
   if (activePlayers[id1]) io.to(id1).emit('player_registered', activePlayers[id1]);
   if (activePlayers[id2]) io.to(id2).emit('player_registered', activePlayers[id2]);
-  io.to(id1).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents, rewards: matchRewards, isRanked });
-  io.to(id2).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents, rewards: matchRewards, isRanked });
+  io.to(id1).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents, rewards: matchRewards, isRanked, isCatch: !!matchData.isCatch });
+  io.to(id2).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents, rewards: matchRewards, isRanked, isCatch: !!matchData.isCatch });
 }
 
 /* ============================================================
