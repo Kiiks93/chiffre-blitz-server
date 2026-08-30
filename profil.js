@@ -960,6 +960,8 @@ socket.on("events_state_update", (events) => {
   if (events.chaosMode) activeList.push("🌪️ <b>Chaos Mode</b> (Modificateurs aléatoires en non classé)");
   if (events.jackpotEclair) activeList.push("🎁 <b>Jackpot Éclair</b> (Coffres mystères)");
   if (events.tugOfWarMode) activeList.push("🪢 <b>Mode Exclusif : Corde Raide (Tug-of-War)</b>");
+  if (events.halloweenMode) activeList.push("🎃 <b>Mode Exclusif : Chasse Hantée (Halloween)</b>");
+  if (events.noelMode) activeList.push("🎄 <b>Mode Exclusif : Course aux Cadeaux (Noël)</b>");
   if (activeList.length > 0) { banner.innerHTML = `⚡ <b>ADMIN ABUSE EN COURS :</b><br>` + activeList.join("<br>"); banner.style.display = "block"; }
   else banner.style.display = "none";
 });
