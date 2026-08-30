@@ -238,6 +238,20 @@ function showRewardPopUp(rewardName, rewardIcon) {
   if (rewardPopupTimeout) clearTimeout(rewardPopupTimeout);
   rewardPopupTimeout = setTimeout(() => { popup.style.display = "none"; }, 3000);
 }
+function spawnUnlockBurst(card, icon) {
+  const rect = card.getBoundingClientRect();
+  for (let i = 0; i < 8; i++) {
+    const p = document.createElement('div');
+    p.className = 'bp-burst'; p.innerText = icon;
+    p.style.left = (rect.left + rect.width / 2) + 'px';
+    p.style.top = (rect.top + rect.height / 2) + 'px';
+    const ang = (Math.PI * 2 / 8) * i, dist = 60 + Math.random() * 40;
+    p.style.setProperty('--dx', Math.cos(ang) * dist + 'px');
+    p.style.setProperty('--dy', Math.sin(ang) * dist + 'px');
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 900);
+  }
+}
 function renderBlitzPass() {
 const container = document.getElementById("blitz-pass-container");
 const season = getActiveSeason();
@@ -263,6 +277,7 @@ const isPremClaimed = claimed[premKey];
 const premDisabled = isPremClaimed || !isPremium;
 const card = document.createElement("div");
 card.className = "bp-tier-card unlocked";
+card.id = "bp-card-" + t.tier;
 card.innerHTML = `
 <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:3px;"><span style="font-weight:900; color:#f8b500; font-size:11px;">PALIER ${t.tier}</span><span style="font-size:9px; font-weight:bold; color:#00ff88;">Disponible ✅</span></div>
 <div class="bp-tracks-grid">
@@ -300,7 +315,10 @@ let icon = "🌟";
 if (season.id === "s2") icon = (tier === 30 && track === "premium") ? "🎃" : (tier === 25 && track === "premium") ? "🦇" : (tier === 15 && track === "premium") ? "💀" : "🎃";
 else if (season.id === "s3") icon = (tier === 30 && track === "premium") ? "🍪" : (tier === 25 && track === "premium") ? "🎅" : (tier === 15 && track === "premium") ? "🔮" : (tier === 5 && track === "premium") ? "⛄" : "🎄";
 else icon = (tier === 30 && track === "premium") ? "🐯" : (tier === 25 && track === "premium") ? "🌈" : (tier === 15 && track === "premium") ? "🐱" : "🌟";
-showRewardPopUp(rewardText, icon);
+const card = document.getElementById("bp-card-" + tier);
+if (card) { card.classList.remove("bp-unlock"); void card.offsetWidth; card.classList.add("bp-unlock"); spawnUnlockBurst(card, icon); }
+const ns = Date.now();
+if (ns - lastRewardSoundTime > 1200) { lastRewardSoundTime = ns; SoundEngine.playVictory(); }
 renderBlitzPass();
 });
 socket.on("pass_claim_denied", (data) => {
