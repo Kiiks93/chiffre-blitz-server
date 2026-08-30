@@ -4,8 +4,8 @@ MODES SAISONNIERS — Halloween 🎃 (cliquer) & Noël 🎄 (attraper)
 const CATCH_CONFIG = {
   halloween: { good: "🦇", bad: "👻", gamble: "🎃", label: "🎃 CHASSE HANTÉE",
     rules: "Clique les 🦇 <b style='color:#00ff88'>(+10)</b> avant qu'elles ne tombent ! Évite les 👻 <b style='color:#ff4b2b'>(−15)</b>. Les 🎃 sont un pari : <b>+20 / 0 / −10</b>." },
-  noel: { good: "🍭", bad: "🎄", gamble: "🧝", label: "🎄 COURSE AUX CADEAUX",
-    rules: "Déplace la <b>hutte</b> avec ton doigt / ta souris pour attraper les 🍭 <b style='color:#00ff88'>(+10)</b> dans le sac ! Évite les 🎄 <b style='color:#ff4b2b'>(−15)</b>. Les 🧝 sont un pari : <b>+20 / 0 / −10</b>." }
+  noel: { good: "🎁", bad: "🎄", gamble: "🧝", label: "🎄 HOTTE DU PÈRE NOËL",
+    rules: "Déplace le <b>Père Noël</b> (doigt / souris) et lève sa <b>hotte</b> pour attraper les 🎁 <b style='color:#00ff88'>(+10)</b> ! Évite les 🎄 <b style='color:#ff4b2b'>(−15)</b>. Les 🧝 sont un pari : <b>+20 / 0 / −10</b>." }
 };
 let catchState = null;
 
@@ -60,7 +60,7 @@ function beginCatch(theme, is1v1, opponent) {
   const cfg = CATCH_CONFIG[theme];
   const arena = document.createElement('div');
   arena.id = 'catch-arena'; arena.className = theme;
-  const extra = theme === 'noel' ? '<div id="catch-hut">🛖</div>' : '<div id="catch-backdrop">🏰</div>';
+    const extra = theme === 'noel' ? '<div id="catch-santa"></div>' : '<div id="catch-backdrop">🏰</div>';
   arena.innerHTML = `${extra}
     <div id="catch-hud"><div>⭐ <span id="catch-score">0</span></div><div id="catch-timer" style="color:#ff007f;">30</div><div>${is1v1 ? '🆚 <span id="catch-opp">0</span>' : ''}</div></div>
     <div style="text-align:center;font-weight:900;color:#fff;">${cfg.label}</div>
@@ -68,8 +68,8 @@ function beginCatch(theme, is1v1, opponent) {
   document.body.appendChild(arena);
 
   if (theme === 'noel') {
-    const hut = document.getElementById('catch-hut');
-    const move = (x) => { catchState.hutX = Math.max(40, Math.min(innerWidth - 40, x)); hut.style.left = catchState.hutX + 'px'; };
+    const hut = document.getElementById('catch-santa');
+    const move = (x) => { catchState.hutX = Math.max(50, Math.min(innerWidth - 50, x)); hut.style.left = catchState.hutX + 'px'; };
     arena.addEventListener('pointermove', (e) => move(e.clientX));
     arena.addEventListener('touchmove', (e) => { if (e.touches[0]) move(e.touches[0].clientX); e.preventDefault(); }, { passive: false });
     move(innerWidth / 2);
