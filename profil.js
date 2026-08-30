@@ -435,21 +435,7 @@ function renderProfileCustomizationMenus() {
       if (equippedTitle === tId || equippedTitle === displayName) opt.selected = true;
       titleSelect.appendChild(opt);
     });
-    titleSelect.onchange = () => {
-      if (!myProfile.inventory) myProfile.inventory = {};
-      if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
-      const val = titleSelect.value;
-      if (val) {
-        myProfile.inventory.__equipped.title = val;
-        localStorage.setItem("cb_equipped_title", val);
-        if (socket.connected) socket.emit("equip_cosmetic", val);
-      } else {
-        delete myProfile.inventory.__equipped.title;
-        localStorage.removeItem("cb_equipped_title");
-        if (socket.connected) socket.emit("equip_cosmetic", "none_title");
-      }
-      showNotificationToast("✅ Titre " + (val ? "équipé" : "retiré"), "gift");
-    };
+        titleSelect.onchange = () => {};
   }
   const frameSelect = document.getElementById("frame-input");
   const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
@@ -465,22 +451,7 @@ function renderProfileCustomizationMenus() {
       if (equippedFrame === fId) opt.selected = true;
       frameSelect.appendChild(opt);
     });
-    frameSelect.onchange = () => {
-      if (!myProfile.inventory) myProfile.inventory = {};
-      if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
-      const val = frameSelect.value;
-      if (val) {
-        myProfile.inventory.__equipped.frame = val;
-        localStorage.setItem("cb_equipped_frame", val);
-        if (socket.connected) socket.emit("equip_cosmetic", val);
-      } else {
-        delete myProfile.inventory.__equipped.frame;
-        localStorage.removeItem("cb_equipped_frame");
-        if (socket.connected) socket.emit("equip_cosmetic", "none_frame");
-      }
-      updateProfilePreview();
-      showNotificationToast("✅ Cadre " + (val ? "équipé" : "retiré"), "gift");
-    };
+        frameSelect.onchange = () => { updateProfilePreview(); };
   }
   const themeSelect = document.getElementById("theme-input");
   const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
@@ -493,22 +464,7 @@ function renderProfileCustomizationMenus() {
       if (equippedTheme === thId) opt.selected = true;
       themeSelect.appendChild(opt);
     });
-    themeSelect.onchange = () => {
-      if (!myProfile.inventory) myProfile.inventory = {};
-      if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
-      const val = themeSelect.value;
-      if (val) {
-        myProfile.inventory.__equipped.theme = val;
-        localStorage.setItem("cb_equipped_theme", val);
-        if (socket.connected) socket.emit("equip_cosmetic", val);
-      } else {
-        delete myProfile.inventory.__equipped.theme;
-        localStorage.removeItem("cb_equipped_theme");
-        if (socket.connected) socket.emit("equip_cosmetic", "none_theme");
-      }
-      updateProfilePreview();
-      showNotificationToast("✅ Thème " + (val ? "équipé" : "retiré"), "gift");
-    };
+        themeSelect.onchange = () => { updateProfilePreview(); };
   }
   renderProfileAvatarSelector();
   ensurePackSelector();
@@ -839,6 +795,12 @@ function promptProfileChange() {
   document.getElementById("modal-username").style.display = "flex";
 }
 function saveProfileFromModal() {
+  const f = document.getElementById('frame-input')?.value, th = document.getElementById('theme-input')?.value, ti = document.getElementById('title-input')?.value;
+  if (!myProfile.inventory) myProfile.inventory = {}; if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
+  if (f) { myProfile.inventory.__equipped.frame = f; localStorage.setItem('cb_equipped_frame', f); socket.emit('equip_cosmetic', f); }
+  if (th) { myProfile.inventory.__equipped.theme = th; localStorage.setItem('cb_equipped_theme', th); socket.emit('equip_cosmetic', th); }
+  if (ti) { myProfile.inventory.__equipped.title = ti; localStorage.setItem('cb_equipped_title', ti); socket.emit('equip_cosmetic', ti); }
+  else { delete myProfile.inventory.__equipped.title; localStorage.removeItem('cb_equipped_title'); socket.emit('equip_cosmetic', 'none_title'); }
   const nameInput = document.getElementById("username-input").value.trim();
   const regionInput = document.getElementById("region-input").value;
   const selectedTitleId = document.getElementById("title-input").value;
