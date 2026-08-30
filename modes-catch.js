@@ -66,6 +66,7 @@ function beginCatch(theme, is1v1, opponent) {
     <div style="text-align:center;font-weight:900;color:#fff;">${cfg.label}</div>
     <div id="catch-field"></div>`;
   document.body.appendChild(arena);
+  document.body.style.overflow = 'hidden';
 
   if (theme === 'noel') {
     const hut = document.getElementById('catch-santa');
@@ -83,7 +84,7 @@ function scheduleSpawn() {
   if (!catchState || !catchState.active) return;
   spawnCatchItem();
   const elapsed = 30 - catchState.timeLeft;
-  if (catchState.theme === 'noel') catchState.spawnDelay = Math.max(650, 1000 - elapsed * 10);
+  if (catchState.theme === 'noel') catchState.spawnDelay = Math.max(500, 850 - elapsed * 12);
   else catchState.spawnDelay = Math.max(400, 800 - elapsed * 13);
   catchState.spawnTimeout = setTimeout(scheduleSpawn, catchState.spawnDelay);
 }
@@ -92,18 +93,17 @@ function spawnCatchItem() {
   const field = document.getElementById('catch-field'); if (!field || !catchState) return;
   const cfg = CATCH_CONFIG[catchState.theme];
   const r = Math.random();
-  const pGood = catchState.theme === 'noel' ? 0.70 : 0.60;
-  const pBad = catchState.theme === 'noel' ? 0.88 : 0.85;
+  const pGood = 0.60;
+  const pBad = catchState.theme === 'noel' ? 0.87 : 0.85;
   const type = r < pGood ? 'good' : (r < pBad ? 'bad' : 'gamble');
   const el = document.createElement('div');
-  el.className = 'catch-item';
-  el.innerText = cfg[type];
-  const xPct = 6 + Math.random() * 86;
-  el.style.left = xPct + '%';
-  if (catchState.theme === 'halloween') {
+    el.className = 'catch-item';
+    el.innerText = cfg[type];
+    if (catchState.theme === 'halloween') {
     if (field.childElementCount > 14) return;
     el.classList.add('fall');
     el.style.fontSize = (52 + Math.random() * 26) + 'px';
+    el.style.left = (10 + Math.random() * Math.max(60, innerWidth - 100)) + 'px';
     el.style.top = '-80px';
     el.style.animationDuration = catchState.speed + 's';
     el.addEventListener('pointerdown', (e) => { e.preventDefault(); applyCatch(type, e.clientX, e.clientY); el.remove(); }, { once: true });
@@ -114,7 +114,8 @@ function spawnCatchItem() {
     el.style.fontSize = (40 + Math.random() * 16) + 'px';
     el.style.left = '0px'; el.style.top = '0px';
     field.appendChild(el);
-    catchState.items.push({ el, type, x: (xPct / 100) * innerWidth, y: -60, vy: 1.2 + Math.random() * 0.8 + (30 - catchState.timeLeft) * 0.03 });
+    const x = 30 + Math.random() * Math.max(60, innerWidth - 70);
+    catchState.items.push({ el, type, x, y: -60, vy: 2.0 + Math.random() * 1.2 + (30 - catchState.timeLeft) * 0.04 });
   }
 }
 
@@ -164,6 +165,7 @@ function stopCatchSpawning() { if (catchState) clearTimeout(catchState.spawnTime
 function clearCatchArena() {
   if (catchState) { clearTimeout(catchState.spawnTimeout); clearInterval(catchState.timerInterval); if (catchState.raf) cancelAnimationFrame(catchState.raf); catchState.items = []; }
   const a = document.getElementById('catch-arena'); if (a) a.remove();
+  document.body.style.overflow = '';
 }
 function endCatchSolo() {
   if (!catchState) return;
