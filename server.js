@@ -183,6 +183,12 @@ function getCurrentSeason() {
   if (now < new Date(SEASONS[0].start + "T00:00:00Z")) return SEASONS[0];
   return SEASONS[SEASONS.length - 1];
 }
+function isCatchEnabled(theme) {
+  const season = getCurrentSeason().id;
+  if (theme === 'halloween') return globalEvents.halloweenMode || season === 's2';
+  if (theme === 'noel') return globalEvents.noelMode || season === 's3';
+  return false;
+}
 function normalizeClaimedTiers(cpt) {
   cpt = cpt || {};
   const keys = Object.keys(cpt);
@@ -697,14 +703,14 @@ io.on('connection', (socket) => {
   });
 
     socket.on('find_halloween_match', () => {
-    if (!globalEvents.halloweenMode) return;
+    if (!isCatchEnabled('noel')) return;
     halloweenQueue = halloweenQueue.filter(s => s !== socket.id);
     halloweenQueue.push(socket.id);
     if (halloweenQueue.length >= 2) startCatchMatch(halloweenQueue.shift(), halloweenQueue.shift(), 'halloween');
   });
 
   socket.on('find_noel_match', () => {
-    if (!globalEvents.noelMode) return;
+    if (!isCatchEnabled('noel')) return;
     noelQueue = noelQueue.filter(s => s !== socket.id);
     noelQueue.push(socket.id);
     if (noelQueue.length >= 2) startCatchMatch(noelQueue.shift(), noelQueue.shift(), 'noel');
