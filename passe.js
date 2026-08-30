@@ -253,43 +253,42 @@ function spawnUnlockBurst(card, icon) {
   }
 }
 function renderBlitzPass() {
-const container = document.getElementById("blitz-pass-container");
-const season = getActiveSeason();
-const seasonData = (myProfile.claimedPassTiers || {})[season.id] || {};
-const isPremium = !!seasonData.premium || (season.id === "s1" && myProfile.blitzPassPremium);
-const claimed = seasonData;
-container.innerHTML = `<div class="bp-header-banner">
-<div style="font-size:13px; font-weight:900; color:#f8b500; margin-bottom:2px;">${season.emoji} PASSE DE SAISON : ${season.name}</div>
-<div style="font-size:9px; color:#aaa; margin-bottom:4px;">📅 ${season.start} → ${season.end}</div>
-<div style="font-size:10px; color:#ccc; margin-bottom:6px;">${isPremium ? "✨ Passe Premium Actif !" : "Débloque le Passe Premium pour 1000 🪙"}</div>
-${!isPremium ? `<button class="btn-main btn-gold" onclick="buyBlitzPassPremium()" style="padding:6px 10px; font-size:11px; margin:0 auto; width:auto;">Acheter le Passe Premium (1000 🪙) </button>` : `<div style="color:#00ff88; font-weight:bold; font-size:10px;">Statut : VIP / Premium</div>`}</div>`;
-if (!season.tiers || season.tiers.length === 0) {
-container.innerHTML += `<div style="text-align:center; color:#aaa; padding:20px; font-size:12px; font-weight:bold;">${season.emoji} Le contenu de la saison ${season.name} arrive bientôt !</div>`;
-return;
-}
-const listDiv = document.createElement("div");
-listDiv.style.cssText = "display:flex; flex-direction:column; gap:6px;";
-season.tiers.forEach(t => {
-const freeKey = `${t.tier}_free`;
-const premKey = `${t.tier}_premium`;
-const isFreeClaimed = claimed[freeKey];
-const isPremClaimed = claimed[premKey];
-const premDisabled = isPremClaimed || !isPremium;
-const card = document.createElement("div");
-card.className = "bp-tier-card unlocked";
-card.id = "bp-card-" + t.tier;
-card.innerHTML = `
-<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:3px;"><span style="font-weight:900; color:#f8b500; font-size:11px;">PALIER ${t.tier}</span><span style="font-size:9px; font-weight:bold; color:#00ff88;">Disponible ✅</span></div>
-<div class="bp-tracks-grid">
-<div class="bp-track-box"><div><span style="color:#38ef7d; font-weight:bold;">🟢 Gratuit :</span><br>${t.free}</div>
-<button class="power-btn ${isFreeClaimed ? "active" : "equip"}" style="margin-top:4px; font-size:9px; padding:3px; ${isFreeClaimed ? "opacity:0.5;" : ""}" ${isFreeClaimed ? "disabled" : ""} onclick="claimPassReward(${t.tier}, 'free')">${isFreeClaimed ? "Récupéré" : "Récupérer"}</button></div>
-<div class="bp-track-box"><div><span style="color:#00d2ff; font-weight:bold;">⭐ Premium :</span><br>${t.premium}</div>
-<button class="power-btn ${isPremClaimed ? "active" : "equip"}" style="margin-top:4px; font-size:9px; padding:3px; ${premDisabled ? "opacity:0.5;" : ""}" ${premDisabled ? "disabled" : ""} onclick="claimPassReward(${t.tier}, 'premium')">${isPremClaimed ? "Récupéré" : "Récupérer"}</button></div>
-</div>`;
-listDiv.appendChild(card);
-});
-container.appendChild(listDiv);
-updatePassSeasonLabels();
+  const container = document.getElementById("blitz-pass-container");
+  const season = getActiveSeason();
+  const seasonData = (myProfile.claimedPassTiers || {})[season.id] || {};
+  const isPremium = !!seasonData.premium || (season.id === "s1" && myProfile.blitzPassPremium);
+  const claimed = seasonData;
+  container.innerHTML = `<div class="bp-header-banner">
+    <div style="font-size:13px; font-weight:900; color:#f8b500; margin-bottom:2px;">${season.emoji} PASSE DE SAISON : ${season.name}</div>
+    <div style="font-size:9px; color:#aaa; margin-bottom:4px;">📅 ${season.start} → ${season.end}</div>
+    <div style="font-size:10px; color:#ccc; margin-bottom:6px;">${isPremium ? "✨ Passe Premium Actif !" : "Débloque le Passe Premium pour 1000 🪙"}</div>
+    ${!isPremium ? `<button class="btn-main btn-gold" onclick="buyBlitzPassPremium()" style="padding:6px 10px; font-size:11px; margin:0 auto; width:auto;">Acheter le Passe Premium (1000 🪙)</button>` : `<div style="color:#00ff88; font-weight:bold; font-size:10px;">Statut : VIP / Premium</div>`}</div>`;
+  if (!season.tiers || season.tiers.length === 0) {
+    container.innerHTML += `<div style="text-align:center; color:#aaa; padding:20px; font-size:12px; font-weight:bold;">${season.emoji} Le contenu de la saison ${season.name} arrive bientôt !</div>`;
+    return;
+  }
+  const scroll = document.createElement("div");
+  scroll.className = "bp-track-scroll";
+  season.tiers.forEach(t => {
+    const freeKey = `${t.tier}_free`, premKey = `${t.tier}_premium`;
+    const isFreeClaimed = claimed[freeKey], isPremClaimed = claimed[premKey];
+    const premDisabled = isPremClaimed || !isPremium;
+    const col = document.createElement("div");
+    col.className = "bp-tier-col"; col.id = "bp-card-" + t.tier;
+    col.innerHTML = `
+      <div class="bp-cell bp-prem ${isPremClaimed ? 'claimed' : ''}">
+        <div class="bp-reward">${t.premium}</div>
+        <button class="power-btn ${isPremClaimed ? 'active' : 'equip'}" style="font-size:10px;padding:3px;" ${premDisabled ? 'disabled' : ''} onclick="claimPassReward(${t.tier},'premium')">${isPremClaimed ? '✔' : '⭐'}</button>
+      </div>
+      <div class="bp-tier-num">${t.tier}</div>
+      <div class="bp-cell bp-free ${isFreeClaimed ? 'claimed' : ''}">
+        <div class="bp-reward">${t.free}</div>
+        <button class="power-btn ${isFreeClaimed ? 'active' : 'equip'}" style="font-size:10px;padding:3px;" ${isFreeClaimed ? 'disabled' : ''} onclick="claimPassReward(${t.tier},'free')">${isFreeClaimed ? '✔' : '🟢'}</button>
+      </div>`;
+    scroll.appendChild(col);
+  });
+  container.appendChild(scroll);
+  updatePassSeasonLabels();
 }
 function buyBlitzPassPremium() { if (myProfile.coins < 1000) { showNotificationToast(i18n[currentLang].not_enough_coins, "announcement"); return; } socket.emit("buy_blitz_pass"); }
 let lastClaimTime = 0;
