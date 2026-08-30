@@ -254,22 +254,27 @@ function spawnUnlockBurst(card, icon) {
 }
 function renderBlitzPass() {
   const container = document.getElementById("blitz-pass-container");
+  if (!container) return;
+
   const season = getActiveSeason();
+  // Récupère les données sauvegardées pour cette saison
   const seasonData = (myProfile.claimedPassTiers || {})[season.id] || {};
   const isPremium = !!seasonData.premium || (season.id === "s1" && myProfile.blitzPassPremium);
   const claimed = seasonData;
+  
+  // Calculs XP et Niveau
   const currentTier = myProfile.blitzPassTier || 1;
   const xpPerTier = 1000;
-  const currentXP = ((currentTier - 1) * xpPerTier) + (myProfile.blitzPassXP || 0);
-  const maxXP = currentTier * xpPerTier;
-  const xpPercent = Math.min(100, Math.floor((myProfile.blitzPassXP || 0) / xpPerTier * 100));
+  const currentXP = myProfile.blitzPassXP || 0;
+  const xpInCurrentTier = currentXP % xpPerTier; // XP depuis le dernier niveau
+  const xpPercent = Math.min(100, Math.floor((xpInCurrentTier / xpPerTier) * 100));
   
-  // Mettre à jour la barre XP
+  // --- MISE À JOUR DE LA BARRE XP (BUG #1 CORRIGÉ) ---
   document.getElementById("bp-current-tier").innerText = currentTier;
-  document.getElementById("bp-xp-text").innerText = `${myProfile.blitzPassXP || 0} / ${xpPerTier} XP`;
+  document.getElementById("bp-xp-text").innerText = `${xpInCurrentTier} / ${xpPerTier} XP`;
   document.getElementById("bp-xp-bar").style.width = xpPercent + "%";
   
-  // Header avec bouton premium
+  // --- HEADER AVEC BOUTON PREMIUM (BUG #2 CORRIGÉ) ---
   let headerHTML = `<div class="bp-header-banner" style="background:linear-gradient(135deg, rgba(248,181,0,0.15), rgba(0,0,0,0.6)); border:2px solid #f8b500; border-radius:12px; padding:12px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
     <div style="display:flex; align-items:center; gap:12px;">
       <div style="font-size:28px;">${season.emoji}</div>
@@ -288,7 +293,7 @@ function renderBlitzPass() {
     return;
   }
   
-  // Track horizontale scrollable style Fortnite
+  // Track horizontale scrollable
   const trackWrapper = document.createElement("div");
   trackWrapper.className = "bp-track-wrapper";
   trackWrapper.style.cssText = "position:relative; overflow-x:auto; overflow-y:hidden; padding:20px 10px; background:rgba(0,0,0,0.3); border-radius:12px; border:1px solid #333;";
@@ -302,6 +307,7 @@ function renderBlitzPass() {
   connectorLine.style.cssText = "position:absolute; top:50%; left:60px; right:60px; height:4px; background:linear-gradient(90deg, #f8b500, #ffaa00, #f8b500); opacity:0.3; transform:translateY(-50%); z-index:0; border-radius:2px;";
   trackWrapper.appendChild(connectorLine);
   
+  // --- BOUCLE SUR LES NIVEAUX ---
   season.tiers.forEach(t => {
     const freeKey = `${t.tier}_free`, premKey = `${t.tier}_premium`;
     const isFreeClaimed = claimed[freeKey], isPremClaimed = claimed[premKey];
@@ -315,18 +321,23 @@ function renderBlitzPass() {
     col.id = "bp-card-" + tierNum;
     col.style.cssText = `position:relative; z-index:1; flex-shrink:0; width:160px; transition:transform 0.3s ease; ${isCurrentTier ? 'transform:scale(1.08);' : ''}`;
     
-    // Icône de récompense premium
-    let premIcon = "🎁";
-    if (t.premium.includes("Avatar") || t.premium.includes("Grille") || t.premium.includes("Cadre")) premIcon = "✨";
-    else if (t.premium.includes("Titre")) premIcon = "📛";
-    else if (t.premium.includes("GRAAL")) premIcon = "👑";
-    else if (t.premium.includes("Pièces") || t.premium.includes("🪙")) premIcon = "🪙";
+    // --- LOGIQUE D'AFFICHAGE DES ICÔNES (BUG #3 CORRIGÉ) ---
+    // Fonction helper pour trouver l'icône selon le texte de la récompense
+    function getRewardIcon(text) {
+      if (!text) return "🎁";
+      const lower = text.toLowerCase();
+      if (lower.includes("avatar") || lower.includes("grille") || lower.includes("cadre")) return "✨";
+      if (lower.includes("titre")) return "📛";
+      if (lower.includes("graal")) return "👑";
+      if (lower.includes("pièces") || lower.includes("🪙")) return "🪙";
+      if (lower.includes("joker") || lower.includes("blocage") || lower.includes("nova") || lower.includes("projecteur") || lower.includes("séisme")) return "⚡";
+      return "🎁";
+    }
+
+    const premIcon = getRewardIcon(t.premium);
+    const freeIcon = getRewardIcon(t.free);
     
-    // Icône de récompense free
-    let freeIcon = "🎁";
-    if (t.free.includes("Pièces") || t.free.includes("🪙")) freeIcon = "🪙";
-    else if (t.free.includes("Joker") || t.free.includes("Blocage") || t.free.includes("Nova") || t.free.includes("Projecteur") || t.free.includes("Séisme")) freeIcon = "⚡";
-    
+    // Construction HTML de la carte
     col.innerHTML = `
       <div class="bp-tier-number" style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); background:${isCurrentTier ? 'linear-gradient(45deg, #f8b500, #ffaa00)' : (isPastTier ? '#00ff88' : '#444')}; color:${isCurrentTier || isPastTier ? '#000' : '#fff'}; font-size:11px; font-weight:bold; padding:3px 10px; border-radius:10px; border:2px solid #fff; z-index:3; white-space:nowrap;">${tierNum}</div>
       
@@ -368,14 +379,12 @@ function renderBlitzPass() {
   
   updatePassSeasonLabels();
 }
-function buyBlitzPassPremium() { if (myProfile.coins < 1000) { showNotificationToast(i18n[currentLang].not_enough_coins, "announcement"); return; } socket.emit("buy_blitz_pass"); }
-let lastClaimTime = 0;
-function claimPassReward(tier, track) {
-  if (track === "premium" && !myProfile.blitzPassPremium) {
-    showNotificationToast("❌ Tu dois acheter le Passe Premium pour récupérer cette récompense !", "announcement");
-    return;
-  }
-  socket.emit("claim_pass_tier", { tier, track });
+function buyBlitzPassPremium() { 
+  if (myProfile.coins < 1000) { 
+    showNotificationToast(i18n[currentLang].not_enough_coins, "announcement"); 
+    return; 
+  } 
+  socket.emit("buy_blitz_pass"); 
 }
 socket.on("pass_tier_claimed", (data) => {
 const tier = data.tier, track = data.track;
