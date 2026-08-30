@@ -30,15 +30,11 @@ SoundEngine.startMusicSeasonal = function(key) {
 SoundEngine._originalStartMusic = SoundEngine.startMusic;
 SoundEngine.startMusic = function(mode) {
   this._baseMode = mode;
-  const season = (typeof window !== "undefined") ? (window.CURRENT_SEASON || "s1") : "s1";
-  if (season === "s2") {
-    if (mode === "menu") return this.startMusicSeasonal("s2menu");
-    return this.startMusicSeasonal("s2game");
-  }
-  if (season === "s3") {
-    if (mode === "menu") return this.startMusicSeasonal("s3menu");
-    return this.startMusicSeasonal("s3game");
-  }
+  let season = (typeof window !== "undefined") ? (window.CURRENT_SEASON || "s1") : "s1";
+  const pref = localStorage.getItem('cb_music_season');
+  if (pref && getReleasedSeasons().some(s => s.id === pref)) season = pref;
+  if (season === "s2") { if (mode === "menu") return this.startMusicSeasonal("s2menu"); return this.startMusicSeasonal("s2game"); }
+  if (season === "s3") { if (mode === "menu") return this.startMusicSeasonal("s3menu"); return this.startMusicSeasonal("s3game"); }
   this._originalStartMusic.call(this, mode);
 };
 /* ============================================================
@@ -495,4 +491,33 @@ function playLutinSound() {
       o.stop(t + note.time + note.dur + 0.01);
     });
   } catch (e) {}
+}
+/* ============================================================
+SÉLECTEUR DE BANDE SON (sans spoiler)
+============================================================ */
+function getReleasedSeasons() {
+  const list = (typeof SEASONS_CLIENT !== "undefined") ? SEASONS_CLIENT : [];
+  const now = new Date();
+  return list.filter(s => { const [d, m, y] = s.start.split("/").map(Number); return now >= new Date(y, m - 1, d); });
+}
+function openMusicChooser() {
+  closeMusicChooser();
+  const released = getReleasedSeasons();
+  const cur = localStorage.getItem('cb_music_season') || 'auto';
+  let btns = `<button class="btn-main ${cur === 'auto' ? 'btn-gold' : 'btn-blue'}" onclick="setMusicSeason('auto')">🎵 Auto (saison en cours)</button>`;
+  released.forEach(s => { const num = s.id.replace('s', ''); btns += `<button class="btn-main ${cur === s.id ? 'btn-gold' : 'btn-blue'}" onclick="setMusicSeason('${s.id}')">${s.emoji} Saison ${num} — ${s.name}</button>`; });
+  const ov = document.createElement('div'); ov.id = 'music-chooser'; ov.className = 'modal-overlay';
+  ov.innerHTML = `<div class="modal-card" style="max-width:320px;text-align:center;">
+    <h2 style="color:#00d2ff;margin:0 0 8px 0;">🎵 BANDE SON</h2>
+    <p style="font-size:10px;color:#aaa;margin-bottom:10px;">Seules les saisons déjà sorties sont proposées (pas de spoiler !).</p>
+    ${btns}
+    <button class="btn-secondary" onclick="closeMusicChooser()">Fermer</button>
+  </div>`;
+  document.body.appendChild(ov);
+}
+function closeMusicChooser() { const o = document.getElementById('music-chooser'); if (o) o.remove(); }
+function setMusicSeason(id) {
+  if (id === 'auto') localStorage.removeItem('cb_music_season'); else localStorage.setItem('cb_music_season', id);
+  closeMusicChooser();
+  if (typeof restartSeasonMusic === "function") restartSeasonMusic();
 }
