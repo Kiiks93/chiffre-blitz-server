@@ -211,23 +211,32 @@ function getActiveSeason() {
 }
 function openBlitzPass() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } document.getElementById("modal-blitz-pass").style.display = "flex"; renderBlitzPass(); }
 function closeBlitzPass() { document.getElementById("modal-blitz-pass").style.display = "none"; }
+let rewardPopupTimeout = null;
+let lastRewardSoundTime = 0;
 function showRewardPopUp(rewardName, rewardIcon) {
-let popup = document.getElementById("reward-popup-overlay");
-if (!popup) {
-popup = document.createElement("div");
-popup.id = "reward-popup-overlay";
-popup.className = "modal-overlay";
-popup.innerHTML = `<div class="modal-card" style="text-align:center; animation: victoryScalePop 0.5s cubic-bezier(0.175,0.885,0.32,1.275) forwards; border-color:#f8b500; box-shadow:0 0 40px rgba(248,181,0,0.8);">
-<div style="font-size:55px; margin-bottom:10px;" id="popup-reward-icon">🎁</div>
-<div style="font-size:10px; font-weight:900; color:#f8b500; letter-spacing:2px; margin-bottom:4px;">RÉCOMPENSE DÉBLOQUÉE</div>
-<div id="popup-reward-name" style="color:#fff; font-size:15px; font-weight:bold; margin-bottom:20px; line-height:1.4;">-</div>
-<button class="btn-main btn-gold" onclick="document.getElementById('reward-popup-overlay').style.display='none'" style="width:100%; margin-top:0;">Récupéré ! ⚡</button></div>`;
-document.body.appendChild(popup);
-}
-document.getElementById("popup-reward-icon").innerText = rewardIcon || "🎁";
-document.getElementById("popup-reward-name").innerText = rewardName;
-popup.style.display = "flex";
-SoundEngine.playVictory();
+  let popup = document.getElementById("reward-popup-overlay");
+  if (!popup) {
+    popup = document.createElement("div");
+    popup.id = "reward-popup-overlay";
+    popup.className = "modal-overlay";
+    popup.innerHTML = `<div class="modal-card" style="text-align:center; animation: victoryScalePop 0.5s cubic-bezier(0.175,0.885,0.32,1.275) forwards; border-color:#f8b500; box-shadow:0 0 40px rgba(248,181,0,0.8);">
+      <div style="font-size:55px; margin-bottom:10px;" id="popup-reward-icon">🎁</div>
+      <div style="font-size:10px; font-weight:900; color:#f8b500; letter-spacing:2px; margin-bottom:4px;">RÉCOMPENSE DÉBLOQUÉE</div>
+      <div id="popup-reward-name" style="color:#fff; font-size:15px; font-weight:bold; margin-bottom:20px; line-height:1.4;">-</div>
+      <button class="btn-main btn-gold" onclick="document.getElementById('reward-popup-overlay').style.display='none'" style="width:100%; margin-top:0;">Récupéré ! ⚡</button></div>`;
+    document.body.appendChild(popup);
+  }
+  document.getElementById("popup-reward-icon").innerText = rewardIcon || "🎁";
+  document.getElementById("popup-reward-name").innerText = rewardName;
+  popup.style.display = "flex";
+
+  // 🔊 Son max 1 fois / 1.2s (évite la superposition de 10 victoires)
+  const now = Date.now();
+  if (now - lastRewardSoundTime > 1200) { lastRewardSoundTime = now; SoundEngine.playVictory(); }
+
+  // ⏱️ Auto-fermeture après 3s (le timer précédent est annulé → pas d'accumulation)
+  if (rewardPopupTimeout) clearTimeout(rewardPopupTimeout);
+  rewardPopupTimeout = setTimeout(() => { popup.style.display = "none"; }, 3000);
 }
 function renderBlitzPass() {
 const container = document.getElementById("blitz-pass-container");
@@ -268,7 +277,20 @@ container.appendChild(listDiv);
 updatePassSeasonLabels();
 }
 function buyBlitzPassPremium() { if (myProfile.coins < 1000) { showNotificationToast(i18n[currentLang].not_enough_coins, "announcement"); return; } socket.emit("buy_blitz_pass"); }
-function claimPassReward(tier, track) { if (track === "premium" && !myProfile.blitzPassPremium) { showNotificationToast("❌ Tu dois acheter le Passe Premium pour récupérer cette récompense !", "announcement"); return; } socket.emit("claim_pass_tier", { tier, track }); }
+let lastClaimTime = 0;
+function claimPassReward(tier, track) {
+  const now = Date.now();
+  if (now - lastClaimTime < 800) {
+    showNotificationToast("⏳ Un peu de patience entre deux récompenses !", "announcement");
+    return;
+  }
+  lastClaimTime = now;
+  if (track === "premium" && !myProfile.blitzPassPremium) {
+    showNotificationToast("❌ Tu dois acheter le Passe Premium pour récupérer cette récompense !", "announcement");
+    return;
+  }
+  socket.emit("claim_pass_tier", { tier, track });
+}
 socket.on("pass_tier_claimed", (data) => {
 const tier = data.tier, track = data.track;
 const season = getActiveSeason();
