@@ -332,30 +332,13 @@
     </div>
 
     <div id="modal-blitz-pass" class="modal-overlay" style="display:none;">
-        <div class="modal-card" style="max-width: 900px; width: 95vw; padding: 20px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <div>
-                    <h2 id="pass-menu-title" style="margin:0; color:#f8b500; font-size:18px; font-weight:900; letter-spacing:1px;">🎫 PASSE DE SAISON • SAISON 1 🐱 FÉLIN & NÉON</h2>
-                    <div id="pass-menu-sub" style="font-size:11px; color:#aaa; margin-top:3px;">Néon Félin & Récompenses 🐱</div>
-                </div>
-                <span id="pass-modal-season" style="font-size:11px; background:rgba(248,181,0,0.2); border:2px solid #f8b500; color:#f8b500; padding:4px 10px; border-radius:12px; font-weight:bold;">Saison 1 • 🐱 FÉLIN & NÉON</span>
+        <div class="modal-card" style="max-width: 410px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <h2 style="margin:0; color:#f8b500; font-size:16px;">🎫 PASSE DE SAISON</h2>
+                <span id="pass-modal-season" style="font-size:10px; background:rgba(248,181,0,0.2); border:1px solid #f8b500; color:#f8b500; padding:2px 6px; border-radius:8px; font-weight:bold;">Saison 1</span>
             </div>
-            
-            <!-- Progress Bar XP -->
-            <div style="margin-bottom:15px;">
-                <div style="display:flex; justify-content:space-between; font-size:11px; color:#f8b500; margin-bottom:5px; font-weight:bold;">
-                    <span>NIVEAU <span id="bp-current-tier">1</span></span>
-                    <span id="bp-xp-text">0 / 1000 XP</span>
-                </div>
-                <div style="background:rgba(0,0,0,0.5); border-radius:10px; height:14px; overflow:hidden; border:1px solid #333;">
-                    <div id="bp-xp-bar" style="width:0%; height:100%; background:linear-gradient(90deg, #f8b500, #ffaa00, #f8b500); border-radius:10px; transition:width 0.5s ease;"></div>
-                </div>
-            </div>
-            
-            <!-- Battle Pass Track Horizontale -->
-            <div id="blitz-pass-container" style="position:relative;"></div>
-            
-            <button class="btn-secondary" onclick="closeBlitzPass()" style="margin-top:15px; width:100%;">Fermer</button>
+            <div id="blitz-pass-container" style="overflow-y: auto; max-height: 52vh; display: flex; flex-direction: column; gap: 6px;"></div>
+            <button class="btn-secondary" onclick="closeBlitzPass()" style="margin-top:8px;">Fermer</button>
         </div>
     </div>
 

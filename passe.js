@@ -254,137 +254,50 @@ function spawnUnlockBurst(card, icon) {
 }
 function renderBlitzPass() {
   const container = document.getElementById("blitz-pass-container");
-  if (!container) return;
-
   const season = getActiveSeason();
-  // Récupère les données sauvegardées pour cette saison
   const seasonData = (myProfile.claimedPassTiers || {})[season.id] || {};
   const isPremium = !!seasonData.premium || (season.id === "s1" && myProfile.blitzPassPremium);
   const claimed = seasonData;
-  
-  // Calculs XP et Niveau
-  const currentTier = myProfile.blitzPassTier || 1;
-  const xpPerTier = 1000;
-  const currentXP = myProfile.blitzPassXP || 0;
-  const xpInCurrentTier = currentXP % xpPerTier; // XP depuis le dernier niveau
-  const xpPercent = Math.min(100, Math.floor((xpInCurrentTier / xpPerTier) * 100));
-  
-  // --- MISE À JOUR DE LA BARRE XP (BUG #1 CORRIGÉ) ---
-  document.getElementById("bp-current-tier").innerText = currentTier;
-  document.getElementById("bp-xp-text").innerText = `${xpInCurrentTier} / ${xpPerTier} XP`;
-  document.getElementById("bp-xp-bar").style.width = xpPercent + "%";
-  
-  // --- HEADER AVEC BOUTON PREMIUM (BUG #2 CORRIGÉ) ---
-  let headerHTML = `<div class="bp-header-banner" style="background:linear-gradient(135deg, rgba(248,181,0,0.15), rgba(0,0,0,0.6)); border:2px solid #f8b500; border-radius:12px; padding:12px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
-    <div style="display:flex; align-items:center; gap:12px;">
-      <div style="font-size:28px;">${season.emoji}</div>
-      <div>
-        <div style="font-size:12px; font-weight:900; color:#f8b500; text-transform:uppercase; letter-spacing:1px;">Passe de Saison ${season.name}</div>
-        <div style="font-size:10px; color:#ccc;">${isPremium ? '✨ STATUT PREMIUM ACTIF' : 'Passe Premium disponible'}</div>
-      </div>
-    </div>
-    ${!isPremium ? `<button class="btn-main btn-gold" onclick="buyBlitzPassPremium()" style="padding:8px 16px; font-size:11px; font-weight:bold; background:linear-gradient(45deg, #f8b500, #ffaa00); border:none; border-radius:8px; cursor:pointer; box-shadow:0 4px 15px rgba(248,181,0,0.4);">🔓 DÉBLOQUER PREMIUM (1000 🪙)</button>` : '<div style="color:#00ff88; font-weight:bold; font-size:11px; background:rgba(0,255,136,0.15); padding:6px 12px; border-radius:8px; border:1px solid #00ff88;">⭐ VIP PREMIUM</div>'}
-  </div>`;
-  
-  container.innerHTML = headerHTML;
-  
+  container.innerHTML = `<div class="bp-header-banner">
+    <div style="font-size:13px; font-weight:900; color:#f8b500; margin-bottom:2px;">${season.emoji} PASSE DE SAISON : ${season.name}</div>
+    <div style="font-size:9px; color:#aaa; margin-bottom:4px;">📅 ${season.start} → ${season.end}</div>
+    <div style="font-size:10px; color:#ccc; margin-bottom:6px;">${isPremium ? "✨ Passe Premium Actif !" : "Débloque le Passe Premium pour 1000 🪙"}</div>
+    ${!isPremium ? `<button class="btn-main btn-gold" onclick="buyBlitzPassPremium()" style="padding:6px 10px; font-size:11px; margin:0 auto; width:auto;">Acheter le Passe Premium (1000 🪙)</button>` : `<div style="color:#00ff88; font-weight:bold; font-size:10px;">Statut : VIP / Premium</div>`}</div>`;
   if (!season.tiers || season.tiers.length === 0) {
-    container.innerHTML += `<div style="text-align:center; color:#aaa; padding:40px; font-size:14px; font-weight:bold;">${season.emoji} Le contenu de la saison ${season.name} arrive bientôt !</div>`;
+    container.innerHTML += `<div style="text-align:center; color:#aaa; padding:20px; font-size:12px; font-weight:bold;">${season.emoji} Le contenu de la saison ${season.name} arrive bientôt !</div>`;
     return;
   }
-  
-  // Track horizontale scrollable
-  const trackWrapper = document.createElement("div");
-  trackWrapper.className = "bp-track-wrapper";
-  trackWrapper.style.cssText = "position:relative; overflow-x:auto; overflow-y:hidden; padding:20px 10px; background:rgba(0,0,0,0.3); border-radius:12px; border:1px solid #333;";
-  
-  const track = document.createElement("div");
-  track.className = "bp-track";
-  track.style.cssText = "display:flex; gap:8px; min-width:max-content; padding:10px 0;";
-  
-  // Ligne de connexion centrale
-  const connectorLine = document.createElement("div");
-  connectorLine.style.cssText = "position:absolute; top:50%; left:60px; right:60px; height:4px; background:linear-gradient(90deg, #f8b500, #ffaa00, #f8b500); opacity:0.3; transform:translateY(-50%); z-index:0; border-radius:2px;";
-  trackWrapper.appendChild(connectorLine);
-  
-  // --- BOUCLE SUR LES NIVEAUX ---
+  const scroll = document.createElement("div");
+  scroll.className = "bp-track-scroll";
   season.tiers.forEach(t => {
     const freeKey = `${t.tier}_free`, premKey = `${t.tier}_premium`;
     const isFreeClaimed = claimed[freeKey], isPremClaimed = claimed[premKey];
-    const canClaimPrem = isPremium && !isPremClaimed;
-    const tierNum = t.tier;
-    const isCurrentTier = tierNum === currentTier;
-    const isPastTier = tierNum < currentTier;
-    
+    const premDisabled = isPremClaimed || !isPremium;
     const col = document.createElement("div");
-    col.className = "bp-tier-card";
-    col.id = "bp-card-" + tierNum;
-    col.style.cssText = `position:relative; z-index:1; flex-shrink:0; width:160px; transition:transform 0.3s ease; ${isCurrentTier ? 'transform:scale(1.08);' : ''}`;
-    
-    // --- LOGIQUE D'AFFICHAGE DES ICÔNES (BUG #3 CORRIGÉ) ---
-    // Fonction helper pour trouver l'icône selon le texte de la récompense
-    function getRewardIcon(text) {
-      if (!text) return "🎁";
-      const lower = text.toLowerCase();
-      if (lower.includes("avatar") || lower.includes("grille") || lower.includes("cadre")) return "✨";
-      if (lower.includes("titre")) return "📛";
-      if (lower.includes("graal")) return "👑";
-      if (lower.includes("pièces") || lower.includes("🪙")) return "🪙";
-      if (lower.includes("joker") || lower.includes("blocage") || lower.includes("nova") || lower.includes("projecteur") || lower.includes("séisme")) return "⚡";
-      return "🎁";
-    }
-
-    const premIcon = getRewardIcon(t.premium);
-    const freeIcon = getRewardIcon(t.free);
-    
-    // Construction HTML de la carte
+    col.className = "bp-tier-col"; col.id = "bp-card-" + t.tier;
     col.innerHTML = `
-      <div class="bp-tier-number" style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); background:${isCurrentTier ? 'linear-gradient(45deg, #f8b500, #ffaa00)' : (isPastTier ? '#00ff88' : '#444')}; color:${isCurrentTier || isPastTier ? '#000' : '#fff'}; font-size:11px; font-weight:bold; padding:3px 10px; border-radius:10px; border:2px solid #fff; z-index:3; white-space:nowrap;">${tierNum}</div>
-      
-      <!-- Carte Premium (haut) -->
-      <div class="bp-reward-card bp-premium ${isPremClaimed ? 'claimed' : ''} ${!isPremium ? 'locked' : ''}" style="margin-top:15px; background:linear-gradient(135deg, ${isPremClaimed ? 'rgba(0,255,136,0.2)' : (isPremium ? 'rgba(248,181,0,0.15)' : 'rgba(60,60,60,0.5)')}, rgba(0,0,0,0.8)); border:2px solid ${isPremClaimed ? '#00ff88' : (isPremium ? '#f8b500' : '#555')}; border-radius:10px; padding:8px; min-height:70px; display:flex; flex-direction:column; justify-content:center; position:relative; overflow:hidden;">
-        ${!isPremium ? '<div style="position:absolute; inset:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:2; font-size:18px;">🔒</div>' : ''}
-        <div style="font-size:16px; margin-bottom:3px;">${premIcon}</div>
-        <div style="font-size:9px; color:${isPremClaimed ? '#00ff88' : (isPremium ? '#f8b500' : '#888')}; line-height:1.2; font-weight:bold;">${t.premium}</div>
-        ${isPremClaimed ? '<div style="position:absolute; top:2px; right:2px; color:#00ff88; font-size:12px;">✅</div>' : ''}
+      <div class="bp-cell bp-prem ${isPremClaimed ? 'claimed' : ''}">
+        <div class="bp-reward">${t.premium}</div>
+        <button class="power-btn ${isPremClaimed ? 'active' : 'equip'}" style="font-size:10px;padding:3px;" ${premDisabled ? 'disabled' : ''} onclick="claimPassReward(${t.tier},'premium')">${isPremClaimed ? '✔' : '⭐'}</button>
       </div>
-      
-      <!-- Carte Free (bas) -->
-      <div class="bp-reward-card bp-free ${isFreeClaimed ? 'claimed' : ''}" style="margin-top:6px; background:linear-gradient(135deg, ${isFreeClaimed ? 'rgba(0,210,255,0.2)' : 'rgba(60,60,60,0.5)'}, rgba(0,0,0,0.8)); border:2px solid ${isFreeClaimed ? '#00d2ff' : '#555'}; border-radius:10px; padding:8px; min-height:70px; display:flex; flex-direction:column; justify-content:center; position:relative; overflow:hidden;">
-        <div style="font-size:16px; margin-bottom:3px;">${freeIcon}</div>
-        <div style="font-size:9px; color:${isFreeClaimed ? '#00d2ff' : '#aaa'}; line-height:1.2; font-weight:bold;">${t.free}</div>
-        ${isFreeClaimed ? '<div style="position:absolute; top:2px; right:2px; color:#00d2ff; font-size:12px;">✅</div>' : ''}
-      </div>
-      
-      <!-- Bouton claim si niveau actuel -->
-      ${isCurrentTier && !isFreeClaimed ? `<button class="bp-claim-btn" onclick="claimPassReward(${tierNum},'free')" style="position:absolute; bottom:-8px; left:50%; transform:translateX(-50%); background:linear-gradient(45deg, #00d2ff, #00aaff); border:none; border-radius:8px; padding:4px 12px; color:#000; font-size:9px; font-weight:bold; cursor:pointer; z-index:4; box-shadow:0 2px 8px rgba(0,210,255,0.5); white-space:nowrap;">RÉCUPÉRER</button>` : ''}
-      ${isCurrentTier && isPremium && !isPremClaimed ? `<button class="bp-claim-btn" onclick="claimPassReward(${tierNum},'premium')" style="position:absolute; bottom:-20px; left:50%; transform:translateX(-50%); background:linear-gradient(45deg, #f8b500, #ffaa00); border:none; border-radius:8px; padding:4px 12px; color:#000; font-size:9px; font-weight:bold; cursor:pointer; z-index:4; box-shadow:0 2px 8px rgba(248,181,0,0.5); white-space:nowrap;">PREMIUM</button>` : ''}
-    `;
-    
-    track.appendChild(col);
+      <div class="bp-tier-num">${t.tier}</div>
+      <div class="bp-cell bp-free ${isFreeClaimed ? 'claimed' : ''}">
+        <div class="bp-reward">${t.free}</div>
+        <button class="power-btn ${isFreeClaimed ? 'active' : 'equip'}" style="font-size:10px;padding:3px;" ${isFreeClaimed ? 'disabled' : ''} onclick="claimPassReward(${t.tier},'free')">${isFreeClaimed ? '✔' : '🟢'}</button>
+      </div>`;
+    scroll.appendChild(col);
   });
-  
-  trackWrapper.appendChild(track);
-  container.appendChild(trackWrapper);
-  
-  // Scroll automatique vers le tier actuel
-  setTimeout(() => {
-    const currentCard = document.getElementById("bp-card-" + currentTier);
-    if (currentCard && trackWrapper) {
-      const cardCenter = currentCard.offsetLeft + currentCard.offsetWidth / 2;
-      const wrapperCenter = trackWrapper.offsetWidth / 2;
-      trackWrapper.scrollTo({ left: cardCenter - wrapperCenter, behavior: 'smooth' });
-    }
-  }, 100);
-  
+  container.appendChild(scroll);
   updatePassSeasonLabels();
 }
-function buyBlitzPassPremium() { 
-  if (myProfile.coins < 1000) { 
-    showNotificationToast(i18n[currentLang].not_enough_coins, "announcement"); 
-    return; 
-  } 
-  socket.emit("buy_blitz_pass"); 
+function buyBlitzPassPremium() { if (myProfile.coins < 1000) { showNotificationToast(i18n[currentLang].not_enough_coins, "announcement"); return; } socket.emit("buy_blitz_pass"); }
+let lastClaimTime = 0;
+function claimPassReward(tier, track) {
+  if (track === "premium" && !myProfile.blitzPassPremium) {
+    showNotificationToast("❌ Tu dois acheter le Passe Premium pour récupérer cette récompense !", "announcement");
+    return;
+  }
+  socket.emit("claim_pass_tier", { tier, track });
 }
 socket.on("pass_tier_claimed", (data) => {
 const tier = data.tier, track = data.track;
