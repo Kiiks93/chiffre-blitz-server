@@ -96,14 +96,15 @@ function spawnCatchItem() {
   const xPct = 6 + Math.random() * 86;
   el.style.left = xPct + '%';
   if (catchState.theme === 'halloween') {
+    if (field.childElementCount > 14) return;
     el.classList.add('fall');
     el.style.fontSize = (52 + Math.random() * 26) + 'px';
     el.style.top = '-80px';
     el.style.animationDuration = catchState.speed + 's';
-    el.onclick = (e) => { applyCatch(type, e.clientX, e.clientY); el.remove(); };
+    el.addEventListener('pointerdown', (e) => { e.preventDefault(); applyCatch(type, e.clientX, e.clientY); el.remove(); }, { once: true });
     el.addEventListener('animationend', () => el.remove());
     field.appendChild(el);
-    } else {
+  } else {
     if (catchState.items.length > 12) return;
     el.style.fontSize = (40 + Math.random() * 16) + 'px';
     el.style.left = '0px'; el.style.top = '0px';
