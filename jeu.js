@@ -1046,12 +1046,14 @@ function getWinnerAvatarShowcaseHTML(playerObj) {
 
 function showGameOverRecap(data) {
   recapActive = true;
+  if (typeof clearCatchArena === "function") clearCatchArena();
   hideAllScreens();
   window.history.replaceState({}, "", window.location.pathname);
   const modal = document.getElementById("recap-modal");
   const modalCard = modal.querySelector(".modal-card");
   const banner = document.getElementById("recap-banner");
   document.getElementById("recap-1v1-rows").style.display = "block";
+  if (data.isCatch) document.getElementById("recap-1v1-rows").style.display = "none";
   const myId = socket.id;
   const myData = data.players[myId];
   const oppId = Object.keys(data.players).find(id => id !== myId);
