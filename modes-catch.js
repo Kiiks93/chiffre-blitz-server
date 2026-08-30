@@ -3,9 +3,9 @@ MODES SAISONNIERS — base (100🪙) + bonus (100🪙, non doublé x2)
 ============================================================ */
 const CATCH_CONFIG = {
   halloween: { good: "🦇", bad: "👻", happy: "🎃", mean: "🎃", label: "🎃 CHASSE HANTÉE",
-    rules: "Clique les 🦇 <b style='color:#00ff88'>(+10)</b> ! Évite les 👻 <b style='color:#ff4b2b'>(−15)</b>. 🎃😊 = <b>+20 bonus</b>, 🎃😈 = <b>−20</b>. Le bonus (max 100🪙) n'est PAS doublé par le x2." },
+    rules: "Clique les 🦇 <b style='color:#00ff88'>(+10)</b> ! Évite les 👻 <b style='color:#ff4b2b'>(−15)</b>. 🎃 qui sourit = <b>+20 bonus</b>, 🎃 énervée = <b>−20</b>. Le bonus (max 100🪙) n'est PAS doublé par le x2." },
   noel: { good: "🎁", bad: "🎄", happy: "🧝", mean: "🧝", label: "🎄 HOTTE DU PÈRE NOËL",
-    rules: "Attrape les 🎁 <b style='color:#00ff88'>(+10)</b> ! Évite les 🎄 <b style='color:#ff4b2b'>(−15)</b>. 🧝😊 = <b>+20 bonus</b>, 🧝😈 = <b>−20</b>. Le bonus (max 100🪙) n'est PAS doublé par le x2." }
+    rules: "Attrape les 🎁 <b style='color:#00ff88'>(+10)</b> ! Évite les 🎄 <b style='color:#ff4b2b'>(−15)</b>. 🧝 qui sourit = <b>+20 bonus</b>, 🧝 énervé = <b>−20</b>. Le bonus (max 100🪙) n'est PAS doublé par le x2." }
 };
 let catchState = null;
 
