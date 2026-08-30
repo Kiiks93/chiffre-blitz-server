@@ -161,6 +161,15 @@ function getCosmeticCategory(itemId) {
   if (itemId.startsWith("theme_")) return "theme";
   return null;
 }
+function ownsItemOrPack(player, itemId) {
+  const u = player.unlocked_items || [];
+  if (u.includes(itemId)) return true;
+  for (const id of u) {
+    const it = ITEM_CATALOG[id];
+    if (it && it.type === 'pack' && Array.isArray(it.items) && it.items.includes(itemId)) return true;
+  }
+  return false;
+}
 
 /* ============================================================
 SAISONS (moteur multi-saisons)
@@ -448,7 +457,7 @@ io.on('connection', (socket) => {
     else if (itemId === 'none_theme') delete player.inventory.__equipped.theme;
     else {
       const category = getCosmeticCategory(itemId);
-      const owned = itemId === "frame_standard" ? true : (player.unlocked_items && player.unlocked_items.includes(itemId));
+      const owned = itemId === "frame_standard" ? true : ownsItemOrPack(player, itemId);
       if (!category || !owned) { socket.emit('room_error', "Tu ne possedes pas cet objet cosmetique."); return; }
       player.inventory.__equipped[category] = itemId;
     }
