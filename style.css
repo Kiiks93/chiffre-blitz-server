@@ -1153,3 +1153,18 @@ ANIMATION DÉBLOCAGE PALIER (toutes saisons)
   .bp-track-scroll { flex-direction:column; overflow-x:visible; }
   .bp-tier-col { flex:none; width:100%; }
 }
+/* ============================================================
+PASS HORIZONTAL/VERTICAL
+============================================================ */
+.bp-track-scroll { display:flex; gap:6px; overflow-x:auto; padding:8px; scroll-snap-type:x proximity; }
+.bp-tier-col { flex:0 0 150px; display:flex; flex-direction:column; gap:4px; scroll-snap-align:start; }
+.bp-tier-num { text-align:center; font-weight:900; color:#f8b500; font-size:12px; background:rgba(0,0,0,.4); border-radius:6px; padding:2px; }
+.bp-cell { border:1px solid rgba(255,255,255,.12); border-radius:8px; padding:6px; display:flex; flex-direction:column; gap:4px; }
+.bp-prem { background:rgba(0,210,255,.08); border-color:rgba(0,210,255,.3); }
+.bp-free { background:rgba(56,239,125,.08); border-color:rgba(56,239,125,.3); }
+.bp-cell.claimed { opacity:.55; }
+.bp-reward { font-size:9px; color:#ddd; min-height:26px; }
+@media (max-width:700px) {
+  .bp-track-scroll { flex-direction:column; overflow-x:visible; }
+  .bp-tier-col { flex:none; width:100%; }
+}
