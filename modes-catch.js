@@ -150,7 +150,13 @@ socket.on('catch_solo_result', (data) => {
 });
 
 /* ---------- Visibilité des boutons menu ---------- */
-socket.on('events_state_update', (e) => {
-  const hb = document.getElementById('btn-halloween-menu'); if (hb) hb.style.display = e.halloweenMode ? 'flex' : 'none';
-  const nb = document.getElementById('btn-noel-menu'); if (nb) nb.style.display = e.noelMode ? 'flex' : 'none';
-});
+function refreshCatchButtons() {
+  const season = (typeof getCurrentSeasonId === "function") ? getCurrentSeasonId() : (window.CURRENT_SEASON || "s1");
+  const hb = document.getElementById('btn-halloween-menu');
+  const nb = document.getElementById('btn-noel-menu');
+  if (hb) hb.style.display = (latestGlobalEvents.halloweenMode || season === 's2') ? 'flex' : 'none';
+  if (nb) nb.style.display = (latestGlobalEvents.noelMode || season === 's3') ? 'flex' : 'none';
+}
+socket.on('events_state_update', refreshCatchButtons);
+socket.on('player_registered', () => setTimeout(refreshCatchButtons, 60));
+socket.on('season_updated', () => setTimeout(refreshCatchButtons, 60));
