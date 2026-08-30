@@ -458,3 +458,17 @@ LUTINS COMBO 🧝 (4 variantes 3D) — bloc complet
   #grid:has(.lutin-theme)::before { height: 40px; margin-bottom: -10px; }
   #grid:has(.lutin-theme)::after { height: 26px; margin-top: -10px; }
 }
+
+/* ============================================================
+ARÈNE MODES CATCH 🎃/🎄
+============================================================ */
+#catch-arena { position: fixed; inset: 0; z-index: 5000; overflow: hidden; display: flex; flex-direction: column; }
+#catch-arena.halloween { background: radial-gradient(circle at 50% 30%, #2b0a45 0%, #12001f 60%, #000 100%); }
+#catch-arena.noel { background: radial-gradient(circle at 50% 30%, #0a2a4d 0%, #051525 60%, #020a12 100%); }
+#catch-backdrop { position: absolute; bottom: 2%; left: 50%; transform: translateX(-50%); font-size: 110px; opacity: .9; filter: drop-shadow(0 0 20px rgba(255,200,120,.4)); }
+#catch-hud { display: flex; justify-content: space-around; align-items: center; font-size: 18px; font-weight: 900; color: #fff; padding: 10px; background: rgba(0,0,0,.4); }
+#catch-field { position: absolute; inset: 0; }
+.catch-item { position: absolute; cursor: pointer; user-select: none; animation: catchApproach linear forwards; filter: drop-shadow(0 0 8px rgba(255,255,255,.5)); z-index: 2; }
+@keyframes catchApproach { 0% { transform: scale(.2); opacity: 0; } 12% { opacity: 1; } 100% { transform: scale(1.7) translateY(16vh); opacity: 1; } }
+.catch-float { position: absolute; font-size: 20px; font-weight: 900; pointer-events: none; animation: catchFloat .9s ease forwards; z-index: 3; }
+@keyframes catchFloat { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-40px); } }
