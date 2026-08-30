@@ -13,7 +13,7 @@ body.season-s2 .modal-card { border-color: #ff8a00; background: #1a0033; }
 body.season-s2 .tile { background: #2a0a3d; border-color: #7b2ff7; }
 body.season-s2 .hud { background: rgba(123, 47, 247, 0.12); }
 body.season-s2 .user-pill { color: #ff8a00; }
-body.season-s2 .tab-btn.active { background: #ff8a00; }
+body.season-s2 .tab-btn.active { background: #ff8a00; }.catch-item { position: absolute;
 
 /* ============================================================
 SCÈNE HALLOWEEN ANIMÉE (ciel, lune, château…)
@@ -468,7 +468,7 @@ ARÈNE MODES CATCH 🎃/🎄
 #catch-backdrop { position: absolute; bottom: 2%; left: 50%; transform: translateX(-50%); font-size: 110px; opacity: .5; }
 #catch-hud { display: flex; justify-content: space-around; align-items: center; font-size: 18px; font-weight: 900; color: #fff; padding: 10px; background: rgba(0,0,0,.4); }
 #catch-field { position: absolute; inset: 0; }
-.catch-item { position: absolute; cursor: pointer; user-select: none; z-index: 2; will-change: transform; }
+.catch-item { position: absolute; cursor: pointer; user-select: none; z-index: 2; will-change: transform; padding: 12px; touch-action: manipulation; }
 .catch-item.fall { animation: catchFall linear forwards; }
 @keyframes catchFall { 0% { transform: translateY(0); opacity: 0; } 8% { opacity: 1; } 100% { transform: translateY(115vh); opacity: 1; } }
 #catch-santa { position: absolute; bottom: 12px; width: 96px; height: 115px; transform: translateX(-50%); z-index: 3; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Cellipse cx='72' cy='30' rx='20' ry='24' fill='%238b5a2b'/%3E%3Cellipse cx='72' cy='12' rx='12' ry='6' fill='%235a3a1b'/%3E%3Crect x='64' y='6' width='7' height='7' fill='%23ff4b4b'/%3E%3Crect x='73' y='4' width='7' height='8' fill='%234bb3ff'/%3E%3Cpath d='M55 60 Q60 45 68 38' stroke='%23c62828' stroke-width='9' fill='none' stroke-linecap='round'/%3E%3Crect x='30' y='52' width='40' height='44' rx='14' fill='%23c62828'/%3E%3Crect x='30' y='70' width='40' height='8' fill='%23222'/%3E%3Crect x='28' y='92' width='44' height='10' rx='5' fill='%23fff'/%3E%3Ccircle cx='50' cy='44' r='12' fill='%23c62828'/%3E%3Crect x='38' y='50' width='24' height='6' rx='3' fill='%23fff'/%3E%3Ccircle cx='60' cy='36' r='4' fill='%23fff'/%3E%3Crect x='34' y='100' width='12' height='12' rx='3' fill='%23222'/%3E%3Crect x='54' y='100' width='12' height='12' rx='3' fill='%23222'/%3E%3C/svg%3E") center / contain no-repeat; filter: drop-shadow(0 0 15px rgba(255,200,120,.6)); }
