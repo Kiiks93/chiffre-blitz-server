@@ -700,9 +700,19 @@ io.on('connection', (socket) => {
   });
 
   /* ---------- MATCHMAKING ---------- */
-  socket.on('find_1v1_match', () => {
-    matchmakingQueue.push(socket.id);
-    if (matchmakingQueue.length >= 2) startMatchBetween(matchmakingQueue.shift(), matchmakingQueue.shift(), false, true, false);
+    socket.on('find_1v1_match', () => {
+    if (!matchmakingQueue.includes(socket.id)) matchmakingQueue.push(socket.id);
+    if (matchmakingQueue.length >= 2) {
+      const id1 = matchmakingQueue.shift();
+      let id2 = null;
+      for (let i = 0; i < matchmakingQueue.length; i++) {
+        const c = matchmakingQueue[i];
+        const sameUser = activePlayers[id1] && activePlayers[c] && activePlayers[id1].username === activePlayers[c].username;
+        if (c !== id1 && !sameUser) { id2 = c; matchmakingQueue.splice(i, 1); break; }
+      }
+      if (id2) startMatchBetween(id1, id2, false, true, false);
+      else matchmakingQueue.unshift(id1);
+    }
   });
 
   socket.on('find_ranked_match', (data) => {
@@ -717,9 +727,18 @@ io.on('connection', (socket) => {
     }
     player.equippedPowers = items;
     player.equippedPower = items[0];
-    rankedQueue.push(socket.id);
-    if (rankedQueue.length >= 2) startMatchBetween(rankedQueue.shift(), rankedQueue.shift(), true, true, false);
-  });
+        if (!rankedQueue.includes(socket.id)) rankedQueue.push(socket.id);
+    if (rankedQueue.length >= 2) {
+      const id1 = rankedQueue.shift();
+      let id2 = null;
+      for (let i = 0; i < rankedQueue.length; i++) {
+        const c = rankedQueue[i];
+        const sameUser = activePlayers[id1] && activePlayers[c] && activePlayers[id1].username === activePlayers[c].username;
+        if (c !== id1 && !sameUser) { id2 = c; rankedQueue.splice(i, 1); break; }
+      }
+      if (id2) startMatchBetween(id1, id2, true, true, false);
+      else rankedQueue.unshift(id1);
+    }
 
   socket.on('find_tug_of_war_match', () => {
     if (!globalEvents.tugOfWarMode) return;
