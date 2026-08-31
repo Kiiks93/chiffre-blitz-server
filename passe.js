@@ -314,15 +314,15 @@ function renderBlitzPass() {
     const premDisabled = isPremClaimed || !isPremium;
     const col = document.createElement("div");
     col.className = "bp-tier-col"; col.id = "bp-card-" + t.tier;
-    col.innerHTML = `
-      <div class="bp-cell bp-prem ${isPremClaimed ? 'claimed' : ''}">
+      col.innerHTML = `
+      <div class="bp-card bp-card-prem ${isPremClaimed ? 'claimed' : (!isPremium ? 'locked' : '')}" onclick="claimPassReward(${t.tier},'premium')">
+        <div class="bp-ribbon">⭐ PREMIUM</div>
         ${rewardVisualHTML(season.id, t.tier, 'premium', t.premium)}
-        <button class="power-btn ${isPremClaimed ? 'active' : 'equip'}" style="font-size:10px;padding:3px;" ${premDisabled ? 'disabled' : ''} onclick="claimPassReward(${t.tier},'premium')">${isPremClaimed ? '✔' : '⭐'}</button>
       </div>
-      <div class="bp-tier-num">${t.tier}</div>
-      <div class="bp-cell bp-free ${isFreeClaimed ? 'claimed' : ''}">
+      <div class="bp-num">${t.tier}</div>
+      <div class="bp-card bp-card-free ${isFreeClaimed ? 'claimed' : ''}" onclick="claimPassReward(${t.tier},'free')">
+        <div class="bp-ribbon free">GRATUIT</div>
         ${rewardVisualHTML(season.id, t.tier, 'free', t.free)}
-        <button class="power-btn ${isFreeClaimed ? 'active' : 'equip'}" style="font-size:10px;padding:3px;" ${isFreeClaimed ? 'disabled' : ''} onclick="claimPassReward(${t.tier},'free')">${isFreeClaimed ? '✔' : '🟢'}</button>
       </div>`;
     scroll.appendChild(col);
   });
@@ -346,8 +346,12 @@ let icon = "🌟";
 if (season.id === "s2") icon = (tier === 30 && track === "premium") ? "🎃" : (tier === 25 && track === "premium") ? "🦇" : (tier === 15 && track === "premium") ? "💀" : "🎃";
 else if (season.id === "s3") icon = (tier === 30 && track === "premium") ? "🍪" : (tier === 25 && track === "premium") ? "🎅" : (tier === 15 && track === "premium") ? "🔮" : (tier === 5 && track === "premium") ? "⛄" : "🎄";
 else icon = (tier === 30 && track === "premium") ? "🐯" : (tier === 25 && track === "premium") ? "🌈" : (tier === 15 && track === "premium") ? "🐱" : "🌟";
-const card = document.getElementById("bp-card-" + tier);
-if (card) { card.classList.remove("bp-unlock"); void card.offsetWidth; card.classList.add("bp-unlock"); spawnUnlockBurst(card, icon); }
+const col = document.getElementById("bp-card-" + tier);
+if (col) {
+  const card = col.querySelector(track === 'premium' ? '.bp-card-prem' : '.bp-card-free');
+  if (card) { card.classList.remove('bp-unlock'); void card.offsetWidth; card.classList.add('bp-unlock'); }
+  spawnUnlockBurst(col, icon);
+}
 const ns = Date.now();
 if (ns - lastRewardSoundTime > 1200) { lastRewardSoundTime = ns; SoundEngine.playVictory(); }
 setTimeout(() => { renderBlitzPass(); }, 450);
