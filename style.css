@@ -1214,3 +1214,26 @@ PASSE DE SAISON — DA "BRAWL STARS" (horizontal PC / vertical mobile)
   .bp-num { order:2; }
   .bp-card-prem { width:46%; min-height:120px; order:3; transform:rotate(1.5deg); }
 }
+
+/* ============================================================
+PASS : ÉQUILIBRE (plus de vide) + TEXTES PLUS GROS
+============================================================ */
+#modal-blitz-pass .modal-card { display:flex; flex-direction:column; }
+#blitz-pass-container {
+  flex:1 !important; max-height:none !important; overflow:hidden !important;
+  display:flex !important; flex-direction:column !important; min-height:0;
+}
+#modal-blitz-pass .bp-track-scroll { flex:1; align-items:center; }
+
+/* Textes du haut plus lisibles */
+#modal-blitz-pass h2 { font-size:20px !important; }
+#pass-modal-season { font-size:12px !important; padding:4px 10px !important; }
+#modal-blitz-pass .bp-header-banner > div:nth-child(1) { font-size:18px !important; }
+#modal-blitz-pass .bp-header-banner > div:nth-child(2) { font-size:12px !important; }
+#modal-blitz-pass .bp-header-banner > div:nth-child(3) { font-size:13px !important; }
+#modal-blitz-pass .bp-header-banner > div:nth-child(4) { font-size:13px !important; }
+
+/* Mobile : la piste redevient scrollable verticalement */
+@media (max-width:700px) {
+  #blitz-pass-container { overflow-y:auto !important; }
+}
