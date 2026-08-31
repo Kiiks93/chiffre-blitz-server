@@ -4,6 +4,35 @@ BOUTIQUE
 let currentShopTab = "bonus";
 function openShop() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } updateShopCoinsDisplay(); document.getElementById("modal-shop").style.display = "flex"; switchShopTab(currentShopTab); }
 function closeShop() { document.getElementById("modal-shop").style.display = "none"; }
+
+function getCosmeticsDict() {
+  const fr = currentLang === "fr";
+  return {
+    theme_glacial: { name: "🧊 " + (fr ? "Grille Cryo" : "Cryo Grid"), desc: fr ? "Grille aux reflets bleutés glacés" : "Icy blue tinted grid" },
+    theme_alt: { name: "🎨 " + (fr ? "Grille Rétro/Dorée" : "Retro/Gold Grid"), desc: fr ? "Tuiles dorées look rétro, pluie de pièces au combo" : "Retro gold tiles, coin rain on combo" },
+    theme_eclair: { name: "⚡ " + (fr ? "Grille Éclair" : "Lightning Grid"), desc: fr ? "Tuiles jaune électrique crépitantes" : "Crackling electric yellow tiles" },
+    theme_obsidian: { name: "🖤 " + (fr ? "Grille Obsidienne" : "Obsidian Grid"), desc: fr ? "Tuiles sombres striées de lueurs pourpres" : "Dark tiles streaked with purple glows" },
+    theme_neon: { name: "🌈 " + (fr ? "Grille Néon Synthwave" : "Neon Synthwave Grid"), desc: fr ? "Dégradé multi-néons animé (EXCLUSIF pass S1)" : "Animated multi-neon gradient (S1 pass EXCLUSIVE)" },
+    theme_citrouille: { name: "🎃 " + (fr ? "Grille Lanterne" : "Lantern Grid"), desc: fr ? "Lanternes sculptées qui tombent (EXCLUSIF pass S2)" : "Falling carved lanterns (S2 pass EXCLUSIVE)" },
+    theme_fantome: { name: "👻 " + (fr ? "Grille Fantôme" : "Ghost Grid"), desc: fr ? "Fantômes violets qui descendent (EXCLUSIF pass S2)" : "Purple ghosts floating down (S2 pass EXCLUSIVE)" },
+    frame_voltage: { name: "⚡ " + (fr ? "Cadre Sous Tension" : "Voltage Frame"), desc: fr ? "Éclairs électriques crépitants" : "Crackling electric lightning" },
+    frame_obsidian: { name: "🖤 " + (fr ? "Cadre Obsidienne" : "Obsidian Frame"), desc: fr ? "Cadre sombre strié de lueurs pourpres" : "Dark frame streaked with purple glows" },
+    frame_givre: { name: "🧊 " + (fr ? "Cadre Givre" : "Frost Frame"), desc: fr ? "Halo glacé aux reflets givrés" : "Icy halo with frosty reflections" },
+    frame_prism: { name: "✨ " + (fr ? "Cadre Doré" : "Gold Frame"), desc: fr ? "Scintillements dorés éblouissants" : "Dazzling golden sparkles" },
+    frame_osseux: { name: "🦴 " + (fr ? "Cadre Osseux" : "Bone Frame"), desc: fr ? "Os blanchis sous la lune" : "Whitened bones under the moon" },
+    frame_fantome: { name: "👻 " + (fr ? "Cadre Fantôme" : "Ghost Frame"), desc: fr ? "Lueur pâle spectrale" : "Pale spectral glow" }
+  };
+}
+function getPacksDict() {
+  const fr = currentLang === "fr";
+  return {
+    pack_haute_tension: { name: "⚡ PACK " + (fr ? "Haute Tension" : "High Voltage"), desc: fr ? "Cadre Sous Tension + Grille Éclair" : "Voltage Frame + Lightning Grid", items: ["frame_voltage", "theme_eclair"], value: 3700 },
+    pack_cryo: { name: "🧊 PACK " + (fr ? "Cryo" : "Cryo"), desc: fr ? "Cadre Givre + Grille Cryo" : "Frost Frame + Cryo Grid", items: ["frame_givre", "theme_glacial"], value: 3400 },
+    pack_solaire: { name: "✨ PACK " + (fr ? "Doré" : "Gold"), desc: fr ? "Cadre Doré + Grille Dorée" : "Gold Frame + Gold Grid", items: ["frame_prism", "theme_alt"], value: 4400 },
+    pack_obsidienne: { name: "🖤 PACK " + (fr ? "Obsidienne" : "Obsidian"), desc: fr ? "Cadre Obsidienne + Grille Obsidienne" : "Obsidian Frame + Obsidian Grid", items: ["frame_obsidian", "theme_obsidian"], value: 6300 }
+  };
+}
+
 function switchShopTab(type) {
 currentShopTab = type;
 updateShopCoinsDisplay();
@@ -16,27 +45,8 @@ if (packsTabBtn) packsTabBtn.classList.toggle("active", type === "packs");
 const container = document.getElementById("shop-container");
 container.innerHTML = "";
 const powersDict = i18n[currentLang].powers;
-const cosmeticsDict = {
-theme_glacial: { name: "🧊 Grille Cryo", desc: "Grille aux reflets bleutés glacés" },
-theme_alt: { name: "🎨 Grille Rétro/Dorée", desc: "Tuiles dorées look rétro, pluie de pièces au combo" },
-theme_eclair: { name: "⚡ Grille Éclair", desc: "Tuiles jaune électrique crépitantes" },
-theme_obsidian: { name: "🖤 Grille Obsidienne", desc: "Tuiles sombres striées de lueurs pourpres" },
-theme_neon: { name: "🌈 Grille Néon Synthwave", desc: "Dégradé multi-néons animé (EXCLUSIF pass S1)" },
-theme_citrouille: { name: "🎃 Grille Lanterne", desc: "Lanternes sculptées qui tombent en vacillant (EXCLUSIF pass S2)" },
-theme_fantome: { name: "👻 Grille Fantôme", desc: "Fantômes violets qui descendent vers le fond (EXCLUSIF pass S2)" },
-frame_voltage: { name: "⚡ Cadre Sous Tension", desc: "Éclairs électriques crépitants autour de l'avatar" },
-frame_obsidian: { name: "🖤 Cadre Obsidienne", desc: "Cadre sombre strié de lueurs pourpres" },
-frame_givre: { name: "🧊 Cadre Givre", desc: "Halo glacé aux reflets givrés" },
-frame_prism: { name: "✨ Cadre Doré", desc: "Scintillements dorés éblouissants" },
-frame_osseux: { name: "🦴 Cadre Osseux", desc: "Os blanchis sous la lune (Halloween)" },
-frame_fantome: { name: "👻 Cadre Fantôme", desc: "Lueur pâle spectrale (Halloween)" }
-};
-const packsDict = {
-pack_haute_tension: { name: "⚡ PACK Haute Tension", desc: "Cadre Sous Tension + Grille Éclair", items: ["frame_voltage", "theme_eclair"], value: 3700 },
-pack_cryo: { name: "🧊 PACK Cryo", desc: "Cadre Givre + Grille Cryo", items: ["frame_givre", "theme_glacial"], value: 3400 },
-pack_solaire: { name: "✨ PACK Doré", desc: "Cadre Doré + Grille Dorée", items: ["frame_prism", "theme_alt"], value: 4400 },
-pack_obsidienne: { name: "🖤 PACK Obsidienne", desc: "Cadre Obsidienne + Grille Obsidienne", items: ["frame_obsidian", "theme_obsidian"], value: 6300 }
-};
+const cosmeticsDict = getCosmeticsDict();
+const packsDict = getPacksDict();
 POWERS_CATALOG.filter(p => p.type === type).forEach(p => {
 const card = document.createElement("div");
 if (type === "packs") {
@@ -46,9 +56,9 @@ const ownedAll = info.items.every(i => (myProfile.unlocked_items || []).includes
 const reduc = Math.round((1 - p.price / info.value) * 100);
 card.className = "power-card";
 card.innerHTML = `<h4>${info.name}</h4><p>${info.desc}</p>
-<div style="font-size:9px; color:#aaa; margin-bottom:2px; text-decoration:line-through;">${info.value} 🪙 séparés</div>
+<div style="font-size:9px; color:#aaa; margin-bottom:2px; text-decoration:line-through;">${info.value} 🪙</div>
 <div style="font-weight:bold; margin-bottom:4px; font-size:11px; color:#00ff88;">${p.price} 🪙 (-${reduc}%)</div>
-${ownedAll ? `<button class="power-btn equip" onclick="equipPack('${p.id}')">Équiper le pack ⚡</button>` : `<button class="power-btn buy" onclick="buyItem('${p.id}')">Acheter</button>`}`;
+${ownedAll ? `<button class="power-btn equip" onclick="equipPack('${p.id}')">${currentLang === "fr" ? "Équiper le pack ⚡" : "Equip pack ⚡"}</button>` : `<button class="power-btn buy" onclick="buyItem('${p.id}')">${currentLang === "fr" ? "Acheter" : "Buy"}</button>`}`;
 } else if (type === "cosmetics") {
 const info = cosmeticsDict[p.id];
 if (!info) return;
@@ -56,15 +66,15 @@ const unlocked = myProfile.unlocked_items && myProfile.unlocked_items.includes(p
 const equipped = myProfile.inventory && myProfile.inventory.__equipped && Object.values(myProfile.inventory.__equipped).includes(p.id);
 card.className = `power-card ${equipped ? "equipped" : ""}`;
 card.innerHTML = `<h4>${info.name}</h4><p>${info.desc}</p><div style="font-weight:bold; margin-bottom:4px; font-size:10px; color:#f8b500;">${p.price} 🪙</div>
-${unlocked ? `<button class="power-btn ${equipped ? "active" : "equip"}" onclick="equipCosmetic('${p.id}')">${equipped ? "Équipé ✅" : "Équiper"}</button>` : `<button class="power-btn buy" onclick="buyItem('${p.id}')">Acheter</button>`}`;
+${unlocked ? `<button class="power-btn ${equipped ? "active" : "equip"}" onclick="equipCosmetic('${p.id}')">${equipped ? (currentLang === "fr" ? "Équipé ✅" : "Equipped ✅") : (currentLang === "fr" ? "Équiper" : "Equip")}</button>` : `<button class="power-btn buy" onclick="buyItem('${p.id}')">${currentLang === "fr" ? "Acheter" : "Buy"}</button>`}`;
 } else {
 const powerInfo = powersDict[p.id];
 const qty = myProfile.inventory[p.id] || 0;
 const isEquipped = myProfile.equippedPower === p.id;
 card.className = `power-card ${isEquipped ? "equipped" : ""}`;
-card.innerHTML = `<h4>${powerInfo.name}</h4><p>${powerInfo.desc}</p><div class="stock-badge">Stock : ${qty}</div><div style="font-weight:bold; margin-bottom:4px; font-size:10px; color:#f8b500;">${p.price} 🪙</div>
-<button class="power-btn buy" onclick="buyItem('${p.id}')">Acheter (+1)</button>
-${qty > 0 ? `<button class="power-btn ${isEquipped ? "active" : "equip"}" onclick="equipPower('${p.id}')">${isEquipped ? "Équipé ✅" : "Équiper"}</button>` : ""}`;
+card.innerHTML = `<h4>${powerInfo.name}</h4><p>${powerInfo.desc}</p><div class="stock-badge">${currentLang === "fr" ? "Stock" : "Stock"} : ${qty}</div><div style="font-weight:bold; margin-bottom:4px; font-size:10px; color:#f8b500;">${p.price} 🪙</div>
+<button class="power-btn buy" onclick="buyItem('${p.id}')">${currentLang === "fr" ? "Acheter (+1)" : "Buy (+1)"}</button>
+${qty > 0 ? `<button class="power-btn ${isEquipped ? "active" : "equip"}" onclick="equipPower('${p.id}')">${isEquipped ? (currentLang === "fr" ? "Équipé ✅" : "Equipped ✅") : (currentLang === "fr" ? "Équiper" : "Equip")}</button>` : ""}`;
 }
 container.appendChild(card);
 });
@@ -86,7 +96,7 @@ const items = packs[packId];
 if (!items) return;
 equipCosmetic(items[0]);
 equipCosmetic(items[1]);
-showNotificationToast("✅ Pack équipé : grille + cadre !", "gift");
+showNotificationToast(currentLang === "fr" ? "✅ Pack équipé : grille + cadre !" : "✅ Pack equipped: grid + frame!", "gift");
 }
 function equipPower(id) { if (socket.connected) socket.emit("equip_power", id); }
 function sanitizeEquippedPowers() {
@@ -95,119 +105,132 @@ if (myProfile.equippedPower && (myProfile.inventory[myProfile.equippedPower] || 
 if (myProfile.equippedPowers && myProfile.equippedPowers.length > 0) myProfile.equippedPowers = myProfile.equippedPowers.filter(p => (myProfile.inventory[p] || 0) > 0);
 if (selectedRankedItems && selectedRankedItems.length > 0) selectedRankedItems = selectedRankedItems.filter(p => (myProfile.inventory[p] || 0) > 0);
 }
+
 /* ============================================================
-PASSE DE SAISON — MOTEUR MULTI-SAISONS
+PASSE DE SAISON — MOTEUR MULTI-SAISONS (TRADUIT)
 ============================================================ */
-const SEASONS_CLIENT = [
-  { id: "s1", name: "FÉLIN & NÉON", emoji: "🐱", start: "01/06/2026", end: "30/09/2026", tiers: [
-    { tier: 1, free: "50 Pièces (🪙)", premium: "Titre exclusif « [ Stalker Numérique ] »" },
-    { tier: 2, free: "1 💡 Projecteur", premium: "100 Pièces (🪙)" },
-    { tier: 3, free: "50 Pièces (🪙)", premium: "Titre rare « [ Réflexe Félin ] »" },
-    { tier: 4, free: "1 ⏳ Blocage du Temps", premium: "🛡️ Cadre de Profil Argenté" },
-    { tier: 5, free: "75 Pièces (🪙)", premium: "150 Pièces (🪙)" },
-    { tier: 6, free: "1 ⚡ Joker Éclair", premium: "Pack de Consommables (Bonus)" },
-    { tier: 7, free: "50 Pièces (🪙)", premium: "Titre « [ Pulsion Néon ] »" },
-    { tier: 8, free: "1 💡 Projecteur", premium: "2 🌟 Novas Temporelles" },
-    { tier: 9, free: "100 Pièces (🪙)", premium: "200 Pièces (🪙)" },
-    { tier: 10, free: "1 🌟 Nova Temporelle", premium: "🎨 Grille Néon Synthwave (EXCLUSIF pass)" },
-    { tier: 11, free: "60 Pièces (🪙)", premium: "120 Pièces (🪙)" },
-    { tier: 12, free: "1 ⏳ Blocage du Temps", premium: "1 💡 Projecteur" },
-    { tier: 13, free: "70 Pièces (🪙)", premium: "Titre « [ Spectre Cosmique ] »" },
-    { tier: 14, free: "1 ⚡ Joker Éclair", premium: "2 ⏳ Blocage du Temps" },
-    { tier: 15, free: "150 Pièces (🪙)", premium: "🐱 Avatar Animé Lottie : Chat Assistant" },
-    { tier: 16, free: "80 Pièces (🪙)", premium: "160 Pièces (🪙)" },
-    { tier: 17, free: "2 💡 Projecteur", premium: "2 🌟 Novas Temporelles" },
-    { tier: 18, free: "90 Pièces (🪙)", premium: "250 Pièces (🪙)" },
-    { tier: 19, free: "1 ⚡ Joker Éclair", premium: "1 📳 Séisme" },
-    { tier: 20, free: "100 Pièces (🪙)", premium: "🌈 Cadre Animé « Flux Chroma »" },
-    { tier: 21, free: "110 Pièces (🪙)", premium: "220 Pièces (🪙)" },
-    { tier: 22, free: "1 ⏳ Blocage du Temps", premium: "3 💡 Projecteur" },
-    { tier: 23, free: "120 Pièces (🪙)", premium: "350 Pièces (🪙)" },
-    { tier: 24, free: "1 ⚡ Joker Éclair", premium: "300 Pièces (🪙)" },
-    { tier: 25, free: "150 Pièces (🪙)", premium: "🌈 Avatar Animé Lottie : Chat Arc-en-ciel" },
-    { tier: 26, free: "130 Pièces (🪙)", premium: "260 Pièces (🪙)" },
-    { tier: 27, free: "2 💡 Projecteur", premium: "4 🌟 Novas Temporelles" },
-    { tier: 28, free: "140 Pièces (🪙)", premium: "400 Pièces (🪙)" },
-    { tier: 29, free: "300 Pièces (🪙)", premium: "500 Pièces (🪙)" },
-    { tier: 30, free: "Titre suprême « [ ⚡ FÉLIN SUPRÊME ] » + 500 🪙", premium: "🏆 GRAAL : 🐯 Avatar Tigre de Sibérie (Vidéo) + 1000 🪙" }
-  ] },
-  { id: "s2", name: "HALLOWEEN", emoji: "🎃", start: "01/10/2026", end: "30/11/2026", tiers: [
-    { tier: 1, free: "50 Pièces (🪙)", premium: "Titre « [ Chuchoteur de Fantômes ] » 👻" },
-    { tier: 2, free: "1 💡 Projecteur", premium: "100 Pièces (🪙)" },
-    { tier: 3, free: "50 Pièces (🪙)", premium: "Titre « [ Danse Macabre ] » 🦴" },
-    { tier: 4, free: "1 ⏳ Blocage du Temps", premium: "🎃 Cadre « Lanterne »" },
-    { tier: 5, free: "75 Pièces (🪙)", premium: "150 Pièces (🪙)" },
-    { tier: 6, free: "1 ⚡ Joker Éclair", premium: "Pack de Consommables (Bonus)" },
-    { tier: 7, free: "50 Pièces (🪙)", premium: "Titre « [ Pulsion Citrouille ] » 🎃" },
-    { tier: 8, free: "1 💡 Projecteur", premium: "2 🌟 Novas Temporelles" },
-    { tier: 9, free: "100 Pièces (🪙)", premium: "200 Pièces (🪙)" },
-    { tier: 10, free: "1 🌟 Nova Temporelle", premium: "🎨 Grille Lanterne (EXCLUSIF pass)" },
-    { tier: 11, free: "60 Pièces (🪙)", premium: "120 Pièces (🪙)" },
-    { tier: 12, free: "1 ⏳ Blocage du Temps", premium: "1 💡 Projecteur" },
-    { tier: 13, free: "70 Pièces (🪙)", premium: "Titre « [ Spectre d'Automne ] » 🍂" },
-    { tier: 14, free: "1 ⚡ Joker Éclair", premium: "2 ⏳ Blocage du Temps" },
-    { tier: 15, free: "150 Pièces (🪙)", premium: "💀 Avatar Animé : Squelette qui danse" },
-    { tier: 16, free: "80 Pièces (🪙)", premium: "160 Pièces (🪙)" },
-    { tier: 17, free: "2 💡 Projecteur", premium: "2 🌟 Novas Temporelles" },
-    { tier: 18, free: "90 Pièces (🪙)", premium: "250 Pièces (🪙)" },
-    { tier: 19, free: "1 ⚡ Joker Éclair", premium: "1 📳 Séisme" },
-    { tier: 20, free: "100 Pièces (🪙)", premium: "👻 Cadre « Fantôme »" },
-    { tier: 21, free: "110 Pièces (🪙)", premium: "220 Pièces (🪙)" },
-    { tier: 22, free: "1 ⏳ Blocage du Temps", premium: "3 💡 Projecteur" },
-    { tier: 23, free: "120 Pièces (🪙)", premium: "350 Pièces (🪙)" },
-    { tier: 24, free: "1 ⚡ Joker Éclair", premium: "🎨 Grille Fantôme (EXCLUSIF pass)" },
-    { tier: 25, free: "150 Pièces (🪙)", premium: "🦇 Avatar Vidéo : Chauve-Souris" },
-    { tier: 26, free: "130 Pièces (🪙)", premium: "260 Pièces (🪙)" },
-    { tier: 27, free: "2 💡 Projecteur", premium: "4 🌟 Novas Temporelles" },
-    { tier: 28, free: "140 Pièces (🪙)", premium: "400 Pièces (🪙)" },
-    { tier: 29, free: "300 Pièces (🪙)", premium: "500 Pièces (🪙)" },
-    { tier: 30, free: "Titre « [ 👻 Esprit d'Halloween ] » + 500 🪙", premium: "🏆 GRAAL : 🎃 Avatar Citrouille du Château + 1000 🪙 + Titre « [ ROI D'HALLOWEEN ] »" }
-  ] },
-    { id: "s3", name: "NOËL", emoji: "🎄", start: "01/12/2026", end: "10/01/2027", tiers: [
-    { tier: 1, free: "50 Pièces (🪙)", premium: "Titre « [ Lutin espiègle ] » 🧝" },
-    { tier: 2, free: "1 💡 Projecteur", premium: "100 Pièces (🪙)" },
-    { tier: 3, free: "50 Pièces (🪙)", premium: "Titre « [ Pilote de traîneau ] » 🛷" },
-    { tier: 4, free: "1 ⏳ Blocage du Temps", premium: "🍭 Cadre « Bonbon »" },
-    { tier: 5, free: "75 Pièces (🪙)", premium: "⛄ Avatar Animé Lottie : Bonhomme de Neige" },
-    { tier: 6, free: "1 ⚡ Joker Éclair", premium: "Pack de Consommables (Bonus)" },
-    { tier: 7, free: "50 Pièces (🪙)", premium: "Titre « [ Dompteur de rennes ] » 🦌" },
-    { tier: 8, free: "1 💡 Projecteur", premium: "2 🌟 Novas Temporelles" },
-    { tier: 9, free: "100 Pièces (🪙)", premium: "200 Pièces (🪙)" },
-    { tier: 10, free: "1 🌟 Nova Temporelle", premium: "🍭 Grille Bonbon Canne (EXCLUSIF pass)" },
-    { tier: 11, free: "60 Pièces (🪙)", premium: "120 Pièces (🪙)" },
-    { tier: 12, free: "1 ⏳ Blocage du Temps", premium: "1 💡 Projecteur" },
-    { tier: 13, free: "70 Pièces (🪙)", premium: "Titre « [ Assistant du Père Noël ] » 🎅" },
-    { tier: 14, free: "1 ⚡ Joker Éclair", premium: "2 ⏳ Blocage du Temps" },
-    { tier: 15, free: "🔮 Avatar Boule de Neige (Cadeau 🎁)", premium: "🔮 Avatar Animé Lottie : Boule de Neige" },
-    { tier: 16, free: "80 Pièces (🪙)", premium: "160 Pièces (🪙)" },
-    { tier: 17, free: "2 💡 Projecteur", premium: "2 🌟 Novas Temporelles" },
-    { tier: 18, free: "90 Pièces (🪙)", premium: "250 Pièces (🪙)" },
-    { tier: 19, free: "1 ⚡ Joker Éclair", premium: "1 📳 Séisme" },
-    { tier: 20, free: "100 Pièces (🪙)", premium: "🎄 Cadre « Guirlande »" },
-    { tier: 21, free: "110 Pièces (🪙)", premium: "220 Pièces (🪙)" },
-    { tier: 22, free: "1 ⏳ Blocage du Temps", premium: "3 💡 Projecteur" },
-    { tier: 23, free: "120 Pièces (🪙)", premium: "350 Pièces (🪙)" },
-    { tier: 24, free: "1 ⚡ Joker Éclair", premium: "🎄 Grille Sapin de Noël (EXCLUSIF pass)" },
-    { tier: 25, free: "150 Pièces (🪙)", premium: "🎅 Avatar Animé Lottie : Père Noël" },
-    { tier: 26, free: "130 Pièces (🪙)", premium: "260 Pièces (🪙)" },
-    { tier: 27, free: "2 💡 Projecteur", premium: "4 🌟 Novas Temporelles" },
-    { tier: 28, free: "140 Pièces (🪙)", premium: "Titre « [ Magie de Noël ] » ✨" },
-    { tier: 29, free: "300 Pièces (🪙)", premium: "🧝 Cadre « Lutin »" },
-    { tier: 30, free: "Titre « [ 🎄 Esprit de Noël ] » + 500 🪙", premium: "🏆 GRAAL : 🧝 Grille Lutin + 1000 🪙" }
-  ] }
-];
+function getSeasonsClient() {
+  const fr = currentLang === "fr";
+  const PC = fr ? " Pièces (🪙)" : " Coins (🪙)";
+  const PROJ = fr ? "Projecteur" : "Spotlight";
+  const FREEZE = fr ? "Blocage du Temps" : "Time Freeze";
+  const JOKER = fr ? "Joker Éclair" : "Lightning Joker";
+  const NOVA = fr ? "Nova Temporelle" : "Time Nova";
+  const NOVAS = fr ? "Novas Temporelles" : "Time Novas";
+  const QUAKE = fr ? "Séisme" : "Earthquake";
+  return [
+    { id: "s1", name: fr ? "FÉLIN & NÉON" : "FELINE & NEON", emoji: "🐱", start: "01/06/2026", end: "30/09/2026", tiers: [
+      { tier: 1, free: "50" + PC, premium: fr ? "Titre exclusif « [ Stalker Numérique ] »" : "Exclusive title « [ Digital Stalker ] »" },
+      { tier: 2, free: "1 💡 " + PROJ, premium: "100" + PC },
+      { tier: 3, free: "50" + PC, premium: fr ? "Titre rare « [ Réflexe Félin ] »" : "Rare title « [ Feline Reflex ] »" },
+      { tier: 4, free: "1 ⏳ " + FREEZE, premium: fr ? "🛡️ Cadre de Profil Argenté" : "🛡️ Silver Profile Frame" },
+      { tier: 5, free: "75" + PC, premium: "150" + PC },
+      { tier: 6, free: "1 ⚡ " + JOKER, premium: fr ? "Pack de Consommables (Bonus)" : "Consumables Pack (Bonus)" },
+      { tier: 7, free: "50" + PC, premium: fr ? "Titre « [ Pulsion Néon ] »" : "Title « [ Neon Pulse ] »" },
+      { tier: 8, free: "1 💡 " + PROJ, premium: "2 🌟 " + NOVAS },
+      { tier: 9, free: "100" + PC, premium: "200" + PC },
+      { tier: 10, free: "1 🌟 " + NOVA, premium: "🎨 " + (fr ? "Grille Néon Synthwave (EXCLUSIF pass)" : "Neon Synthwave Grid (pass EXCLUSIVE)") },
+      { tier: 11, free: "60" + PC, premium: "120" + PC },
+      { tier: 12, free: "1 ⏳ " + FREEZE, premium: "1 💡 " + PROJ },
+      { tier: 13, free: "70" + PC, premium: fr ? "Titre « [ Spectre Cosmique ] »" : "Title « [ Cosmic Specter ] »" },
+      { tier: 14, free: "1 ⚡ " + JOKER, premium: "2 ⏳ " + FREEZE },
+      { tier: 15, free: "150" + PC, premium: "🐱 " + (fr ? "Avatar Animé Lottie : Chat Assistant" : "Lottie Animated Avatar: Assistant Cat") },
+      { tier: 16, free: "80" + PC, premium: "160" + PC },
+      { tier: 17, free: "2 💡 " + PROJ, premium: "2 🌟 " + NOVAS },
+      { tier: 18, free: "90" + PC, premium: "250" + PC },
+      { tier: 19, free: "1 ⚡ " + JOKER, premium: "1 📳 " + QUAKE },
+      { tier: 20, free: "100" + PC, premium: "🌈 " + (fr ? "Cadre Animé « Flux Chroma »" : "Animated Frame « Chroma Flow »") },
+      { tier: 21, free: "110" + PC, premium: "220" + PC },
+      { tier: 22, free: "1 ⏳ " + FREEZE, premium: "3 💡 " + PROJ },
+      { tier: 23, free: "120" + PC, premium: "350" + PC },
+      { tier: 24, free: "1 ⚡ " + JOKER, premium: "300" + PC },
+      { tier: 25, free: "150" + PC, premium: "🌈 " + (fr ? "Avatar Animé Lottie : Chat Arc-en-ciel" : "Lottie Animated Avatar: Rainbow Cat") },
+      { tier: 26, free: "130" + PC, premium: "260" + PC },
+      { tier: 27, free: "2 💡 " + PROJ, premium: "4 🌟 " + NOVAS },
+      { tier: 28, free: "140" + PC, premium: "400" + PC },
+      { tier: 29, free: "300" + PC, premium: "500" + PC },
+      { tier: 30, free: (fr ? "Titre suprême « [ ⚡ FÉLIN SUPRÊME ] » + 500 🪙" : "Supreme title « [ ⚡ SUPREME FELINE ] » + 500 🪙"), premium: "🏆 GRAAL: 🐯 " + (fr ? "Avatar Tigre de Sibérie (Vidéo) + 1000 🪙" : "Siberian Tiger Avatar (Video) + 1000 🪙") }
+    ] },
+    { id: "s2", name: "HALLOWEEN", emoji: "🎃", start: "01/10/2026", end: "30/11/2026", tiers: [
+      { tier: 1, free: "50" + PC, premium: fr ? "Titre « [ Chuchoteur de Fantômes ] » 👻" : "Title « [ Ghost Whisperer ] » 👻" },
+      { tier: 2, free: "1 💡 " + PROJ, premium: "100" + PC },
+      { tier: 3, free: "50" + PC, premium: fr ? "Titre « [ Danse Macabre ] » 🦴" : "Title « [ Macabre Dance ] » 🦴" },
+      { tier: 4, free: "1 ⏳ " + FREEZE, premium: "🎃 " + (fr ? "Cadre « Lanterne »" : "Frame « Lantern »") },
+      { tier: 5, free: "75" + PC, premium: "150" + PC },
+      { tier: 6, free: "1 ⚡ " + JOKER, premium: fr ? "Pack de Consommables (Bonus)" : "Consumables Pack (Bonus)" },
+      { tier: 7, free: "50" + PC, premium: fr ? "Titre « [ Pulsion Citrouille ] » 🎃" : "Title « [ Pumpkin Pulse ] » 🎃" },
+      { tier: 8, free: "1 💡 " + PROJ, premium: "2 🌟 " + NOVAS },
+      { tier: 9, free: "100" + PC, premium: "200" + PC },
+      { tier: 10, free: "1 🌟 " + NOVA, premium: "🎨 " + (fr ? "Grille Lanterne (EXCLUSIF pass)" : "Lantern Grid (pass EXCLUSIVE)") },
+      { tier: 11, free: "60" + PC, premium: "120" + PC },
+      { tier: 12, free: "1 ⏳ " + FREEZE, premium: "1 💡 " + PROJ },
+      { tier: 13, free: "70" + PC, premium: fr ? "Titre « [ Spectre d'Automne ] » 🍂" : "Title « [ Autumn Specter ] » 🍂" },
+      { tier: 14, free: "1 ⚡ " + JOKER, premium: "2 ⏳ " + FREEZE },
+      { tier: 15, free: "150" + PC, premium: "💀 " + (fr ? "Avatar Animé : Squelette qui danse" : "Animated Avatar: Dancing Skeleton") },
+      { tier: 16, free: "80" + PC, premium: "160" + PC },
+      { tier: 17, free: "2 💡 " + PROJ, premium: "2 🌟 " + NOVAS },
+      { tier: 18, free: "90" + PC, premium: "250" + PC },
+      { tier: 19, free: "1 ⚡ " + JOKER, premium: "1 📳 " + QUAKE },
+      { tier: 20, free: "100" + PC, premium: "👻 " + (fr ? "Cadre « Fantôme »" : "Frame « Ghost »") },
+      { tier: 21, free: "110" + PC, premium: "220" + PC },
+      { tier: 22, free: "1 ⏳ " + FREEZE, premium: "3 💡 " + PROJ },
+      { tier: 23, free: "120" + PC, premium: "350" + PC },
+      { tier: 24, free: "1 ⚡ " + JOKER, premium: "🎨 " + (fr ? "Grille Fantôme (EXCLUSIF pass)" : "Ghost Grid (pass EXCLUSIVE)") },
+      { tier: 25, free: "150" + PC, premium: "🦇 " + (fr ? "Avatar Vidéo : Chauve-Souris" : "Video Avatar: Bat") },
+      { tier: 26, free: "130" + PC, premium: "260" + PC },
+      { tier: 27, free: "2 💡 " + PROJ, premium: "4 🌟 " + NOVAS },
+      { tier: 28, free: "140" + PC, premium: "400" + PC },
+      { tier: 29, free: "300" + PC, premium: "500" + PC },
+      { tier: 30, free: (fr ? "Titre « [ 👻 Esprit d'Halloween ] » + 500 🪙" : "Title « [ 👻 Halloween Spirit ] » + 500 🪙"), premium: "🏆 GRAAL: 🎃 " + (fr ? "Avatar Citrouille du Château + 1000 🪙 + Titre « [ ROI D'HALLOWEEN ] »" : "Castle Pumpkin Avatar + 1000 🪙 + Title « [ KING OF HALLOWEEN ] »") }
+    ] },
+    { id: "s3", name: fr ? "NOËL" : "CHRISTMAS", emoji: "🎄", start: "01/12/2026", end: "10/01/2027", tiers: [
+      { tier: 1, free: "50" + PC, premium: fr ? "Titre « [ Lutin espiègle ] » 🧝" : "Title « [ Mischievous Elf ] » 🧝" },
+      { tier: 2, free: "1 💡 " + PROJ, premium: "100" + PC },
+      { tier: 3, free: "50" + PC, premium: fr ? "Titre « [ Pilote de traîneau ] » 🛷" : "Title « [ Sleigh Pilot ] » 🛷" },
+      { tier: 4, free: "1 ⏳ " + FREEZE, premium: "🍭 " + (fr ? "Cadre « Bonbon »" : "Frame « Candy »") },
+      { tier: 5, free: "75" + PC, premium: "⛄ " + (fr ? "Avatar Animé Lottie : Bonhomme de Neige" : "Lottie Animated Avatar: Snowman") },
+      { tier: 6, free: "1 ⚡ " + JOKER, premium: fr ? "Pack de Consommables (Bonus)" : "Consumables Pack (Bonus)" },
+      { tier: 7, free: "50" + PC, premium: fr ? "Titre « [ Dompteur de rennes ] » 🦌" : "Title « [ Reindeer Tamer ] » 🦌" },
+      { tier: 8, free: "1 💡 " + PROJ, premium: "2 🌟 " + NOVAS },
+      { tier: 9, free: "100" + PC, premium: "200" + PC },
+      { tier: 10, free: "1 🌟 " + NOVA, premium: "🍭 " + (fr ? "Grille Bonbon Canne (EXCLUSIF pass)" : "Candy Cane Grid (pass EXCLUSIVE)") },
+      { tier: 11, free: "60" + PC, premium: "120" + PC },
+      { tier: 12, free: "1 ⏳ " + FREEZE, premium: "1 💡 " + PROJ },
+      { tier: 13, free: "70" + PC, premium: fr ? "Titre « [ Assistant du Père Noël ] » 🎅" : "Title « [ Santa's Assistant ] » 🎅" },
+      { tier: 14, free: "1 ⚡ " + JOKER, premium: "2 ⏳ " + FREEZE },
+      { tier: 15, free: "🔮 " + (fr ? "Avatar Boule de Neige (Cadeau 🎁)" : "Snowball Avatar (Gift 🎁)"), premium: "🔮 " + (fr ? "Avatar Animé Lottie : Boule de Neige" : "Lottie Animated Avatar: Snowball") },
+      { tier: 16, free: "80" + PC, premium: "160" + PC },
+      { tier: 17, free: "2 💡 " + PROJ, premium: "2 🌟 " + NOVAS },
+      { tier: 18, free: "90" + PC, premium: "250" + PC },
+      { tier: 19, free: "1 ⚡ " + JOKER, premium: "1 📳 " + QUAKE },
+      { tier: 20, free: "100" + PC, premium: "🎄 " + (fr ? "Cadre « Guirlande »" : "Frame « Garland »") },
+      { tier: 21, free: "110" + PC, premium: "220" + PC },
+      { tier: 22, free: "1 ⏳ " + FREEZE, premium: "3 💡 " + PROJ },
+      { tier: 23, free: "120" + PC, premium: "350" + PC },
+      { tier: 24, free: "1 ⚡ " + JOKER, premium: "🎄 " + (fr ? "Grille Sapin de Noël (EXCLUSIF pass)" : "Christmas Tree Grid (pass EXCLUSIVE)") },
+      { tier: 25, free: "150" + PC, premium: "🎅 " + (fr ? "Avatar Animé Lottie : Père Noël" : "Lottie Animated Avatar: Santa Claus") },
+      { tier: 26, free: "130" + PC, premium: "260" + PC },
+      { tier: 27, free: "2 💡 " + PROJ, premium: "4 🌟 " + NOVAS },
+      { tier: 28, free: "140" + PC, premium: fr ? "Titre « [ Magie de Noël ] » ✨" : "Title « [ Christmas Magic ] » ✨" },
+      { tier: 29, free: "300" + PC, premium: "🧝 " + (fr ? "Cadre « Lutin »" : "Frame « Elf »") },
+      { tier: 30, free: (fr ? "Titre « [ 🎄 Esprit de Noël ] » + 500 🪙" : "Title « [ 🎄 Christmas Spirit ] » + 500 🪙"), premium: "🏆 GRAAL: 🧝 " + (fr ? "Grille Lutin + 1000 🪙" : "Elf Grid + 1000 🪙") }
+    ] }
+  ];
+}
+
 function getActiveSeason() {
+  const list = getSeasonsClient();
   if (myProfile.currentSeasonId) {
-    const s = SEASONS_CLIENT.find(x => x.id === myProfile.currentSeasonId);
+    const s = list.find(x => x.id === myProfile.currentSeasonId);
     if (s) return s;
   }
   const now = new Date();
-  for (const s of SEASONS_CLIENT) {
+  for (const s of list) {
     const [d1, m1, y1] = s.start.split("/").map(Number);
     const [d2, m2, y2] = s.end.split("/").map(Number);
     if (now >= new Date(y1, m1 - 1, d1) && now <= new Date(y2, m2 - 1, d2, 23, 59)) return s;
   }
-  return SEASONS_CLIENT[SEASONS_CLIENT.length - 1];
+  return list[list.length - 1];
 }
 function openBlitzPass() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } document.getElementById("modal-blitz-pass").style.display = "flex"; renderBlitzPass(); }
 function closeBlitzPass() { document.getElementById("modal-blitz-pass").style.display = "none"; }
@@ -248,6 +271,7 @@ function spawnUnlockBurst(card, icon) {
     setTimeout(() => p.remove(), 900);
   }
 }
+
 /* ---------- APERÇUS VISUELS (style Fortnite) ---------- */
 const SPECIAL_REWARDS = {
   s1: { free:{30:'title_supreme'}, premium:{1:'title_stalker',3:'title_felin',4:'frame_silver',7:'title_neon',10:'theme_neon',13:'title_spectre',15:'avatar_lottie_palier15',20:'frame_chroma',23:'title_supreme',25:'avatar_lottie_palier30',30:'avatar_tigre'} },
@@ -273,40 +297,40 @@ function avatarPreviewHTML(id) {
   return '🎁';
 }
 function rewardVisualHTML(seasonId, tier, track, text) {
+  const fr = currentLang === "fr";
   try {
     const item = (SPECIAL_REWARDS[seasonId] && SPECIAL_REWARDS[seasonId][track] && SPECIAL_REWARDS[seasonId][track][tier]) || null;
     if (item) {
-      if (item.indexOf('avatar_') === 0) return `<div class="bp-visual">${avatarPreviewHTML(item)}<div class="bp-type">Avatar</div></div>`;
-      if (item.indexOf('frame_') === 0) return `<div class="bp-visual"><div class="tft-avatar-container ${getFrameClass(item)}" style="width:40px;height:40px;">⭐</div><div class="bp-type">Cadre</div></div>`;
-      if (item.indexOf('theme_') === 0) return `<div class="bp-visual"><div class="bp-swatch" style="background:${THEME_GRAD[item]||'linear-gradient(135deg,#522d80,#2a1845)'}"></div><div class="bp-type">Grille</div></div>`;
-      if (item.indexOf('title_') === 0) return `<div class="bp-visual bp-title">${(typeof TITLE_DISPLAY_NAMES!=='undefined' && TITLE_DISPLAY_NAMES[item])||item}<div class="bp-type">Titre</div></div>`;
+      if (item.indexOf('avatar_') === 0) return `<div class="bp-visual">${avatarPreviewHTML(item)}<div class="bp-type">${fr ? "Avatar" : "Avatar"}</div></div>`;
+      if (item.indexOf('frame_') === 0) return `<div class="bp-visual"><div class="tft-avatar-container ${getFrameClass(item)}" style="width:40px;height:40px;">⭐</div><div class="bp-type">${fr ? "Cadre" : "Frame"}</div></div>`;
+      if (item.indexOf('theme_') === 0) return `<div class="bp-visual"><div class="bp-swatch" style="background:${THEME_GRAD[item]||'linear-gradient(135deg,#522d80,#2a1845)'}"></div><div class="bp-type">${fr ? "Grille" : "Grid"}</div></div>`;
+      if (item.indexOf('title_') === 0) return `<div class="bp-visual bp-title">${(typeof getTitleDisplayNames!=='undefined' && getTitleDisplayNames()[item])||item}<div class="bp-type">${fr ? "Titre" : "Title"}</div></div>`;
     }
     const emoji = firstEmoji(text);
     const label = String(text).split(emoji).join('').trim();
-    let type = 'Récompense';
-    if (/Pièces/i.test(text)) type = 'Pièces';
-    else if (/Projecteur|Blocage|Joker|Nova|Séisme|Pack/i.test(text)) type = 'Pouvoir';
+    let type = fr ? 'Récompense' : 'Reward';
+    if (/Pièces|Coins/i.test(text)) type = fr ? 'Pièces' : 'Coins';
+    else if (/Projecteur|Blocage|Joker|Nova|Séisme|Pack|Spotlight|Freeze|Earthquake|Lightning|Time/i.test(text)) type = fr ? 'Pouvoir' : 'Power';
     return `<div class="bp-visual"><div class="bp-emoji">${emoji}</div><div class="bp-label">${label}</div><div class="bp-type">${type}</div></div>`;
   } catch (e) {
     return `<div class="bp-visual"><div class="bp-emoji">🎁</div><div class="bp-label">${text}</div></div>`;
   }
 }
+
 function renderBlitzPass() {
+  const fr = currentLang === "fr";
   const container = document.getElementById("blitz-pass-container");
-  const prevEl = document.querySelector('.bp-track-scroll');
-  const prevX = prevEl ? prevEl.scrollLeft : 0;
-  const prevY = prevEl ? prevEl.scrollTop : 0;
   const season = getActiveSeason();
   const seasonData = (myProfile.claimedPassTiers || {})[season.id] || {};
   const isPremium = !!seasonData.premium || (season.id === "s1" && myProfile.blitzPassPremium);
   const claimed = seasonData;
   container.innerHTML = `<div class="bp-header-banner">
-    <div style="font-size:13px; font-weight:900; color:#f8b500; margin-bottom:2px;">${season.emoji} PASSE DE SAISON : ${season.name}</div>
+    <div style="font-size:13px; font-weight:900; color:#f8b500; margin-bottom:2px;">${season.emoji} ${fr ? "PASSE DE SAISON :" : "SEASON PASS:"} ${season.name}</div>
     <div style="font-size:9px; color:#aaa; margin-bottom:4px;">📅 ${season.start} → ${season.end}</div>
-    <div style="font-size:10px; color:#ccc; margin-bottom:6px;">${isPremium ? "✨ Passe Premium Actif !" : "Débloque le Passe Premium pour 1000 🪙"}</div>
-    ${!isPremium ? `<button class="btn-main btn-gold" onclick="buyBlitzPassPremium()" style="padding:6px 10px; font-size:11px; margin:0 auto; width:auto;">Acheter le Passe Premium (1000 🪙)</button>` : `<div style="color:#00ff88; font-weight:bold; font-size:10px;">Statut : VIP / Premium</div>`}</div>`;
+    <div style="font-size:10px; color:#ccc; margin-bottom:6px;">${isPremium ? (fr ? "✨ Passe Premium Actif !" : "✨ Premium Pass Active!") : (fr ? "Débloque le Passe Premium pour 1000 🪙" : "Unlock the Premium Pass for 1000 🪙")}</div>
+    ${!isPremium ? `<button class="btn-main btn-gold" onclick="buyBlitzPassPremium()" style="padding:6px 10px; font-size:11px; margin:0 auto; width:auto;">${fr ? "Acheter le Passe Premium (1000 🪙)" : "Buy Premium Pass (1000 🪙)"}</button>` : `<div style="color:#00ff88; font-weight:bold; font-size:10px;">${fr ? "Statut : VIP / Premium" : "Status: VIP / Premium"}</div>`}</div>`;
   if (!season.tiers || season.tiers.length === 0) {
-    container.innerHTML += `<div style="text-align:center; color:#aaa; padding:20px; font-size:12px; font-weight:bold;">${season.emoji} Le contenu de la saison ${season.name} arrive bientôt !</div>`;
+    container.innerHTML += `<div style="text-align:center; color:#aaa; padding:20px; font-size:12px; font-weight:bold;">${season.emoji} ${fr ? "Le contenu de la saison arrive bientôt !" : "Season content coming soon!"}</div>`;
     return;
   }
   const scroll = document.createElement("div");
@@ -317,27 +341,19 @@ function renderBlitzPass() {
     const premDisabled = isPremClaimed || !isPremium;
     const col = document.createElement("div");
     col.className = "bp-tier-col"; col.id = "bp-card-" + t.tier;
-      col.innerHTML = `
-      <div class="bp-card bp-card-prem ${isPremClaimed ? 'claimed' : (!isPremium ? 'locked' : '')}" onclick="claimPassReward(${t.tier},'premium')">
-        <div class="bp-ribbon">⭐ PREMIUM</div>
+    col.innerHTML = `
+      <div class="bp-cell bp-prem ${isPremClaimed ? 'claimed' : ''}">
         ${rewardVisualHTML(season.id, t.tier, 'premium', t.premium)}
+        <button class="power-btn ${isPremClaimed ? 'active' : 'equip'}" style="font-size:10px;padding:3px;" ${premDisabled ? 'disabled' : ''} onclick="claimPassReward(${t.tier},'premium')">${isPremClaimed ? '✔' : '⭐'}</button>
       </div>
-      <div class="bp-num">${t.tier}</div>
-      <div class="bp-card bp-card-free ${isFreeClaimed ? 'claimed' : ''}" onclick="claimPassReward(${t.tier},'free')">
-        <div class="bp-ribbon free">GRATUIT</div>
+      <div class="bp-tier-num">${t.tier}</div>
+      <div class="bp-cell bp-free ${isFreeClaimed ? 'claimed' : ''}">
         ${rewardVisualHTML(season.id, t.tier, 'free', t.free)}
+        <button class="power-btn ${isFreeClaimed ? 'active' : 'equip'}" style="font-size:10px;padding:3px;" ${isFreeClaimed ? 'disabled' : ''} onclick="claimPassReward(${t.tier},'free')">${isFreeClaimed ? '✔' : '🟢'}</button>
       </div>`;
     scroll.appendChild(col);
   });
   container.appendChild(scroll);
-  scroll.scrollLeft = prevX; scroll.scrollTop = prevY;
-  setTimeout(() => { scroll.scrollLeft = prevX; scroll.scrollTop = prevY; }, 0);
-  scroll.addEventListener('wheel', (e) => {
-  if (window.innerWidth > 700) {
-    e.preventDefault();
-    scroll.scrollLeft += (e.deltaY + e.deltaX);
-    }
-  }, { passive: false });
   updatePassSeasonLabels();
   setTimeout(() => { if (typeof initAllLottieBadges === "function") initAllLottieBadges(); }, 60);
 }
@@ -345,7 +361,7 @@ function buyBlitzPassPremium() { if (myProfile.coins < 1000) { showNotificationT
 let lastClaimTime = 0;
 function claimPassReward(tier, track) {
   if (track === "premium" && !myProfile.blitzPassPremium) {
-    showNotificationToast("❌ Tu dois acheter le Passe Premium pour récupérer cette récompense !", "announcement");
+    showNotificationToast(currentLang === "fr" ? "❌ Tu dois acheter le Passe Premium pour récupérer cette récompense !" : "❌ You must buy the Premium Pass to claim this reward!", "announcement");
     return;
   }
   socket.emit("claim_pass_tier", { tier, track });
@@ -359,8 +375,8 @@ else if (season.id === "s3") icon = (tier === 30 && track === "premium") ? "🍪
 else icon = (tier === 30 && track === "premium") ? "🐯" : (tier === 25 && track === "premium") ? "🌈" : (tier === 15 && track === "premium") ? "🐱" : "🌟";
 const col = document.getElementById("bp-card-" + tier);
 if (col) {
-  const card = col.querySelector(track === 'premium' ? '.bp-card-prem' : '.bp-card-free');
-  if (card) { card.classList.remove('bp-unlock'); void card.offsetWidth; card.classList.add('bp-unlock'); }
+  const card = col.querySelector(track === 'premium' ? '.bp-card-prem' : '.bp-card-free') || col;
+  card.classList.remove("bp-unlock"); void card.offsetWidth; card.classList.add("bp-unlock");
   spawnUnlockBurst(col, icon);
 }
 const ns = Date.now();
@@ -368,40 +384,30 @@ if (ns - lastRewardSoundTime > 1200) { lastRewardSoundTime = ns; SoundEngine.pla
 setTimeout(() => { renderBlitzPass(); }, 450);
 });
 socket.on("pass_claim_denied", (data) => {
-if (data.reason === "premium_required") showNotificationToast("❌ Tu dois acheter le Passe Premium pour récupérer cette récompense !", "announcement");
-else if (data.reason === "already_claimed") showNotificationToast("❌ Cette récompense a déjà été récupérée.", "announcement");
+if (data.reason === "premium_required") showNotificationToast(currentLang === "fr" ? "❌ Tu dois acheter le Passe Premium pour récupérer cette récompense !" : "❌ You must buy the Premium Pass to claim this reward!", "announcement");
+else if (data.reason === "already_claimed") showNotificationToast(currentLang === "fr" ? "❌ Cette récompense a déjà été récupérée." : "❌ This reward has already been claimed.", "announcement");
 renderBlitzPass();
 });
 
 /* ============================================================
-NOM DU PASS DYNAMIQUE (s'adapte à la saison active)
+NOM DU PASS DYNAMIQUE
 ============================================================ */
 const SEASON_PASS_SUBTITLES = {
-  s1: "Néon Félin & Récompenses 🐱",
-  s2: "Frisson d'Halloween & Récompenses 🎃",
-  s3: "Magie de Noël & Récompenses 🎄"
+  s1: { fr: "Néon Félin & Récompenses 🐱", en: "Feline Neon & Rewards 🐱" },
+  s2: { fr: "Frisson d'Halloween & Récompenses 🎃", en: "Halloween Thrill & Rewards 🎃" },
+  s3: { fr: "Magie de Noël & Récompenses 🎄", en: "Christmas Magic & Rewards 🎄" }
 };
 
 function updatePassSeasonLabels() {
   const season = getActiveSeason();
   const num = season.id.replace("s", "");
+  const lang = currentLang === "fr" ? "fr" : "en";
   const titleEl = document.getElementById("pass-menu-title");
-  if (titleEl) titleEl.innerText = `PASSE DE SAISON • SAISON ${num} ${season.emoji} ${season.name}`;
+  if (titleEl) titleEl.innerText = (lang === "fr" ? "PASSE DE SAISON • SAISON " : "SEASON PASS • SEASON ") + num + " " + season.emoji + " " + season.name;
   const subEl = document.getElementById("pass-menu-sub");
-  if (subEl) subEl.innerText = SEASON_PASS_SUBTITLES[season.id] || "Récompenses 🌟";
+  if (subEl) subEl.innerText = (SEASON_PASS_SUBTITLES[season.id] && SEASON_PASS_SUBTITLES[season.id][lang]) || (lang === "fr" ? "Récompenses 🌟" : "Rewards 🌟");
   const badgeEl = document.getElementById("pass-modal-season");
-  if (badgeEl) badgeEl.innerText = `Saison ${num} • ${season.emoji} ${season.name}`;
-}
-function isoToFr(iso) { const [y, m, d] = String(iso).split('-'); return `${d}/${m}/${y}`; }
-if (typeof socket !== "undefined") {
-  socket.on('seasons_updated', (list) => {
-    (list || []).forEach(s => {
-      const c = SEASONS_CLIENT.find(x => x.id === s.id);
-      if (c) { c.start = isoToFr(s.start); c.end = isoToFr(s.end); }
-    });
-    updatePassSeasonLabels();
-    if (document.getElementById('modal-blitz-pass').style.display === 'flex') renderBlitzPass();
-  });
+  if (badgeEl) badgeEl.innerText = (lang === "fr" ? "Saison " : "Season ") + num + " • " + season.emoji + " " + season.name;
 }
 
 if (typeof socket !== "undefined") {
