@@ -90,6 +90,10 @@ const i18n = {
     catch_season_done: "🎯 MODE SAISONNIER TERMINÉ", catch_score_label: "Score :", catch_bonus_label: "Bonus :", catch_rush_x2: "(x2)",
     lb_cat_points: "🏅 Points", lb_cat_trophies: "🏆 Trophées", lb_cat_coins: "🪙 Argent", lb_cat_combined: "⭐ Combiné",
     friends_center_title: "👥 Centre d'Amis", friends_placeholder: "Pseudo exact...", trophy_room_btn: "SALLE DES TROPHÉES",
+    account_title: "⚙️ MON COMPTE", account_connected: "Connecté :", account_change: "🔑 Changer de compte",
+    account_create: "➕ Créer un nouveau compte", account_delete: "🗑️ Supprimer mon compte",
+    account_login_desc: "Entre ton pseudo + ton code secret.<br>Si le compte existe → connexion. Sinon → création.",
+    account_pseudo_ph: "Pseudo", account_code_ph: "🔒 Code secret (4 min)", account_login_btn: "🔓 Accéder à mon compte ⚡",
     powers: {
       spotlight: { name: "💡 Projecteur", desc: "Révèle la bonne tuile pendant 2s. Zéro hésitation." },
       freeze: { name: "⏳ Blocage du Temps", desc: "Gèle le chrono 3s. Respire, tu as le temps." },
@@ -192,6 +196,10 @@ const i18n = {
     catch_season_done: "🎯 SEASONAL MODE DONE", catch_score_label: "Score:", catch_bonus_label: "Bonus:", catch_rush_x2: "(x2)",
     lb_cat_points: "🏅 Points", lb_cat_trophies: "🏆 Trophies", lb_cat_coins: "🪙 Money", lb_cat_combined: "⭐ Combined",
     friends_center_title: "👥 Friends Center", friends_placeholder: "Exact pseudo...", trophy_room_btn: "TROPHY ROOM",
+    account_title: "⚙️ MY ACCOUNT", account_connected: "Connected:", account_change: "🔑 Switch account",
+    account_create: "➕ Create a new account", account_delete: "🗑️ Delete my account",
+    account_login_desc: "Enter your pseudo + secret code.<br>If the account exists → login. Else → creation.",
+    account_pseudo_ph: "Pseudo", account_code_ph: "🔒 Secret code (4 min)", account_login_btn: "🔓 Access my account ⚡",
     powers: {
       spotlight: { name: "💡 Spotlight", desc: "Reveals the correct tile for 2s. Zero hesitation." },
       freeze: { name: "⏳ Time Freeze", desc: "Freezes the timer for 3s. Breathe, you've got time." },
