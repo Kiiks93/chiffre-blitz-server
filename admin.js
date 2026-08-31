@@ -188,14 +188,30 @@ socket.on("admin_schedule_saved", () => {
   showNotificationToast("✅ Événements mis à jour côté serveur !", "gift");
 });
 /* ============================================================
-ÉDITEUR DE DATES DES SAISONS (admin)
+ÉDITEUR DE DATES DES SAISONS (admin) — version robuste
 ============================================================ */
 socket.on('admin_auth_success', () => {
-  setTimeout(renderSeasonDatesEditor, 100);
   socket.emit('admin_get_season_dates');
+  attachSeasonDatesEditor();
 });
-socket.on('admin_season_dates', (list) => fillSeasonDatesInputs(list));
+socket.on('admin_season_dates', (list) => {
+  window.__seasonDates = list;
+  fillSeasonDatesInputs(list);
+});
 
+function attachSeasonDatesEditor() {
+  let tries = 0;
+  const t = setInterval(() => {
+    tries++;
+    const dash = document.getElementById('admin-dashboard-section');
+    if (dash && !dash.classList.contains('hidden')) {
+      clearInterval(t);
+      renderSeasonDatesEditor();
+      if (window.__seasonDates) fillSeasonDatesInputs(window.__seasonDates);
+    }
+    if (tries > 30) clearInterval(t);
+  }, 150);
+}
 function renderSeasonDatesEditor() {
   const dash = document.getElementById('admin-dashboard-section');
   if (!dash || document.getElementById('season-dates-card')) return;
@@ -214,7 +230,7 @@ function fillSeasonDatesInputs(list) {
   (list || []).forEach(s => {
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:6px;';
-    row.innerHTML = `<span style="width:40px;font-weight:bold;color:#f8b500;">${s.id.toUpperCase()}</span>
+    row.innerHTML = `<span style="width:44px;font-weight:bold;color:#f8b500;">${s.id.toUpperCase()}</span>
       <input type="date" id="sd-${s.id}-start" value="${s.start}" style="flex:1;">
       <input type="date" id="sd-${s.id}-end" value="${s.end}" style="flex:1;">`;
     rows.appendChild(row);
