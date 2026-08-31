@@ -1147,8 +1147,11 @@ RESPONSIVE MOBILE
 /* ============================================================
 PASSE DE SAISON — DA "BRAWL STARS" (horizontal PC / vertical mobile)
 ============================================================ */
+#modal-blitz-pass { padding: 0; }
 #modal-blitz-pass .modal-card {
-  max-width: 96vw; width: 96vw; height: 92vh; max-height: 92vh;
+  width: 96vw !important; max-width: 96vw !important;
+  height: 92vh !important; max-height: 92vh !important;
+  display: flex; flex-direction: column;
   background:
     radial-gradient(circle at 50% 0%, rgba(255,255,255,.10), transparent 60%),
     repeating-linear-gradient(45deg, rgba(255,255,255,.04) 0 14px, transparent 14px 28px),
@@ -1160,15 +1163,15 @@ PASSE DE SAISON — DA "BRAWL STARS" (horizontal PC / vertical mobile)
   background: linear-gradient(180deg, rgba(0,0,0,.4), transparent);
   border: none; border-radius: 0; padding: 12px;
 }
-.bp-track-scroll { display:flex; gap:16px; overflow-x:auto; padding:26px 18px 18px; position:relative; align-items:stretch; }
+.bp-track-scroll { display:flex; gap:16px; overflow-x:auto; padding:26px 18px 18px; position:relative; align-items:center; flex:1; }
 .bp-track-scroll::before { content:''; position:absolute; left:0; right:0; top:50%; height:6px; background:rgba(0,0,0,.5); border-radius:3px; }
-.bp-tier-col { flex:0 0 150px; display:flex; flex-direction:column; align-items:center; gap:8px; position:relative; z-index:1; }
+.bp-tier-col { flex:0 0 170px; display:flex; flex-direction:column; align-items:center; gap:8px; position:relative; z-index:1; }
 
 /* ---------- Cartes (cliquables) ---------- */
 .bp-card { position:relative; border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; cursor:pointer; overflow:hidden; transition:transform .15s ease, box-shadow .15s ease; }
 /* PREMIUM : grande, bleue, bordure OR */
 .bp-card-prem {
-  width:100%; min-height:170px; padding:16px 8px 10px;
+  width:100%; min-height:200px; padding:16px 8px 10px;
   background:linear-gradient(180deg,#4db8ff 0%, #0a84ff 55%, #0060df 100%);
   border:3px solid #ffd23b;
   box-shadow:0 6px 0 rgba(0,0,0,.35), 0 0 22px rgba(255,210,59,.5);
