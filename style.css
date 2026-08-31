@@ -1344,3 +1344,16 @@ BADGE JOUEURS EN LIGNE barre de stats
   padding: 2px 10px;
 }
 .online-stat strong { color: #00ff88; }
+.user-stats {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  max-width: 96vw;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;          /* pas de barre moche (Firefox) */
+}
+.user-stats::-webkit-scrollbar { display: none; }  /* pas de barre (Chrome/Safari) */
+.user-stats > span { flex: 0 0 auto; white-space: nowrap; }
