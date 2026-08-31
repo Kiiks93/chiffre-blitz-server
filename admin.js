@@ -187,3 +187,46 @@ function saveAdminSchedules() {
 socket.on("admin_schedule_saved", () => {
   showNotificationToast("✅ Événements mis à jour côté serveur !", "gift");
 });
+/* ============================================================
+ÉDITEUR DE DATES DES SAISONS (admin)
+============================================================ */
+socket.on('admin_auth_success', () => {
+  setTimeout(renderSeasonDatesEditor, 100);
+  socket.emit('admin_get_season_dates');
+});
+socket.on('admin_season_dates', (list) => fillSeasonDatesInputs(list));
+
+function renderSeasonDatesEditor() {
+  const dash = document.getElementById('admin-dashboard-section');
+  if (!dash || document.getElementById('season-dates-card')) return;
+  const card = document.createElement('div');
+  card.id = 'season-dates-card'; card.className = 'roblox-card';
+  card.style.marginTop = '10px';
+  card.innerHTML = `<h4 style="color:#00d2ff;margin:0 0 8px;">📅 Dates des saisons</h4>
+    <div id="season-dates-rows"></div>
+    <button class="btn-main btn-gold" onclick="saveSeasonDates()">💾 Enregistrer les dates</button>`;
+  dash.appendChild(card);
+}
+function fillSeasonDatesInputs(list) {
+  const rows = document.getElementById('season-dates-rows');
+  if (!rows) return;
+  rows.innerHTML = '';
+  (list || []).forEach(s => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:6px;';
+    row.innerHTML = `<span style="width:40px;font-weight:bold;color:#f8b500;">${s.id.toUpperCase()}</span>
+      <input type="date" id="sd-${s.id}-start" value="${s.start}" style="flex:1;">
+      <input type="date" id="sd-${s.id}-end" value="${s.end}" style="flex:1;">`;
+    rows.appendChild(row);
+  });
+}
+function saveSeasonDates() {
+  const dates = {};
+  ['s1', 's2', 's3'].forEach(id => {
+    const st = document.getElementById(`sd-${id}-start`);
+    const en = document.getElementById(`sd-${id}-end`);
+    if (st && en) dates[id] = { start: st.value, end: en.value };
+  });
+  socket.emit('admin_set_season_dates', dates);
+  showNotificationToast('✅ Dates des saisons mises à jour !', 'gift');
+}
