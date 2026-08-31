@@ -215,6 +215,14 @@ label {
     <input type="text" id="admin-log-username" placeholder="Pseudo (vide = tout le monde)">
     <button class="btn-green" onclick="adminGetLogs()">Consulter 🔍</button>
     <div id="admin-logs" style="max-height:260px; overflow-y:auto; font-size:10px; margin-top:8px;"></div>
+    <div class="card" style="border-color: rgba(56,239,125,0.55);">
+    <h2 style="color:#38ef7d;">🎁 Attribuer objet / trophée</h2>
+    <div class="card-desc">Compense un bug ou offre : cadres, grilles, avatars, titres, packs, pouvoirs, trophées. Marche hors-ligne.</div>
+    <input type="text" id="admin-give-username" placeholder="Pseudo exact...">
+    <select id="admin-give-item"></select>
+    <button class="btn-gold" onclick="adminGiveItem()">Attribuer ⚡</button>
+    <div id="admin-give-result" class="small-result"></div>
+  </div>
   </div>
 
   <div class="card">
@@ -349,6 +357,7 @@ socket.on("admin_auth_success", (data) => {
   document.getElementById("admin-dashboard-section").style.display = "block";
   renderAdminSchedules(data.schedules || {});
   socket.emit('admin_get_season_dates');
+  socket.emit('admin_get_catalog');
 });
 
 /* ============================================================
@@ -563,6 +572,34 @@ socket.on('admin_logs_data', (d) => {
       → sol:${r.balance_after ?? '-'}
       <i style="color:#777;">${new Date(r.created_at).toLocaleString()}</i>
     </div>`).join('') || 'Aucun log trouvé.';
+});
+  /* ---------- ATTRIBUER OBJET / TROPHÉE ---------- */
+socket.on('admin_catalog', (cat) => {
+  const sel = document.getElementById('admin-give-item');
+  if (!sel) return;
+  sel.innerHTML = '';
+  const groups = { frame: '🛡️ Cadres', theme: '🎨 Grilles', avatar: '🐱 Avatars', title: '🏅 Titres', pack: '🎁 Packs', power: '⚡ Pouvoirs' };
+  for (const g in groups) {
+    const opts = (cat.items || []).filter(i => i.type === g);
+    if (!opts.length) continue;
+    const og = document.createElement('optgroup'); og.label = groups[g];
+    opts.forEach(i => { const o = document.createElement('option'); o.value = i.id; o.textContent = i.id; og.appendChild(o); });
+    sel.appendChild(og);
+  }
+  const tg = document.createElement('optgroup'); tg.label = '🏆 Trophées';
+  (cat.trophies || []).forEach(t => { const o = document.createElement('option'); o.value = 'trophy:' + t.id; o.textContent = t.name; tg.appendChild(o); });
+  sel.appendChild(tg);
+});
+function adminGiveItem() {
+  const username = document.getElementById('admin-give-username').value.trim();
+  const val = document.getElementById('admin-give-item').value;
+  if (!username || !val) { alert('Pseudo et objet requis.'); return; }
+  const isTrophy = val.startsWith('trophy:');
+  socket.emit('admin_give_cosmetic', { username, itemId: isTrophy ? val.slice(7) : val, kind: isTrophy ? 'trophy' : 'item' });
+}
+socket.on('admin_give_result', (d) => {
+  const el = document.getElementById('admin-give-result');
+  if (el) { el.style.color = d.ok ? '#00ff88' : '#ff4b2b'; el.innerText = d.message || ''; }
 });
 </script>
 
