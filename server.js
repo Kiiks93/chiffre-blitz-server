@@ -712,7 +712,7 @@ io.on('connection', (socket) => {
   });
 
     socket.on('find_halloween_match', () => {
-    if (!isCatchEnabled('noel')) return;
+    if (!isCatchEnabled('halloween')) return;
     halloweenQueue = halloweenQueue.filter(s => s !== socket.id);
     halloweenQueue.push(socket.id);
     if (halloweenQueue.length >= 2) startCatchMatch(halloweenQueue.shift(), halloweenQueue.shift(), 'halloween');
