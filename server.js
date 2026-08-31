@@ -179,6 +179,23 @@ const SEASONS = [
   { id: "s2", name: "Halloween", start: "2026-10-01", end: "2026-11-30" },
   { id: "s3", name: "Noël", start: "2026-12-01", end: "2027-01-10" }
 ];
+function applySeasonDates(dates) {
+  if (!dates) return;
+  SEASONS.forEach(s => {
+    const d = dates[s.id];
+    if (d && d.start) s.start = d.start;
+    if (d && d.end) s.end = d.end;
+  });
+}
+function getSeasonDatesPublic() {
+  return SEASONS.map(s => ({ id: s.id, name: s.name, start: s.start, end: s.end }));
+}
+(async () => {
+  try {
+    const { data } = await supabase.from('settings').select('season_dates').eq('id', 1).single();
+    if (data && data.season_dates) applySeasonDates(data.season_dates);
+  } catch (e) { console.log('Settings saisons absentes :', e.message); }
+})();
 let seasonOverride = null;
 function getCurrentSeason() {
   if (seasonOverride) {
@@ -964,6 +981,26 @@ io.on('connection', (socket) => {
       p.blitzPassPremium = !!(p.claimedPassTiers[seasonNow.id] && p.claimedPassTiers[seasonNow.id].premium);
       io.to(sId).emit('player_registered', p);
     }
+    socket.emit('admin_season_result', { ok: true, season: seasonNow.id });
+  });
+
+    socket.on('admin_get_season_dates', () => {
+    if (!socket.isAdmin) return;
+    socket.emit('admin_season_dates', getSeasonDatesPublic());
+  });
+
+  socket.on('admin_set_season_dates', async (dates) => {
+    if (!socket.isAdmin) return;
+    applySeasonDates(dates);
+    try { await supabase.from('settings').update({ season_dates: dates }).eq('id', 1); } catch (e) {}
+    // refreshe la saison courante de tous les joueurs
+    const seasonNow = getCurrentSeason();
+    for (let sId in activePlayers) {
+      const p = activePlayers[sId];
+      p.current_season = seasonNow.id;
+      io.to(sId).emit('player_registered', p);
+    }
+    io.emit('seasons_updated', getSeasonDatesPublic());
     socket.emit('admin_season_result', { ok: true, season: seasonNow.id });
   });
 
