@@ -1154,3 +1154,10 @@ PASS HORIZONTAL/VERTICAL + ANIMATION DÉBLOCAGE PALIER
   .bp-track-scroll { flex-direction:column; overflow-x:visible; }
   .bp-tier-col { flex:none; width:100%; }
 }
+
+/* ---------- Aperçus visuels du pass (style Fortnite) ---------- */
+.bp-visual { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; min-height:52px; }
+.bp-emoji { font-size:24px; filter:drop-shadow(0 0 6px rgba(255,255,255,.4)); }
+.bp-label { font-size:8px; color:#ddd; line-height:1.2; text-align:center; }
+.bp-swatch { width:40px; height:40px; border-radius:8px; border:2px solid rgba(255,255,255,.3); box-shadow:0 0 10px rgba(0,0,0,.5); }
+.bp-title { font-size:9px; color:#f8b500; font-weight:bold; text-align:center; line-height:1.2; padding:0 2px; }
