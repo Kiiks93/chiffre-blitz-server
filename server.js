@@ -9,17 +9,11 @@ const io = new Server(server, { cors: { origin: "*", methods: ["GET", "POST"] } 
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
-if (!SUPABASE_URL || !SUPABASE_KEY) {
-  console.error("SUPABASE_URL et SUPABASE_KEY doivent etre definies.");
-  process.exit(1);
-}
+if (!SUPABASE_URL || !SUPABASE_KEY) { console.error("SUPABASE_URL et SUPABASE_KEY doivent etre definies."); process.exit(1); }
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-if (!ADMIN_PASSWORD) {
-  console.error("ADMIN_PASSWORD doit etre definie.");
-  process.exit(1);
-}
+if (!ADMIN_PASSWORD) { console.error("ADMIN_PASSWORD doit etre definie."); process.exit(1); }
 
 /* ============================================================
 OBJETS
@@ -92,7 +86,7 @@ const ITEM_CATALOG = {
 };
 
 /* ============================================================
-TROPHÉES — SALLE DES TROPHÉES (16 trophées)
+TROPHÉES
 ============================================================ */
 const TROPHY_CATALOG = {
   first_victory:   { name: "Première Victoire", emoji: "⚔️", shelf: "combat", rarity: "bronze", title: "title_vainqueur" },
@@ -121,9 +115,7 @@ function checkAndUnlockTrophy(player, trophyId) {
   if (player.trophies_collection[trophyId]) return null;
   player.trophies_collection[trophyId] = { unlocked: true, unlockedAt: Date.now() };
   player.unlocked_items = player.unlocked_items || [];
-  if (trophy.title && !player.unlocked_items.includes(trophy.title)) {
-    player.unlocked_items.push(trophy.title);
-  }
+  if (trophy.title && !player.unlocked_items.includes(trophy.title)) player.unlocked_items.push(trophy.title);
   return trophy;
 }
 
@@ -145,13 +137,8 @@ function evaluateTrophies(player) {
   return unlocked;
 }
 
-function hasSource(itemId, source) {
-  const item = ITEM_CATALOG[itemId];
-  return !!(item && Array.isArray(item.sources) && item.sources.includes(source));
-}
-
+function hasSource(itemId, source) { const item = ITEM_CATALOG[itemId]; return !!(item && Array.isArray(item.sources) && item.sources.includes(source)); }
 function isShopItem(itemId) { return hasSource(itemId, "shop"); }
-
 function getCosmeticCategory(itemId) {
   const item = ITEM_CATALOG[itemId];
   if (item && ["theme", "frame", "avatar", "title"].includes(item.type)) return item.type;
@@ -164,48 +151,23 @@ function getCosmeticCategory(itemId) {
 function ownsItemOrPack(player, itemId) {
   const u = player.unlocked_items || [];
   if (u.includes(itemId)) return true;
-  for (const id of u) {
-    const it = ITEM_CATALOG[id];
-    if (it && it.type === 'pack' && Array.isArray(it.items) && it.items.includes(itemId)) return true;
-  }
+  for (const id of u) { const it = ITEM_CATALOG[id]; if (it && it.type === 'pack' && Array.isArray(it.items) && it.items.includes(itemId)) return true; }
   return false;
 }
 
 /* ============================================================
-SAISONS (moteur multi-saisons)
+SAISONS
 ============================================================ */
 const SEASONS = [
   { id: "s1", name: "Felin & Neon", start: "2026-06-01", end: "2026-09-30" },
   { id: "s2", name: "Halloween", start: "2026-10-01", end: "2026-11-30" },
   { id: "s3", name: "Noël", start: "2026-12-01", end: "2027-01-10" }
 ];
-function applySeasonDates(dates) {
-  if (!dates) return;
-  SEASONS.forEach(s => {
-    const d = dates[s.id];
-    if (d && d.start) s.start = d.start;
-    if (d && d.end) s.end = d.end;
-  });
-}
-function getSeasonDatesPublic() {
-  return SEASONS.map(s => ({ id: s.id, name: s.name, start: s.start, end: s.end }));
-}
-(async () => {
-  try {
-    const { data } = await supabase.from('settings').select('season_dates').eq('id', 1).single();
-    if (data && data.season_dates) applySeasonDates(data.season_dates);
-  } catch (e) { console.log('Settings saisons absentes :', e.message); }
-})();
 let seasonOverride = null;
 function getCurrentSeason() {
-  if (seasonOverride) {
-    const s = SEASONS.find(x => x.id === seasonOverride);
-    if (s) return s;
-  }
+  if (seasonOverride) { const s = SEASONS.find(x => x.id === seasonOverride); if (s) return s; }
   const now = new Date();
-  for (const s of SEASONS) {
-    if (now >= new Date(s.start + "T00:00:00Z") && now <= new Date(s.end + "T23:59:59Z")) return s;
-  }
+  for (const s of SEASONS) { if (now >= new Date(s.start + "T00:00:00Z") && now <= new Date(s.end + "T23:59:59Z")) return s; }
   if (now < new Date(SEASONS[0].start + "T00:00:00Z")) return SEASONS[0];
   return SEASONS[SEASONS.length - 1];
 }
@@ -228,6 +190,19 @@ function normalizeClaimedTiers(cpt) {
   return cpt;
 }
 
+/* ---------- Dates saisons modifiables (admin) ---------- */
+function applySeasonDates(dates) {
+  if (!dates) return;
+  SEASONS.forEach(s => { const d = dates[s.id]; if (d && d.start) s.start = d.start; if (d && d.end) s.end = d.end; });
+}
+function getSeasonDatesPublic() { return SEASONS.map(s => ({ id: s.id, name: s.name, start: s.start, end: s.end })); }
+(async () => {
+  try {
+    const { data } = await supabase.from('settings').select('season_dates').eq('id', 1).single();
+    if (data && data.season_dates) applySeasonDates(data.season_dates);
+  } catch (e) { console.log('Settings saisons absentes :', e.message); }
+})();
+
 /* ============================================================
 ÉTAT SERVEUR
 ============================================================ */
@@ -243,14 +218,10 @@ const lastMatchEarnings = {};
 
 let globalEvents = { coinRush: false, rankShield: false, expressoMatch: false, chaosMode: false, jackpotEclair: false, tugOfWarMode: false, halloweenMode: false, noelMode: false };
 let eventSchedules = {
-  coinRush: { manual: false, start: null, end: null },
-  rankShield: { manual: false, start: null, end: null },
-  expressoMatch: { manual: false, start: null, end: null },
-  chaosMode: { manual: false, start: null, end: null },
-  jackpotEclair: { manual: false, start: null, end: null },
-  tugOfWarMode: { manual: false, start: null, end: null },
-  halloweenMode: { manual: false, start: null, end: null },
-  noelMode: { manual: false, start: null, end: null }
+  coinRush: { manual: false, start: null, end: null }, rankShield: { manual: false, start: null, end: null },
+  expressoMatch: { manual: false, start: null, end: null }, chaosMode: { manual: false, start: null, end: null },
+  jackpotEclair: { manual: false, start: null, end: null }, tugOfWarMode: { manual: false, start: null, end: null },
+  halloweenMode: { manual: false, start: null, end: null }, noelMode: { manual: false, start: null, end: null }
 };
 
 setInterval(() => {
@@ -268,30 +239,26 @@ setInterval(() => {
 app.get('/', (req, res) => { res.send('Chiffre Blitz Server is running ⚡'); });
 
 async function savePlayerToSupabase(socketId) {
-const p = activePlayers[socketId];
-if (!p) return;
-const core = {
-points: p.points, coins: p.coins, trophies: p.trophies, wins: p.wins, losses: p.losses,
-inventory: p.inventory, equipped_power: p.equippedPower, region: p.region, avatar: p.avatar,
-flag: p.flag, unlocked_items: p.unlocked_items, blitz_pass_premium: p.blitzPassPremium,
-claimed_pass_tiers: p.claimedPassTiers
-};
-const extra = {
-matches_played: p.matches_played || 0,
-win_streak: p.win_streak || 0,
-best_combo: p.best_combo || 0,
-best_avalanche: p.best_avalanche || 0,
-solo_games: p.solo_games || 0,
-total_coins_earned: p.total_coins_earned || 0,
-season_n1_count: p.season_n1_count || 0,
-trophies_collection: p.trophies_collection || {}
-};
-let { error } = await supabase.from('players').update({ ...core, ...extra }).eq('id', p.dbId);
-if (error) {
-console.error("⚠️ SAVE (colonnes trophées) ÉCHEC → fallback : ", error.message);
-const retry = await supabase.from('players').update(core).eq('id', p.dbId);
-if (retry.error) console.error("❌ SAVE CORE ÉCHEC : ", retry.error.message);
-}
+  const p = activePlayers[socketId];
+  if (!p) return;
+  const core = {
+    points: p.points, coins: p.coins, trophies: p.trophies, wins: p.wins, losses: p.losses,
+    inventory: p.inventory, equipped_power: p.equippedPower, region: p.region, avatar: p.avatar,
+    flag: p.flag, unlocked_items: p.unlocked_items, blitz_pass_premium: p.blitzPassPremium,
+    claimed_pass_tiers: p.claimedPassTiers
+  };
+  const extra = {
+    matches_played: p.matches_played || 0, win_streak: p.win_streak || 0, best_combo: p.best_combo || 0,
+    best_avalanche: p.best_avalanche || 0, solo_games: p.solo_games || 0,
+    total_coins_earned: p.total_coins_earned || 0, season_n1_count: p.season_n1_count || 0,
+    trophies_collection: p.trophies_collection || {}
+  };
+  let { error } = await supabase.from('players').update({ ...core, ...extra }).eq('id', p.dbId);
+  if (error) {
+    console.error("⚠️ SAVE (colonnes trophées) ÉCHEC → fallback : ", error.message);
+    const retry = await supabase.from('players').update(core).eq('id', p.dbId);
+    if (retry.error) console.error("❌ SAVE CORE ÉCHEC : ", retry.error.message);
+  }
 }
 
 /* ============================================================
@@ -301,7 +268,6 @@ io.on('connection', (socket) => {
   console.log('Connexion : ' + socket.id);
   socket.emit('events_state_update', globalEvents);
 
-  /* ---------- SALLE DES TROPHÉES ---------- */
   socket.on('get_trophy_room', async (targetUsername) => {
     try {
       const cleanTarget = (targetUsername || '').trim();
@@ -310,37 +276,27 @@ io.on('connection', (socket) => {
       if (error || !matched || matched.length === 0) { socket.emit('trophy_room_data', { ok: false }); return; }
       const t = matched[0];
       socket.emit('trophy_room_data', {
-        ok: true,
-        username: t.username,
-        avatar: t.avatar,
-        flag: t.flag,
-        region: t.region,
-        trophies_collection: t.trophies_collection || {},
-        wins: t.wins || 0, losses: t.losses || 0, points: t.points || 0, coins: t.coins || 0,
-        matches_played: t.matches_played || 0, win_streak: t.win_streak || 0,
-        best_combo: t.best_combo || 0, best_avalanche: t.best_avalanche || 0,
+        ok: true, username: t.username, avatar: t.avatar, flag: t.flag, region: t.region,
+        trophies_collection: t.trophies_collection || {}, wins: t.wins || 0, losses: t.losses || 0,
+        points: t.points || 0, coins: t.coins || 0, matches_played: t.matches_played || 0,
+        win_streak: t.win_streak || 0, best_combo: t.best_combo || 0, best_avalanche: t.best_avalanche || 0,
         solo_games: t.solo_games || 0, total_coins_earned: t.total_coins_earned || 0
       });
-    } catch (e) {
-      socket.emit('trophy_room_data', { ok: false });
-    }
+    } catch (e) { socket.emit('trophy_room_data', { ok: false }); }
   });
 
   socket.on('get_my_trophy_room', () => {
     const p = activePlayers[socket.id];
     if (!p) return;
     socket.emit('trophy_room_data', {
-      ok: true,
-      username: p.username, avatar: p.avatar, flag: p.flag, region: p.region,
-      trophies_collection: p.trophies_collection || {},
-      wins: p.wins || 0, losses: p.losses || 0, points: p.points || 0, coins: p.coins || 0,
-      matches_played: p.matches_played || 0, win_streak: p.win_streak || 0,
-      best_combo: p.best_combo || 0, best_avalanche: p.best_avalanche || 0,
+      ok: true, username: p.username, avatar: p.avatar, flag: p.flag, region: p.region,
+      trophies_collection: p.trophies_collection || {}, wins: p.wins || 0, losses: p.losses || 0,
+      points: p.points || 0, coins: p.coins || 0, matches_played: p.matches_played || 0,
+      win_streak: p.win_streak || 0, best_combo: p.best_combo || 0, best_avalanche: p.best_avalanche || 0,
       solo_games: p.solo_games || 0, total_coins_earned: p.total_coins_earned || 0
     });
   });
 
-  /* ---------- PROFIL / SUPABASE ---------- */
   socket.on('register_player', async (data) => {
     const rawUsername = (data.username || '').trim();
     const secretCode = (data.secretCode || '').trim();
@@ -352,79 +308,54 @@ io.on('connection', (socket) => {
       if (!error && matchedPlayers && matchedPlayers.length > 0) {
         const existing = matchedPlayers[0];
         const storedCode = (existing.secret_code || '').trim();
-        if (storedCode && storedCode.toLowerCase() !== secretCode.toLowerCase()) {
-          socket.emit('register_result', { ok: false, reason: 'taken' });
-          return;
-        }
+        if (storedCode && storedCode.toLowerCase() !== secretCode.toLowerCase()) { socket.emit('register_result', { ok: false, reason: 'taken' }); return; }
         const updates = {};
         if (!storedCode) updates.secret_code = secretCode;
         if (Object.keys(updates).length > 0) {
-        const { data: updated } = await supabase.from('players').update(updates).eq('id', existing.id).select().single();
-        playerData = updated || existing;
-        } else {
-        playerData = existing;
-        }
+          const { data: updated } = await supabase.from('players').update(updates).eq('id', existing.id).select().single();
+          playerData = updated || existing;
+        } else { playerData = existing; }
       } else {
         const newRecord = {
-          username: rawUsername, secret_code: secretCode,
-          region: data.region || "Hauts-de-France",
-          country: data.flag ? data.flag.replace(/['"]/g, '').trim() : "FR",
-          avatar: data.avatar || 1, flag: data.flag || "🇫🇷",
+          username: rawUsername, secret_code: secretCode, region: data.region || "Hauts-de-France",
+          country: data.flag ? data.flag.replace(/['"]/g, '').trim() : "FR", avatar: data.avatar || 1, flag: data.flag || "🇫🇷",
           points: 0, coins: 100, trophies: 0, wins: 0, losses: 0,
-          inventory: { __equipped: { frame: "frame_standard" } }, equipped_power: null,
-          unlocked_items: ["frame_standard"],
+          inventory: { __equipped: { frame: "frame_standard" } }, equipped_power: null, unlocked_items: ["frame_standard"],
           blitz_pass_premium: false, claimed_pass_tiers: {},
-          matches_played: 0, win_streak: 0, best_combo: 0, best_avalanche: 0,
-          solo_games: 0, total_coins_earned: 0, season_n1_count: 0, trophies_collection: {}
+          matches_played: 0, win_streak: 0, best_combo: 0, best_avalanche: 0, solo_games: 0, total_coins_earned: 0,
+          season_n1_count: 0, trophies_collection: {}
         };
         const { data: inserted, error: insertErr } = await supabase.from('players').insert([newRecord]).select().single();
-        if (!insertErr && inserted) {
-          playerData = inserted;
-        } else {
-          console.error("ERREUR INSERT SUPABASE : ", insertErr ? insertErr.message : "aucune donnee");
-          playerData = { ...newRecord, id: socket.id };
-        }
+        if (!insertErr && inserted) { playerData = inserted; }
+        else { console.error("ERREUR INSERT SUPABASE : ", insertErr ? insertErr.message : "aucune donnee"); playerData = { ...newRecord, id: socket.id }; }
       }
       const claimedNorm = normalizeClaimedTiers(playerData.claimed_pass_tiers);
-      // Migration : tout le monde possède le cadre Standard
       playerData.unlocked_items = playerData.unlocked_items || [];
       if (!playerData.unlocked_items.includes("frame_standard")) playerData.unlocked_items.push("frame_standard");
       playerData.inventory = playerData.inventory || {};
       playerData.inventory.__equipped = playerData.inventory.__equipped || {};
       if (!playerData.inventory.__equipped.frame) playerData.inventory.__equipped.frame = "frame_standard";
-      // Rattrapage : palier 24 S2 réclamé avant l'ajout de la grille Fantôme
-      if (claimedNorm["s2"] && claimedNorm["s2"]["24_premium"] && !playerData.unlocked_items.includes("theme_fantome")) {
-        playerData.unlocked_items.push("theme_fantome");
-      }
+      if (claimedNorm["s2"] && claimedNorm["s2"]["24_premium"] && !playerData.unlocked_items.includes("theme_fantome")) playerData.unlocked_items.push("theme_fantome");
       const seasonNow = getCurrentSeason();
       const premNow = !!(claimedNorm[seasonNow.id] && claimedNorm[seasonNow.id].premium) || (seasonNow.id === "s1" && playerData.blitz_pass_premium);
       activePlayers[socket.id] = {
         socketId: socket.id, dbId: playerData.id || socket.id, id: socket.id,
-        username: playerData.username, region: playerData.region, avatar: playerData.avatar,
-        flag: playerData.flag, points: playerData.points || 0, coins: playerData.coins || 0,
-        country: playerData.country || "FR",
+        username: playerData.username, region: playerData.region, avatar: playerData.avatar, flag: playerData.flag,
+        points: playerData.points || 0, coins: playerData.coins || 0, country: playerData.country || "FR",
         trophies: playerData.trophies || 0, wins: playerData.wins || 0, losses: playerData.losses || 0,
         inventory: playerData.inventory, equippedPower: playerData.equipped_power || null,
-        unlocked_items: playerData.unlocked_items, blitzPassPremium: premNow,
-        claimedPassTiers: claimedNorm, current_season: seasonNow.id,
-        matches_played: playerData.matches_played || 0,
-        win_streak: playerData.win_streak || 0,
-        best_combo: playerData.best_combo || 0,
-        best_avalanche: playerData.best_avalanche || 0,
-        solo_games: playerData.solo_games || 0,
-        total_coins_earned: playerData.total_coins_earned || 0,
-        season_n1_count: playerData.season_n1_count || 0,
-        trophies_collection: playerData.trophies_collection || {}
+        unlocked_items: playerData.unlocked_items, blitzPassPremium: premNow, claimedPassTiers: claimedNorm,
+        current_season: seasonNow.id,
+        matches_played: playerData.matches_played || 0, win_streak: playerData.win_streak || 0,
+        best_combo: playerData.best_combo || 0, best_avalanche: playerData.best_avalanche || 0,
+        solo_games: playerData.solo_games || 0, total_coins_earned: playerData.total_coins_earned || 0,
+        season_n1_count: playerData.season_n1_count || 0, trophies_collection: playerData.trophies_collection || {}
       };
       socket.emit('register_result', { ok: true });
       socket.emit('player_registered', activePlayers[socket.id]);
-    } catch (err) {
-      console.error("Erreur enregistrement Supabase : ", err);
-      socket.emit('register_result', { ok: false, reason: 'error' });
-    }
+    } catch (err) { console.error("Erreur enregistrement Supabase : ", err); socket.emit('register_result', { ok: false, reason: 'error' }); }
   });
 
-  /* ---------- BOUTIQUE ---------- */
   socket.on('buy_item', async (itemId) => {
     const player = activePlayers[socket.id];
     if (!player) return;
@@ -433,20 +364,16 @@ io.on('connection', (socket) => {
     if (player.coins < item.price) { socket.emit('room_error', "Tu n'as pas assez de pieces !"); return; }
     player.inventory = player.inventory || {};
     player.unlocked_items = player.unlocked_items || [];
-    if (item.type === 'power') {
-      player.coins -= item.price;
-      player.inventory[itemId] = (player.inventory[itemId] || 0) + 1;
-    } else if (item.type === 'pack') {
+    if (item.type === 'power') { player.coins -= item.price; player.inventory[itemId] = (player.inventory[itemId] || 0) + 1; }
+    else if (item.type === 'pack') {
       const ownedAll = item.items.every(i => player.unlocked_items.includes(i));
       if (ownedAll) { socket.emit('room_error', "Tu possedes deja tous les objets de ce pack."); return; }
       player.coins -= item.price;
-      item.items.forEach(i => {
-        if (!player.unlocked_items.includes(i)) player.unlocked_items.push(i);
-      });
-    } else if (item.permanent) {
+      item.items.forEach(i => { if (!player.unlocked_items.includes(i)) player.unlocked_items.push(i); });
+    }
+    else if (item.permanent) {
       if (player.unlocked_items.includes(itemId)) { socket.emit('room_error', "Tu possedes deja cet objet."); return; }
-      player.coins -= item.price;
-      player.unlocked_items.push(itemId);
+      player.coins -= item.price; player.unlocked_items.push(itemId);
     } else { return; }
     await savePlayerToSupabase(socket.id);
     socket.emit('player_registered', player);
@@ -456,11 +383,7 @@ io.on('connection', (socket) => {
     const player = activePlayers[socket.id];
     if (!player) return;
     if (!POWER_IDS.includes(powerId)) return;
-    if ((player.inventory[powerId] || 0) > 0) {
-      player.equippedPower = powerId;
-      await savePlayerToSupabase(socket.id);
-      socket.emit('player_registered', player);
-    }
+    if ((player.inventory[powerId] || 0) > 0) { player.equippedPower = powerId; await savePlayerToSupabase(socket.id); socket.emit('player_registered', player); }
   });
 
   socket.on('equip_cosmetic', async (itemId) => {
@@ -482,7 +405,6 @@ io.on('connection', (socket) => {
     socket.emit('player_registered', player);
   });
 
-  /* ---------- PASSE DE SAISON (multi-saisons) ---------- */
   socket.on('buy_blitz_pass', async () => {
     const player = activePlayers[socket.id];
     if (!player) return;
@@ -498,9 +420,7 @@ io.on('connection', (socket) => {
       socket.emit('player_registered', player);
       socket.emit('blitz_pass_updated', { coins: player.coins, blitzPassPremium: true, claimedPassTiers: player.claimedPassTiers });
       socket.emit('pass_reward_received', { message: "Passe Premium « " + getCurrentSeason().name + " » activé !" });
-    } else {
-      socket.emit('room_error', "Tu n'as pas assez de pieces !");
-    }
+    } else { socket.emit('room_error', "Tu n'as pas assez de pieces !"); }
   });
 
   socket.on('claim_pass_tier', async (data) => {
@@ -518,16 +438,13 @@ io.on('connection', (socket) => {
     player.blitzPassPremium = !!seasonData.premium;
     applyPassReward(player, tier, track, seasonId);
     const unlockedTrophies = evaluateTrophies(player);
-    if (unlockedTrophies.length > 0) {
-      socket.emit('trophy_unlocked', unlockedTrophies.map(t => ({ id: Object.keys(TROPHY_CATALOG).find(k => TROPHY_CATALOG[k] === t), ...t })));
-    }
+    if (unlockedTrophies.length > 0) socket.emit('trophy_unlocked', unlockedTrophies.map(t => ({ id: Object.keys(TROPHY_CATALOG).find(k => TROPHY_CATALOG[k] === t), ...t })));
     await savePlayerToSupabase(socket.id);
     socket.emit('player_registered', player);
     socket.emit('pass_tier_claimed', { tier, track });
     socket.emit('pass_reward_received', { message: "Recompense du Palier " + tier + " (" + track + ") recuperee !" });
   });
 
-  /* ---------- POUVOIRS ---------- */
   socket.on('use_power', async (powerId) => {
     const player = activePlayers[socket.id];
     if (!player) return;
@@ -558,7 +475,6 @@ io.on('connection', (socket) => {
 
   socket.on('send_malus', () => {});
 
-  /* ---------- ÉMOTICÔNES ---------- */
   socket.on('send_emote', (data) => {
     const match = activeMatches[socket.id];
     if (match) {
@@ -567,15 +483,11 @@ io.on('connection', (socket) => {
     } else {
       for (let code in rooms) {
         const room = rooms[code];
-        if (room.players.some(p => (p.socketId || p.id) === socket.id)) {
-          io.to(code).emit('receive_emote', { senderId: socket.id, emote: data.emote });
-          break;
-        }
+        if (room.players.some(p => (p.socketId || p.id) === socket.id)) { io.to(code).emit('receive_emote', { senderId: socket.id, emote: data.emote }); break; }
       }
     }
   });
 
-  /* ---------- ROUE JACKPOT ---------- */
   socket.on('spin_jackpot_wheel', async () => {
     const player = activePlayers[socket.id];
     if (!player) return;
@@ -583,12 +495,7 @@ io.on('connection', (socket) => {
     let outcome = 'rien', coinDelta = 0, itemId = null;
     const possiblePowerRewards = ["spotlight", "freeze", "joker", "quake"];
     if (roll < 0.30) { outcome = 'jackpot'; coinDelta = 250; }
-    else if (roll < 0.45) {
-      outcome = 'objet';
-      itemId = possiblePowerRewards[Math.floor(Math.random() * possiblePowerRewards.length)];
-      player.inventory = player.inventory || {};
-      player.inventory[itemId] = (player.inventory[itemId] || 0) + 1;
-    }
+    else if (roll < 0.45) { outcome = 'objet'; itemId = possiblePowerRewards[Math.floor(Math.random() * possiblePowerRewards.length)]; player.inventory = player.inventory || {}; player.inventory[itemId] = (player.inventory[itemId] || 0) + 1; }
     else if (roll < 0.70) { outcome = 'banqueroute'; coinDelta = -150; }
     if (coinDelta < 0) player.coins = Math.max(0, player.coins + coinDelta);
     else player.coins += coinDelta;
@@ -598,7 +505,6 @@ io.on('connection', (socket) => {
     socket.emit('jackpot_wheel_result', { outcome, coinDelta, itemId, newCoins: player.coins });
   });
 
-  /* ---------- CLASSEMENT ---------- */
   socket.on('get_leaderboard', async (type) => {
     try {
       const [category, scope] = type.split('_');
@@ -612,12 +518,9 @@ io.on('connection', (socket) => {
       else query = query.order('trophies', { ascending: false }).order('points', { ascending: false });
       const { data: sortedData, error } = await query.limit(50);
       socket.emit('leaderboard_data', { type, data: (!error && sortedData) ? sortedData : [] });
-    } catch (err) {
-      socket.emit('leaderboard_data', { type, data: [] });
-    }
+    } catch (err) { socket.emit('leaderboard_data', { type, data: [] }); }
   });
 
-  /* ---------- SALONS ---------- */
   socket.on('get_rooms_list', () => {
     socket.emit('rooms_list_data', Object.values(rooms).map(r => ({ code: r.code, hasPassword: !!r.password, playersCount: r.players.length })));
   });
@@ -643,15 +546,12 @@ io.on('connection', (socket) => {
     socket.emit('room_joined_success', { code: room.code, players: room.players });
     io.to(room.code).emit('room_players_update', { players: room.players });
     if (room.players.length === 2) {
-      setTimeout(() => {
-        startMatchBetween(room.players[0].socketId || room.players[0].id, room.players[1].socketId || room.players[1].id, false, false, false);
-      }, 1000);
+      setTimeout(() => { startMatchBetween(room.players[0].socketId || room.players[0].id, room.players[1].socketId || room.players[1].id, false, false, false); }, 1000);
     }
   });
 
   socket.on('leave_room', () => { leaveAllRooms(socket); });
 
-  /* ---------- AMIS ---------- */
   socket.on('get_friends_list', async () => {
     const player = activePlayers[socket.id];
     if (!player) return;
@@ -683,24 +583,16 @@ io.on('connection', (socket) => {
     else socket.emit('friend_success', "Demande d'ami envoyee a " + targetExists.username + " !");
   });
 
-  socket.on('accept_friend_request', async (friendshipId) => {
-    await supabase.from('friendships').update({ status: 'accepted' }).eq('id', friendshipId);
-    socket.emit('friend_updated');
-  });
-
-  socket.on('remove_friend', async (friendshipId) => {
-    await supabase.from('friendships').delete().eq('id', friendshipId);
-    socket.emit('friend_updated');
-  });
-
+  socket.on('accept_friend_request', async (friendshipId) => { await supabase.from('friendships').update({ status: 'accepted' }).eq('id', friendshipId); socket.emit('friend_updated'); });
+  socket.on('remove_friend', async (friendshipId) => { await supabase.from('friendships').delete().eq('id', friendshipId); socket.emit('friend_updated'); });
   socket.on('invite_friend_to_game', (data) => {
     const player = activePlayers[socket.id];
     if (!player || !data.targetSocketId) return;
     io.to(data.targetSocketId).emit('receive_game_invite', { from: player.username, roomCode: data.roomCode || null });
   });
 
-  /* ---------- MATCHMAKING ---------- */
-    socket.on('find_1v1_match', () => {
+  /* ---------- MATCHMAKING (anti match-contre-soi) ---------- */
+  socket.on('find_1v1_match', () => {
     if (!matchmakingQueue.includes(socket.id)) matchmakingQueue.push(socket.id);
     if (matchmakingQueue.length >= 2) {
       const id1 = matchmakingQueue.shift();
@@ -722,12 +614,10 @@ io.on('connection', (socket) => {
     if (items.length !== 2) { socket.emit('room_error', "En mode classe, tu dois equiper exactement 2 objets."); return; }
     const counts = {};
     items.forEach(id => { counts[id] = (counts[id] || 0) + 1; });
-    for (const id in counts) {
-      if ((player.inventory[id] || 0) < counts[id]) { socket.emit('room_error', "Stock insuffisant pour un objet selectionne."); return; }
-    }
+    for (const id in counts) { if ((player.inventory[id] || 0) < counts[id]) { socket.emit('room_error', "Stock insuffisant pour un objet selectionne."); return; } }
     player.equippedPowers = items;
     player.equippedPower = items[0];
-        if (!rankedQueue.includes(socket.id)) rankedQueue.push(socket.id);
+    if (!rankedQueue.includes(socket.id)) rankedQueue.push(socket.id);
     if (rankedQueue.length >= 2) {
       const id1 = rankedQueue.shift();
       let id2 = null;
@@ -739,7 +629,8 @@ io.on('connection', (socket) => {
       if (id2) startMatchBetween(id1, id2, true, true, false);
       else rankedQueue.unshift(id1);
     }
-    }
+  });
+
   socket.on('find_tug_of_war_match', () => {
     if (!globalEvents.tugOfWarMode) return;
     tugOfWarQueue = tugOfWarQueue.filter(sId => sId !== socket.id);
@@ -747,7 +638,7 @@ io.on('connection', (socket) => {
     if (tugOfWarQueue.length >= 2) startMatchBetween(tugOfWarQueue.shift(), tugOfWarQueue.shift(), false, true, true);
   });
 
-    socket.on('find_halloween_match', () => {
+  socket.on('find_halloween_match', () => {
     if (!isCatchEnabled('halloween')) return;
     halloweenQueue = halloweenQueue.filter(s => s !== socket.id);
     halloweenQueue.push(socket.id);
@@ -776,7 +667,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  /* ---------- GAMEPLAY 1V1 ---------- */
   socket.on('player_click_1v1', (clickedIndex) => {
     const match = activeMatches[socket.id];
     if (!match || match.ended) return;
@@ -802,7 +692,7 @@ io.on('connection', (socket) => {
     }
   });
 
-    socket.on('catch_click', (data) => {
+  socket.on('catch_click', (data) => {
     const match = activeMatches[socket.id];
     if (!match || !match.isCatch || match.ended) return;
     const allowed = [10, -15, 20, -20, 0, -5];
@@ -832,7 +722,6 @@ io.on('connection', (socket) => {
     socket.emit('catch_solo_result', { baseCoins, bonusCoins, rushBonus, earnedCoins: earned });
   });
 
-  /* ---------- RÉCOMPENSES SOLO ---------- */
   socket.on('claim_solo_reward', async (payload) => {
     const player = activePlayers[socket.id];
     if (!player) return;
@@ -846,21 +735,12 @@ io.on('connection', (socket) => {
     player.coins += earnedCoins;
     player.solo_games = (player.solo_games || 0) + 1;
     player.total_coins_earned = (player.total_coins_earned || 0) + earnedCoins;
-    if (payload && typeof payload.best_combo === 'number') {
-      player.best_combo = Math.max(player.best_combo || 0, payload.best_combo);
-    }
-    if (payload && typeof payload.avalanche_score === 'number') {
-      player.best_avalanche = Math.max(player.best_avalanche || 0, payload.avalanche_score);
-    }
+    if (payload && typeof payload.best_combo === 'number') player.best_combo = Math.max(player.best_combo || 0, payload.best_combo);
+    if (payload && typeof payload.avalanche_score === 'number') player.best_avalanche = Math.max(player.best_avalanche || 0, payload.avalanche_score);
     const unlockedTrophies = evaluateTrophies(player);
-    if (unlockedTrophies.length > 0) {
-      socket.emit('trophy_unlocked', unlockedTrophies.map(t => ({ id: Object.keys(TROPHY_CATALOG).find(k => TROPHY_CATALOG[k] === t), ...t })));
-    }
+    if (unlockedTrophies.length > 0) socket.emit('trophy_unlocked', unlockedTrophies.map(t => ({ id: Object.keys(TROPHY_CATALOG).find(k => TROPHY_CATALOG[k] === t), ...t })));
     lastMatchEarnings[socket.id] = earnedCoins;
-    if (perfection) {
-      player.unlocked_items = player.unlocked_items || [];
-      if (!player.unlocked_items.includes('achievement_perfection')) player.unlocked_items.push('achievement_perfection');
-    }
+    if (perfection) { player.unlocked_items = player.unlocked_items || []; if (!player.unlocked_items.includes('achievement_perfection')) player.unlocked_items.push('achievement_perfection'); }
     let triggerWheel = (globalEvents.jackpotEclair && Math.random() < 0.10);
     await savePlayerToSupabase(socket.id);
     socket.emit('player_registered', player);
@@ -871,15 +751,9 @@ io.on('connection', (socket) => {
     const player = activePlayers[socket.id];
     if (!player) return;
     const earnings = lastMatchEarnings[socket.id] || 0;
-    if (earnings > 0) {
-      player.coins += earnings;
-      lastMatchEarnings[socket.id] = 0;
-      await savePlayerToSupabase(socket.id);
-      socket.emit('player_registered', player);
-    }
+    if (earnings > 0) { player.coins += earnings; lastMatchEarnings[socket.id] = 0; await savePlayerToSupabase(socket.id); socket.emit('player_registered', player); }
   });
 
-  /* ---------- SUPPRESSION DE COMPTE ---------- */
   socket.on('delete_account', async (data) => {
     const player = activePlayers[socket.id];
     if (!player) return;
@@ -893,10 +767,7 @@ io.on('connection', (socket) => {
       await supabase.from('players').delete().eq('id', row.id);
       delete activePlayers[socket.id];
       socket.emit('delete_account_result', { ok: true });
-    } catch (e) {
-      console.error("Erreur suppression compte :", e);
-      socket.emit('delete_account_result', { ok: false });
-    }
+    } catch (e) { console.error("Erreur suppression compte :", e); socket.emit('delete_account_result', { ok: false }); }
   });
 
   /* ---------- ADMIN ---------- */
@@ -904,13 +775,8 @@ io.on('connection', (socket) => {
   socket.on('admin_auth', (password) => {
     if (socket.isAdmin) return;
     if (socket.adminAttempts >= 5) { socket.emit('admin_auth_fail', "Trop de tentatives."); return; }
-    if (password === ADMIN_PASSWORD) {
-      socket.isAdmin = true;
-      socket.emit('admin_auth_success', { events: globalEvents, schedules: eventSchedules });
-    } else {
-      socket.adminAttempts++;
-      socket.emit('admin_auth_fail', "Mot de passe administrateur incorrect !");
-    }
+    if (password === ADMIN_PASSWORD) { socket.isAdmin = true; socket.emit('admin_auth_success', { events: globalEvents, schedules: eventSchedules }); }
+    else { socket.adminAttempts++; socket.emit('admin_auth_fail', "Mot de passe administrateur incorrect !"); }
   });
 
   socket.on('admin_update_schedule', (schedulesData) => {
@@ -928,10 +794,7 @@ io.on('connection', (socket) => {
     socket.emit('admin_schedule_saved', eventSchedules);
   });
 
-  socket.on('admin_broadcast_message', (message) => {
-    if (!socket.isAdmin) return;
-    io.emit('global_announcement', message);
-  });
+  socket.on('admin_broadcast_message', (message) => { if (!socket.isAdmin) return; io.emit('global_announcement', message); });
 
   socket.on('admin_give_gift', async (data) => {
     if (!socket.isAdmin) return;
@@ -949,9 +812,7 @@ io.on('connection', (socket) => {
     } else {
       const cleanTarget = targetUsername.trim().toLowerCase();
       let found = null;
-      for (let sId in activePlayers) {
-        if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === cleanTarget) { found = sId; break; }
-      }
+      for (let sId in activePlayers) { if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === cleanTarget) { found = sId; break; } }
       if (found) {
         activePlayers[found][currency] = (activePlayers[found][currency] || 0) + amount;
         await savePlayerToSupabase(found);
@@ -978,15 +839,10 @@ io.on('connection', (socket) => {
       const t = matched[0];
       await supabase.from('players').update({ region: newRegion }).eq('id', t.id);
       for (let sId in activePlayers) {
-        if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === t.username.toLowerCase()) {
-          activePlayers[sId].region = newRegion;
-          io.to(sId).emit('player_registered', activePlayers[sId]);
-        }
+        if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === t.username.toLowerCase()) { activePlayers[sId].region = newRegion; io.to(sId).emit('player_registered', activePlayers[sId]); }
       }
       socket.emit('admin_region_result', { ok: true, username: t.username, region: newRegion });
-    } catch (e) {
-      socket.emit('admin_region_result', { ok: false, reason: 'error' });
-    }
+    } catch (e) { socket.emit('admin_region_result', { ok: false, reason: 'error' }); }
   });
 
   socket.on('admin_set_season', (seasonId) => {
@@ -1003,27 +859,17 @@ io.on('connection', (socket) => {
     socket.emit('admin_season_result', { ok: true, season: seasonNow.id });
   });
 
-    socket.on('admin_get_season_dates', () => {
-    if (!socket.isAdmin) return;
-    socket.emit('admin_season_dates', getSeasonDatesPublic());
-  });
-
+  socket.on('admin_get_season_dates', () => { if (!socket.isAdmin) return; socket.emit('admin_season_dates', getSeasonDatesPublic()); });
   socket.on('admin_set_season_dates', async (dates) => {
     if (!socket.isAdmin) return;
     applySeasonDates(dates);
     try { await supabase.from('settings').update({ season_dates: dates }).eq('id', 1); } catch (e) {}
-    // refreshe la saison courante de tous les joueurs
     const seasonNow = getCurrentSeason();
-    for (let sId in activePlayers) {
-      const p = activePlayers[sId];
-      p.current_season = seasonNow.id;
-      io.to(sId).emit('player_registered', p);
-    }
+    for (let sId in activePlayers) { const p = activePlayers[sId]; p.current_season = seasonNow.id; io.to(sId).emit('player_registered', p); }
     io.emit('seasons_updated', getSeasonDatesPublic());
     socket.emit('admin_season_result', { ok: true, season: seasonNow.id });
   });
 
-  /* ---------- DÉCONNEXION ---------- */
   socket.on('disconnect', async () => {
     leaveAllRooms(socket);
     const qIdx = matchmakingQueue.indexOf(socket.id);
@@ -1041,7 +887,7 @@ io.on('connection', (socket) => {
 });
 
 /* ============================================================
-FONCTIONS ROOM
+FONCTIONS ROOM / MATCH
 ============================================================ */
 function leaveAllRooms(socket) {
   let changed = false;
@@ -1055,29 +901,20 @@ function leaveAllRooms(socket) {
   if (changed) io.emit('rooms_list_changed');
 }
 
-/* ============================================================
-FONCTIONS MATCH
-============================================================ */
 function buildMatchCharges(playerObj) {
   const charges = {};
   if (!playerObj) return charges;
-  const loadout = (playerObj.equippedPowers && playerObj.equippedPowers.length > 0)
-    ? playerObj.equippedPowers
-    : (playerObj.equippedPower ? [playerObj.equippedPower] : []);
-  loadout.forEach(id => {
-    const stock = playerObj.inventory ? (playerObj.inventory[id] || 0) : 0;
-    if (stock > 0) charges[id] = Math.min((charges[id] || 0) + 1, stock);
-  });
+  const loadout = (playerObj.equippedPowers && playerObj.equippedPowers.length > 0) ? playerObj.equippedPowers : (playerObj.equippedPower ? [playerObj.equippedPower] : []);
+  loadout.forEach(id => { const stock = playerObj.inventory ? (playerObj.inventory[id] || 0) : 0; if (stock > 0) charges[id] = Math.min((charges[id] || 0) + 1, stock); });
   return charges;
 }
 
 function startMatchBetween(id1, id2, isRanked = false, isOnline = true, isTugOfWar = false) {
-  const p1 = activePlayers[id1] || { socketId: id1, username: "Joueur 1", avatar: 1, flag: "🇫🇷", points: 0 };
+  const p1 = activePlayers[id1] || { socketId: id1, username: "Joueur 1", avatar: 1, flag: "🇫", points: 0 };
   const p2 = activePlayers[id2] || { socketId: id2, username: "Joueur 2", avatar: 2, flag: "🇫🇷", points: 0 };
   const isExpressoActive = globalEvents.expressoMatch && isOnline && !isRanked && !isTugOfWar;
   const match = {
-    id1, id2,
-    timeLeft: isExpressoActive ? 20 : 30,
+    id1, id2, timeLeft: isExpressoActive ? 20 : 30,
     players: {
       [id1]: { target: 1, score: 0, pool: generatePool(1), charges: buildMatchCharges(activePlayers[id1]) },
       [id2]: { target: 1, score: 0, pool: generatePool(1), charges: buildMatchCharges(activePlayers[id2]) }
@@ -1113,10 +950,7 @@ function startMatchBetween(id1, id2, isRanked = false, isOnline = true, isTugOfW
 function startCatchMatch(id1, id2, theme) {
   const p1 = activePlayers[id1] || { socketId: id1, username: "Joueur 1", avatar: 1, flag: "🇫🇷" };
   const p2 = activePlayers[id2] || { socketId: id2, username: "Joueur 2", avatar: 2, flag: "🇫🇷" };
-  const match = {
-    id1, id2, timeLeft: 30, isCatch: true, catchTheme: theme, ended: false, rematchVotes: {},
-    players: { [id1]: { score: 0 }, [id2]: { score: 0 } }
-  };
+  const match = { id1, id2, timeLeft: 30, isCatch: true, catchTheme: theme, ended: false, rematchVotes: {}, players: { [id1]: { score: 0 }, [id2]: { score: 0 } } };
   activeMatches[id1] = match;
   activeMatches[id2] = match;
   io.to(id1).emit('start_catch', { theme, opponent: p2, timeLeft: 30 });
@@ -1141,7 +975,7 @@ function generatePool(target) {
 }
 
 /* ============================================================
-PASS REWARDS (multi-saisons)
+PASS REWARDS
 ============================================================ */
 function applyPassReward(p, tier, track, seasonId) {
   p.inventory = p.inventory || {};
@@ -1239,13 +1073,12 @@ function applyPassRewardS2(p, tier, track) {
     else if (tier === 27) p.inventory['nova'] = (p.inventory['nova'] || 0) + 4;
     else if (tier === 28) p.coins = (p.coins || 0) + 400;
     else if (tier === 29) p.coins = (p.coins || 0) + 500;
-        else if (tier === 30) { p.coins = (p.coins || 0) + 1000; if (!p.unlocked_items.includes('avatar_s2_citrouille')) p.unlocked_items.push('avatar_s2_citrouille'); if (!p.unlocked_items.includes('title_roi_halloween')) p.unlocked_items.push('title_roi_halloween'); }
+    else if (tier === 30) { p.coins = (p.coins || 0) + 1000; if (!p.unlocked_items.includes('avatar_s2_citrouille')) p.unlocked_items.push('avatar_s2_citrouille'); if (!p.unlocked_items.includes('title_roi_halloween')) p.unlocked_items.push('title_roi_halloween'); }
   }
 }
 
 function applyPassRewardS3(p, tier, track) {
   if (track === 'free') {
-    // 🎁 CADEAU DE NOËL : boule de neige pour TOUS au palier 15 (gratuit + premium)
     if (tier === 15) { if (!p.unlocked_items.includes('avatar_s3_boule')) p.unlocked_items.push('avatar_s3_boule'); }
     else if ([1, 3, 7, 11, 13, 16, 18, 21, 23, 26, 28].includes(tier)) {
       const coinMap = { 1: 50, 3: 50, 7: 50, 11: 60, 13: 70, 16: 80, 18: 90, 21: 110, 23: 120, 26: 130, 28: 140 };
@@ -1329,16 +1162,11 @@ async function endMatch(id1, id2, matchData, isRanked) {
     const p1 = activePlayers[id1];
     const p2 = activePlayers[id2];
     if (p1 && p2) {
-      if (winnerId === id1) {
-        p1.wins = (p1.wins || 0) + 1; p1.points = (p1.points || 0) + 25; p2.losses = (p2.losses || 0) + 1;
-        if (!globalEvents.rankShield) p2.points = Math.max(0, (p2.points || 0) - 15);
-      } else if (winnerId === id2) {
-        p2.wins = (p2.wins || 0) + 1; p2.points = (p2.points || 0) + 25; p1.losses = (p1.losses || 0) + 1;
-        if (!globalEvents.rankShield) p1.points = Math.max(0, (p1.points || 0) - 15);
-      }
+      if (winnerId === id1) { p1.wins = (p1.wins || 0) + 1; p1.points = (p1.points || 0) + 25; p2.losses = (p2.losses || 0) + 1; if (!globalEvents.rankShield) p2.points = Math.max(0, (p2.points || 0) - 15); }
+      else if (winnerId === id2) { p2.wins = (p2.wins || 0) + 1; p2.points = (p2.points || 0) + 25; p1.losses = (p1.losses || 0) + 1; if (!globalEvents.rankShield) p1.points = Math.max(0, (p1.points || 0) - 15); }
     }
   }
-    if (matchData.isCatch && !matchData.isTugOfWar) {
+  if (matchData.isCatch && !matchData.isTugOfWar) {
     const p1 = activePlayers[id1];
     const p2 = activePlayers[id2];
     if (p1 && p2) {
@@ -1351,15 +1179,9 @@ async function endMatch(id1, id2, matchData, isRanked) {
     if (!p) continue;
     p.matches_played = (p.matches_played || 0) + 1;
     const isWinner = (winnerId === sId);
-    if (isWinner) {
-      p.win_streak = (p.win_streak || 0) + 1;
-    } else {
-      p.win_streak = 0;
-    }
+    if (isWinner) { p.win_streak = (p.win_streak || 0) + 1; } else { p.win_streak = 0; }
     const unlockedTrophies = evaluateTrophies(p);
-    if (unlockedTrophies.length > 0) {
-      io.to(sId).emit('trophy_unlocked', unlockedTrophies.map(t => ({ id: Object.keys(TROPHY_CATALOG).find(k => TROPHY_CATALOG[k] === t), ...t })));
-    }
+    if (unlockedTrophies.length > 0) io.to(sId).emit('trophy_unlocked', unlockedTrophies.map(t => ({ id: Object.keys(TROPHY_CATALOG).find(k => TROPHY_CATALOG[k] === t), ...t })));
   }
   await savePlayerToSupabase(id1);
   await savePlayerToSupabase(id2);
