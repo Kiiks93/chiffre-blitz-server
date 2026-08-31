@@ -252,21 +252,54 @@ function spawnUnlockBurst(card, icon) {
     setTimeout(() => p.remove(), 900);
   }
 }
+const SPECIAL_REWARDS = {
+  s1: { free:{30:'title_supreme'}, premium:{1:'title_stalker',3:'title_felin',4:'frame_silver',7:'title_neon',10:'theme_neon',13:'title_spectre',15:'avatar_lottie_palier15',20:'frame_chroma',23:'title_supreme',25:'avatar_lottie_palier30',30:'avatar_tigre'} },
+  s2: { free:{30:'title_esprit_halloween'}, premium:{1:'title_fantome',3:'title_danse_macabre',4:'frame_osseux',7:'title_citrouille',10:'theme_citrouille',13:'title_spectre_automne',15:'avatar_s2_squelette',20:'frame_fantome',24:'theme_fantome',25:'avatar_s2_chauve',30:'avatar_s2_citrouille'} },
+  s3: { free:{15:'avatar_s3_boule',30:'title_esprit_noel'}, premium:{1:'title_lutin',3:'title_traineau',4:'frame_bonbon',5:'avatar_s3_bonhomme',7:'title_rennes',10:'theme_bonbon',13:'title_assistant_noel',15:'avatar_s3_boule',20:'frame_guirlande',24:'theme_sapin',25:'avatar_s3_perenoel',28:'title_magie_noel',29:'frame_lutin',30:'theme_lutin'} }
+};
+const THEME_GRAD = {
+  theme_neon:'linear-gradient(135deg,#ff007f,#00e5ff,#76ff03)', theme_glacial:'linear-gradient(135deg,#0a2a4d,#0ea5c9)',
+  theme_eclair:'linear-gradient(135deg,#282805,#fff34d)', theme_obsidian:'linear-gradient(135deg,#0a050a,#23050f)',
+  theme_alt:'linear-gradient(135deg,#f8b500,#ff8a00)', theme_citrouille:'linear-gradient(135deg,#1a0d00,#ff8a00)',
+  theme_fantome:'linear-gradient(135deg,#1a0033,#7b2ff7)', theme_bonbon:'linear-gradient(135deg,#ff4b4b,#fff)',
+  theme_sapin:'linear-gradient(135deg,#0a3d1f,#1a7a3c)', theme_lutin:'linear-gradient(135deg,#c62828,#ffd23b)'
+};
+function avatarPreviewHTML(id) {
+  if (id==='avatar_tigre') return `<video class="tft-avatar-video" src="tiger-siberien.mp4" autoplay loop muted playsinline style="width:44px;height:44px;border-radius:50%;"></video>`;
+  if (id==='avatar_s2_chauve') return `<video class="tft-avatar-video" src="bat-halloween.mp4" autoplay loop muted playsinline style="width:44px;height:44px;border-radius:50%;"></video>`;
+  const lm = { avatar_lottie_palier15:'cat-assistant.json', avatar_lottie_palier30:'black-rainbow-cat.json', avatar_s2_squelette:'squelette-danse.json', avatar_s2_citrouille:'citrouille-chateau.json', avatar_s3_bonhomme:'bonhomme-de-neige-avatar.json', avatar_s3_boule:'boule-de-neige-avatar.json', avatar_s3_perenoel:'pere-noel-avatar.json' };
+  if (lm[id]) return `<div class="lottie-avatar-badge" data-lottie-url="${lm[id]}" style="width:44px;height:44px;"></div>`;
+  return '🎁';
+}
+function rewardVisualHTML(seasonId, tier, track, text) {
+  const item = (SPECIAL_REWARDS[seasonId] && SPECIAL_REWARDS[seasonId][track] && SPECIAL_REWARDS[seasonId][track][tier]) || null;
+  if (item) {
+    if (item.startsWith('avatar_')) return `<div class="bp-visual">${avatarPreviewHTML(item)}</div>`;
+    if (item.startsWith('frame_')) return `<div class="bp-visual"><div class="tft-avatar-container ${getFrameClass(item)}" style="width:40px;height:40px;">⭐</div></div>`;
+    if (item.startsWith('theme_')) return `<div class="bp-visual"><div class="bp-swatch" style="background:${THEME_GRAD[item]||'linear-gradient(135deg,#522d80,#2a1845)'}"></div></div>`;
+    if (item.startsWith('title_')) return `<div class="bp-visual bp-title">${TITLE_DISPLAY_NAMES[item]||item}</div>`;
+  }
+  const em = text.match(/\p{Extended_Pictographic}/u);
+  const emoji = em ? em[0] : '🎁';
+  const label = text.replace(emoji, '').trim();
+  return `<div class="bp-visual"><div class="bp-emoji">${emoji}</div><div class="bp-label">${label}</div></div>`;
+}
 function renderBlitzPass() {
   const container = document.getElementById("blitz-pass-container");
   const season = getActiveSeason();
   const seasonData = (myProfile.claimedPassTiers || {})[season.id] || {};
   const isPremium = !!seasonData.premium || (season.id === "s1" && myProfile.blitzPassPremium);
   const claimed = seasonData;
-  container.innerHTML = `<div class="bp-header-banner">
-    <div style="font-size:13px; font-weight:900; color:#f8b500; margin-bottom:2px;">${season.emoji} PASSE DE SAISON : ${season.name}</div>
-    <div style="font-size:9px; color:#aaa; margin-bottom:4px;">📅 ${season.start} → ${season.end}</div>
-    <div style="font-size:10px; color:#ccc; margin-bottom:6px;">${isPremium ? "✨ Passe Premium Actif !" : "Débloque le Passe Premium pour 1000 🪙"}</div>
-    ${!isPremium ? `<button class="btn-main btn-gold" onclick="buyBlitzPassPremium()" style="padding:6px 10px; font-size:11px; margin:0 auto; width:auto;">Acheter le Passe Premium (1000 🪙)</button>` : `<div style="color:#00ff88; font-weight:bold; font-size:10px;">Statut : VIP / Premium</div>`}</div>`;
-  if (!season.tiers || season.tiers.length === 0) {
-    container.innerHTML += `<div style="text-align:center; color:#aaa; padding:20px; font-size:12px; font-weight:bold;">${season.emoji} Le contenu de la saison ${season.name} arrive bientôt !</div>`;
-    return;
-  }
+  col.innerHTML = `
+      <div class="bp-cell bp-prem ${isPremClaimed ? 'claimed' : ''}">
+        ${rewardVisualHTML(season.id, t.tier, 'premium', t.premium)}
+        <button class="power-btn ${isPremClaimed ? 'active' : 'equip'}" style="font-size:10px;padding:3px;" ${premDisabled ? 'disabled' : ''} onclick="claimPassReward(${t.tier},'premium')">${isPremClaimed ? '✔' : '⭐'}</button>
+      </div>
+      <div class="bp-tier-num">${t.tier}</div>
+      <div class="bp-cell bp-free ${isFreeClaimed ? 'claimed' : ''}">
+        ${rewardVisualHTML(season.id, t.tier, 'free', t.free)}
+        <button class="power-btn ${isFreeClaimed ? 'active' : 'equip'}" style="font-size:10px;padding:3px;" ${isFreeClaimed ? 'disabled' : ''} onclick="claimPassReward(${t.tier},'free')">${isFreeClaimed ? '✔' : '🟢'}</button>
+      </div>`;
   const scroll = document.createElement("div");
   scroll.className = "bp-track-scroll";
   season.tiers.forEach(t => {
@@ -288,6 +321,7 @@ function renderBlitzPass() {
     scroll.appendChild(col);
   });
   container.appendChild(scroll);
+  setTimeout(() => { if (typeof initAllLottieBadges === "function") initAllLottieBadges(); }, 60);
   updatePassSeasonLabels();
 }
 function buyBlitzPassPremium() { if (myProfile.coins < 1000) { showNotificationToast(i18n[currentLang].not_enough_coins, "announcement"); return; } socket.emit("buy_blitz_pass"); }
