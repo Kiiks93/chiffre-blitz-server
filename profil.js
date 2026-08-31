@@ -126,6 +126,21 @@ function getFrameClass(equippedFrame) {
   };
   return FRAME_CLASS_MAP[equippedFrame] || "";
 }
+
+function equipFromSelect(cat, val) {
+  if (!myProfile.inventory) myProfile.inventory = {};
+  if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
+  if (val) {
+    myProfile.inventory.__equipped[cat] = val;
+    localStorage.setItem('cb_equipped_' + cat, val);
+    if (socket.connected) socket.emit('equip_cosmetic', val);
+  } else {
+    delete myProfile.inventory.__equipped[cat];
+    localStorage.removeItem('cb_equipped_' + cat);
+    if (socket.connected) socket.emit('equip_cosmetic', 'none_' + cat);
+  }
+}
+
 function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
   const profile = playerObj || myProfile;
   const equippedAvatar = overrideAvatarType || (profile.inventory && profile.inventory.__equipped && profile.inventory.__equipped.avatar);
@@ -435,7 +450,7 @@ function renderProfileCustomizationMenus() {
       if (equippedTitle === tId || equippedTitle === displayName) opt.selected = true;
       titleSelect.appendChild(opt);
     });
-    titleSelect.onchange = () => {};
+    titleSelect.onchange = () => { equipFromSelect('title', titleSelect.value); };
   }
   const frameSelect = document.getElementById("frame-input");
   const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
@@ -451,7 +466,7 @@ function renderProfileCustomizationMenus() {
       if (equippedFrame === fId) opt.selected = true;
       frameSelect.appendChild(opt);
     });
-    frameSelect.onchange = () => { updateProfilePreview(); };
+    titleSelect.onchange = () => { equipFromSelect('title', titleSelect.value); };
   }
   const themeSelect = document.getElementById("theme-input");
   const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
@@ -464,16 +479,10 @@ function renderProfileCustomizationMenus() {
       if (equippedTheme === thId) opt.selected = true;
       themeSelect.appendChild(opt);
     });
-    themeSelect.onchange = () => { updateProfilePreview(); };
+    themeSelect.onchange = () => { equipFromSelect('theme', themeSelect.value); };
   }
   renderProfileAvatarSelector();
   ensurePackSelector();
-  const holder = document.getElementById('frame-input')?.parentElement;
-  if (holder && !document.getElementById('cp-open-btn')) {
-    const b=document.createElement('button'); b.id='cp-open-btn'; b.className='btn-main btn-blue';
-    b.style.cssText='width:100%;margin:6px 0;'; b.innerText='👁️ Prévisualiser (cadre / titre)';
-    b.onclick=openCosmeticPreview; holder.appendChild(b);
-  }
   renderProfilePackSelector();
 }
 
@@ -822,17 +831,6 @@ function saveProfileFromModal() {
   myProfile.flag = getFlagEmoji(flagVal);
   if (!myProfile.inventory) myProfile.inventory = {};
   if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
-  if (selectedTitleId) { myProfile.inventory.__equipped.title = selectedTitleId; localStorage.setItem("cb_equipped_title", selectedTitleId); socket.emit("equip_cosmetic", selectedTitleId); }
-  else { delete myProfile.inventory.__equipped.title; localStorage.removeItem("cb_equipped_title"); socket.emit("equip_cosmetic", "none_title"); }
-  if (selectedThemeId) {
-    myProfile.inventory.__equipped.theme = selectedThemeId;
-    localStorage.setItem("cb_equipped_theme", selectedThemeId);
-    socket.emit("equip_cosmetic", selectedThemeId);
-  } else {
-    delete myProfile.inventory.__equipped.theme;
-    localStorage.removeItem("cb_equipped_theme");
-    socket.emit("equip_cosmetic", "none_theme");
-  }
   if (activeAvatarChoice && activeAvatarChoice !== "standard") { myProfile.inventory.__equipped.avatar = activeAvatarChoice; socket.emit("equip_cosmetic", activeAvatarChoice); }
   else { delete myProfile.inventory.__equipped.avatar; socket.emit("equip_cosmetic", "none"); }
   saveLocalPreferences();
