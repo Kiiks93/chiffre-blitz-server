@@ -1289,3 +1289,23 @@ PASSE DE SAISON — DA "BRAWL STARS" (restauration, priorité max)
   .bp-tier-num { order: 2; margin: 0; }
   .bp-cell.bp-prem { width: 48%; min-height: 120px; order: 3; transform: rotate(1.5deg); }
 }
+/* ============================================================
+PASS : APERÇUS PLUS GRANDS (meilleure lisibilité)
+============================================================ */
+.bp-tier-col { flex: 0 0 185px; }
+.bp-cell.bp-prem { min-height: 200px; }
+.bp-cell.bp-free { min-height: 120px; }
+
+.bp-visual { min-height: 70px; gap: 5px; }
+.bp-emoji { font-size: 40px; filter: drop-shadow(0 0 8px rgba(255,255,255,.5)); }
+.bp-swatch { width: 60px; height: 60px; border-radius: 10px; border-width: 3px; }
+
+/* Avatars animés / vidéos / cadres dans les tuiles */
+.bp-visual .lottie-avatar-badge { width: 60px !important; height: 60px !important; }
+.bp-visual .tft-avatar-video { width: 60px !important; height: 60px !important; }
+.bp-visual .tft-avatar-container { width: 56px !important; height: 56px !important; }
+
+/* Textes sous l'aperçu un peu plus lisibles */
+.bp-label { font-size: 9px; color: #fff; }
+.bp-type { font-size: 10px; letter-spacing: 2px; }
+.bp-title { font-size: 10px; }
