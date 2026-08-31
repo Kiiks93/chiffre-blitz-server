@@ -215,6 +215,23 @@ function getThemeDisplayNames() {
   };
 }
 
+function getPackDisplayNames() {
+  const fr = currentLang === "fr";
+  return {
+    pack_standard: "🔰 " + (fr ? "Standard" : "Standard"),
+    pack_haute_tension: "⚡ " + (fr ? "Haute Tension" : "High Voltage"),
+    pack_cryo: "🧊 " + (fr ? "Cryo" : "Cryo"),
+    pack_solaire: "✨ " + (fr ? "Doré" : "Gold"),
+    pack_obsidienne: "🖤 " + (fr ? "Obsidienne" : "Obsidian"),
+    pack_neon: "🌈 " + (fr ? "Néon" : "Neon"),
+    pack_halloween_citrouille: "🎃 " + (fr ? "Pack Lanterne" : "Lantern Pack"),
+    pack_halloween_fantome: "👻 " + (fr ? "Pack Fantôme" : "Ghost Pack"),
+    pack_noel_bonbon: "🍭 " + (fr ? "Pack Bonbon" : "Candy Pack"),
+    pack_noel_sapin: "🎄 " + (fr ? "Pack Sapin" : "Tree Pack"),
+    pack_noel_lutin: "🧝 " + (fr ? "Pack Lutin" : "Elf Pack")
+  };
+}
+
 function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
   const profile = playerObj || myProfile;
   const equippedAvatar = overrideAvatarType || (profile.inventory && profile.inventory.__equipped && profile.inventory.__equipped.avatar);
@@ -404,13 +421,14 @@ function renderProfilePackSelector() {
   const packSelect = document.getElementById("pack-input");
   if (!packSelect) return;
   const unlocked = myProfile.unlocked_items || [];
-  packSelect.innerHTML = `<option value="">🎁 Packs (grille + cadre)</option>`;
+  const PDN = getPackDisplayNames();
+  packSelect.innerHTML = `<option value="">🎁 ${currentLang === "fr" ? "Packs (grille + cadre)" : "Packs (grid + frame)"}</option>`;
   PACKS_LIST.forEach(pack => {
   const required = [pack.theme, pack.frame].filter(x => x !== "");
   const owned = pack.id === "pack_standard" ? true : required.every(i => unlocked.includes(i));
   const opt = document.createElement("option");
   opt.value = pack.id;
-  opt.innerText = (owned ? "🎁 " : "🔒 ") + pack.name;
+  opt.innerText = (owned ? "🎁 " : "🔒 ") + (PDN[pack.id] || pack.name);
   packSelect.appendChild(opt);
 });
 }
