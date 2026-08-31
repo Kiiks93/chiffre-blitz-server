@@ -94,6 +94,7 @@ const i18n = {
     account_create: "➕ Créer un nouveau compte", account_delete: "🗑️ Supprimer mon compte",
     account_login_desc: "Entre ton pseudo + ton code secret.<br>Si le compte existe → connexion. Sinon → création.",
     account_pseudo_ph: "Pseudo", account_code_ph: "🔒 Code secret (4 min)", account_login_btn: "🔓 Accéder à mon compte ⚡",
+    pass_title: "🎫 PASSE DE SAISON", room_name_ph: "NOM DU SALON", room_pass_ph: "MOT DE PASSE (Optionnel)", room_code_ph: "CODE DU SALON",
     powers: {
       spotlight: { name: "💡 Projecteur", desc: "Révèle la bonne tuile pendant 2s. Zéro hésitation." },
       freeze: { name: "⏳ Blocage du Temps", desc: "Gèle le chrono 3s. Respire, tu as le temps." },
@@ -200,6 +201,7 @@ const i18n = {
     account_create: "➕ Create a new account", account_delete: "🗑️ Delete my account",
     account_login_desc: "Enter your pseudo + secret code.<br>If the account exists → login. Else → creation.",
     account_pseudo_ph: "Pseudo", account_code_ph: "🔒 Secret code (4 min)", account_login_btn: "🔓 Access my account ⚡",
+    pass_title: "🎫 SEASON PASS", room_name_ph: "ROOM NAME", room_pass_ph: "PASSWORD (Optional)", room_code_ph: "ROOM CODE",
     powers: {
       spotlight: { name: "💡 Spotlight", desc: "Reveals the correct tile for 2s. Zero hesitation." },
       freeze: { name: "⏳ Time Freeze", desc: "Freezes the timer for 3s. Breathe, you've got time." },
@@ -237,21 +239,20 @@ function applyTranslations() {
     const key = el.getAttribute("data-i18n");
     if (d[key]) el.innerText = d[key];
   });
-  // Traductions complémentaires (éléments sans data-i18n)
   const byId = {
-    "lb-cat-points": d.lb_cat_points,
-    "lb-cat-trophies": d.lb_cat_trophies,
-    "lb-cat-coins": d.lb_cat_coins,
-    "lb-cat-combined": d.lb_cat_combined,
+    "lb-cat-points": d.lb_cat_points, "lb-cat-trophies": d.lb_cat_trophies,
+    "lb-cat-coins": d.lb_cat_coins, "lb-cat-combined": d.lb_cat_combined,
     "friend-tab-all": d.friends_btn
   };
   for (const id in byId) { const el = document.getElementById(id); if (el) el.innerText = byId[id]; }
-  const friendsTitle = document.querySelector("#modal-friends h2");
-  if (friendsTitle) friendsTitle.innerText = d.friends_center_title;
-  const addInput = document.getElementById("input-add-friend");
-  if (addInput) addInput.placeholder = d.friends_placeholder;
-  const trophyLabel = document.querySelector(".trophy-room-label");
-  if (trophyLabel) trophyLabel.innerText = d.trophy_room_btn;
-  const langBtn = document.getElementById("lang-btn");
-  if (langBtn) langBtn.innerText = (currentLang === "fr") ? "ENG" : "FR";
+  const friendsTitle = document.querySelector("#modal-friends h2"); if (friendsTitle) friendsTitle.innerText = d.friends_center_title;
+  const addInput = document.getElementById("input-add-friend"); if (addInput) addInput.placeholder = d.friends_placeholder;
+  const trophyLabel = document.querySelector(".trophy-room-label"); if (trophyLabel) trophyLabel.innerText = d.trophy_room_btn;
+  const passTitle = document.querySelector("#modal-blitz-pass h2"); if (passTitle) passTitle.innerText = d.pass_title;
+  const passClose = document.querySelector("#modal-blitz-pass .btn-secondary"); if (passClose) passClose.innerText = d.close;
+  const rn = document.getElementById("custom-room-name"); if (rn) rn.placeholder = d.room_name_ph;
+  const rp = document.getElementById("custom-room-pass"); if (rp) rp.placeholder = d.room_pass_ph;
+  const jc = document.getElementById("join-room-code-input"); if (jc) jc.placeholder = d.room_code_ph;
+  const jp = document.getElementById("join-room-pass-input"); if (jp) jp.placeholder = d.room_pass_ph;
+  const langBtn = document.getElementById("lang-btn"); if (langBtn) langBtn.innerText = (currentLang === "fr") ? "ENG" : "FR";
 }
