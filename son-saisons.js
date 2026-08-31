@@ -38,6 +38,12 @@ SoundEngine.startMusic = function(mode) {
     if (ctx !== season) { localStorage.removeItem('cb_music_season'); localStorage.removeItem('cb_music_season_ctx'); }
     else if (getReleasedSeasons().some(s => s.id === pref)) season = pref;
   }
+  const isGame = (mode !== "menu");
+  if (season === "s2") { this.startMusicSeasonal(isGame ? "s2game" : "s2menu"); return; }
+  if (season === "s3") { this.startMusicSeasonal(isGame ? "s3game" : "s3menu"); return; }
+  this._originalStartMusic.call(this, mode);
+};
+
 /* ============================================================
 HALLOWEEN MENU : chill-horreur LONG (~51s, 2 moitiés)
 ============================================================ */
@@ -284,9 +290,7 @@ SoundEngine.tickNoelMenu = function(step) {
     g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.05, t + 0.1); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.8);
     o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 1.8);
   }
-  // Arpèges fluides aux contretemps
   if ([2, 6, 10, 14].includes(inBar)) this._voice(t, chord.pad[Math.floor(inBar / 2) % 3], 0.022, 1.0);
-  // Mélodie legato (durée longue = ça se fond)
   const m = seq[bar % 8];
   if (m && m[inBar] !== undefined) this._voice(t, m[inBar], 0.06, 1.3);
 };
@@ -330,6 +334,7 @@ SoundEngine.tickNoelGame = function(step) {
   const m = seq[bar % 8];
   if (m && m[inBar] !== undefined) this._voice(t, m[inBar], 0.055, 0.9);
 };
+
 /* ============================================================
 HELPERS (réutilisables)
 ============================================================ */
@@ -460,8 +465,6 @@ function playLutinSound() {
     if (!ctx) return;
     if (ctx.state === "suspended") ctx.resume();
     const t = ctx.currentTime;
-    
-    // Pattern "hi hi hi hi" rapide et aigu
     const laughPattern = [
       { freq: 2200, time: 0.0, dur: 0.08 },
       { freq: 2400, time: 0.12, dur: 0.08 },
@@ -470,21 +473,17 @@ function playLutinSound() {
       { freq: 2200, time: 0.55, dur: 0.08 },
       { freq: 2400, time: 0.67, dur: 0.08 }
     ];
-    
     laughPattern.forEach(note => {
       const o = ctx.createOscillator(), g = ctx.createGain();
       o.type = "square";
       o.frequency.setValueAtTime(note.freq, t + note.time);
       o.frequency.exponentialRampToValueAtTime(note.freq * 0.9, t + note.time + note.dur);
-      
       g.gain.setValueAtTime(0.09, t + note.time);
       g.gain.exponentialRampToValueAtTime(0.0001, t + note.time + note.dur);
-      
       const bp = ctx.createBiquadFilter();
       bp.type = "bandpass";
       bp.frequency.setValueAtTime(note.freq, t + note.time);
       bp.Q.setValueAtTime(12, t + note.time);
-      
       o.connect(bp);
       bp.connect(g);
       g.connect(ctx.destination);
@@ -493,11 +492,12 @@ function playLutinSound() {
     });
   } catch (e) {}
 }
+
 /* ============================================================
-SÉLECTEUR DE BANDE SON (sans spoiler)
+SÉLECTEUR DE BANDE SON (sans spoiler) — TRADUIT
 ============================================================ */
 function getReleasedSeasons() {
-  const list = (typeof SEASONS_CLIENT !== "undefined") ? SEASONS_CLIENT : [];
+  const list = (typeof getSeasonsClient !== "undefined") ? getSeasonsClient() : ((typeof SEASONS_CLIENT !== "undefined") ? SEASONS_CLIENT : []);
   const now = new Date();
   return list.filter(s => { const [d, m, y] = s.start.split("/").map(Number); return now >= new Date(y, m - 1, d); });
 }
@@ -507,13 +507,8 @@ function openMusicChooser() {
   const released = getReleasedSeasons();
   const cur = localStorage.getItem('cb_music_season') || 'auto';
   let btns = `<button class="btn-main ${cur === 'auto' ? 'btn-gold' : 'btn-blue'}" onclick="setMusicSeason('auto')">🎵 ${d.music_auto}</button>`;
-  released.forEach(s => {
-    const num = s.id.replace('s', '');
-    btns += `<button class="btn-main ${cur === s.id ? 'btn-gold' : 'btn-blue'}" onclick="setMusicSeason('${s.id}')">${s.emoji} ${d.music_season_label} ${num} — ${s.name}</button>`;
-  });
-  const ov = document.createElement('div');
-  ov.id = 'music-chooser';
-  ov.className = 'modal-overlay';
+  released.forEach(s => { const num = s.id.replace('s', ''); btns += `<button class="btn-main ${cur === s.id ? 'btn-gold' : 'btn-blue'}" onclick="setMusicSeason('${s.id}')">${s.emoji} ${d.music_season_label} ${num} — ${s.name}</button>`; });
+  const ov = document.createElement('div'); ov.id = 'music-chooser'; ov.className = 'modal-overlay';
   ov.innerHTML = `<div class="modal-card" style="max-width:320px;text-align:center;">
     <h2 style="color:#00d2ff;margin:0 0 8px 0;">${d.music_title}</h2>
     <p style="font-size:10px;color:#aaa;margin-bottom:10px;">${d.music_no_spoiler}</p>
