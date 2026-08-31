@@ -615,6 +615,7 @@ function injectAccountGear() {
   }
 }
 function openAccountModal() {
+  const d = i18n[currentLang];
   let modal = document.getElementById('modal-account');
   if (!modal) {
     modal = document.createElement('div');
@@ -622,11 +623,14 @@ function openAccountModal() {
     modal.className = 'modal-overlay';
     modal.innerHTML = `
       <div class="modal-card" style="max-width:340px;">
-        <h3 style="color:#00d2ff; margin:0 0 10px 0; text-align:center;">⚙️ MON COMPTE</h3>
+        <h3 id="account-title" style="color:#00d2ff; margin:0 0 10px 0; text-align:center;">${d.account_title}</h3>
         <div id="account-content"></div>
-        <button class="btn-secondary" onclick="closeAccountModal()">Fermer</button>
+        <button class="btn-secondary" onclick="closeAccountModal()">${d.close}</button>
       </div>`;
     document.body.appendChild(modal);
+  } else {
+    const t = modal.querySelector('#account-title'); if (t) t.innerText = d.account_title;
+    const cb = modal.querySelector('.btn-secondary'); if (cb) cb.innerText = d.close;
   }
   renderAccountContent();
   modal.style.display = 'flex';
@@ -636,22 +640,23 @@ function closeAccountModal() {
   if (modal) modal.style.display = 'none';
 }
 function renderAccountContent() {
+  const d = i18n[currentLang];
   const content = document.getElementById('account-content');
   if (!content) return;
   const connected = isProfileValid() && localStorage.getItem('cb_secret');
   const inputStyle = 'width:100%; background:#0f051d; color:#fff; border:2px solid #00d2ff; border-radius:8px; padding:8px; font-size:13px; margin-bottom:6px; box-sizing:border-box; text-align:center;';
   if (!connected) {
     content.innerHTML = `
-      <p style="font-size:10px; color:#aaa; text-align:center;">Entre ton pseudo + ton code secret.<br>Si le compte existe → connexion. Sinon → création.</p>
-      <input id="account-pseudo" type="text" placeholder="Pseudo" style="${inputStyle}">
-      <input id="account-code" type="password" placeholder="🔒 Code secret (4 min)" style="${inputStyle}">
-      <button class="btn-main btn-blue" onclick="submitAccountForm()">🔓 Accéder à mon compte ⚡</button>`;
+      <p style="font-size:10px; color:#aaa; text-align:center;">${d.account_login_desc}</p>
+      <input id="account-pseudo" type="text" placeholder="${d.account_pseudo_ph}" style="${inputStyle}">
+      <input id="account-code" type="password" placeholder="${d.account_code_ph}" style="${inputStyle}">
+      <button class="btn-main btn-blue" onclick="submitAccountForm()">${d.account_login_btn}</button>`;
   } else {
     content.innerHTML = `
-      <p style="font-size:12px; text-align:center;">Connecté : <b style="color:#00ff88;">${myProfile.username}</b></p>
-      <button class="btn-main btn-blue" onclick="switchAccount()" style="margin-bottom:6px;">🔑 Changer de compte</button>
-      <button class="btn-main btn-gold" onclick="startCreateAccount()" style="margin-bottom:6px;">➕ Créer un nouveau compte</button>
-      <button class="btn-main" onclick="askDeleteAccount()" style="background:linear-gradient(45deg,#ff416c,#7a0026);">🗑️ Supprimer mon compte</button>`;
+      <p style="font-size:12px; text-align:center;">${d.account_connected} <b style="color:#00ff88;">${myProfile.username}</b></p>
+      <button class="btn-main btn-blue" onclick="switchAccount()" style="margin-bottom:6px;">${d.account_change}</button>
+      <button class="btn-main btn-gold" onclick="startCreateAccount()" style="margin-bottom:6px;">${d.account_create}</button>
+      <button class="btn-main" onclick="askDeleteAccount()" style="background:linear-gradient(45deg,#ff416c,#7a0026);">${d.account_delete}</button>`;
   }
 }
 function submitAccountForm() {
