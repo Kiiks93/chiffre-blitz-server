@@ -209,6 +209,13 @@ label {
 </div>
 
 <div id="admin-dashboard-section" style="display:none;">
+  <div class="card">
+    <h2 style="color:#38ef7d;">📜 Journal des transactions</h2>
+    <div class="card-desc">Vérifie l'historique d'un joueur (pertes, achats, gains, ajustements).</div>
+    <input type="text" id="admin-log-username" placeholder="Pseudo (vide = tout le monde)">
+    <button class="btn-green" onclick="adminGetLogs()">Consulter 🔍</button>
+    <div id="admin-logs" style="max-height:260px; overflow-y:auto; font-size:10px; margin-top:8px;"></div>
+  </div>
 
   <div class="card">
     <h2 style="color:#00d2ff;">📢 Diffuseur d'Annonce</h2>
@@ -542,6 +549,21 @@ function saveSeasonDates() {
   }
   alert('✅ Dates des saisons mises à jour !');
 }
+function adminGetLogs() {
+  socket.emit('admin_get_logs', { username: document.getElementById('admin-log-username').value });
+}
+socket.on('admin_logs_data', (d) => {
+  const el = document.getElementById('admin-logs');
+  if (!el) return;
+  el.innerHTML = (d.rows || []).map(r =>
+    `<div style="border-bottom:1px solid #333; padding:4px 2px;">
+      <b style="color:#00d2ff;">${r.username}</b>
+      <span style="color:#f8b500;">[${r.action}]</span> ${r.detail || ''}
+      ${r.amount ? `<b style="color:${r.amount >= 0 ? '#00ff88' : '#ff4b2b'};">${r.amount > 0 ? '+' : ''}${r.amount} ${r.currency || ''}</b>` : ''}
+      → sol:${r.balance_after ?? '-'}
+      <i style="color:#777;">${new Date(r.created_at).toLocaleString()}</i>
+    </div>`).join('') || 'Aucun log trouvé.';
+});
 </script>
 
 </body>
