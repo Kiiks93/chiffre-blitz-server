@@ -356,6 +356,12 @@ function renderBlitzPass() {
     scroll.appendChild(col);
   });
   container.appendChild(scroll);
+  scroll.addEventListener('wheel', (e) => {
+    if (window.innerWidth > 700) {
+      e.preventDefault();
+      scroll.scrollLeft += (e.deltaY + e.deltaX);
+    }
+  }, { passive: false });
   updatePassSeasonLabels();
   setTimeout(() => { if (typeof initAllLottieBadges === "function") initAllLottieBadges(); }, 60);
 }
