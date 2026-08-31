@@ -1,12 +1,13 @@
 /* ============================================================
 MODES SAISONNIERS — base (100🪙) + bonus (100🪙, non doublé x2)
 ============================================================ */
-const CATCH_CONFIG = {
-  halloween: { good: "🦇", bad: "👻", happy: "🎃", mean: "🎃", label: "🎃 CHASSE HANTÉE",
-    rules: "Clique les 🦇 <b style='color:#00ff88'>(+10)</b> ! Évite les 👻 <b style='color:#ff4b2b'>(−15)</b>. Citrouilles : la <b style='color:#00ff88'>SOURIANTE = +20 bonus</b>, l'<b style='color:#ff4b2b'>ÉNERVÉE = −20</b>. Le bonus (max 100🪙) n'est PAS doublé par le x2." },
-  noel: { good: "🎁", bad: "🎄", happy: "🧝", mean: "🧝", label: "🎄 HOTTE DU PÈRE NOËL",
-    rules: "Attrape les 🎁 <b style='color:#00ff88'>(+10)</b> ! Évite les 🎄 <b style='color:#ff4b2b'>(−15)</b>. Lutins : le <b style='color:#00ff88'>SOURiant = +20 bonus</b>, l'<b style='color:#ff4b2b'>ÉNERVÉ = −20</b>. Le bonus (max 100🪙) n'est PAS doublé par le x2." }
-};
+function getCatchConfig() {
+  const d = i18n[currentLang];
+  return {
+    halloween: { good: "🦇", bad: "👻", happy: "🎃", mean: "🎃", label: d.catch_halloween_label, rules: d.catch_halloween_rules },
+    noel: { good: "🎁", bad: "🎄", happy: "🧝", mean: "🧝", label: d.catch_noel_label, rules: d.catch_noel_rules }
+  };
+}
 function isCatchMobile() {
   return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 2 && Math.min(screen.width, screen.height) < 900);
 }
@@ -16,18 +17,19 @@ function startHalloweenQueue() { openCatchChoice("halloween"); }
 function startNoelQueue() { openCatchChoice("noel"); }
 
 function openCatchChoice(theme) {
+  const d = i18n[currentLang];
   closeCatchChoice();
-  const cfg = CATCH_CONFIG[theme];
+  const cfg = getCatchConfig()[theme];
   const ov = document.createElement('div');
   ov.id = 'catch-choice-overlay'; ov.className = 'modal-overlay';
   ov.innerHTML = `<div class="modal-card" style="max-width:340px;text-align:center;">
     <h2 style="color:#f8b500;margin:0 0 8px 0;">${cfg.label}</h2>
     <div style="background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px;font-size:14px;color:#eee;line-height:1.6;margin-bottom:10px;text-align:left;">
-      <b style="color:#00d2ff;">📖 COMMENT JOUER :</b><br>${cfg.rules}
+      <b style="color:#00d2ff;">${d.catch_how_to_play}</b><br>${cfg.rules}
     </div>
-    <button class="btn-main btn-blue" onclick="launchCatch('${theme}',false)">🏋️ Solo</button>
-    <button class="btn-main btn-gold" onclick="launchCatch('${theme}',true)">⚔️ Duel 1v1</button>
-    <button class="btn-secondary" onclick="closeCatchChoice()">⬅️ Retour</button>
+    <button class="btn-main btn-blue" onclick="launchCatch('${theme}',false)">${d.catch_solo_btn}</button>
+    <button class="btn-main btn-gold" onclick="launchCatch('${theme}',true)">${d.catch_1v1_btn}</button>
+    <button class="btn-secondary" onclick="closeCatchChoice()">⬅️ ${d.back}</button>
   </div>`;
   document.body.appendChild(ov);
 }
@@ -58,7 +60,7 @@ socket.on('game_over_1v1', (data) => { if (data.isCatch) catchState = null; });
 function beginCatch(theme, is1v1, opponent) {
   clearCatchArena();
   catchState = { theme, is1v1, opponent, score: 0, bonus: 0, oppScore: 0, timeLeft: 30, active: true, items: [], hutX: innerWidth / 2, spawnDelay: 800, speed: theme === 'halloween' ? 2.1 : 3.2, lastHappy: Date.now(), hard: 1.3 };
-  const cfg = CATCH_CONFIG[theme];
+  const cfg = getCatchConfig()[theme];
   const arena = document.createElement('div');
   arena.id = 'catch-arena'; arena.className = theme;
   const extra = theme === 'noel' ? '<div id="catch-santa"></div>' : '<div id="catch-backdrop">🏰</div>';
@@ -96,7 +98,7 @@ function scheduleSpawn() {
 
 function spawnCatchItem() {
   const field = document.getElementById('catch-field'); if (!field || !catchState) return;
-  const cfg = CATCH_CONFIG[catchState.theme];
+  const cfg = getCatchConfig()[catchState.theme];
   const r = Math.random();
   let type;
   if (r < 0.62) type = 'good'; else if (r < 0.84) type = 'bad'; else if (r < 0.92) type = 'happy'; else type = 'mean';
@@ -201,16 +203,17 @@ function endCatchSolo() {
   socket.emit('claim_catch_solo', { score: catchState.score, bonus: catchState.bonus });
 }
 socket.on('catch_solo_result', (data) => {
+  const d = i18n[currentLang];
   const score = catchState ? catchState.score : 0;
   const bonus = catchState ? catchState.bonus : 0;
   clearCatchArena(); catchState = null;
   hideAllScreens();
   document.getElementById('recap-1v1-rows').style.display = 'none';
-  document.getElementById('recap-banner').innerText = '🎯 MODE SAISONNIER TERMINÉ';
+  document.getElementById('recap-banner').innerText = d.catch_season_done;
   document.getElementById('recap-banner').style.color = '#00d2ff';
-  document.getElementById('recap-reason').innerText = `Score : ${score} • Bonus : ${bonus}`;
+  document.getElementById('recap-reason').innerText = `${d.catch_score_label} ${score} • ${d.catch_bonus_label} ${bonus}`;
   document.getElementById('recap-my-score').innerText = score;
-  document.getElementById('recap-coins-gained').innerHTML = `+${data.baseCoins}  ${data.bonusCoins > 0 ? `+ <span style="color:#f8b500;">${data.bonusCoins} bonus</span>` : ''}${data.rushBonus > 0 ? ` <span style="color:#ff8a00;">+${data.rushBonus}(x2)</span>` : ''}`;
+  document.getElementById('recap-coins-gained').innerHTML = `+${data.baseCoins}  ${data.bonusCoins > 0 ? `+ <span style="color:#f8b500;">${data.bonusCoins} ${d.catch_bonus_label}</span>` : ''}${data.rushBonus > 0 ? ` <span style="color:#ff8a00;">+${data.rushBonus}${d.catch_rush_x2}</span>` : ''}`;
   document.getElementById('winner-cinematic-container').innerHTML = '';
   document.getElementById('recap-modal').style.display = 'flex';
   SoundEngine.playVictory();
