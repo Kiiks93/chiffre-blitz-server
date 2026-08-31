@@ -869,7 +869,57 @@ io.on('connection', (socket) => {
     io.emit('seasons_updated', getSeasonDatesPublic());
     socket.emit('admin_season_result', { ok: true, season: seasonNow.id });
   });
+  /* ---------- STATS : joueurs réellement en ligne ---------- */
+  socket.on('admin_get_stats', () => {
+    if (!socket.isAdmin) return;
+    socket.emit('admin_stats', { online: Object.keys(activePlayers).length });
+  });
 
+  /* ---------- AJUSTER PIÈCES / POINTS / TROPHÉES ---------- */
+  socket.on('admin_adjust_currency', async (data) => {
+    if (!socket.isAdmin) return;
+    const { mode, currency, amount, pseudo, count } = data || {};
+    if (!["coins", "points", "trophies"].includes(currency)) return;
+    const amt = parseInt(amount) || 0;
+    if (amt === 0) return;
+    const apply = (p) => { p[currency] = Math.max(0, (p[currency] || 0) + amt); };
+
+    let targets = [];
+    if (mode === 'all') {
+      targets = Object.keys(activePlayers);
+    } else if (mode === 'pseudo') {
+      const clean = (pseudo || '').trim();
+      const low = clean.toLowerCase();
+      targets = Object.keys(activePlayers).filter(id => activePlayers[id].username && activePlayers[id].username.toLowerCase() === low);
+      // Si le joueur est hors-ligne → mise à jour directe en base
+      if (targets.length === 0 && clean) {
+        const { data: matched, error } = await supabase.from('players').select('*').ilike('username', clean).limit(1);
+        if (!error && matched && matched.length > 0) {
+          const t = matched[0];
+          const newVal = Math.max(0, (t[currency] || 0) + amt);
+          await supabase.from('players').update({ [currency]: newVal }).eq('id', t.id);
+          socket.emit('admin_adjust_result', { ok: true, message: `${t.username} (hors-ligne) : ${currency} → ${newVal}` });
+        } else {
+          socket.emit('admin_adjust_result', { ok: false, message: "Pseudo introuvable." });
+        }
+        return;
+      }
+    } else if (mode === 'random') {
+      const n = Math.max(1, parseInt(count) || 1);
+      const ids = Object.keys(activePlayers);
+      for (let i = ids.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [ids[i], ids[j]] = [ids[j], ids[i]]; }
+      targets = ids.slice(0, n);
+    }
+
+    for (const id of targets) {
+      const p = activePlayers[id];
+      if (!p) continue;
+      apply(p);
+      await savePlayerToSupabase(id);
+      io.to(id).emit('player_registered', p);
+    }
+    socket.emit('admin_adjust_result', { ok: true, message: `${targets.length} joueur(s) modifié(s) (${amt > 0 ? '+' : ''}${amt} ${currency})` });
+  });
   socket.on('disconnect', async () => {
     leaveAllRooms(socket);
     const qIdx = matchmakingQueue.indexOf(socket.id);
