@@ -293,6 +293,9 @@ function rewardVisualHTML(seasonId, tier, track, text) {
 }
 function renderBlitzPass() {
   const container = document.getElementById("blitz-pass-container");
+  const prevEl = document.querySelector('.bp-track-scroll');
+  const prevX = prevEl ? prevEl.scrollLeft : 0;
+  const prevY = prevEl ? prevEl.scrollTop : 0;
   const season = getActiveSeason();
   const seasonData = (myProfile.claimedPassTiers || {})[season.id] || {};
   const isPremium = !!seasonData.premium || (season.id === "s1" && myProfile.blitzPassPremium);
@@ -327,6 +330,8 @@ function renderBlitzPass() {
     scroll.appendChild(col);
   });
   container.appendChild(scroll);
+  scroll.scrollLeft = prevX; scroll.scrollTop = prevY;
+  setTimeout(() => { scroll.scrollLeft = prevX; scroll.scrollTop = prevY; }, 0);
   updatePassSeasonLabels();
   setTimeout(() => { if (typeof initAllLottieBadges === "function") initAllLottieBadges(); }, 60);
 }
