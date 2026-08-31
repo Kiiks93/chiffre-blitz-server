@@ -276,14 +276,17 @@ function rewardVisualHTML(seasonId, tier, track, text) {
   try {
     const item = (SPECIAL_REWARDS[seasonId] && SPECIAL_REWARDS[seasonId][track] && SPECIAL_REWARDS[seasonId][track][tier]) || null;
     if (item) {
-      if (item.indexOf('avatar_') === 0) return `<div class="bp-visual">${avatarPreviewHTML(item)}</div>`;
-      if (item.indexOf('frame_') === 0) return `<div class="bp-visual"><div class="tft-avatar-container ${getFrameClass(item)}" style="width:40px;height:40px;">⭐</div></div>`;
-      if (item.indexOf('theme_') === 0) return `<div class="bp-visual"><div class="bp-swatch" style="background:${THEME_GRAD[item]||'linear-gradient(135deg,#522d80,#2a1845)'}"></div></div>`;
-      if (item.indexOf('title_') === 0) return `<div class="bp-visual bp-title">${(typeof TITLE_DISPLAY_NAMES!=='undefined' && TITLE_DISPLAY_NAMES[item])||item}</div>`;
+      if (item.indexOf('avatar_') === 0) return `<div class="bp-visual">${avatarPreviewHTML(item)}<div class="bp-type">Avatar</div></div>`;
+      if (item.indexOf('frame_') === 0) return `<div class="bp-visual"><div class="tft-avatar-container ${getFrameClass(item)}" style="width:40px;height:40px;">⭐</div><div class="bp-type">Cadre</div></div>`;
+      if (item.indexOf('theme_') === 0) return `<div class="bp-visual"><div class="bp-swatch" style="background:${THEME_GRAD[item]||'linear-gradient(135deg,#522d80,#2a1845)'}"></div><div class="bp-type">Grille</div></div>`;
+      if (item.indexOf('title_') === 0) return `<div class="bp-visual bp-title">${(typeof TITLE_DISPLAY_NAMES!=='undefined' && TITLE_DISPLAY_NAMES[item])||item}<div class="bp-type">Titre</div></div>`;
     }
     const emoji = firstEmoji(text);
     const label = String(text).split(emoji).join('').trim();
-    return `<div class="bp-visual"><div class="bp-emoji">${emoji}</div><div class="bp-label">${label}</div></div>`;
+    let type = 'Récompense';
+    if (/Pièces/i.test(text)) type = 'Pièces';
+    else if (/Projecteur|Blocage|Joker|Nova|Séisme|Pack/i.test(text)) type = 'Pouvoir';
+    return `<div class="bp-visual"><div class="bp-emoji">${emoji}</div><div class="bp-label">${label}</div><div class="bp-type">${type}</div></div>`;
   } catch (e) {
     return `<div class="bp-visual"><div class="bp-emoji">🎁</div><div class="bp-label">${text}</div></div>`;
   }
