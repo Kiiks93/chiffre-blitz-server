@@ -260,6 +260,9 @@ async function savePlayerToSupabase(socketId) {
     if (retry.error) console.error("❌ SAVE CORE ÉCHEC : ", retry.error.message);
   }
 }
+function broadcastOnlineCount() {
+  io.emit('online_count', { online: Object.keys(activePlayers).length });
+}
 
 /* ============================================================
 SOCKET
@@ -267,6 +270,7 @@ SOCKET
 io.on('connection', (socket) => {
   console.log('Connexion : ' + socket.id);
   socket.emit('events_state_update', globalEvents);
+  socket.emit('online_count', { online: Object.keys(activePlayers).length });
 
   socket.on('get_trophy_room', async (targetUsername) => {
     try {
@@ -353,6 +357,7 @@ io.on('connection', (socket) => {
       };
       socket.emit('register_result', { ok: true });
       socket.emit('player_registered', activePlayers[socket.id]);
+      broadcastOnlineCount();
     } catch (err) { console.error("Erreur enregistrement Supabase : ", err); socket.emit('register_result', { ok: false, reason: 'error' }); }
   });
 
@@ -933,6 +938,7 @@ io.on('connection', (socket) => {
     delete lastMatchEarnings[socket.id];
     await savePlayerToSupabase(socket.id);
     delete activePlayers[socket.id];
+    broadcastOnlineCount();
   });
 });
 
