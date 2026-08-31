@@ -88,6 +88,8 @@ const i18n = {
     catch_noel_label: "🎄 HOTTE DU PÈRE NOËL",
     catch_noel_rules: "Attrape les 🎁 <b style='color:#00ff88'>(+10)</b> ! Évite les 🎄 <b style='color:#ff4b2b'>(−15)</b>. Lutins : le <b style='color:#00ff88'>SOURIANT = +20 bonus</b>, l'<b style='color:#ff4b2b'>ÉNERVÉ = −20</b>. Le bonus (max 100🪙) n'est PAS doublé par le x2.",
     catch_season_done: "🎯 MODE SAISONNIER TERMINÉ", catch_score_label: "Score :", catch_bonus_label: "Bonus :", catch_rush_x2: "(x2)",
+    lb_cat_points: "🏅 Points", lb_cat_trophies: "🏆 Trophées", lb_cat_coins: "🪙 Argent", lb_cat_combined: "⭐ Combiné",
+    friends_center_title: "👥 Centre d'Amis", friends_placeholder: "Pseudo exact...", trophy_room_btn: "SALLE DES TROPHÉES",
     powers: {
       spotlight: { name: "💡 Projecteur", desc: "Révèle la bonne tuile pendant 2s. Zéro hésitation." },
       freeze: { name: "⏳ Blocage du Temps", desc: "Gèle le chrono 3s. Respire, tu as le temps." },
@@ -188,6 +190,8 @@ const i18n = {
     catch_noel_label: "🎄 SANTA'S SACK",
     catch_noel_rules: "Catch 🎁 <b style='color:#00ff88'>(+10)</b>! Avoid 🎄 <b style='color:#ff4b2b'>(−15)</b>. Elves: <b style='color:#00ff88'>SMILING = +20 bonus</b>, <b style='color:#ff4b2b'>ANGRY = −20</b>. Bonus (max 100🪙) is NOT doubled by x2.",
     catch_season_done: "🎯 SEASONAL MODE DONE", catch_score_label: "Score:", catch_bonus_label: "Bonus:", catch_rush_x2: "(x2)",
+    lb_cat_points: "🏅 Points", lb_cat_trophies: "🏆 Trophies", lb_cat_coins: "🪙 Money", lb_cat_combined: "⭐ Combined",
+    friends_center_title: "👥 Friends Center", friends_placeholder: "Exact pseudo...", trophy_room_btn: "TROPHY ROOM",
     powers: {
       spotlight: { name: "💡 Spotlight", desc: "Reveals the correct tile for 2s. Zero hesitation." },
       freeze: { name: "⏳ Time Freeze", desc: "Freezes the timer for 3s. Breathe, you've got time." },
@@ -220,11 +224,26 @@ function toggleLanguage() {
 }
 
 function applyTranslations() {
-  const dict = i18n[currentLang];
+  const d = i18n[currentLang];
   document.querySelectorAll("[data-i18n]").forEach(el => {
     const key = el.getAttribute("data-i18n");
-    if (dict[key]) el.innerText = dict[key];
+    if (d[key]) el.innerText = d[key];
   });
+  // Traductions complémentaires (éléments sans data-i18n)
+  const byId = {
+    "lb-cat-points": d.lb_cat_points,
+    "lb-cat-trophies": d.lb_cat_trophies,
+    "lb-cat-coins": d.lb_cat_coins,
+    "lb-cat-combined": d.lb_cat_combined,
+    "friend-tab-all": d.friends_btn
+  };
+  for (const id in byId) { const el = document.getElementById(id); if (el) el.innerText = byId[id]; }
+  const friendsTitle = document.querySelector("#modal-friends h2");
+  if (friendsTitle) friendsTitle.innerText = d.friends_center_title;
+  const addInput = document.getElementById("input-add-friend");
+  if (addInput) addInput.placeholder = d.friends_placeholder;
+  const trophyLabel = document.querySelector(".trophy-room-label");
+  if (trophyLabel) trophyLabel.innerText = d.trophy_room_btn;
   const langBtn = document.getElementById("lang-btn");
   if (langBtn) langBtn.innerText = (currentLang === "fr") ? "ENG" : "FR";
 }
