@@ -1,111 +1,283 @@
 const i18n = {
-fr: {
-coins: "Pièces", trophies: "Trophées", subtitle: "Le duel de calcul et de réflexes ultime",
-rule1_title: "⚡ Principe du jeu", rule1_desc: "Repère la CIBLE affichée et clique-la à la vitesse de l'éclair ! Ordre croissant ou désordre total : seul le plus rapide survit. ⚡",
-rule2_title: "🏋️ Entraînement Solo", rule2_desc: "Classique, Aléatoire ou Avalanche : enchaîne les chiffres, bats tes records et fais le plein de pièces (🪙).",
-rule3_title: "⚔️ Duel 1v1 Online", rule3_desc: "Affronte un joueur en temps réel (non classé, classé SBMM ou salon privé). Le meilleur score en 30s l'emporte !",
-rule4_title: "🏆 Rangs & Trophées", rule4_desc: "Grimpe en classé : Novice 🌱 → Chiffre 🔢 → Expert 🧠 → Calculateur ⚡, et débloque les 16 trophées de ta Salle des Trophées !",
-rule5_title: "🎯 Mode Tournoi", rule5_desc: "Bientôt disponible ! Des tournois épiques pour affronter l'élite et décrocher le titre de Champion 👑.",
-btn_play: "JOUER ⚡", menu_solo: "🏋️ ENTRAÎNEMENT SOLO", menu_1v1: "⚔️ DUEL 1v1 ONLINE", menu_tow: "🪢 Mode Corde Raide (Tug-of-War)",
-menu_friends: "👥 SALONS & AMIS", menu_shop: "🛍️ BOUTIQUE", menu_lb: "🏆 CLASSEMENT", menu_tourney: "🎯 TOURNOIS", menu_info: "ℹ️ Informations & Règles",
-menu_halloween: "🎃 Mode Exclusif Halloween", menu_noel: "🎄 Mode Exclusif Noël",
-solo_menu_title: "MODES D'ENTRAÎNEMENT", solo_classic: "⚡ Classique (Croissant)", solo_random: "🎲 Aléatoire (Cibles variées)", solo_avalanche_btn: "🧊 Avalanche (Difficultés)",
-avalanche_menu_title: "🧊 AVALANCHE (Difficultés)", diff_easy: "Facile", diff_medium: "Moyen", diff_hard: "Difficile 💀", back_menu: "⬅️ Retour Menu",
-hub_title: "⚔️ DUEL 1v1 ONLINE", hub_subtitle: "Choisis ton mode de jeu :", hub_random: "🎲 Matchmaking non classé", hub_ranked: "⚔️ Matchmaking Classé (SBMM)",
-ranked_modal_title: "⚔️ PRÉPARATION CLASSÉE", ranked_modal_sub: "Choisis 2 objets de ton inventaire pour le match classé :", ranked_start_btn: "Lancer le Classé ⚡",
-back: "⬅️ Retour", searching: "Recherche d'adversaire...", cancel: "❌ Annuler",
-rooms_title: "👥 Jouer entre amis", rooms_create: "✨ Créer un salon personnalisé", rooms_join_code: "🔑 Rejoindre avec un code", rooms_open_list: "Salons ouverts :",
-loading: "Chargement...", join_title: "🔑 Rejoindre un Salon", join_subtitle: "Entre le code et le mot de passe (si requis) :",
-room_code_label: "ROOM CODE", room_pass_label: "PASSWORD (Optional)", join_btn: "Rejoindre ⚡", room_header: "Salon",
-share_label: "INVITATION RAPIDE (SMS / WhatsApp) :", share_btn: "📤 Partager le lien", copy_btn: "Copier 📋", link_copied: "Lien du salon copié dans le presse-papier !",
-players_in_room: "Joueurs dans le salon :", waiting_opponent: "En attente d'un adversaire...", leave_room: "❌ Quitter le salon",
-create_modal_title: "✨ CRÉER UN SALON", create_modal_sub: "Personnalise ton salon privé :", create_btn: "Créer ⚡",
-tourney_screen_title: "🎯 Tournoi Blitz", tourney_teaser_title: "Bientôt disponible !", tourney_teaser_desc: "Ce mode est actuellement en cours de réflexion et de développement. Prépare-toi à affronter l'élite dans des tournois épiques très bientôt...",
-tourney_rewards: "Récompenses : 200 🪙 + 1 🏆 + 50 ⭐",
-welcome_title: "⚡ IDENTITÉ BLITZ ⚡", welcome_sub: "Personnalise ton profil compétitif :",
-pseudo_label: "PSEUDO", avatar_num_label: "AVATAR (1-999)", flag_label: "DRAPEAU", region_label: "RÉGION",
-shop_title: "🛍️ BOUTIQUE", shop_tab_bonus: "🟢 Bonus (pour soi)", shop_tab_malus: "🔴 Malus (adversaire)", close: "Fermer",
-lb_title: "🏆 CLASSEMENT", lb_reg: "📍 Région", lb_nat: "🇫🇷 France", lb_glb: "🌍 Monde",
-lb_combined_desc: "💡 Combiné : Trophées prioritaires, départagés par les points",
-get_ready: "PRÉPAREZ-VOUS !", hud_opp_target: "CIBLE ADVERSAIRE", hud_solo_score: "SCORE", timer_label: "Temps", target_label: "CIBLE : ",
-tow_title: "🪢 CORDE RAIDE (TUG-OF-WAR)", recap_my_target: "🎯 Ma Cible : ", recap_opp_target: "🎯 Cible Adversaire : ", recap_my_score: "⭐ Mon Score : ", recap_coins: "🪙 Pièces Gagnées : ",
-double_reward: "📺 Doubler mes gains (Pub)", main_menu: "MENU PRINCIPAL", no_rooms: "Aucun salon ouvert.", no_players: "Aucun joueur.",
-friends_title: "👥 Liste d'Amis", friends_btn: "👥 Amis", add_btn: "Ajouter", no_friends: "Aucun ami pour le moment.", rematch_btn: "Revanche ⚔️",
-ad_title: "Soutenir le Créateur", ad_desc: "Chiffre Blitz est 100% gratuit. Une publicité de soutien va se lancer. Merci ! ❤️", ad_btn: "Lancer la partie ⚡", ad_sponsored: "VIDÉO SPONSORISÉE...",
-not_enough_coins: "Tu n'as pas assez de pièces 🪙 pour acheter cet objet !",
-powers: {
-spotlight: { name: "💡 Projecteur", desc: "Révèle la bonne tuile pendant 2s. Zéro hésitation." },
-freeze: { name: "⏳ Blocage du Temps", desc: "Gèle le chrono 3s. Respire, tu as le temps." },
-joker: { name: "⚡ Joker Éclair", desc: "Valide instantanément ta cible actuelle." },
-nova: { name: "🌟 Nova Temporelle", desc: "GIGA : enchaîne 3 validations automatiques." },
-quake: { name: "📳 Séisme", desc: "Secoue la grille adverse pendant 2s." },
-micro: { name: "🐜 Micro-Tuiles", desc: "Rétrécit les tuiles adverses pendant 2s." },
-eclipse: { name: "🌑 Éclipse", desc: "Plonge la grille adverse dans le flou (1,5s)." },
-chaos: { name: "🌪️ Chaos Absolu", desc: "GIGA : séisme + micro + éclipse en chaîne (5s)." }
-}
-},
-en: {
-coins: "Coins", trophies: "Trophies", subtitle: "The ultimate math and reflex duel",
-rule1_title: "⚡ Game Rule", rule1_desc: "Spot the TARGET and click it at lightning speed! Ascending order or total chaos: only the fastest survives. ⚡",
-rule2_title: "🏋️ Solo Training", rule2_desc: "Classic, Random or Avalanche: chain numbers, beat your records and stack up coins (🪙).",
-rule3_title: "⚔️ Online 1v1 Duel", rule3_desc: "Face a player in real time (unranked, ranked SBMM or private room). Best score in 30s wins!",
-rule4_title: "🏆 Ranks & Trophies", rule4_desc: "Climb the ranked ladder: Novice 🌱 → Cipher  → Expert 🧠 → Calculator ⚡, and unlock the 16 trophies of your Trophy Room!",
-rule5_title: "🎯 Tournament Mode", rule5_desc: "Coming soon! Epic tournaments to face the elite and claim the Champion title 👑.",
-btn_play: "PLAY ⚡", menu_solo: "🏋️ TRAINING", menu_1v1: "⚔️ 1v1 DUEL", menu_tow: "🪢 Tug-of-War Mode",
-menu_friends: "👥 ROOMS", menu_shop: "🛍️ SHOP", menu_lb: "🏆 LEADERBOARD", menu_tourney: "🎯 TOURNAMENTS", menu_info: "ℹ️ Info & Rules",
-menu_halloween: "🎃 Halloween Exclusive Mode", menu_noel: "🎄 Christmas Exclusive Mode",
-solo_menu_title: "TRAINING MODES", solo_classic: "⚡ Classic (Ascending)", solo_random: "🎲 Random (Varied targets)", solo_avalanche_btn: "🧊 Avalanche (Difficulties)",
-avalanche_menu_title: "🧊 Avalanche (Difficulties)", diff_easy: "Easy", diff_medium: "Medium", diff_hard: "Hard 💀", back_menu: "⬅️ Back to Menu",
-hub_title: "⚔️ ONLINE 1v1 DUEL", hub_subtitle: "Choose your game mode:", hub_random: "🎲 Unranked Matchmaking", hub_ranked: "⚔️ Ranked Matchmaking (SBMM)",
-ranked_modal_title: "⚔️ RANKED LOADOUT", ranked_modal_sub: "Choose 2 items from your inventory for the ranked match:", ranked_start_btn: "Start Ranked ⚡",
-back: "⬅️ Back", searching: "Searching for opponent...", cancel: "❌ Cancel",
-rooms_title: "👥 Play with Friends", rooms_create: "✨ Create Custom Room", rooms_join_code: "🔑 Join with Code", rooms_open_list: "Open rooms:",
-loading: "Loading...", join_title: "🔑 Join a Room", join_subtitle: "Enter the code and password (if required):",
-room_code_label: "ROOM CODE", room_pass_label: "PASSWORD (Optional)", join_btn: "Join ⚡", room_header: "Room",
-share_label: "QUICK INVITE (SMS / WhatsApp):", share_btn: "📤 Share Link", copy_btn: "Copy 📋", link_copied: "Room link copied to clipboard!",
-players_in_room: "Players in room:", waiting_opponent: "Waiting for opponent...", leave_room: "❌ Leave Room",
-create_modal_title: "✨ CREATE A ROOM", create_modal_sub: "Customize your private room:", create_btn: "Create ⚡",
-tourney_screen_title: "🎯 Blitz Tournament", tourney_teaser_title: "Coming soon!", tourney_teaser_desc: "This mode is currently under consideration and development. Get ready to face the elite in epic tournaments very soon...",
-tourney_rewards: "Rewards: 200 🪙 + 1 🏆 + 50 ⭐",
-welcome_title: "⚡ BLITZ IDENTITY ⚡", welcome_sub: "Customize your competitive profile:",
-pseudo_label: "PSEUDO", avatar_num_label: "AVATAR (1-999)", flag_label: "FLAG", region_label: "REGION",
-shop_title: "🛍️ SHOP", shop_tab_bonus: "🟢 Bonus (self)", shop_tab_malus: "🔴 Malus (opponent)", close: "Close",
-lb_title: "🏆 LEADERBOARD", lb_reg: "📍 Region", lb_nat: "🇫🇷 France", lb_glb: "🌍 World",
-lb_combined_desc: "💡 Combined: Trophies priority, tie-broken by points",
-get_ready: "GET READY!", hud_opp_target: "OPPONENT TARGET", hud_solo_score: "SCORE", timer_label: "Time", target_label: "TARGET: ",
-tow_title: "🪢 TUG-OF-WAR", recap_my_target: "🎯 My Target: ", recap_opp_target: "🎯 Opponent Target: ", recap_my_score: "⭐ My Score: ", recap_coins: "🪙 Coins Earned: ",
-double_reward: "📺 Double my rewards (Ad)", main_menu: "MAIN MENU", no_rooms: "No open rooms.", no_players: "No players.",
-friends_title: "👥 Friends List", friends_btn: "👥 Friends", add_btn: "Add", no_friends: "No friends yet.", rematch_btn: "Rematch ⚔️",
-ad_title: "Support the Creator", ad_desc: "Chiffre Blitz is 100% free. A support advertisement will play. Thank you! ❤️", ad_btn: "Start Game ⚡", ad_sponsored: "SPONSORED VIDEO...",
-not_enough_coins: "You don't have enough coins 🪙 to buy this item!",
-powers: {
-spotlight: { name: "💡 Spotlight", desc: "Reveals the correct tile for 2s. Zero hesitation." },
-freeze: { name: "⏳ Time Freeze", desc: "Freezes the timer for 3s. Breathe, you've got time." },
-joker: { name: "⚡ Lightning Joker", desc: "Instantly validates your current target." },
-nova: { name: "🌟 Time Nova", desc: "GIGA: chains 3 auto-validations." },
-quake: { name: "📳 Earthquake", desc: "Shakes the opponent's grid for 2s." },
-micro: { name: "🐜 Micro-Tiles", desc: "Shrinks the opponent's tiles for 2s." },
-eclipse: { name: "🌑 Eclipse", desc: "Blurs the opponent's grid (1.5s)." },
-chaos: { name: "🌪️ Absolute Chaos", desc: "GIGA: quake + micro + eclipse chained (5s)." }
-}
-}
+  fr: {
+    // === Accueil & Menu ===
+    coins: "Pièces", trophies: "Trophées", subtitle: "Le duel de calcul et de réflexes ultime",
+    rule1_title: "⚡ Principe du jeu", rule1_desc: "Repère la CIBLE affichée et clique-la à la vitesse de l'éclair ! Ordre croissant ou désordre total : seul le plus rapide survit. ⚡",
+    rule2_title: "🏋️ Entraînement Solo", rule2_desc: "Classique, Aléatoire ou Avalanche : enchaîne les chiffres, bats tes records et fais le plein de pièces (🪙).",
+    rule3_title: "⚔️ Duel 1v1 Online", rule3_desc: "Affronte un joueur en temps réel (non classé, classé SBMM ou salon privé). Le meilleur score en 30s l'emporte !",
+    rule4_title: "🏆 Rangs & Trophées", rule4_desc: "Grimpe en classé : Novice 🌱 → Chiffre 🔢 → Expert 🧠 → Calculateur ⚡, et débloque les 16 trophées de ta Salle des Trophées !",
+    rule5_title: "🎯 Mode Tournoi", rule5_desc: "Bientôt disponible ! Des tournois épiques pour affronter l'élite et décrocher le titre de Champion 👑.",
+    btn_play: "JOUER ⚡", menu_solo: "🏋️ ENTRAÎNEMENT SOLO", menu_1v1: "⚔️ DUEL 1v1 ONLINE", menu_tow: "🪢 Mode Corde Raide (Tug-of-War)",
+    menu_friends: "👥 SALONS & AMIS", menu_shop: "🛍️ BOUTIQUE", menu_lb: "🏆 CLASSEMENT", menu_tourney: "🎯 TOURNOIS", menu_info: "ℹ️ Informations & Règles",
+    menu_halloween: "🎃 Mode Exclusif Halloween", menu_noel: "🎄 Mode Exclusif Noël",
+
+    // === Solo ===
+    solo_menu_title: "MODES D'ENTRAÎNEMENT", solo_classic: "⚡ Classique (Croissant)", solo_random: "🎲 Aléatoire (Cibles variées)", solo_avalanche_btn: "🧊 Avalanche (Difficultés)",
+    avalanche_menu_title: "🧊 AVALANCHE (Difficultés)", diff_easy: "Facile", diff_medium: "Moyen", diff_hard: "Difficile 💀", back_menu: "⬅️ Retour Menu",
+
+    // === 1v1 ===
+    hub_title: "⚔️ DUEL 1v1 ONLINE", hub_subtitle: "Choisis ton mode de jeu :", hub_random: "🎲 Matchmaking non classé", hub_ranked: "⚔️ Matchmaking Classé (SBMM)",
+    ranked_modal_title: "⚔️ PRÉPARATION CLASSÉE", ranked_modal_sub: "Choisis 2 objets de ton inventaire pour le match classé :", ranked_start_btn: "Lancer le Classé ⚡",
+    back: "⬅️ Retour", searching: "Recherche d'adversaire...", cancel: "❌ Annuler",
+
+    // === Salons ===
+    rooms_title: "👥 Jouer entre amis", rooms_create: "✨ Créer un salon personnalisé", rooms_join_code: "🔑 Rejoindre avec un code", rooms_open_list: "Salons ouverts :",
+    loading: "Chargement...", join_title: "🔑 Rejoindre un Salon", join_subtitle: "Entre le code et le mot de passe (si requis) :",
+    room_code_label: "ROOM CODE", room_pass_label: "PASSWORD (Optional)", join_btn: "Rejoindre ⚡", room_header: "Salon",
+    share_label: "INVITATION RAPIDE (SMS / WhatsApp) :", share_btn: "📤 Partager le lien", copy_btn: "Copier 📋", link_copied: "Lien du salon copié dans le presse-papier !",
+    players_in_room: "Joueurs dans le salon :", waiting_opponent: "En attente d'un adversaire...", leave_room: "❌ Quitter le salon",
+    create_modal_title: "✨ CRÉER UN SALON", create_modal_sub: "Personnalise ton salon privé :", create_btn: "Créer ⚡",
+
+    // === Tournoi ===
+    tourney_screen_title: "🎯 Tournoi Blitz", tourney_teaser_title: "Bientôt disponible !", tourney_teaser_desc: "Ce mode est actuellement en cours de réflexion et de développement. Prépare-toi à affronter l'élite dans des tournois épiques très bientôt...",
+    tourney_rewards: "Récompenses : 200 🪙 + 1 🏆 + 50 ⭐",
+
+    // === Profil ===
+    welcome_title: "⚡ IDENTITÉ BLITZ ⚡", welcome_sub: "Personnalise ton profil compétitif :",
+    pseudo_label: "PSEUDO", avatar_num_label: "AVATAR (1-999)", flag_label: "DRAPEAU", region_label: "RÉGION",
+
+    // === Boutique ===
+    shop_title: "🛍️ BOUTIQUE", shop_tab_bonus: "🟢 Bonus (pour soi)", shop_tab_malus: "🔴 Malus (adversaire)", close: "Fermer",
+
+    // === Classement ===
+    lb_title: "🏆 CLASSEMENT", lb_reg: "📍 Région", lb_nat: "🇫🇷 France", lb_glb: "🌍 Monde",
+    lb_combined_desc: "💡 Combiné : Trophées prioritaires, départagés par les points",
+
+    // === Jeu ===
+    get_ready: "PRÉPAREZ-VOUS !", hud_opp_target: "CIBLE ADVERSAIRE", hud_solo_score: "SCORE", timer_label: "Temps", target_label: "CIBLE : ",
+    tow_title: "🪢 CORDE RAIDE (TUG-OF-WAR)", recap_my_target: "🎯 Ma Cible : ", recap_opp_target: "🎯 Cible Adversaire : ", recap_my_score: "⭐ Mon Score : ", recap_coins: "🪙 Pièces Gagnées : ",
+    double_reward: "📺 Doubler mes gains (Pub)", main_menu: "MENU PRINCIPAL", no_rooms: "Aucun salon ouvert.", no_players: "Aucun joueur.",
+    friends_title: "👥 Liste d'Amis", friends_btn: "👥 Amis", add_btn: "Ajouter", no_friends: "Aucun ami pour le moment.", rematch_btn: "Revanche ⚔️",
+    ad_title: "Soutenir le Créateur", ad_desc: "Chiffre Blitz est 100% gratuit. Une publicité de soutien va se lancer. Merci ! ❤️", ad_btn: "Lancer la partie ⚡", ad_sponsored: "VIDÉO SPONSORISÉE...",
+    not_enough_coins: "Tu n'as pas assez de pièces 🪙 pour acheter cet objet !",
+
+    // === Amis (social.js) ===
+    friends_tab_requests: "Demandes", friends_tab_invites: "Invitations",
+    friend_online: "En ligne", friend_offline: "Hors-ligne", friend_accept: "✅ Accepter", friend_pending: "⏳ En attente",
+    friend_invite: "Inviter", friend_remove: "Supprimer", friend_cancel: "Annuler la demande", friend_sent_req: "Demande envoyée",
+    friend_wants: "Veut être ton ami !", friend_received: "📥 REÇUES", friend_sent_label: "📤 ENVOYÉES",
+    friend_no_requests: "Aucune demande en attente.", friend_no_invites: "Aucune invitation en attente.",
+    friend_view_trophy: "Voir sa salle des trophées", friend_room_created: "📤 Salon créé et invitation envoyée !",
+    friend_game_invite_from: "📩 Invitation de jeu de", friend_join_room: "Rejoindre le salon ⚡", friend_join: "Rejoindre ⚡", friend_room: "Salon :",
+    rooms_join: "Rejoindre", rooms_room: "Salon", rooms_name_short: "Nom de salon trop court.", rooms_invalid_code: "Entrer un code valide.",
+    share_text: "Viens m'affronter sur Chiffre Blitz !",
+
+    // === Bande son (son-saisons.js) ===
+    music_title: "🎵 BANDE SON",
+    music_no_spoiler: "Seules les saisons déjà sorties sont proposées (pas de spoiler !).",
+    music_auto: "Auto (saison en cours)",
+    music_season_label: "Saison",
+
+    // === Combos (jeu.js) ===
+    combo_x15: "⚡ COMBO x15 !", combo_x30: "🔥 COMBO x30 !!", combo_perfection: "💥 PERFECTION x35 !!!",
+
+    // === Ranked loadout (jeu.js) ===
+    ranked_empty: "Inventaire vide !", ranked_summary: "Objets sélectionnés : X/2", ranked_ready: "✅ Prêt à lancer",
+    ranked_warning: "⚠️ Tu dois sélectionner exactement 2 objets", ranked_selected: "Sélectionné :", ranked_add: "+ Ajouter",
+    ranked_remove: "- Retirer", ranked_no_stock: "Tu ne possèdes pas assez d'exemplaires de cet objet.",
+    ranked_must_2: "En mode classé, tu dois sélectionner exactement 2 objets.",
+
+    // === Notifications (jeu.js) ===
+    opp_wants_rematch: "⚔️ L'adversaire souhaite une revanche !", malus_received: "💥 PIÈGE ADVERSAIRE REÇU !",
+
+    // === Classement (jeu.js) ===
+    lb_regional_label: "Régional", lb_no_players: "Aucun joueur.",
+
+    // === Menu clic pseudo (jeu.js) ===
+    action_friend_request: "🤝 Demande d'ami", action_trophy_room: "🏛️ Salle des trophées",
+
+    // === Badges modes (jeu.js) ===
+    badge_ranked: "⚔️ CLASSÉ", badge_tow: "🪢 CORDE RAIDE", badge_private: "👥 SALON PRIVÉ",
+    badge_chaos: "🌪️ CHAOS MODE", badge_expresso: "⚡ EXPRESSO 20s", badge_1v1: "⚔️ 1v1 AMICAL",
+    badge_solo_random: "🎲 SOLO ALÉATOIRE", badge_solo_classic: "🏋️ SOLO CLASSIQUE", badge_avalanche: "🏔️ AVALANCHE",
+
+    // === Jackpot (jeu.js) ===
+    jackpot_win: "JACKPOT ! +X Pièces 🪙", jackpot_item: "OBJET GAGNÉ ! ⚡", jackpot_lost: "PERDU ! X Pièces 🪙", jackpot_nothing: "RIEN ! Retente ta chance.",
+    jackpot_coins_label: "Pièces",
+
+    // === Récap partie (jeu.js) ===
+    triomphe: "TRIOMPHE !", equality: "ÉGALITÉ !", victory_supreme: "🏆 VICTOIRE SUPRÊME !",
+    defeat_bitter: "💥 DÉFAITE AMÈRE...", equality_timeout: "⏱️ ÉGALITÉ !",
+    reward_doubled: "✅ Gains doublés !", rush_bonus: "(RUSH)",
+
+    // === Solo perfection popup (jeu.js) ===
+    perfection_popup_text: "⚡ PERFECTION — Combo x35 atteint ! Récompense maximale + Succès 🏆 débloqué !",
+
+    // === Trophées tooltip (jeu.js) ===
+    trophy_unlocked_status: "✅ Débloqué", trophy_locked_status: "🔒 Verrouillé", trophy_progress_label: "Progrès :",
+    trophy_title_unlocked: "Titre débloqué :", trophy_soon: "🔒 Bientôt", trophy_end_season: "Fin de saison",
+    trophy_name_first_victory: "Première Victoire", trophy_cond_first_victory: "Gagner 1 match 1v1",
+    trophy_name_unstoppable: "Inarrêtable", trophy_cond_unstoppable: "5 victoires d'affilée",
+    trophy_name_gladiator: "Gladiateur", trophy_cond_gladiator: "Jouer 30 matchs 1v1",
+    trophy_name_champion: "Champion", trophy_cond_champion: "Gagner un tournoi (bientôt !)",
+    trophy_name_awakening: "Éveil", trophy_cond_awakening: "Combo x15",
+    trophy_name_furnace: "Fournaise", trophy_cond_furnace: "Combo x30",
+    trophy_name_perfection: "PERFECTION", trophy_cond_perfection: "Combo x35",
+    trophy_name_avalanche_master: "Maître Avalanche", trophy_cond_avalanche_master: "Score 400 en Avalanche",
+    trophy_name_combatant: "Combattant", trophy_cond_combatant: "Pass Palier 15",
+    trophy_name_elite: "Élite", trophy_cond_elite: "Pass Palier 30",
+    trophy_name_worker: "Travailleur", trophy_cond_worker: "1000 🪙 gagnés en jeu",
+    trophy_name_rising_star: "Étoile Montante", trophy_cond_rising_star: "500 points au classement",
+    trophy_name_local_king: "Roi Local", trophy_cond_local_king: "N°1 régional en fin de saison",
+    trophy_name_midas: "Midas", trophy_cond_midas: "N°1 pièces en fin de saison",
+    trophy_name_dynasty: "Dynastie", trophy_cond_dynasty: "3 saisons N°1",
+    trophy_name_world_n1: "N°1 Mondial", trophy_cond_world_n1: "N°1 global fin de saison",
+    shelf_combat: "⚔️ COMBAT", shelf_skill: "💥 SKILL", shelf_progression: "📈 PROGRESSION", shelf_domination: "👑 DOMINATION",
+
+    // === Fin de partie solo (jeu.js) ===
+    solo_perfection_banner: "💥 PERFECTION x35 !", solo_perfection_reason: "PERFECTION ! Récompense maximale + Succès 🏆",
+    solo_training_done: "🏋️ ENTRAÎNEMENT TERMINÉ", solo_score_label: "Score :",
+
+    // === Modes catch (modes-catch.js) ===
+    catch_how_to_play: "📖 COMMENT JOUER :",
+    catch_solo_btn: "🏋️ Solo", catch_1v1_btn: "⚔️ Duel 1v1",
+    catch_halloween_label: "🎃 CHASSE HANTÉE",
+    catch_halloween_rules: "Clique les 🦇 <b style='color:#00ff88'>(+10)</b> ! Évite les 👻 <b style='color:#ff4b2b'>(−15)</b>. Citrouilles : la <b style='color:#00ff88'>SOURIANTE = +20 bonus</b>, l'<b style='color:#ff4b2b'>ÉNERVÉE = −20</b>. Le bonus (max 100🪙) n'est PAS doublé par le x2.",
+    catch_noel_label: "🎄 HOTTE DU PÈRE NOËL",
+    catch_noel_rules: "Attrape les 🎁 <b style='color:#00ff88'>(+10)</b> ! Évite les 🎄 <b style='color:#ff4b2b'>(−15)</b>. Lutins : le <b style='color:#00ff88'>SOURIANT = +20 bonus</b>, l'<b style='color:#ff4b2b'>ÉNERVÉ = −20</b>. Le bonus (max 100🪙) n'est PAS doublé par le x2.",
+    catch_season_done: "🎯 MODE SAISONNIER TERMINÉ", catch_score_label: "Score :", catch_bonus_label: "Bonus :", catch_rush_x2: "(x2)",
+
+    // === Pouvoirs (jeu.js + profil.js) ===
+    powers: {
+      spotlight: { name: "💡 Projecteur", desc: "Révèle la bonne tuile pendant 2s. Zéro hésitation." },
+      freeze: { name: "⏳ Blocage du Temps", desc: "Gèle le chrono 3s. Respire, tu as le temps." },
+      joker: { name: "⚡ Joker Éclair", desc: "Valide instantanément ta cible actuelle." },
+      nova: { name: "🌟 Nova Temporelle", desc: "GIGA : enchaîne 3 validations automatiques." },
+      quake: { name: "📳 Séisme", desc: "Secoue la grille adverse pendant 2s." },
+      micro: { name: "🐜 Micro-Tuiles", desc: "Rétrécit les tuiles adverses pendant 2s." },
+      eclipse: { name: "🌑 Éclipse", desc: "Plonge la grille adverse dans le flou (1,5s)." },
+      chaos: { name: "🌪️ Chaos Absolu", desc: "GIGA : séisme + micro + éclipse en chaîne (5s)." }
+    }
+  },
+  en: {
+    coins: "Coins", trophies: "Trophies", subtitle: "The ultimate math and reflex duel",
+    rule1_title: "⚡ Game Rule", rule1_desc: "Spot the TARGET and click it at lightning speed! Ascending order or total chaos: only the fastest survives. ⚡",
+    rule2_title: "🏋️ Solo Training", rule2_desc: "Classic, Random or Avalanche: chain numbers, beat your records and stack up coins (🪙).",
+    rule3_title: "⚔️ Online 1v1 Duel", rule3_desc: "Face a player in real time (unranked, ranked SBMM or private room). Best score in 30s wins!",
+    rule4_title: "🏆 Ranks & Trophies", rule4_desc: "Climb the ranked ladder: Novice 🌱 → Cipher 🔢 → Expert 🧠 → Calculator ⚡, and unlock the 16 trophies of your Trophy Room!",
+    rule5_title: "🎯 Tournament Mode", rule5_desc: "Coming soon! Epic tournaments to face the elite and claim the Champion title 👑.",
+    btn_play: "PLAY ⚡", menu_solo: "🏋️ TRAINING", menu_1v1: "⚔️ 1v1 DUEL", menu_tow: "🪢 Tug-of-War Mode",
+    menu_friends: "👥 ROOMS", menu_shop: "🛍️ SHOP", menu_lb: "🏆 LEADERBOARD", menu_tourney: "🎯 TOURNAMENTS", menu_info: "ℹ️ Info & Rules",
+    menu_halloween: "🎃 Halloween Exclusive Mode", menu_noel: "🎄 Christmas Exclusive Mode",
+    solo_menu_title: "TRAINING MODES", solo_classic: "⚡ Classic (Ascending)", solo_random: "🎲 Random (Varied targets)", solo_avalanche_btn: "🧊 Avalanche (Difficulties)",
+    avalanche_menu_title: "🧊 Avalanche (Difficulties)", diff_easy: "Easy", diff_medium: "Medium", diff_hard: "Hard 💀", back_menu: "⬅️ Back to Menu",
+    hub_title: "⚔️ ONLINE 1v1 DUEL", hub_subtitle: "Choose your game mode:", hub_random: "🎲 Unranked Matchmaking", hub_ranked: "⚔️ Ranked Matchmaking (SBMM)",
+    ranked_modal_title: "⚔️ RANKED LOADOUT", ranked_modal_sub: "Choose 2 items from your inventory for the ranked match:", ranked_start_btn: "Start Ranked ⚡",
+    back: "⬅️ Back", searching: "Searching for opponent...", cancel: "❌ Cancel",
+    rooms_title: "👥 Play with Friends", rooms_create: "✨ Create Custom Room", rooms_join_code: "🔑 Join with Code", rooms_open_list: "Open rooms:",
+    loading: "Loading...", join_title: "🔑 Join a Room", join_subtitle: "Enter the code and password (if required):",
+    room_code_label: "ROOM CODE", room_pass_label: "PASSWORD (Optional)", join_btn: "Join ⚡", room_header: "Room",
+    share_label: "QUICK INVITE (SMS / WhatsApp):", share_btn: "📤 Share Link", copy_btn: "Copy 📋", link_copied: "Room link copied to clipboard!",
+    players_in_room: "Players in room:", waiting_opponent: "Waiting for opponent...", leave_room: "❌ Leave Room",
+    create_modal_title: "✨ CREATE A ROOM", create_modal_sub: "Customize your private room:", create_btn: "Create ⚡",
+    tourney_screen_title: "🎯 Blitz Tournament", tourney_teaser_title: "Coming soon!", tourney_teaser_desc: "This mode is currently under consideration and development. Get ready to face the elite in epic tournaments very soon...",
+    tourney_rewards: "Rewards: 200 🪙 + 1 🏆 + 50 ⭐",
+    welcome_title: "⚡ BLITZ IDENTITY ⚡", welcome_sub: "Customize your competitive profile:",
+    pseudo_label: "PSEUDO", avatar_num_label: "AVATAR (1-999)", flag_label: "FLAG", region_label: "REGION",
+    shop_title: "🛍️ SHOP", shop_tab_bonus: "🟢 Bonus (self)", shop_tab_malus: "🔴 Malus (opponent)", close: "Close",
+    lb_title: "🏆 LEADERBOARD", lb_reg: "📍 Region", lb_nat: "🇫🇷 France", lb_glb: "🌍 World",
+    lb_combined_desc: "💡 Combined: Trophies priority, tie-broken by points",
+    get_ready: "GET READY!", hud_opp_target: "OPPONENT TARGET", hud_solo_score: "SCORE", timer_label: "Time", target_label: "TARGET: ",
+    tow_title: "🪢 TUG-OF-WAR", recap_my_target: "🎯 My Target: ", recap_opp_target: "🎯 Opponent Target: ", recap_my_score: "⭐ My Score: ", recap_coins: "🪙 Coins Earned: ",
+    double_reward: "📺 Double my rewards (Ad)", main_menu: "MAIN MENU", no_rooms: "No open rooms.", no_players: "No players.",
+    friends_title: "👥 Friends List", friends_btn: "👥 Friends", add_btn: "Add", no_friends: "No friends yet.", rematch_btn: "Rematch ⚔️",
+    ad_title: "Support the Creator", ad_desc: "Chiffre Blitz is 100% free. A support advertisement will play. Thank you! ❤️", ad_btn: "Start Game ⚡", ad_sponsored: "SPONSORED VIDEO...",
+    not_enough_coins: "You don't have enough coins 🪙 to buy this item!",
+    friends_tab_requests: "Requests", friends_tab_invites: "Invites",
+    friend_online: "Online", friend_offline: "Offline", friend_accept: "✅ Accept", friend_pending: "⏳ Pending",
+    friend_invite: "Invite", friend_remove: "Remove", friend_cancel: "Cancel request", friend_sent_req: "Request sent",
+    friend_wants: "Wants to be your friend!", friend_received: "📥 RECEIVED", friend_sent_label: "📤 SENT",
+    friend_no_requests: "No pending requests.", friend_no_invites: "No pending invites.",
+    friend_view_trophy: "View trophy room", friend_room_created: "📤 Room created and invite sent!",
+    friend_game_invite_from: "📩 Game invite from", friend_join_room: "Join room ⚡", friend_join: "Join ⚡", friend_room: "Room:",
+    rooms_join: "Join", rooms_room: "Room", rooms_name_short: "Room name too short.", rooms_invalid_code: "Enter a valid code.",
+    share_text: "Come face me on Chiffre Blitz!",
+    music_title: "🎵 SOUNDTRACK",
+    music_no_spoiler: "Only released seasons are available (no spoilers!).",
+    music_auto: "Auto (current season)",
+    music_season_label: "Season",
+    combo_x15: "⚡ COMBO x15!", combo_x30: "🔥 COMBO x30!!", combo_perfection: "💥 PERFECTION x35!!!",
+    ranked_empty: "Empty inventory!", ranked_summary: "Selected items: X/2", ranked_ready: "✅ Ready to launch",
+    ranked_warning: "⚠️ You must select exactly 2 items", ranked_selected: "Selected:", ranked_add: "+ Add",
+    ranked_remove: "- Remove", ranked_no_stock: "You don't have enough copies of this item.",
+    ranked_must_2: "In ranked mode, you must select exactly 2 items.",
+    opp_wants_rematch: "⚔️ Opponent wants a rematch!", malus_received: "💥 ENEMY TRAP RECEIVED!",
+    lb_regional_label: "Regional", lb_no_players: "No players.",
+    action_friend_request: "🤝 Friend request", action_trophy_room: "🏛️ Trophy room",
+    badge_ranked: "⚔️ RANKED", badge_tow: "🪢 TUG-OF-WAR", badge_private: "👥 PRIVATE ROOM",
+    badge_chaos: "🌪️ CHAOS MODE", badge_expresso: "⚡ EXPRESSO 20s", badge_1v1: "⚔️ 1v1 FRIENDLY",
+    badge_solo_random: "🎲 SOLO RANDOM", badge_solo_classic: "🏋️ SOLO CLASSIC", badge_avalanche: "🏔️ AVALANCHE",
+    jackpot_win: "JACKPOT! +X Coins 🪙", jackpot_item: "ITEM WON! ⚡", jackpot_lost: "LOST! X Coins 🪙", jackpot_nothing: "NOTHING! Try again.",
+    jackpot_coins_label: "Coins",
+    triomphe: "TRIUMPH!", equality: "DRAW!", victory_supreme: "🏆 SUPREME VICTORY!",
+    defeat_bitter: "💥 BITTER DEFEAT...", equality_timeout: "⏱️ DRAW!",
+    reward_doubled: "✅ Rewards doubled!", rush_bonus: "(RUSH)",
+    perfection_popup_text: "⚡ PERFECTION — Combo x35 reached! Max reward + Trophy 🏆 unlocked!",
+    trophy_unlocked_status: "✅ Unlocked", trophy_locked_status: "🔒 Locked", trophy_progress_label: "Progress:",
+    trophy_title_unlocked: "Title unlocked:", trophy_soon: "🔒 Soon", trophy_end_season: "End of season",
+    trophy_name_first_victory: "First Victory", trophy_cond_first_victory: "Win 1 1v1 match",
+    trophy_name_unstoppable: "Unstoppable", trophy_cond_unstoppable: "5 wins in a row",
+    trophy_name_gladiator: "Gladiator", trophy_cond_gladiator: "Play 30 1v1 matches",
+    trophy_name_champion: "Champion", trophy_cond_champion: "Win a tournament (soon!)",
+    trophy_name_awakening: "Awakening", trophy_cond_awakening: "Combo x15",
+    trophy_name_furnace: "Furnace", trophy_cond_furnace: "Combo x30",
+    trophy_name_perfection: "PERFECTION", trophy_cond_perfection: "Combo x35",
+    trophy_name_avalanche_master: "Avalanche Master", trophy_cond_avalanche_master: "Score 400 in Avalanche",
+    trophy_name_combatant: "Combatant", trophy_cond_combatant: "Pass Tier 15",
+    trophy_name_elite: "Elite", trophy_cond_elite: "Pass Tier 30",
+    trophy_name_worker: "Worker", trophy_cond_worker: "1000 🪙 earned in game",
+    trophy_name_rising_star: "Rising Star", trophy_cond_rising_star: "500 leaderboard points",
+    trophy_name_local_king: "Local King", trophy_cond_local_king: "Regional #1 at season end",
+    trophy_name_midas: "Midas", trophy_cond_midas: "#1 coins at season end",
+    trophy_name_dynasty: "Dynasty", trophy_cond_dynasty: "3 seasons #1",
+    trophy_name_world_n1: "World #1", trophy_cond_world_n1: "Global #1 at season end",
+    shelf_combat: "⚔️ COMBAT", shelf_skill: "💥 SKILL", shelf_progression: "📈 PROGRESSION", shelf_domination: "👑 DOMINATION",
+    solo_perfection_banner: "💥 PERFECTION x35!", solo_perfection_reason: "PERFECTION! Max reward + Trophy 🏆",
+    solo_training_done: "🏋️ TRAINING DONE", solo_score_label: "Score:",
+    catch_how_to_play: "📖 HOW TO PLAY:",
+    catch_solo_btn: "🏋️ Solo", catch_1v1_btn: "⚔️ 1v1 Duel",
+    catch_halloween_label: "🎃 HAUNTED HUNT",
+    catch_halloween_rules: "Click 🦇 <b style='color:#00ff88'>(+10)</b>! Avoid 👻 <b style='color:#ff4b2b'>(−15)</b>. Pumpkins: <b style='color:#00ff88'>SMILING = +20 bonus</b>, <b style='color:#ff4b2b'>ANGRY = −20</b>. Bonus (max 100🪙) is NOT doubled by x2.",
+    catch_noel_label: "🎄 SANTA'S SACK",
+    catch_noel_rules: "Catch 🎁 <b style='color:#00ff88'>(+10)</b>! Avoid 🎄 <b style='color:#ff4b2b'>(−15)</b>. Elves: <b style='color:#00ff88'>SMILING = +20 bonus</b>, <b style='color:#ff4b2b'>ANGRY = −20</b>. Bonus (max 100🪙) is NOT doubled by x2.",
+    catch_season_done: "🎯 SEASONAL MODE DONE", catch_score_label: "Score:", catch_bonus_label: "Bonus:", catch_rush_x2: "(x2)",
+    powers: {
+      spotlight: { name: "💡 Spotlight", desc: "Reveals the correct tile for 2s. Zero hesitation." },
+      freeze: { name: "⏳ Time Freeze", desc: "Freezes the timer for 3s. Breathe, you've got time." },
+      joker: { name: "⚡ Lightning Joker", desc: "Instantly validates your current target." },
+      nova: { name: "🌟 Time Nova", desc: "GIGA: chains 3 auto-validations." },
+      quake: { name: "📳 Earthquake", desc: "Shakes the opponent's grid for 2s." },
+      micro: { name: "🐜 Micro-Tiles", desc: "Shrinks the opponent's tiles for 2s." },
+      eclipse: { name: "🌑 Eclipse", desc: "Blurs the opponent's grid (1.5s)." },
+      chaos: { name: "🌪️ Absolute Chaos", desc: "GIGA: quake + micro + eclipse chained (5s)." }
+    }
+  }
 };
-let currentLang = localStorage.getItem("cb_lang") || "fr";
-function toggleLanguage() {
-currentLang = (currentLang === "fr") ? "en" : "fr";
-localStorage.setItem("cb_lang", currentLang);
-applyTranslations();
-if (document.getElementById("modal-shop").style.display === "flex") switchShopTab(currentShopTab);
-if (document.getElementById("modal-ranked-loadout").style.display === "flex") renderRankedLoadoutItems();
-if (document.getElementById("modal-blitz-pass").style.display === "flex") renderBlitzPass();
-updateCombinedExplanationVisibility();
+
+function detectLanguage() {
+  const saved = localStorage.getItem("cb_lang");
+  if (saved) return saved;
+  const nav = (navigator.language || navigator.userLanguage || "fr").toLowerCase();
+  return nav.startsWith("fr") ? "fr" : "en";
 }
+let currentLang = detectLanguage();
+
+function toggleLanguage() {
+  currentLang = (currentLang === "fr") ? "en" : "fr";
+  localStorage.setItem("cb_lang", currentLang);
+  applyTranslations();
+  if (document.getElementById("modal-shop").style.display === "flex") switchShopTab(currentShopTab);
+  if (document.getElementById("modal-ranked-loadout").style.display === "flex") renderRankedLoadoutItems();
+  if (document.getElementById("modal-blitz-pass").style.display === "flex") renderBlitzPass();
+  updateCombinedExplanationVisibility();
+}
+
 function applyTranslations() {
-const dict = i18n[currentLang];
-document.querySelectorAll("[data-i18n]").forEach(el => {
-const key = el.getAttribute("data-i18n");
-if (dict[key]) el.innerText = dict[key];
-});
-const langBtn = document.getElementById("lang-btn");
-if (langBtn) langBtn.innerText = (currentLang === "fr") ? "ENG" : "FR";
+  const dict = i18n[currentLang];
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.getAttribute("data-i18n");
+    if (dict[key]) el.innerText = dict[key];
+  });
+  const langBtn = document.getElementById("lang-btn");
+  if (langBtn) langBtn.innerText = (currentLang === "fr") ? "ENG" : "FR";
 }
