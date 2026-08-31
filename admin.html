@@ -219,6 +219,33 @@ label {
   <div class="card">
     <h2 style="color:#f8b500;">🎁 Distribution de Cadeaux Admin</h2>
 
+      <div class="card" style="border-color: rgba(0,210,255,0.55);">
+    <h2 style="color:#00d2ff;">🟢 Joueurs en ligne</h2>
+    <div id="admin-online-count" style="font-size:28px; font-weight:900; color:#00ff88; text-align:center;">-</div>
+    <div class="card-desc">Nombre de joueurs réellement connectés (mis à jour toutes les 5s).</div>
+  </div>
+
+  <div class="card" style="border-color: rgba(248,181,0,0.55);">
+    <h2 style="color:#f8b500;">💰 Ajuster Pièces / Points / Trophées</h2>
+    <select id="admin-adjust-mode" onchange="toggleAdjustInputs()">
+      <option value="all">🌍 Tout le monde</option>
+      <option value="pseudo">👤 Par pseudo</option>
+      <option value="random">🎲 Aléatoire</option>
+    </select>
+    <input type="text" id="admin-adjust-pseudo" placeholder="Pseudo exact..." style="display:none;">
+    <input type="number" id="admin-adjust-count" placeholder="Nb de joueurs (X)" value="1" style="display:none;">
+    <div class="row">
+      <select id="admin-adjust-currency">
+        <option value="coins">🪙 Pièces</option>
+        <option value="points">⚡ Points</option>
+        <option value="trophies">🏆 Trophées</option>
+      </select>
+      <input type="number" id="admin-adjust-amount" placeholder="Montant (+ donner / - retirer)" value="100">
+    </div>
+    <button class="btn-gold" onclick="adminAdjustCurrency()">Appliquer ⚡</button>
+    <div id="admin-adjust-result" class="small-result"></div>
+  </div>
+
     <select id="admin-target-type" onchange="toggleAdminTargetInput()">
       <option value="all">🌍 Tout le monde</option>
       <option value="pseudo">👤 Par Pseudo</option>
@@ -514,7 +541,33 @@ socket.on('admin_season_dates', (list) => {
     rows.appendChild(row);
   });
 });
+/* ---------- AJUSTER DEVISES ---------- */
+function toggleAdjustInputs() {
+  const mode = document.getElementById('admin-adjust-mode').value;
+  document.getElementById('admin-adjust-pseudo').style.display = (mode === 'pseudo') ? 'block' : 'none';
+  document.getElementById('admin-adjust-count').style.display = (mode === 'random') ? 'block' : 'none';
+}
+function adminAdjustCurrency() {
+  socket.emit('admin_adjust_currency', {
+    mode: document.getElementById('admin-adjust-mode').value,
+    currency: document.getElementById('admin-adjust-currency').value,
+    amount: parseInt(document.getElementById('admin-adjust-amount').value) || 0,
+    pseudo: document.getElementById('admin-adjust-pseudo').value.trim(),
+    count: parseInt(document.getElementById('admin-adjust-count').value) || 1
+  });
+}
+socket.on('admin_adjust_result', (d) => {
+  const el = document.getElementById('admin-adjust-result');
+  if (el) { el.style.color = d.ok ? '#00ff88' : '#ff4b2b'; el.innerText = d.message || ''; }
+});
 
+/* ---------- COMPTEUR EN LIGNE ---------- */
+setInterval(() => { socket.emit('admin_get_stats'); }, 5000);
+socket.on('admin_stats', (s) => {
+  const el = document.getElementById('admin-online-count');
+  if (el) el.innerText = s.online;
+});
+  
 function saveSeasonDates() {
   const dates = {};
   ['s1', 's2', 's3'].forEach(id => {
