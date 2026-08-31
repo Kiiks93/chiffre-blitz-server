@@ -392,6 +392,17 @@ function updatePassSeasonLabels() {
   const badgeEl = document.getElementById("pass-modal-season");
   if (badgeEl) badgeEl.innerText = `Saison ${num} • ${season.emoji} ${season.name}`;
 }
+function isoToFr(iso) { const [y, m, d] = String(iso).split('-'); return `${d}/${m}/${y}`; }
+if (typeof socket !== "undefined") {
+  socket.on('seasons_updated', (list) => {
+    (list || []).forEach(s => {
+      const c = SEASONS_CLIENT.find(x => x.id === s.id);
+      if (c) { c.start = isoToFr(s.start); c.end = isoToFr(s.end); }
+    });
+    updatePassSeasonLabels();
+    if (document.getElementById('modal-blitz-pass').style.display === 'flex') renderBlitzPass();
+  });
+}
 
 if (typeof socket !== "undefined") {
   socket.on("player_registered", () => setTimeout(updatePassSeasonLabels, 60));
