@@ -438,6 +438,19 @@ function renderProfilePackSelector() {
   packSelect.appendChild(opt);
 });
 }
+function equipFromSelect(cat, val) {
+  if (!myProfile.inventory) myProfile.inventory = {};
+  if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
+  if (val) {
+    myProfile.inventory.__equipped[cat] = val;
+    localStorage.setItem('cb_equipped_' + cat, val);
+    if (socket.connected) socket.emit('equip_cosmetic', val);
+  } else {
+    delete myProfile.inventory.__equipped[cat];
+    localStorage.removeItem('cb_equipped_' + cat);
+    if (socket.connected) socket.emit('equip_cosmetic', 'none_' + cat);
+  }
+}
 function renderProfileCustomizationMenus() {
   const titleSelect = document.getElementById("title-input");
   const equippedTitle = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.title;
@@ -461,12 +474,12 @@ function renderProfileCustomizationMenus() {
     frames.forEach(fId => {
       const displayName = FRAME_DISPLAY_NAMES[fId] || fId;
       const opt = document.createElement("option");
-      opt.value = fId; 
+      opt.value = fId;
       opt.innerText = displayName;
       if (equippedFrame === fId) opt.selected = true;
       frameSelect.appendChild(opt);
     });
-    titleSelect.onchange = () => { equipFromSelect('title', titleSelect.value); };
+    frameSelect.onchange = () => { equipFromSelect('frame', frameSelect.value); updateProfilePreview(); };
   }
   const themeSelect = document.getElementById("theme-input");
   const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
