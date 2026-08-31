@@ -271,7 +271,15 @@ function getOnlineCount() {
 function broadcastOnlineCount() {
   io.emit('online_count', { online: getOnlineCount() });
 }
-
+async function logPlayerAction(p, action, detail, currency, amount, balanceAfter) {
+  try {
+    await supabase.from('player_logs').insert([{
+      username: p.username, socket_id: p.socketId, action, detail,
+      currency: currency || null, amount: (amount === undefined ? null : amount),
+      balance_after: (balanceAfter === undefined ? null : balanceAfter)
+    }]);
+  } catch (e) { console.log('log error:', e.message); }
+}
 /* ============================================================
 SOCKET
 ============================================================ */
@@ -375,6 +383,7 @@ io.on('connection', (socket) => {
     const item = ITEM_CATALOG[itemId];
     if (!item || !isShopItem(itemId)) { socket.emit('room_error', "Cet objet ne peut pas etre achete en boutique."); return; }
     if (player.coins < item.price) { socket.emit('room_error', "Tu n'as pas assez de pieces !"); return; }
+    logPlayerAction(player, 'buy_item_fail', 'Fonds insuffisants pour ' + itemId, 'coins', 0, player.coins);
     player.inventory = player.inventory || {};
     player.unlocked_items = player.unlocked_items || [];
     if (item.type === 'power') { player.coins -= item.price; player.inventory[itemId] = (player.inventory[itemId] || 0) + 1; }
@@ -389,6 +398,7 @@ io.on('connection', (socket) => {
       player.coins -= item.price; player.unlocked_items.push(itemId);
     } else { return; }
     await savePlayerToSupabase(socket.id);
+    logPlayerAction(player, 'buy_item', 'Achat ' + itemId, 'coins', -item.price, player.coins);
     socket.emit('player_registered', player);
   });
 
@@ -757,6 +767,7 @@ io.on('connection', (socket) => {
     let triggerWheel = (globalEvents.jackpotEclair && Math.random() < 0.10);
     await savePlayerToSupabase(socket.id);
     socket.emit('player_registered', player);
+    logPlayerAction(player, 'solo_reward', 'Entraînement (score ' + (payload && payload.score || 0) + ')', 'coins', earnedCoins, player.coins);
     socket.emit('solo_reward_result', { baseCoins, rushBonus, earnedCoins, triggerWheel, globalEvents, perfection });
   });
 
@@ -887,7 +898,14 @@ io.on('connection', (socket) => {
     if (!socket.isAdmin) return;
     socket.emit('admin_stats', { online: getOnlineCount() });
   });
-
+  socket.on('admin_get_logs', async (data) => {
+    if (!socket.isAdmin) return;
+    const username = ((data && data.username) || '').trim();
+    let query = supabase.from('player_logs').select('*').order('id', { ascending: false }).limit(100);
+    if (username) query = query.ilike('username', username);
+    const { data: rows, error } = await query;
+    socket.emit('admin_logs_data', { username, rows: (!error && rows) ? rows : [] });
+  });
   /* ---------- AJUSTER PIÈCES / POINTS / TROPHÉES ---------- */
   socket.on('admin_adjust_currency', async (data) => {
     if (!socket.isAdmin) return;
@@ -928,6 +946,7 @@ io.on('connection', (socket) => {
       const p = activePlayers[id];
       if (!p) continue;
       apply(p);
+      logPlayerAction(p, 'admin_adjust', 'Ajustement admin', currency, amt, p[currency]);
       await savePlayerToSupabase(id);
       io.to(id).emit('player_registered', p);
     }
