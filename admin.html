@@ -345,35 +345,6 @@ socket.on("admin_auth_success", (data) => {
 });
 
 /* ============================================================
-CADEAUX ADMIN
-============================================================ */
-function toggleAdminTargetInput() {
-  const type = document.getElementById("admin-target-type").value;
-  document.getElementById("admin-target-pseudo").style.display = (type === "pseudo") ? "block" : "none";
-}
-
-function adminSendGift() {
-  const targetType = document.getElementById("admin-target-type").value;
-  const pseudo = document.getElementById("admin-target-pseudo").value.trim();
-  const currency = document.getElementById("admin-currency-type").value;
-  const amount = parseInt(document.getElementById("admin-amount").value) || 0;
-  const target = (targetType === "all") ? "TOUS" : pseudo;
-
-  if (targetType === "pseudo" && !pseudo) {
-    alert("Entre un pseudo valide !");
-    return;
-  }
-
-  if (amount <= 0) {
-    alert("Entre un montant supérieur à 0.");
-    return;
-  }
-
-  socket.emit("admin_give_gift", { targetUsername: target, currency, amount });
-  alert(`🎁 Don de ${amount} (${currency}) envoyé !`);
-}
-
-/* ============================================================
 ANNONCES
 ============================================================ */
 function adminBroadcast() {
