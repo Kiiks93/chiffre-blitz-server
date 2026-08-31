@@ -127,18 +127,92 @@ function getFrameClass(equippedFrame) {
   return FRAME_CLASS_MAP[equippedFrame] || "";
 }
 
-function equipFromSelect(cat, val) {
-  if (!myProfile.inventory) myProfile.inventory = {};
-  if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
-  if (val) {
-    myProfile.inventory.__equipped[cat] = val;
-    localStorage.setItem('cb_equipped_' + cat, val);
-    if (socket.connected) socket.emit('equip_cosmetic', val);
-  } else {
-    delete myProfile.inventory.__equipped[cat];
-    localStorage.removeItem('cb_equipped_' + cat);
-    if (socket.connected) socket.emit('equip_cosmetic', 'none_' + cat);
-  }
+/* ---------- NOMS D'AFFICHAGE TRADUITS (fonctions dynamiques) ---------- */
+function getAvatarDisplayNames() {
+  const fr = currentLang === "fr";
+  return {
+    "avatar_lottie_palier15": fr ? "🐱 Chat Assistant (Pass S1)" : "🐱 Assistant Cat (Pass S1)",
+    "avatar_lottie_palier30": fr ? "🌈 Chat Arc-en-ciel (Pass S1)" : "🌈 Rainbow Cat (Pass S1)",
+    "avatar_tigre": fr ? "🐯 Tigre de Sibérie (GRAAL S1)" : "🐯 Siberian Tiger (GRAAL S1)",
+    "avatar_s2_squelette": fr ? "💀 Squelette qui danse (Pass S2)" : "💀 Dancing Skeleton (Pass S2)",
+    "avatar_s2_chauve": fr ? "🦇 Chauve-Souris (Pass S2)" : "🦇 Bat (Pass S2)",
+    "avatar_s2_citrouille": fr ? "🎃 Citrouille du Château (GRAAL S2)" : "🎃 Castle Pumpkin (GRAAL S2)",
+    "avatar_s3_bonhomme": fr ? "⛄ Bonhomme de neige (Pass S3)" : "⛄ Snowman (Pass S3)",
+    "avatar_s3_boule": fr ? "🔮 Boule de neige (Pass S3)" : "🔮 Snowball (Pass S3)",
+    "avatar_s3_perenoel": fr ? "🎅 Père Noël (Pass S3)" : "🎅 Santa Claus (Pass S3)"
+  };
+}
+function getTitleDisplayNames() {
+  const fr = currentLang === "fr";
+  const d = i18n[currentLang];
+  return {
+    "title_stalker": "🕵️ " + (fr ? "Stalker Numérique" : "Digital Stalker"),
+    "title_felin": "🐱 " + (fr ? "Réflexe Félin" : "Feline Reflex"),
+    "title_neon": "🌈 " + (fr ? "Pulsion Néon" : "Neon Pulse"),
+    "title_spectre": "🌌 " + (fr ? "Spectre Cosmique" : "Cosmic Specter"),
+    "title_supreme": "⚡ " + (fr ? "FÉLIN SUPRÊME" : "SUPREME FELINE"),
+    "title_champion": "🏅 " + (fr ? "Champion Éclair" : "Lightning Champion"),
+    "title_combattant": "🎖️ " + d.trophy_name_combatant,
+    "title_elite": "🏵️ " + d.trophy_name_elite,
+    "title_eveille": "⚡ " + d.trophy_name_awakening,
+    "title_flamme": "🔥 " + d.trophy_name_furnace,
+    "title_parfait": "💎 " + d.trophy_name_perfection,
+    "title_vainqueur": "⚔️ " + (fr ? "Vainqueur" : "Victor"),
+    "title_inarrettable": "🔥 " + d.trophy_name_unstoppable,
+    "title_gladiateur": "🛡️ " + d.trophy_name_gladiator,
+    "title_champion_trophy": "👑 " + d.trophy_name_champion,
+    "title_maitre_avalanche": "🎯 " + d.trophy_name_avalanche_master,
+    "title_travailleur": "⛏️ " + d.trophy_name_worker,
+    "title_etoile": "⭐ " + d.trophy_name_rising_star,
+    "title_roi_local": "🏰 " + d.trophy_name_local_king,
+    "title_midas": "💰 " + d.trophy_name_midas,
+    "title_dynastie": "🏛️ " + d.trophy_name_dynasty,
+    "title_mondial": "🌍 " + d.trophy_name_world_n1,
+    "title_fantome": "👻 " + (fr ? "Chuchoteur de Fantômes" : "Ghost Whisperer"),
+    "title_danse_macabre": "🦴 " + (fr ? "Danse Macabre" : "Macabre Dance"),
+    "title_citrouille": "🎃 " + (fr ? "Pulsion Citrouille" : "Pumpkin Pulse"),
+    "title_spectre_automne": "🍂 " + (fr ? "Spectre d'Automne" : "Autumn Specter"),
+    "title_roi_halloween": "🎃 " + (fr ? "ROI D'HALLOWEEN" : "KING OF HALLOWEEN"),
+    "title_esprit_halloween": "👻 " + (fr ? "Esprit d'Halloween" : "Halloween Spirit"),
+    "title_lutin": "🧝 " + (fr ? "Lutin espiègle" : "Mischievous Elf"),
+    "title_traineau": "🛷 " + (fr ? "Pilote de traîneau" : "Sleigh Pilot"),
+    "title_rennes": "🦌 " + (fr ? "Dompteur de rennes" : "Reindeer Tamer"),
+    "title_assistant_noel": "🎅 " + (fr ? "Assistant du Père Noël" : "Santa's Assistant"),
+    "title_magie_noel": "✨ " + (fr ? "Magie de Noël" : "Christmas Magic"),
+    "title_esprit_noel": "🎄 " + (fr ? "Esprit de Noël" : "Christmas Spirit")
+  };
+}
+function getFrameDisplayNames() {
+  const fr = currentLang === "fr";
+  return {
+    "frame_standard": "🔰 " + (fr ? "Cadre « Standard »" : "Frame « Standard »"),
+    "frame_silver": "🛡️ " + (fr ? "Cadre « Argenté »" : "Frame « Silver »"),
+    "frame_chroma": "🌈 " + (fr ? "Cadre « Flux Chroma »" : "Frame « Chroma Flow »"),
+    "frame_prism": "✨ " + (fr ? "Cadre « Doré »" : "Frame « Gold »"),
+    "frame_voltage": "⚡ " + (fr ? "Cadre « Sous Tension »" : "Frame « Voltage »"),
+    "frame_obsidian": "🖤 " + (fr ? "Cadre « Obsidienne »" : "Frame « Obsidian »"),
+    "frame_givre": "🧊 " + (fr ? "Cadre « Givre »" : "Frame « Frost »"),
+    "frame_osseux": "🎃 " + (fr ? "Cadre « Lanterne »" : "Frame « Lantern »"),
+    "frame_fantome": "👻 " + (fr ? "Cadre « Fantôme »" : "Frame « Ghost »"),
+    "frame_bonbon": "🍭 " + (fr ? "Cadre « Bonbon »" : "Frame « Candy »"),
+    "frame_guirlande": "🎄 " + (fr ? "Cadre « Guirlande »" : "Frame « Garland »"),
+    "frame_lutin": "🧝 " + (fr ? "Cadre « Lutin »" : "Frame « Elf »")
+  };
+}
+function getThemeDisplayNames() {
+  const fr = currentLang === "fr";
+  return {
+    "theme_alt": "🎨 " + (fr ? "Thème de Grille Rétro / Doré" : "Retro / Gold Grid Theme"),
+    "theme_glacial": "🧊 " + (fr ? "Thème de Grille Cryo" : "Cryo Grid Theme"),
+    "theme_eclair": "⚡ " + (fr ? "Thème de Grille Éclair" : "Lightning Grid Theme"),
+    "theme_neon": "🌈 " + (fr ? "Thème de Grille Néon Synthwave" : "Neon Synthwave Grid Theme"),
+    "theme_obsidian": "🖤 " + (fr ? "Thème de Grille Obsidienne" : "Obsidian Grid Theme"),
+    "theme_citrouille": "🎃 " + (fr ? "Thème de Grille Lanterne" : "Lantern Grid Theme"),
+    "theme_fantome": "👻 " + (fr ? "Thème de Grille Fantôme" : "Ghost Grid Theme"),
+    "theme_bonbon": "🍭 " + (fr ? "Thème de Grille Bonbon Canne" : "Candy Cane Grid Theme"),
+    "theme_sapin": "🎄 " + (fr ? "Thème de Grille Sapin de Noël" : "Christmas Tree Grid Theme"),
+    "theme_lutin": "🧝 " + (fr ? "Thème de Grille Lutin" : "Elf Grid Theme")
+  };
 }
 
 function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
@@ -153,33 +227,18 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
       if (frameClass) pill.classList.add(frameClass);
     }
   }
+  const ADN = getAvatarDisplayNames();
   let avatarContent = avatarNum || 1;
   let avatarTitle = `Avatar #${avatarNum || 1}`;
-  if (equippedAvatar === "avatar_lottie_palier30") {
-    avatarTitle = "Chat Arc-en-ciel (Palier 25 - Lottie)";
-    avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="black-rainbow-cat.json" style="width:32px; height:32px;"></div>`;
-  } else if (equippedAvatar === "avatar_lottie_palier15") {
-    avatarTitle = "Chat Assistant (Palier 15 - Lottie)";
-    avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="cat-assistant.json" style="width:32px; height:32px;"></div>`;
-  } else if (equippedAvatar === "avatar_tigre") {
-    avatarTitle = "Tigre de Sibérie (GRAAL - Palier 30)";
-    avatarContent = `<video class="tft-avatar-video" src="tiger-siberien.mp4" autoplay loop muted playsinline></video>`;
-  } else if (equippedAvatar === "avatar_s2_squelette") {
-    avatarTitle = "Squelette qui danse (Pass Halloween)";
-    avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="squelette-danse.json" style="width:32px; height:32px;"></div>`;
-  } else if (equippedAvatar === "avatar_s2_chauve") {
-    avatarTitle = "Chauve-Souris (Pass Halloween)";
-    avatarContent = `<video class="tft-avatar-video" src="bat-halloween.mp4" autoplay loop muted playsinline></video>`;
-    } else if (equippedAvatar === "avatar_s2_citrouille") {
-    avatarTitle = "Citrouille du Château (GRAAL Halloween)";
-    avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="citrouille-chateau.json" style="width:32px; height:32px;"></div>`;
-  } else if (equippedAvatar === "avatar_s3_bonhomme") {
-    avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="bonhomme-de-neige-avatar.json" style="width:40px; height:40px;"></div>`;
-  } else if (equippedAvatar === "avatar_s3_boule") {
-    avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="boule-de-neige-avatar.json" style="width:40px; height:40px;"></div>`;
-  } else if (equippedAvatar === "avatar_s3_perenoel") {
-    avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="pere-noel-avatar.json" style="width:40px; height:40px;"></div>`;
-  }
+  if (equippedAvatar === "avatar_lottie_palier30") { avatarTitle = ADN["avatar_lottie_palier30"]; avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="black-rainbow-cat.json" style="width:32px; height:32px;"></div>`; }
+  else if (equippedAvatar === "avatar_lottie_palier15") { avatarTitle = ADN["avatar_lottie_palier15"]; avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="cat-assistant.json" style="width:32px; height:32px;"></div>`; }
+  else if (equippedAvatar === "avatar_tigre") { avatarTitle = ADN["avatar_tigre"]; avatarContent = `<video class="tft-avatar-video" src="tiger-siberien.mp4" autoplay loop muted playsinline></video>`; }
+  else if (equippedAvatar === "avatar_s2_squelette") { avatarTitle = ADN["avatar_s2_squelette"]; avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="squelette-danse.json" style="width:32px; height:32px;"></div>`; }
+  else if (equippedAvatar === "avatar_s2_chauve") { avatarTitle = ADN["avatar_s2_chauve"]; avatarContent = `<video class="tft-avatar-video" src="bat-halloween.mp4" autoplay loop muted playsinline></video>`; }
+  else if (equippedAvatar === "avatar_s2_citrouille") { avatarTitle = ADN["avatar_s2_citrouille"]; avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="citrouille-chateau.json" style="width:32px; height:32px;"></div>`; }
+  else if (equippedAvatar === "avatar_s3_bonhomme") { avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="bonhomme-de-neige-avatar.json" style="width:40px; height:40px;"></div>`; }
+  else if (equippedAvatar === "avatar_s3_boule") { avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="boule-de-neige-avatar.json" style="width:40px; height:40px;"></div>`; }
+  else if (equippedAvatar === "avatar_s3_perenoel") { avatarContent = `<div class="lottie-avatar-badge" data-lottie-url="pere-noel-avatar.json" style="width:40px; height:40px;"></div>`; }
   const frameClass = getFrameClass(equippedFrame);
   const html = `
     <div class="tft-avatar-container ${frameClass}" title="${avatarTitle}">
@@ -190,6 +249,7 @@ function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
   return html;
 }
 function getLargeAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
+  const ADN = getAvatarDisplayNames();
   const avatarType = overrideAvatarType || activeAvatarChoice || (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar);
   const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
   const frameClass = getFrameClass(equippedFrame);
@@ -206,7 +266,7 @@ function getLargeAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
   const html = `
     <div class="tft-avatar-large ${frameClass}">
       <span class="tft-avatar-large-icon" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; ${typeof avatarContent === "number" ? "font-size:24px;" : ""}">${avatarContent}</span>
-      <span class="tft-flag-large-overlay">${flag || "🇫🇷"}</span>
+      <span class="tft-flag-large-overlay">${flag || "🇫"}</span>
     </div>`;
   setTimeout(() => initAllLottieBadges(), 50);
   return html;
@@ -255,21 +315,12 @@ function showAvatarZoom() {
   overlay.style.display = "flex";
   setTimeout(() => initAllLottieBadges(), 50);
 }
-const AVATAR_DISPLAY_NAMES = {
-  "avatar_lottie_palier15": "🐱 Chat Assistant (Pass S1)",
-  "avatar_lottie_palier30": "🌈 Chat Arc-en-ciel (Pass S1)",
-  "avatar_tigre": "🐯 Tigre de Sibérie (GRAAL S1)",
-  "avatar_s2_squelette": "💀 Squelette qui danse (Pass S2)",
-  "avatar_s2_chauve": "🦇 Chauve-Souris (Pass S2)",
-  "avatar_s2_citrouille": "🎃 Citrouille du Château (GRAAL S2)",
-  "avatar_s3_bonhomme": "⛄ Bonhomme de neige (Pass S3)",
-  "avatar_s3_boule": "🔮 Boule de neige (Pass S3)",
-  "avatar_s3_perenoel": "🎅 Père Noël (Pass S3)"
-};
+
 function renderProfileAvatarSelector() {
   const container = document.getElementById("profile-avatar-selector");
   if (!container) return;
   const unlocked = myProfile.unlocked_items || [];
+  const ADN = getAvatarDisplayNames();
   const refSelect = document.getElementById("title-input");
   const sel = document.createElement("select");
   sel.id = "avatar-select-input";
@@ -279,11 +330,11 @@ function renderProfileAvatarSelector() {
   optStd.value = "standard";
   optStd.innerText = "🔢 Avatar Standard";
   sel.appendChild(optStd);
-  for (const id in AVATAR_DISPLAY_NAMES) {
+  for (const id in ADN) {
     if (unlocked.includes(id)) {
       const opt = document.createElement("option");
       opt.value = id;
-      opt.innerText = AVATAR_DISPLAY_NAMES[id];
+      opt.innerText = ADN[id];
       sel.appendChild(opt);
     }
   }
@@ -292,73 +343,8 @@ function renderProfileAvatarSelector() {
   container.style.cssText = "margin-bottom:8px;";
   container.appendChild(sel);
 }
-const TITLE_DISPLAY_NAMES = {
-  // --- Pass S1 ---
-  "title_stalker": "🕵️ Stalker Numérique",
-  "title_felin": "🐱 Réflexe Félin",
-  "title_neon": "🌈 Pulsion Néon",
-  "title_spectre": "🌌 Spectre Cosmique",
-  "title_supreme": "⚡ FÉLIN SUPRÊME",
-  "title_champion": "🏅 Champion Éclair",
-  // --- Trophées ---
-  "title_combattant": "🎖️ Combattant",
-  "title_elite": "🏵️ Élite",
-  "title_eveille": "⚡ Éveil",
-  "title_flamme": "🔥 Fournaise",
-  "title_parfait": "💎 PERFECTION",
-  "title_vainqueur": "⚔️ Vainqueur",
-  "title_inarrettable": "🔥 Inarrêtable",
-  "title_gladiateur": "🛡️ Gladiateur",
-  "title_champion_trophy": "👑 Champion",
-  "title_maitre_avalanche": "🎯 Maître Avalanche",
-  "title_travailleur": "⛏️ Travailleur",
-  "title_etoile": "⭐ Étoile Montante",
-  "title_roi_local": "🏰 Roi Local",
-  "title_midas": "💰 Midas",
-  "title_dynastie": "🏛️ Dynastie",
-  "title_mondial": "🌍 N°1 Mondial",
-  // --- Pass S2 ---
-  "title_fantome": "👻 Chuchoteur de Fantômes",
-  "title_danse_macabre": "🦴 Danse Macabre",
-  "title_citrouille": "🎃 Pulsion Citrouille",
-  "title_spectre_automne": "🍂 Spectre d'Automne",
-  "title_roi_halloween": "🎃 ROI D'HALLOWEEN",
-  "title_esprit_halloween": "👻 Esprit d'Halloween",
-  // --- Pass S3 ---
-  "title_lutin": "🧝 Lutin espiègle",
-  "title_traineau": "🛷 Pilote de traîneau",
-  "title_rennes": "🦌 Dompteur de rennes",
-  "title_assistant_noel": "🎅 Assistant du Père Noël",
-  "title_magie_noel": "✨ Magie de Noël",
-  "title_esprit_noel": "🎄 Esprit de Noël"
-};
-const FRAME_DISPLAY_NAMES = {
-  "frame_standard": "🔰 Cadre « Standard »",
-  "frame_silver": "🛡️ Cadre « Argenté »",
-  "frame_chroma": "🌈 Cadre « Flux Chroma »",
-  "frame_prism": "✨ Cadre « Doré »",
-  "frame_voltage": "⚡ Cadre « Sous Tension »",
-  "frame_obsidian": "🖤 Cadre « Obsidienne »",
-  "frame_givre": "🧊 Cadre « Givre »",
-  "frame_osseux": "🎃 Cadre « Lanterne »",
-  "frame_fantome": "👻 Cadre « Fantôme »",
-  "frame_bonbon": "🍭 Cadre « Bonbon »",
-  "frame_guirlande": "🎄 Cadre « Guirlande »",
-  "frame_lutin": "🧝 Cadre « Lutin »"
-};
-const THEME_DISPLAY_NAMES = {
-  "theme_alt": "🎨 Thème de Grille Rétro / Doré",
-  "theme_glacial": "🧊 Thème de Grille Cryo",
-  "theme_eclair": "⚡ Thème de Grille Éclair",
-  "theme_neon": "🌈 Thème de Grille Néon Synthwave",
-  "theme_obsidian": "🖤 Thème de Grille Obsidienne",
-  "theme_citrouille": "🎃 Thème de Grille Lanterne",
-  "theme_fantome": "👻 Thème de Grille Fantôme",
-  "theme_bonbon": "🍭 Thème de Grille Bonbon Canne",
-  "theme_sapin": "🎄 Thème de Grille Sapin de Noël",
-  "theme_lutin": "🧝 Thème de Grille Lutin"
-};
-/* ---------- PACKS : menu déroulant (grille + cadre en 1 choix) ---------- */
+
+/* ---------- PACKS ---------- */
 const PACKS_LIST = [
   { id: "pack_standard", name: "🔰 Standard", theme: "", frame: "frame_standard" },
   { id: "pack_haute_tension", name: "⚡ Haute Tension", theme: "theme_eclair", frame: "frame_voltage" },
@@ -372,6 +358,19 @@ const PACKS_LIST = [
   { id: "pack_noel_sapin", name: "🎄 Pack Sapin", theme: "theme_sapin", frame: "frame_guirlande" },
   { id: "pack_noel_lutin", name: "🧝 Pack Lutin", theme: "theme_lutin", frame: "frame_lutin" },
 ];
+function equipFromSelect(cat, val) {
+  if (!myProfile.inventory) myProfile.inventory = {};
+  if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
+  if (val) {
+    myProfile.inventory.__equipped[cat] = val;
+    localStorage.setItem('cb_equipped_' + cat, val);
+    if (socket.connected) socket.emit('equip_cosmetic', val);
+  } else {
+    delete myProfile.inventory.__equipped[cat];
+    localStorage.removeItem('cb_equipped_' + cat);
+    if (socket.connected) socket.emit('equip_cosmetic', 'none_' + cat);
+  }
+}
 function ensurePackSelector() {
   if (document.getElementById("pack-input")) return;
   const themeSelect = document.getElementById("theme-input");
@@ -387,39 +386,16 @@ function ensurePackSelector() {
   const required = [pack.theme, pack.frame].filter(x => x !== "");
   const owned = pack.id === "pack_standard" ? true : required.every(i => unlocked.includes(i));
   if (!owned) {
-    showNotificationToast("🔒 Pack non possédé ! Direction la boutique 🛍️", "announcement");
+    showNotificationToast(currentLang === "fr" ? "🔒 Pack non possédé ! Direction la boutique 🛍️" : "🔒 Pack not owned! Go to the shop 🛍️", "announcement");
     packSelect.value = "";
     return;
   }
-  
   const themeSel = document.getElementById("theme-input");
   const frameSel = document.getElementById("frame-input");
   if (themeSel) themeSel.value = pack.theme;
   if (frameSel) frameSel.value = pack.frame;
-  
-  if (!myProfile.inventory) myProfile.inventory = {};
-  if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
-  
-  if (pack.theme) {
-    myProfile.inventory.__equipped.theme = pack.theme;
-    localStorage.setItem("cb_equipped_theme", pack.theme);
-    if (socket.connected) socket.emit("equip_cosmetic", pack.theme);
-  } else {
-    delete myProfile.inventory.__equipped.theme;
-    localStorage.removeItem("cb_equipped_theme");
-    if (socket.connected) socket.emit("equip_cosmetic", "none_theme");
-  }
-  
-  if (pack.frame) {
-    myProfile.inventory.__equipped.frame = pack.frame;
-    localStorage.setItem("cb_equipped_frame", pack.frame);
-    if (socket.connected) socket.emit("equip_cosmetic", pack.frame);
-  } else {
-    delete myProfile.inventory.__equipped.frame;
-    localStorage.removeItem("cb_equipped_frame");
-    if (socket.connected) socket.emit("equip_cosmetic", "none_frame");
-  }
-  
+  equipFromSelect('theme', pack.theme);
+  equipFromSelect('frame', pack.frame);
   updateProfilePreview();
 };
   themeSelect.parentElement.insertBefore(packSelect, themeSelect.nextSibling);
@@ -438,26 +414,16 @@ function renderProfilePackSelector() {
   packSelect.appendChild(opt);
 });
 }
-function equipFromSelect(cat, val) {
-  if (!myProfile.inventory) myProfile.inventory = {};
-  if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
-  if (val) {
-    myProfile.inventory.__equipped[cat] = val;
-    localStorage.setItem('cb_equipped_' + cat, val);
-    if (socket.connected) socket.emit('equip_cosmetic', val);
-  } else {
-    delete myProfile.inventory.__equipped[cat];
-    localStorage.removeItem('cb_equipped_' + cat);
-    if (socket.connected) socket.emit('equip_cosmetic', 'none_' + cat);
-  }
-}
 function renderProfileCustomizationMenus() {
+  const TDN = getTitleDisplayNames();
+  const FDN = getFrameDisplayNames();
+  const THDN = getThemeDisplayNames();
   const titleSelect = document.getElementById("title-input");
   const equippedTitle = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.title;
   if (titleSelect) {
     titleSelect.innerHTML = `<option value="">Aucun titre actif</option>`;
     (myProfile.unlocked_items || []).filter(id => id.startsWith("title_")).forEach(tId => {
-      const displayName = TITLE_DISPLAY_NAMES[tId] || tId;
+      const displayName = TDN[tId] || tId;
       const opt = document.createElement("option");
       opt.value = tId; opt.innerText = displayName;
       if (equippedTitle === tId || equippedTitle === displayName) opt.selected = true;
@@ -472,7 +438,7 @@ function renderProfileCustomizationMenus() {
     const frames = (myProfile.unlocked_items || []).filter(id => id.startsWith("frame_"));
     if (!frames.includes("frame_standard")) frames.unshift("frame_standard");
     frames.forEach(fId => {
-      const displayName = FRAME_DISPLAY_NAMES[fId] || fId;
+      const displayName = FDN[fId] || fId;
       const opt = document.createElement("option");
       opt.value = fId;
       opt.innerText = displayName;
@@ -486,7 +452,7 @@ function renderProfileCustomizationMenus() {
   if (themeSelect) {
     themeSelect.innerHTML = `<option value="">Thème de grille standard</option>`;
     (myProfile.unlocked_items || []).filter(id => id.startsWith("theme_")).forEach(thId => {
-      const displayName = THEME_DISPLAY_NAMES[thId] || thId;
+      const displayName = THDN[thId] || thId;
       const opt = document.createElement("option");
       opt.value = thId; opt.innerText = displayName;
       if (equippedTheme === thId) opt.selected = true;
@@ -569,31 +535,18 @@ function updateEconomyUI() {
 
   if (!recapActive) {
     if (rankEl) rankEl.innerText = getRankName(myProfile.points);
-
-    if (lastDisplayed.coins !== null && myProfile.coins !== lastDisplayed.coins) {
-      showDelta(myProfile.coins - lastDisplayed.coins, "🪙");
-    }
-    if (lastDisplayed.trophies !== null && myProfile.trophies !== lastDisplayed.trophies) {
-      showDelta(myProfile.trophies - lastDisplayed.trophies, "🏆");
-    }
-    if (lastDisplayed.points !== null && myProfile.points !== lastDisplayed.points) {
-      showDelta(myProfile.points - lastDisplayed.points, "pts");
-    }
-
+    if (lastDisplayed.coins !== null && myProfile.coins !== lastDisplayed.coins) showDelta(myProfile.coins - lastDisplayed.coins, "🪙");
+    if (lastDisplayed.trophies !== null && myProfile.trophies !== lastDisplayed.trophies) showDelta(myProfile.trophies - lastDisplayed.trophies, "🏆");
+    if (lastDisplayed.points !== null && myProfile.points !== lastDisplayed.points) showDelta(myProfile.points - lastDisplayed.points, "pts");
     tweenNumber(coinsEl, lastDisplayed.coins, myProfile.coins);
     tweenNumber(trophiesEl, lastDisplayed.trophies, myProfile.trophies);
     tweenNumber(pointsEl, lastDisplayed.points, myProfile.points);
-
-    lastDisplayed = {
-      coins: myProfile.coins,
-      trophies: myProfile.trophies,
-      points: myProfile.points
-    };
+    lastDisplayed = { coins: myProfile.coins, trophies: myProfile.trophies, points: myProfile.points };
   }
 
   const equippedTitle = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.title;
   const titleEl = document.getElementById("user-title-display");
-  if (titleEl) titleEl.innerText = equippedTitle ? `[ ${TITLE_DISPLAY_NAMES[equippedTitle] || equippedTitle} ]` : "";
+  if (titleEl) titleEl.innerText = equippedTitle ? `[ ${getTitleDisplayNames()[equippedTitle] || equippedTitle} ]` : "";
 
   document.getElementById("user-name-display").innerText = myProfile.username || "Définir";
   document.getElementById("user-avatar-badge").innerHTML = getAvatarBadgeHTML(myProfile.flag, myProfile.avatar);
@@ -612,7 +565,7 @@ function isProfileValid() {
 }
 
 /* ============================================================
-COMPTE (roue crantée) + CENTRE DE CONTRÔLE
+COMPTE + CENTRE DE CONTRÔLE
 ============================================================ */
 function switchAccount() {
   localStorage.removeItem('cb_username');
@@ -696,13 +649,8 @@ function submitAccountForm() {
   pendingAccountLogin = true;
   if (socket.connected) {
     socket.emit("register_player", {
-      username: myProfile.username,
-      region: myProfile.region,
-      avatar: myProfile.avatar,
-      flag: myProfile.flag,
-      inventory: myProfile.inventory || {},
-      secretCode: myProfile.secretCode,
-      mode: 'login'
+      username: myProfile.username, region: myProfile.region, avatar: myProfile.avatar, flag: myProfile.flag,
+      inventory: myProfile.inventory || {}, secretCode: myProfile.secretCode, mode: 'login'
     });
   } else {
     alert('❌ Connexion au serveur perdue. Réessaie dans quelques secondes.');
@@ -751,7 +699,7 @@ function renderControlCenter() {
   const accountEl = document.getElementById('cc-account-btn');
   if (accountEl) accountEl.innerText = isEN ? "👤 Account management" : "👤 Gestion du compte";
   const musEl = document.getElementById('cc-music-text');
-  if (musEl) { const p = localStorage.getItem('cb_music_season'); musEl.innerText = 'Bande son : ' + (p ? 'Saison ' + p.replace('s', '') : 'Auto'); }
+  if (musEl) { const p = localStorage.getItem('cb_music_season'); musEl.innerText = (isEN ? 'Soundtrack: ' : 'Bande son : ') + (p ? (isEN ? 'Season ' : 'Saison ') + p.replace('s', '') : (isEN ? 'Auto' : 'Auto')); }
   const btnLabel = document.getElementById('cc-btn-label');
   if (btnLabel) btnLabel.innerText = isEN ? "Settings" : "Paramètres";
 }
@@ -813,16 +761,10 @@ function promptProfileChange() {
   const oldSwitch = document.getElementById('switch-account-btn');
   if (oldSwitch) oldSwitch.style.display = 'none';
   const validateBtn = document.querySelector('[onclick="saveProfileFromModal()"]');
-  if (validateBtn) validateBtn.innerText = '💾 Enregistrer ma personnalisation';
+  if (validateBtn) validateBtn.innerText = currentLang === "fr" ? '💾 Enregistrer ma personnalisation' : '💾 Save my customization';
   document.getElementById("modal-username").style.display = "flex";
 }
 function saveProfileFromModal() {
-  const f = document.getElementById('frame-input')?.value, th = document.getElementById('theme-input')?.value, ti = document.getElementById('title-input')?.value;
-  if (!myProfile.inventory) myProfile.inventory = {}; if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
-  if (f) { myProfile.inventory.__equipped.frame = f; localStorage.setItem('cb_equipped_frame', f); socket.emit('equip_cosmetic', f); }
-  if (th) { myProfile.inventory.__equipped.theme = th; localStorage.setItem('cb_equipped_theme', th); socket.emit('equip_cosmetic', th); }
-  if (ti) { myProfile.inventory.__equipped.title = ti; localStorage.setItem('cb_equipped_title', ti); socket.emit('equip_cosmetic', ti); }
-  else { delete myProfile.inventory.__equipped.title; localStorage.removeItem('cb_equipped_title'); socket.emit('equip_cosmetic', 'none_title'); }
   const nameInput = document.getElementById("username-input").value.trim();
   const regionInput = document.getElementById("region-input").value;
   const selectedTitleId = document.getElementById("title-input").value;
@@ -830,7 +772,7 @@ function saveProfileFromModal() {
   const selectedThemeId = document.getElementById("theme-input").value;
   let avatarVal = parseInt(document.getElementById("avatar-input").value);
   const flagVal = document.getElementById("flag-input").value;
-  if (nameInput.length < 3) { alert("Ton pseudo doit contenir au moins 3 caractères !"); return; }
+  if (nameInput.length < 3) { alert(currentLang === "fr" ? "Ton pseudo doit contenir au moins 3 caractères !" : "Your pseudo must contain at least 3 characters!"); return; }
   const savedSecret = localStorage.getItem('cb_secret') || '';
   const savedName = localStorage.getItem('cb_username') || '';
   const isCustomizationOnly = savedSecret !== '' && isProfileValid() && (nameInput === savedName);
@@ -844,6 +786,11 @@ function saveProfileFromModal() {
   myProfile.flag = getFlagEmoji(flagVal);
   if (!myProfile.inventory) myProfile.inventory = {};
   if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
+  if (selectedTitleId) { myProfile.inventory.__equipped.title = selectedTitleId; localStorage.setItem("cb_equipped_title", selectedTitleId); socket.emit("equip_cosmetic", selectedTitleId); }
+  else { delete myProfile.inventory.__equipped.title; localStorage.removeItem("cb_equipped_title"); socket.emit("equip_cosmetic", "none_title"); }
+  if (selectedFrameId) { myProfile.inventory.__equipped.frame = selectedFrameId; localStorage.setItem("cb_equipped_frame", selectedFrameId); socket.emit("equip_cosmetic", selectedFrameId); }
+  if (selectedThemeId) { myProfile.inventory.__equipped.theme = selectedThemeId; localStorage.setItem("cb_equipped_theme", selectedThemeId); socket.emit("equip_cosmetic", selectedThemeId); }
+  else { delete myProfile.inventory.__equipped.theme; localStorage.removeItem("cb_equipped_theme"); socket.emit("equip_cosmetic", "none_theme"); }
   if (activeAvatarChoice && activeAvatarChoice !== "standard") { myProfile.inventory.__equipped.avatar = activeAvatarChoice; socket.emit("equip_cosmetic", activeAvatarChoice); }
   else { delete myProfile.inventory.__equipped.avatar; socket.emit("equip_cosmetic", "none"); }
   saveLocalPreferences();
@@ -855,13 +802,8 @@ function saveProfileFromModal() {
 function registerIfPossible() {
   if (isProfileValid() && socket.connected) {
     socket.emit("register_player", {
-      username: myProfile.username,
-      region: myProfile.region,
-      avatar: myProfile.avatar,
-      flag: myProfile.flag,
-      inventory: myProfile.inventory,
-      secretCode: myProfile.secretCode || localStorage.getItem('cb_secret') || '',
-      mode: profileMode || 'login'
+      username: myProfile.username, region: myProfile.region, avatar: myProfile.avatar, flag: myProfile.flag,
+      inventory: myProfile.inventory, secretCode: myProfile.secretCode || localStorage.getItem('cb_secret') || '', mode: profileMode || 'login'
     });
   }
 }
@@ -893,33 +835,20 @@ socket.on("player_registered", (rawData) => {
 socket.on('register_result', (res) => {
   if (!res.ok) {
     pendingProfileValidation = false;
-    localStorage.removeItem('cb_username');
-    localStorage.removeItem('cb_secret');
-    localStorage.removeItem('cb_region');
-    localStorage.removeItem('cb_avatar');
-    localStorage.removeItem('cb_flag');
-    localStorage.removeItem('cb_equipped_title');
-    localStorage.removeItem('cb_equipped_frame');
-    localStorage.removeItem('cb_equipped_theme');
-    myProfile.username = '';
-    myProfile.secretCode = '';
-    myProfile.inventory = { __equipped: {} };
+    localStorage.removeItem('cb_username'); localStorage.removeItem('cb_secret'); localStorage.removeItem('cb_region');
+    localStorage.removeItem('cb_avatar'); localStorage.removeItem('cb_flag');
+    localStorage.removeItem('cb_equipped_title'); localStorage.removeItem('cb_equipped_frame'); localStorage.removeItem('cb_equipped_theme');
+    myProfile.username = ''; myProfile.secretCode = ''; myProfile.inventory = { __equipped: {} };
     if (res.reason === 'taken') alert('❌ Code secret incorrect pour ce pseudo.');
     else if (res.reason === 'nocode') alert('🔒 Choisis un code secret (4 caractères minimum).');
     else if (res.reason === 'short') alert('Ton pseudo doit contenir au moins 3 caractères !');
     else alert('❌ Erreur de connexion au serveur. Réessaie.');
-    if (pendingAccountLogin) {
-      pendingAccountLogin = false;
-      renderAccountContent();
-    }
+    if (pendingAccountLogin) { pendingAccountLogin = false; renderAccountContent(); }
     return;
   }
   if (pendingAccountLogin) {
     pendingAccountLogin = false;
-    saveLocalPreferences();
-    updateEconomyUI();
-    closeAccountModal();
-    showTitleScreen();
+    saveLocalPreferences(); updateEconomyUI(); closeAccountModal(); showTitleScreen();
     return;
   }
   if (pendingProfileValidation) {
@@ -936,7 +865,7 @@ socket.on("blitz_pass_updated", (data) => {
   if (data.claimedPassTiers) myProfile.claimedPassTiers = data.claimedPassTiers;
   updateEconomyUI();
   if (document.getElementById("modal-blitz-pass").style.display === "flex") renderBlitzPass();
-  showNotificationToast("✨ Passe de Saison mis à jour avec succès !", "gift");
+  showNotificationToast(currentLang === "fr" ? "✨ Passe de Saison mis à jour avec succès !" : "✨ Season Pass updated successfully!", "gift");
 });
 
 /* ============================================================
@@ -960,16 +889,16 @@ function showNotificationToast(message, type = "info") {
   setTimeout(() => { toast.remove(); }, 4500);
 }
 socket.on("admin_gift_received", (data) => {
-  const msg = data.message || "🎁 Cadeau reçu de l'Administrateur !";
-  showNotificationToast(`🎁 <b>CADEAU ADMIN REÇU !</b><br>` + msg, "gift");
+  const msg = data.message || (currentLang === "fr" ? "🎁 Cadeau reçu de l'Administrateur !" : "🎁 Gift received from the Admin!");
+  showNotificationToast(`🎁 <b>${currentLang === "fr" ? "CADEAU ADMIN REÇU !" : "ADMIN GIFT RECEIVED!"}</b><br>` + msg, "gift");
   registerIfPossible();
 });
 socket.on('pass_reward_received', (data) => {
-  const msg = data.message || "🎫 Récompense du Passe de Combat !";
-  showNotificationToast(`🎫 <b>PASSE DE COMBAT !</b><br>` + msg, 'gift');
+  const msg = data.message || (currentLang === "fr" ? "🎫 Récompense du Passe de Combat !" : "🎫 Battle Pass reward!");
+  showNotificationToast(`🎫 <b>${currentLang === "fr" ? "PASSE DE COMBAT !" : "BATTLE PASS!"}</b><br>` + msg, 'gift');
 });
 socket.on("global_announcement", (msg) => {
-  showNotificationToast(`📢 <b>ANNONCE GLOBALE :</b><br>` + msg, "announcement");
+  showNotificationToast(`📢 <b>${currentLang === "fr" ? "ANNONCE GLOBALE :" : "GLOBAL ANNOUNCEMENT:"}</b><br>` + msg, "announcement");
 });
 socket.on("events_state_update", (events) => {
   latestGlobalEvents = events;
@@ -980,13 +909,13 @@ socket.on("events_state_update", (events) => {
   let activeList = [];
   if (events.coinRush) activeList.push("🪙 <b>Coin Rush</b> (Pièces x2)");
   if (events.rankShield) activeList.push("🛡️ <b>Rank Shield</b> (Zéro perte de points en classé)");
-  if (events.expressoMatch) activeList.push("⚡ <b>Expresso Match</b> (Parties rapides en 20s pour le 1v1 Online Non Classé)");
-  if (events.chaosMode) activeList.push("🌪️ <b>Chaos Mode</b> (Modificateurs aléatoires en non classé)");
+  if (events.expressoMatch) activeList.push("⚡ <b>Expresso Match</b> (Parties rapides en 20s)");
+  if (events.chaosMode) activeList.push("🌪️ <b>Chaos Mode</b> (Modificateurs aléatoires)");
   if (events.jackpotEclair) activeList.push("🎁 <b>Jackpot Éclair</b> (Coffres mystères)");
-  if (events.tugOfWarMode) activeList.push("🪢 <b>Mode Exclusif : Corde Raide (Tug-of-War)</b>");
-  if (events.halloweenMode) activeList.push("🎃 <b>Mode Exclusif : Chasse Hantée (Halloween)</b>");
-  if (events.noelMode) activeList.push("🎄 <b>Mode Exclusif : Course aux Cadeaux (Noël)</b>");
-  if (activeList.length > 0) { banner.innerHTML = `⚡ <b>ADMIN ABUSE EN COURS :</b><br>` + activeList.join("<br>"); banner.style.display = "block"; }
+  if (events.tugOfWarMode) activeList.push("🪢 <b>Mode Exclusif : Corde Raide</b>");
+  if (events.halloweenMode) activeList.push("🎃 <b>Mode Exclusif : Chasse Hantée</b>");
+  if (events.noelMode) activeList.push("🎄 <b>Mode Exclusif : Course aux Cadeaux</b>");
+  if (activeList.length > 0) { banner.innerHTML = `⚡ <b>${currentLang === "fr" ? "ADMIN ABUSE EN COURS :" : "ADMIN ABUSE ACTIVE:"}</b><br>` + activeList.join("<br>"); banner.style.display = "block"; }
   else banner.style.display = "none";
 });
 
@@ -1013,47 +942,3 @@ document.addEventListener("DOMContentLoaded", () => {
   const targetRoom = urlParams.get("room");
   if (targetRoom) setTimeout(() => { if (isProfileValid()) openJoinCustomScreen(targetRoom.toUpperCase()); }, 1000);
 });
-
-/* ============================================================
-Fenêtre de prévisualisation (style Fortnite / Rocket League)
-============================================================ */
-function previewMannequinHTML(frame, title) {
-  const avatarNum = parseInt(document.getElementById('avatar-input')?.value) || myProfile.avatar || 1;
-  const flag = getFlagEmoji(document.getElementById('flag-input')?.value || myProfile.flag);
-  return `<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
-    <div class="tft-avatar-large ${getFrameClass(frame)}"><span class="tft-avatar-large-icon" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:24px;">${avatarNum}</span><span class="tft-flag-large-overlay">${flag}</span></div>
-    <div style="font-size:12px;font-weight:bold;color:#f8b500;">${TITLE_DISPLAY_NAMES[title] || (title || 'Sans titre')}</div>
-  </div>`;
-}
-function closeCosmeticPreview(){ const o=document.getElementById('cosmetic-preview-overlay'); if(o)o.remove(); }
-function openCosmeticPreview(){
-  closeCosmeticPreview();
-  const eq=(myProfile.inventory&&myProfile.inventory.__equipped)||{};
-  const ov=document.createElement('div'); ov.id='cosmetic-preview-overlay'; ov.className='modal-overlay';
-  ov.innerHTML=`<div class="modal-card" style="max-width:340px;text-align:center;">
-    <h2 style="color:#00d2ff;margin:0 0 10px 0;">👁️ PRÉVISUALISATION</h2>
-    <div id="cp-mannequin" style="margin-bottom:10px;"></div>
-    <select id="cp-frame" style="width:100%;margin-bottom:6px;"></select>
-    <select id="cp-title" style="width:100%;margin-bottom:10px;"></select>
-    <button class="btn-main btn-gold" id="cp-equip" style="width:100%;">✅ Équiper</button>
-    <button class="btn-secondary" onclick="closeCosmeticPreview()" style="width:100%;">Fermer</button>
-  </div>`;
-  document.body.appendChild(ov);
-  const fSel=ov.querySelector('#cp-frame'), tSel=ov.querySelector('#cp-title');
-  const frames=["frame_standard",...(myProfile.unlocked_items||[]).filter(i=>i.startsWith("frame_")&&i!=="frame_standard")];
-  fSel.innerHTML=frames.map(f=>`<option value="${f}">${FRAME_DISPLAY_NAMES[f]||f}</option>`).join("");
-  fSel.value=eq.frame||"frame_standard";
-  const titles=["",...(myProfile.unlocked_items||[]).filter(i=>i.startsWith("title_"))];
-  tSel.innerHTML=titles.map(t=>`<option value="${t}">${t?(TITLE_DISPLAY_NAMES[t]||t):"Sans titre"}</option>`).join("");
-  tSel.value=eq.title||"";
-  const render=()=>{ ov.querySelector('#cp-mannequin').innerHTML=previewMannequinHTML(fSel.value,tSel.value); };
-  fSel.onchange=render; tSel.onchange=render; render();
-  ov.querySelector('#cp-equip').onclick=()=>{
-    if(!myProfile.inventory)myProfile.inventory={}; if(!myProfile.inventory.__equipped)myProfile.inventory.__equipped={};
-    if(fSel.value){ myProfile.inventory.__equipped.frame=fSel.value; localStorage.setItem("cb_equipped_frame",fSel.value); socket.emit("equip_cosmetic",fSel.value); }
-    if(tSel.value){ myProfile.inventory.__equipped.title=tSel.value; localStorage.setItem("cb_equipped_title",tSel.value); socket.emit("equip_cosmetic",tSel.value); }
-    else { delete myProfile.inventory.__equipped.title; localStorage.removeItem("cb_equipped_title"); socket.emit("equip_cosmetic","none_title"); }
-    updateProfilePreview(); renderProfileCustomizationMenus(); closeCosmeticPreview();
-    showNotificationToast("✅ Cosmétiques équipés !","gift");
-  };
-}
