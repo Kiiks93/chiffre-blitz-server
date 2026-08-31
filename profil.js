@@ -368,7 +368,7 @@ function ensurePackSelector() {
   packSelect.onchange = () => {
   const pack = PACKS_LIST.find(p => p.id === packSelect.value);
   if (!pack) return;
-  const unlocked = myProfile.unlocked_items || []; // <-- LA LIGNE QUI MANQUAIT
+  const unlocked = myProfile.unlocked_items || [];
   const required = [pack.theme, pack.frame].filter(x => x !== "");
   const owned = pack.id === "pack_standard" ? true : required.every(i => unlocked.includes(i));
   if (!owned) {
@@ -435,7 +435,7 @@ function renderProfileCustomizationMenus() {
       if (equippedTitle === tId || equippedTitle === displayName) opt.selected = true;
       titleSelect.appendChild(opt);
     });
-        titleSelect.onchange = () => {};
+    titleSelect.onchange = () => {};
   }
   const frameSelect = document.getElementById("frame-input");
   const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
@@ -451,7 +451,7 @@ function renderProfileCustomizationMenus() {
       if (equippedFrame === fId) opt.selected = true;
       frameSelect.appendChild(opt);
     });
-        frameSelect.onchange = () => { updateProfilePreview(); };
+    frameSelect.onchange = () => { updateProfilePreview(); };
   }
   const themeSelect = document.getElementById("theme-input");
   const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
@@ -464,7 +464,7 @@ function renderProfileCustomizationMenus() {
       if (equippedTheme === thId) opt.selected = true;
       themeSelect.appendChild(opt);
     });
-        themeSelect.onchange = () => { updateProfilePreview(); };
+    themeSelect.onchange = () => { updateProfilePreview(); };
   }
   renderProfileAvatarSelector();
   ensurePackSelector();
@@ -825,17 +825,14 @@ function saveProfileFromModal() {
   if (selectedTitleId) { myProfile.inventory.__equipped.title = selectedTitleId; localStorage.setItem("cb_equipped_title", selectedTitleId); socket.emit("equip_cosmetic", selectedTitleId); }
   else { delete myProfile.inventory.__equipped.title; localStorage.removeItem("cb_equipped_title"); socket.emit("equip_cosmetic", "none_title"); }
   if (selectedThemeId) {
-  myProfile.inventory.__equipped.theme = selectedThemeId;
-  localStorage.setItem("cb_equipped_theme", selectedThemeId);
-  socket.emit("equip_cosmetic", selectedThemeId);
-} else {
-  // Pack Standard : on force la suppression LOCALE + serveur
-  delete myProfile.inventory.__equipped.theme;
-  localStorage.removeItem("cb_equipped_theme");
-  socket.emit("equip_cosmetic", "none_theme");
-}
-  if (selectedThemeId) { myProfile.inventory.__equipped.theme = selectedThemeId; localStorage.setItem("cb_equipped_theme", selectedThemeId); socket.emit("equip_cosmetic", selectedThemeId); }
-  else { delete myProfile.inventory.__equipped.theme; localStorage.removeItem("cb_equipped_theme"); socket.emit("equip_cosmetic", "none_theme"); }
+    myProfile.inventory.__equipped.theme = selectedThemeId;
+    localStorage.setItem("cb_equipped_theme", selectedThemeId);
+    socket.emit("equip_cosmetic", selectedThemeId);
+  } else {
+    delete myProfile.inventory.__equipped.theme;
+    localStorage.removeItem("cb_equipped_theme");
+    socket.emit("equip_cosmetic", "none_theme");
+  }
   if (activeAvatarChoice && activeAvatarChoice !== "standard") { myProfile.inventory.__equipped.avatar = activeAvatarChoice; socket.emit("equip_cosmetic", activeAvatarChoice); }
   else { delete myProfile.inventory.__equipped.avatar; socket.emit("equip_cosmetic", "none"); }
   saveLocalPreferences();
