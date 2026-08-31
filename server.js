@@ -260,8 +260,16 @@ async function savePlayerToSupabase(socketId) {
     if (retry.error) console.error("❌ SAVE CORE ÉCHEC : ", retry.error.message);
   }
 }
+function getOnlineCount() {
+  const set = new Set();
+  for (const id in activePlayers) {
+    const u = activePlayers[id] && activePlayers[id].username;
+    if (u) set.add(String(u).toLowerCase());
+  }
+  return set.size;
+}
 function broadcastOnlineCount() {
-  io.emit('online_count', { online: Object.keys(activePlayers).length });
+  io.emit('online_count', { online: getOnlineCount() });
 }
 
 /* ============================================================
@@ -270,7 +278,7 @@ SOCKET
 io.on('connection', (socket) => {
   console.log('Connexion : ' + socket.id);
   socket.emit('events_state_update', globalEvents);
-  socket.emit('online_count', { online: Object.keys(activePlayers).length });
+  socket.emit('online_count', { online: getOnlineCount() });
 
   socket.on('get_trophy_room', async (targetUsername) => {
     try {
@@ -877,7 +885,7 @@ io.on('connection', (socket) => {
   /* ---------- STATS : joueurs réellement en ligne ---------- */
   socket.on('admin_get_stats', () => {
     if (!socket.isAdmin) return;
-    socket.emit('admin_stats', { online: Object.keys(activePlayers).length });
+    socket.emit('admin_stats', { online: getOnlineCount() });
   });
 
   /* ---------- AJUSTER PIÈCES / POINTS / TROPHÉES ---------- */
