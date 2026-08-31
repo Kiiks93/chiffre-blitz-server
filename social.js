@@ -8,13 +8,14 @@ socket.emit("get_friends_list");
 }
 function closeFriendsModal() { document.getElementById("modal-friends").style.display = "none"; }
 function updateFriendsBadge() {
+const d = i18n[currentLang];
 const totalCount = (window.lastRequestsCount || 0) + (myGameInvites ? myGameInvites.length : 0);
 const badge = document.getElementById("friends-main-badge");
 if (badge) { badge.innerText = totalCount; badge.style.display = totalCount > 0 ? "inline-block" : "none"; }
 const requestsTab = document.getElementById("friend-tab-requests");
 const invitesTab = document.getElementById("friend-tab-invites");
-if (requestsTab) requestsTab.innerText = `Demandes ${window.lastRequestsCount || 0}`;
-if (invitesTab) invitesTab.innerText = `Invitations ${myGameInvites.length}`;
+if (requestsTab) requestsTab.innerText = `${d.friends_tab_requests} ${window.lastRequestsCount || 0}`;
+if (invitesTab) invitesTab.innerText = `${d.friends_tab_invites} ${myGameInvites.length}`;
 }
 function switchFriendTab(tab) {
 currentFriendFilter = tab;
@@ -36,27 +37,29 @@ const randomRoomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
 socket.emit("create_room", { code: randomRoomCode, password: "", username: myProfile.username, avatar: myProfile.avatar, flag: myProfile.flag });
 socket.emit("invite_friend_to_game", { targetSocketId, roomCode: randomRoomCode });
 closeFriendsModal();
-showNotificationToast("📤 Salon créé et invitation envoyée !", "gift");
+showNotificationToast(i18n[currentLang].friend_room_created, "gift");
 }
 socket.on("receive_game_invite", (data) => {
+const d = i18n[currentLang];
 myGameInvites.unshift({ from: data.from, roomCode: data.roomCode, time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
 updateFriendsBadge();
 if (currentFriendFilter === "invites" && document.getElementById("modal-friends").style.display === "flex") renderGameInvitesList();
-let inviteHtml = `📩 Invitation de jeu de <b>${data.from}</b> !`;
-if (data.roomCode) inviteHtml += `<br><button class="power-btn equip" onclick="joinGameInviteByCode('${data.roomCode}')" style="margin-top:6px; font-size:11px; padding:4px 10px;">Rejoindre le salon ⚡</button>`;
+let inviteHtml = `${d.friend_game_invite_from} <b>${data.from}</b> !`;
+if (data.roomCode) inviteHtml += `<br><button class="power-btn equip" onclick="joinGameInviteByCode('${data.roomCode}')" style="margin-top:6px; font-size:11px; padding:4px 10px;">${d.friend_join_room}</button>`;
 showNotificationToast(inviteHtml, "gift");
 });
 function renderGameInvitesList() {
+const d = i18n[currentLang];
 const container = document.getElementById("friends-list-container");
 container.innerHTML = "";
-if (myGameInvites.length === 0) { container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">Aucune invitation en attente.</div>`; return; }
+if (myGameInvites.length === 0) { container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">${d.friend_no_invites}</div>`; return; }
 myGameInvites.forEach((inv, index) => {
 const row = document.createElement("div");
 row.className = "friend-card";
 row.innerHTML = `
-<div style="text-align:left;"><div style="font-weight:bold; color:#fff; font-size:12px;">${inv.from}</div><div style="font-size:10px; color:#00d2ff;">Salon : ${inv.roomCode} (${inv.time})</div></div>
+<div style="text-align:left;"><div style="font-weight:bold; color:#fff; font-size:12px;">${inv.from}</div><div style="font-size:10px; color:#00d2ff;">${d.friend_room} ${inv.roomCode} (${inv.time})</div></div>
 <div style="display:flex; gap:4px; align-items:center;">
-<button class="power-btn equip" onclick="joinGameInviteByCode('${inv.roomCode}')" style="font-size:10px; padding:4px 8px;">Rejoindre ⚡</button>
+<button class="power-btn equip" onclick="joinGameInviteByCode('${inv.roomCode}')" style="font-size:10px; padding:4px 8px;">${d.friend_join}</button>
 <button class="power-btn" onclick="removeGameInvite(${index})" style="font-size:10px; padding:4px 6px; background:rgba(255,75,43,0.2); color:#ff4b2b; border:1px solid #ff4b2b;">✕</button>
 </div>`;
 container.appendChild(row);
@@ -71,6 +74,7 @@ updateFriendsBadge(); renderGameInvitesList(); closeFriendsModal();
 joinRoomDirect(roomCode, "");
 }
 socket.on("friends_list_data", (friends) => {
+const d = i18n[currentLang];
 let allFriends = friends || [];
 const incomingRequests = allFriends.filter(f => f.status === "pending" && !f.isRequester);
 const outgoingRequests = allFriends.filter(f => f.status === "pending" && f.isRequester);
@@ -80,37 +84,37 @@ if (currentFriendFilter === "invites") return;
 const container = document.getElementById("friends-list-container");
 container.innerHTML = "";
 const makeLabel = (text) => {
-const d = document.createElement("div");
-d.style.cssText = "text-align:left; font-size:9px; letter-spacing:2px; color:#00d2ff; margin:8px 0 4px 2px; font-weight:bold;";
-d.innerText = text;
-return d;
+const el = document.createElement("div");
+el.style.cssText = "text-align:left; font-size:9px; letter-spacing:2px; color:#00d2ff; margin:8px 0 4px 2px; font-weight:bold;";
+el.innerText = text;
+return el;
 };
 const renderCard = (f) => {
 const row = document.createElement("div");
 row.className = "friend-card";
 const dotColor = f.isOnline ? "#38ef7d" : "#aaa";
-const statusText = f.isOnline ? "En ligne" : "Hors-ligne";
+const statusText = f.isOnline ? d.friend_online : d.friend_offline;
 const safeName = String(f.username || "").replace(/'/g, "\\'");
 let actionsHtml = "";
 if (f.status === "pending") {
 if (!f.isRequester) {
-actionsHtml += `<button class="power-btn equip" onclick="acceptFriend('${f.id}')" style="font-size:10px; padding:4px 6px;">✅ Accepter</button>`;
+actionsHtml += `<button class="power-btn equip" onclick="acceptFriend('${f.id}')" style="font-size:10px; padding:4px 6px;">${d.friend_accept}</button>`;
 actionsHtml += `<button class="power-btn" onclick="removeFriend('${f.id}')" style="font-size:10px; padding:4px 6px; background:rgba(255,75,43,0.2); color:#ff4b2b; border:1px solid #ff4b2b;">✕</button>`;
 } else {
-actionsHtml += `<span style="font-size:10px; color:#f8b500;">⏳ En attente</span>`;
-actionsHtml += `<button class="power-btn" onclick="removeFriend('${f.id}')" style="font-size:10px; padding:4px 6px; background:rgba(255,75,43,0.2); color:#ff4b2b; border:1px solid #ff4b2b;" title="Annuler la demande">✕</button>`;
+actionsHtml += `<span style="font-size:10px; color:#f8b500;">${d.friend_pending}</span>`;
+actionsHtml += `<button class="power-btn" onclick="removeFriend('${f.id}')" style="font-size:10px; padding:4px 6px; background:rgba(255,75,43,0.2); color:#ff4b2b; border:1px solid #ff4b2b;" title="${d.friend_cancel}">✕</button>`;
 }
 } else {
-if (f.isOnline && f.targetSocketId) actionsHtml += `<button class="power-btn buy" onclick="inviteFriend('${f.targetSocketId}')" style="font-size:10px; padding:4px 6px;">Inviter</button>`;
+if (f.isOnline && f.targetSocketId) actionsHtml += `<button class="power-btn buy" onclick="inviteFriend('${f.targetSocketId}')" style="font-size:10px; padding:4px 6px;">${d.friend_invite}</button>`;
 }
-actionsHtml += `<button class="power-btn" onclick="openTrophyRoom('${safeName}')" style="font-size:10px; padding:4px 6px; background:rgba(248,181,0,0.15); color:#f8b500; border:1px solid #f8b500;" title="Voir sa salle des trophées">🏛️</button>`;
-if (f.status === "accepted") actionsHtml += `<button class="power-btn" onclick="removeFriend('${f.id}')" style="font-size:10px; padding:4px 6px; background:rgba(255,75,43,0.2); color:#ff4b2b; border:1px solid #ff4b2b;">Supprimer</button>`;
-const subText = f.status === "pending" ? (f.isRequester ? "Demande envoyée" : "Veut être ton ami !") : statusText;
+actionsHtml += `<button class="power-btn" onclick="openTrophyRoom('${safeName}')" style="font-size:10px; padding:4px 6px; background:rgba(248,181,0,0.15); color:#f8b500; border:1px solid #f8b500;" title="${d.friend_view_trophy}">🏛️</button>`;
+if (f.status === "accepted") actionsHtml += `<button class="power-btn" onclick="removeFriend('${f.id}')" style="font-size:10px; padding:4px 6px; background:rgba(255,75,43,0.2); color:#ff4b2b; border:1px solid #ff4b2b;">${d.friend_remove}</button>`;
+const subText = f.status === "pending" ? (f.isRequester ? d.friend_sent_req : d.friend_wants) : statusText;
 row.innerHTML = `
 <div style="display:flex; align-items:center; gap:6px;">
 <span style="width:7px; height:7px; border-radius:50%; background:${dotColor}; box-shadow:0 0 5px ${dotColor};"></span>
 <div style="text-align:left;">
-<div style="font-weight:bold; color:#fff; font-size:12px; cursor:pointer; text-decoration:underline dotted;" onclick="openTrophyRoom('${safeName}')" title="Voir sa salle des trophées">${f.username}</div>
+<div style="font-weight:bold; color:#fff; font-size:12px; cursor:pointer; text-decoration:underline dotted;" onclick="openTrophyRoom('${safeName}')" title="${d.friend_view_trophy}">${f.username}</div>
 <div style="font-size:9px; color:${f.status === "pending" ? "#f8b500" : dotColor};">${subText}</div>
 </div></div>
 <div style="display:flex; gap:4px; align-items:center;">${actionsHtml}</div>`;
@@ -118,21 +122,21 @@ return row;
 };
 if (currentFriendFilter === "requests") {
 if (incomingRequests.length === 0 && outgoingRequests.length === 0) {
-container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">Aucune demande en attente.</div>`;
+container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">${d.friend_no_requests}</div>`;
 return;
 }
 if (incomingRequests.length > 0) {
-container.appendChild(makeLabel("📥 REÇUES"));
+container.appendChild(makeLabel(d.friend_received));
 incomingRequests.forEach(f => container.appendChild(renderCard(f)));
 }
 if (outgoingRequests.length > 0) {
-container.appendChild(makeLabel("📤 ENVOYÉES"));
+container.appendChild(makeLabel(d.friend_sent_label));
 outgoingRequests.forEach(f => container.appendChild(renderCard(f)));
 }
 return;
 }
 const accepted = allFriends.filter(f => f.status === "accepted");
-if (accepted.length === 0) { container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">Aucun ami pour le moment.</div>`; return; }
+if (accepted.length === 0) { container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">${d.no_friends}</div>`; return; }
 accepted.forEach(f => container.appendChild(renderCard(f)));
 });
 
@@ -148,33 +152,36 @@ function fetchRoomsList() { socket.emit("get_rooms_list"); }
 function openCreateRoomModal() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } document.getElementById("custom-room-name").value = ""; document.getElementById("custom-room-pass").value = ""; document.getElementById("modal-create-room").style.display = "flex"; }
 function closeCreateRoomModal() { document.getElementById("modal-create-room").style.display = "none"; }
 function submitCreateRoom() {
+const d = i18n[currentLang];
 const code = document.getElementById("custom-room-name").value.trim().toUpperCase();
 const password = document.getElementById("custom-room-pass").value.trim();
-if (code !== "" && code.length < 2) { alert("Nom de salon trop court."); return; }
+if (code !== "" && code.length < 2) { alert(d.rooms_name_short); return; }
 socket.emit("create_room", { code, password, username: myProfile.username, avatar: myProfile.avatar, flag: myProfile.flag });
 closeCreateRoomModal();
 }
 function openJoinCustomScreen(prefilledCode = "") { if (!isProfileValid()) { checkAndShowProfileModal(); return; } hideAllScreens(); document.getElementById("screen-join-custom").style.display = "flex"; document.getElementById("join-room-code-input").value = prefilledCode; document.getElementById("join-room-pass-input").value = ""; }
 function submitJoinCustomRoom() {
+const d = i18n[currentLang];
 const roomCode = document.getElementById("join-room-code-input").value.trim().toUpperCase();
 const password = document.getElementById("join-room-pass-input").value.trim();
-if (!roomCode) { alert("Entrer un code valide."); return; }
+if (!roomCode) { alert(d.rooms_invalid_code); return; }
 socket.emit("join_room", { code: roomCode, password });
 }
 function joinRoomFromList(code, hasPassword) { if (hasPassword) openJoinCustomScreen(code); else joinRoomDirect(code, ""); }
 function joinRoomDirect(code, password) { socket.emit("join_room", { code: code.toUpperCase(), password }); }
 function leaveCustomRoom() { socket.emit("leave_room"); window.history.replaceState({}, "", window.location.pathname); openRoomsScreen(); }
 function copyRoomLink() { const input = document.getElementById("room-share-link"); input.select(); navigator.clipboard.writeText(input.value).then(() => { showNotificationToast("📋 " + i18n[currentLang].link_copied, "gift"); }); }
-function shareRoomLink() { const input = document.getElementById("room-share-link"); if (navigator.share) { navigator.share({ title: "Chiffre Blitz ⚡", text: "Viens m'affronter !", url: input.value }).catch(() => {}); } else copyRoomLink(); }
+function shareRoomLink() { const input = document.getElementById("room-share-link"); if (navigator.share) { navigator.share({ title: "Chiffre Blitz ⚡", text: i18n[currentLang].share_text, url: input.value }).catch(() => {}); } else copyRoomLink(); }
 socket.on("rooms_list_data", (rooms) => {
+const d = i18n[currentLang];
 const listEl = document.getElementById("rooms-list");
 listEl.innerHTML = "";
-if (!rooms || rooms.length === 0) { listEl.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:8px; font-size:11px;">Aucun salon ouvert.</div>`; return; }
+if (!rooms || rooms.length === 0) { listEl.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:8px; font-size:11px;">${d.no_rooms}</div>`; return; }
 rooms.forEach(r => {
 const row = document.createElement("div");
 row.className = "room-row";
 const lockIcon = r.hasPassword ? " 🔒" : "";
-row.innerHTML = `<span class="room-info">Salon <b>${r.code}</b>${lockIcon} (${r.playersCount}/2)</span><button class="power-btn equip" onclick="joinRoomFromList('${r.code}', ${r.hasPassword})">Rejoindre</button>`;
+row.innerHTML = `<span class="room-info">${d.rooms_room} <b>${r.code}</b>${lockIcon} (${r.playersCount}/2)</span><button class="power-btn equip" onclick="joinRoomFromList('${r.code}', ${r.hasPassword})">${d.rooms_join}</button>`;
 listEl.appendChild(row);
 });
 });
@@ -191,11 +198,11 @@ updateRoomPlayers(data.players);
 socket.on("room_players_update", (data) => { updateRoomPlayers(data.players); });
 function updateRoomPlayers(players) {
 const playersListEl = document.getElementById("room-players-list");
-if (!players || players.length === 0) { playersListEl.innerText = "En attente d'un adversaire..."; return; }
+if (!players || players.length === 0) { playersListEl.innerText = i18n[currentLang].waiting_opponent; return; }
 playersListEl.innerHTML = players.map(rawData => {
 const p = parsePlayer(rawData);
 const title = p.inventory && p.inventory.__equipped && p.inventory.__equipped.title;
-const titleHtml = title ? `<span style="font-size: 8px; color: #f8b500; margin-left: 3px;">[${TITLE_DISPLAY_NAMES[title] || title}]</span>` : "";
+const titleHtml = title ? `<span style="font-size: 8px; color: #f8b500; margin-left: 3px;">[${getTitleDisplayNames()[title] || title}]</span>` : "";
 return `<div style="display:inline-flex; align-items:center; gap:4px;">${getAvatarBadgeHTML(p.flag, p.avatar, null, p)}<span>${p.username}</span>${titleHtml}</div>`;
 }).join(' <span style="color:#aaa; margin:0 4px;">vs</span> ');
 if (players && socket.id) { const opp = players.find(p => (p.socketId || p.id) !== socket.id); if (opp) cachedOpponent = parsePlayer(opp); }
