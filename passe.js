@@ -343,11 +343,13 @@ function renderBlitzPass() {
     col.className = "bp-tier-col"; col.id = "bp-card-" + t.tier;
     col.innerHTML = `
       <div class="bp-cell bp-prem ${isPremClaimed ? 'claimed' : ''}">
+        <div class="bp-ribbon">⭐ PREMIUM</div>
         ${rewardVisualHTML(season.id, t.tier, 'premium', t.premium)}
         <button class="power-btn ${isPremClaimed ? 'active' : 'equip'}" style="font-size:10px;padding:3px;" ${premDisabled ? 'disabled' : ''} onclick="claimPassReward(${t.tier},'premium')">${isPremClaimed ? '✔' : '⭐'}</button>
       </div>
       <div class="bp-tier-num">${t.tier}</div>
       <div class="bp-cell bp-free ${isFreeClaimed ? 'claimed' : ''}">
+        <div class="bp-ribbon free">${currentLang === "fr" ? "GRATUIT" : "FREE"}</div>
         ${rewardVisualHTML(season.id, t.tier, 'free', t.free)}
         <button class="power-btn ${isFreeClaimed ? 'active' : 'equip'}" style="font-size:10px;padding:3px;" ${isFreeClaimed ? 'disabled' : ''} onclick="claimPassReward(${t.tier},'free')">${isFreeClaimed ? '✔' : '🟢'}</button>
       </div>`;
