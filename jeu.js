@@ -19,15 +19,14 @@ let avalancheInterval = null;
 let avalancheTimerInterval = null;
 let avalancheTimeLeft = 30;
 
-// Précharge les animations lourdes au démarrage
 window.addEventListener("load", () => {
   if (typeof preloadGhostAnimation === "function") preloadGhostAnimation();
 });
 
-// Détection mobile/tablette → effets réduits pour éviter le lag
 window.IS_LOW_PERF = /Android|iPhone|iPad|iPod|Tablet|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 2 && Math.min(screen.width, screen.height) < 900);
+
 /* ============================================================
-SYSTÈME COMBO (solo) — 15 / 30 / 35 + compteur + chrono
+SYSTÈME COMBO (solo)
 ============================================================ */
 let currentCombo = 0;
 let lastComboTime = 0;
@@ -38,32 +37,38 @@ const COMBO_WINDOW_MS = 20000;
 let pendingRecapAfterPopup = false;
 
 /* ============================================================
-CATALOGUE TROPHÉES CLIENT (16 trophées)
+CATALOGUE TROPHÉES CLIENT (16 trophées) — traduit
 ============================================================ */
-const TROPHY_CATALOG_CLIENT = {
-  first_victory:    { name: "Première Victoire", emoji: "⚔️", shelf: "combat",      rarity: "bronze",    condition: "Gagner 1 match 1v1",        progress: p => `${Math.min(p.wins||0,1)}/1` },
-  unstoppable:      { name: "Inarrêtable",       emoji: "🔥", shelf: "combat",      rarity: "silver",    condition: "5 victoires d'affilée",       progress: p => `${Math.min(p.win_streak||0,5)}/5` },
-  gladiator:        { name: "Gladiateur",        emoji: "🛡️", shelf: "combat",      rarity: "silver",    condition: "Jouer 30 matchs 1v1",         progress: p => `${Math.min(p.matches_played||0,30)}/30` },
-  champion:         { name: "Champion",          emoji: "👑", shelf: "combat",      rarity: "gold",      condition: "Gagner un tournoi (bientôt !)", progress: () => "🔒 Bientôt", dormant: true },
-  awakening:        { name: "Éveil",             emoji: "⚡", shelf: "skill",       rarity: "bronze",    condition: "Combo x15",                   progress: p => `x${Math.min(p.best_combo||0,15)}/15` },
-  furnace:          { name: "Fournaise",         emoji: "💥", shelf: "skill",       rarity: "silver",    condition: "Combo x30",                   progress: p => `x${Math.min(p.best_combo||0,30)}/30` },
-  perfection:       { name: "PERFECTION",        emoji: "💎", shelf: "skill",       rarity: "legendary", condition: "Combo x35",                   progress: p => `x${Math.min(p.best_combo||0,35)}/35` },
-  avalanche_master: { name: "Maître Avalanche",  emoji: "🎯", shelf: "skill",       rarity: "gold",      condition: "Score 400 en Avalanche",      progress: p => `${Math.min(p.best_avalanche||0,400)}/400` },
-  combatant:        { name: "Combattant",        emoji: "🎖️", shelf: "progression", rarity: "bronze",    condition: "Pass Palier 15",              progress: () => "—" },
-  elite:            { name: "Élite",             emoji: "🏵️", shelf: "progression", rarity: "gold",      condition: "Pass Palier 30",              progress: () => "—" },
-  worker:           { name: "Travailleur",       emoji: "⛏️", shelf: "progression", rarity: "silver",    condition: "1000 🪙 gagnés en jeu",       progress: p => `${Math.min(p.total_coins_earned||0,1000)}/1000` },
-  rising_star:      { name: "Étoile Montante",   emoji: "⭐", shelf: "progression", rarity: "silver",    condition: "500 points au classement",    progress: p => `${Math.min(p.points||0,500)}/500` },
-  local_king:       { name: "Roi Local",         emoji: "🏰", shelf: "domination",  rarity: "gold",      condition: "N°1 régional en fin de saison", progress: () => "Fin de saison" },
-  midas:            { name: "Midas",             emoji: "💰", shelf: "domination",  rarity: "gold",      condition: "N°1 pièces en fin de saison", progress: () => "Fin de saison" },
-  dynasty:          { name: "Dynastie",          emoji: "🏛️", shelf: "domination",  rarity: "legendary", condition: "3 saisons N°1",               progress: p => `${p.season_n1_count||0}/3` },
-  world_n1:         { name: "N°1 Mondial",       emoji: "🌍", shelf: "domination",  rarity: "legendary", condition: "N°1 global fin de saison",    progress: () => "Fin de saison" }
-};
-const TROPHY_SHELVES = [
-  { id: "combat",      label: "⚔️ COMBAT",      color: "#ff4b2b" },
-  { id: "skill",       label: "💥 SKILL",       color: "#00d2ff" },
-  { id: "progression", label: "📈 PROGRESSION", color: "#00ff88" },
-  { id: "domination",  label: "👑 DOMINATION",  color: "#f8b500" }
-];
+function getTrophyCatalogClient() {
+  const d = i18n[currentLang];
+  return {
+    first_victory:    { name: d.trophy_name_first_victory, emoji: "⚔️", shelf: "combat",      rarity: "bronze",    condition: d.trophy_cond_first_victory, progress: p => `${Math.min(p.wins||0,1)}/1` },
+    unstoppable:      { name: d.trophy_name_unstoppable,   emoji: "🔥", shelf: "combat",      rarity: "silver",    condition: d.trophy_cond_unstoppable, progress: p => `${Math.min(p.win_streak||0,5)}/5` },
+    gladiator:        { name: d.trophy_name_gladiator,     emoji: "🛡️", shelf: "combat",      rarity: "silver",    condition: d.trophy_cond_gladiator, progress: p => `${Math.min(p.matches_played||0,30)}/30` },
+    champion:         { name: d.trophy_name_champion,      emoji: "👑", shelf: "combat",      rarity: "gold",      condition: d.trophy_cond_champion, progress: () => d.trophy_soon, dormant: true },
+    awakening:        { name: d.trophy_name_awakening,     emoji: "⚡", shelf: "skill",       rarity: "bronze",    condition: d.trophy_cond_awakening, progress: p => `x${Math.min(p.best_combo||0,15)}/15` },
+    furnace:          { name: d.trophy_name_furnace,       emoji: "💥", shelf: "skill",       rarity: "silver",    condition: d.trophy_cond_furnace, progress: p => `x${Math.min(p.best_combo||0,30)}/30` },
+    perfection:       { name: d.trophy_name_perfection,    emoji: "💎", shelf: "skill",       rarity: "legendary", condition: d.trophy_cond_perfection, progress: p => `x${Math.min(p.best_combo||0,35)}/35` },
+    avalanche_master: { name: d.trophy_name_avalanche_master, emoji: "🎯", shelf: "skill",   rarity: "gold",      condition: d.trophy_cond_avalanche_master, progress: p => `${Math.min(p.best_avalanche||0,400)}/400` },
+    combatant:        { name: d.trophy_name_combatant,     emoji: "🎖️", shelf: "progression", rarity: "bronze",    condition: d.trophy_cond_combatant, progress: () => "—" },
+    elite:            { name: d.trophy_name_elite,         emoji: "🏵️", shelf: "progression", rarity: "gold",      condition: d.trophy_cond_elite, progress: () => "—" },
+    worker:           { name: d.trophy_name_worker,        emoji: "⛏️", shelf: "progression", rarity: "silver",    condition: d.trophy_cond_worker, progress: p => `${Math.min(p.total_coins_earned||0,1000)}/1000` },
+    rising_star:      { name: d.trophy_name_rising_star,   emoji: "⭐", shelf: "progression", rarity: "silver",    condition: d.trophy_cond_rising_star, progress: p => `${Math.min(p.points||0,500)}/500` },
+    local_king:       { name: d.trophy_name_local_king,    emoji: "🏰", shelf: "domination",  rarity: "gold",      condition: d.trophy_cond_local_king, progress: () => d.trophy_end_season },
+    midas:            { name: d.trophy_name_midas,         emoji: "💰", shelf: "domination",  rarity: "gold",      condition: d.trophy_cond_midas, progress: () => d.trophy_end_season },
+    dynasty:          { name: d.trophy_name_dynasty,       emoji: "🏛️", shelf: "domination",  rarity: "legendary", condition: d.trophy_cond_dynasty, progress: p => `${p.season_n1_count||0}/3` },
+    world_n1:         { name: d.trophy_name_world_n1,      emoji: "🌍", shelf: "domination",  rarity: "legendary", condition: d.trophy_cond_world_n1, progress: () => d.trophy_end_season }
+  };
+}
+function getTrophyShelves() {
+  const d = i18n[currentLang];
+  return [
+    { id: "combat",      label: d.shelf_combat,      color: "#ff4b2b" },
+    { id: "skill",       label: d.shelf_skill,       color: "#00d2ff" },
+    { id: "progression", label: d.shelf_progression, color: "#00ff88" },
+    { id: "domination",  label: d.shelf_domination,  color: "#f8b500" }
+  ];
+}
 
 function closeRewardPopUp() {
   const popup = document.getElementById("reward-popup-overlay");
@@ -124,8 +129,8 @@ function flashScreen() {
 
 function shatterExplosion() {
   const color = getComboColor();
-    const shardCount = IS_LOW_PERF ? 15 : 50;
-    for (let i = 0; i < shardCount; i++) {
+  const shardCount = IS_LOW_PERF ? 15 : 50;
+  for (let i = 0; i < shardCount; i++) {
     const s = document.createElement("div");
     s.className = "shard-particle";
     s.style.background = i % 3 === 0 ? "#ffffff" : color;
@@ -224,6 +229,7 @@ function showComboBanner(text) {
 }
 
 function registerComboHit() {
+  const d = i18n[currentLang];
   if (soloPerfection) return;
   const now = Date.now();
   if (now - lastComboTime > COMBO_WINDOW_MS) {
@@ -244,11 +250,11 @@ function registerComboHit() {
   if (grid) grid.style.setProperty("--combo-color", getComboColor());
   if (currentCombo === 15) {
     if (grid) grid.classList.add("combo-tier1");
-    showComboBanner("⚡ COMBO x15 !");
+    showComboBanner(d.combo_x15);
     spawnCrack();
   } else if (currentCombo === 30) {
     if (grid) { grid.classList.remove("combo-tier1"); grid.classList.add("combo-tier2"); }
-    showComboBanner("🔥 COMBO x30 !!");
+    showComboBanner(d.combo_x30);
     const burstCount = IS_LOW_PERF ? 2 : 6;
     for (let i = 0; i < burstCount; i++) setTimeout(() => spawnCrack(), i * 60);
     shakeScreen(0.5);
@@ -260,6 +266,7 @@ function registerComboHit() {
 }
 
 function triggerPerfection() {
+  const d = i18n[currentLang];
   if (soloPerfection) return;
   soloPerfection = true;
   if (soloTimerInterval) clearInterval(soloTimerInterval);
@@ -267,7 +274,7 @@ function triggerPerfection() {
   if (avalancheInterval) clearInterval(avalancheInterval);
   const grid = document.getElementById("grid");
   if (grid) { grid.classList.remove("combo-tier1", "combo-tier2"); grid.classList.add("combo-perfection"); }
-  showComboBanner("💥 PERFECTION x35 !!!");
+  showComboBanner(d.combo_perfection);
   const themeNow = getEquippedThemeId();
   SoundEngine.playPerfectionBoom(themeNow);
   if (themeNow === "theme_eclair") {
@@ -281,9 +288,9 @@ function triggerPerfection() {
     if (typeof neonHyperspace === "function") neonHyperspace();
   } else if (themeNow === "theme_citrouille") {
     spawnLanterns(true); playLanternSound(); shakeScreen(1.2);
-   } else if (themeNow === "theme_fantome") {
+  } else if (themeNow === "theme_fantome") {
     spawnGhostLotties(true); playGhostSound(); shakeScreen(1.2);
-    } else if (themeNow === "theme_bonbon") {
+  } else if (themeNow === "theme_bonbon") {
     if (typeof spawnBonbons === "function") spawnBonbons(true);
     if (typeof playBonbonSound === "function") playBonbonSound();
     shakeScreen(1.0);
@@ -326,8 +333,8 @@ function spawnExplosionParticles() {
   if (theme === "theme_obsidian") emojis = ["🖤", "💀", "🔥", ""];
   if (theme === "theme_citrouille") emojis = ["🎃", "", "", "💀"];
   if (theme === "theme_fantome") emojis = ["👻", "", "💜", "✨"];
-    const partCount = IS_LOW_PERF ? 12 : 40;
-    for (let i = 0; i < partCount; i++) {
+  const partCount = IS_LOW_PERF ? 12 : 40;
+  for (let i = 0; i < partCount; i++) {
     const p = document.createElement("div");
     p.className = "explosion-particle";
     p.innerText = emojis[i % emojis.length];
@@ -404,39 +411,20 @@ function coinStorm() {
 
 function spawnCrack() {
   const themeNow = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
-  
   if (!themeNow || themeNow === "") return;
-  
   if (themeNow === "theme_alt") {
     for (let i = 0; i < 8; i++) setTimeout(() => spawnCoin(), i * 60);
     SoundEngine.playCrack(themeNow);
     return;
   }
-  
   if (themeNow === "theme_neon") return;
-  
   if (themeNow === "theme_citrouille") { spawnLanterns(false); playLanternSound(); return; }
-  
   if (themeNow === "theme_fantome") { spawnGhostLotties(false); playGhostSound(); return; }
-  
   if (themeNow === "theme_bonbon") { if (typeof spawnBonbons === "function") spawnBonbons(false); if (typeof playBonbonSound === "function") playBonbonSound(); return; }
-  
   if (themeNow === "theme_sapin") { if (typeof spawnSapinSparkles === "function") spawnSapinSparkles(false); if (typeof playSapinSound === "function") playSapinSound(); return; }
-  
   if (themeNow === "theme_lutin") { if (typeof spawnLutins === "function") spawnLutins(false); if (typeof playLutinSound === "function") playLutinSound(); return; }
-  
-  if (themeNow === "theme_eclair") {
-    spawnLightningBurst(false);
-    playElectricArcSound();
-    return;
-  }
-  
-  if (themeNow === "theme_obsidian") {
-    spawnObsidianRock();
-    playObsidianImpactSound();
-    return;
-  }
-  
+  if (themeNow === "theme_eclair") { spawnLightningBurst(false); playElectricArcSound(); return; }
+  if (themeNow === "theme_obsidian") { spawnObsidianRock(); playObsidianImpactSound(); return; }
   const layer = ensureCracksLayer();
   if (layer.childElementCount > 20) layer.removeChild(layer.firstChild);
   const style = getComboCrackStyle();
@@ -635,6 +623,7 @@ function simulateAd(callback) {
 function closeSimulatedAd() { document.getElementById("simulated-ad-overlay").style.display = "none"; SoundEngine.startMusic("menu"); if (adCallbackFunction) { adCallbackFunction(); adCallbackFunction = null; } }
 
 function watchAdToDoubleReward() {
+  const d = i18n[currentLang];
   if (rewardDoubled) return;
   simulateAd(() => {
     rewardDoubled = true;
@@ -642,7 +631,7 @@ function watchAdToDoubleReward() {
     currentCoinsGained *= 2;
     document.getElementById("recap-coins-gained").innerText = `+${currentCoinsGained} (x2 ⚡)`;
     const doubleBtn = document.getElementById("btn-double-reward");
-    doubleBtn.disabled = true; doubleBtn.style.opacity = "0.5"; doubleBtn.innerText = "✅ Gains doublés !";
+    doubleBtn.disabled = true; doubleBtn.style.opacity = "0.5"; doubleBtn.innerText = d.reward_doubled;
     document.getElementById("recap-modal").style.display = "flex";
   });
 }
@@ -681,15 +670,16 @@ function openRankedLoadoutModal() { if (!isProfileValid()) { checkAndShowProfile
 function closeRankedLoadoutModal() { document.getElementById("modal-ranked-loadout").style.display = "none"; }
 
 function renderRankedLoadoutItems() {
+  const d = i18n[currentLang];
   const container = document.getElementById("ranked-items-container");
   if (!container) return;
   container.innerHTML = "";
-  const powersDict = i18n[currentLang].powers;
+  const powersDict = d.powers;
   const ownedPowers = POWERS_CATALOG.filter(p => p.type !== "cosmetics" && p.type !== "packs" && (myProfile.inventory[p.id] || 0) > 0);
-  if (ownedPowers.length === 0) { container.innerHTML = `<div style="grid-column: span 2; text-align:center; color:#aaa; padding:12px; font-size:11px;">Inventaire vide !</div>`; return; }
+  if (ownedPowers.length === 0) { container.innerHTML = `<div style="grid-column: span 2; text-align:center; color:#aaa; padding:12px; font-size:11px;">${d.ranked_empty}</div>`; return; }
   const summary = document.createElement("div");
   summary.style.cssText = `grid-column: span 2; background: rgba(0,210,255,0.08); border: 1px solid #00d2ff; border-radius: 10px; padding: 8px; font-size: 11px; color: #fff; margin-bottom: 6px;`;
-  summary.innerHTML = `<b>Objets sélectionnés : ${selectedRankedItems.length}/2</b><br>${selectedRankedItems.length === 2 ? "✅ Prêt à lancer" : "⚠️ Tu dois sélectionner exactement 2 objets"}`;
+  summary.innerHTML = `<b>${d.ranked_summary.replace('X', selectedRankedItems.length)}</b><br>${selectedRankedItems.length === 2 ? d.ranked_ready : d.ranked_warning}`;
   container.appendChild(summary);
   ownedPowers.forEach(p => {
     const powerInfo = powersDict[p.id];
@@ -699,21 +689,22 @@ function renderRankedLoadoutItems() {
     card.className = `power-card ${selectedCount > 0 ? "equipped" : ""}`;
     card.innerHTML = `
       <h4>${powerInfo.name}</h4><p>${powerInfo.desc}</p>
-      <div class="stock-badge">Stock : ${qty}</div>
-      <div style="font-weight:bold; font-size:10px; color:${selectedCount > 0 ? "#00ff88" : "#f8b500"};">Sélectionné : ${selectedCount}</div>
+      <div class="stock-badge">${i18n[currentLang].coins ? 'Stock' : 'Stock'} : ${qty}</div>
+      <div style="font-weight:bold; font-size:10px; color:${selectedCount > 0 ? "#00ff88" : "#f8b500"};">${d.ranked_selected} ${selectedCount}</div>
       <div style="display:flex; gap:4px; margin-top:6px;">
-        <button class="power-btn buy" onclick="addRankedItem('${p.id}')" ${(selectedRankedItems.length >= 2 || selectedCount >= qty) ? "disabled" : ""}>+ Ajouter</button>
-        <button class="power-btn" onclick="removeRankedItem('${p.id}')" ${selectedCount === 0 ? "disabled" : ""}>- Retirer</button>
+        <button class="power-btn buy" onclick="addRankedItem('${p.id}')" ${(selectedRankedItems.length >= 2 || selectedCount >= qty) ? "disabled" : ""}>${d.ranked_add}</button>
+        <button class="power-btn" onclick="removeRankedItem('${p.id}')" ${selectedCount === 0 ? "disabled" : ""}>${d.ranked_remove}</button>
       </div>`;
     container.appendChild(card);
   });
 }
 
 function addRankedItem(id) {
+  const d = i18n[currentLang];
   if (selectedRankedItems.length >= 2) return;
   const owned = myProfile.inventory[id] || 0;
   const sel = selectedRankedItems.filter(i => i === id).length;
-  if (sel >= owned) { alert("Tu ne possèdes pas assez d'exemplaires de cet objet."); return; }
+  if (sel >= owned) { alert(d.ranked_no_stock); return; }
   selectedRankedItems.push(id);
   renderRankedLoadoutItems();
 }
@@ -721,7 +712,8 @@ function addRankedItem(id) {
 function removeRankedItem(id) { const i = selectedRankedItems.lastIndexOf(id); if (i !== -1) selectedRankedItems.splice(i, 1); renderRankedLoadoutItems(); }
 
 function startRankedMatch() {
-  if (selectedRankedItems.length !== 2) { alert("En mode classé, tu dois sélectionner exactement 2 objets."); return; }
+  const d = i18n[currentLang];
+  if (selectedRankedItems.length !== 2) { alert(d.ranked_must_2); return; }
   closeRankedLoadoutModal();
   hideAllScreens();
   document.getElementById("screen-1v1-lobby").style.display = "flex";
@@ -745,7 +737,7 @@ function requestRematch() {
     radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById("radar-digit").innerText = digit; }, 70);
   }
 }
-socket.on("opponent_wants_rematch", () => { showNotificationToast("⚔️ L'adversaire souhaite une revanche !", "gift"); });
+socket.on("opponent_wants_rematch", () => { showNotificationToast(i18n[currentLang].opp_wants_rematch, "gift"); });
 
 /* ============================================================
 POUVOIRS / HUD
@@ -809,9 +801,10 @@ function autoValidateTarget() {
 }
 
 socket.on("receive_malus", (data) => {
+  const d = i18n[currentLang];
   const grid = document.getElementById("grid");
   SoundEngine.playError();
-  showNotificationToast("💥 PIÈGE ADVERSAIRE REÇU !", "announcement");
+  showNotificationToast(d.malus_received, "announcement");
   if (!grid) return;
   if (data.type === "quake") { grid.classList.add("effect-quake"); setTimeout(() => grid.classList.remove("effect-quake"), 2000); }
   else if (data.type === "micro") { grid.classList.add("effect-micro"); setTimeout(() => grid.classList.remove("effect-micro"), 2000); }
@@ -849,21 +842,23 @@ function setLbScope(scope) {
 }
 
 function updateLbRegionLabel() {
+  const d = i18n[currentLang];
   const btn = document.getElementById("lb-scope-regional");
-  if (btn && myProfile && myProfile.region) btn.innerText = "Régional (" + myProfile.region + ")";
+  if (btn && myProfile && myProfile.region) btn.innerText = d.lb_regional_label + " (" + myProfile.region + ")";
 }
 socket.on("player_registered", () => { updateLbRegionLabel(); });
 
 function fetchLeaderboard() {
   const type = `${currentLbCategory}_${currentLbScope}`;
-  document.getElementById("lb-list").innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;" data-i18n="loading">Chargement...</div>`;
+  document.getElementById("lb-list").innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;" data-i18n="loading">${i18n[currentLang].loading || 'Chargement...'}</div>`;
   socket.emit("get_leaderboard", type);
 }
 
 socket.on("leaderboard_data", (res) => {
+  const d = i18n[currentLang];
   const container = document.getElementById("lb-list");
   container.innerHTML = "";
-  if (!res.data || res.data.length === 0) { container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">Aucun joueur.</div>`; return; }
+  if (!res.data || res.data.length === 0) { container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">${d.lb_no_players}</div>`; return; }
   const category = res.type ? res.type.split("_")[0] : "points";
   const parsedList = res.data.map(p => parsePlayer(p));
   if (category === "combined") parsedList.sort((a, b) => { if ((b.trophies - a.trophies) !== 0) return b.trophies - a.trophies; return b.points - a.points; });
@@ -890,6 +885,7 @@ socket.on("leaderboard_data", (res) => {
 });
 
 function openPlayerActions(username, e) {
+  const d = i18n[currentLang];
   closePlayerActions();
   const safeName = String(username).replace(/'/g, "\\'");
   const menu = document.createElement('div');
@@ -900,8 +896,8 @@ function openPlayerActions(username, e) {
   const isMe = myProfile.username && myProfile.username.toLowerCase() === username.toLowerCase();
   menu.innerHTML = `
     <div style="font-size:12px; font-weight:900; color:#f8b500; margin-bottom:6px;">${username}</div>
-    ${!isMe ? `<button class="btn-main" style="width:100%; margin:2px 0; padding:8px; font-size:11px;" onclick="requestFriendFromMenu('${safeName}')">🤝 Demande d'ami</button>` : ''}
-    <button class="btn-main" style="width:100%; margin:2px 0; padding:8px; font-size:11px;" onclick="openTrophyRoom('${safeName}'); closePlayerActions();">🏛️ Salle des trophées</button>
+    ${!isMe ? `<button class="btn-main" style="width:100%; margin:2px 0; padding:8px; font-size:11px;" onclick="requestFriendFromMenu('${safeName}')">${d.action_friend_request}</button>` : ''}
+    <button class="btn-main" style="width:100%; margin:2px 0; padding:8px; font-size:11px;" onclick="openTrophyRoom('${safeName}'); closePlayerActions();">${d.action_trophy_room}</button>
   `;
   document.body.appendChild(menu);
   setTimeout(() => document.addEventListener('click', closePlayerActions, { once: true }), 0);
@@ -939,6 +935,7 @@ function updateOpponentDisplay(opp) {
 }
 
 socket.on("start_countdown", (data) => {
+  const d = i18n[currentLang];
   if (radarInterval) clearInterval(radarInterval);
   latest1v1StartData = data;
   currentMatchCharges = {};
@@ -951,12 +948,12 @@ socket.on("start_countdown", (data) => {
   hideAllScreens();
   const roomCodeEl = document.getElementById("current-room-code");
   const inRoom = roomCodeEl && roomCodeEl.innerText && roomCodeEl.innerText !== "----";
-  if (data.isRanked) setGameModeBadge("⚔️ CLASSÉ", "#f8b500");
-  else if (data.isTugOfWar) setGameModeBadge("🪢 CORDE RAIDE", "#ff4b2b");
-  else if (inRoom) setGameModeBadge("👥 SALON PRIVÉ", "#00d2ff");
-  else if (latestGlobalEvents.chaosMode) setGameModeBadge("🌪️ CHAOS MODE", "#ff007f");
-  else if (latestGlobalEvents.expressoMatch) setGameModeBadge("⚡ EXPRESSO 20s", "#ffe600");
-  else setGameModeBadge("⚔️ 1v1 AMICAL", "#00ff88");
+  if (data.isRanked) setGameModeBadge(d.badge_ranked, "#f8b500");
+  else if (data.isTugOfWar) setGameModeBadge(d.badge_tow, "#ff4b2b");
+  else if (inRoom) setGameModeBadge(d.badge_private, "#00d2ff");
+  else if (latestGlobalEvents.chaosMode) setGameModeBadge(d.badge_chaos, "#ff007f");
+  else if (latestGlobalEvents.expressoMatch) setGameModeBadge(d.badge_expresso, "#ffe600");
+  else setGameModeBadge(d.badge_1v1, "#00ff88");
   document.getElementById("countdown-overlay").style.display = "flex";
   let count = 3;
   document.getElementById("countdown-number").innerText = count;
@@ -1008,16 +1005,17 @@ socket.on("trigger_jackpot_wheel", () => {
 function spinJackpotWheel() { const b = document.getElementById("btn-spin-wheel"); b.disabled = true; b.style.opacity = "0.5"; document.getElementById("wheel-result-text").innerText = ""; socket.emit("spin_jackpot_wheel"); }
 
 socket.on("jackpot_wheel_result", (data) => {
+  const d = i18n[currentLang];
   const wheelEl = document.getElementById("wheel-element");
   const resultText = document.getElementById("wheel-result-text");
   const randomSpin = 1440 + Math.floor(Math.random() * 360);
   wheelEl.style.transition = "transform 3.5s cubic-bezier(0.15,0.75,0.1,1)";
   wheelEl.style.transform = `rotate(${data.targetAngle || randomSpin}deg)`;
   setTimeout(() => {
-    if (data.outcome === "jackpot") { resultText.innerHTML = `🎉 <span style="color:#f8b500;">JACKPOT ! +${data.coinDelta} Pièces 🪙</span>`; SoundEngine.playVictory(); }
-    else if (data.outcome === "objet") { resultText.innerHTML = `🎁 <span style="color:#00c6ff;">OBJET GAGNÉ ! ⚡</span>`; SoundEngine.playVictory(); }
-    else if (data.outcome === "banqueroute") { resultText.innerHTML = `💀 <span style="color:#ff4b2b;">PERDU ! ${data.coinDelta} Pièces 🪙</span>`; SoundEngine.playError(); }
-    else resultText.innerHTML = `❌ <span style="color:#38ef7d;">RIEN ! Retente ta chance.</span>`;
+    if (data.outcome === "jackpot") { resultText.innerHTML = `🎉 <span style="color:#f8b500;">${d.jackpot_win.replace('X', data.coinDelta)}</span>`; SoundEngine.playVictory(); }
+    else if (data.outcome === "objet") { resultText.innerHTML = `🎁 <span style="color:#00c6ff;">${d.jackpot_item}</span>`; SoundEngine.playVictory(); }
+    else if (data.outcome === "banqueroute") { resultText.innerHTML = `💀 <span style="color:#ff4b2b;">${d.jackpot_lost.replace('X', data.coinDelta)}</span>`; SoundEngine.playError(); }
+    else resultText.innerHTML = `❌ <span style="color:#38ef7d;">${d.jackpot_nothing}</span>`;
     setTimeout(() => { document.getElementById("modal-jackpot-wheel").style.display = "none"; if (pendingGameOverData) { showGameOverRecap(pendingGameOverData); pendingGameOverData = null; } }, 2200);
   }, 3600);
 });
@@ -1030,6 +1028,7 @@ socket.on("game_over_1v1", (data) => {
 
 function getWinnerAvatarShowcaseHTML(playerObj) {
   if (!playerObj) return "";
+  const d = i18n[currentLang];
   const equippedAvatar = playerObj.inventory && playerObj.inventory.__equipped && playerObj.inventory.__equipped.avatar;
   const equippedFrame = playerObj.inventory && playerObj.inventory.__equipped && playerObj.inventory.__equipped.frame;
   let iconContent = playerObj.avatar || 1;
@@ -1041,10 +1040,11 @@ function getWinnerAvatarShowcaseHTML(playerObj) {
   else if (equippedAvatar === "avatar_s2_citrouille") iconContent = `<div class="lottie-avatar-large" data-lottie-url="citrouille-chateau.json" style="width:75px; height:75px;"></div>`;
   const frameClass = getFrameClass(equippedFrame);
   setTimeout(() => initAllLottieBadges(), 50);
-  return `<div class="victory-avatar-showcase"><div class="victory-badge-large ${frameClass}" style="display:flex; align-items:center; justify-content:center;"><span style="font-weight:900; color:#fff;">${iconContent}</span><span style="position:absolute; bottom:-2px; right:-2px; font-size:14px; background:#0f051d; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; border:2px solid #fff; z-index:3;">${playerObj.flag || "🇫🇷"}</span></div><div style="font-size:13px; font-weight:900; color:#f8b500; margin-top:4px;">${playerObj.username || "Joueur"} TRIOMPHE !</div></div>`;
+  return `<div class="victory-avatar-showcase"><div class="victory-badge-large ${frameClass}" style="display:flex; align-items:center; justify-content:center;"><span style="font-weight:900; color:#fff;">${iconContent}</span><span style="position:absolute; bottom:-2px; right:-2px; font-size:14px; background:#0f051d; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; border:2px solid #fff; z-index:3;">${playerObj.flag || "🇫🇷"}</span></div><div style="font-size:13px; font-weight:900; color:#f8b500; margin-top:4px;">${playerObj.username || "Joueur"} ${d.triomphe}</div></div>`;
 }
 
 function showGameOverRecap(data) {
+  const d = i18n[currentLang];
   recapActive = true;
   if (typeof clearCatchArena === "function") clearCatchArena();
   hideAllScreens();
@@ -1060,11 +1060,11 @@ function showGameOverRecap(data) {
   const oppData = oppId ? data.players[oppId] : { target: "-", score: 0 };
   rewardDoubled = false;
   const doubleBtn = document.getElementById("btn-double-reward");
-  doubleBtn.disabled = false; doubleBtn.style.opacity = "1"; doubleBtn.innerText = "📺 Doubler mes gains (Pub)";
+  doubleBtn.disabled = false; doubleBtn.style.opacity = "1"; doubleBtn.innerText = d.double_reward;
   const rematchBtn = document.getElementById("btn-rematch");
   if (rematchBtn) {
     if (data.isRanked) { rematchBtn.style.display = "none"; }
-    else { rematchBtn.style.display = "block"; rematchBtn.disabled = false; rematchBtn.style.opacity = "1"; rematchBtn.innerText = "Revanche ⚔️"; }
+    else { rematchBtn.style.display = "block"; rematchBtn.disabled = false; rematchBtn.style.opacity = "1"; rematchBtn.innerText = d.rematch_btn; }
   }
   const myReward = data.rewards && data.rewards[myId] ? data.rewards[myId] : { baseCoins: 30, rushBonus: 0, totalCoins: 30 };
   currentCoinsGained = myReward.totalCoins;
@@ -1079,16 +1079,16 @@ function showGameOverRecap(data) {
     else if (data.players[winnerId]) winnerObj = parsePlayer(data.players[winnerId]);
   }
   if (winnerObj) cinematic.innerHTML = getWinnerAvatarShowcaseHTML(winnerObj);
-  else cinematic.innerHTML = `<div class="victory-avatar-showcase"><div style="font-size:28px; margin-bottom:4px;">🤝</div><div style="font-size:13px; font-weight:900; color:#00d2ff;">ÉGALITÉ !</div></div>`;
-  if (isWinner) { banner.innerText = "🏆 VICTOIRE SUPRÊME !"; banner.style.color = "#00ff88"; SoundEngine.playVictory(); }
-  else if (winnerId) { banner.innerText = "💥 DÉFAITE AMÈRE..."; banner.style.color = "#ff4b2b"; }
-  else { banner.innerText = "⏱️ ÉGALITÉ !"; banner.style.color = "#ff8a00"; }
+  else cinematic.innerHTML = `<div class="victory-avatar-showcase"><div style="font-size:28px; margin-bottom:4px;">🤝</div><div style="font-size:13px; font-weight:900; color:#00d2ff;">${d.equality}</div></div>`;
+  if (isWinner) { banner.innerText = d.victory_supreme; banner.style.color = "#00ff88"; SoundEngine.playVictory(); }
+  else if (winnerId) { banner.innerText = d.defeat_bitter; banner.style.color = "#ff4b2b"; }
+  else { banner.innerText = d.equality_timeout; banner.style.color = "#ff8a00"; }
   document.getElementById("recap-reason").innerText = data.reason;
   document.getElementById("recap-my-target").innerText = myData ? myData.target : "-";
   document.getElementById("recap-opp-target").innerText = oppData ? oppData.target : "-";
   document.getElementById("recap-my-score").innerText = myData ? myData.score : 0;
   let htmlCoins = `+${myReward.baseCoins}`;
-  if (myReward.rushBonus > 0) htmlCoins += ` <span style="color:#ff8a00;">+${myReward.rushBonus}(RUSH)</span>`;
+  if (myReward.rushBonus > 0) htmlCoins += ` <span style="color:#ff8a00;">+${myReward.rushBonus} ${d.rush_bonus}</span>`;
   document.getElementById("recap-coins-gained").innerHTML = htmlCoins;
   modal.style.display = "flex";
   registerIfPossible();
@@ -1098,15 +1098,16 @@ function showGameOverRecap(data) {
 RÉCOMPENSES SOLO
 ============================================================ */
 socket.on("solo_reward_result", (data) => {
+  const d = i18n[currentLang];
   currentCoinsGained = data.earnedCoins;
   let htmlCoins = `+${data.baseCoins}`;
-  if (data.rushBonus > 0) htmlCoins += `<span style="color:#ff8a00;">+${data.rushBonus}(RUSH)</span>`;
+  if (data.rushBonus > 0) htmlCoins += `<span style="color:#ff8a00;">+${data.rushBonus} ${d.rush_bonus}</span>`;
   document.getElementById("recap-coins-gained").innerHTML = htmlCoins;
   if (data.perfection) {
     pendingRecapAfterPopup = true;
     setTimeout(() => {
       SoundEngine.stopBoom();
-      showRewardPopUp("⚡ PERFECTION — Combo x35 atteint ! Récompense maximale + Succès 🏆 débloqué !", "🏆");
+      showRewardPopUp(d.perfection_popup_text, "🏆");
       const btn = document.querySelector("#reward-popup-overlay .btn-gold");
       if (btn) btn.onclick = closeRewardPopUp;
     }, 900);
@@ -1129,13 +1130,14 @@ socket.on("solo_reward_result", (data) => {
 TROPHÉES : handler de déblocage (popup dorée)
 ============================================================ */
 socket.on('trophy_unlocked', (trophies) => {
+  const d = i18n[currentLang];
   trophies.forEach((t, i) => {
     setTimeout(() => {
       const popup = document.getElementById('trophy-unlock-popup');
       if (!popup) return;
       document.getElementById('trophy-unlock-emoji').innerText = t.emoji;
       document.getElementById('trophy-unlock-name').innerText = t.name;
-      document.getElementById('trophy-unlock-title').innerText = `Titre débloqué : ${t.title}`;
+      document.getElementById('trophy-unlock-title').innerText = `${d.trophy_title_unlocked} ${t.title}`;
       popup.style.display = 'block';
       setTimeout(() => { popup.style.display = 'none'; }, 3500);
     }, i * 800);
@@ -1153,12 +1155,13 @@ function handle1v1TileClick(num, index) {
 ENTRAÎNEMENT SOLO
 ============================================================ */
 function startSoloTraining(mode) {
+  const d = i18n[currentLang];
   if (!isProfileValid()) { checkAndShowProfileModal(); return; }
   activeTrainingMode = mode || "classic";
   hideAllScreens();
   ensureEquippedGrid();
-  if (activeTrainingMode === "random") setGameModeBadge("🎲 SOLO ALÉATOIRE", "#00ff88");
-  else setGameModeBadge("🏋️ SOLO CLASSIQUE", "#00d2ff");
+  if (activeTrainingMode === "random") setGameModeBadge(d.badge_solo_random, "#00ff88");
+  else setGameModeBadge(d.badge_solo_classic, "#00d2ff");
   soloTarget = (activeTrainingMode === "random") ? Math.floor(Math.random() * 50) + 1 : 1;
   soloScore = 0; soloTimeLeft = 50; isTimeFrozen = false;
   currentSoloCharges = {};
@@ -1239,10 +1242,11 @@ function handleSoloTileClick(num, index) {
 AVALANCHE
 ============================================================ */
 function startAvalancheGame(speed, initialCount) {
+  const d = i18n[currentLang];
   if (!isProfileValid()) { checkAndShowProfileModal(); return; }
   hideAllScreens();
   ensureEquippedGrid();
-  setGameModeBadge("🏔️ AVALANCHE", "#7be8ff");
+  setGameModeBadge(d.badge_avalanche, "#7be8ff");
   document.getElementById("screen-game").style.display = "block";
   document.getElementById("hud-solo").style.display = "grid";
   document.getElementById("hud-1v1").style.display = "none";
@@ -1326,7 +1330,7 @@ function renderAvalancheGrid() {
   const isFantomeTheme = equippedTheme === "theme_fantome";
   const isBonbonTheme = equippedTheme === "theme_bonbon";
   const isSapinTheme = equippedTheme === "theme_sapin";
-    const isLutinTheme = equippedTheme === "theme_lutin";
+  const isLutinTheme = equippedTheme === "theme_lutin";
   avalancheGridData.forEach((val, idx) => {
     const tile = document.createElement("div");
     if (val !== null) {
@@ -1365,6 +1369,7 @@ function handleAvalancheClick(val, idx) {
 FIN DE PARTIE SOLO
 ============================================================ */
 function endSoloGame() {
+  const d = i18n[currentLang];
   recapActive = true;
   hideAllScreens();
   const wasPerfection = soloPerfection;
@@ -1373,7 +1378,7 @@ function endSoloGame() {
   const doubleBtn = document.getElementById("btn-double-reward");
   doubleBtn.disabled = false;
   doubleBtn.style.opacity = "1";
-  doubleBtn.innerText = "📺 Doubler mes gains (Pub)";
+  doubleBtn.innerText = d.double_reward;
   const rematchBtn = document.getElementById("btn-rematch");
   if (rematchBtn) rematchBtn.style.display = "none";
   socket.emit("claim_solo_reward", {
@@ -1389,13 +1394,13 @@ function endSoloGame() {
       </div>
     </div>`;
   if (wasPerfection) {
-    document.getElementById("recap-banner").innerText = "💥 PERFECTION x35 !";
+    document.getElementById("recap-banner").innerText = d.solo_perfection_banner;
     document.getElementById("recap-banner").style.color = "#f8b500";
-    document.getElementById("recap-reason").innerText = "PERFECTION ! Récompense maximale + Succès 🏆";
+    document.getElementById("recap-reason").innerText = d.solo_perfection_reason;
   } else {
-    document.getElementById("recap-banner").innerText = "🏋️ ENTRAÎNEMENT TERMINÉ";
+    document.getElementById("recap-banner").innerText = d.solo_training_done;
     document.getElementById("recap-banner").style.color = "#00d2ff";
-    document.getElementById("recap-reason").innerText = `Score : ${soloScore}`;
+    document.getElementById("recap-reason").innerText = `${d.solo_score_label} ${soloScore}`;
   }
   document.getElementById("recap-1v1-rows").style.display = "none";
   document.getElementById("recap-my-score").innerText = soloScore;
@@ -1438,11 +1443,13 @@ socket.on('trophy_room_data', (data) => {
 
   const shelvesContainer = document.getElementById('trophy-room-shelves');
   shelvesContainer.innerHTML = '';
+  const TROPHY_CATALOG = getTrophyCatalogClient();
+  const TROPHY_SHELVES = getTrophyShelves();
 
   TROPHY_SHELVES.forEach(shelf => {
     const shelfEl = document.createElement('div');
     shelfEl.className = 'trophy-shelf';
-    const shelfTrophies = Object.entries(TROPHY_CATALOG_CLIENT).filter(([_, t]) => t.shelf === shelf.id);
+    const shelfTrophies = Object.entries(TROPHY_CATALOG).filter(([_, t]) => t.shelf === shelf.id);
 
     shelfEl.innerHTML = `<div class="trophy-shelf-title" style="color:${shelf.color}; text-shadow:0 0 8px ${shelf.color};">${shelf.label}</div>`;
     const grid = document.createElement('div');
@@ -1470,6 +1477,7 @@ socket.on('trophy_room_data', (data) => {
 
 let tooltipEl = null;
 function showTrophyTooltip(e, trophy, playerData, isUnlocked) {
+  const d = i18n[currentLang];
   hideTrophyTooltip();
   tooltipEl = document.createElement('div');
   tooltipEl.className = 'trophy-tooltip';
@@ -1477,8 +1485,8 @@ function showTrophyTooltip(e, trophy, playerData, isUnlocked) {
   tooltipEl.innerHTML = `
     <div style="font-size:13px; font-weight:900; color:#f8b500;">${trophy.emoji} ${trophy.name}</div>
     <div style="margin:6px 0; color:#00d2ff;">${trophy.condition}</div>
-    <div style="color:#fff;">Progrès : <b>${progressText}</b></div>
-    <div style="margin-top:6px; font-size:10px; color:${isUnlocked ? "#00ff88" : "#ff4b2b"};">${isUnlocked ? "✅ Débloqué" : "🔒 Verrouillé"}</div>
+    <div style="color:#fff;">${d.trophy_progress_label} <b>${progressText}</b></div>
+    <div style="margin-top:6px; font-size:10px; color:${isUnlocked ? "#00ff88" : "#ff4b2b"};">${isUnlocked ? d.trophy_unlocked_status : d.trophy_locked_status}</div>
   `;
   document.body.appendChild(tooltipEl);
   moveTrophyTooltip(e);
@@ -1522,4 +1530,3 @@ function renderGrid(pool, handler) {
     grid.appendChild(tile);
   });
 }
-// ===== FIN DU FICHIER jeu.js =====
