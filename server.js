@@ -280,6 +280,11 @@ async function logPlayerAction(p, action, detail, currency, amount, balanceAfter
     }]);
   } catch (e) { console.log('log error:', e.message); }
 }
+function buildAdminCatalog() {
+  const items = Object.keys(ITEM_CATALOG).map(id => ({ id, type: ITEM_CATALOG[id].type }));
+  const trophies = Object.keys(TROPHY_CATALOG).map(id => ({ id, name: TROPHY_CATALOG[id].name }));
+  return { items, trophies };
+}
 /* ============================================================
 SOCKET
 ============================================================ */
@@ -893,6 +898,67 @@ io.on('connection', (socket) => {
     io.emit('seasons_updated', getSeasonDatesPublic());
     socket.emit('admin_season_result', { ok: true, season: seasonNow.id });
   });
+
+    socket.on('admin_get_catalog', () => {
+    if (!socket.isAdmin) return;
+    socket.emit('admin_catalog', buildAdminCatalog());
+  });
+
+  socket.on('admin_give_cosmetic', async (data) => {
+    if (!socket.isAdmin) return;
+    const { username, itemId, kind } = data || {};
+    const clean = (username || '').trim();
+    if (!clean || !itemId) return;
+    const isPower = kind === 'item' && ITEM_CATALOG[itemId] && ITEM_CATALOG[itemId].type === 'power';
+
+    // --- Joueur EN LIGNE ---
+    let targetId = null;
+    for (const sId in activePlayers) {
+      if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === clean.toLowerCase()) { targetId = sId; break; }
+    }
+    if (targetId) {
+      const p = activePlayers[targetId];
+      if (kind === 'trophy') {
+        const t = checkAndUnlockTrophy(p, itemId);
+        if (!t) { socket.emit('admin_give_result', { ok: false, message: 'Trophée déjà possédé ou introuvable.' }); return; }
+      } else if (isPower) {
+        p.inventory = p.inventory || {}; p.inventory[itemId] = (p.inventory[itemId] || 0) + 1;
+      } else {
+        p.unlocked_items = p.unlocked_items || [];
+        if (p.unlocked_items.includes(itemId)) { socket.emit('admin_give_result', { ok: false, message: 'Déjà possédé.' }); return; }
+        p.unlocked_items.push(itemId);
+      }
+      await savePlayerToSupabase(targetId);
+      logPlayerAction(p, 'admin_give_item', 'Don admin : ' + itemId);
+      io.to(targetId).emit('player_registered', p);
+      socket.emit('admin_give_result', { ok: true, message: itemId + ' → ' + p.username });
+      return;
+    }
+
+    // --- Joueur HORS-LIGNE (mise à jour base) ---
+    const { data: matched, error } = await supabase.from('players').select('*').ilike('username', clean).limit(1);
+    if (error || !matched || matched.length === 0) { socket.emit('admin_give_result', { ok: false, message: 'Pseudo introuvable.' }); return; }
+    const row = matched[0];
+    if (kind === 'trophy') {
+      const tc = row.trophies_collection || {};
+      if (tc[itemId]) { socket.emit('admin_give_result', { ok: false, message: 'Trophée déjà possédé.' }); return; }
+      const trophy = TROPHY_CATALOG[itemId];
+      tc[itemId] = { unlocked: true, unlockedAt: Date.now() };
+      const unlocked = row.unlocked_items || [];
+      if (trophy && trophy.title && !unlocked.includes(trophy.title)) unlocked.push(trophy.title);
+      await supabase.from('players').update({ trophies_collection: tc, unlocked_items: unlocked }).eq('id', row.id);
+    } else if (isPower) {
+      const inv = row.inventory || {}; inv[itemId] = (inv[itemId] || 0) + 1;
+      await supabase.from('players').update({ inventory: inv }).eq('id', row.id);
+    } else {
+      const unlocked = row.unlocked_items || [];
+      if (unlocked.includes(itemId)) { socket.emit('admin_give_result', { ok: false, message: 'Déjà possédé.' }); return; }
+      unlocked.push(itemId);
+      await supabase.from('players').update({ unlocked_items: unlocked }).eq('id', row.id);
+    }
+    logPlayerAction({ username: row.username, socketId: null }, 'admin_give_item', 'Don admin (hors-ligne) : ' + itemId);
+    socket.emit('admin_give_result', { ok: true, message: itemId + ' → ' + row.username + ' (hors-ligne)' });
+  });
   /* ---------- STATS : joueurs réellement en ligne ---------- */
   socket.on('admin_get_stats', () => {
     if (!socket.isAdmin) return;
@@ -906,6 +972,8 @@ io.on('connection', (socket) => {
     const { data: rows, error } = await query;
     socket.emit('admin_logs_data', { username, rows: (!error && rows) ? rows : [] });
   });
+
+  
   /* ---------- AJUSTER PIÈCES / POINTS / TROPHÉES ---------- */
   socket.on('admin_adjust_currency', async (data) => {
     if (!socket.isAdmin) return;
