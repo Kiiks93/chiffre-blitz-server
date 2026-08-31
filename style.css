@@ -1105,7 +1105,7 @@ BADGE MODE DE JEU
 }
 
 /* ============================================================
-RESPONSIVE MOBILE
+RESPONSIVE MOBILE (bloc unique fusionné)
 ============================================================ */
 @media (max-width: 600px) {
   .header-bar { max-width: 96vw; }
@@ -1115,16 +1115,10 @@ RESPONSIVE MOBILE
   .user-pill .tft-avatar-container { width: 40px; height: 40px; }
   .user-pill .tft-avatar-container .lottie-avatar-badge { width: 34px !important; height: 34px !important; }
   .user-pill .tft-flag-overlay { width: 15px; height: 15px; font-size: 10px; }
-  :root { --game-width: min(96vw, 78vh, 430px); }
-  #grid { gap: 8px !important; }
+  :root { --game-width: min(82vw, 68vh, 380px) !important; }
+  #grid { gap: 8px !important; width: var(--game-width) !important; }
   #grid .tile, #grid .tile.empty { aspect-ratio: 1 / 1.15 !important; font-size: clamp(26px, 8vw, 34px) !important; }
   #game-mode-badge { font-size: 11px !important; padding: 4px 12px !important; letter-spacing: 1px !important; }
-}
-
-/* ---------- MOBILE : grille réduite + semi-transparente ---------- */
-@media (max-width: 600px) {
-  :root { --game-width: min(82vw, 68vh, 380px) !important; }
-  #grid { width: var(--game-width) !important; }
   .tile { background: rgba(42, 24, 69, 0.72) !important; }
   .tile.alt-theme { background: linear-gradient(135deg, rgba(248, 181, 0, 0.75), rgba(255, 138, 0, 0.75)) !important; }
   .tile.glacial-theme { background: linear-gradient(135deg, rgba(10, 42, 77, 0.75), rgba(14, 165, 201, 0.75)) !important; }
