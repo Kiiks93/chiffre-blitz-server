@@ -502,17 +502,23 @@ function getReleasedSeasons() {
   return list.filter(s => { const [d, m, y] = s.start.split("/").map(Number); return now >= new Date(y, m - 1, d); });
 }
 function openMusicChooser() {
+  const d = i18n[currentLang];
   closeMusicChooser();
   const released = getReleasedSeasons();
   const cur = localStorage.getItem('cb_music_season') || 'auto';
-  let btns = `<button class="btn-main ${cur === 'auto' ? 'btn-gold' : 'btn-blue'}" onclick="setMusicSeason('auto')">🎵 Auto (saison en cours)</button>`;
-  released.forEach(s => { const num = s.id.replace('s', ''); btns += `<button class="btn-main ${cur === s.id ? 'btn-gold' : 'btn-blue'}" onclick="setMusicSeason('${s.id}')">${s.emoji} Saison ${num} — ${s.name}</button>`; });
-  const ov = document.createElement('div'); ov.id = 'music-chooser'; ov.className = 'modal-overlay';
+  let btns = `<button class="btn-main ${cur === 'auto' ? 'btn-gold' : 'btn-blue'}" onclick="setMusicSeason('auto')">🎵 ${d.music_auto}</button>`;
+  released.forEach(s => {
+    const num = s.id.replace('s', '');
+    btns += `<button class="btn-main ${cur === s.id ? 'btn-gold' : 'btn-blue'}" onclick="setMusicSeason('${s.id}')">${s.emoji} ${d.music_season_label} ${num} — ${s.name}</button>`;
+  });
+  const ov = document.createElement('div');
+  ov.id = 'music-chooser';
+  ov.className = 'modal-overlay';
   ov.innerHTML = `<div class="modal-card" style="max-width:320px;text-align:center;">
-    <h2 style="color:#00d2ff;margin:0 0 8px 0;">🎵 BANDE SON</h2>
-    <p style="font-size:10px;color:#aaa;margin-bottom:10px;">Seules les saisons déjà sorties sont proposées (pas de spoiler !).</p>
+    <h2 style="color:#00d2ff;margin:0 0 8px 0;">${d.music_title}</h2>
+    <p style="font-size:10px;color:#aaa;margin-bottom:10px;">${d.music_no_spoiler}</p>
     ${btns}
-    <button class="btn-secondary" onclick="closeMusicChooser()">Fermer</button>
+    <button class="btn-secondary" onclick="closeMusicChooser()">${d.close}</button>
   </div>`;
   document.body.appendChild(ov);
 }
