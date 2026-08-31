@@ -37,7 +37,7 @@ const COMBO_WINDOW_MS = 20000;
 let pendingRecapAfterPopup = false;
 
 /* ============================================================
-CATALOGUE TROPHÉES CLIENT (16 trophées) — traduit
+CATALOGUE TROPHÉES CLIENT (16 trophées) — TRADUIT
 ============================================================ */
 function getTrophyCatalogClient() {
   const d = i18n[currentLang];
@@ -330,7 +330,7 @@ function spawnExplosionParticles() {
   if (theme === "theme_alt") emojis = ["✨", "🪙", "💰", "⚡"];
   if (theme === "theme_neon") emojis = ["💜", "", "✨", "💥"];
   if (theme === "theme_eclair") emojis = ["⚡", "", "✨", "💥"];
-  if (theme === "theme_obsidian") emojis = ["🖤", "💀", "🔥", ""];
+  if (theme === "theme_obsidian") emojis = ["🖤", "", "🔥", ""];
   if (theme === "theme_citrouille") emojis = ["🎃", "", "", "💀"];
   if (theme === "theme_fantome") emojis = ["👻", "", "💜", "✨"];
   const partCount = IS_LOW_PERF ? 12 : 40;
@@ -689,7 +689,7 @@ function renderRankedLoadoutItems() {
     card.className = `power-card ${selectedCount > 0 ? "equipped" : ""}`;
     card.innerHTML = `
       <h4>${powerInfo.name}</h4><p>${powerInfo.desc}</p>
-      <div class="stock-badge">${i18n[currentLang].coins ? 'Stock' : 'Stock'} : ${qty}</div>
+      <div class="stock-badge">Stock : ${qty}</div>
       <div style="font-weight:bold; font-size:10px; color:${selectedCount > 0 ? "#00ff88" : "#f8b500"};">${d.ranked_selected} ${selectedCount}</div>
       <div style="display:flex; gap:4px; margin-top:6px;">
         <button class="power-btn buy" onclick="addRankedItem('${p.id}')" ${(selectedRankedItems.length >= 2 || selectedCount >= qty) ? "disabled" : ""}>${d.ranked_add}</button>
@@ -867,7 +867,7 @@ socket.on("leaderboard_data", (res) => {
     row.className = "lb-row";
     const badgeHtml = getAvatarBadgeHTML(p.flag, p.avatar, null, p);
     const equippedTitle = p.inventory && p.inventory.__equipped && p.inventory.__equipped.title;
-    const titleHtml = equippedTitle ? `<span style="font-size:8px; color:#f8b500; font-weight:bold; margin-left:4px;">[${TITLE_DISPLAY_NAMES[equippedTitle] || equippedTitle}]</span>` : "";
+    const titleHtml = equippedTitle ? `<span style="font-size:8px; color:#f8b500; font-weight:bold; margin-left:4px;">[${getTitleDisplayNames()[equippedTitle] || equippedTitle}]</span>` : "";
     let rightBadge = `<span class="lb-pts" style="color:#00ff88;">${p.points} pts</span>`;
     if (category === "coins") rightBadge = `<span class="lb-pts" style="color:#f8b500;">${p.coins} 🪙</span>`;
     else if (category === "trophies") rightBadge = `<span class="lb-pts" style="color:#fceabb;">${p.trophies} 🏆</span>`;
@@ -879,7 +879,7 @@ socket.on("leaderboard_data", (res) => {
     const safeName = String(p.username || "").replace(/'/g, "\\'");
     row.innerHTML = `<span class="lb-rank" style="color:${rankColor};">${rankDisplay}</span>
       <div class="lb-user-info"><div class="lb-name-row">${badgeHtml}<span class="lb-clickable-name" onclick="openPlayerActions('${safeName}', event)">${p.username}</span>${titleHtml}</div>
-      <div class="lb-sub-details"><span>🏆 ${p.trophies}</span><span>🪙 ${p.coins}</span><span>⚔️ V:${p.wins}/D:${p.losses}</span></div></div>${rightBadge}`;
+      <div class="lb-sub-details"><span>🏆 ${p.trophies}</span><span>🪙 ${p.coins}</span><span>⚔️ ${currentLang === "fr" ? "V" : "W"}:${p.wins}/${currentLang === "fr" ? "D" : "L"}:${p.losses}</span></div></div>${rightBadge}`;
     container.appendChild(row);
   });
 });
@@ -931,7 +931,7 @@ function updateOpponentDisplay(opp) {
   document.getElementById("opp-profile-badge").innerHTML = getAvatarBadgeHTML(cachedOpponent.flag, cachedOpponent.avatar);
   const oppTitle = cachedOpponent.inventory && cachedOpponent.inventory.__equipped && cachedOpponent.title;
   const el = document.getElementById("opp-profile-title");
-  if (el) el.innerText = oppTitle ? `[ ${TITLE_DISPLAY_NAMES[oppTitle] || oppTitle} ]` : "";
+  if (el) el.innerText = oppTitle ? `[ ${getTitleDisplayNames()[oppTitle] || oppTitle} ]` : "";
 }
 
 socket.on("start_countdown", (data) => {
