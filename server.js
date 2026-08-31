@@ -739,7 +739,7 @@ io.on('connection', (socket) => {
       if (id2) startMatchBetween(id1, id2, true, true, false);
       else rankedQueue.unshift(id1);
     }
-
+    }
   socket.on('find_tug_of_war_match', () => {
     if (!globalEvents.tugOfWarMode) return;
     tugOfWarQueue = tugOfWarQueue.filter(sId => sId !== socket.id);
