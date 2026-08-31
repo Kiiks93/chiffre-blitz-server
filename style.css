@@ -1335,26 +1335,12 @@ LOBBY 1v1 : centrage (corrige le décalage PC)
 #screen-1v1-lobby .matchmaking-loader { width: 100%; align-items: center; }
 #screen-1v1-lobby .btn-secondary { align-self: center; }
 /* ============================================================
-BADGE JOUEURS EN LIGNE (sous le titre)
+BADGE JOUEURS EN LIGNE barre de stats 
 ============================================================ */
-.header-bar { position: relative; }
-.online-badge {
-  position: absolute;
-  top: 100%;
-  left: 16px;
-  margin-top: 4px;
-  background: rgba(0, 210, 255, 0.15);
-  border: 1px solid rgba(0, 210, 255, 0.4);
-  color: #00d2ff;
-  font-size: 11px;
-  font-weight: 900;
-  padding: 3px 10px;
+.online-stat {
+  background: rgba(0, 210, 255, 0.12);
+  border: 1px solid rgba(0, 210, 255, 0.35);
   border-radius: 20px;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  letter-spacing: 0.5px;
-  box-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
-  pointer-events: none;
+  padding: 2px 10px;
 }
-.online-badge strong { color: #00ff88; font-size: 13px; }
+.online-stat strong { color: #00ff88; }
