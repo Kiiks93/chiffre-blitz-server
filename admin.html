@@ -173,6 +173,25 @@ label {
   font-weight: bold;
   margin-top: 7px;
 }
+
+/* ===== Dates des saisons ===== */
+.season-date-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.season-date-row .season-label {
+  width: 44px;
+  font-weight: bold;
+  color: #f8b500;
+  font-size: 12px;
+  text-align: center;
+}
+.season-date-row input[type="date"] {
+  flex: 1;
+  margin: 0;
+}
 </style>
 </head>
 
@@ -242,6 +261,25 @@ label {
     <div id="admin-season-result" class="small-result"></div>
   </div>
 
+  <!-- ===== NOUVEAU : Dates des saisons ===== -->
+  <div class="card" style="border-color: rgba(56,239,125,0.55);">
+    <h2 style="color:#38ef7d;">📅 Dates des Saisons</h2>
+
+    <div class="notice" style="background: rgba(56,239,125,0.08); border-color: rgba(56,239,125,0.35); color: #c9f7d8;">
+      Définis les dates de début et fin de chaque saison.
+      <br>
+      Les dates sont <b>persistées en base de données</b> (survivent aux redéploiements Render).
+      <br>
+      Tous les joueurs connectés se mettront à jour en temps réel.
+    </div>
+
+    <div id="season-dates-rows"></div>
+
+    <button class="btn-green" onclick="saveSeasonDates()">💾 Enregistrer les dates</button>
+    <div id="admin-dates-result" class="small-result"></div>
+  </div>
+  <!-- ===== Fin : Dates des saisons ===== -->
+
   <div class="card">
     <h2 style="color:#38ef7d;">⚡ Planification des Événements & Abuses</h2>
     <div id="admin-schedules-container"></div>
@@ -289,6 +327,7 @@ socket.on("admin_auth_success", (data) => {
   document.getElementById("admin-login-section").style.display = "none";
   document.getElementById("admin-dashboard-section").style.display = "block";
   renderAdminSchedules(data.schedules || {});
+  socket.emit('admin_get_season_dates');
 });
 
 /* ============================================================
@@ -458,6 +497,40 @@ function saveAdminSchedules() {
 socket.on("admin_schedule_saved", () => {
   alert("✅ Événements mis à jour côté serveur !");
 });
+
+/* ============================================================
+ÉDITEUR DE DATES DES SAISONS
+============================================================ */
+socket.on('admin_season_dates', (list) => {
+  const rows = document.getElementById('season-dates-rows');
+  if (!rows) return;
+  rows.innerHTML = '';
+  (list || []).forEach(s => {
+    const row = document.createElement('div');
+    row.className = 'season-date-row';
+    row.innerHTML = `<span class="season-label">${s.id.toUpperCase()}</span>
+      <input type="date" id="sd-${s.id}-start" value="${s.start}">
+      <input type="date" id="sd-${s.id}-end" value="${s.end}">`;
+    rows.appendChild(row);
+  });
+});
+
+function saveSeasonDates() {
+  const dates = {};
+  ['s1', 's2', 's3'].forEach(id => {
+    const st = document.getElementById(`sd-${id}-start`);
+    const en = document.getElementById(`sd-${id}-end`);
+    if (st && en) dates[id] = { start: st.value, end: en.value };
+  });
+  socket.emit('admin_set_season_dates', dates);
+  const result = document.getElementById('admin-dates-result');
+  if (result) {
+    result.style.color = '#00ff88';
+    result.innerText = '✅ Dates envoyées !';
+    setTimeout(() => { result.innerText = ''; }, 3000);
+  }
+  alert('✅ Dates des saisons mises à jour !');
+}
 </script>
 
 </body>
