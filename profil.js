@@ -855,6 +855,10 @@ socket.on("player_registered", (rawData) => {
   if (document.getElementById("modal-blitz-pass").style.display === "flex") renderBlitzPass();
   if (document.getElementById("screen-game").style.display === "block") preparePowerHUD();
 });
+socket.on("online_count", (data) => {
+  const el = document.getElementById("online-count-display");
+  if (el) el.innerText = data.online;
+});
 socket.on('register_result', (res) => {
   if (!res.ok) {
     pendingProfileValidation = false;
