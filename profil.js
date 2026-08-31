@@ -943,10 +943,28 @@ socket.on("events_state_update", (events) => {
 });
 
 /* ============================================================
+RECONSTRUCTION DES BARRES D'ÉMOTICÔNES (corrige les emojis manquants)
+============================================================ */
+function fixEmoteBars() {
+  const emotes = ["\u{1F525}", "\u26A1", "\u{1F916}", "\u{1F480}", "\u{1F602}", "\u{1F451}"];
+  document.querySelectorAll(".emote-bar").forEach(bar => {
+    bar.innerHTML = "";
+    emotes.forEach(em => {
+      const b = document.createElement("button");
+      b.className = "emote-btn";
+      b.type = "button";
+      b.innerText = em;
+      b.onclick = () => sendEmote(em);
+      bar.appendChild(b);
+    });
+  });
+}
+/* ============================================================
 DÉMARRAGE
 ============================================================ */
 document.addEventListener("DOMContentLoaded", () => {
   applyTranslations();
+  fixEmoteBars();
   updateEconomyUI();
   initMenuBackgroundFX();
   injectAccountGear();
