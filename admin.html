@@ -7,191 +7,57 @@
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
 <style>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+/* ============================================================
+RESET & BASE
+============================================================ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0f051d; color: #fff; font-family: system-ui, sans-serif; padding: 14px; }
+h1 { color: #00d2ff; font-size: 16px; text-align: center; margin-bottom: 4px; }
+.sub { color: #f8b500; font-size: 10px; text-align: center; font-weight: bold; margin-bottom: 14px; }
 
-body {
-  background: #0f051d;
-  color: #fff;
-  font-family: system-ui, sans-serif;
-  padding: 14px;
-}
+/* ============================================================
+CARTES
+============================================================ */
+.card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+.card h2 { font-size: 13px; margin-bottom: 8px; }
+.card-desc { font-size: 10px; color: #aaa; line-height: 1.35; margin-bottom: 8px; }
 
-h1 {
-  color: #00d2ff;
-  font-size: 16px;
-  text-align: center;
-  margin-bottom: 4px;
-}
+/* ============================================================
+FORMULAIRES
+============================================================ */
+input, select { width: 100%; background: #0f051d; color: #fff; border: 1px solid #444; border-radius: 6px; padding: 8px; font-size: 12px; margin-bottom: 8px; }
+button { width: 100%; border: none; border-radius: 8px; padding: 9px; font-weight: bold; font-size: 12px; cursor: pointer; }
+button:active { transform: scale(0.98); }
+.btn-blue { background: linear-gradient(45deg,#00c6ff,#0072ff); color: #fff; }
+.btn-gold { background: linear-gradient(45deg,#f8b500,#fceabb); color: #222; }
+.btn-orange { background: linear-gradient(45deg,#ff8a00,#e52e71); color: #fff; }
+.btn-green { background: linear-gradient(45deg,#11998e,#38ef7d); color: #001; }
+.row { display: flex; gap: 6px; }
 
-.sub {
-  color: #f8b500;
-  font-size: 10px;
-  text-align: center;
-  font-weight: bold;
-  margin-bottom: 14px;
-}
+/* ============================================================
+STATUTS & RÉSULTATS
+============================================================ */
+.err { color: #ff4b2b; font-size: 11px; text-align: center; min-height: 14px; margin-top: 6px; }
+.status { text-align: center; font-size: 10px; font-weight: bold; margin-bottom: 10px; color: #aaa; }
+.status.ok { color: #00ff88; }
+.status.ko { color: #ff4b2b; }
+.small-result { min-height: 16px; font-size: 10px; text-align: center; font-weight: bold; margin-top: 7px; }
 
-.card {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 12px;
-  padding: 12px;
-  margin-bottom: 12px;
-}
+/* ============================================================
+NOTICES & DÉTAILS
+============================================================ */
+details { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px; margin-bottom: 6px; }
+summary { cursor: pointer; font-weight: bold; font-size: 11px; }
+label { font-size: 10px; color: #aaa; }
+.notice { background: rgba(0, 210, 255, 0.08); border: 1px solid rgba(0, 210, 255, 0.35); color: #c9f7ff; border-radius: 8px; padding: 8px; font-size: 10px; line-height: 1.35; margin-bottom: 8px; }
+.warning { background: rgba(255, 138, 0, 0.08); border: 1px solid rgba(255, 138, 0, 0.45); color: #ffd8a3; }
 
-.card h2 {
-  font-size: 13px;
-  margin-bottom: 8px;
-}
-
-.card-desc {
-  font-size: 10px;
-  color: #aaa;
-  line-height: 1.35;
-  margin-bottom: 8px;
-}
-
-input,
-select {
-  width: 100%;
-  background: #0f051d;
-  color: #fff;
-  border: 1px solid #444;
-  border-radius: 6px;
-  padding: 8px;
-  font-size: 12px;
-  margin-bottom: 8px;
-}
-
-button {
-  width: 100%;
-  border: none;
-  border-radius: 8px;
-  padding: 9px;
-  font-weight: bold;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-button:active {
-  transform: scale(0.98);
-}
-
-.btn-blue {
-  background: linear-gradient(45deg,#00c6ff,#0072ff);
-  color: #fff;
-}
-
-.btn-gold {
-  background: linear-gradient(45deg,#f8b500,#fceabb);
-  color: #222;
-}
-
-.btn-orange {
-  background: linear-gradient(45deg,#ff8a00,#e52e71);
-  color: #fff;
-}
-
-.btn-green {
-  background: linear-gradient(45deg,#11998e,#38ef7d);
-  color: #001;
-}
-
-.row {
-  display: flex;
-  gap: 6px;
-}
-
-.err {
-  color: #ff4b2b;
-  font-size: 11px;
-  text-align: center;
-  min-height: 14px;
-  margin-top: 6px;
-}
-
-.status {
-  text-align: center;
-  font-size: 10px;
-  font-weight: bold;
-  margin-bottom: 10px;
-  color: #aaa;
-}
-
-.status.ok {
-  color: #00ff88;
-}
-
-.status.ko {
-  color: #ff4b2b;
-}
-
-details {
-  background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 8px;
-  padding: 8px;
-  margin-bottom: 6px;
-}
-
-summary {
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 11px;
-}
-
-label {
-  font-size: 10px;
-  color: #aaa;
-}
-
-.notice {
-  background: rgba(0, 210, 255, 0.08);
-  border: 1px solid rgba(0, 210, 255, 0.35);
-  color: #c9f7ff;
-  border-radius: 8px;
-  padding: 8px;
-  font-size: 10px;
-  line-height: 1.35;
-  margin-bottom: 8px;
-}
-
-.warning {
-  background: rgba(255, 138, 0, 0.08);
-  border: 1px solid rgba(255, 138, 0, 0.45);
-  color: #ffd8a3;
-}
-
-.small-result {
-  min-height: 16px;
-  font-size: 10px;
-  text-align: center;
-  font-weight: bold;
-  margin-top: 7px;
-}
-
-/* ===== Dates des saisons ===== */
-.season-date-row {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  margin-bottom: 6px;
-}
-.season-date-row .season-label {
-  width: 44px;
-  font-weight: bold;
-  color: #f8b500;
-  font-size: 12px;
-  text-align: center;
-}
-.season-date-row input[type="date"] {
-  flex: 1;
-  margin: 0;
-}
+/* ============================================================
+DATES DES SAISONS
+============================================================ */
+.season-date-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+.season-date-row .season-label { width: 44px; font-weight: bold; color: #f8b500; font-size: 12px; text-align: center; }
+.season-date-row input[type="date"] { flex: 1; margin: 0; }
 </style>
 </head>
 
@@ -201,6 +67,9 @@ label {
 <div class="sub">FENÊTRE INDÉPENDANTE</div>
 <div id="server-status" class="status">Connexion serveur...</div>
 
+<!-- ============================================================
+LOGIN
+============================================================ -->
 <div id="admin-login-section" class="card">
   <h2 style="color:#f8b500;">🔒 ACCÈS RESTREINT DÉVELOPPEUR</h2>
   <input type="password" id="admin-password-input" placeholder="Mot de passe admin">
@@ -208,38 +77,26 @@ label {
   <div class="err" id="admin-login-error"></div>
 </div>
 
+<!-- ============================================================
+DASHBOARD
+============================================================ -->
 <div id="admin-dashboard-section" style="display:none;">
-  <div class="card">
-    <h2 style="color:#38ef7d;">📜 Journal des transactions</h2>
-    <div class="card-desc">Vérifie l'historique d'un joueur (pertes, achats, gains, ajustements).</div>
-    <input type="text" id="admin-log-username" placeholder="Pseudo (vide = tout le monde)">
-    <button class="btn-green" onclick="adminGetLogs()">Consulter 🔍</button>
-    <div id="admin-logs" style="max-height:260px; overflow-y:auto; font-size:10px; margin-top:8px;"></div>
-    <div class="card" style="border-color: rgba(56,239,125,0.55);">
-    <h2 style="color:#38ef7d;">🎁 Attribuer objet / trophée</h2>
-    <div class="card-desc">Compense un bug ou offre : cadres, grilles, avatars, titres, packs, pouvoirs, trophées. Marche hors-ligne.</div>
-    <input type="text" id="admin-give-username" placeholder="Pseudo exact...">
-    <select id="admin-give-item"></select>
-    <button class="btn-gold" onclick="adminGiveItem()">Attribuer ⚡</button>
-    <div id="admin-give-result" class="small-result"></div>
-  </div>
+
+  <!-- ===== COMPTEUR EN LIGNE ===== -->
+  <div class="card" style="border-color: rgba(0,210,255,0.55);">
+    <h2 style="color:#00d2ff;">🟢 Joueurs en ligne</h2>
+    <div id="admin-online-count" style="font-size:28px; font-weight:900; color:#00ff88; text-align:center;">-</div>
+    <div class="card-desc">Nombre de joueurs réellement connectés (mis à jour toutes les 5s).</div>
   </div>
 
+  <!-- ===== ANNONCES ===== -->
   <div class="card">
     <h2 style="color:#00d2ff;">📢 Diffuseur d'Annonce</h2>
     <input type="text" id="admin-broadcast-text" placeholder="Message global...">
     <button class="btn-blue" onclick="adminBroadcast()">Diffuser l'annonce 🚀</button>
   </div>
 
-  <div class="card">
-    <h2 style="color:#f8b500;">🎁 Distribution de Cadeaux Admin</h2>
-
-      <div class="card" style="border-color: rgba(0,210,255,0.55);">
-    <h2 style="color:#00d2ff;">🟢 Joueurs en ligne</h2>
-    <div id="admin-online-count" style="font-size:28px; font-weight:900; color:#00ff88; text-align:center;">-</div>
-    <div class="card-desc">Nombre de joueurs réellement connectés (mis à jour toutes les 5s).</div>
-  </div>
-
+  <!-- ===== AJUSTER DEVISES ===== -->
   <div class="card" style="border-color: rgba(248,181,0,0.55);">
     <h2 style="color:#f8b500;">💰 Ajuster Pièces / Points / Trophées</h2>
     <select id="admin-adjust-mode" onchange="toggleAdjustInputs()">
@@ -261,54 +118,57 @@ label {
     <div id="admin-adjust-result" class="small-result"></div>
   </div>
 
-    <select id="admin-target-type" onchange="toggleAdminTargetInput()">
-      <option value="all">🌍 Tout le monde</option>
-      <option value="pseudo">👤 Par Pseudo</option>
-    </select>
- 
+  <!-- ===== JOURNAL DES TRANSACTIONS ===== -->
+  <div class="card">
+    <h2 style="color:#38ef7d;">📜 Journal des transactions</h2>
+    <div class="card-desc">Vérifie l'historique d'un joueur (pertes, achats, gains, ajustements).</div>
+    <input type="text" id="admin-log-username" placeholder="Pseudo (vide = tout le monde)">
+    <button class="btn-green" onclick="adminGetLogs()">Consulter 🔍</button>
+    <div id="admin-logs" style="max-height:260px; overflow-y:auto; font-size:10px; margin-top:8px;"></div>
+  </div>
 
+  <!-- ===== ATTRIBUER OBJET / TROPHÉE ===== -->
+  <div class="card" style="border-color: rgba(56,239,125,0.55);">
+    <h2 style="color:#38ef7d;">🎁 Attribuer objet / trophée</h2>
+    <div class="card-desc">Compense un bug ou offre : cadres, grilles, avatars, titres, packs, pouvoirs, trophées. Marche hors-ligne.</div>
+    <input type="text" id="admin-give-username" placeholder="Pseudo exact...">
+    <select id="admin-give-item"></select>
+    <button class="btn-gold" onclick="adminGiveItem()">Attribuer ⚡</button>
+    <div id="admin-give-result" class="small-result"></div>
+  </div>
+
+  <!-- ===== CONTRÔLE DE SAISON ===== -->
   <div class="card" style="border-color: rgba(255,138,0,0.55);">
     <h2 style="color:#ff8a00;">🗓️ Contrôle de Saison</h2>
-
     <div class="notice warning">
       Permet de forcer temporairement la saison active pour tester le Pass.
-      <br>
-      L'override est global pour tous les joueurs connectés.
-      <br>
-      Il revient en mode auto après redémarrage ou redéploiement serveur.
+      <br>L'override est global pour tous les joueurs connectés.
+      <br>Il revient en mode auto après redémarrage ou redéploiement serveur.
     </div>
-
     <select id="admin-season-select">
       <option value="auto">⏱️ Auto — date réelle du serveur</option>
       <option value="s1">🐱 S1 — Félin & Néon</option>
       <option value="s2">🎃 S2 — Halloween</option>
       <option value="s3">🎄 S3 — Noël</option>
     </select>
-
     <button class="btn-orange" onclick="adminSetSeason()">Appliquer la saison 🎃</button>
-
     <div id="admin-season-result" class="small-result"></div>
   </div>
 
-  <!-- ===== NOUVEAU : Dates des saisons ===== -->
+  <!-- ===== DATES DES SAISONS ===== -->
   <div class="card" style="border-color: rgba(56,239,125,0.55);">
     <h2 style="color:#38ef7d;">📅 Dates des Saisons</h2>
-
     <div class="notice" style="background: rgba(56,239,125,0.08); border-color: rgba(56,239,125,0.35); color: #c9f7d8;">
       Définis les dates de début et fin de chaque saison.
-      <br>
-      Les dates sont <b>persistées en base de données</b> (survivent aux redéploiements Render).
-      <br>
-      Tous les joueurs connectés se mettront à jour en temps réel.
+      <br>Les dates sont <b>persistées en base de données</b> (survivent aux redéploiements Render).
+      <br>Tous les joueurs connectés se mettront à jour en temps réel.
     </div>
-
     <div id="season-dates-rows"></div>
-
     <button class="btn-green" onclick="saveSeasonDates()">💾 Enregistrer les dates</button>
     <div id="admin-dates-result" class="small-result"></div>
   </div>
-  <!-- ===== Fin : Dates des saisons ===== -->
 
+  <!-- ===== ÉVÉNEMENTS & ABUSES ===== -->
   <div class="card">
     <h2 style="color:#38ef7d;">⚡ Planification des Événements & Abuses</h2>
     <div id="admin-schedules-container"></div>
@@ -326,18 +186,11 @@ STATUT SERVEUR
 ============================================================ */
 socket.on("connect", () => {
   const el = document.getElementById("server-status");
-  if (el) {
-    el.innerText = "✅ Connecté au serveur";
-    el.className = "status ok";
-  }
+  if (el) { el.innerText = "✅ Connecté au serveur"; el.className = "status ok"; }
 });
-
 socket.on("disconnect", () => {
   const el = document.getElementById("server-status");
-  if (el) {
-    el.innerText = "❌ Déconnecté du serveur";
-    el.className = "status ko";
-  }
+  if (el) { el.innerText = "❌ Déconnecté du serveur"; el.className = "status ko"; }
 });
 
 /* ============================================================
@@ -347,11 +200,9 @@ function authAdmin() {
   const pass = document.getElementById("admin-password-input").value;
   socket.emit("admin_auth", pass);
 }
-
 socket.on("admin_auth_fail", (msg) => {
   document.getElementById("admin-login-error").innerText = msg || "Mot de passe incorrect";
 });
-
 socket.on("admin_auth_success", (data) => {
   document.getElementById("admin-login-section").style.display = "none";
   document.getElementById("admin-dashboard-section").style.display = "block";
@@ -365,12 +216,7 @@ ANNONCES
 ============================================================ */
 function adminBroadcast() {
   const text = document.getElementById("admin-broadcast-text").value.trim();
-
-  if (!text) {
-    alert("Entre un message d'annonce !");
-    return;
-  }
-
+  if (!text) { alert("Entre un message d'annonce !"); return; }
   socket.emit("admin_broadcast_message", text);
   document.getElementById("admin-broadcast-text").value = "";
   alert("📢 Annonce diffusée !");
@@ -382,36 +228,19 @@ CONTRÔLE DE SAISON
 function adminSetSeason() {
   const select = document.getElementById("admin-season-select");
   const result = document.getElementById("admin-season-result");
-
   if (!select) return;
-
   const seasonId = select.value;
-
-  if (result) {
-    result.style.color = "#aaa";
-    result.innerText = "Envoi de la commande...";
-  }
-
+  if (result) { result.style.color = "#aaa"; result.innerText = "Envoi de la commande..."; }
   socket.emit("admin_set_season", seasonId);
 }
-
 socket.on("admin_season_result", (data) => {
   const result = document.getElementById("admin-season-result");
-
   if (!result) return;
-
   if (data && data.ok) {
-    const names = {
-      s1: "🐱 S1 — Félin & Néon",
-      s2: "🎃 S2 — Halloween",
-      s3: "🎄 S3 — Noël"
-    };
-
+    const names = { s1: "🐱 S1 — Félin & Néon", s2: "🎃 S2 — Halloween", s3: "🎄 S3 — Noël" };
     const label = names[data.season] || data.season || "Auto";
-
     result.style.color = "#00ff88";
     result.innerText = "✅ Saison active : " + label;
-
     alert("🗓️ Saison changée : " + label);
   } else {
     result.style.color = "#ff4b2b";
@@ -437,51 +266,33 @@ const EVENT_NAMES = {
 function renderAdminSchedules(schedules) {
   const container = document.getElementById("admin-schedules-container");
   container.innerHTML = "";
-
   for (let key in EVENT_NAMES) {
     const s = schedules[key] || { manual: false, start: null, end: null };
     const startStr = s.start ? new Date(s.start).toISOString().slice(0, 16) : "";
     const endStr = s.end ? new Date(s.end).toISOString().slice(0, 16) : "";
-
     const row = document.createElement("details");
     row.innerHTML = `
       <summary>${EVENT_NAMES[key]}</summary>
-
       <label style="display:flex; align-items:center; gap:6px; margin:6px 0;">
         <input type="checkbox" id="admin-manual-${key}" ${s.manual ? "checked" : ""} style="width:auto; margin:0;">
         Actif (Forcé)
       </label>
-
       <label>Début :</label>
       <input type="datetime-local" id="admin-start-${key}" value="${startStr}">
-
       <label>Fin :</label>
       <input type="datetime-local" id="admin-end-${key}" value="${endStr}">
     `;
-
     container.appendChild(row);
   }
 }
 
 function saveAdminSchedules() {
-  const EVENT_KEYS = [
-    "coinRush",
-    "rankShield",
-    "expressoMatch",
-    "chaosMode",
-    "jackpotEclair", 
-    "tugOfWarMode", 
-    "halloweenMode", 
-    "noelMode"
-  ];
-
+  const EVENT_KEYS = ["coinRush", "rankShield", "expressoMatch", "chaosMode", "jackpotEclair", "tugOfWarMode", "halloweenMode", "noelMode"];
   const schedulesData = {};
-
   EVENT_KEYS.forEach(key => {
     const manualEl = document.getElementById(`admin-manual-${key}`);
     const startEl = document.getElementById(`admin-start-${key}`);
     const endEl = document.getElementById(`admin-end-${key}`);
-
     if (manualEl && startEl && endEl) {
       schedulesData[key] = {
         manual: manualEl.checked,
@@ -490,17 +301,13 @@ function saveAdminSchedules() {
       };
     }
   });
-
   socket.emit("admin_update_schedule", schedulesData);
   alert("✅ Programmation enregistrée !");
 }
-
-socket.on("admin_schedule_saved", () => {
-  alert("✅ Événements mis à jour côté serveur !");
-});
+socket.on("admin_schedule_saved", () => { alert("✅ Événements mis à jour côté serveur !"); });
 
 /* ============================================================
-ÉDITEUR DE DATES DES SAISONS
+DATES DES SAISONS
 ============================================================ */
 socket.on('admin_season_dates', (list) => {
   const rows = document.getElementById('season-dates-rows');
@@ -515,33 +322,7 @@ socket.on('admin_season_dates', (list) => {
     rows.appendChild(row);
   });
 });
-/* ---------- AJUSTER DEVISES ---------- */
-function toggleAdjustInputs() {
-  const mode = document.getElementById('admin-adjust-mode').value;
-  document.getElementById('admin-adjust-pseudo').style.display = (mode === 'pseudo') ? 'block' : 'none';
-  document.getElementById('admin-adjust-count').style.display = (mode === 'random') ? 'block' : 'none';
-}
-function adminAdjustCurrency() {
-  socket.emit('admin_adjust_currency', {
-    mode: document.getElementById('admin-adjust-mode').value,
-    currency: document.getElementById('admin-adjust-currency').value,
-    amount: parseInt(document.getElementById('admin-adjust-amount').value) || 0,
-    pseudo: document.getElementById('admin-adjust-pseudo').value.trim(),
-    count: parseInt(document.getElementById('admin-adjust-count').value) || 1
-  });
-}
-socket.on('admin_adjust_result', (d) => {
-  const el = document.getElementById('admin-adjust-result');
-  if (el) { el.style.color = d.ok ? '#00ff88' : '#ff4b2b'; el.innerText = d.message || ''; }
-});
 
-/* ---------- COMPTEUR EN LIGNE ---------- */
-setInterval(() => { socket.emit('admin_get_stats'); }, 5000);
-socket.on('admin_stats', (s) => {
-  const el = document.getElementById('admin-online-count');
-  if (el) el.innerText = s.online;
-});
-  
 function saveSeasonDates() {
   const dates = {};
   ['s1', 's2', 's3'].forEach(id => {
@@ -558,6 +339,43 @@ function saveSeasonDates() {
   }
   alert('✅ Dates des saisons mises à jour !');
 }
+
+/* ============================================================
+AJUSTER DEVISES
+============================================================ */
+function toggleAdjustInputs() {
+  const mode = document.getElementById('admin-adjust-mode').value;
+  document.getElementById('admin-adjust-pseudo').style.display = (mode === 'pseudo') ? 'block' : 'none';
+  document.getElementById('admin-adjust-count').style.display = (mode === 'random') ? 'block' : 'none';
+}
+
+function adminAdjustCurrency() {
+  socket.emit('admin_adjust_currency', {
+    mode: document.getElementById('admin-adjust-mode').value,
+    currency: document.getElementById('admin-adjust-currency').value,
+    amount: parseInt(document.getElementById('admin-adjust-amount').value) || 0,
+    pseudo: document.getElementById('admin-adjust-pseudo').value.trim(),
+    count: parseInt(document.getElementById('admin-adjust-count').value) || 1
+  });
+}
+
+socket.on('admin_adjust_result', (d) => {
+  const el = document.getElementById('admin-adjust-result');
+  if (el) { el.style.color = d.ok ? '#00ff88' : '#ff4b2b'; el.innerText = d.message || ''; }
+});
+
+/* ============================================================
+COMPTEUR EN LIGNE
+============================================================ */
+setInterval(() => { socket.emit('admin_get_stats'); }, 5000);
+socket.on('admin_stats', (s) => {
+  const el = document.getElementById('admin-online-count');
+  if (el) el.innerText = s.online;
+});
+
+/* ============================================================
+JOURNAL DES TRANSACTIONS
+============================================================ */
 function adminGetLogs() {
   socket.emit('admin_get_logs', { username: document.getElementById('admin-log-username').value });
 }
@@ -573,7 +391,10 @@ socket.on('admin_logs_data', (d) => {
       <i style="color:#777;">${new Date(r.created_at).toLocaleString()}</i>
     </div>`).join('') || 'Aucun log trouvé.';
 });
-  /* ---------- ATTRIBUER OBJET / TROPHÉE ---------- */
+
+/* ============================================================
+ATTRIBUER OBJET / TROPHÉE
+============================================================ */
 socket.on('admin_catalog', (cat) => {
   const sel = document.getElementById('admin-give-item');
   if (!sel) return;
@@ -582,14 +403,17 @@ socket.on('admin_catalog', (cat) => {
   for (const g in groups) {
     const opts = (cat.items || []).filter(i => i.type === g);
     if (!opts.length) continue;
-    const og = document.createElement('optgroup'); og.label = groups[g];
+    const og = document.createElement('optgroup');
+    og.label = groups[g];
     opts.forEach(i => { const o = document.createElement('option'); o.value = i.id; o.textContent = i.id; og.appendChild(o); });
     sel.appendChild(og);
   }
-  const tg = document.createElement('optgroup'); tg.label = '🏆 Trophées';
+  const tg = document.createElement('optgroup');
+  tg.label = '🏆 Trophées';
   (cat.trophies || []).forEach(t => { const o = document.createElement('option'); o.value = 'trophy:' + t.id; o.textContent = t.name; tg.appendChild(o); });
   sel.appendChild(tg);
 });
+
 function adminGiveItem() {
   const username = document.getElementById('admin-give-username').value.trim();
   const val = document.getElementById('admin-give-item').value;
@@ -597,6 +421,7 @@ function adminGiveItem() {
   const isTrophy = val.startsWith('trophy:');
   socket.emit('admin_give_cosmetic', { username, itemId: isTrophy ? val.slice(7) : val, kind: isTrophy ? 'trophy' : 'item' });
 }
+
 socket.on('admin_give_result', (d) => {
   const el = document.getElementById('admin-give-result');
   if (el) { el.style.color = d.ok ? '#00ff88' : '#ff4b2b'; el.innerText = d.message || ''; }
