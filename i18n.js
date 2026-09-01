@@ -117,6 +117,10 @@ const i18n = {
     recovery_key_copy: "📋 Copier la clé", recovery_key_copied: "📋 Clé copiée !",
     recovery_key_prompt: "🔒 Entre ton code secret pour voir ta clé de récupération :",
     recovery_key_wrong: "❌ Code secret incorrect.",
+    account_change_code: "🔑 Changer mon code secret",
+    account_recovery_key: "🔐 Voir ma clé de récupération",
+    change_code_validate: "Valider ⚡",
+    change_code_reminder: "✅ N'oublie pas ton nouveau code !",
 
     /* ----- Pass de saison ----- */
     pass_title: "🎫 PASSE DE SAISON",
@@ -318,6 +322,10 @@ const i18n = {
     recovery_key_copy: "📋 Copy key", recovery_key_copied: "📋 Key copied!",
     recovery_key_prompt: "🔒 Enter your secret code to see your recovery key:",
     recovery_key_wrong: "❌ Secret code incorrect.",
+    account_change_code: "🔑 Change my secret code",
+    account_recovery_key: "🔐 View my recovery key",
+    change_code_validate: "Confirm ⚡",
+    change_code_reminder: "✅ Don't forget your new code!",
 
     /* ----- Season Pass ----- */
     pass_title: "🎫 SEASON PASS",
