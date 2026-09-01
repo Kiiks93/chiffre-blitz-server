@@ -136,7 +136,19 @@ DASHBOARD
     <button class="btn-gold" onclick="adminGiveItem()">Attribuer ⚡</button>
     <div id="admin-give-result" class="small-result"></div>
   </div>
-
+  
+  <!-- ===== RÉINITIALISER CODE ===== -->
+  <div class="card" style="border-color: rgba(255,75,43,0.55);">
+    <h2 style="color:#ff4b2b;">🔑 Réinitialiser un code secret</h2>
+    <div class="card-desc">
+      Le joueur doit te donner son <b>pseudo</b> + sa <b>clé de récupération</b> (qu'il a sauvegardée).
+      <br>Si la clé est correcte → un nouveau code est généré.
+    </div>
+    <input type="text" id="admin-reset-username" placeholder="Pseudo exact du joueur">
+    <input type="text" id="admin-reset-key" placeholder="Clé de récupération (XXXX-XXXX-XXXX)">
+    <button class="btn-orange" onclick="adminResetPassword()">Générer un nouveau code ⚡</button>
+    <div id="admin-reset-result" class="small-result"></div>
+  </div>
   <!-- ===== CONTRÔLE DE SAISON ===== -->
   <div class="card" style="border-color: rgba(255,138,0,0.55);">
     <h2 style="color:#ff8a00;">🗓️ Contrôle de Saison</h2>
@@ -425,6 +437,30 @@ function adminGiveItem() {
 socket.on('admin_give_result', (d) => {
   const el = document.getElementById('admin-give-result');
   if (el) { el.style.color = d.ok ? '#00ff88' : '#ff4b2b'; el.innerText = d.message || ''; }
+});
+  
+/* ============================================================
+RÉINITIALISER CODE
+============================================================ */
+function adminResetPassword() {
+  const username = document.getElementById('admin-reset-username').value.trim();
+  const recoveryKey = document.getElementById('admin-reset-key').value.trim();
+  if (!username || !recoveryKey) { alert('Pseudo et clé requis.'); return; }
+  socket.emit('admin_reset_password', { username, recoveryKey });
+}
+socket.on('admin_reset_result', (d) => {
+  const el = document.getElementById('admin-reset-result');
+  if (!el) return;
+  el.style.color = d.ok ? '#00ff88' : '#ff4b2b';
+  el.innerText = d.message || '';
+  if (d.ok && d.newCode) {
+    // Copie automatique dans le presse-papier
+    navigator.clipboard.writeText(d.newCode).then(() => {
+      alert('✅ Nouveau code généré et copié !\n\n' + d.newCode + '\n\nTransmets-le au joueur via Discord/email.');
+    }).catch(() => {
+      alert('✅ Nouveau code généré :\n\n' + d.newCode + '\n\nTransmets-le au joueur via Discord/email.');
+    });
+  }
 });
 </script>
 
