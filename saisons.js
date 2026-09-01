@@ -1,7 +1,76 @@
 /* ============================================================
-MODULE SAISONS — DA visuelle saisonnière
+SAISONS.JS — MODULE DA VISUELLE SAISONNIÈRE
+Gère les scènes Halloween (S2) et Noël (S3) avec Lottie
 ============================================================ */
 
+/* ============================================================
+1. CONSTANTES
+============================================================ */
+const SEASON_CONFIG = {
+  MUSIC_RESTART_DELAY: 150,
+  HALLOWEEN_AMBIENCE_INTERVAL: 1500,
+  LOTTIE_RETRY_INTERVAL: 1000,
+  LOTTIE_RETRY_TIMEOUT: 15000,
+  NOEL_SLEIGH_INTERVAL: 7000,
+  NOEL_SLEIGH_INITIAL_DELAY: 1500,
+  NOEL_STAR_INTERVAL: 4000,
+  NOEL_SLEIGH_LIFETIME: 19000,
+  GHOST_LIFETIME: 5500,
+  BAT_LIFETIME: 8000,
+  SPIDER_LIFETIME: 9000,
+  ORB_LIFETIME: 3500,
+  LANTERN_SPAWN_DELAY: 90,
+  BONBON_SPAWN_DELAY: 90,
+  SAPIN_SPAWN_DELAY: 90,
+  LUTIN_SPAWN_DELAY: 150,
+  SHOOTING_STAR_LIFETIME_OFFSET: 200
+};
+
+const HALLOWEEN_LOTTIE_FILES = {
+  citrouille: "CITROUILLE.json",
+  fantome: "fantome.json",
+  chauve: "chauve-souris.json",
+  araignee: "araignée.json"
+};
+
+const NOEL_LOTTIE_FILES = {
+  flocon: "flocon-decors.json",
+  guirlandes: "guirlandes-decors.json",
+  perenoel: "pere-noel-decors.json",
+  sapin: "sapin-decors.json",
+  bonhomme: "bonhomme-de-neige-avatar.json"
+};
+
+const SEASON_SHAPES = {
+  s1: { shapes: ["◆", "▲", "■", "●"], colors: ["#00d2ff", "#ff007f", "#ffe600", "#00ff88"] },
+  s3: { shapes: ["❄️", "⛄", "🎄", ""], colors: ["#ffffff", "#7be8ff", "#ff4b2b", "#38ef7d"] }
+};
+
+/* ============================================================
+2. ÉTAT GLOBAL
+============================================================ */
+let lastAppliedSeason = null;
+let _musicRestartTimer = null;
+let halloweenAmbienceTimer = null;
+let _lanternAudioCtx = null;
+let _ghostAudioCtx = null;
+let noelSleighTimer = null;
+let noelStarTimer = null;
+
+// Lottie Halloween
+let _hlData = {};
+let _hlPreloaded = false;
+let _hlPumpkins = [];
+const _hlActive = { chauve: [], fantome: [], araignee: [] };
+
+// Lottie Noël
+let _nxData = {};
+let _nxPreloaded = false;
+let _nxAnims = [];
+
+/* ============================================================
+3. HELPERS GÉNÉRIQUES
+============================================================ */
 function getCurrentSeasonId() {
   if (typeof myProfile !== "undefined" && myProfile) {
     return myProfile.currentSeasonId || myProfile.seasonId || myProfile.season_id || "s1";
@@ -9,47 +78,58 @@ function getCurrentSeasonId() {
   return window.CURRENT_SEASON || "s1";
 }
 
-let lastAppliedSeason = null;
-let _musicRestartTimer = null;
+function isLowPerf() {
+  return (typeof IS_LOW_PERF !== "undefined") && IS_LOW_PERF;
+}
 
+function isMutedGlobal() {
+  if (typeof isMuted === "function") return isMuted();
+  return false;
+}
+
+function cloneLottieData(data) {
+  if (!data) return null;
+  return (typeof structuredClone === "function") ? structuredClone(data) : JSON.parse(JSON.stringify(data));
+}
+
+/* ============================================================
+4. MUSIQUE SAISONNIÈRE
+============================================================ */
 function restartSeasonMusic() {
   if (typeof SoundEngine === "undefined") return;
 
   if (_musicRestartTimer) clearTimeout(_musicRestartTimer);
 
   _musicRestartTimer = setTimeout(() => {
-    const seasonId = window.CURRENT_SEASON || getCurrentSeasonId();
-
-    const gameScreen = document.getElementById("screen-game");
-    const inGame = gameScreen && gameScreen.style.display === "block";
-    const mode = inGame ? "game" : "menu";
-
     try {
+      const seasonId = window.CURRENT_SEASON || getCurrentSeasonId();
+      const gameScreen = document.getElementById("screen-game");
+      const inGame = gameScreen && gameScreen.style.display === "block";
+      const mode = inGame ? "game" : "menu";
+
       if (typeof SoundEngine.stopMusic === "function") {
         SoundEngine.stopMusic(false);
       }
 
-      // IMPORTANT : on lance directement la musique saisonnière.
-      // Comme ça, on ne dépend pas de l'override SoundEngine.startMusic.
-      if (typeof SoundEngine.startMusic === "function") SoundEngine.startMusic(mode);
-
-      // Saison 1 : musique normale
       if (typeof SoundEngine.startMusic === "function") {
         SoundEngine.startMusic(mode);
       }
     } catch (e) {
       console.warn("Erreur restartSeasonMusic:", e);
     }
-  }, 150);
+  }, SEASON_CONFIG.MUSIC_RESTART_DELAY);
 }
 
+/* ============================================================
+5. APPLICATION DA SAISONNIÈRE
+============================================================ */
 function applySeasonDA() {
   const seasonId = getCurrentSeasonId();
   window.CURRENT_SEASON = seasonId;
 
   document.body.classList.remove("season-s1", "season-s2", "season-s3");
   document.body.classList.add("season-" + seasonId);
-    // Force le changement de musique si la saison a changé
+
   if (lastAppliedSeason !== seasonId) {
     lastAppliedSeason = seasonId;
     restartSeasonMusic();
@@ -67,18 +147,15 @@ function applySeasonDA() {
   fx.querySelectorAll(".bg-shape").forEach(s => s.remove());
   if (seasonId === "s2") return;
 
-  const shapes = seasonId === "s3" ? ["❄️", "⛄", "🎄", ""] : ["◆", "▲", "■", "●"];
-  const colors = seasonId === "s3"
-    ? ["#ffffff", "#7be8ff", "#ff4b2b", "#38ef7d"]
-    : ["#00d2ff", "#ff007f", "#ffe600", "#00ff88"];
+  const config = SEASON_SHAPES[seasonId] || SEASON_SHAPES.s1;
 
   for (let i = 0; i < 12; i++) {
     const s = document.createElement("div");
     s.className = "bg-shape";
-    s.innerText = shapes[i % shapes.length];
+    s.innerText = config.shapes[i % config.shapes.length];
     s.style.fontSize = (14 + Math.random() * 26) + "px";
     s.style.left = Math.random() * 100 + "%";
-    s.style.color = colors[i % colors.length];
+    s.style.color = config.colors[i % config.colors.length];
     s.style.animationDuration = (14 + Math.random() * 16) + "s";
     s.style.animationDelay = (-Math.random() * 25) + "s";
     fx.appendChild(s);
@@ -86,7 +163,7 @@ function applySeasonDA() {
 }
 
 /* ============================================================
-SCÈNE HALLOWEEN ANIMÉE
+6. SCÈNE HALLOWEEN (S2)
 ============================================================ */
 function buildHalloweenScene() {
   let bg = document.getElementById("season-bg");
@@ -98,13 +175,14 @@ function buildHalloweenScene() {
   if (bg.dataset.built === "s2") return;
   bg.dataset.built = "s2";
   clearNoelLotties();
+  
   bg.innerHTML = `
     <div class="hw-sky"></div>
     <div class="hw-moon"></div>
     <div class="hw-cloud hw-c1"></div>
     <div class="hw-cloud hw-c2"></div>
     <div class="hw-cloud hw-c3"></div>
-        <div class="hw-castle">
+    <div class="hw-castle">
       <svg viewBox="0 0 400 300" preserveAspectRatio="none">
         <defs>
           <linearGradient id="castleGrad" x1="0" y1="0" x2="0" y2="1">
@@ -138,7 +216,7 @@ function buildHalloweenScene() {
         </g>
       </svg>
     </div>
-        <div class="hw-tree hw-tree-left">
+    <div class="hw-tree hw-tree-left">
       <svg viewBox="0 0 200 300" preserveAspectRatio="none">
         <g stroke="#0d0016" fill="none" stroke-linecap="round">
           <path d="M30,300 C28,240 24,190 30,140 C34,100 30,70 26,40" stroke-width="18"/>
@@ -173,24 +251,29 @@ function buildHalloweenScene() {
     <div class="hw-ground"></div>
     <div class="hw-mist"></div>
   `;
+  
   preloadHalloweenLotties();
   addScenePumpkins(bg);
 }
 
 function clearHalloweenScene() {
   const bg = document.getElementById("season-bg");
-  if (bg) { bg.innerHTML = ""; bg.dataset.built = ""; }
+  if (bg) {
+    bg.innerHTML = "";
+    bg.dataset.built = "";
+  }
   clearHalloweenLotties();
 }
 
 /* ============================================================
-DÉCOR VIVANT HALLOWEEN (toiles + spawner)
+7. DÉCOR VIVANT HALLOWEEN (toiles + spawner)
 ============================================================ */
-let halloweenAmbienceTimer = null;
-
 function setupHalloweenDecor(seasonId) {
   document.querySelectorAll(".halloween-web").forEach(el => el.remove());
-  if (halloweenAmbienceTimer) { clearInterval(halloweenAmbienceTimer); halloweenAmbienceTimer = null; }
+  if (halloweenAmbienceTimer) {
+    clearInterval(halloweenAmbienceTimer);
+    halloweenAmbienceTimer = null;
+  }
   if (seasonId !== "s2") return;
 
   const webTL = document.createElement("div");
@@ -210,25 +293,14 @@ function setupHalloweenDecor(seasonId) {
     if (roll < 0.25) spawnSceneGhost();
     else if (roll < 0.6) spawnSceneBat();
     else spawnSceneSpider();
-  }, 1500);
+  }, SEASON_CONFIG.HALLOWEEN_AMBIENCE_INTERVAL);
 }
 
 /* ============================================================
-LOTTIE HALLOWEEN — préchargé + recyclage (zéro lag)
+8. LOTTIE HALLOWEEN — préchargement + recyclage
 ============================================================ */
-const HALLOWEEN_LOTTIE_FILES = {
-  citrouille: "CITROUILLE.json",
-  fantome: "fantome.json",
-  chauve: "chauve-souris.json",
-  araignee: "araignée.json"
-};
-let _hlData = {};
-let _hlPreloaded = false;
-let _hlPumpkins = [];
-const _hlActive = { chauve: [], fantome: [], araignee: [] };
-
 function hlMax(type) {
-  const low = (typeof IS_LOW_PERF !== "undefined") && IS_LOW_PERF;
+  const low = isLowPerf();
   if (type === "araignee") return low ? 2 : 3;
   return low ? 2 : 3;
 }
@@ -242,22 +314,25 @@ function preloadHalloweenLotties() {
         if (!r.ok) throw new Error(r.status);
         return r.json();
       })
-      .then(data => { _hlData[key] = data; console.log("✅ Lottie chargé : " + key); })
-      .catch(() => { _hlData[key] = null; console.log("❌ Lottie introuvable : " + HALLOWEEN_LOTTIE_FILES[key]); });
+      .then(data => {
+        _hlData[key] = data;
+        console.log("✅ Lottie chargé : " + key);
+      })
+      .catch(() => {
+        _hlData[key] = null;
+        console.log("❌ Lottie introuvable : " + HALLOWEEN_LOTTIE_FILES[key]);
+      });
   });
-}
-
-function hlClone(key) {
-  const d = _hlData[key];
-  if (!d) return null;
-  return (typeof structuredClone === "function") ? structuredClone(d) : JSON.parse(JSON.stringify(d));
 }
 
 function hlRecycle(type) {
   const arr = _hlActive[type];
   while (arr.length >= hlMax(type)) {
     const old = arr.shift();
-    if (old) { if (old.anim) old.anim.destroy(); if (old.el && old.el.parentNode) old.el.remove(); }
+    if (old) {
+      if (old.anim) old.anim.destroy();
+      if (old.el && old.el.parentNode) old.el.remove();
+    }
   }
 }
 
@@ -271,11 +346,13 @@ function hlRegister(type, obj, lifetime) {
   }, lifetime);
 }
 
-/* ---------- CITROUILLES EN BAS (SVG = fusions respectées) ---------- */
+/* ============================================================
+9. CITROUILLES HALLOWEEN (Lottie ou fallback CSS)
+============================================================ */
 function addScenePumpkins(bg) {
   clearHalloweenPumpkins();
-  const low = (typeof IS_LOW_PERF !== "undefined") && IS_LOW_PERF;
-    const spots = low
+  const low = isLowPerf();
+  const spots = low
     ? [
         { left: "-4%", bottom: "-2%", size: 150 },
         { right: "-4%", bottom: "-1%", size: 170 }
@@ -286,10 +363,10 @@ function addScenePumpkins(bg) {
         { right: "-3%", bottom: "-1%", size: 320 },
         { right: "22%", bottom: "-4%", size: 170 }
       ];
-  const count = spots.length;
+  
   const build = () => {
     clearHalloweenPumpkins();
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < spots.length; i++) {
       const s = spots[i];
       const el = document.createElement("div");
       el.className = "hw-pumpkin-lottie";
@@ -299,42 +376,59 @@ function addScenePumpkins(bg) {
       if (s.right) el.style.right = s.right;
       el.style.bottom = s.bottom;
       bg.appendChild(el);
+      
       let anim = null;
-      const data = hlClone("citrouille");
+      const data = cloneLottieData(_hlData.citrouille);
       if (data) {
-        anim = lottie.loadAnimation({ container: el, renderer: "svg", loop: true, autoplay: true, animationData: data });
+        anim = lottie.loadAnimation({
+          container: el,
+          renderer: "svg",
+          loop: true,
+          autoplay: true,
+          animationData: data
+        });
       } else {
         el.innerHTML = `<div class="lantern" style="width:100%;height:100%;"><div class="face"><div class="eye-left"></div><div class="eye-right"></div><div class="mouth"></div></div></div>`;
       }
       _hlPumpkins.push({ el, anim });
     }
   };
+  
   build();
+  
   if (!_hlData.citrouille) {
     const retry = setInterval(() => {
       if (_hlData.citrouille && window.CURRENT_SEASON === "s2" && document.getElementById("season-bg")) {
         clearInterval(retry);
         build();
       }
-    }, 1000);
-    setTimeout(() => clearInterval(retry), 15000);
+    }, SEASON_CONFIG.LOTTIE_RETRY_INTERVAL);
+    setTimeout(() => clearInterval(retry), SEASON_CONFIG.LOTTIE_RETRY_TIMEOUT);
   }
 }
 
 function clearHalloweenPumpkins() {
-  _hlPumpkins.forEach(p => { if (p.anim) p.anim.destroy(); if (p.el && p.el.parentNode) p.el.remove(); });
+  _hlPumpkins.forEach(p => {
+    if (p.anim) p.anim.destroy();
+    if (p.el && p.el.parentNode) p.el.remove();
+  });
   _hlPumpkins = [];
 }
 
 function clearHalloweenLotties() {
   clearHalloweenPumpkins();
   Object.keys(_hlActive).forEach(type => {
-    _hlActive[type].forEach(o => { if (o.anim) o.anim.destroy(); if (o.el && o.el.parentNode) o.el.remove(); });
+    _hlActive[type].forEach(o => {
+      if (o.anim) o.anim.destroy();
+      if (o.el && o.el.parentNode) o.el.remove();
+    });
     _hlActive[type] = [];
   });
 }
 
-/* ---------- CHAUVE-SOURIS : traverse + fonce vers nous ---------- */
+/* ============================================================
+10. SPAWNERS HALLOWEEN (chauve-souris, fantôme, araignée)
+============================================================ */
 function spawnSceneBat() {
   hlRecycle("chauve");
   const el = document.createElement("div");
@@ -345,18 +439,25 @@ function spawnSceneBat() {
   el.style.top = (5 + Math.random() * 28) + "%";
   el.style.animationDuration = (4 + Math.random() * 3) + "s";
   (document.getElementById("season-bg") || document.body).appendChild(el);
-  const data = hlClone("chauve");
+  
+  const data = cloneLottieData(_hlData.chauve);
   let anim = null;
   if (data) {
-    anim = lottie.loadAnimation({ container: el, renderer: "canvas", loop: true, autoplay: true, animationData: data, rendererSettings: { dpr: window.devicePixelRatio || 2, clearCanvas: true } });
+    anim = lottie.loadAnimation({
+      container: el,
+      renderer: "canvas",
+      loop: true,
+      autoplay: true,
+      animationData: data,
+      rendererSettings: { dpr: window.devicePixelRatio || 2, clearCanvas: true }
+    });
   } else {
     el.innerText = "🦇";
     el.style.fontSize = size * 0.6 + "px";
   }
-  hlRegister("chauve", { el, anim }, 8000);
+  hlRegister("chauve", { el, anim }, SEASON_CONFIG.BAT_LIFETIME);
 }
 
-/* ---------- FANTÔMES : du fond vers nous (fond noir masqué) ---------- */
 function spawnSceneGhost() {
   hlRecycle("fantome");
   const el = document.createElement("div");
@@ -367,7 +468,7 @@ function spawnSceneGhost() {
   el.style.left = (10 + Math.random() * 80) + "%";
   el.style.top = (15 + Math.random() * 55) + "%";
   el.style.animationDuration = (3.5 + Math.random() * 1.5) + "s";
-    el.innerHTML = `
+  el.innerHTML = `
     <div class="scene-ghost">
       <div class="sg-body"></div>
       <div class="sg-fringe"></div>
@@ -376,10 +477,9 @@ function spawnSceneGhost() {
       <div class="sg-mouth"></div>
     </div>`;
   (document.getElementById("season-bg") || document.body).appendChild(el);
-  hlRegister("fantome", { el, anim: null }, 5500);
+  hlRegister("fantome", { el, anim: null }, SEASON_CONFIG.GHOST_LIFETIME);
 }
 
-/* ---------- ARAIGNÉES : descendent du haut puis remontent ---------- */
 function spawnSceneSpider() {
   hlRecycle("araignee");
   const el = document.createElement("div");
@@ -389,7 +489,8 @@ function spawnSceneSpider() {
   el.style.height = (50 + Math.random() * 15) + "vh";
   el.style.left = (8 + Math.random() * 84) + "%";
   (document.getElementById("season-bg") || document.body).appendChild(el);
-  const data = hlClone("araignee");
+  
+  const data = cloneLottieData(_hlData.araignee);
   let anim = null;
   if (data) {
     anim = lottie.loadAnimation({
@@ -398,22 +499,23 @@ function spawnSceneSpider() {
       loop: false,
       autoplay: true,
       animationData: data,
-      rendererSettings: { dpr: window.devicePixelRatio || 2, clearCanvas: true, preserveAspectRatio: "xMidYMin meet" }
+      rendererSettings: {
+        dpr: window.devicePixelRatio || 2,
+        clearCanvas: true,
+        preserveAspectRatio: "xMidYMin meet"
+      }
     });
   } else {
     el.innerHTML = `<div style="position:absolute;top:0;left:50%;width:1.5px;height:60%;background:linear-gradient(rgba(255,255,255,0),rgba(255,255,255,0.4));"></div><div style="position:absolute;top:60%;left:50%;transform:translateX(-50%);font-size:46px;">🕷️</div>`;
   }
-  hlRegister("araignee", { el, anim }, 9000);
+  hlRegister("araignee", { el, anim }, SEASON_CONFIG.SPIDER_LIFETIME);
 }
 
 /* ============================================================
-FX 🎃 LANTERNES (grille Citrouille) — lanternes 3D + drone angoissant
-(utilisé en jeu, pas seulement au menu)
+11. FX LANTERNES (grille Citrouille)
 ============================================================ */
-let _lanternAudioCtx = null;
-
 function playLanternSound() {
-  if (isMuted()) return;
+  if (isMutedGlobal()) return;
   try {
     if (!_lanternAudioCtx) _lanternAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (_lanternAudioCtx.state === "suspended") _lanternAudioCtx.resume();
@@ -429,15 +531,20 @@ function playLanternSound() {
       const filter = ctx.createBiquadFilter();
       filter.type = "lowpass";
       filter.frequency.setValueAtTime(300, ctx.currentTime);
-      osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
-      osc.start(); osc.stop(ctx.currentTime + 1.5);
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 1.5);
     });
   } catch (e) {}
 }
 
 function spawnLanterns(big) {
   const count = big ? 14 : 3 + Math.floor(Math.random() * 3);
-  for (let i = 0; i < count; i++) setTimeout(() => createLantern(), i * 90);
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => createLantern(), i * SEASON_CONFIG.LANTERN_SPAWN_DELAY);
+  }
 }
 
 function createLantern() {
@@ -448,15 +555,22 @@ function createLantern() {
   wrapper.style.animationDuration = duration + "s";
   wrapper.style.setProperty("--drift", ((Math.random() - 0.5) * 100) + "px");
   wrapper.style.setProperty("--rot", ((Math.random() - 0.5) * 120) + "deg");
+  
   const lantern = document.createElement("div");
   lantern.className = "lantern";
   const face = document.createElement("div");
   face.className = "face";
-  const eyeLeft = document.createElement("div"); eyeLeft.className = "eye-left";
-  const eyeRight = document.createElement("div"); eyeRight.className = "eye-right";
-  const mouth = document.createElement("div"); mouth.className = "mouth";
-  face.appendChild(eyeLeft); face.appendChild(eyeRight); face.appendChild(mouth);
+  const eyeLeft = document.createElement("div");
+  eyeLeft.className = "eye-left";
+  const eyeRight = document.createElement("div");
+  eyeRight.className = "eye-right";
+  const mouth = document.createElement("div");
+  mouth.className = "mouth";
+  face.appendChild(eyeLeft);
+  face.appendChild(eyeRight);
+  face.appendChild(mouth);
   lantern.appendChild(face);
+  
   const particlesContainer = document.createElement("div");
   particlesContainer.className = "lantern-particles";
   for (let p = 0; p < 3; p++) {
@@ -470,6 +584,7 @@ function createLantern() {
     particle.style.animationDelay = (Math.random() * 0.4) + "s";
     particlesContainer.appendChild(particle);
   }
+  
   wrapper.appendChild(lantern);
   wrapper.appendChild(particlesContainer);
   document.body.appendChild(wrapper);
@@ -477,13 +592,10 @@ function createLantern() {
 }
 
 /* ============================================================
-FX 👻 ORBE FANTÔME (CSS pure, zéro lag)
-(utilisé en jeu, pas seulement au menu)
+12. FX ORBE FANTÔME (CSS pure)
 ============================================================ */
-let _ghostAudioCtx = null;
-
 function playGhostSound() {
-  if (isMuted()) return;
+  if (isMutedGlobal()) return;
   try {
     if (!_ghostAudioCtx) _ghostAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (_ghostAudioCtx.state === "suspended") _ghostAudioCtx.resume();
@@ -512,14 +624,14 @@ function playGhostSound() {
 }
 
 function spawnGhostLotties(big) {
-  const count = big ? (IS_LOW_PERF ? 3 : 6) : (IS_LOW_PERF ? 1 : 2 + Math.floor(Math.random() * 2));
+  const count = big ? (isLowPerf() ? 3 : 6) : (isLowPerf() ? 1 : 2 + Math.floor(Math.random() * 2));
   for (let i = 0; i < count; i++) {
     setTimeout(() => createGhostOrb(), i * 180);
   }
 }
 
 function createGhostOrb() {
-  const lite = (typeof IS_LOW_PERF !== "undefined") && IS_LOW_PERF;
+  const lite = isLowPerf();
   const orb = document.createElement("div");
   orb.className = "ghost-orb";
   const size = lite ? (60 + Math.random() * 30) : (80 + Math.random() * 60);
@@ -563,16 +675,19 @@ function createGhostOrb() {
   }
 
   document.body.appendChild(orb);
-  setTimeout(() => orb.remove(), 3500);
+  setTimeout(() => orb.remove(), SEASON_CONFIG.ORB_LIFETIME);
 }
 
 /* ============================================================
-FX 🎄 COMBOS NOËL (S3) — bonbons / boules / lutins
+13. FX COMBOS NOËL (S3) — bonbons, boules, lutins
 ============================================================ */
 function spawnBonbons(big) {
   const count = big ? 14 : 3 + Math.floor(Math.random() * 3);
-  for (let i = 0; i < count; i++) setTimeout(() => createBonbon(), i * 90);
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => createBonbon(), i * SEASON_CONFIG.BONBON_SPAWN_DELAY);
+  }
 }
+
 function createBonbon() {
   const w = document.createElement("div");
   w.className = "bonbon-wrapper";
@@ -589,8 +704,11 @@ function createBonbon() {
 function spawnSapinSparkles(big) {
   const count = big ? 14 : 3 + Math.floor(Math.random() * 3);
   const colors = ["#ff4b4b", "#ffd700", "#4bb3ff", "#38ef7d", "#ff8ae2"];
-  for (let i = 0; i < count; i++) setTimeout(() => createSapinSparkle(colors[i % colors.length]), i * 90);
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => createSapinSparkle(colors[i % colors.length]), i * SEASON_CONFIG.SAPIN_SPAWN_DELAY);
+  }
 }
+
 function createSapinSparkle(color) {
   const s = document.createElement("div");
   s.className = "sapin-sparkle";
@@ -604,8 +722,11 @@ function createSapinSparkle(color) {
 
 function spawnLutins(big) {
   const count = big ? 8 : 3 + Math.floor(Math.random() * 2);
-  for (let i = 0; i < count; i++) setTimeout(() => createLutin(), i * 150);
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => createLutin(), i * SEASON_CONFIG.LUTIN_SPAWN_DELAY);
+  }
 }
+
 function createLutin() {
   const variants = ["v-grimace", "v-kdo", "v-bonnet", "v-cerf"];
   const variant = variants[Math.floor(Math.random() * variants.length)];
@@ -639,7 +760,9 @@ function createLutin() {
   }
 }
 
-// Relance la musique quand on entre/sort du jeu (pour passer menu↔game)
+/* ============================================================
+14. WATCHER ÉCRAN DE JEU (relance musique menu↔game)
+============================================================ */
 function _watchScreenGame() {
   const gameScreen = document.getElementById("screen-game");
   if (!gameScreen) return;
@@ -652,22 +775,10 @@ function _watchScreenGame() {
   });
   observer.observe(gameScreen, { attributes: true, attributeFilter: ["style"] });
 }
-/* ============================================================
-SCÈNE NOËL ️ (S3) — Lottie + traîneau
-============================================================ */
-const NOEL_LOTTIE_FILES = {
-  flocon: "flocon-decors.json",
-  guirlandes: "guirlandes-decors.json",
-  perenoel: "pere-noel-decors.json",
-  sapin: "sapin-decors.json",
-  bonhomme: "bonhomme-de-neige-avatar.json"
-};
-let _nxData = {};
-let _nxPreloaded = false;
-let _nxAnims = [];
-let noelSleighTimer = null;
-let noelStarTimer = null;
 
+/* ============================================================
+15. SCÈNE NOËL (S3) — Lottie + traîneau
+============================================================ */
 function spawnShootingStar() {
   const bg = document.getElementById("season-bg");
   if (!bg) return;
@@ -678,7 +789,7 @@ function spawnShootingStar() {
   const dur = 1.2 + Math.random() * 1.2;
   s.style.animationDuration = dur + "s";
   bg.appendChild(s);
-  setTimeout(() => s.remove(), dur * 1000 + 200);
+  setTimeout(() => s.remove(), dur * 1000 + SEASON_CONFIG.SHOOTING_STAR_LIFETIME_OFFSET);
 }
 
 function preloadNoelLotties() {
@@ -686,36 +797,56 @@ function preloadNoelLotties() {
   _nxPreloaded = true;
   Object.keys(NOEL_LOTTIE_FILES).forEach(key => {
     fetch(NOEL_LOTTIE_FILES[key])
-      .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(r => {
+        if (!r.ok) throw new Error(r.status);
+        return r.json();
+      })
       .then(d => { _nxData[key] = d; })
       .catch(() => { _nxData[key] = null; });
   });
 }
-function nxClone(key) {
-  const d = _nxData[key];
-  if (!d) return null;
-  return (typeof structuredClone === "function") ? structuredClone(d) : JSON.parse(JSON.stringify(d));
-}
+
 function clearNoelLotties() {
-  _nxAnims.forEach(a => { if (a.anim) a.anim.destroy(); if (a.el && a.el.parentNode) a.el.remove(); });
+  _nxAnims.forEach(a => {
+    if (a.anim) a.anim.destroy();
+    if (a.el && a.el.parentNode) a.el.remove();
+  });
   _nxAnims = [];
 }
+
 function clearNoelScene() {
   const bg = document.getElementById("season-bg");
-  if (bg && bg.dataset.built === "s3") { bg.innerHTML = ""; bg.dataset.built = ""; }
+  if (bg && bg.dataset.built === "s3") {
+    bg.innerHTML = "";
+    bg.dataset.built = "";
+  }
   clearNoelLotties();
-  if (noelSleighTimer) { clearInterval(noelSleighTimer); noelSleighTimer = null; }
-  if (noelStarTimer) { clearInterval(noelStarTimer); noelStarTimer = null; }
+  if (noelSleighTimer) {
+    clearInterval(noelSleighTimer);
+    noelSleighTimer = null;
+  }
+  if (noelStarTimer) {
+    clearInterval(noelStarTimer);
+    noelStarTimer = null;
+  }
 }
 
 function buildNoelScene() {
   let bg = document.getElementById("season-bg");
-  if (!bg) { bg = document.createElement("div"); bg.id = "season-bg"; document.body.prepend(bg); }
+  if (!bg) {
+    bg = document.createElement("div");
+    bg.id = "season-bg";
+    document.body.prepend(bg);
+  }
   if (bg.dataset.built === "s3") return;
   clearHalloweenLotties();
   bg.dataset.built = "s3";
+  
   let stars = "";
-  for (let i = 0; i < 40; i++) stars += `<div class="nx-star" style="left:${Math.random()*100}%; top:${Math.random()*55}%; animation-delay:${Math.random()*2}s;"></div>`;
+  for (let i = 0; i < 40; i++) {
+    stars += `<div class="nx-star" style="left:${Math.random()*100}%; top:${Math.random()*55}%; animation-delay:${Math.random()*2}s;"></div>`;
+  }
+  
   bg.innerHTML = `
     <div class="nx-sky"></div>${stars}<div class="nx-moon"></div>
     <div class="nx-village">
@@ -748,6 +879,7 @@ function buildNoelScene() {
     <div class="nx-bonhomme"></div>
     <div class="nx-flocons"></div>
   `;
+  
   preloadNoelLotties();
   attachNoelLotties(bg);
 }
@@ -757,36 +889,57 @@ function attachNoelLotties(bg) {
     const el = bg.querySelector(sel);
     if (!el) return;
     const load = () => {
-      const data = nxClone(key);
+      const data = cloneLottieData(_nxData[key]);
       if (data) {
-        const anim = lottie.loadAnimation({ container: el, renderer: "svg", loop: true, autoplay: true, animationData: data });
+        const anim = lottie.loadAnimation({
+          container: el,
+          renderer: "svg",
+          loop: true,
+          autoplay: true,
+          animationData: data
+        });
         if (speed && typeof anim.setSpeed === "function") anim.setSpeed(speed);
         _nxAnims.push({ el, anim });
       }
     };
     if (_nxData[key]) load();
-    else { const r = setInterval(() => { if (_nxData[key]) { clearInterval(r); load(); } }, 1000); setTimeout(() => clearInterval(r), 15000); }
+    else {
+      const r = setInterval(() => {
+        if (_nxData[key]) {
+          clearInterval(r);
+          load();
+        }
+      }, SEASON_CONFIG.LOTTIE_RETRY_INTERVAL);
+      setTimeout(() => clearInterval(r), SEASON_CONFIG.LOTTIE_RETRY_TIMEOUT);
+    }
   };
+  
   put(".nx-guirlande-tl", "guirlandes", 1);
   put(".nx-guirlande-tr", "guirlandes", 1);
   put(".nx-sapin-left", "sapin", 1);
   put(".nx-sapin-right", "sapin", 1);
   put(".nx-bonhomme", "bonhomme", 1);
-  put(".nx-flocons", "flocon", 0.35);  // ← ralenti à 35% (douceur réaliste)
+  put(".nx-flocons", "flocon", 0.35);
 }
 
 function setupNoelDecor(seasonId) {
-  if (noelSleighTimer) { clearInterval(noelSleighTimer); noelSleighTimer = null; }
+  if (noelSleighTimer) {
+    clearInterval(noelSleighTimer);
+    noelSleighTimer = null;
+  }
   if (seasonId !== "s3") return;
-  setTimeout(() => spawnNoelSleigh(), 1500);
+  
+  setTimeout(() => spawnNoelSleigh(), SEASON_CONFIG.NOEL_SLEIGH_INITIAL_DELAY);
+  
   noelSleighTimer = setInterval(() => {
     const inGame = document.getElementById("screen-game") && document.getElementById("screen-game").style.display === "block";
     if (inGame) return;
     spawnNoelSleigh();
-  }, 7000);
-    noelStarTimer = setInterval(() => {
+  }, SEASON_CONFIG.NOEL_SLEIGH_INTERVAL);
+  
+  noelStarTimer = setInterval(() => {
     if (Math.random() < 0.6) spawnShootingStar();
-  }, 4000);
+  }, SEASON_CONFIG.NOEL_STAR_INTERVAL);
 }
 
 function spawnNoelSleigh() {
@@ -795,15 +948,30 @@ function spawnNoelSleigh() {
   el.style.top = (8 + Math.random() * 18) + "%";
   el.style.animationDuration = (13 + Math.random() * 5) + "s";
   (document.getElementById("season-bg") || document.body).appendChild(el);
-  const data = nxClone("perenoel");
+  
+  const data = cloneLottieData(_nxData.perenoel);
   let anim = null;
-  if (data) anim = lottie.loadAnimation({ container: el, renderer: "svg", loop: true, autoplay: true, animationData: data });
-  else el.innerText = "🎅";
+  if (data) {
+    anim = lottie.loadAnimation({
+      container: el,
+      renderer: "svg",
+      loop: true,
+      autoplay: true,
+      animationData: data
+    });
+  } else {
+    el.innerText = "🎅";
+  }
+  
   _nxAnims.push({ el, anim });
-  setTimeout(() => { if (anim) anim.destroy(); if (el.parentNode) el.remove(); }, 19000);
+  setTimeout(() => {
+    if (anim) anim.destroy();
+    if (el.parentNode) el.remove();
+  }, SEASON_CONFIG.NOEL_SLEIGH_LIFETIME);
 }
+
 /* ============================================================
-APPLICATION AUTOMATIQUE
+16. INITIALISATION
 ============================================================ */
 document.addEventListener("DOMContentLoaded", () => {
   setTimeout(() => {
@@ -817,6 +985,7 @@ if (typeof socket !== "undefined") {
   socket.on("player_registered", () => {
     setTimeout(() => { applySeasonDA(); }, 50);
   });
+  
   socket.on("season_updated", (data) => {
     if (data && data.seasonId) {
       window.CURRENT_SEASON = data.seasonId;
