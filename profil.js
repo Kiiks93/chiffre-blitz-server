@@ -126,7 +126,13 @@ function getFrameClass(equippedFrame) {
   };
   return FRAME_CLASS_MAP[equippedFrame] || "";
 }
-
+function isStrongCode(code) {
+  if (!code || code.length < 8) return false;
+  const hasLetter = /[a-zA-Z]/.test(code);
+  const hasDigit = /\d/.test(code);
+  const hasSpecial = /[!@#$%&*+\-_=]/.test(code);
+  return hasLetter && hasDigit && hasSpecial;
+}
 /* ---------- NOMS D'AFFICHAGE TRADUITS (fonctions dynamiques) ---------- */
 function getAvatarDisplayNames() {
   const fr = currentLang === "fr";
@@ -751,7 +757,8 @@ function submitAccountForm() {
   const pseudo = (document.getElementById('account-pseudo').value || '').trim();
   const code = (document.getElementById('account-code').value || '').trim();
   if (pseudo.length < 3) { alert('Pseudo : 3 caractères minimum.'); return; }
-  if (code.length < 4) { alert('Code secret : 4 caractères minimum.'); return; }
+  if (code.length < 8) { alert('Code secret : 8 caractères minimum (avec lettres, chiffres et caractère spécial !@#$%&*+-_).'); return; }
+  if (!isStrongCode(code)) { alert('⚠️ Code trop faible !\n\nUn code fort doit contenir :\n• 8+ caractères\n• Des lettres\n• Des chiffres\n• Un caractère spécial (!@#$%&*+-_)\n\nExemple : Blitz2026!'); return; }
   myProfile.username = pseudo;
   myProfile.secretCode = code;
   if (!myProfile.region) myProfile.region = 'Hauts-de-France';
@@ -891,6 +898,10 @@ function saveProfileFromModal() {
   else { myProfile.secretCode = myProfile.secretCode || savedSecret; pendingCustomization = false; }
   if (isNaN(avatarVal) || avatarVal < 1) avatarVal = 1;
   if (avatarVal > 999) avatarVal = 999;
+  // Validation force du code secret (avertissement uniquement)
+  if (myProfile.secretCode && !isStrongCode(myProfile.secretCode)) {
+  if (confirm('⚠️ Ton code secret est faible !\n\nUn code fort doit contenir :\n• 8+ caractères\n• Des lettres\n• Des chiffres\n• Un caractère spécial (!@#$%&*+-_)\n\nTu pourras le changer plus tard dans "Mon Compte".\n\nContinuer quand même ?') === false) return;
+  }
   myProfile.username = nameInput;
   myProfile.region = regionInput;
   myProfile.avatar = avatarVal;
