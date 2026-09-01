@@ -654,11 +654,99 @@ function renderAccountContent() {
   } else {
     content.innerHTML = `
       <p style="font-size:12px; text-align:center;">${d.account_connected} <b style="color:#00ff88;">${myProfile.username}</b></p>
+      <button class="btn-main btn-gold" onclick="showChangeCodeModal()" style="margin-bottom:6px;">🔑 Changer mon code secret</button>
+      <button class="btn-main" onclick="showRecoveryKeyModal()" style="background:linear-gradient(45deg,#f8b500,#ff8a00); margin-bottom:6px;">🔐 Voir ma clé de récupération</button>
       <button class="btn-main btn-blue" onclick="switchAccount()" style="margin-bottom:6px;">${d.account_change}</button>
-      <button class="btn-main btn-gold" onclick="startCreateAccount()" style="margin-bottom:6px;">${d.account_create}</button>
+      <button class="btn-main" onclick="startCreateAccount()" style="background:linear-gradient(45deg,#f8b500,#fceabb); color:#222; margin-bottom:6px;">${d.account_create}</button>
       <button class="btn-main" onclick="askDeleteAccount()" style="background:linear-gradient(45deg,#ff416c,#7a0026);">${d.account_delete}</button>`;
   }
 }
+
+/* ---------- CHANGER LE CODE SECRET ---------- */
+function showChangeCodeModal() {
+  const d = i18n[currentLang];
+  let modal = document.getElementById('modal-change-code');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modal-change-code';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal-card" style="max-width:360px;">
+        <h3 style="color:#00d2ff; margin:0 0 10px 0; text-align:center;">🔑 CHANGER MON CODE SECRET</h3>
+        <div class="card-desc" style="font-size:11px; color:#aaa; text-align:center; margin-bottom:10px;">
+          8+ caractères avec <b>lettres</b>, <b>chiffres</b> et <b>caractère spécial</b> (!@#$%&*+-_)
+        </div>
+        <input type="password" id="change-old-code" placeholder="Ancien code secret" style="width:100%; background:#0f051d; color:#fff; border:2px solid #00d2ff; border-radius:8px; padding:8px; font-size:13px; margin-bottom:6px;">
+        <input type="password" id="change-new-code" placeholder="Nouveau code secret" style="width:100%; background:#0f051d; color:#fff; border:2px solid #00d2ff; border-radius:8px; padding:8px; font-size:13px; margin-bottom:6px;">
+        <input type="password" id="change-confirm-code" placeholder="Confirmer le nouveau code" style="width:100%; background:#0f051d; color:#fff; border:2px solid #00d2ff; border-radius:8px; padding:8px; font-size:13px; margin-bottom:10px;">
+        <div id="change-code-result" style="min-height:16px; font-size:11px; text-align:center; font-weight:bold; margin-bottom:8px;"></div>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-secondary" onclick="closeChangeCodeModal()" style="margin-top:0;">Annuler</button>
+          <button class="btn-main btn-gold" onclick="submitChangeCode()" style="margin-top:0;">Valider ⚡</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+  modal.style.display = 'flex';
+}
+function closeChangeCodeModal() { const m = document.getElementById('modal-change-code'); if (m) m.style.display = 'none'; }
+function submitChangeCode() {
+  const oldCode = document.getElementById('change-old-code').value.trim();
+  const newCode = document.getElementById('change-new-code').value;
+  const confirmCode = document.getElementById('change-confirm-code').value;
+  const result = document.getElementById('change-code-result');
+  if (newCode !== confirmCode) { result.style.color = '#ff4b2b'; result.innerText = 'Les nouveaux codes ne correspondent pas.'; return; }
+  socket.emit('change_secret_code', { oldCode, newCode });
+}
+socket.on('change_code_result', (d) => {
+  const result = document.getElementById('change-code-result');
+  if (!result) return;
+  result.style.color = d.ok ? '#00ff88' : '#ff4b2b';
+  result.innerText = d.message || '';
+  if (d.ok) {
+    myProfile.secretCode = document.getElementById('change-new-code').value;
+    localStorage.setItem('cb_secret', myProfile.secretCode);
+    setTimeout(() => { closeChangeCodeModal(); alert('✅ N\'oublie pas ton nouveau code !'); }, 1200);
+  }
+});
+
+/* ---------- VOIR SA CLÉ DE RÉCUPÉRATION ---------- */
+function showRecoveryKeyModal() {
+  const d = i18n[currentLang];
+  const code = prompt('🔒 Entre ton code secret pour voir ta clé de récupération :');
+  if (!code) return;
+  socket.emit('get_recovery_key', { secretCode: code });
+}
+socket.on('recovery_key_result', (d) => {
+  if (!d.ok) { alert('❌ ' + d.message); return; }
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-card" style="max-width:400px; text-align:center;">
+      <h3 style="color:#f8b500; margin:0 0 10px 0;">🔐 TA CLÉ DE RÉCUPÉRATION</h3>
+      <div style="font-size:11px; color:#aaa; margin-bottom:12px; line-height:1.4;">
+        <b style="color:#ff8a00;">⚠️ À CONSERVER PRÉCIEUSEMENT !</b><br>
+        Si tu perds ton code secret, donne-moi cette clé sur Discord/email pour prouver que c'est bien ton compte.
+      </div>
+      <div style="background:#0f051d; border:2px solid #f8b500; border-radius:10px; padding:16px; font-size:22px; font-weight:900; color:#f8b500; letter-spacing:3px; font-family:monospace; margin-bottom:12px; user-select:all;">${d.key}</div>
+      <button class="btn-main btn-gold" onclick="navigator.clipboard.writeText('${d.key}').then(()=>alert('📋 Clé copiée !'));" style="margin-bottom:6px;">📋 Copier la clé</button>
+      <button class="btn-secondary" onclick="this.closest('.modal-overlay').remove()">Fermer</button>
+    </div>`;
+  document.body.appendChild(modal);
+});
+
+/* ---------- DÉCONNEXION FORCÉE (après reset admin) ---------- */
+socket.on('force_logout', (data) => {
+  localStorage.removeItem('cb_secret');
+  localStorage.removeItem('cb_username');
+  myProfile.secretCode = '';
+  myProfile.username = '';
+  alert('🔒 Ton code secret a été réinitialisé par un administrateur.\n\nTu vas être redirigé vers l\'écran de connexion.');
+  closeAccountModal();
+  switchAccount();
+  checkAndShowProfileModal();
+});
 function submitAccountForm() {
   const pseudo = (document.getElementById('account-pseudo').value || '').trim();
   const code = (document.getElementById('account-code').value || '').trim();
