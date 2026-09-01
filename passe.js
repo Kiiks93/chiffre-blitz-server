@@ -342,6 +342,8 @@ function getActiveSeason() {
     const [d2, m2, y2] = s.end.split("/").map(Number);
     if (now >= new Date(y1, m1 - 1, d1) && now <= new Date(y2, m2 - 1, d2, 23, 59)) return s;
   }
+  const [fd, fm, fy] = list[0].start.split("/").map(Number);
+  if (now < new Date(fy, fm - 1, fd)) return list[0]; // avant la S1 → affiche S1
   return list[list.length - 1];
 }
 
