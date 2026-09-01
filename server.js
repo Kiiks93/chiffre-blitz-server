@@ -2,6 +2,9 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const { createClient } = require('@supabase/supabase-js');
+const crypto = require('crypto');
+function hashSecret(code) { return crypto.createHash('sha256').update(String(code)).digest('hex'); }
+function isHashed(v) { return /^[a-f0-9]{64}$/.test(v || ''); }
 
 const app = express();
 const server = http.createServer(app);
@@ -333,16 +336,19 @@ io.on('connection', (socket) => {
       if (!error && matchedPlayers && matchedPlayers.length > 0) {
         const existing = matchedPlayers[0];
         const storedCode = (existing.secret_code || '').trim();
-        if (storedCode && storedCode.toLowerCase() !== secretCode.toLowerCase()) { socket.emit('register_result', { ok: false, reason: 'taken' }); return; }
+        if (storedCode) {
+          const ok = isHashed(storedCode) ? (hashSecret(secretCode) === storedCode) : (storedCode.toLowerCase() === secretCode.toLowerCase());
+          if (!ok) { socket.emit('register_result', { ok: false, reason: 'taken' }); return; }
+          if (!isHashed(storedCode)) await supabase.from('players').update({ secret_code: hashSecret(secretCode) }).eq('id', existing.id); // migration legacy
+        }
         const updates = {};
-        if (!storedCode) updates.secret_code = secretCode;
         if (Object.keys(updates).length > 0) {
           const { data: updated } = await supabase.from('players').update(updates).eq('id', existing.id).select().single();
           playerData = updated || existing;
         } else { playerData = existing; }
       } else {
         const newRecord = {
-          username: rawUsername, secret_code: secretCode, region: data.region || "Hauts-de-France",
+          username: rawUsername, secret_code: hashSecret(secretCode), region: data.region || "Hauts-de-France",
           country: data.flag ? data.flag.replace(/['"]/g, '').trim() : "FR", avatar: data.avatar || 1, flag: data.flag || "🇫🇷",
           points: 0, coins: 100, trophies: 0, wins: 0, losses: 0,
           inventory: { __equipped: { frame: "frame_standard" } }, equipped_power: null, unlocked_items: ["frame_standard"],
@@ -700,6 +706,9 @@ io.on('connection', (socket) => {
     if (!match || match.ended) return;
     const pData = match.players[socket.id];
     if (!pData) return;
+    const now = Date.now();
+    if (pData.lastClick && now - pData.lastClick < 60) return; // trop rapide = bot, ignoré
+    pData.lastClick = now;
     const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
     if (typeof clickedIndex !== 'number' || clickedIndex < 0 || clickedIndex >= pData.pool.length) return;
     const num = pData.pool[clickedIndex];
@@ -728,6 +737,9 @@ io.on('connection', (socket) => {
     if (!allowed.includes(delta)) return;
     const pData = match.players[socket.id];
     if (!pData) return;
+    const nowC = Date.now();
+    if (pData.lastCatch && nowC - pData.lastCatch < 50) return; // anti-bot
+    pData.lastCatch = nowC;
     pData.score = Math.max(0, pData.score + delta);
     const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
     io.to(oppId).emit('catch_opp_score', { score: pData.score });
@@ -792,7 +804,8 @@ io.on('connection', (socket) => {
       if (error || !matched || matched.length === 0) { socket.emit('delete_account_result', { ok: false }); return; }
       const row = matched[0];
       const stored = (row.secret_code || '').trim();
-      if (stored && stored.toLowerCase() !== code.toLowerCase()) { socket.emit('delete_account_result', { ok: false, reason: 'bad_code' }); return; }
+      const okCode = isHashed(stored) ? (hashSecret(code) === stored) : (stored.toLowerCase() === code.toLowerCase());
+      if (stored && !okCode) { socket.emit('delete_account_result', { ok: false, reason: 'bad_code' }); return; }
       await supabase.from('players').delete().eq('id', row.id);
       delete activePlayers[socket.id];
       socket.emit('delete_account_result', { ok: true });
