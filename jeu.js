@@ -1,14 +1,28 @@
 /* ============================================================
-VARIABLES D'ÉTAT DU JEU
+JEU.JS — LOGIQUE DE JEU COMPLÈTE
+============================================================ */
+
+/* ============================================================
+1. CONSTANTES
+============================================================ */
+const COMBO_WINDOW_MS = 20000;
+const COMBO_TIERS = { TIER1: 15, TIER2: 30, PERFECTION: 35 };
+const MALUS_POWERS = ['quake', 'micro', 'eclipse', 'chaos'];
+const SOLO_TIME_LIMIT = 50;
+const AVALANCHE_TIME_LIMIT = 30;
+const MATCH_TIME_LIMIT = 30;
+
+/* ============================================================
+2. VARIABLES D'ÉTAT DU JEU
 ============================================================ */
 let currentMatchCharges = {};
 let currentSoloCharges = {};
-let current1v1Time = 30;
+let current1v1Time = MATCH_TIME_LIMIT;
 let radarInterval = null;
 let activeTrainingMode = "classic";
 let soloTarget = 1;
 let soloScore = 0;
-let soloTimeLeft = 30;
+let soloTimeLeft = SOLO_TIME_LIMIT;
 let soloTimerInterval = null;
 let isTimeFrozen = false;
 let currentCoinsGained = 0;
@@ -17,96 +31,96 @@ let avalancheGridData = [];
 let avalancheTarget = null;
 let avalancheInterval = null;
 let avalancheTimerInterval = null;
-let avalancheTimeLeft = 30;
+let avalancheTimeLeft = AVALANCHE_TIME_LIMIT;
 
 window.addEventListener("load", () => {
   if (typeof preloadGhostAnimation === "function") preloadGhostAnimation();
 });
 
-window.IS_LOW_PERF = /Android|iPhone|iPad|iPod|Tablet|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 2 && Math.min(screen.width, screen.height) < 900);
+window.IS_LOW_PERF = /Android|iPhone|iPad|iPod|Tablet|Mobile/i.test(navigator.userAgent) || 
+                     (navigator.maxTouchPoints > 2 && Math.min(screen.width, screen.height) < 900);
 
 /* ============================================================
-SYSTÈME COMBO (solo)
+3. SYSTÈME COMBO (solo)
 ============================================================ */
 let currentCombo = 0;
 let lastComboTime = 0;
 let soloPerfection = false;
 let comboFXEnabled = false;
 let comboTimerInterval = null;
-const COMBO_WINDOW_MS = 20000;
 let pendingRecapAfterPopup = false;
 
 /* ============================================================
-CATALOGUE TROPHÉES CLIENT (16 trophées) — TRADUIT
+4. HELPERS THÈME (factorisation)
 ============================================================ */
-function getTrophyCatalogClient() {
-  const d = i18n[currentLang];
-  return {
-    first_victory:    { name: d.trophy_name_first_victory, emoji: "⚔️", shelf: "combat",      rarity: "bronze",    condition: d.trophy_cond_first_victory, progress: p => `${Math.min(p.wins||0,1)}/1` },
-    unstoppable:      { name: d.trophy_name_unstoppable,   emoji: "🔥", shelf: "combat",      rarity: "silver",    condition: d.trophy_cond_unstoppable, progress: p => `${Math.min(p.win_streak||0,5)}/5` },
-    gladiator:        { name: d.trophy_name_gladiator,     emoji: "🛡️", shelf: "combat",      rarity: "silver",    condition: d.trophy_cond_gladiator, progress: p => `${Math.min(p.matches_played||0,30)}/30` },
-    champion:         { name: d.trophy_name_champion,      emoji: "👑", shelf: "combat",      rarity: "gold",      condition: d.trophy_cond_champion, progress: () => d.trophy_soon, dormant: true },
-    awakening:        { name: d.trophy_name_awakening,     emoji: "⚡", shelf: "skill",       rarity: "bronze",    condition: d.trophy_cond_awakening, progress: p => `x${Math.min(p.best_combo||0,15)}/15` },
-    furnace:          { name: d.trophy_name_furnace,       emoji: "💥", shelf: "skill",       rarity: "silver",    condition: d.trophy_cond_furnace, progress: p => `x${Math.min(p.best_combo||0,30)}/30` },
-    perfection:       { name: d.trophy_name_perfection,    emoji: "💎", shelf: "skill",       rarity: "legendary", condition: d.trophy_cond_perfection, progress: p => `x${Math.min(p.best_combo||0,35)}/35` },
-    avalanche_master: { name: d.trophy_name_avalanche_master, emoji: "🎯", shelf: "skill",   rarity: "gold",      condition: d.trophy_cond_avalanche_master, progress: p => `${Math.min(p.best_avalanche||0,400)}/400` },
-    combatant:        { name: d.trophy_name_combatant,     emoji: "🎖️", shelf: "progression", rarity: "bronze",    condition: d.trophy_cond_combatant, progress: () => "—" },
-    elite:            { name: d.trophy_name_elite,         emoji: "🏵️", shelf: "progression", rarity: "gold",      condition: d.trophy_cond_elite, progress: () => "—" },
-    worker:           { name: d.trophy_name_worker,        emoji: "⛏️", shelf: "progression", rarity: "silver",    condition: d.trophy_cond_worker, progress: p => `${Math.min(p.total_coins_earned||0,1000)}/1000` },
-    rising_star:      { name: d.trophy_name_rising_star,   emoji: "⭐", shelf: "progression", rarity: "silver",    condition: d.trophy_cond_rising_star, progress: p => `${Math.min(p.points||0,500)}/500` },
-    local_king:       { name: d.trophy_name_local_king,    emoji: "🏰", shelf: "domination",  rarity: "gold",      condition: d.trophy_cond_local_king, progress: () => d.trophy_end_season },
-    midas:            { name: d.trophy_name_midas,         emoji: "💰", shelf: "domination",  rarity: "gold",      condition: d.trophy_cond_midas, progress: () => d.trophy_end_season },
-    dynasty:          { name: d.trophy_name_dynasty,       emoji: "🏛️", shelf: "domination",  rarity: "legendary", condition: d.trophy_cond_dynasty, progress: p => `${p.season_n1_count||0}/3` },
-    world_n1:         { name: d.trophy_name_world_n1,      emoji: "🌍", shelf: "domination",  rarity: "legendary", condition: d.trophy_cond_world_n1, progress: () => d.trophy_end_season }
-  };
-}
-function getTrophyShelves() {
-  const d = i18n[currentLang];
-  return [
-    { id: "combat",      label: d.shelf_combat,      color: "#ff4b2b" },
-    { id: "skill",       label: d.shelf_skill,       color: "#00d2ff" },
-    { id: "progression", label: d.shelf_progression, color: "#00ff88" },
-    { id: "domination",  label: d.shelf_domination,  color: "#f8b500" }
-  ];
-}
-
-function closeRewardPopUp() {
-  const popup = document.getElementById("reward-popup-overlay");
-  if (popup) popup.style.display = "none";
-  if (pendingRecapAfterPopup) {
-    pendingRecapAfterPopup = false;
-    document.getElementById("recap-modal").style.display = "flex";
-  }
-}
-
-function getComboColor() {
-  const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
-  if (theme === "theme_glacial") return "#7be8ff";
-  if (theme === "theme_alt") return "#f8b500";
-  if (theme === "theme_neon") return "#ff00c8";
-  if (theme === "theme_eclair") return "#fff34d";
-  if (theme === "theme_obsidian") return "#ff003c";
-  if (theme === "theme_citrouille") return "#ff8a00";
-  if (theme === "theme_fantome") return "#b06bff";
-  return "#00d2ff";
-}
-
 function getEquippedThemeId() {
   return (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme) || "";
 }
 
-function getComboEmojis() {
-  const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
-  if (theme === "theme_glacial") return ["❄️", "🧊", "✨", "💥"];
-  if (theme === "theme_alt") return ["✨", "🪙", "", "⚡"];
-  if (theme === "theme_neon") return ["💜", "", "✨", ""];
-  if (theme === "theme_eclair") return ["⚡", "", "✨", ""];
-  if (theme === "theme_obsidian") return ["🖤", "", "🔥", "✨"];
-  if (theme === "theme_citrouille") return ["🎃", "", "", "💀"];
-  if (theme === "theme_fantome") return ["👻", "", "💜", "✨"];
-  return ["⚡", "", "✨", ""];
+function getThemeConfig() {
+  const theme = getEquippedThemeId();
+  const configs = {
+    theme_glacial: { color: "#7be8ff", emojis: ["❄️", "🧊", "✨", "💥"], crackStyle: { color: "#7be8ff", width: 2, jag: 30 } },
+    theme_alt: { color: "#f8b500", emojis: ["✨", "🪙", "💰", "⚡"], crackStyle: { color: "#f8b500", width: 3, jag: 18 } },
+    theme_neon: { color: "#ff00c8", emojis: ["💜", "", "✨", "💥"], crackStyle: { color: "#ff00c8", width: 2, jag: 34 } },
+    theme_eclair: { color: "#fff34d", emojis: ["⚡", "", "✨", "💥"], crackStyle: { color: "#fff34d", width: 3, jag: 20 } },
+    theme_obsidian: { color: "#ff003c", emojis: ["🖤", "", "🔥", ""], crackStyle: { color: "#ff003c", width: 3, jag: 26 } },
+    theme_citrouille: { color: "#ff8a00", emojis: ["🎃", "", "", "💀"], crackStyle: { color: "#ff8a00", width: 3, jag: 24 } },
+    theme_fantome: { color: "#b06bff", emojis: ["👻", "", "💜", "✨"], crackStyle: { color: "#b06bff", width: 2, jag: 30 } }
+  };
+  return configs[theme] || { color: "#00d2ff", emojis: ["⚡", "", "✨", ""], crackStyle: { color: "#00d2ff", width: 2, jag: 38 } };
 }
 
+function getComboColor() {
+  return getThemeConfig().color;
+}
+
+function getComboEmojis() {
+  return getThemeConfig().emojis;
+}
+
+function getComboCrackStyle() {
+  return getThemeConfig().crackStyle;
+}
+
+/* ============================================================
+5. CATALOGUE TROPHÉES CLIENT (16 trophées)
+============================================================ */
+function getTrophyCatalogClient() {
+  const d = i18n[currentLang];
+  return {
+    first_victory: { name: d.trophy_name_first_victory, emoji: "⚔️", shelf: "combat", rarity: "bronze", condition: d.trophy_cond_first_victory, progress: p => `${Math.min(p.wins||0,1)}/1` },
+    unstoppable: { name: d.trophy_name_unstoppable, emoji: "🔥", shelf: "combat", rarity: "silver", condition: d.trophy_cond_unstoppable, progress: p => `${Math.min(p.win_streak||0,5)}/5` },
+    gladiator: { name: d.trophy_name_gladiator, emoji: "🛡️", shelf: "combat", rarity: "silver", condition: d.trophy_cond_gladiator, progress: p => `${Math.min(p.matches_played||0,30)}/30` },
+    champion: { name: d.trophy_name_champion, emoji: "👑", shelf: "combat", rarity: "gold", condition: d.trophy_cond_champion, progress: () => d.trophy_soon, dormant: true },
+    awakening: { name: d.trophy_name_awakening, emoji: "⚡", shelf: "skill", rarity: "bronze", condition: d.trophy_cond_awakening, progress: p => `x${Math.min(p.best_combo||0,15)}/15` },
+    furnace: { name: d.trophy_name_furnace, emoji: "💥", shelf: "skill", rarity: "silver", condition: d.trophy_cond_furnace, progress: p => `x${Math.min(p.best_combo||0,30)}/30` },
+    perfection: { name: d.trophy_name_perfection, emoji: "💎", shelf: "skill", rarity: "legendary", condition: d.trophy_cond_perfection, progress: p => `x${Math.min(p.best_combo||0,35)}/35` },
+    avalanche_master: { name: d.trophy_name_avalanche_master, emoji: "🎯", shelf: "skill", rarity: "gold", condition: d.trophy_cond_avalanche_master, progress: p => `${Math.min(p.best_avalanche||0,400)}/400` },
+    combatant: { name: d.trophy_name_combatant, emoji: "🎖️", shelf: "progression", rarity: "bronze", condition: d.trophy_cond_combatant, progress: () => "—" },
+    elite: { name: d.trophy_name_elite, emoji: "🏵️", shelf: "progression", rarity: "gold", condition: d.trophy_cond_elite, progress: () => "—" },
+    worker: { name: d.trophy_name_worker, emoji: "⛏️", shelf: "progression", rarity: "silver", condition: d.trophy_cond_worker, progress: p => `${Math.min(p.total_coins_earned||0,1000)}/1000` },
+    rising_star: { name: d.trophy_name_rising_star, emoji: "⭐", shelf: "progression", rarity: "silver", condition: d.trophy_cond_rising_star, progress: p => `${Math.min(p.points||0,500)}/500` },
+    local_king: { name: d.trophy_name_local_king, emoji: "🏰", shelf: "domination", rarity: "gold", condition: d.trophy_cond_local_king, progress: () => d.trophy_end_season },
+    midas: { name: d.trophy_name_midas, emoji: "💰", shelf: "domination", rarity: "gold", condition: d.trophy_cond_midas, progress: () => d.trophy_end_season },
+    dynasty: { name: d.trophy_name_dynasty, emoji: "🏛️", shelf: "domination", rarity: "legendary", condition: d.trophy_cond_dynasty, progress: p => `${p.season_n1_count||0}/3` },
+    world_n1: { name: d.trophy_name_world_n1, emoji: "🌍", shelf: "domination", rarity: "legendary", condition: d.trophy_cond_world_n1, progress: () => d.trophy_end_season }
+  };
+}
+
+function getTrophyShelves() {
+  const d = i18n[currentLang];
+  return [
+    { id: "combat", label: d.shelf_combat, color: "#ff4b2b" },
+    { id: "skill", label: d.shelf_skill, color: "#00d2ff" },
+    { id: "progression", label: d.shelf_progression, color: "#00ff88" },
+    { id: "domination", label: d.shelf_domination, color: "#f8b500" }
+  ];
+}
+
+/* ============================================================
+6. EFFETS VISUELS (shake, flash, explosion)
+============================================================ */
 function shakeScreen(intensity) {
   const el = document.getElementById("screen-game") || document.body;
   const d = 12 * intensity;
@@ -146,6 +160,25 @@ function shatterExplosion() {
   }
 }
 
+function spawnExplosionParticles() {
+  const emojis = getComboEmojis();
+  const partCount = IS_LOW_PERF ? 12 : 40;
+  for (let i = 0; i < partCount; i++) {
+    const p = document.createElement("div");
+    p.className = "explosion-particle";
+    p.innerText = emojis[i % emojis.length];
+    const angle = (Math.PI * 2 * i) / partCount;
+    const dist = 80 + Math.random() * 180;
+    p.style.setProperty("--dx", Math.cos(angle) * dist + "px");
+    p.style.setProperty("--dy", Math.sin(angle) * dist + "px");
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1200);
+  }
+}
+
+/* ============================================================
+7. SYSTÈME COMBO (HUD, timer, reset)
+============================================================ */
 function ensureEquippedGrid() {
   if (!myProfile.inventory) myProfile.inventory = {};
   if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
@@ -248,23 +281,26 @@ function registerComboHit() {
   }
   const grid = document.getElementById("grid");
   if (grid) grid.style.setProperty("--combo-color", getComboColor());
-  if (currentCombo === 15) {
+  if (currentCombo === COMBO_TIERS.TIER1) {
     if (grid) grid.classList.add("combo-tier1");
     showComboBanner(d.combo_x15);
     spawnCrack();
-  } else if (currentCombo === 30) {
+  } else if (currentCombo === COMBO_TIERS.TIER2) {
     if (grid) { grid.classList.remove("combo-tier1"); grid.classList.add("combo-tier2"); }
     showComboBanner(d.combo_x30);
     const burstCount = IS_LOW_PERF ? 2 : 6;
     for (let i = 0; i < burstCount; i++) setTimeout(() => spawnCrack(), i * 60);
     shakeScreen(0.5);
-  } else if (currentCombo >= 35) {
+  } else if (currentCombo >= COMBO_TIERS.PERFECTION) {
     triggerPerfection();
-  } else if (currentCombo > 15) {
+  } else if (currentCombo > COMBO_TIERS.TIER1) {
     spawnCrack();
   }
 }
 
+/* ============================================================
+8. PERFECTION (combo x35)
+============================================================ */
 function triggerPerfection() {
   const d = i18n[currentLang];
   if (soloPerfection) return;
@@ -277,6 +313,8 @@ function triggerPerfection() {
   showComboBanner(d.combo_perfection);
   const themeNow = getEquippedThemeId();
   SoundEngine.playPerfectionBoom(themeNow);
+  
+  // Effets spéciaux par thème
   if (themeNow === "theme_eclair") {
     playElectroExplosionSound();
     for (let i = 0; i < 5; i++) setTimeout(() => spawnLightningBurst(true), i * 90);
@@ -303,6 +341,7 @@ function triggerPerfection() {
     if (typeof playLutinSound === "function") playLutinSound();
     shakeScreen(1.0);
   }
+  
   const crackCount = IS_LOW_PERF ? 6 : 18;
   for (let i = 0; i < crackCount; i++) {
     setTimeout(() => {
@@ -323,42 +362,9 @@ function triggerPerfection() {
   setTimeout(() => { endSoloGame(); }, explosionTime + 1000);
 }
 
-function spawnExplosionParticles() {
-  const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
-  let emojis = ["⚡", "", "✨", ""];
-  if (theme === "theme_glacial") emojis = ["❄️", "🧊", "✨", "💥"];
-  if (theme === "theme_alt") emojis = ["✨", "🪙", "💰", "⚡"];
-  if (theme === "theme_neon") emojis = ["💜", "", "✨", "💥"];
-  if (theme === "theme_eclair") emojis = ["⚡", "", "✨", "💥"];
-  if (theme === "theme_obsidian") emojis = ["🖤", "", "🔥", ""];
-  if (theme === "theme_citrouille") emojis = ["🎃", "", "", "💀"];
-  if (theme === "theme_fantome") emojis = ["👻", "", "💜", "✨"];
-  const partCount = IS_LOW_PERF ? 12 : 40;
-  for (let i = 0; i < partCount; i++) {
-    const p = document.createElement("div");
-    p.className = "explosion-particle";
-    p.innerText = emojis[i % emojis.length];
-    const angle = (Math.PI * 2 * i) / partCount;
-    const dist = 80 + Math.random() * 180;
-    p.style.setProperty("--dx", Math.cos(angle) * dist + "px");
-    p.style.setProperty("--dy", Math.sin(angle) * dist + "px");
-    document.body.appendChild(p);
-    setTimeout(() => p.remove(), 1200);
-  }
-}
-
-function getComboCrackStyle() {
-  const theme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
-  if (theme === "theme_glacial") return { color: "#7be8ff", width: 2, jag: 30 };
-  if (theme === "theme_alt") return { color: "#f8b500", width: 3, jag: 18 };
-  if (theme === "theme_neon") return { color: "#ff00c8", width: 2, jag: 34 };
-  if (theme === "theme_eclair") return { color: "#fff34d", width: 3, jag: 20 };
-  if (theme === "theme_obsidian") return { color: "#ff003c", width: 3, jag: 26 };
-  if (theme === "theme_citrouille") return { color: "#ff8a00", width: 3, jag: 24 };
-  if (theme === "theme_fantome") return { color: "#b06bff", width: 2, jag: 30 };
-  return { color: "#00d2ff", width: 2, jag: 38 };
-}
-
+/* ============================================================
+9. FISSURES & PIÈCES (combo visuals)
+============================================================ */
 function ensureCracksLayer() {
   let layer = document.getElementById("combo-cracks-layer");
   if (!layer) {
@@ -410,8 +416,10 @@ function coinStorm() {
 }
 
 function spawnCrack() {
-  const themeNow = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
-  if (!themeNow || themeNow === "") return;
+  const themeNow = getEquippedThemeId();
+  if (!themeNow) return;
+  
+  // Thèmes spéciaux
   if (themeNow === "theme_alt") {
     for (let i = 0; i < 8; i++) setTimeout(() => spawnCoin(), i * 60);
     SoundEngine.playCrack(themeNow);
@@ -425,6 +433,8 @@ function spawnCrack() {
   if (themeNow === "theme_lutin") { if (typeof spawnLutins === "function") spawnLutins(false); if (typeof playLutinSound === "function") playLutinSound(); return; }
   if (themeNow === "theme_eclair") { spawnLightningBurst(false); playElectricArcSound(); return; }
   if (themeNow === "theme_obsidian") { spawnObsidianRock(); playObsidianImpactSound(); return; }
+  
+  // Fissure standard
   const layer = ensureCracksLayer();
   if (layer.childElementCount > 20) layer.removeChild(layer.firstChild);
   const style = getComboCrackStyle();
@@ -452,6 +462,7 @@ function spawnCrack() {
   svg.setAttribute("width", w);
   svg.setAttribute("height", h);
   svg.style.color = style.color;
+  
   const mainCrack = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
   mainCrack.setAttribute("class", "crack-main");
   mainCrack.setAttribute("points", pointsStr);
@@ -461,6 +472,7 @@ function spawnCrack() {
   mainCrack.setAttribute("stroke-linecap", "round");
   mainCrack.setAttribute("stroke-linejoin", "round");
   svg.appendChild(mainCrack);
+  
   const innerCrack = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
   innerCrack.setAttribute("class", "crack-inner");
   innerCrack.setAttribute("points", pointsStr);
@@ -470,6 +482,7 @@ function spawnCrack() {
   innerCrack.setAttribute("stroke-linecap", "round");
   innerCrack.setAttribute("stroke-linejoin", "round");
   svg.appendChild(innerCrack);
+  
   const branchCount = 2 + Math.floor(Math.random() * 3);
   for (let b = 0; b < branchCount; b++) {
     const branchStart = Math.floor(Math.random() * (points.length - 1));
@@ -496,7 +509,7 @@ function spawnCrack() {
     svg.appendChild(branch);
   }
   layer.appendChild(svg);
-  SoundEngine.playCrack(themeNow || "");
+  SoundEngine.playCrack(themeNow);
 }
 
 function clearCracks() {
@@ -506,15 +519,27 @@ function clearCracks() {
   if (coins) coins.innerHTML = "";
 }
 
+function closeRewardPopUp() {
+  const popup = document.getElementById("reward-popup-overlay");
+  if (popup) popup.style.display = "none";
+  if (pendingRecapAfterPopup) {
+    pendingRecapAfterPopup = false;
+    document.getElementById("recap-modal").style.display = "flex";
+  }
+}
+
 /* ============================================================
-NAVIGATION / ÉCRANS
+10. NAVIGATION / ÉCRANS
 ============================================================ */
 function hideAllScreens() {
   setMenuFX(false);
   hideGameModeBadge();
   resetCombo();
   if (typeof stopNeonFx === "function") stopNeonFx();
-  ["screen-title","screen-menu","screen-solo-menu","screen-avalanche-menu","screen-1v1-hub","screen-1v1-lobby","screen-rooms","screen-join-custom","screen-room-waiting","screen-tournament","screen-game","recap-modal","modal-leaderboard","modal-shop","modal-blitz-pass","countdown-overlay","modal-create-room","modal-launch-ad","simulated-ad-overlay","modal-ranked-loadout","modal-jackpot-wheel","modal-friends","admin-modal"].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = "none"; });
+  ["screen-title","screen-menu","screen-solo-menu","screen-avalanche-menu","screen-1v1-hub","screen-1v1-lobby","screen-rooms","screen-join-custom","screen-room-waiting","screen-tournament","screen-game","recap-modal","modal-leaderboard","modal-shop","modal-blitz-pass","countdown-overlay","modal-create-room","modal-launch-ad","simulated-ad-overlay","modal-ranked-loadout","modal-jackpot-wheel","modal-friends","admin-modal"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = "none";
+  });
   const rewardPopup = document.getElementById("reward-popup-overlay");
   if (rewardPopup) rewardPopup.style.display = "none";
   if (radarInterval) clearInterval(radarInterval);
@@ -567,20 +592,31 @@ function hideGameModeBadge() {
 
 function initMenuBackgroundFX() {
   if (document.getElementById('bg-fx')) return;
-  const fx = document.createElement('div'); fx.id = 'bg-fx';
-  const glow = document.createElement('div'); glow.id = 'bg-glow'; fx.appendChild(glow);
+  const fx = document.createElement('div');
+  fx.id = 'bg-fx';
+  const glow = document.createElement('div');
+  glow.id = 'bg-glow';
+  fx.appendChild(glow);
   const shapes = ['◆','▲','■','●'];
   const colors = ['#00d2ff','#ff007f','#ffe600','#00ff88'];
   for (let i = 0; i < 12; i++) {
-    const s = document.createElement('div'); s.className = 'bg-shape'; s.innerText = shapes[i % shapes.length];
-    s.style.fontSize = (14 + Math.random() * 26) + 'px'; s.style.left = Math.random() * 100 + '%'; s.color = colors[i % colors.length];
-    s.style.animationDuration = (14 + Math.random() * 16) + 's'; s.style.animationDelay = (-Math.random() * 25) + 's';
+    const s = document.createElement('div');
+    s.className = 'bg-shape';
+    s.innerText = shapes[i % shapes.length];
+    s.style.fontSize = (14 + Math.random() * 26) + 'px';
+    s.style.left = Math.random() * 100 + '%';
+    s.color = colors[i % colors.length];
+    s.style.animationDuration = (14 + Math.random() * 16) + 's';
+    s.style.animationDelay = (-Math.random() * 25) + 's';
     fx.appendChild(s);
   }
   document.body.appendChild(fx);
 }
 
-function setMenuFX(visible) { const fx = document.getElementById('bg-fx'); if (fx) fx.style.opacity = visible ? '1' : '0'; }
+function setMenuFX(visible) {
+  const fx = document.getElementById('bg-fx');
+  if (fx) fx.style.opacity = visible ? '1' : '0';
+}
 
 function showTitleScreen() {
   hideAllScreens();
@@ -603,11 +639,24 @@ function showMainMenu() {
 
 function leaveRoomIfInRoom() {
   const codeEl = document.getElementById("current-room-code");
-  if (codeEl && codeEl.innerText && codeEl.innerText !== "----") { if (socket.connected) socket.emit("leave_room"); codeEl.innerText = "----"; }
+  if (codeEl && codeEl.innerText && codeEl.innerText !== "----") {
+    if (socket.connected) socket.emit("leave_room");
+    codeEl.innerText = "----";
+  }
 }
 
-function openLaunchAdModal() { SoundEngine.init(); document.getElementById("modal-launch-ad").style.display = "flex"; }
-function playLaunchAd() { document.getElementById("modal-launch-ad").style.display = "none"; simulateAd(() => { launchAdWatched = true; showMainMenu(); }); }
+function openLaunchAdModal() {
+  SoundEngine.init();
+  document.getElementById("modal-launch-ad").style.display = "flex";
+}
+
+function playLaunchAd() {
+  document.getElementById("modal-launch-ad").style.display = "none";
+  simulateAd(() => {
+    launchAdWatched = true;
+    showMainMenu();
+  });
+}
 
 function simulateAd(callback) {
   SoundEngine.stopMusic(false);
@@ -615,12 +664,30 @@ function simulateAd(callback) {
   const overlay = document.getElementById("simulated-ad-overlay");
   const timerEl = document.getElementById("ad-timer");
   const closeBtn = document.getElementById("ad-close-btn");
-  overlay.style.display = "flex"; closeBtn.style.display = "none";
-  let timeLeft = 5; timerEl.innerText = timeLeft;
-  const interval = setInterval(() => { timeLeft--; timerEl.innerText = timeLeft; if (timeLeft <= 0) { clearInterval(interval); timerEl.innerText = "✓"; closeBtn.style.display = "block"; adCallbackFunction = callback; } }, 1000);
+  overlay.style.display = "flex";
+  closeBtn.style.display = "none";
+  let timeLeft = 5;
+  timerEl.innerText = timeLeft;
+  const interval = setInterval(() => {
+    timeLeft--;
+    timerEl.innerText = timeLeft;
+    if (timeLeft <= 0) {
+      clearInterval(interval);
+      timerEl.innerText = "✓";
+      closeBtn.style.display = "block";
+      adCallbackFunction = callback;
+    }
+  }, 1000);
 }
 
-function closeSimulatedAd() { document.getElementById("simulated-ad-overlay").style.display = "none"; SoundEngine.startMusic("menu"); if (adCallbackFunction) { adCallbackFunction(); adCallbackFunction = null; } }
+function closeSimulatedAd() {
+  document.getElementById("simulated-ad-overlay").style.display = "none";
+  SoundEngine.startMusic("menu");
+  if (adCallbackFunction) {
+    adCallbackFunction();
+    adCallbackFunction = null;
+  }
+}
 
 function watchAdToDoubleReward() {
   const d = i18n[currentLang];
@@ -631,14 +698,32 @@ function watchAdToDoubleReward() {
     currentCoinsGained *= 2;
     document.getElementById("recap-coins-gained").innerText = `+${currentCoinsGained} (x2 ⚡)`;
     const doubleBtn = document.getElementById("btn-double-reward");
-    doubleBtn.disabled = true; doubleBtn.style.opacity = "0.5"; doubleBtn.innerText = d.reward_doubled;
+    doubleBtn.disabled = true;
+    doubleBtn.style.opacity = "0.5";
+    doubleBtn.innerText = d.reward_doubled;
     document.getElementById("recap-modal").style.display = "flex";
   });
 }
 
-function openSoloMenu() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } hideAllScreens(); document.getElementById("screen-solo-menu").style.display = "flex"; SoundEngine.startMusic("menu"); }
-function openAvalancheDifficulties() { hideAllScreens(); document.getElementById("screen-avalanche-menu").style.display = "flex"; SoundEngine.startMusic("menu"); }
-function open1v1Hub() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } hideAllScreens(); document.getElementById("screen-1v1-hub").style.display = "flex"; SoundEngine.startMusic("menu"); }
+function openSoloMenu() {
+  if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+  hideAllScreens();
+  document.getElementById("screen-solo-menu").style.display = "flex";
+  SoundEngine.startMusic("menu");
+}
+
+function openAvalancheDifficulties() {
+  hideAllScreens();
+  document.getElementById("screen-avalanche-menu").style.display = "flex";
+  SoundEngine.startMusic("menu");
+}
+
+function open1v1Hub() {
+  if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+  hideAllScreens();
+  document.getElementById("screen-1v1-hub").style.display = "flex";
+  SoundEngine.startMusic("menu");
+}
 
 function sanitizeEquippedPower() {
   if (!myProfile.inventory) myProfile.inventory = {};
@@ -646,14 +731,22 @@ function sanitizeEquippedPower() {
   if (myProfile.equippedPowers && myProfile.equippedPowers.length > 0) myProfile.equippedPowers = myProfile.equippedPowers.filter(p => (myProfile.inventory[p] || 0) > 0);
 }
 
-function getOptionalLoadout() { sanitizeEquippedPower(); const p = myProfile.equippedPower; if (p && (myProfile.inventory[p] || 0) > 0) return [p]; return []; }
+function getOptionalLoadout() {
+  sanitizeEquippedPower();
+  const p = myProfile.equippedPower;
+  if (p && (myProfile.inventory[p] || 0) > 0) return [p];
+  return [];
+}
 
 function startTugOfWarQueue() {
   if (!isProfileValid()) { checkAndShowProfileModal(); return; }
   hideAllScreens();
   document.getElementById("screen-1v1-lobby").style.display = "flex";
   let digit = 1;
-  radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById("radar-digit").innerText = digit; }, 70);
+  radarInterval = setInterval(() => {
+    digit = (digit % 50) + 1;
+    document.getElementById("radar-digit").innerText = digit;
+  }, 70);
   socket.emit("find_tug_of_war_match", getOptionalLoadout());
 }
 
@@ -662,12 +755,23 @@ function startRandom1v1() {
   hideAllScreens();
   document.getElementById("screen-1v1-lobby").style.display = "flex";
   let digit = 1;
-  radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById("radar-digit").innerText = digit; }, 70);
+  radarInterval = setInterval(() => {
+    digit = (digit % 50) + 1;
+    document.getElementById("radar-digit").innerText = digit;
+  }, 70);
   socket.emit("find_1v1_match", getOptionalLoadout());
 }
 
-function openRankedLoadoutModal() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } selectedRankedItems = []; document.getElementById("modal-ranked-loadout").style.display = "flex"; renderRankedLoadoutItems(); }
-function closeRankedLoadoutModal() { document.getElementById("modal-ranked-loadout").style.display = "none"; }
+function openRankedLoadoutModal() {
+  if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+  selectedRankedItems = [];
+  document.getElementById("modal-ranked-loadout").style.display = "flex";
+  renderRankedLoadoutItems();
+}
+
+function closeRankedLoadoutModal() {
+  document.getElementById("modal-ranked-loadout").style.display = "none";
+}
 
 function renderRankedLoadoutItems() {
   const d = i18n[currentLang];
@@ -676,7 +780,10 @@ function renderRankedLoadoutItems() {
   container.innerHTML = "";
   const powersDict = d.powers;
   const ownedPowers = POWERS_CATALOG.filter(p => p.type !== "cosmetics" && p.type !== "packs" && (myProfile.inventory[p.id] || 0) > 0);
-  if (ownedPowers.length === 0) { container.innerHTML = `<div style="grid-column: span 2; text-align:center; color:#aaa; padding:12px; font-size:11px;">${d.ranked_empty}</div>`; return; }
+  if (ownedPowers.length === 0) {
+    container.innerHTML = `<div style="grid-column: span 2; text-align:center; color:#aaa; padding:12px; font-size:11px;">${d.ranked_empty}</div>`;
+    return;
+  }
   const summary = document.createElement("div");
   summary.style.cssText = `grid-column: span 2; background: rgba(0,210,255,0.08); border: 1px solid #00d2ff; border-radius: 10px; padding: 8px; font-size: 11px; color: #fff; margin-bottom: 6px;`;
   summary.innerHTML = `<b>${d.ranked_summary.replace('X', selectedRankedItems.length)}</b><br>${selectedRankedItems.length === 2 ? d.ranked_ready : d.ranked_warning}`;
@@ -709,7 +816,11 @@ function addRankedItem(id) {
   renderRankedLoadoutItems();
 }
 
-function removeRankedItem(id) { const i = selectedRankedItems.lastIndexOf(id); if (i !== -1) selectedRankedItems.splice(i, 1); renderRankedLoadoutItems(); }
+function removeRankedItem(id) {
+  const i = selectedRankedItems.lastIndexOf(id);
+  if (i !== -1) selectedRankedItems.splice(i, 1);
+  renderRankedLoadoutItems();
+}
 
 function startRankedMatch() {
   const d = i18n[currentLang];
@@ -718,7 +829,10 @@ function startRankedMatch() {
   hideAllScreens();
   document.getElementById("screen-1v1-lobby").style.display = "flex";
   let digit = 1;
-  radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById("radar-digit").innerText = digit; }, 70);
+  radarInterval = setInterval(() => {
+    digit = (digit % 50) + 1;
+    document.getElementById("radar-digit").innerText = digit;
+  }, 70);
   myProfile.equippedPowers = selectedRankedItems.slice();
   socket.emit("find_ranked_match", { items: selectedRankedItems.slice() });
 }
@@ -729,18 +843,25 @@ function requestRematch() {
   socket.emit("request_rematch");
   document.getElementById("recap-modal").style.display = "none";
   const roomCodeText = document.getElementById("current-room-code").innerText;
-  if (roomCodeText && roomCodeText !== "----") { document.getElementById("screen-room-waiting").style.display = "block"; }
-  else {
+  if (roomCodeText && roomCodeText !== "----") {
+    document.getElementById("screen-room-waiting").style.display = "block";
+  } else {
     document.getElementById("screen-1v1-lobby").style.display = "flex";
     let digit = 1;
     if (radarInterval) clearInterval(radarInterval);
-    radarInterval = setInterval(() => { digit = (digit % 50) + 1; document.getElementById("radar-digit").innerText = digit; }, 70);
+    radarInterval = setInterval(() => {
+      digit = (digit % 50) + 1;
+      document.getElementById("radar-digit").innerText = digit;
+    }, 70);
   }
 }
-socket.on("opponent_wants_rematch", () => { showNotificationToast(i18n[currentLang].opp_wants_rematch, "gift"); });
+
+socket.on("opponent_wants_rematch", () => {
+  showNotificationToast(i18n[currentLang].opp_wants_rematch, "gift");
+});
 
 /* ============================================================
-POUVOIRS / HUD
+11. POUVOIRS / HUD
 ============================================================ */
 function preparePowerHUD() {
   const zone = document.getElementById('power-zone');
@@ -764,23 +885,31 @@ function preparePowerHUD() {
 }
 
 function triggerSpecificPower(powerId, btnEl) {
-  const isSolo = document.getElementById('hud-solo').style.display !== 'none';
+  const isSolo = document.getElementById('hud-solo').style.display !== "none";
   const charges = isSolo ? currentSoloCharges : currentMatchCharges;
   if ((charges[powerId] || 0) <= 0 || btnEl.disabled) return;
   charges[powerId]--;
-  btnEl.disabled = true; btnEl.style.opacity = '0.5';
+  btnEl.disabled = true;
+  btnEl.style.opacity = '0.5';
   socket.emit('use_power', powerId);
-  const MALUS = ['quake','micro','eclipse','chaos'];
-  if (MALUS.includes(powerId) && !isSolo) socket.emit('send_malus', { type: powerId });
+  if (MALUS_POWERS.includes(powerId) && !isSolo) socket.emit('send_malus', { type: powerId });
   const currentTarget = parseInt(document.getElementById('game-target-giant').innerText) || 1;
   if (powerId === 'spotlight') {
-    document.querySelectorAll('.tile').forEach(t => { if (parseInt(t.innerText) === currentTarget) { t.classList.add('highlight-target'); setTimeout(() => t.classList.remove('highlight-target'), 2000); } });
+    document.querySelectorAll('.tile').forEach(t => {
+      if (parseInt(t.innerText) === currentTarget) {
+        t.classList.add('highlight-target');
+        setTimeout(() => t.classList.remove('highlight-target'), 2000);
+      }
+    });
   } else if (powerId === 'joker') autoValidateTarget();
   else if (powerId === 'freeze') {
     isTimeFrozen = true;
     const timerEl = document.getElementById('game-timer');
     timerEl.classList.add('frozen');
-    setTimeout(() => { isTimeFrozen = false; timerEl.classList.remove('frozen'); }, 3000);
+    setTimeout(() => {
+      isTimeFrozen = false;
+      timerEl.classList.remove('frozen');
+    }, 3000);
   } else if (powerId === 'nova') {
     autoValidateTarget();
     setTimeout(() => autoValidateTarget(), 250);
@@ -789,14 +918,21 @@ function triggerSpecificPower(powerId, btnEl) {
   setTimeout(() => preparePowerHUD(), 100);
 }
 
-socket.on("power_used_success", () => { if (document.getElementById("screen-game").style.display === "block") preparePowerHUD(); });
-socket.on("power_use_denied", () => { if (document.getElementById("screen-game").style.display === "block") preparePowerHUD(); });
+socket.on("power_used_success", () => {
+  if (document.getElementById("screen-game").style.display === "block") preparePowerHUD();
+});
+
+socket.on("power_use_denied", () => {
+  if (document.getElementById("screen-game").style.display === "block") preparePowerHUD();
+});
 
 function autoValidateTarget() {
   const is1v1 = document.getElementById("hud-1v1").style.display !== "none";
   if (is1v1) {
     const targetVal = parseInt(document.getElementById("game-target-giant").innerText) || 1;
-    document.querySelectorAll("#grid .tile").forEach((t, idx) => { if (parseInt(t.innerText) === targetVal) handle1v1TileClick(targetVal, idx); });
+    document.querySelectorAll("#grid .tile").forEach((t, idx) => {
+      if (parseInt(t.innerText) === targetVal) handle1v1TileClick(targetVal, idx);
+    });
   } else handleSoloTileClick(soloTarget);
 }
 
@@ -806,38 +942,70 @@ socket.on("receive_malus", (data) => {
   SoundEngine.playError();
   showNotificationToast(d.malus_received, "announcement");
   if (!grid) return;
-  if (data.type === "quake") { grid.classList.add("effect-quake"); setTimeout(() => grid.classList.remove("effect-quake"), 2000); }
-  else if (data.type === "micro") { grid.classList.add("effect-micro"); setTimeout(() => grid.classList.remove("effect-micro"), 2000); }
-  else if (data.type === "eclipse") { grid.classList.add("effect-eclipse"); setTimeout(() => grid.classList.remove("effect-eclipse"), 1500); }
-  else if (data.type === "chaos") {
+  if (data.type === "quake") {
     grid.classList.add("effect-quake");
-    setTimeout(() => { grid.classList.remove("effect-quake"); grid.classList.add("effect-micro"); }, 1500);
-    setTimeout(() => { grid.classList.remove("effect-micro"); grid.classList.add("effect-eclipse"); }, 3000);
-    setTimeout(() => { grid.classList.remove("effect-eclipse"); }, 4500);
+    setTimeout(() => grid.classList.remove("effect-quake"), 2000);
+  } else if (data.type === "micro") {
+    grid.classList.add("effect-micro");
+    setTimeout(() => grid.classList.remove("effect-micro"), 2000);
+  } else if (data.type === "eclipse") {
+    grid.classList.add("effect-eclipse");
+    setTimeout(() => grid.classList.remove("effect-eclipse"), 1500);
+  } else if (data.type === "chaos") {
+    grid.classList.add("effect-quake");
+    setTimeout(() => {
+      grid.classList.remove("effect-quake");
+      grid.classList.add("effect-micro");
+    }, 1500);
+    setTimeout(() => {
+      grid.classList.remove("effect-micro");
+      grid.classList.add("effect-eclipse");
+    }, 3000);
+    setTimeout(() => {
+      grid.classList.remove("effect-eclipse");
+    }, 4500);
   }
 });
 
 /* ============================================================
-CLASSEMENT
+12. CLASSEMENT
 ============================================================ */
 let currentLbCategory = "points";
 let currentLbScope = "regional";
 
-function openLeaderboard() { if (!isProfileValid()) { checkAndShowProfileModal(); return; } updateLbRegionLabel(); document.getElementById("modal-leaderboard").style.display = "flex"; updateCombinedExplanationVisibility(); fetchLeaderboard(); }
-function closeLeaderboard() { document.getElementById("modal-leaderboard").style.display = "none"; }
-
-function setLbCategory(cat) {
-  currentLbCategory = cat;
-  ["points", "trophies", "coins", "combined"].forEach(c => { const btn = document.getElementById(`lb-cat-${c}`); if (btn) btn.classList.toggle("active", c === cat); });
+function openLeaderboard() {
+  if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+  updateLbRegionLabel();
+  document.getElementById("modal-leaderboard").style.display = "flex";
   updateCombinedExplanationVisibility();
   fetchLeaderboard();
 }
 
-function updateCombinedExplanationVisibility() { const el = document.getElementById("lb-combined-explanation"); if (el) el.style.display = (currentLbCategory === "combined") ? "block" : "none"; }
+function closeLeaderboard() {
+  document.getElementById("modal-leaderboard").style.display = "none";
+}
+
+function setLbCategory(cat) {
+  currentLbCategory = cat;
+  ["points", "trophies", "coins", "combined"].forEach(c => {
+    const btn = document.getElementById(`lb-cat-${c}`);
+    if (btn) btn.classList.toggle("active", c === cat);
+  });
+  updateCombinedExplanationVisibility();
+  fetchLeaderboard();
+}
+
+function updateCombinedExplanationVisibility() {
+  const el = document.getElementById("lb-combined-explanation");
+  if (el) el.style.display = (currentLbCategory === "combined") ? "block" : "none";
+}
 
 function setLbScope(scope) {
   currentLbScope = scope;
-  ["regional", "national", "global"].forEach(s => { const btn = document.getElementById(`lb-scope-${s}`); if (btn) btn.classList.toggle("active", s === scope); });
+  ["regional", "national", "global"].forEach(s => {
+    const btn = document.getElementById(`lb-scope-${s}`);
+    if (btn) btn.classList.toggle("active", s === scope);
+  });
   fetchLeaderboard();
 }
 
@@ -846,6 +1014,7 @@ function updateLbRegionLabel() {
   const btn = document.getElementById("lb-scope-regional");
   if (btn && myProfile && myProfile.region) btn.innerText = d.lb_regional_label + " (" + myProfile.region + ")";
 }
+
 socket.on("player_registered", () => { updateLbRegionLabel(); });
 
 function fetchLeaderboard() {
@@ -858,10 +1027,16 @@ socket.on("leaderboard_data", (res) => {
   const d = i18n[currentLang];
   const container = document.getElementById("lb-list");
   container.innerHTML = "";
-  if (!res.data || res.data.length === 0) { container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">${d.lb_no_players}</div>`; return; }
+  if (!res.data || res.data.length === 0) {
+    container.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:15px; font-size:11px;">${d.lb_no_players}</div>`;
+    return;
+  }
   const category = res.type ? res.type.split("_")[0] : "points";
   const parsedList = res.data.map(p => parsePlayer(p));
-  if (category === "combined") parsedList.sort((a, b) => { if ((b.trophies - a.trophies) !== 0) return b.trophies - a.trophies; return b.points - a.points; });
+  if (category === "combined") parsedList.sort((a, b) => {
+    if ((b.trophies - a.trophies) !== 0) return b.trophies - a.trophies;
+    return b.points - a.points;
+  });
   parsedList.forEach((p, index) => {
     const row = document.createElement("div");
     row.className = "lb-row";
@@ -902,24 +1077,29 @@ function openPlayerActions(username, e) {
   document.body.appendChild(menu);
   setTimeout(() => document.addEventListener('click', closePlayerActions, { once: true }), 0);
 }
+
 function requestFriendFromMenu(username) {
   socket.emit('send_friend_request', username);
   closePlayerActions();
 }
+
 function closePlayerActions() {
   const m = document.getElementById('player-actions-menu');
   if (m) m.remove();
 }
 
 /* ============================================================
-1V1 / ADVERSAIRE / RÉCAP
+13. 1V1 / ADVERSAIRE / RÉCAP
 ============================================================ */
 function extractOpponentInfo(data) {
   if (!data) return cachedOpponent;
   let rawOpp = data.opponent || data.player2 || data.opp;
   if (!rawOpp && data.players) {
     if (Array.isArray(data.players)) rawOpp = data.players.find(p => (p.socketId || p.id) !== socket.id);
-    else if (typeof data.players === "object") { const oppId = Object.keys(data.players).find(id => id !== socket.id); if (oppId) rawOpp = data.players[oppId]; }
+    else if (typeof data.players === "object") {
+      const oppId = Object.keys(data.players).find(id => id !== socket.id);
+      if (oppId) rawOpp = data.players[oppId];
+    }
   }
   return rawOpp ? parsePlayer(rawOpp) : cachedOpponent;
 }
@@ -942,7 +1122,10 @@ socket.on("start_countdown", (data) => {
   resetCombo();
   comboFXEnabled = false;
   let loadout = (myProfile.equippedPowers && myProfile.equippedPowers.length > 0) ? myProfile.equippedPowers : (myProfile.equippedPower ? [myProfile.equippedPower] : []);
-  loadout.forEach(id => { const stock = myProfile.inventory[id] || 0; if (stock > 0) currentMatchCharges[id] = Math.min((currentMatchCharges[id] || 0) + 1, stock); });
+  loadout.forEach(id => {
+    const stock = myProfile.inventory[id] || 0;
+    if (stock > 0) currentMatchCharges[id] = Math.min((currentMatchCharges[id] || 0) + 1, stock);
+  });
   let oppData = extractOpponentInfo(data);
   if (oppData) updateOpponentDisplay(oppData);
   hideAllScreens();
@@ -968,9 +1151,13 @@ socket.on("start_countdown", (data) => {
       document.getElementById("hud-solo").style.display = "none";
       const towHud = document.getElementById("hud-tow");
       if (data.isTugOfWar) { towHud.style.display = "block"; updateTugOfWarGauge(0); } else towHud.style.display = "none";
-      if (latest1v1StartData) { ensureEquippedGrid(); document.getElementById("game-target-giant").innerText = latest1v1StartData.myTarget || 1; renderGrid(latest1v1StartData.myPool, handle1v1TileClick); }
+      if (latest1v1StartData) {
+        ensureEquippedGrid();
+        document.getElementById("game-target-giant").innerText = latest1v1StartData.myTarget || 1;
+        renderGrid(latest1v1StartData.myPool, handle1v1TileClick);
+      }
       preparePowerHUD();
-      current1v1Time = latest1v1StartData ? latest1v1StartData.timeLeft : 30;
+      current1v1Time = latest1v1StartData ? latest1v1StartData.timeLeft : MATCH_TIME_LIMIT;
       isTimeFrozen = false;
       SoundEngine.startMusic("1v1");
       if (getEquippedThemeId() === "theme_neon" && typeof startNeonFx === "function") startNeonFx();
@@ -978,31 +1165,60 @@ socket.on("start_countdown", (data) => {
   }, 1000);
 });
 
-socket.on("timer_update", (time) => { if (!isTimeFrozen) { current1v1Time = time; document.getElementById("game-timer").innerText = Math.max(0, time); } });
+socket.on("timer_update", (time) => {
+  if (!isTimeFrozen) {
+    current1v1Time = time;
+    document.getElementById("game-timer").innerText = Math.max(0, time);
+  }
+});
+
 socket.on("tug_of_war_update", (data) => { updateTugOfWarGauge(data.ropePosition); });
-function updateTugOfWarGauge(pos) { const ind = document.getElementById("tow-indicator"); if (!ind) return; let percent = 50 + (pos / 6) * 45; ind.style.left = `${Math.max(5, Math.min(95, percent))}%`; }
+
+function updateTugOfWarGauge(pos) {
+  const ind = document.getElementById("tow-indicator");
+  if (!ind) return;
+  let percent = 50 + (pos / 6) * 45;
+  ind.style.left = `${Math.max(5, Math.min(95, percent))}%`;
+}
 
 socket.on("my_grid_updated", (data) => {
   document.getElementById("game-target-giant").innerText = data.target;
   renderGrid(data.newPool, handle1v1TileClick);
-  if (data.success) { SoundEngine.playClick(); registerComboHit(); }
-  else { SoundEngine.playError(); resetCombo(); }
+  if (data.success) {
+    SoundEngine.playClick();
+    registerComboHit();
+  } else {
+    SoundEngine.playError();
+    resetCombo();
+  }
 });
 
-socket.on("opponent_progress", (data) => { document.getElementById("opp-target").innerText = data.target; let o = extractOpponentInfo(data); if (o) updateOpponentDisplay(o); });
+socket.on("opponent_progress", (data) => {
+  document.getElementById("opp-target").innerText = data.target;
+  let o = extractOpponentInfo(data);
+  if (o) updateOpponentDisplay(o);
+});
 
 socket.on("trigger_jackpot_wheel", () => {
   document.getElementById("recap-modal").style.display = "none";
   const wheelModal = document.getElementById("modal-jackpot-wheel");
   const spinBtn = document.getElementById("btn-spin-wheel");
   const wheelEl = document.getElementById("wheel-element");
-  wheelEl.style.transition = "none"; wheelEl.style.transform = "rotate(0deg)";
-  spinBtn.disabled = false; spinBtn.style.opacity = "1";
+  wheelEl.style.transition = "none";
+  wheelEl.style.transform = "rotate(0deg)";
+  spinBtn.disabled = false;
+  spinBtn.style.opacity = "1";
   document.getElementById("wheel-result-text").innerText = "";
   wheelModal.style.display = "flex";
 });
 
-function spinJackpotWheel() { const b = document.getElementById("btn-spin-wheel"); b.disabled = true; b.style.opacity = "0.5"; document.getElementById("wheel-result-text").innerText = ""; socket.emit("spin_jackpot_wheel"); }
+function spinJackpotWheel() {
+  const b = document.getElementById("btn-spin-wheel");
+  b.disabled = true;
+  b.style.opacity = "0.5";
+  document.getElementById("wheel-result-text").innerText = "";
+  socket.emit("spin_jackpot_wheel");
+}
 
 socket.on("jackpot_wheel_result", (data) => {
   const d = i18n[currentLang];
@@ -1012,17 +1228,32 @@ socket.on("jackpot_wheel_result", (data) => {
   wheelEl.style.transition = "transform 3.5s cubic-bezier(0.15,0.75,0.1,1)";
   wheelEl.style.transform = `rotate(${data.targetAngle || randomSpin}deg)`;
   setTimeout(() => {
-    if (data.outcome === "jackpot") { resultText.innerHTML = `🎉 <span style="color:#f8b500;">${d.jackpot_win.replace('X', data.coinDelta)}</span>`; SoundEngine.playVictory(); }
-    else if (data.outcome === "objet") { resultText.innerHTML = `🎁 <span style="color:#00c6ff;">${d.jackpot_item}</span>`; SoundEngine.playVictory(); }
-    else if (data.outcome === "banqueroute") { resultText.innerHTML = `💀 <span style="color:#ff4b2b;">${d.jackpot_lost.replace('X', data.coinDelta)}</span>`; SoundEngine.playError(); }
-    else resultText.innerHTML = `❌ <span style="color:#38ef7d;">${d.jackpot_nothing}</span>`;
-    setTimeout(() => { document.getElementById("modal-jackpot-wheel").style.display = "none"; if (pendingGameOverData) { showGameOverRecap(pendingGameOverData); pendingGameOverData = null; } }, 2200);
+    if (data.outcome === "jackpot") {
+      resultText.innerHTML = `🎉 <span style="color:#f8b500;">${d.jackpot_win.replace('X', data.coinDelta)}</span>`;
+      SoundEngine.playVictory();
+    } else if (data.outcome === "objet") {
+      resultText.innerHTML = `🎁 <span style="color:#00c6ff;">${d.jackpot_item}</span>`;
+      SoundEngine.playVictory();
+    } else if (data.outcome === "banqueroute") {
+      resultText.innerHTML = `💀 <span style="color:#ff4b2b;">${d.jackpot_lost.replace('X', data.coinDelta)}</span>`;
+      SoundEngine.playError();
+    } else resultText.innerHTML = `❌ <span style="color:#38ef7d;">${d.jackpot_nothing}</span>`;
+    setTimeout(() => {
+      document.getElementById("modal-jackpot-wheel").style.display = "none";
+      if (pendingGameOverData) {
+        showGameOverRecap(pendingGameOverData);
+        pendingGameOverData = null;
+      }
+    }, 2200);
   }, 3600);
 });
 
 socket.on("game_over_1v1", (data) => {
   const wheelModal = document.getElementById("modal-jackpot-wheel");
-  if (wheelModal && wheelModal.style.display === "flex") { pendingGameOverData = data; return; }
+  if (wheelModal && wheelModal.style.display === "flex") {
+    pendingGameOverData = data;
+    return;
+  }
   showGameOverRecap(data);
 });
 
@@ -1060,7 +1291,9 @@ function showGameOverRecap(data) {
   const oppData = oppId ? data.players[oppId] : { target: "-", score: 0 };
   rewardDoubled = false;
   const doubleBtn = document.getElementById("btn-double-reward");
-  doubleBtn.disabled = false; doubleBtn.style.opacity = "1"; doubleBtn.innerText = d.double_reward;
+  doubleBtn.disabled = false;
+  doubleBtn.style.opacity = "1";
+  doubleBtn.innerText = d.double_reward;
   const rematchBtn = document.getElementById("btn-rematch");
   if (rematchBtn) {
     if (data.isRanked) { rematchBtn.style.display = "none"; }
@@ -1071,7 +1304,10 @@ function showGameOverRecap(data) {
   const winnerId = data.winnerId;
   const isWinner = (winnerId === myId);
   const cinematic = document.getElementById("winner-cinematic-container");
-  if (modalCard) { modalCard.classList.remove("defeat-theme"); if (!isWinner && winnerId) modalCard.classList.add("defeat-theme"); }
+  if (modalCard) {
+    modalCard.classList.remove("defeat-theme");
+    if (!isWinner && winnerId) modalCard.classList.add("defeat-theme");
+  }
   let winnerObj = null;
   if (winnerId) {
     if (winnerId === myId) winnerObj = { username: myProfile.username, avatar: myProfile.avatar, flag: myProfile.flag, inventory: myProfile.inventory, unlocked_items: myProfile.unlocked_items };
@@ -1080,9 +1316,17 @@ function showGameOverRecap(data) {
   }
   if (winnerObj) cinematic.innerHTML = getWinnerAvatarShowcaseHTML(winnerObj);
   else cinematic.innerHTML = `<div class="victory-avatar-showcase"><div style="font-size:28px; margin-bottom:4px;">🤝</div><div style="font-size:13px; font-weight:900; color:#00d2ff;">${d.equality}</div></div>`;
-  if (isWinner) { banner.innerText = d.victory_supreme; banner.style.color = "#00ff88"; SoundEngine.playVictory(); }
-  else if (winnerId) { banner.innerText = d.defeat_bitter; banner.style.color = "#ff4b2b"; }
-  else { banner.innerText = d.equality_timeout; banner.style.color = "#ff8a00"; }
+  if (isWinner) {
+    banner.innerText = d.victory_supreme;
+    banner.style.color = "#00ff88";
+    SoundEngine.playVictory();
+  } else if (winnerId) {
+    banner.innerText = d.defeat_bitter;
+    banner.style.color = "#ff4b2b";
+  } else {
+    banner.innerText = d.equality_timeout;
+    banner.style.color = "#ff8a00";
+  }
   document.getElementById("recap-reason").innerText = data.reason;
   document.getElementById("recap-my-target").innerText = myData ? myData.target : "-";
   document.getElementById("recap-opp-target").innerText = oppData ? oppData.target : "-";
@@ -1095,7 +1339,7 @@ function showGameOverRecap(data) {
 }
 
 /* ============================================================
-RÉCOMPENSES SOLO
+14. RÉCOMPENSES SOLO
 ============================================================ */
 socket.on("solo_reward_result", (data) => {
   const d = i18n[currentLang];
@@ -1127,7 +1371,7 @@ socket.on("solo_reward_result", (data) => {
 });
 
 /* ============================================================
-TROPHÉES : handler de déblocage (popup dorée)
+15. TROPHÉES : handler de déblocage (popup dorée)
 ============================================================ */
 socket.on('trophy_unlocked', (trophies) => {
   const d = i18n[currentLang];
@@ -1147,12 +1391,15 @@ socket.on('trophy_unlocked', (trophies) => {
 function handle1v1TileClick(num, index) {
   if (current1v1Time <= 0) return;
   const tiles = document.querySelectorAll("#grid .tile");
-  if (tiles[index]) { tiles[index].classList.add("ripple-active"); setTimeout(() => tiles[index].classList.remove("ripple-active"), 400); }
+  if (tiles[index]) {
+    tiles[index].classList.add("ripple-active");
+    setTimeout(() => tiles[index].classList.remove("ripple-active"), 400);
+  }
   socket.emit("player_click_1v1", index);
 }
 
 /* ============================================================
-ENTRAÎNEMENT SOLO
+16. ENTRAÎNEMENT SOLO
 ============================================================ */
 function startSoloTraining(mode) {
   const d = i18n[currentLang];
@@ -1163,7 +1410,9 @@ function startSoloTraining(mode) {
   if (activeTrainingMode === "random") setGameModeBadge(d.badge_solo_random, "#00ff88");
   else setGameModeBadge(d.badge_solo_classic, "#00d2ff");
   soloTarget = (activeTrainingMode === "random") ? Math.floor(Math.random() * 50) + 1 : 1;
-  soloScore = 0; soloTimeLeft = 50; isTimeFrozen = false;
+  soloScore = 0;
+  soloTimeLeft = SOLO_TIME_LIMIT;
+  isTimeFrozen = false;
   currentSoloCharges = {};
   resetCombo();
   comboFXEnabled = true;
@@ -1180,13 +1429,21 @@ function startSoloTraining(mode) {
   generateSoloGrid();
   SoundEngine.startMusic("solo");
   if (getEquippedThemeId() === "theme_neon" && typeof startNeonFx === "function") startNeonFx();
-  soloTimerInterval = setInterval(() => { if (!isTimeFrozen) { soloTimeLeft--; document.getElementById("game-timer").innerText = Math.max(0, soloTimeLeft); if (soloTimeLeft <= 0) endSoloGame(); } }, 1000);
+  soloTimerInterval = setInterval(() => {
+    if (!isTimeFrozen) {
+      soloTimeLeft--;
+      document.getElementById("game-timer").innerText = Math.max(0, soloTimeLeft);
+      if (soloTimeLeft <= 0) endSoloGame();
+    }
+  }, 1000);
 }
 
 function generateSoloGrid() {
   let pool = [soloTarget];
   let candidates = [];
-  for (let i = 1; i <= 50; i++) { if (i !== soloTarget) candidates.push(i); }
+  for (let i = 1; i <= 50; i++) {
+    if (i !== soloTarget) candidates.push(i);
+  }
   candidates.sort(() => Math.random() - 0.5);
   pool = pool.concat(candidates.slice(0, 11)).sort(() => Math.random() - 0.5);
   renderGrid(pool, handleSoloTileClick);
@@ -1239,7 +1496,7 @@ function handleSoloTileClick(num, index) {
 }
 
 /* ============================================================
-AVALANCHE
+17. AVALANCHE
 ============================================================ */
 function startAvalancheGame(speed, initialCount) {
   const d = i18n[currentLang];
@@ -1252,7 +1509,7 @@ function startAvalancheGame(speed, initialCount) {
   document.getElementById("hud-1v1").style.display = "none";
   document.getElementById("hud-tow").style.display = "none";
   soloScore = 0;
-  avalancheTimeLeft = 30;
+  avalancheTimeLeft = AVALANCHE_TIME_LIMIT;
   isTimeFrozen = false;
   resetCombo();
   comboFXEnabled = true;
@@ -1320,21 +1577,12 @@ function renderAvalancheGrid() {
   const grid = document.getElementById("grid");
   if (!grid) return;
   grid.innerHTML = "";
-  const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
-  const isAltTheme = equippedTheme === "theme_alt";
-  const isGlacialTheme = equippedTheme === "theme_glacial";
-  const isEclairTheme = equippedTheme === "theme_eclair";
-  const isNeonTheme = equippedTheme === "theme_neon";
-  const isObsidianTheme = equippedTheme === "theme_obsidian";
-  const isCitrouilleTheme = equippedTheme === "theme_citrouille";
-  const isFantomeTheme = equippedTheme === "theme_fantome";
-  const isBonbonTheme = equippedTheme === "theme_bonbon";
-  const isSapinTheme = equippedTheme === "theme_sapin";
-  const isLutinTheme = equippedTheme === "theme_lutin";
   avalancheGridData.forEach((val, idx) => {
     const tile = document.createElement("div");
     if (val !== null) {
-      tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""} ${isObsidianTheme ? "obsidian-theme" : ""} ${isCitrouilleTheme ? "citrouille-theme" : ""} ${isFantomeTheme ? "fantome-theme" : ""} ${isBonbonTheme ? "bonbon-theme" : ""} ${isSapinTheme ? "sapin-theme" : ""} ${isLutinTheme ? "lutin-theme" : ""}`;
+      tile.className = "tile";
+      const themeClass = getEquippedThemeId() ? `${getEquippedThemeId().replace('theme_', '')}-theme` : "";
+      if (themeClass) tile.classList.add(themeClass);
       tile.innerText = val;
       tile.onclick = () => handleAvalancheClick(val, idx);
     } else {
@@ -1366,7 +1614,7 @@ function handleAvalancheClick(val, idx) {
 }
 
 /* ============================================================
-FIN DE PARTIE SOLO
+18. FIN DE PARTIE SOLO
 ============================================================ */
 function endSoloGame() {
   const d = i18n[currentLang];
@@ -1411,7 +1659,7 @@ function endSoloGame() {
 }
 
 /* ============================================================
-SALLE DES TROPHÉES — fonctions client
+19. SALLE DES TROPHÉES
 ============================================================ */
 function openTrophyRoom(targetUsername = null) {
   document.getElementById('modal-trophy-room').style.display = 'flex';
@@ -1440,21 +1688,17 @@ socket.on('trophy_room_data', (data) => {
   document.getElementById('trophy-room-username').innerText = data.username;
   const unlockedCount = Object.keys(data.trophies_collection || {}).length;
   document.getElementById('trophy-room-count').innerText = `${unlockedCount}/16 🏆`;
-
   const shelvesContainer = document.getElementById('trophy-room-shelves');
   shelvesContainer.innerHTML = '';
   const TROPHY_CATALOG = getTrophyCatalogClient();
   const TROPHY_SHELVES = getTrophyShelves();
-
   TROPHY_SHELVES.forEach(shelf => {
     const shelfEl = document.createElement('div');
     shelfEl.className = 'trophy-shelf';
     const shelfTrophies = Object.entries(TROPHY_CATALOG).filter(([_, t]) => t.shelf === shelf.id);
-
     shelfEl.innerHTML = `<div class="trophy-shelf-title" style="color:${shelf.color}; text-shadow:0 0 8px ${shelf.color};">${shelf.label}</div>`;
     const grid = document.createElement('div');
     grid.className = 'trophy-shelf-grid';
-
     shelfTrophies.forEach(([id, trophy]) => {
       const isUnlocked = !!(data.trophies_collection && data.trophies_collection[id]);
       const vitrine = document.createElement('div');
@@ -1469,13 +1713,13 @@ socket.on('trophy_room_data', (data) => {
       vitrine.onmouseleave = hideTrophyTooltip;
       grid.appendChild(vitrine);
     });
-
     shelfEl.appendChild(grid);
     shelvesContainer.appendChild(shelfEl);
   });
 });
 
 let tooltipEl = null;
+
 function showTrophyTooltip(e, trophy, playerData, isUnlocked) {
   const d = i18n[currentLang];
   hideTrophyTooltip();
@@ -1499,32 +1743,25 @@ function moveTrophyTooltip(e) {
 }
 
 function hideTrophyTooltip() {
-  if (tooltipEl) { tooltipEl.remove(); tooltipEl = null; }
+  if (tooltipEl) {
+    tooltipEl.remove();
+    tooltipEl = null;
+  }
 }
 
 /* ============================================================
-RENDU DE LA GRILLE
+20. RENDU DE LA GRILLE
 ============================================================ */
 function renderGrid(pool, handler) {
   const grid = document.getElementById("grid");
   if (!grid) return;
   grid.innerHTML = "";
-  if (!pool) return;  
-  const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
-
-  const isAltTheme = equippedTheme === "theme_alt";
-  const isGlacialTheme = equippedTheme === "theme_glacial";
-  const isEclairTheme = equippedTheme === "theme_eclair";
-  const isNeonTheme = equippedTheme === "theme_neon";
-  const isObsidianTheme = equippedTheme === "theme_obsidian";
-  const isCitrouilleTheme = equippedTheme === "theme_citrouille";
-  const isFantomeTheme = equippedTheme === "theme_fantome";
-  const isBonbonTheme = equippedTheme === "theme_bonbon";
-  const isSapinTheme = equippedTheme === "theme_sapin";
-  const isLutinTheme = equippedTheme === "theme_lutin";
+  if (!pool) return;
+  const themeClass = getEquippedThemeId() ? `${getEquippedThemeId().replace('theme_', '')}-theme` : "";
   pool.forEach((num, index) => {
     const tile = document.createElement("div");
-    tile.className = `tile ${isAltTheme ? "alt-theme" : ""} ${isGlacialTheme ? "glacial-theme" : ""} ${isEclairTheme ? "eclair-theme" : ""} ${isNeonTheme ? "neon-theme" : ""} ${isObsidianTheme ? "obsidian-theme" : ""} ${isCitrouilleTheme ? "citrouille-theme" : ""} ${isFantomeTheme ? "fantome-theme" : ""} ${isBonbonTheme ? "bonbon-theme" : ""} ${isSapinTheme ? "sapin-theme" : ""} ${isLutinTheme ? "lutin-theme" : ""}`;
+    tile.className = "tile";
+    if (themeClass) tile.classList.add(themeClass);
     tile.innerText = num;
     tile.onclick = () => handler(num, index);
     grid.appendChild(tile);
