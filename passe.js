@@ -214,8 +214,8 @@ function getSeasonsClient() {
       id: "s1",
       name: fr ? "FÉLIN & NÉON" : "FELINE & NEON",
       emoji: "🐱",
-      start: "01/06/2026",
-      end: "30/09/2026",
+      start: "01/10/2026", 
+      end: "31/10/2026",
       tiers: [
         { tier: 1, free: "50" + PC, premium: fr ? "Titre exclusif « [ Stalker Numérique ] »" : "Exclusive title « [ Digital Stalker ] »" },
         { tier: 2, free: "1 💡 " + PROJ, premium: "100" + PC },
@@ -253,7 +253,7 @@ function getSeasonsClient() {
       id: "s2",
       name: "HALLOWEEN",
       emoji: "🎃",
-      start: "01/10/2026",
+      start: "01/11/2026",
       end: "30/11/2026",
       tiers: [
         { tier: 1, free: "50" + PC, premium: fr ? "Titre « [ Chuchoteur de Fantômes ] » 👻" : "Title « [ Ghost Whisperer ] » 👻" },
