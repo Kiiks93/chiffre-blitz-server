@@ -798,8 +798,8 @@ function renderAccountContent() {
   } else {
     content.innerHTML = `
       <p style="font-size:12px; text-align:center;">${d.account_connected} <b style="color:#00ff88;">${myProfile.username}</b></p>
-      <button class="btn-main btn-gold" onclick="showChangeCodeModal()" style="margin-bottom:6px;">🔑 Changer mon code secret</button>
-      <button class="btn-main" onclick="showRecoveryKeyModal()" style="background:linear-gradient(45deg,#f8b500,#ff8a00); margin-bottom:6px;">🔐 Voir ma clé de récupération</button>
+      <button class="btn-main btn-gold" onclick="showChangeCodeModal()" style="margin-bottom:6px;">${d.account_change_code}</button>
+      <button class="btn-main" onclick="showRecoveryKeyModal()" style="background:linear-gradient(45deg,#f8b500,#ff8a00); margin-bottom:6px;">${d.account_recovery_key}</button>
       <button class="btn-main btn-blue" onclick="switchAccount()" style="margin-bottom:6px;">${d.account_change}</button>
       <button class="btn-main" onclick="startCreateAccount()" style="background:linear-gradient(45deg,#f8b500,#fceabb); color:#222; margin-bottom:6px;">${d.account_create}</button>
       <button class="btn-main" onclick="askDeleteAccount()" style="background:linear-gradient(45deg,#ff416c,#7a0026);">${d.account_delete}</button>`;
@@ -825,7 +825,7 @@ function showChangeCodeModal() {
         <div id="change-code-result" style="min-height:16px; font-size:11px; text-align:center; font-weight:bold; margin-bottom:8px;"></div>
         <div style="display:flex; gap:6px;">
           <button class="btn-secondary" onclick="closeChangeCodeModal()" style="margin-top:0;">${d.cancel}</button>
-          <button class="btn-main btn-gold" onclick="submitChangeCode()" style="margin-top:0;">${d.ranked_start_btn}</button>
+          <button class="btn-main btn-gold" onclick="submitChangeCode()" style="margin-top:0;">${d.change_code_validate}</button>
         </div>
       </div>`;
     document.body.appendChild(modal);
@@ -863,7 +863,7 @@ socket.on('change_code_result', (d) => {
     localStorage.setItem('cb_secret', myProfile.secretCode);
     setTimeout(() => {
       closeChangeCodeModal();
-      alert('✅ N\'oublie pas ton nouveau code !');
+      alert(i18n[currentLang].change_code_reminder);
     }, 1200);
   }
 });
