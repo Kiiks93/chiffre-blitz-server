@@ -3,6 +3,32 @@ const http = require('http');
 const { Server } = require('socket.io');
 const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
+const RECOVERY_SECRET = process.env.RECOVERY_SECRET || 'change-moi-en-prod-une-longue-chaine-secrete';
+
+function generateRecoveryKey(username) {
+  return crypto.createHmac('sha256', RECOVERY_SECRET)
+    .update(String(username).toLowerCase().trim())
+    .digest('hex')
+    .substring(0, 12)
+    .toUpperCase()
+    .match(/.{4}/g)
+    .join('-');
+}
+
+function generateSecureCode() {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*+-';
+  let code = '';
+  for (let i = 0; i < 10; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+function isStrongCode(code) {
+  if (!code || code.length < 8) return false;
+  const hasLetter = /[a-zA-Z]/.test(code);
+  const hasDigit = /\d/.test(code);
+  const hasSpecial = /[!@#$%&*+\-_=]/.test(code);
+  return hasLetter && hasDigit && hasSpecial;
+}
 function hashSecret(code) { return crypto.createHash('sha256').update(String(code)).digest('hex'); }
 function isHashed(v) { return /^[a-f0-9]{64}$/.test(v || ''); }
 
@@ -924,6 +950,47 @@ io.on('connection', (socket) => {
     if (!clean || !itemId) return;
     const isPower = kind === 'item' && ITEM_CATALOG[itemId] && ITEM_CATALOG[itemId].type === 'power';
 
+    /* ---------- ADMIN : RÉINITIALISER CODE D'UN JOUEUR ---------- */
+  socket.on('admin_reset_password', async (data) => {
+    if (!socket.isAdmin) return;
+    const targetUsername = (data && data.username || '').trim();
+    const providedKey = (data && data.recoveryKey || '').trim().toUpperCase().replace(/\s/g, '');
+    if (!targetUsername || !providedKey) { socket.emit('admin_reset_result', { ok: false, message: 'Pseudo et clé requis.' }); return; }
+
+    // Vérifie la clé
+    const expectedKey = generateRecoveryKey(targetUsername).replace(/-/g, '');
+    if (providedKey !== expectedKey) {
+      socket.emit('admin_reset_result', { ok: false, message: '❌ Clé de récupération incorrecte.' });
+      return;
+    }
+
+    // Génère un nouveau code
+    const newCode = generateSecureCode();
+    try {
+      const { data: matched, error } = await supabase.from('players').select('*').ilike('username', targetUsername).limit(1);
+      if (error || !matched || matched.length === 0) { socket.emit('admin_reset_result', { ok: false, message: 'Pseudo introuvable.' }); return; }
+      const row = matched[0];
+      await supabase.from('players').update({ secret_code: hashSecret(newCode) }).eq('id', row.id);
+
+      // Si le joueur est en ligne, on le déconnecte (son localStorage devient invalide)
+      for (const sId in activePlayers) {
+        if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === row.username.toLowerCase()) {
+          io.to(sId).emit('force_logout', { reason: 'password_reset' });
+        }
+      }
+
+      socket.emit('admin_reset_result', {
+        ok: true,
+        message: `✅ Nouveau code pour ${row.username} : ${newCode}`,
+        newCode,
+        username: row.username
+      });
+      logPlayerAction({ username: row.username, socketId: null }, 'admin_reset_password', 'Réinitialisation par admin (clé vérifiée)');
+    } catch (e) {
+      socket.emit('admin_reset_result', { ok: false, message: 'Erreur serveur : ' + e.message });
+    }
+  });
+
     // --- Joueur EN LIGNE ---
     let targetId = null;
     for (const sId in activePlayers) {
@@ -972,6 +1039,46 @@ io.on('connection', (socket) => {
     logPlayerAction({ username: row.username, socketId: null }, 'admin_give_item', 'Don admin (hors-ligne) : ' + itemId);
     socket.emit('admin_give_result', { ok: true, message: itemId + ' → ' + row.username + ' (hors-ligne)' });
   });
+
+    /* ---------- JOUEUR : VOIR SA CLÉ DE RÉCUPÉRATION ---------- */
+  socket.on('get_recovery_key', (data) => {
+    const player = activePlayers[socket.id];
+    if (!player) return;
+    const providedCode = (data && data.secretCode) || '';
+    // Vérifie le code actuel
+    supabase.from('players').select('secret_code').eq('id', player.dbId).single().then(({ data: row, error }) => {
+      if (error || !row) { socket.emit('recovery_key_result', { ok: false, message: 'Erreur serveur.' }); return; }
+      const stored = (row.secret_code || '').trim();
+      const okCode = isHashed(stored) ? (hashSecret(providedCode) === stored) : (stored.toLowerCase() === providedCode.toLowerCase());
+      if (!okCode) { socket.emit('recovery_key_result', { ok: false, message: 'Code secret incorrect.' }); return; }
+      const key = generateRecoveryKey(player.username);
+      socket.emit('recovery_key_result', { ok: true, key });
+    });
+  });
+
+  /* ---------- JOUEUR : CHANGER SON CODE SECRET ---------- */
+  socket.on('change_secret_code', async (data) => {
+    const player = activePlayers[socket.id];
+    if (!player) return;
+    const oldCode = (data && data.oldCode) || '';
+    const newCode = (data && data.newCode) || '';
+    if (!isStrongCode(newCode)) {
+      socket.emit('change_code_result', { ok: false, message: 'Le nouveau code doit faire 8+ caractères avec lettres, chiffres et caractère spécial (!@#$%&*+-_).' });
+      return;
+    }
+    try {
+      const { data: row, error } = await supabase.from('players').select('secret_code').eq('id', player.dbId).single();
+      if (error || !row) { socket.emit('change_code_result', { ok: false, message: 'Erreur serveur.' }); return; }
+      const stored = (row.secret_code || '').trim();
+      const okOld = isHashed(stored) ? (hashSecret(oldCode) === stored) : (stored.toLowerCase() === oldCode.toLowerCase());
+      if (!okOld) { socket.emit('change_code_result', { ok: false, message: 'Ancien code incorrect.' }); return; }
+      await supabase.from('players').update({ secret_code: hashSecret(newCode) }).eq('id', player.dbId);
+      socket.emit('change_code_result', { ok: true, message: '✅ Code secret changé avec succès !' });
+    } catch (e) {
+      socket.emit('change_code_result', { ok: false, message: 'Erreur serveur.' });
+    }
+  });
+
   /* ---------- STATS : joueurs réellement en ligne ---------- */
   socket.on('admin_get_stats', () => {
     if (!socket.isAdmin) return;
