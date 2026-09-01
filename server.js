@@ -188,9 +188,9 @@ function ownsItemOrPack(player, itemId) {
 SAISONS
 ============================================================ */
 const SEASONS = [
-  { id: "s1", name: "Felin & Neon", start: "2026-06-01", end: "2026-09-30" },
-  { id: "s2", name: "Halloween", start: "2026-10-01", end: "2026-11-30" },
-  { id: "s3", name: "Noël", start: "2026-12-01", end: "2027-01-10" }
+  { id: "s1", name: "Felin & Neon", start: "2026-10-01", end: "2026-10-31" },
+  { id: "s2", name: "Halloween",   start: "2026-11-01", end: "2026-11-30" },
+  { id: "s3", name: "Noël",        start: "2026-12-01", end: "2027-01-10" }
 ];
 let seasonOverride = null;
 function getCurrentSeason() {
