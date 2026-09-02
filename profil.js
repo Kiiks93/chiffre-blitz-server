@@ -974,7 +974,7 @@ function submitAccountForm() {
   if (!myProfile.region) myProfile.region = 'Hauts-de-France';
   if (!myProfile.avatar) myProfile.avatar = 1;
   if (!myProfile.flag) myProfile.flag = '🇫🇷';
-  pendingAccountLogin = true;     // ✅ TOUJOURS à true avant l'emit
+  pendingAccountLogin = true;
   
   if (socket.connected) {
     socket.emit("register_player", {
@@ -986,9 +986,8 @@ function submitAccountForm() {
       secretCode: myProfile.secretCode,
       mode: 'create',
       timezone: getPlayerTimezone()
-      mode: 'create'
     });
-  } else {
+} else {
     alert('❌ Connexion au serveur perdue. Réessaie dans quelques secondes.');
     pendingAccountLogin = false;
   }
