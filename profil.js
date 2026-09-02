@@ -149,6 +149,10 @@ const PACKS_LIST = [
 /* ============================================================
 4. HELPERS PROFIL
 ============================================================ */
+function getPlayerTimezone() {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Paris'; }
+  catch (e) { return 'Europe/Paris'; }
+}
 function getFlagEmoji(flag) {
   if (!flag) return "🇫🇷";
   let cleanFlag = flag.replace(/['"]/g, "").trim();
@@ -980,6 +984,8 @@ function submitAccountForm() {
       flag: myProfile.flag,
       inventory: myProfile.inventory || {},
       secretCode: myProfile.secretCode,
+      mode: 'create',
+      timezone: getPlayerTimezone()
       mode: 'create'
     });
   } else {
@@ -1209,7 +1215,8 @@ function registerIfPossible() {
       username: myProfile.username, region: myProfile.region, avatar: myProfile.avatar, flag: myProfile.flag,
       inventory: myProfile.inventory,
       secretCode: myProfile.secretCode || localStorage.getItem('cb_secret') || '',
-      mode: isReturning ? 'login' : (profileMode || 'create')
+      mode: isReturning ? 'login' : (profileMode || 'create'),
+      timezone: getPlayerTimezone()
     });
   }
 }
