@@ -940,7 +940,7 @@ function submitAccountForm() {
       region: myProfile.region,
       avatar: myProfile.avatar,
       flag: myProfile.flag,
-      inventory: myProfile.inventory || {},
+      inventory: myProfile.inventory || {}, secretCode: myProfile.secretCode, mode: 'create'
       secretCode: myProfile.secretCode,
       mode: 'login'
     });
