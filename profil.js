@@ -198,10 +198,11 @@ function getFrameClass(equippedFrame) {
 
 function isStrongCode(code) {
   if (!code || code.length < CONFIG.MIN_CODE_LENGTH) return false;
-  const hasLetter = /[a-zA-Z]/.test(code);
+  const hasLower = /[a-z]/.test(code);
+  const hasUpper = /[A-Z]/.test(code);
   const hasDigit = /\d/.test(code);
   const hasSpecial = /[!@#$%&*+\-_=]/.test(code);
-  return hasLetter && hasDigit && hasSpecial;
+  return hasLower && hasUpper && hasDigit && hasSpecial;
 }
 
 /* ============================================================
@@ -793,14 +794,15 @@ function renderAccountContent() {
       <button class="btn-main btn-blue" onclick="switchAccount()" style="margin-bottom:6px;">${d.account_change}</button>
       <button class="btn-main btn-gold" onclick="startCreateAccount()" style="margin-bottom:6px;">${d.account_create}</button>
       <button class="btn-main" onclick="askDeleteAccount()" style="background:linear-gradient(45deg,#ff4b6b,#8b0000);">${d.account_delete}</button>`;
-  } else {
+   } else {
     content.innerHTML = `
       <p style="font-size:11px; text-align:center; color:#aaa; margin-bottom:8px;">${d.account_desc}</p>
       <div style="background:rgba(248,181,0,0.12); border:1px solid #f8b500; border-radius:8px; padding:8px; margin-bottom:10px; font-size:10px; color:#f8b500; text-align:center; line-height:1.4;">
         ⚠️ ${d.account_key_warning}
       </div>
       <input id="account-username" placeholder="${d.account_username_ph}" maxlength="16" style="width:100%; margin-bottom:6px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
-      <input id="account-secret" type="password" placeholder="${d.account_secret_ph}" maxlength="32" style="width:100%; margin-bottom:10px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
+      <input id="account-secret" type="password" placeholder="${d.account_secret_ph}" maxlength="32" style="width:100%; margin-bottom:4px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
+      <div style="font-size:9px; color:#aaa; text-align:center; margin-bottom:10px; line-height:1.4;">${d.account_secret_help}</div>
       <button class="btn-main btn-blue" onclick="submitAccountForm()" style="width:100%;">${d.account_submit}</button>`;
   }
 }
@@ -922,7 +924,7 @@ function submitAccountForm() {
   }
   
   if (!isStrongCode(code)) {
-    alert('⚠️ Code trop faible !\n\nUn code fort doit contenir :\n• 8+ caractères\n• Des lettres\n• Des chiffres\n• Un caractère spécial (!@#$%&*+-_)\n\nExemple : Blitz2026!');
+    alert('⚠️ Code trop faible !\n\nUn code fort doit contenir :\n• 8+ caractères\n• 1 MAJUSCULE\n• 1 minuscule\n• 1 chiffre\n• 1 caractère spécial (!@#$%&*+-_)\n\nExemple : Blitz2026!');
     return;
   }
   
