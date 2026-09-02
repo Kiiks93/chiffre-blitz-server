@@ -395,26 +395,30 @@ function renderBlitzPass() {
   const scroll = document.createElement("div");
   scroll.className = "bp-track-scroll";
   
-  season.tiers.forEach(t => {
+    season.tiers.forEach(t => {
     const freeKey = `${t.tier}_free`, premKey = `${t.tier}_premium`;
     const isFreeClaimed = claimed[freeKey], isPremClaimed = claimed[premKey];
-    const isLocked = t.tier > unlockedTier;
+    
+    // ✅ Verrouillage séparé : FREE = jours débloqués, PREMIUM = jours + passe acheté
+    const isLockedFree = t.tier > unlockedTier;
+    const isLockedPrem = (t.tier > unlockedTier) || !isPremium;
     
     const col = document.createElement("div");
     col.className = "bp-tier-col";
     col.id = "bp-card-" + t.tier;
     
-    const lockOverlay = isLocked ? `<div style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; font-size:24px; z-index:10; border-radius:8px;">🔒</div>` : '';
+    const lockOverlayFree = isLockedFree ? `<div style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; font-size:24px; z-index:10; border-radius:8px;">🔒</div>` : '';
+    const lockOverlayPrem = isLockedPrem ? `<div style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; font-size:24px; z-index:10; border-radius:8px;">🔒</div>` : '';
     
     col.innerHTML = `
       <div class="bp-cell bp-prem ${isPremClaimed ? 'claimed' : ''}" onclick="claimPassReward(${t.tier},'premium')" style="position:relative;">
-        ${lockOverlay}
+        ${lockOverlayPrem}
         <div class="bp-ribbon">⭐ PREMIUM</div>
         ${rewardVisualHTML(season.id, t.tier, 'premium', t.premium)}
       </div>
       <div class="bp-tier-num">${t.tier}</div>
       <div class="bp-cell bp-free ${isFreeClaimed ? 'claimed' : ''}" onclick="claimPassReward(${t.tier},'free')" style="position:relative;">
-        ${lockOverlay}
+        ${lockOverlayFree}
         <div class="bp-ribbon free">${currentLang === "fr" ? "GRATUIT" : "FREE"}</div>
         ${rewardVisualHTML(season.id, t.tier, 'free', t.free)}
       </div>`;
