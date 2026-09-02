@@ -784,25 +784,31 @@ function closeAccountModal() {
 
 function renderAccountContent() {
   const d = i18n[currentLang];
-  const content = document.getElementById('account-content');
+  const content = document.getElementById("account-modal-content");
   if (!content) return;
-  const connected = isProfileValid() && localStorage.getItem('cb_secret');
-  const inputStyle = 'width:100%; background:#0f051d; color:#fff; border:2px solid #00d2ff; border-radius:8px; padding:8px; font-size:13px; margin-bottom:6px; box-sizing:border-box; text-align:center;';
-  
-  if (!connected) {
-    content.innerHTML = `
-      <p style="font-size:10px; color:#aaa; text-align:center;">${d.account_login_desc}</p>
-      <input id="account-pseudo" type="text" placeholder="${d.account_pseudo_ph}" style="${inputStyle}">
-      <input id="account-code" type="password" placeholder="${d.account_code_ph}" style="${inputStyle}">
-      <button class="btn-main btn-blue" onclick="submitAccountForm()">${d.account_login_btn}</button>`;
-  } else {
+  const connected = isProfileValid();
+
+  if (connected) {
+    // Connecté : menu du compte (avec Fermer)
     content.innerHTML = `
       <p style="font-size:12px; text-align:center;">${d.account_connected} <b style="color:#00ff88;">${myProfile.username}</b></p>
       <button class="btn-main btn-gold" onclick="showChangeCodeModal()" style="margin-bottom:6px;">${d.account_change_code}</button>
       <button class="btn-main" onclick="showRecoveryKeyModal()" style="background:linear-gradient(45deg,#f8b500,#ff8a00); margin-bottom:6px;">${d.account_recovery_key}</button>
       <button class="btn-main btn-blue" onclick="switchAccount()" style="margin-bottom:6px;">${d.account_change}</button>
-      <button class="btn-main" onclick="startCreateAccount()" style="background:linear-gradient(45deg,#f8b500,#fceabb); color:#222; margin-bottom:6px;">${d.account_create}</button>
-      <button class="btn-main" onclick="askDeleteAccount()" style="background:linear-gradient(45deg,#ff416c,#7a0026);">${d.account_delete}</button>`;
+      <button class="btn-main btn-gold" onclick="startCreateAccount()" style="margin-bottom:6px;">${d.account_create}</button>
+      <button class="btn-main" onclick="askDeleteAccount()" style="background:linear-gradient(45deg,#ff4b6b,#8b0000);">${d.account_delete}</button>
+      <button class="btn-secondary" onclick="closeAccountModal()" style="margin-top:6px;">${d.close}</button>`;
+  } else {
+    // ✅ NON connecté : écran OBLIGATOIRE, sans bouton Fermer
+    content.innerHTML = `
+      <p style="font-size:11px; text-align:center; color:#aaa; margin-bottom:8px;">${d.account_desc}</p>
+      <div style="background:rgba(248,181,0,0.12); border:1px solid #f8b500; border-radius:8px; padding:8px; margin-bottom:10px; font-size:10px; color:#f8b500; text-align:center; line-height:1.4;">
+        ⚠️ ${d.account_key_warning}
+      </div>
+      <input id="account-username" placeholder="${d.account_username_ph}" maxlength="16" style="width:100%; margin-bottom:6px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
+      <input id="account-secret" type="password" placeholder="${d.account_secret_ph}" maxlength="32" style="width:100%; margin-bottom:10px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
+      <button class="btn-main btn-blue" onclick="submitAccountForm()" style="width:100%;">${d.account_submit}</button>`;
+    //  PAS de bouton Fermer → le joueur doit créer un compte
   }
 }
 
