@@ -908,8 +908,8 @@ socket.on('force_logout', (data) => {
 });
 
 function submitAccountForm() {
-  const pseudo = (document.getElementById('account-pseudo').value || '').trim();
-  const code = (document.getElementById('account-code').value || '').trim();
+  const pseudo = (document.getElementById('account-username').value || '').trim();
+  const code = (document.getElementById('account-secret').value || '').trim();
   
   if (pseudo.length < CONFIG.MIN_PSEUDO_LENGTH) {
     alert('Pseudo : 3 caractères minimum.');
