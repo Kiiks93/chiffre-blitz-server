@@ -946,9 +946,9 @@ function submitAccountForm() {
       region: myProfile.region,
       avatar: myProfile.avatar,
       flag: myProfile.flag,
-      inventory: myProfile.inventory || {}, secretCode: myProfile.secretCode, mode: 'create'
+      inventory: myProfile.inventory || {},
       secretCode: myProfile.secretCode,
-      mode: 'login'
+      mode: 'create'
     });
   } else {
     alert('❌ Connexion au serveur perdue. Réessaie dans quelques secondes.');
@@ -1221,20 +1221,20 @@ socket.on('register_result', (res) => {
     localStorage.removeItem('cb_equipped_title'); localStorage.removeItem('cb_equipped_frame'); localStorage.removeItem('cb_equipped_theme');
     myProfile.username = ''; myProfile.secretCode = ''; myProfile.inventory = { __equipped: {} };
     if (res.reason === 'taken') alert('❌ Code secret incorrect pour ce pseudo.');
-    if (res.created) {
-    // ✅ Création → afficher automatiquement la clé de récupération avec warning
-      setTimeout(() => socket.emit('get_recovery_key', { secretCode: myProfile.secretCode }), 600);
-    }
     else if (res.reason === 'nocode') alert('🔒 Choisis un code secret (4 caractères minimum).');
     else if (res.reason === 'short') alert('Ton pseudo doit contenir au moins 3 caractères !');
     else if (res.reason === 'not_found') {
-      // ✅ NOUVEAU : compte introuvable → effacer et rediriger vers création
       alert('❌ Compte introuvable. Veuillez créer un nouveau compte.');
       checkAndShowProfileModal();
     }
     else alert('❌ Erreur de connexion au serveur. Réessaie.');
     if (pendingAccountLogin) { pendingAccountLogin = false; renderAccountContent(); }
     return;
+  }
+  
+  // ✅ Création réussie → afficher automatiquement la clé de récupération
+  if (res.created) {
+    setTimeout(() => socket.emit('get_recovery_key', { secretCode: myProfile.secretCode }), 600);
   }
   
   if (pendingAccountLogin) {
