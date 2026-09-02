@@ -2,8 +2,8 @@
 SERVICE WORKER — Chiffre Blitz (PWA)
 Cache les assets, laisse passer le serveur (Render/socket.io)
 ============================================================ */
-const CACHE_NAME = "chiffre-blitz-v3";   // bump pour forcer la MàJ
-const BASE = "/chiffre-blitz-server/";
+const CACHE_NAME = "chiffre-blitz-v4";   // bump pour forcer la MàJ
+const BASE = "/";                        // maintenant à la racine
 const CORE_ASSETS = [
   BASE, BASE + "index.html", BASE + "manifest.json",
   BASE + "style.css", BASE + "saisons.css",
