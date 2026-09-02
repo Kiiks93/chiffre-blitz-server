@@ -1221,6 +1221,10 @@ socket.on('register_result', (res) => {
     localStorage.removeItem('cb_equipped_title'); localStorage.removeItem('cb_equipped_frame'); localStorage.removeItem('cb_equipped_theme');
     myProfile.username = ''; myProfile.secretCode = ''; myProfile.inventory = { __equipped: {} };
     if (res.reason === 'taken') alert('❌ Code secret incorrect pour ce pseudo.');
+    if (res.created) {
+    // ✅ Création → afficher automatiquement la clé de récupération avec warning
+      setTimeout(() => socket.emit('get_recovery_key', { secretCode: myProfile.secretCode }), 600);
+    }
     else if (res.reason === 'nocode') alert('🔒 Choisis un code secret (4 caractères minimum).');
     else if (res.reason === 'short') alert('Ton pseudo doit contenir au moins 3 caractères !');
     else if (res.reason === 'not_found') {
