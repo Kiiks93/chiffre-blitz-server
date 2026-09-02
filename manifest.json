@@ -4,6 +4,7 @@
   "description": "Le duel de calcul et de réflexes ultime. Affronte des joueurs en temps réel !",
   "start_url": "/chiffre-blitz-server/",
   "scope": "/chiffre-blitz-server/",
+  "id": "/chiffre-blitz-server/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0f051d",
