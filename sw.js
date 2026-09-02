@@ -2,12 +2,14 @@
 SERVICE WORKER — Chiffre Blitz (PWA)
 Cache les assets, laisse passer le serveur (Render/socket.io)
 ============================================================ */
-const CACHE_NAME = "chiffre-blitz-v2";
+const CACHE_NAME = "chiffre-blitz-v3";   // bump pour forcer la MàJ
+const BASE = "/chiffre-blitz-server/";
 const CORE_ASSETS = [
-  "./", "index.html", "manifest.json",
-  "style.css", "saisons.css",
-  "i18n.js", "audio.js", "son-saisons.js", "profil.js", "admin.js",
-  "social.js", "passe.js", "saisons.js", "fx.js", "jeu.js", "modes-catch.js"
+  BASE, BASE + "index.html", BASE + "manifest.json",
+  BASE + "style.css", BASE + "saisons.css",
+  BASE + "i18n.js", BASE + "audio.js", BASE + "son-saisons.js", BASE + "profil.js", BASE + "admin.js",
+  BASE + "social.js", BASE + "passe.js", BASE + "saisons.js", BASE + "fx.js", BASE + "jeu.js", BASE + "modes-catch.js",
+  BASE + "icons/icon-192.png", BASE + "icons/icon-512.png"
 ];
 
 self.addEventListener("install", (e) => {
@@ -42,7 +44,7 @@ self.addEventListener("fetch", (e) => {
             }
             return res;
           })
-          .catch(() => caches.match("index.html"))
+          .catch(() => caches.match(BASE + "index.html"))
     )
   );
 });
