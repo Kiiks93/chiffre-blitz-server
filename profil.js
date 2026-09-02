@@ -881,22 +881,54 @@ socket.on('recovery_key_result', (d) => {
     alert('❌ ' + d.message);
     return;
   }
-  const modal = document.createElement('div');
-  modal.className = 'modal-overlay';
-  modal.style.display = 'flex';
-  modal.innerHTML = `
-    <div class="modal-card" style="max-width:400px; text-align:center;">
-      <h3 style="color:#f8b500; margin:0 0 10px 0;">${i18n[currentLang].recovery_key_title}</h3>
-      <div style="font-size:11px; color:#aaa; margin-bottom:12px; line-height:1.4;">
-        <b style="color:#ff8a00;">${i18n[currentLang].recovery_key_warning}</b><br>
-        ${i18n[currentLang].recovery_key_desc}
-      </div>
-      <div style="background:#0f051d; border:2px solid #f8b500; border-radius:10px; padding:16px; font-size:22px; font-weight:900; color:#f8b500; letter-spacing:3px; font-family:monospace; margin-bottom:12px; user-select:all;">${d.key}</div>
-      <button class="btn-main btn-gold" onclick="navigator.clipboard.writeText('${d.key}').then(()=>alert('${i18n[currentLang].recovery_key_copied}'));" style="margin-bottom:6px;">${i18n[currentLang].recovery_key_copy}</button>
-      <button class="btn-secondary" onclick="this.closest('.modal-overlay').remove()">${i18n[currentLang].close}</button>
-    </div>`;
-  document.body.appendChild(modal);
+  
+  if (justCreatedAccount) {
+    // ✅ Affichage APRÈS CRÉATION : dans la modale compte actuelle
+    justCreatedAccount = false;
+    const content = document.getElementById("account-content");
+    const closeBtn = document.getElementById("account-close-btn");
+    if (content) {
+      content.innerHTML = `
+        <div style="text-align:center;">
+          <h3 style="color:#00ff88; margin:0 0 12px 0;">✅ Compte créé avec succès !</h3>
+          <div style="background:rgba(248,181,0,0.15); border:2px solid #f8b500; border-radius:10px; padding:14px; margin:10px 0;">
+            <div style="font-size:11px; color:#f8b500; font-weight:bold; margin-bottom:8px;">🔑 TA CLÉ DE RÉCUPÉRATION</div>
+            <div style="font-size:20px; font-weight:900; color:#f8b500; letter-spacing:2px; font-family:monospace; user-select:all; margin-bottom:8px;">${d.key}</div>
+            <button class="btn-main btn-gold" onclick="navigator.clipboard.writeText('${d.key}').then(()=>alert('📋 Clé copiée !'))" style="padding:6px 12px; font-size:11px;">📋 Copier la clé</button>
+          </div>
+          <div style="background:rgba(255,75,43,0.15); border:1px solid #ff4b2b; border-radius:8px; padding:10px; margin:10px 0; font-size:10px; color:#ff4b2b; line-height:1.5;">
+            ⚠️ <b>CONSERVE CETTE CLÉ PRÉCIEUSEMENT !</b><br>
+            Elle est INDISPENSABLE pour changer ton code secret si tu l'oublies.<br>
+            Sans elle, ton compte sera perdu à jamais.
+          </div>
+          <button class="btn-main btn-blue" onclick="finishAccountCreation()" style="width:100%; margin-top:10px;">⚡ Continuer vers le jeu</button>
+        </div>`;
+    }
+    if (closeBtn) closeBtn.style.display = "none";   // Cache "Fermer" : doit cliquer Continuer
+  } else {
+    // ✅ Affichage MANUEL (via bouton du menu) : modale séparée
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+      <div class="modal-card" style="max-width:400px; text-align:center;">
+        <h3 style="color:#f8b500; margin:0 0 10px 0;">${i18n[currentLang].recovery_key_title}</h3>
+        <div style="font-size:11px; color:#aaa; margin-bottom:12px; line-height:1.4;">
+          <b style="color:#ff8a00;">${i18n[currentLang].recovery_key_warning}</b><br>
+          ${i18n[currentLang].recovery_key_desc}
+        </div>
+        <div style="background:#0f051d; border:2px solid #f8b500; border-radius:10px; padding:16px; font-size:22px; font-weight:900; color:#f8b500; letter-spacing:3px; font-family:monospace; margin-bottom:12px; user-select:all;">${d.key}</div>
+        <button class="btn-main btn-gold" onclick="navigator.clipboard.writeText('${d.key}').then(()=>alert('${i18n[currentLang].recovery_key_copied}'));" style="margin-bottom:6px;">${i18n[currentLang].recovery_key_copy}</button>
+        <button class="btn-secondary" onclick="this.closest('.modal-overlay').remove()">${i18n[currentLang].close}</button>
+      </div>`;
+    document.body.appendChild(modal);
+  }
 });
+
+function finishAccountCreation() {
+  closeAccountModal();
+  showTitleScreen();
+}
 
 socket.on('force_logout', (data) => {
   localStorage.removeItem('cb_secret');
@@ -919,7 +951,7 @@ function submitAccountForm() {
   }
   
   if (code.length < CONFIG.MIN_CODE_LENGTH) {
-    alert('Code secret : 8 caractères minimum (avec lettres, chiffres et caractère spécial !@#$%&*+-_).');
+    alert('Code secret : 8 caractères minimum (avec majuscule, minuscule, chiffre et caractère spécial).');
     return;
   }
   
@@ -932,8 +964,8 @@ function submitAccountForm() {
   myProfile.secretCode = code;
   if (!myProfile.region) myProfile.region = 'Hauts-de-France';
   if (!myProfile.avatar) myProfile.avatar = 1;
-  if (!myProfile.flag) myProfile.flag = '🇫';
-  pendingAccountLogin = true;
+  if (!myProfile.flag) myProfile.flag = '🇫🇷';
+  pendingAccountLogin = true;     // ✅ TOUJOURS à true avant l'emit
   
   if (socket.connected) {
     socket.emit("register_player", {
@@ -1010,13 +1042,12 @@ function renderControlCenter() {
 11. FENÊTRE PROFIL / PERSONNALISATION
 ============================================================ */
 function checkAndShowProfileModal() {
-  if (!isProfileValid() || !localStorage.getItem('cb_secret')) {
-    openAccountModal();
-  } else {
+  if (isProfileValid() && localStorage.getItem('cb_secret')) {
+    // ✅ Compte existant : login auto direct vers page explicative
     myProfile.username = localStorage.getItem("cb_username");
     myProfile.region = localStorage.getItem("cb_region");
     myProfile.avatar = parseInt(localStorage.getItem("cb_avatar")) || 1;
-    myProfile.flag = getFlagEmoji(localStorage.getItem("cb_flag") || "🇫");
+    myProfile.flag = getFlagEmoji(localStorage.getItem("cb_flag") || "🇫🇷");
     
     const savedTitle = localStorage.getItem("cb_equipped_title");
     const savedFrame = localStorage.getItem("cb_equipped_frame");
@@ -1031,9 +1062,13 @@ function checkAndShowProfileModal() {
     }
     
     updateEconomyUI();
-    document.getElementById("modal-username").style.display = "none";
-    registerIfPossible();
-    showTitleScreen();
+    const modal = document.getElementById("modal-username");
+    if (modal) modal.style.display = "none";
+    registerIfPossible();        // login auto
+    showTitleScreen();           // page explicative
+  } else {
+    // ✅ Pas de compte : modale compte obligatoire
+    openAccountModal();
   }
 }
 
@@ -1208,6 +1243,8 @@ socket.on("online_count", (data) => {
   if (el) el.innerText = data.online;
 });
 
+let justCreatedAccount = false;
+
 socket.on('register_result', (res) => {
   if (!res.ok) {
     pendingProfileValidation = false;
@@ -1227,17 +1264,21 @@ socket.on('register_result', (res) => {
     return;
   }
   
-  // ✅ Création réussie → afficher automatiquement la clé de récupération
-  if (res.created) {
-    setTimeout(() => socket.emit('get_recovery_key', { secretCode: myProfile.secretCode }), 600);
-  }
-  
   if (pendingAccountLogin) {
     pendingAccountLogin = false;
     saveLocalPreferences();
     updateEconomyUI();
-    closeAccountModal();
-    showTitleScreen();
+    
+    if (res.created) {
+      // ✅ CRÉATION : on demande la clé et on l'affiche DANS la modale compte
+      justCreatedAccount = true;
+      socket.emit('get_recovery_key', { secretCode: myProfile.secretCode });
+      // On NE ferme PAS la modale, on y affichera la clé
+    } else {
+      // ✅ CONNEXION à un compte existant : page explicative directe
+      closeAccountModal();
+      showTitleScreen();
+    }
     return;
   }
   
