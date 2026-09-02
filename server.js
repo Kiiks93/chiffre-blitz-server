@@ -352,67 +352,73 @@ io.on('connection', (socket) => {
   });
 
   socket.on('register_player', async (data) => {
-    const rawUsername = (data.username || '').trim();
-    const secretCode = (data.secretCode || '').trim();
-    if (rawUsername.length < 3) { socket.emit('register_result', { ok: false, reason: 'short' }); return; }
-    if (secretCode.length < 4) { socket.emit('register_result', { ok: false, reason: 'nocode' }); return; }
-    try {
-      let { data: matchedPlayers, error } = await supabase.from('players').select('*').ilike('username', rawUsername);
-      let playerData;
-      if (!error && matchedPlayers && matchedPlayers.length > 0) {
-        const existing = matchedPlayers[0];
-        const storedCode = (existing.secret_code || '').trim();
-        if (storedCode) {
-          const ok = isHashed(storedCode) ? (hashSecret(secretCode) === storedCode) : (storedCode.toLowerCase() === secretCode.toLowerCase());
-          if (!ok) { socket.emit('register_result', { ok: false, reason: 'taken' }); return; }
-          if (!isHashed(storedCode)) await supabase.from('players').update({ secret_code: hashSecret(secretCode) }).eq('id', existing.id); // migration legacy
-        }
-        const updates = {};
-        if (Object.keys(updates).length > 0) {
-          const { data: updated } = await supabase.from('players').update(updates).eq('id', existing.id).select().single();
-          playerData = updated || existing;
-        } else { playerData = existing; }
-      } else {
-        const newRecord = {
-          username: rawUsername, secret_code: hashSecret(secretCode), region: data.region || "Hauts-de-France",
-          country: data.flag ? data.flag.replace(/['"]/g, '').trim() : "FR", avatar: data.avatar || 1, flag: data.flag || "🇫🇷",
-          points: 0, coins: 100, trophies: 0, wins: 0, losses: 0,
-          inventory: { __equipped: { frame: "frame_standard" } }, equipped_power: null, unlocked_items: ["frame_standard"],
-          blitz_pass_premium: false, claimed_pass_tiers: {},
-          matches_played: 0, win_streak: 0, best_combo: 0, best_avalanche: 0, solo_games: 0, total_coins_earned: 0,
-          season_n1_count: 0, trophies_collection: {}
-        };
-        const { data: inserted, error: insertErr } = await supabase.from('players').insert([newRecord]).select().single();
-        if (!insertErr && inserted) { playerData = inserted; }
-        else { console.error("ERREUR INSERT SUPABASE : ", insertErr ? insertErr.message : "aucune donnee"); playerData = { ...newRecord, id: socket.id }; }
+  const rawUsername = (data.username || '').trim();
+  const secretCode = (data.secretCode || '').trim();
+  if (rawUsername.length < 3) { socket.emit('register_result', { ok: false, reason: 'short' }); return; }
+  if (secretCode.length < 4) { socket.emit('register_result', { ok: false, reason: 'nocode' }); return; }
+  try {
+    let { data: matchedPlayers, error } = await supabase.from('players').select('*').ilike('username', rawUsername);
+    let playerData;
+    if (!error && matchedPlayers && matchedPlayers.length > 0) {
+      const existing = matchedPlayers[0];
+      const storedCode = (existing.secret_code || '').trim();
+      if (storedCode) {
+        const ok = isHashed(storedCode) ? (hashSecret(secretCode) === storedCode) : (storedCode.toLowerCase() === secretCode.toLowerCase());
+        if (!ok) { socket.emit('register_result', { ok: false, reason: 'taken' }); return; }
+        if (!isHashed(storedCode)) await supabase.from('players').update({ secret_code: hashSecret(secretCode) }).eq('id', existing.id);
       }
-      const claimedNorm = normalizeClaimedTiers(playerData.claimed_pass_tiers);
-      playerData.unlocked_items = playerData.unlocked_items || [];
-      if (!playerData.unlocked_items.includes("frame_standard")) playerData.unlocked_items.push("frame_standard");
-      playerData.inventory = playerData.inventory || {};
-      playerData.inventory.__equipped = playerData.inventory.__equipped || {};
-      if (!playerData.inventory.__equipped.frame) playerData.inventory.__equipped.frame = "frame_standard";
-      if (claimedNorm["s2"] && claimedNorm["s2"]["24_premium"] && !playerData.unlocked_items.includes("theme_fantome")) playerData.unlocked_items.push("theme_fantome");
-      const seasonNow = getCurrentSeason();
-      const premNow = !!(claimedNorm[seasonNow.id] && claimedNorm[seasonNow.id].premium) || (seasonNow.id === "s1" && playerData.blitz_pass_premium);
-      activePlayers[socket.id] = {
-        socketId: socket.id, dbId: playerData.id || socket.id, id: socket.id,
-        username: playerData.username, region: playerData.region, avatar: playerData.avatar, flag: playerData.flag,
-        points: playerData.points || 0, coins: playerData.coins || 0, country: playerData.country || "FR",
-        trophies: playerData.trophies || 0, wins: playerData.wins || 0, losses: playerData.losses || 0,
-        inventory: playerData.inventory, equippedPower: playerData.equipped_power || null,
-        unlocked_items: playerData.unlocked_items, blitzPassPremium: premNow, claimedPassTiers: claimedNorm,
-        current_season: seasonNow.id,
-        matches_played: playerData.matches_played || 0, win_streak: playerData.win_streak || 0,
-        best_combo: playerData.best_combo || 0, best_avalanche: playerData.best_avalanche || 0,
-        solo_games: playerData.solo_games || 0, total_coins_earned: playerData.total_coins_earned || 0,
-        season_n1_count: playerData.season_n1_count || 0, trophies_collection: playerData.trophies_collection || {}
+      const updates = {};
+      if (Object.keys(updates).length > 0) {
+        const { data: updated } = await supabase.from('players').update(updates).eq('id', existing.id).select().single();
+        playerData = updated || existing;
+      } else { playerData = existing; }
+    } else {
+      // ✅ NOUVEAU : si mode = login mais compte introuvable → erreur, ne pas recréer
+      if (data.mode === 'login') {
+        socket.emit('register_result', { ok: false, reason: 'not_found' });
+        return;
+      }
+      // Sinon mode = create → on crée le compte
+      const newRecord = {
+        username: rawUsername, secret_code: hashSecret(secretCode), region: data.region || "Hauts-de-France",
+        country: data.flag ? data.flag.replace(/['"]/g, '').trim() : "FR", avatar: data.avatar || 1, flag: data.flag || "🇫🇷",
+        points: 0, coins: 100, trophies: 0, wins: 0, losses: 0,
+        inventory: { __equipped: { frame: "frame_standard" } }, equipped_power: null, unlocked_items: ["frame_standard"],
+        blitz_pass_premium: false, claimed_pass_tiers: {},
+        matches_played: 0, win_streak: 0, best_combo: 0, best_avalanche: 0, solo_games: 0, total_coins_earned: 0,
+        season_n1_count: 0, trophies_collection: {}
       };
-      socket.emit('register_result', { ok: true });
-      socket.emit('player_registered', activePlayers[socket.id]);
-      broadcastOnlineCount();
-    } catch (err) { console.error("Erreur enregistrement Supabase : ", err); socket.emit('register_result', { ok: false, reason: 'error' }); }
-  });
+      const { data: inserted, error: insertErr } = await supabase.from('players').insert([newRecord]).select().single();
+      if (!insertErr && inserted) { playerData = inserted; }
+      else { console.error("ERREUR INSERT SUPABASE : ", insertErr ? insertErr.message : "aucune donnee"); playerData = { ...newRecord, id: socket.id }; }
+    }
+    const claimedNorm = normalizeClaimedTiers(playerData.claimed_pass_tiers);
+    playerData.unlocked_items = playerData.unlocked_items || [];
+    if (!playerData.unlocked_items.includes("frame_standard")) playerData.unlocked_items.push("frame_standard");
+    playerData.inventory = playerData.inventory || {};
+    playerData.inventory.__equipped = playerData.inventory.__equipped || {};
+    if (!playerData.inventory.__equipped.frame) playerData.inventory.__equipped.frame = "frame_standard";
+    if (claimedNorm["s2"] && claimedNorm["s2"]["24_premium"] && !playerData.unlocked_items.includes("theme_fantome")) playerData.unlocked_items.push("theme_fantome");
+    const seasonNow = getCurrentSeason();
+    const premNow = !!(claimedNorm[seasonNow.id] && claimedNorm[seasonNow.id].premium) || (seasonNow.id === "s1" && playerData.blitz_pass_premium);
+    activePlayers[socket.id] = {
+      socketId: socket.id, dbId: playerData.id || socket.id, id: socket.id,
+      username: playerData.username, region: playerData.region, avatar: playerData.avatar, flag: playerData.flag,
+      points: playerData.points || 0, coins: playerData.coins || 0, country: playerData.country || "FR",
+      trophies: playerData.trophies || 0, wins: playerData.wins || 0, losses: playerData.losses || 0,
+      inventory: playerData.inventory, equippedPower: playerData.equipped_power || null,
+      unlocked_items: playerData.unlocked_items, blitzPassPremium: premNow, claimedPassTiers: claimedNorm,
+      current_season: seasonNow.id,
+      matches_played: playerData.matches_played || 0, win_streak: playerData.win_streak || 0,
+      best_combo: playerData.best_combo || 0, best_avalanche: playerData.best_avalanche || 0,
+      solo_games: playerData.solo_games || 0, total_coins_earned: playerData.total_coins_earned || 0,
+      season_n1_count: playerData.season_n1_count || 0, trophies_collection: playerData.trophies_collection || {}
+    };
+    socket.emit('register_result', { ok: true });
+    socket.emit('player_registered', activePlayers[socket.id]);
+    broadcastOnlineCount();
+  } catch (err) { console.error("Erreur enregistrement Supabase : ", err); socket.emit('register_result', { ok: false, reason: 'error' }); }
+});
 
   socket.on('buy_item', async (itemId) => {
     const player = activePlayers[socket.id];
