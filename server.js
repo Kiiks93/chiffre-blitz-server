@@ -351,15 +351,15 @@ io.on('connection', (socket) => {
     });
   });
 
-  socket.on('register_player', async (data) => {
+socket.on('register_player', async (data) => {
   const rawUsername = (data.username || '').trim();
   const secretCode = (data.secretCode || '').trim();
   if (rawUsername.length < 3) { socket.emit('register_result', { ok: false, reason: 'short' }); return; }
   if (secretCode.length < 4) { socket.emit('register_result', { ok: false, reason: 'nocode' }); return; }
   try {
+    let wasCreated = false;
     let { data: matchedPlayers, error } = await supabase.from('players').select('*').ilike('username', rawUsername);
     let playerData;
-    let wasCreated = false;
     if (!error && matchedPlayers && matchedPlayers.length > 0) {
       const existing = matchedPlayers[0];
       const storedCode = (existing.secret_code || '').trim();
@@ -374,26 +374,26 @@ io.on('connection', (socket) => {
         playerData = updated || existing;
       } else { playerData = existing; }
     } else {
-      // ✅ NOUVEAU : si mode = login mais compte introuvable → erreur, ne pas recréer
+      // ✅ Garde-fou wipe sticky : en mode login, on refuse si compte absent
       if (data.mode === 'login') {
         socket.emit('register_result', { ok: false, reason: 'not_found' });
         return;
       }
-      // Sinon mode = create → on crée le compte
+      wasCreated = true;
       const newRecord = {
         username: rawUsername, secret_code: hashSecret(secretCode), region: data.region || "Hauts-de-France",
         country: data.flag ? data.flag.replace(/['"]/g, '').trim() : "FR", avatar: data.avatar || 1, flag: data.flag || "🇫🇷",
         points: 0, coins: 100, trophies: 0, wins: 0, losses: 0,
         inventory: { __equipped: { frame: "frame_standard" } }, equipped_power: null, unlocked_items: ["frame_standard"],
-        blitz_pass_premium: false, claimed_pass_tiers: {},
+        blitz_pass_premium: false, claimed_pass_tiers: {}, season_progress: {},
         matches_played: 0, win_streak: 0, best_combo: 0, best_avalanche: 0, solo_games: 0, total_coins_earned: 0,
         season_n1_count: 0, trophies_collection: {}
       };
       const { data: inserted, error: insertErr } = await supabase.from('players').insert([newRecord]).select().single();
       if (!insertErr && inserted) { playerData = inserted; }
-      wasCreated = true;
       else { console.error("ERREUR INSERT SUPABASE : ", insertErr ? insertErr.message : "aucune donnee"); playerData = { ...newRecord, id: socket.id }; }
     }
+
     const claimedNorm = normalizeClaimedTiers(playerData.claimed_pass_tiers);
     playerData.unlocked_items = playerData.unlocked_items || [];
     if (!playerData.unlocked_items.includes("frame_standard")) playerData.unlocked_items.push("frame_standard");
@@ -401,7 +401,20 @@ io.on('connection', (socket) => {
     playerData.inventory.__equipped = playerData.inventory.__equipped || {};
     if (!playerData.inventory.__equipped.frame) playerData.inventory.__equipped.frame = "frame_standard";
     if (claimedNorm["s2"] && claimedNorm["s2"]["24_premium"] && !playerData.unlocked_items.includes("theme_fantome")) playerData.unlocked_items.push("theme_fantome");
+
     const seasonNow = getCurrentSeason();
+
+    // ✅ Progression "1 palier / jour"
+    if (!playerData.season_progress) playerData.season_progress = {};
+    const today = new Date().toISOString().split('T')[0];
+    const progress = playerData.season_progress[seasonNow.id] || { unlocked_tier: 0, last_login_date: null };
+    if (progress.last_login_date !== today) {
+      progress.unlocked_tier = Math.min(30, (progress.unlocked_tier || 0) + 1);
+      progress.last_login_date = today;
+      playerData.season_progress[seasonNow.id] = progress;
+      await supabase.from('players').update({ season_progress: playerData.season_progress }).eq('id', playerData.id);
+    }
+
     const premNow = !!(claimedNorm[seasonNow.id] && claimedNorm[seasonNow.id].premium) || (seasonNow.id === "s1" && playerData.blitz_pass_premium);
     activePlayers[socket.id] = {
       socketId: socket.id, dbId: playerData.id || socket.id, id: socket.id,
@@ -411,28 +424,13 @@ io.on('connection', (socket) => {
       inventory: playerData.inventory, equippedPower: playerData.equipped_power || null,
       unlocked_items: playerData.unlocked_items, blitzPassPremium: premNow, claimedPassTiers: claimedNorm,
       current_season: seasonNow.id,
+      seasonProgress: playerData.season_progress,
+      unlockedTier: progress.unlocked_tier || 0,
       matches_played: playerData.matches_played || 0, win_streak: playerData.win_streak || 0,
       best_combo: playerData.best_combo || 0, best_avalanche: playerData.best_avalanche || 0,
       solo_games: playerData.solo_games || 0, total_coins_earned: playerData.total_coins_earned || 0,
       season_n1_count: playerData.season_n1_count || 0, trophies_collection: playerData.trophies_collection || {}
     };
-          // ✅ NOUVEAU : progression du pass "1 palier / jour"
-      if (!playerData.season_progress) playerData.season_progress = {};
-      const today = new Date().toISOString().split('T')[0]; // "YYYY-MM-DD"
-      const progress = playerData.season_progress[seasonNow.id] || { unlocked_tier: 0, last_login_date: null };
-      
-      if (progress.last_login_date !== today) {
-        // Nouveau jour → débloquer le palier suivant (max 30)
-        progress.unlocked_tier = Math.min(30, (progress.unlocked_tier || 0) + 1);
-        progress.last_login_date = today;
-        playerData.season_progress[seasonNow.id] = progress;
-        await supabase.from('players').update({ season_progress: playerData.season_progress }).eq('id', playerData.id);
-      }
-      
-      // Injecter dans activePlayers pour le client
-      activePlayers[socket.id].seasonProgress = playerData.season_progress;
-      activePlayers[socket.id].unlockedTier = progress.unlocked_tier || 0;
-    
     socket.emit('register_result', { ok: true, created: wasCreated });
     socket.emit('player_registered', activePlayers[socket.id]);
     broadcastOnlineCount();
