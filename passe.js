@@ -379,6 +379,7 @@ function renderBlitzPass() {
       <div style="font-size:9px; color:#aaa; margin-bottom:4px;">📅 ${season.start} → ${season.end}</div>
       <div style="font-size:10px; color:#ccc; margin-bottom:6px;">${isPremium ? (fr ? "✨ Passe Premium Actif !" : "✨ Premium Pass Active!") : (fr ? "Débloque le Passe Premium pour 1000 🪙" : "Unlock the Premium Pass for 1000 🪙")}</div>
       <div style="font-size:10px; color:#00ff88; margin-bottom:6px;">${fr ? "🔓 Paliers débloqués : " : "🔓 Unlocked tiers: "} <b>${unlockedTier}/30</b></div>
+      <div style="font-size:9px; color:#aaa; margin-bottom:6px; line-height:1.4;">ℹ️ ${fr ? "1 palier par jour de connexion. Pas besoin de jouer tous les jours consécutifs : ce sont 30 jours de connexion, pas 30 jours calendaires." : "1 tier per login day. You don't need to play every consecutive day: it's 30 login days, not 30 calendar days."}</div>
       ${!isPremium 
         ? `<button class="btn-main btn-gold" onclick="buyBlitzPassPremium()" style="padding:6px 10px; font-size:11px; margin:0 auto; width:auto;">${fr ? "Acheter le Passe Premium (1000 🪙)" : "Buy Premium Pass (1000 🪙)"}</button>` 
         : `<div style="color:#00ff88; font-weight:bold; font-size:10px;">${fr ? "Statut : VIP / Premium" : "Status: VIP / Premium"}</div>`
@@ -479,7 +480,7 @@ socket.on("pass_tier_claimed", (data) => {
     SoundEngine.playVictory();
   }
   
-  setTimeout(() => { renderBlitzPass(); }, 450);
+  setTimeout(() => { ; }, 450);
 });
 
 socket.on("pass_claim_denied", (data) => {
@@ -488,7 +489,7 @@ socket.on("pass_claim_denied", (data) => {
   } else if (data.reason === "already_claimed") {
     showNotificationToast(currentLang === "fr" ? "❌ Cette récompense a déjà été récupérée." : "❌ This reward has already been claimed.", "announcement");
   }
-  renderBlitzPass();
+  ;
 });
 socket.on("pass_claim_denied", (data) => {
   if (data.reason === "premium_required") {
@@ -498,7 +499,7 @@ socket.on("pass_claim_denied", (data) => {
   } else if (data.reason === "tier_locked") {
     showNotificationToast(currentLang === "fr" ? `🔒 Palier ${data.tier} verrouillé. Débloqué au palier ${data.unlocked + 1} demain.` : `🔒 Tier ${data.tier} locked. Unlocks at tier ${data.unlocked + 1} tomorrow.`, "announcement");
   }
-  renderBlitzPass();
+  ;
 });
 
 /* ============================================================
