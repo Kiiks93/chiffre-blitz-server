@@ -370,6 +370,7 @@ function renderBlitzPass() {
   const seasonData = (myProfile.claimedPassTiers || {})[season.id] || {};
   const isPremium = !!seasonData.premium || (season.id === "s1" && myProfile.blitzPassPremium);
   const claimed = seasonData;
+  const unlockedTier = (myProfile.seasonProgress && myProfile.seasonProgress[season.id] && myProfile.seasonProgress[season.id].unlocked_tier) || 0;
   
   // Header du pass
   container.innerHTML = `
@@ -377,6 +378,7 @@ function renderBlitzPass() {
       <div style="font-size:13px; font-weight:900; color:#f8b500; margin-bottom:2px;">${season.emoji} ${fr ? "PASSE DE SAISON :" : "SEASON PASS:"} ${season.name}</div>
       <div style="font-size:9px; color:#aaa; margin-bottom:4px;">📅 ${season.start} → ${season.end}</div>
       <div style="font-size:10px; color:#ccc; margin-bottom:6px;">${isPremium ? (fr ? "✨ Passe Premium Actif !" : "✨ Premium Pass Active!") : (fr ? "Débloque le Passe Premium pour 1000 🪙" : "Unlock the Premium Pass for 1000 🪙")}</div>
+      <div style="font-size:10px; color:#00ff88; margin-bottom:6px;">${fr ? "🔓 Paliers débloqués : " : "🔓 Unlocked tiers: "} <b>${unlockedTier}/30</b></div>
       ${!isPremium 
         ? `<button class="btn-main btn-gold" onclick="buyBlitzPassPremium()" style="padding:6px 10px; font-size:11px; margin:0 auto; width:auto;">${fr ? "Acheter le Passe Premium (1000 🪙)" : "Buy Premium Pass (1000 🪙)"}</button>` 
         : `<div style="color:#00ff88; font-weight:bold; font-size:10px;">${fr ? "Statut : VIP / Premium" : "Status: VIP / Premium"}</div>`
@@ -395,17 +397,23 @@ function renderBlitzPass() {
   season.tiers.forEach(t => {
     const freeKey = `${t.tier}_free`, premKey = `${t.tier}_premium`;
     const isFreeClaimed = claimed[freeKey], isPremClaimed = claimed[premKey];
+    const isLocked = t.tier > unlockedTier;
     
     const col = document.createElement("div");
     col.className = "bp-tier-col";
     col.id = "bp-card-" + t.tier;
+    
+    const lockOverlay = isLocked ? `<div style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; font-size:24px; z-index:10; border-radius:8px;">🔒</div>` : '';
+    
     col.innerHTML = `
-      <div class="bp-cell bp-prem ${isPremClaimed ? 'claimed' : ''}" onclick="claimPassReward(${t.tier},'premium')">
+      <div class="bp-cell bp-prem ${isPremClaimed ? 'claimed' : ''}" onclick="claimPassReward(${t.tier},'premium')" style="position:relative;">
+        ${lockOverlay}
         <div class="bp-ribbon">⭐ PREMIUM</div>
         ${rewardVisualHTML(season.id, t.tier, 'premium', t.premium)}
       </div>
       <div class="bp-tier-num">${t.tier}</div>
-      <div class="bp-cell bp-free ${isFreeClaimed ? 'claimed' : ''}" onclick="claimPassReward(${t.tier},'free')">
+      <div class="bp-cell bp-free ${isFreeClaimed ? 'claimed' : ''}" onclick="claimPassReward(${t.tier},'free')" style="position:relative;">
+        ${lockOverlay}
         <div class="bp-ribbon free">${currentLang === "fr" ? "GRATUIT" : "FREE"}</div>
         ${rewardVisualHTML(season.id, t.tier, 'free', t.free)}
       </div>`;
@@ -479,6 +487,16 @@ socket.on("pass_claim_denied", (data) => {
     showNotificationToast(currentLang === "fr" ? "❌ Tu dois acheter le Passe Premium pour récupérer cette récompense !" : "❌ You must buy the Premium Pass to claim this reward!", "announcement");
   } else if (data.reason === "already_claimed") {
     showNotificationToast(currentLang === "fr" ? "❌ Cette récompense a déjà été récupérée." : "❌ This reward has already been claimed.", "announcement");
+  }
+  renderBlitzPass();
+});
+socket.on("pass_claim_denied", (data) => {
+  if (data.reason === "premium_required") {
+    showNotificationToast(currentLang === "fr" ? "❌ Tu dois acheter le Passe Premium pour récupérer cette récompense !" : "❌ You must buy the Premium Pass to claim this reward!", "announcement");
+  } else if (data.reason === "already_claimed") {
+    showNotificationToast(currentLang === "fr" ? "❌ Cette récompense a déjà été récupérée." : "❌ This reward has already been claimed.", "announcement");
+  } else if (data.reason === "tier_locked") {
+    showNotificationToast(currentLang === "fr" ? `🔒 Palier ${data.tier} verrouillé. Débloqué au palier ${data.unlocked + 1} demain.` : `🔒 Tier ${data.tier} locked. Unlocks at tier ${data.unlocked + 1} tomorrow.`, "announcement");
   }
   renderBlitzPass();
 });
