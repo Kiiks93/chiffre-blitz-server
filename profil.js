@@ -1210,27 +1210,20 @@ socket.on("online_count", (data) => {
 socket.on('register_result', (res) => {
   if (!res.ok) {
     pendingProfileValidation = false;
-    localStorage.removeItem('cb_username');
-    localStorage.removeItem('cb_secret');
-    localStorage.removeItem('cb_region');
-    localStorage.removeItem('cb_avatar');
-    localStorage.removeItem('cb_flag');
-    localStorage.removeItem('cb_equipped_title');
-    localStorage.removeItem('cb_equipped_frame');
-    localStorage.removeItem('cb_equipped_theme');
-    myProfile.username = '';
-    myProfile.secretCode = '';
-    myProfile.inventory = { __equipped: {} };
-    
+    localStorage.removeItem('cb_username'); localStorage.removeItem('cb_secret'); localStorage.removeItem('cb_region');
+    localStorage.removeItem('cb_avatar'); localStorage.removeItem('cb_flag');
+    localStorage.removeItem('cb_equipped_title'); localStorage.removeItem('cb_equipped_frame'); localStorage.removeItem('cb_equipped_theme');
+    myProfile.username = ''; myProfile.secretCode = ''; myProfile.inventory = { __equipped: {} };
     if (res.reason === 'taken') alert('❌ Code secret incorrect pour ce pseudo.');
     else if (res.reason === 'nocode') alert('🔒 Choisis un code secret (4 caractères minimum).');
     else if (res.reason === 'short') alert('Ton pseudo doit contenir au moins 3 caractères !');
-    else alert('❌ Erreur de connexion au serveur. Réessaie.');
-    
-    if (pendingAccountLogin) {
-      pendingAccountLogin = false;
-      renderAccountContent();
+    else if (res.reason === 'not_found') {
+      // ✅ NOUVEAU : compte introuvable → effacer et rediriger vers création
+      alert('❌ Compte introuvable. Veuillez créer un nouveau compte.');
+      checkAndShowProfileModal();
     }
+    else alert('❌ Erreur de connexion au serveur. Réessaie.');
+    if (pendingAccountLogin) { pendingAccountLogin = false; renderAccountContent(); }
     return;
   }
   
