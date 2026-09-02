@@ -764,42 +764,36 @@ function openAccountModal() {
       <div class="modal-card" style="max-width:340px;">
         <h3 id="account-title" style="color:#00d2ff; margin:0 0 10px 0; text-align:center;">${d.account_title}</h3>
         <div id="account-content"></div>
-        <button class="btn-secondary" onclick="closeAccountModal()">${d.close}</button>
+        <button id="account-close-btn" class="btn-secondary" onclick="closeAccountModal()">${d.close}</button>
       </div>`;
     document.body.appendChild(modal);
   } else {
     const t = modal.querySelector('#account-title');
     if (t) t.innerText = d.account_title;
-    const cb = modal.querySelector('.btn-secondary');
+    const cb = modal.querySelector('#account-close-btn');
     if (cb) cb.innerText = d.close;
   }
   renderAccountContent();
   modal.style.display = 'flex';
 }
 
-function closeAccountModal() {
-  const modal = document.getElementById('modal-account');
-  if (modal) modal.style.display = 'none';
-}
-
 function renderAccountContent() {
   const d = i18n[currentLang];
-  const content = document.getElementById("account-modal-content");
+  const content = document.getElementById("account-content");   // ✅ bon id cette fois
   if (!content) return;
+  const closeBtn = document.getElementById("account-close-btn");
   const connected = isProfileValid();
+  if (closeBtn) closeBtn.style.display = connected ? "block" : "none";  // ✅ obligatoire si pas de compte
 
   if (connected) {
-    // Connecté : menu du compte (avec Fermer)
     content.innerHTML = `
       <p style="font-size:12px; text-align:center;">${d.account_connected} <b style="color:#00ff88;">${myProfile.username}</b></p>
       <button class="btn-main btn-gold" onclick="showChangeCodeModal()" style="margin-bottom:6px;">${d.account_change_code}</button>
       <button class="btn-main" onclick="showRecoveryKeyModal()" style="background:linear-gradient(45deg,#f8b500,#ff8a00); margin-bottom:6px;">${d.account_recovery_key}</button>
       <button class="btn-main btn-blue" onclick="switchAccount()" style="margin-bottom:6px;">${d.account_change}</button>
       <button class="btn-main btn-gold" onclick="startCreateAccount()" style="margin-bottom:6px;">${d.account_create}</button>
-      <button class="btn-main" onclick="askDeleteAccount()" style="background:linear-gradient(45deg,#ff4b6b,#8b0000);">${d.account_delete}</button>
-      <button class="btn-secondary" onclick="closeAccountModal()" style="margin-top:6px;">${d.close}</button>`;
+      <button class="btn-main" onclick="askDeleteAccount()" style="background:linear-gradient(45deg,#ff4b6b,#8b0000);">${d.account_delete}</button>`;
   } else {
-    // ✅ NON connecté : écran OBLIGATOIRE, sans bouton Fermer
     content.innerHTML = `
       <p style="font-size:11px; text-align:center; color:#aaa; margin-bottom:8px;">${d.account_desc}</p>
       <div style="background:rgba(248,181,0,0.12); border:1px solid #f8b500; border-radius:8px; padding:8px; margin-bottom:10px; font-size:10px; color:#f8b500; text-align:center; line-height:1.4;">
@@ -808,7 +802,6 @@ function renderAccountContent() {
       <input id="account-username" placeholder="${d.account_username_ph}" maxlength="16" style="width:100%; margin-bottom:6px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
       <input id="account-secret" type="password" placeholder="${d.account_secret_ph}" maxlength="32" style="width:100%; margin-bottom:10px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
       <button class="btn-main btn-blue" onclick="submitAccountForm()" style="width:100%;">${d.account_submit}</button>`;
-    //  PAS de bouton Fermer → le joueur doit créer un compte
   }
 }
 
