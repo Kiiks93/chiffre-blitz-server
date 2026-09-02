@@ -414,6 +414,23 @@ io.on('connection', (socket) => {
       solo_games: playerData.solo_games || 0, total_coins_earned: playerData.total_coins_earned || 0,
       season_n1_count: playerData.season_n1_count || 0, trophies_collection: playerData.trophies_collection || {}
     };
+          // ✅ NOUVEAU : progression du pass "1 palier / jour"
+      if (!playerData.season_progress) playerData.season_progress = {};
+      const today = new Date().toISOString().split('T')[0]; // "YYYY-MM-DD"
+      const progress = playerData.season_progress[seasonNow.id] || { unlocked_tier: 0, last_login_date: null };
+      
+      if (progress.last_login_date !== today) {
+        // Nouveau jour → débloquer le palier suivant (max 30)
+        progress.unlocked_tier = Math.min(30, (progress.unlocked_tier || 0) + 1);
+        progress.last_login_date = today;
+        playerData.season_progress[seasonNow.id] = progress;
+        await supabase.from('players').update({ season_progress: playerData.season_progress }).eq('id', playerData.id);
+      }
+      
+      // Injecter dans activePlayers pour le client
+      activePlayers[socket.id].seasonProgress = playerData.season_progress;
+      activePlayers[socket.id].unlockedTier = progress.unlocked_tier || 0;
+    
     socket.emit('register_result', { ok: true });
     socket.emit('player_registered', activePlayers[socket.id]);
     broadcastOnlineCount();
@@ -490,26 +507,35 @@ io.on('connection', (socket) => {
   });
 
   socket.on('claim_pass_tier', async (data) => {
-    const player = activePlayers[socket.id];
-    if (!player) return;
-    const { tier, track } = data;
-    const seasonId = getCurrentSeason().id;
-    player.claimedPassTiers = normalizeClaimedTiers(player.claimedPassTiers);
-    player.claimedPassTiers[seasonId] = player.claimedPassTiers[seasonId] || {};
-    const seasonData = player.claimedPassTiers[seasonId];
-    const key = tier + "_" + track;
-    if (seasonData[key]) { socket.emit('pass_claim_denied', { tier, track, reason: "already_claimed" }); return; }
-    if (track === 'premium' && !seasonData.premium) { socket.emit('pass_claim_denied', { tier, track, reason: "premium_required" }); return; }
-    seasonData[key] = true;
-    player.blitzPassPremium = !!seasonData.premium;
-    applyPassReward(player, tier, track, seasonId);
-    const unlockedTrophies = evaluateTrophies(player);
-    if (unlockedTrophies.length > 0) socket.emit('trophy_unlocked', unlockedTrophies.map(t => ({ id: Object.keys(TROPHY_CATALOG).find(k => TROPHY_CATALOG[k] === t), ...t })));
-    await savePlayerToSupabase(socket.id);
-    socket.emit('player_registered', player);
-    socket.emit('pass_tier_claimed', { tier, track });
-    socket.emit('pass_reward_received', { message: "Recompense du Palier " + tier + " (" + track + ") recuperee !" });
-  });
+  const player = activePlayers[socket.id];
+  if (!player) return;
+  const { tier, track } = data;
+  const seasonId = getCurrentSeason().id;
+  player.claimedPassTiers = normalizeClaimedTiers(player.claimedPassTiers);
+  player.claimedPassTiers[seasonId] = player.claimedPassTiers[seasonId] || {};
+  const seasonData = player.claimedPassTiers[seasonId];
+  const key = tier + "_" + track;
+  
+  // ✅ NOUVEAU : vérifier que le palier est débloqué
+  const unlockedTier = (player.seasonProgress && player.seasonProgress[seasonId] && player.seasonProgress[seasonId].unlocked_tier) || 0;
+  if (tier > unlockedTier) {
+    socket.emit('pass_claim_denied', { tier, track, reason: "tier_locked", unlocked: unlockedTier });
+    return;
+  }
+  
+  if (seasonData[key]) { socket.emit('pass_claim_denied', { tier, track, reason: "already_claimed" }); return; }
+  if (track === 'premium' && !seasonData.premium) { socket.emit('pass_claim_denied', { tier, track, reason: "premium_required" }); return; }
+  
+  seasonData[key] = true;
+  player.blitzPassPremium = !!seasonData.premium;
+  applyPassReward(player, tier, track, seasonId);
+  const unlockedTrophies = evaluateTrophies(player);
+  if (unlockedTrophies.length > 0) socket.emit('trophy_unlocked', unlockedTrophies.map(t => ({ id: Object.keys(TROPHY_CATALOG).find(k => TROPHY_CATALOG[k] === t), ...t })));
+  await savePlayerToSupabase(socket.id);
+  socket.emit('player_registered', player);
+  socket.emit('pass_tier_claimed', { tier, track });
+  socket.emit('pass_reward_received', { message: "Recompense du Palier " + tier + " (" + track + ") recuperee !" });
+});
 
   socket.on('use_power', async (powerId) => {
     const player = activePlayers[socket.id];
