@@ -10,9 +10,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="saisons.css">
-    <link rel="manifest" href="/chiffre-blitz-server/manifest.json">
-    <link rel="icon" type="image/png" href="/chiffre-blitz-server/icons/icon-192.png">
-    <link rel="apple-touch-icon" href="/chiffre-blitz-server/icons/icon-192.png">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
 </head>
 <body>
 
@@ -549,7 +549,7 @@ SCRIPTS (ordre de chargement important)
 
 <script>
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("/chiffre-blitz-server/sw.js"));
+  window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js"));
 }
 </script>
 </body>
