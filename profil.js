@@ -1163,14 +1163,12 @@ function saveProfileFromModal() {
 
 function registerIfPossible() {
   if (isProfileValid() && socket.connected) {
+    const isReturning = localStorage.getItem('cb_secret') && localStorage.getItem('cb_username');
     socket.emit("register_player", {
-      username: myProfile.username,
-      region: myProfile.region,
-      avatar: myProfile.avatar,
-      flag: myProfile.flag,
+      username: myProfile.username, region: myProfile.region, avatar: myProfile.avatar, flag: myProfile.flag,
       inventory: myProfile.inventory,
       secretCode: myProfile.secretCode || localStorage.getItem('cb_secret') || '',
-      mode: profileMode || 'login'
+      mode: isReturning ? 'login' : (profileMode || 'create')
     });
   }
 }
@@ -1194,6 +1192,8 @@ socket.on("player_registered", (rawData) => {
   myProfile.blitzPassPremium = player.blitzPassPremium;
   myProfile.claimedPassTiers = player.claimedPassTiers;
   myProfile.currentSeasonId = rawData.current_season || rawData.currentSeasonId || "s1";
+  myProfile.seasonProgress = rawData.seasonProgress || {};
+  myProfile.unlockedTier = rawData.unlockedTier || 0;
   sanitizeEquippedPowers();
   updateEconomyUI();
   
