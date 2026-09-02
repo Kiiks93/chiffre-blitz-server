@@ -1385,3 +1385,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 1000);
   }
 });
+// ✅ Au chargement : si aucun compte, proposer la fenêtre (fermable → mode invité)
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    if (!isProfileValid()) checkAndShowProfileModal();
+  }, 1000);
+});
