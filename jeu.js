@@ -5,7 +5,9 @@ JEU.JS — LOGIQUE DE JEU COMPLÈTE
 /* ============================================================
 1. CONSTANTES
 ============================================================ */
-const COMBO_WINDOW_MS = 20000;
+// ⏱️ Fenêtre combo : temps max entre 2 bons clics pour garder le combo.
+// Règle ici : 10000 = 10s (recommandé). Remets 20000 si trop dur.
+const COMBO_WINDOW_MS = 10000;
 const COMBO_TIERS = { TIER1: 15, TIER2: 30, PERFECTION: 35 };
 const MALUS_POWERS = ['quake', 'micro', 'eclipse', 'chaos'];
 const SOLO_TIME_LIMIT = 50;
