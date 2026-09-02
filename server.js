@@ -359,6 +359,7 @@ io.on('connection', (socket) => {
   try {
     let { data: matchedPlayers, error } = await supabase.from('players').select('*').ilike('username', rawUsername);
     let playerData;
+    let wasCreated = false;
     if (!error && matchedPlayers && matchedPlayers.length > 0) {
       const existing = matchedPlayers[0];
       const storedCode = (existing.secret_code || '').trim();
@@ -390,6 +391,7 @@ io.on('connection', (socket) => {
       };
       const { data: inserted, error: insertErr } = await supabase.from('players').insert([newRecord]).select().single();
       if (!insertErr && inserted) { playerData = inserted; }
+      wasCreated = true;
       else { console.error("ERREUR INSERT SUPABASE : ", insertErr ? insertErr.message : "aucune donnee"); playerData = { ...newRecord, id: socket.id }; }
     }
     const claimedNorm = normalizeClaimedTiers(playerData.claimed_pass_tiers);
@@ -431,7 +433,7 @@ io.on('connection', (socket) => {
       activePlayers[socket.id].seasonProgress = playerData.season_progress;
       activePlayers[socket.id].unlockedTier = progress.unlocked_tier || 0;
     
-    socket.emit('register_result', { ok: true });
+    socket.emit('register_result', { ok: true, created: wasCreated });
     socket.emit('player_registered', activePlayers[socket.id]);
     broadcastOnlineCount();
   } catch (err) { console.error("Erreur enregistrement Supabase : ", err); socket.emit('register_result', { ok: false, reason: 'error' }); }
