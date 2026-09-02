@@ -10,6 +10,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="saisons.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
 </head>
 <body>
 
@@ -544,5 +546,10 @@ SCRIPTS (ordre de chargement important)
 <script src="jeu.js"></script>
 <script src="modes-catch.js"></script>
 
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
+}
+</script>
 </body>
 </html>
