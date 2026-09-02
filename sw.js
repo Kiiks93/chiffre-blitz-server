@@ -2,7 +2,7 @@
 SERVICE WORKER — Chiffre Blitz (PWA)
 Cache les assets, laisse passer le serveur (Render/socket.io)
 ============================================================ */
-const CACHE_NAME = "chiffre-blitz-v1";
+const CACHE_NAME = "chiffre-blitz-v2";
 const CORE_ASSETS = [
   "./", "index.html", "manifest.json",
   "style.css", "saisons.css",
@@ -35,7 +35,8 @@ self.addEventListener("fetch", (e) => {
         cached ||
         fetch(e.request)
           .then((res) => {
-            if (e.request.method === "GET" && res.ok) {
+            // ✅ On ne cache QUE les réponses complètes (pas de 206 partial)
+            if (e.request.method === "GET" && res.ok && res.status === 200 && res.type === "basic") {
               const copy = res.clone();
               caches.open(CACHE_NAME).then((c) => c.put(e.request, copy));
             }
