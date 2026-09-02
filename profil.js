@@ -778,6 +778,11 @@ function openAccountModal() {
   modal.style.display = 'flex';
 }
 
+function closeAccountModal() {
+  const modal = document.getElementById('modal-account');
+  if (modal) modal.style.display = 'none';
+}
+
 function renderAccountContent() {
   const d = i18n[currentLang];
   const content = document.getElementById("account-content");   // ✅ bon id cette fois
