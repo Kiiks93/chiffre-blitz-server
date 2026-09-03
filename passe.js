@@ -4,6 +4,62 @@ PASSE.JS — BOUTIQUE & PASSE DE SAISON
 // 🔒 VERROU DU PASSE DE SAISON (Play Billing)
 // Passe à true quand la monétisation 3€ est prête → le pass se débloque partout.
 const SEASON_PASS_ENABLED = false;
+
+let _passLockInterval = null;
+
+function applyPassLockToMenu() {
+  const titleEl = document.getElementById("pass-menu-title");
+  if (!titleEl) return;
+  const banner = titleEl.closest("button") || titleEl.closest("[onclick]") || titleEl.parentElement.parentElement;
+  if (!banner) return;
+
+  if (!SEASON_PASS_ENABLED) {
+    if (!banner.querySelector(".pass-lock-overlay")) {
+      banner.classList.add("pass-locked");
+      const ov = document.createElement("div");
+      ov.className = "pass-lock-overlay";
+      ov.innerHTML = `
+        <span class="pass-lock-icon">🔒</span>
+        <span class="pass-lock-stamp">TOP SECRET</span>
+        <span class="pass-lock-soon">${currentLang === "fr" ? "Bientôt disponible" : "Coming soon"}</span>`;
+      banner.appendChild(ov);
+    }
+  } else {
+    banner.classList.remove("pass-locked");
+    const ov = banner.querySelector(".pass-lock-overlay");
+    if (ov) ov.remove();
+  }
+}
+
+function renderPassLockedScreen(container, fr) {
+  if (_passLockInterval) { clearInterval(_passLockInterval); _passLockInterval = null; }
+  container.innerHTML = `
+    <div class="pass-locked-screen">
+      <div class="pls-code" id="pls-code"></div>
+      <div class="pls-center">
+        <div class="pls-lock">🔒</div>
+        <div class="pls-title">${fr ? "PASSE DE SAISON" : "SEASON PASS"}</div>
+        <div class="pls-msg">${fr ? "CHARGEMENT EN COURS" : "LOADING"}<span class="pls-dots"><span>.</span><span>.</span><span>.</span></span></div>
+        <div class="pls-bar"><div class="pls-bar-fill"></div></div>
+        <div class="pls-sub">${fr ? "Données classifiées — disponibles après la prochaine MAJ." : "Classified data — available after the next update."}</div>
+      </div>
+    </div>`;
+
+  const codeEl = container.querySelector("#pls-code");
+  const rand = () => Math.random().toString(16).slice(2, 10).toUpperCase().padStart(8, "0");
+  const genLine = () => {
+    const ops = ["0x", ">>", "::", "##"];
+    return `<div class="pls-line">${ops[Math.floor(Math.random() * ops.length)]} ${rand()} ${rand()} ${rand()}</div>`;
+  };
+  let lines = [];
+  for (let i = 0; i < 12; i++) lines.push(genLine());
+  codeEl.innerHTML = lines.join("");
+  _passLockInterval = setInterval(() => {
+    lines.shift(); lines.push(genLine());
+    codeEl.innerHTML = lines.join("");
+  }, 220);
+}
+
 /* ============================================================
 1. CONSTANTES
 ============================================================ */
@@ -48,7 +104,6 @@ function switchShopTab(type) {
   currentShopTab = type;
   updateShopCoinsDisplay();
   
-  // Met à jour les onglets actifs
   document.getElementById("shop-tab-bonus").classList.toggle("active", type === SHOP_TABS.BONUS);
   document.getElementById("shop-tab-malus").classList.toggle("active", type === SHOP_TABS.MALUS);
   const cosmeticsTabBtn = document.getElementById("shop-tab-cosmetics");
@@ -56,7 +111,6 @@ function switchShopTab(type) {
   const packsTabBtn = document.getElementById("shop-tab-packs");
   if (packsTabBtn) packsTabBtn.classList.toggle("active", type === SHOP_TABS.PACKS);
   
-  // Rendu des items
   const container = document.getElementById("shop-container");
   container.innerHTML = "";
   
@@ -345,7 +399,7 @@ function getActiveSeason() {
     if (now >= new Date(y1, m1 - 1, d1) && now <= new Date(y2, m2 - 1, d2, 23, 59)) return s;
   }
   const [fd, fm, fy] = list[0].start.split("/").map(Number);
-  if (now < new Date(fy, fm - 1, fd)) return list[0]; // avant la S1 → affiche S1
+  if (now < new Date(fy, fm - 1, fd)) return list[0];
   return list[list.length - 1];
 }
 
@@ -359,8 +413,8 @@ function openBlitzPass() {
 }
 
 function closeBlitzPass() {
-if (_passLockInterval) { clearInterval(_passLockInterval); _passLockInterval = null; }
-document.getElementById("modal-blitz-pass").style.display = "none";
+  if (_passLockInterval) { clearInterval(_passLockInterval); _passLockInterval = null; }
+  document.getElementById("modal-blitz-pass").style.display = "none";
 }
 
 /* ============================================================
@@ -368,8 +422,9 @@ document.getElementById("modal-blitz-pass").style.display = "none";
 ============================================================ */
 function renderBlitzPass() {
   const fr = currentLang === "fr";
-  if (!SEASON_PASS_ENABLED) { renderPassLockedScreen(container, fr); return; }   // ⛔ rien de l'intérieur n'est montré
   const container = document.getElementById("blitz-pass-container");
+  
+  if (!SEASON_PASS_ENABLED) { renderPassLockedScreen(container, fr); return; }
   
   const season = getActiveSeason();
   const seasonData = (myProfile.claimedPassTiers || {})[season.id] || {};
@@ -377,7 +432,6 @@ function renderBlitzPass() {
   const claimed = seasonData;
   const unlockedTier = (myProfile.seasonProgress && myProfile.seasonProgress[season.id] && myProfile.seasonProgress[season.id].unlocked_tier) || 0;
   
-  // Header du pass
   container.innerHTML = `
     <div class="bp-header-banner">
       <div style="font-size:13px; font-weight:900; color:#f8b500; margin-bottom:2px;">${season.emoji} ${fr ? "PASSE DE SAISON :" : "SEASON PASS:"} ${season.name}</div>
@@ -396,15 +450,13 @@ function renderBlitzPass() {
     return;
   }
   
-  // Pistes de récompenses
   const scroll = document.createElement("div");
   scroll.className = "bp-track-scroll";
   
-    season.tiers.forEach(t => {
+  season.tiers.forEach(t => {
     const freeKey = `${t.tier}_free`, premKey = `${t.tier}_premium`;
     const isFreeClaimed = claimed[freeKey], isPremClaimed = claimed[premKey];
     
-    // ✅ Verrouillage séparé : FREE = jours débloqués, PREMIUM = jours + passe acheté
     const isLockedFree = t.tier > unlockedTier;
     const isLockedPrem = (t.tier > unlockedTier) || !isPremium;
     
@@ -432,84 +484,13 @@ function renderBlitzPass() {
   
   container.appendChild(scroll);
   
-  // Scroll horizontal à la molette (PC)
   scroll.addEventListener('wheel', (e) => {
     if (window.innerWidth > 700) {
       e.preventDefault();
       scroll.scrollLeft += (e.deltaY + e.deltaX);
     }
   }, { passive: false });
-  
-   // 🔒 GRILLAGE : pass visible mais AUCUN clic tant que Play Billing n'est pas activé
-    if (!SEASON_PASS_ENABLED) {
-    container.style.position = "relative";
-    container.style.overflow = "hidden";
-    const grille = document.createElement("div");
-    grille.id = "season-pass-lock-overlay";
-    grille.style.cssText = "position:absolute; inset:0; z-index:99999; display:flex; align-items:center; justify-content:center; background:repeating-linear-gradient(45deg, rgba(5,5,15,0.85) 0 10px, rgba(20,20,35,0.85) 10px 20px); border-radius:12px; pointer-events:all;";
-    grille.innerHTML = `
-      <div style="text-align:center; background:rgba(0,0,0,0.95); border:2px solid #f8b500; border-radius:14px; padding:24px 28px; max-width:340px; box-shadow:0 0 30px rgba(248,181,0,0.4);">
-        <div style="font-size:50px; margin-bottom:10px;">🔒</div>
-        <div style="font-size:15px; font-weight:900; color:#f8b500; margin-bottom:8px;">${fr ? "PASSE DE SAISON VERROUILLÉ" : "SEASON PASS LOCKED"}</div>
-        <div style="font-size:11px; color:#ccc; line-height:1.6;">${fr ? "Le Passe de Saison arrive très bientôt ! Reviens après la prochaine mise à jour pour le débloquer et l'acheter." : "The Season Pass is coming soon! Come back after the next update to unlock and purchase it."}</div>
-      </div>`;
-    container.appendChild(grille);
-    console.log("✅ Grillage du pass activé (SEASON_PASS_ENABLED=false)");
-    return;
-  }
-  function applyPassLockToMenu() {
-  const titleEl = document.getElementById("pass-menu-title");
-  if (!titleEl) return;
-  const banner = titleEl.closest("button") || titleEl.closest("[onclick]") || titleEl.parentElement.parentElement;
-  if (!banner) return;
 
-  if (!SEASON_PASS_ENABLED) {
-    if (!banner.querySelector(".pass-lock-overlay")) {
-      banner.classList.add("pass-locked");
-      const ov = document.createElement("div");
-      ov.className = "pass-lock-overlay";
-      ov.innerHTML = `
-        <span class="pass-lock-icon">🔒</span>
-        <span class="pass-lock-stamp">TOP SECRET</span>
-        <span class="pass-lock-soon">${currentLang === "fr" ? "Bientôt disponible" : "Coming soon"}</span>`;
-      banner.appendChild(ov);
-    }
-  } else {
-    banner.classList.remove("pass-locked");
-    const ov = banner.querySelector(".pass-lock-overlay");
-    if (ov) ov.remove();
-  }
-}
-let _passLockInterval = null;
-
-function renderPassLockedScreen(container, fr) {
-  if (_passLockInterval) { clearInterval(_passLockInterval); _passLockInterval = null; }
-  container.innerHTML = `
-    <div class="pass-locked-screen">
-      <div class="pls-code" id="pls-code"></div>
-      <div class="pls-center">
-        <div class="pls-lock">🔒</div>
-        <div class="pls-title">${fr ? "PASSE DE SAISON" : "SEASON PASS"}</div>
-        <div class="pls-msg">${fr ? "CHARGEMENT EN COURS" : "LOADING"}<span class="pls-dots"><span>.</span><span>.</span><span>.</span></span></div>
-        <div class="pls-bar"><div class="pls-bar-fill"></div></div>
-        <div class="pls-sub">${fr ? "Données classifiées — disponibles après la prochaine MAJ." : "Classified data — available after the next update."}</div>
-      </div>
-    </div>`;
-
-  const codeEl = container.querySelector("#pls-code");
-  const rand = () => Math.random().toString(16).slice(2, 10).toUpperCase().padStart(8, "0");
-  const genLine = () => {
-    const ops = ["0x", ">>", "::", "##"];
-    return `<div class="pls-line">${ops[Math.floor(Math.random() * ops.length)]} ${rand()} ${rand()} ${rand()}</div>`;
-  };
-  let lines = [];
-  for (let i = 0; i < 12; i++) lines.push(genLine());
-  codeEl.innerHTML = lines.join("");
-  _passLockInterval = setInterval(() => {
-    lines.shift(); lines.push(genLine());
-    codeEl.innerHTML = lines.join("");
-  }, 220);
-}
   updatePassSeasonLabels();
   setTimeout(() => {
     if (typeof initAllLottieBadges === "function") initAllLottieBadges();
@@ -570,7 +551,7 @@ socket.on("pass_claim_denied", (data) => {
   } else if (data.reason === "tier_locked") {
     showNotificationToast(currentLang === "fr" ? `🔒 Palier ${data.tier} verrouillé. Débloqué au palier ${data.unlocked + 1} demain.` : `🔒 Tier ${data.tier} locked. Unlocks at tier ${data.unlocked + 1} tomorrow.`, "announcement");
   }
-});;
+});
 
 /* ============================================================
 10. PASSE DE SAISON — EFFETS VISUELS
