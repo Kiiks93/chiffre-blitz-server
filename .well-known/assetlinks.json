@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.chiffreblitz.app",
+        "sha256_cert_fingerprints": ["A5:84:AF:1B:50:E0:31:4A:2C:74:90:B6:D6:4D:59:2C:0F:68:5C:A7:D5:88:E7:3E:09:3A:FD:2C:99:2D:20:7E"]
+      }
+    }]
