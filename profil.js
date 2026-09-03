@@ -812,8 +812,14 @@ function renderAccountContent() {
       <input id="account-username" placeholder="${d.account_username_ph}" maxlength="16" style="width:100%; margin-bottom:6px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
       <input id="account-secret" type="password" placeholder="${d.account_secret_ph}" maxlength="32" style="width:100%; margin-bottom:4px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
       <div style="font-size:9px; color:#aaa; text-align:center; margin-bottom:10px; line-height:1.4;">${d.account_secret_help}</div>
+      <div style="font-size:10px; color:#aaa; margin-bottom:4px; text-align:left;">🌍 ${currentLang === "fr" ? "Ta région (pour le classement régional)" : "Your region (for regional ranking)"}</div>
+      <select id="account-region" style="width:100%; margin-bottom:10px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff;"></select>
       <button class="btn-main btn-blue" onclick="submitAccountForm()" style="width:100%;">${d.account_submit}</button>`;
   }
+      // ✅ Remplit le select avec les mêmes régions que la fenêtre profil
+    const srcRegion = document.getElementById("region-input");
+    const dstRegion = document.getElementById("account-region");
+    if (srcRegion && dstRegion) dstRegion.innerHTML = srcRegion.innerHTML;
 }
 
 function showChangeCodeModal() {
@@ -971,6 +977,8 @@ function submitAccountForm() {
   
   myProfile.username = pseudo;
   myProfile.secretCode = code;
+  const regionSel = document.getElementById('account-region');
+  if (regionSel && regionSel.value) myProfile.region = regionSel.value;
   if (!myProfile.region) myProfile.region = 'Hauts-de-France';
   if (!myProfile.avatar) myProfile.avatar = 1;
   if (!myProfile.flag) myProfile.flag = '🇫🇷';
@@ -1103,6 +1111,13 @@ function promptProfileChange() {
   document.getElementById("username-input").value = myProfile.username;
   document.getElementById("username-input").disabled = true;
   if (myProfile.region) document.getElementById("region-input").value = myProfile.region;
+  const regionInput = document.getElementById("region-input");
+  if (regionInput) {
+    regionInput.disabled = true;
+    regionInput.title = currentLang === "fr"
+      ? "Région définie à la création du compte (équité des classements régionaux)."
+      : "Region set at account creation (regional ranking fairness).";
+  }
   document.getElementById("avatar-input").value = myProfile.avatar || 1;
   document.getElementById("flag-input").value = myProfile.flag || "🇫🇷";
   
