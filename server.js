@@ -1,3 +1,5 @@
+// 🔒 Passe de Saison pas encore live → progression gelée (aucun palier ne tombe)
+const SEASON_PASS_ENABLED = false;
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -404,7 +406,7 @@ socket.on('register_player', async (data) => {
 
     const seasonNow = getCurrentSeason();
 
-      // ✅ Progression "1 palier / jour" (fuseau horaire du joueur)
+    // ✅ Progression "1 palier / jour" — GELÉE tant que SEASON_PASS_ENABLED = false
     if (!playerData.season_progress) playerData.season_progress = {};
     const playerTz = (typeof data.timezone === 'string' && data.timezone)
       ? data.timezone
@@ -414,14 +416,16 @@ socket.on('register_player', async (data) => {
     catch (e) { today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Paris' }); }
 
     const progress = playerData.season_progress[seasonNow.id] || { unlocked_tier: 0, last_login_date: null };
-    if (progress.last_login_date !== today || playerData.timezone !== playerTz) {
-      if (progress.last_login_date !== today) {
-        progress.unlocked_tier = Math.min(30, (progress.unlocked_tier || 0) + 1);
-        progress.last_login_date = today;
+    if (SEASON_PASS_ENABLED) {
+      if (progress.last_login_date !== today || playerData.timezone !== playerTz) {
+        if (progress.last_login_date !== today) {
+          progress.unlocked_tier = Math.min(30, (progress.unlocked_tier || 0) + 1);
+          progress.last_login_date = today;
+        }
+        playerData.season_progress[seasonNow.id] = progress;
+        playerData.timezone = playerTz;
+        await supabase.from('players').update({ season_progress: playerData.season_progress, timezone: playerTz }).eq('id', playerData.id);
       }
-      playerData.season_progress[seasonNow.id] = progress;
-      playerData.timezone = playerTz;
-      await supabase.from('players').update({ season_progress: playerData.season_progress, timezone: playerTz }).eq('id', playerData.id);
     }
 
     const premNow = !!(claimedNorm[seasonNow.id] && claimedNorm[seasonNow.id].premium) || (seasonNow.id === "s1" && playerData.blitz_pass_premium);
