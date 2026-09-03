@@ -359,7 +359,8 @@ function openBlitzPass() {
 }
 
 function closeBlitzPass() {
-  document.getElementById("modal-blitz-pass").style.display = "none";
+if (_passLockInterval) { clearInterval(_passLockInterval); _passLockInterval = null; }
+document.getElementById("modal-blitz-pass").style.display = "none";
 }
 
 /* ============================================================
@@ -367,7 +368,9 @@ function closeBlitzPass() {
 ============================================================ */
 function renderBlitzPass() {
   const fr = currentLang === "fr";
+  if (!SEASON_PASS_ENABLED) { renderPassLockedScreen(container, fr); return; }   // ⛔ rien de l'intérieur n'est montré
   const container = document.getElementById("blitz-pass-container");
+  
   const season = getActiveSeason();
   const seasonData = (myProfile.claimedPassTiers || {})[season.id] || {};
   const isPremium = !!seasonData.premium || (season.id === "s1" && myProfile.blitzPassPremium);
@@ -454,7 +457,59 @@ function renderBlitzPass() {
     console.log("✅ Grillage du pass activé (SEASON_PASS_ENABLED=false)");
     return;
   }
+  function applyPassLockToMenu() {
+  const titleEl = document.getElementById("pass-menu-title");
+  if (!titleEl) return;
+  const banner = titleEl.closest("button") || titleEl.closest("[onclick]") || titleEl.parentElement.parentElement;
+  if (!banner) return;
 
+  if (!SEASON_PASS_ENABLED) {
+    if (!banner.querySelector(".pass-lock-overlay")) {
+      banner.classList.add("pass-locked");
+      const ov = document.createElement("div");
+      ov.className = "pass-lock-overlay";
+      ov.innerHTML = `
+        <span class="pass-lock-icon">🔒</span>
+        <span class="pass-lock-stamp">TOP SECRET</span>
+        <span class="pass-lock-soon">${currentLang === "fr" ? "Bientôt disponible" : "Coming soon"}</span>`;
+      banner.appendChild(ov);
+    }
+  } else {
+    banner.classList.remove("pass-locked");
+    const ov = banner.querySelector(".pass-lock-overlay");
+    if (ov) ov.remove();
+  }
+}
+let _passLockInterval = null;
+
+function renderPassLockedScreen(container, fr) {
+  if (_passLockInterval) { clearInterval(_passLockInterval); _passLockInterval = null; }
+  container.innerHTML = `
+    <div class="pass-locked-screen">
+      <div class="pls-code" id="pls-code"></div>
+      <div class="pls-center">
+        <div class="pls-lock">🔒</div>
+        <div class="pls-title">${fr ? "PASSE DE SAISON" : "SEASON PASS"}</div>
+        <div class="pls-msg">${fr ? "CHARGEMENT EN COURS" : "LOADING"}<span class="pls-dots"><span>.</span><span>.</span><span>.</span></span></div>
+        <div class="pls-bar"><div class="pls-bar-fill"></div></div>
+        <div class="pls-sub">${fr ? "Données classifiées — disponibles après la prochaine MAJ." : "Classified data — available after the next update."}</div>
+      </div>
+    </div>`;
+
+  const codeEl = container.querySelector("#pls-code");
+  const rand = () => Math.random().toString(16).slice(2, 10).toUpperCase().padStart(8, "0");
+  const genLine = () => {
+    const ops = ["0x", ">>", "::", "##"];
+    return `<div class="pls-line">${ops[Math.floor(Math.random() * ops.length)]} ${rand()} ${rand()} ${rand()}</div>`;
+  };
+  let lines = [];
+  for (let i = 0; i < 12; i++) lines.push(genLine());
+  codeEl.innerHTML = lines.join("");
+  _passLockInterval = setInterval(() => {
+    lines.shift(); lines.push(genLine());
+    codeEl.innerHTML = lines.join("");
+  }, 220);
+}
   updatePassSeasonLabels();
   setTimeout(() => {
     if (typeof initAllLottieBadges === "function") initAllLottieBadges();
@@ -668,4 +723,4 @@ if (typeof socket !== "undefined") {
   socket.on("season_updated", () => setTimeout(updatePassSeasonLabels, 60));
 }
 
-document.addEventListener("DOMContentLoaded", () => setTimeout(updatePassSeasonLabels, 150));
+document.addEventListener("DOMContentLoaded", () => setTimeout(() => { updatePassSeasonLabels(); applyPassLockToMenu(); }, 150));
