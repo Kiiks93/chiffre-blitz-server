@@ -9,7 +9,7 @@ const i18n = {
   ============================================================ */
   fr: {
     /* ----- Général ----- */
-    coins: "Pièces", trophies: "Trophées", subtitle: "Le duel de calcul et de réflexes ultime",
+    coins: "Pièces", trophies: "Trophées", subtitle: "Repère. Clique. Triomphe.",
     btn_play: "JOUER ⚡", close: "Fermer", back: "⬅️ Retour", back_menu: "⬅️ Retour Menu",
     loading: "Chargement...", cancel: "❌ Annuler",
 
