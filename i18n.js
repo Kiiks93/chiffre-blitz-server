@@ -221,7 +221,7 @@ const i18n = {
   ============================================================ */
   en: {
     /* ----- General ----- */
-    coins: "Coins", trophies: "Trophies", subtitle: "The ultimate math and reflex duel",
+    coins: "Coins", trophies: "Trophies", subtitle: "Spot. Click. Triumph.",
     btn_play: "PLAY ⚡", close: "Close", back: "⬅️ Back", back_menu: "⬅️ Back to Menu",
     loading: "Loading...", cancel: "❌ Cancel",
 
