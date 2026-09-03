@@ -438,18 +438,21 @@ function renderBlitzPass() {
   }, { passive: false });
   
    // 🔒 GRILLAGE : pass visible mais AUCUN clic tant que Play Billing n'est pas activé
-  if (!SEASON_PASS_ENABLED) {
+    if (!SEASON_PASS_ENABLED) {
     container.style.position = "relative";
+    container.style.overflow = "hidden";
     const grille = document.createElement("div");
-    grille.style.cssText = "position:absolute; inset:0; z-index:50; display:flex; align-items:center; justify-content:center; background:repeating-linear-gradient(45deg, rgba(5,5,15,0.78) 0 10px, rgba(20,20,35,0.78) 10px 20px); border-radius:12px;";
+    grille.id = "season-pass-lock-overlay";
+    grille.style.cssText = "position:absolute; inset:0; z-index:99999; display:flex; align-items:center; justify-content:center; background:repeating-linear-gradient(45deg, rgba(5,5,15,0.85) 0 10px, rgba(20,20,35,0.85) 10px 20px); border-radius:12px; pointer-events:all;";
     grille.innerHTML = `
-      <div style="text-align:center; background:rgba(0,0,0,0.88); border:2px solid #f8b500; border-radius:14px; padding:20px 26px; max-width:320px;">
-        <div style="font-size:42px; margin-bottom:8px;">🔒</div>
-        <div style="font-size:14px; font-weight:900; color:#f8b500; margin-bottom:6px;">${fr ? "PASSE DE SAISON VERROUILLÉ" : "SEASON PASS LOCKED"}</div>
-        <div style="font-size:11px; color:#ccc; line-height:1.5;">${fr ? "Le Passe de Saison arrive très bientôt ! Reviens après la prochaine mise à jour pour le débloquer et l'acheter." : "The Season Pass is coming soon! Come back after the next update to unlock and purchase it."}</div>
+      <div style="text-align:center; background:rgba(0,0,0,0.95); border:2px solid #f8b500; border-radius:14px; padding:24px 28px; max-width:340px; box-shadow:0 0 30px rgba(248,181,0,0.4);">
+        <div style="font-size:50px; margin-bottom:10px;">🔒</div>
+        <div style="font-size:15px; font-weight:900; color:#f8b500; margin-bottom:8px;">${fr ? "PASSE DE SAISON VERROUILLÉ" : "SEASON PASS LOCKED"}</div>
+        <div style="font-size:11px; color:#ccc; line-height:1.6;">${fr ? "Le Passe de Saison arrive très bientôt ! Reviens après la prochaine mise à jour pour le débloquer et l'acheter." : "The Season Pass is coming soon! Come back after the next update to unlock and purchase it."}</div>
       </div>`;
     container.appendChild(grille);
-    return;   // ⛔ aucun clic ne passe
+    console.log("✅ Grillage du pass activé (SEASON_PASS_ENABLED=false)");
+    return;
   }
 
   updatePassSeasonLabels();
