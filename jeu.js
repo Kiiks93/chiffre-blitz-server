@@ -970,6 +970,21 @@ socket.on("receive_malus", (data) => {
 });
 
 /* ============================================================
+LIMITES QUOTIDIENNES (pub + roulette)
+============================================================ */
+socket.on('ad_limit_reached', (d) => {
+  showNotificationToast(currentLang === 'fr'
+    ? `📺 Limite de pubs atteinte (${d.limit}/jour). Reviens demain !`
+    : `📺 Ad limit reached (${d.limit}/day). Come back tomorrow!`, 'announcement');
+});
+
+socket.on('wheel_limit_reached', (d) => {
+  showNotificationToast(currentLang === 'fr'
+    ? `🎰 Limite de roulette atteinte (${d.limit}/jour). Reviens demain !`
+    : `🎰 Wheel limit reached (${d.limit}/day). Come back tomorrow!`, 'announcement');
+});
+
+/* ============================================================
 12. CLASSEMENT
 ============================================================ */
 let currentLbCategory = "points";
