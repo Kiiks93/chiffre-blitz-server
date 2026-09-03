@@ -620,3 +620,20 @@ h1 { color: var(--c-primary); margin: 0; font-size: 16px; text-shadow: 0 0 15px 
   .tile.citrouille-theme { background: linear-gradient(135deg, rgba(26, 13, 0, 0.75), rgba(255, 138, 0, 0.75)) !important; }
   .tile.fantome-theme { background: linear-gradient(135deg, rgba(26, 0, 51, 0.75), rgba(123, 47, 247, 0.75)) !important; }
 }
+
+/* 🔒 ÉCRAN PASSE VERROUILLÉ — lignes de code + chargement (DA néon) */
+.pass-locked-screen { position:relative; min-height:340px; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:12px; background:#07030f; }
+.pls-code { position:absolute; inset:0; padding:10px; font-family:monospace; font-size:10px; line-height:1.6; color:rgba(0,210,255,0.30); overflow:hidden; text-shadow:0 0 6px rgba(0,210,255,0.45); }
+.pls-line { white-space:nowrap; }
+.pls-center { position:relative; z-index:2; text-align:center; background:rgba(7,3,15,0.8); border:2px solid #f8b500; border-radius:14px; padding:22px 28px; box-shadow:0 0 30px rgba(248,181,0,0.35); backdrop-filter:blur(2px); }
+.pls-lock { font-size:46px; filter:drop-shadow(0 0 12px #f8b500); animation:lockSwing 1.6s ease-in-out infinite; transform-origin:top center; }
+.pls-title { font-size:14px; font-weight:900; color:#f8b500; letter-spacing:2px; margin:8px 0 4px; }
+.pls-msg { font-size:11px; color:#00d2ff; font-weight:bold; letter-spacing:1px; }
+.pls-dots span { animation:dotBlink 1.2s infinite; }
+.pls-dots span:nth-child(2){ animation-delay:.2s; } .pls-dots span:nth-child(3){ animation-delay:.4s; }
+.pls-bar { width:200px; height:8px; margin:12px auto 8px; background:#1a0f2e; border:1px solid #f8b500; border-radius:99px; overflow:hidden; }
+.pls-bar-fill { height:100%; width:40%; background:linear-gradient(90deg,#f8b500,#ff8a00); border-radius:99px; animation:barLoop 1.6s ease-in-out infinite; box-shadow:0 0 12px rgba(248,181,0,0.8); }
+.pls-sub { font-size:9px; color:#aaa; margin-top:6px; }
+@keyframes dotBlink { 0%,60%,100%{opacity:.2;} 30%{opacity:1;} }
+@keyframes barLoop { 0%{margin-left:-40%;} 100%{margin-left:100%;} }
+@keyframes lockSwing { 0%,100%{transform:rotate(-10deg);} 50%{transform:rotate(10deg);} }
