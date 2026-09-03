@@ -1,7 +1,4 @@
-/* ============================================================
-SERVICE WORKER — Chiffre Blitz (PWA)
-============================================================ */
-const CACHE_NAME = "chiffre-blitz-v6";
+const CACHE_NAME = "chiffre-blitz-v7";
 const BASE = "/";
 const CORE_ASSETS = [
   BASE, BASE + "index.html", BASE + "manifest.json",
@@ -24,7 +21,7 @@ self.addEventListener("activate", (e) => {
   e.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+  )
   );
   self.clients.claim();
 });
@@ -33,19 +30,18 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (url.hostname.includes("onrender.com") || url.pathname.startsWith("/socket.io")) return;
 
+  // ✅ RÉSEAU D'ABORD : version fraîche à chaque refresh, cache seulement si hors-ligne
   e.respondWith(
-    caches.match(e.request).then(
-      (cached) =>
-        cached ||
-        fetch(e.request)
-          .then((res) => {
-            if (e.request.method === "GET" && res.ok && res.status === 200 && res.type === "basic") {
-              const copy = res.clone();
-              caches.open(CACHE_NAME).then((c) => c.put(e.request, copy));
-            }
-            return res;
-          })
-          .catch(() => caches.match(BASE + "index.html"))
-    )
+    fetch(e.request)
+      .then((res) => {
+        if (e.request.method === "GET" && res.ok && res.status === 200 && res.type === "basic") {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(e.request, copy));
+        }
+        return res;
+      })
+      .catch(() =>
+        caches.match(e.request).then((c) => c || caches.match(BASE + "index.html"))
+      )
   );
 });
