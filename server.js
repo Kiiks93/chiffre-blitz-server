@@ -34,6 +34,13 @@ function isStrongCode(code) {
 function hashSecret(code) { return crypto.createHash('sha256').update(String(code)).digest('hex'); }
 function isHashed(v) { return /^[a-f0-9]{64}$/.test(v || ''); }
 
+// ✅ Helper : remet à zéro les compteurs quotidiens au fuseau du joueur
+function ensureDailyCounters(p) {
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: p.timezone || 'Europe/Paris' });
+  if (!p.daily_ads || p.daily_ads.date !== today) p.daily_ads = { count: 0, date: today };
+  if (!p.daily_roulette || p.daily_roulette.date !== today) p.daily_roulette = { count: 0, date: today };
+}
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*", methods: ["GET", "POST"] } });
@@ -282,7 +289,10 @@ async function savePlayerToSupabase(socketId) {
     matches_played: p.matches_played || 0, win_streak: p.win_streak || 0, best_combo: p.best_combo || 0,
     best_avalanche: p.best_avalanche || 0, solo_games: p.solo_games || 0,
     total_coins_earned: p.total_coins_earned || 0, season_n1_count: p.season_n1_count || 0,
-    trophies_collection: p.trophies_collection || {}
+    trophies_collection: p.trophies_collection || {},
+    // ✅ Sauvegarde des compteurs quotidiens
+    daily_ads: p.daily_ads || { count: 0, date: '' },
+    daily_roulette: p.daily_roulette || { count: 0, date: '' }
   };
   let { error } = await supabase.from('players').update({ ...core, ...extra }).eq('id', p.dbId);
   if (error) {
@@ -389,7 +399,10 @@ socket.on('register_player', async (data) => {
         inventory: { __equipped: { frame: "frame_standard" } }, equipped_power: null, unlocked_items: ["frame_standard"],
         blitz_pass_premium: false, claimed_pass_tiers: {}, season_progress: {},
         matches_played: 0, win_streak: 0, best_combo: 0, best_avalanche: 0, solo_games: 0, total_coins_earned: 0,
-        season_n1_count: 0, trophies_collection: {}
+        season_n1_count: 0, trophies_collection: {},
+        // ✅ Compteurs quotidiens
+        daily_ads: { count: 0, date: '' },
+        daily_roulette: { count: 0, date: '' }
       };
       const { data: inserted, error: insertErr } = await supabase.from('players').insert([newRecord]).select().single();
       if (!insertErr && inserted) { playerData = inserted; }
@@ -442,26 +455,20 @@ socket.on('register_player', async (data) => {
       matches_played: playerData.matches_played || 0, win_streak: playerData.win_streak || 0,
       best_combo: playerData.best_combo || 0, best_avalanche: playerData.best_avalanche || 0,
       solo_games: playerData.solo_games || 0, total_coins_earned: playerData.total_coins_earned || 0,
-      season_n1_count: playerData.season_n1_count || 0, trophies_collection: playerData.trophies_collection || {}
+      season_n1_count: playerData.season_n1_count || 0, trophies_collection: playerData.trophies_collection || {},
+      // ✅ Compteurs quotidiens
+      daily_ads: playerData.daily_ads || { count: 0, date: '' },
+      daily_roulette: playerData.daily_roulette || { count: 0, date: '' },
+      timezone: playerTz
     };
+    
+    // ✅ Reset quotidien au chargement
+    ensureDailyCounters(activePlayers[socket.id]);
+    
     socket.emit('register_result', { ok: true, created: wasCreated });
     socket.emit('player_registered', activePlayers[socket.id]);
     broadcastOnlineCount();
   } catch (err) { console.error("Erreur enregistrement Supabase : ", err); socket.emit('register_result', { ok: false, reason: 'error' }); }
-
-// Dans register_player ou au chargement du profil :
-if (!p.daily_ads) p.daily_ads = { count: 0, date: '' };
-const today = new Date().toLocaleDateString('sv-SE', { timeZone: p.timezone || 'Europe/Paris' });
-if (p.daily_ads.date !== today) {
-  p.daily_ads = { count: 0, date: today };
-  await supabase.from('players').update({ daily_ads: p.daily_ads }).eq('id', p.id);
-}
-// Dans register_player :
-if (!p.daily_roulette) p.daily_roulette = { count: 0, date: '' };
-const today = new Date().toLocaleDateString('sv-SE', { timeZone: p.timezone || 'Europe/Paris' });
-if (p.daily_roulette.date !== today) {
-  p.daily_roulette = { count: 0, date: today };
-}
 });
 
   socket.on('buy_item', async (itemId) => {
@@ -611,20 +618,33 @@ if (p.daily_roulette.date !== today) {
   const player = activePlayers[socket.id];
   if (!player) return;
   
-  // ✅ Cap 5 spins/jour
-  if (!player.daily_roulette) player.daily_roulette = { count: 0, date: '' };
-  const today = new Date().toLocaleDateString('sv-SE', { timeZone: player.timezone || 'Europe/Paris' });
-  if (player.daily_roulette.date !== today) player.daily_roulette = { count: 0, date: today };
-  
+  // ✅ Reset quotidien + cap 5 spins/jour
+  ensureDailyCounters(player);
   if (player.daily_roulette.count >= 5) {
     socket.emit('wheel_limit_reached', { limit: 5, used: player.daily_roulette.count });
     return;
   }
-  
   player.daily_roulette.count++;
   
-  // ... reste du code inchangé
+  const roll = Math.random();
+  let outcome = 'rien', coinDelta = 0, itemId = null;
+  const possiblePowerRewards = ["spotlight", "freeze", "joker", "quake"];
+  if (roll < 0.30) { outcome = 'jackpot'; coinDelta = 250; }
+  else if (roll < 0.45) {
+    outcome = 'objet';
+    itemId = possiblePowerRewards[Math.floor(Math.random() * possiblePowerRewards.length)];
+    player.inventory = player.inventory || {};
+    player.inventory[itemId] = (player.inventory[itemId] || 0) + 1;
+  }
+  else if (roll < 0.70) { outcome = 'banqueroute'; coinDelta = -150; }
+
+  if (coinDelta < 0) player.coins = Math.max(0, player.coins + coinDelta);
+  else player.coins += coinDelta;
+  lastMatchEarnings[socket.id] = (lastMatchEarnings[socket.id] || 0) + coinDelta;
+
   await savePlayerToSupabase(socket.id);
+  socket.emit('player_registered', player);
+  socket.emit('jackpot_wheel_result', { outcome, coinDelta, itemId, newCoins: player.coins });
 });
 
   socket.on('get_leaderboard', async (type) => {
@@ -880,11 +900,8 @@ if (p.daily_roulette.date !== today) {
   const player = activePlayers[socket.id];
   if (!player) return;
   
-  // ✅ Cap 15 pubs/jour
-  if (!player.daily_ads) player.daily_ads = { count: 0, date: '' };
-  const today = new Date().toLocaleDateString('sv-SE', { timeZone: player.timezone || 'Europe/Paris' });
-  if (player.daily_ads.date !== today) player.daily_ads = { count: 0, date: today };
-  
+  // ✅ Reset quotidien + cap 15 pubs/jour
+  ensureDailyCounters(player);
   if (player.daily_ads.count >= 15) {
     socket.emit('ad_limit_reached', { limit: 15, used: player.daily_ads.count });
     return;
