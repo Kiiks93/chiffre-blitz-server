@@ -509,19 +509,10 @@ socket.on("pass_claim_denied", (data) => {
     showNotificationToast(currentLang === "fr" ? "❌ Tu dois acheter le Passe Premium pour récupérer cette récompense !" : "❌ You must buy the Premium Pass to claim this reward!", "announcement");
   } else if (data.reason === "already_claimed") {
     showNotificationToast(currentLang === "fr" ? "❌ Cette récompense a déjà été récupérée." : "❌ This reward has already been claimed.", "announcement");
-  }
-  ;
-});
-socket.on("pass_claim_denied", (data) => {
-  if (data.reason === "premium_required") {
-    showNotificationToast(currentLang === "fr" ? "❌ Tu dois acheter le Passe Premium pour récupérer cette récompense !" : "❌ You must buy the Premium Pass to claim this reward!", "announcement");
-  } else if (data.reason === "already_claimed") {
-    showNotificationToast(currentLang === "fr" ? "❌ Cette récompense a déjà été récupérée." : "❌ This reward has already been claimed.", "announcement");
   } else if (data.reason === "tier_locked") {
     showNotificationToast(currentLang === "fr" ? `🔒 Palier ${data.tier} verrouillé. Débloqué au palier ${data.unlocked + 1} demain.` : `🔒 Tier ${data.tier} locked. Unlocks at tier ${data.unlocked + 1} tomorrow.`, "announcement");
   }
-  ;
-});
+});;
 
 /* ============================================================
 10. PASSE DE SAISON — EFFETS VISUELS
