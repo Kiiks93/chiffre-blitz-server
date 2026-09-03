@@ -648,8 +648,10 @@ function leaveRoomIfInRoom() {
 }
 
 function openLaunchAdModal() {
+  // ✅ Pub de lancement désactivée : accès direct au menu
   SoundEngine.init();
-  document.getElementById("modal-launch-ad").style.display = "flex";
+  launchAdWatched = true;
+  showMainMenu();
 }
 
 function playLaunchAd() {
