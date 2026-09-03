@@ -7,7 +7,7 @@ JEU.JS — LOGIQUE DE JEU COMPLÈTE
 ============================================================ */
 // ⏱️ Fenêtre combo : temps max entre 2 bons clics pour garder le combo.
 // Règle ici : 10000 = 10s (recommandé). Remets 20000 si trop dur.
-const COMBO_WINDOW_MS = 6000;   // 6s max entre 2 clics
+const COMBO_WINDOW_MS = 3000;   // 3s max entre 2 clics
 const COMBO_TIERS = { TIER1: 15, TIER2: 30, PERFECTION: 35 };
 const MALUS_POWERS = ['quake', 'micro', 'eclipse', 'chaos'];
 const SOLO_TIME_LIMIT = 50;
