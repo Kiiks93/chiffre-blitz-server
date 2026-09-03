@@ -448,6 +448,20 @@ socket.on('register_player', async (data) => {
     socket.emit('player_registered', activePlayers[socket.id]);
     broadcastOnlineCount();
   } catch (err) { console.error("Erreur enregistrement Supabase : ", err); socket.emit('register_result', { ok: false, reason: 'error' }); }
+
+// Dans register_player ou au chargement du profil :
+if (!p.daily_ads) p.daily_ads = { count: 0, date: '' };
+const today = new Date().toLocaleDateString('sv-SE', { timeZone: p.timezone || 'Europe/Paris' });
+if (p.daily_ads.date !== today) {
+  p.daily_ads = { count: 0, date: today };
+  await supabase.from('players').update({ daily_ads: p.daily_ads }).eq('id', p.id);
+}
+// Dans register_player :
+if (!p.daily_roulette) p.daily_roulette = { count: 0, date: '' };
+const today = new Date().toLocaleDateString('sv-SE', { timeZone: p.timezone || 'Europe/Paris' });
+if (p.daily_roulette.date !== today) {
+  p.daily_roulette = { count: 0, date: today };
+}
 });
 
   socket.on('buy_item', async (itemId) => {
@@ -593,22 +607,25 @@ socket.on('register_player', async (data) => {
     }
   });
 
-  socket.on('spin_jackpot_wheel', async () => {
-    const player = activePlayers[socket.id];
-    if (!player) return;
-    const roll = Math.random();
-    let outcome = 'rien', coinDelta = 0, itemId = null;
-    const possiblePowerRewards = ["spotlight", "freeze", "joker", "quake"];
-    if (roll < 0.30) { outcome = 'jackpot'; coinDelta = 250; }
-    else if (roll < 0.45) { outcome = 'objet'; itemId = possiblePowerRewards[Math.floor(Math.random() * possiblePowerRewards.length)]; player.inventory = player.inventory || {}; player.inventory[itemId] = (player.inventory[itemId] || 0) + 1; }
-    else if (roll < 0.70) { outcome = 'banqueroute'; coinDelta = -150; }
-    if (coinDelta < 0) player.coins = Math.max(0, player.coins + coinDelta);
-    else player.coins += coinDelta;
-    lastMatchEarnings[socket.id] = (lastMatchEarnings[socket.id] || 0) + coinDelta;
-    await savePlayerToSupabase(socket.id);
-    socket.emit('player_registered', player);
-    socket.emit('jackpot_wheel_result', { outcome, coinDelta, itemId, newCoins: player.coins });
-  });
+ socket.on('spin_jackpot_wheel', async () => {
+  const player = activePlayers[socket.id];
+  if (!player) return;
+  
+  // ✅ Cap 5 spins/jour
+  if (!player.daily_roulette) player.daily_roulette = { count: 0, date: '' };
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: player.timezone || 'Europe/Paris' });
+  if (player.daily_roulette.date !== today) player.daily_roulette = { count: 0, date: today };
+  
+  if (player.daily_roulette.count >= 5) {
+    socket.emit('wheel_limit_reached', { limit: 5, used: player.daily_roulette.count });
+    return;
+  }
+  
+  player.daily_roulette.count++;
+  
+  // ... reste du code inchangé
+  await savePlayerToSupabase(socket.id);
+});
 
   socket.on('get_leaderboard', async (type) => {
     try {
@@ -859,12 +876,29 @@ socket.on('register_player', async (data) => {
     socket.emit('solo_reward_result', { baseCoins, rushBonus, earnedCoins, triggerWheel, globalEvents, perfection });
   });
 
-  socket.on('double_reward', async () => {
-    const player = activePlayers[socket.id];
-    if (!player) return;
-    const earnings = lastMatchEarnings[socket.id] || 0;
-    if (earnings > 0) { player.coins += earnings; lastMatchEarnings[socket.id] = 0; await savePlayerToSupabase(socket.id); socket.emit('player_registered', player); }
-  });
+ socket.on('double_reward', async () => {
+  const player = activePlayers[socket.id];
+  if (!player) return;
+  
+  // ✅ Cap 15 pubs/jour
+  if (!player.daily_ads) player.daily_ads = { count: 0, date: '' };
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: player.timezone || 'Europe/Paris' });
+  if (player.daily_ads.date !== today) player.daily_ads = { count: 0, date: today };
+  
+  if (player.daily_ads.count >= 15) {
+    socket.emit('ad_limit_reached', { limit: 15, used: player.daily_ads.count });
+    return;
+  }
+  
+  const earnings = lastMatchEarnings[socket.id] || 0;
+  if (earnings > 0) {
+    player.coins += earnings;
+    player.daily_ads.count++;
+    lastMatchEarnings[socket.id] = 0;
+    await savePlayerToSupabase(socket.id);
+    socket.emit('player_registered', player);
+  }
+});
 
   socket.on('delete_account', async (data) => {
     const player = activePlayers[socket.id];
