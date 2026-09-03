@@ -20,8 +20,8 @@ function applyPassLockToMenu() {
       ov.className = "pass-lock-overlay";
       ov.innerHTML = `
         <span class="pass-lock-icon">🔒</span>
-        <span class="pass-lock-stamp">TOP SECRET</span>
-        <span class="pass-lock-soon">${currentLang === "fr" ? "Bientôt disponible" : "Coming soon"}</span>`;
+        <span class="pass-lock-label">${currentLang === "fr" ? "VERROUILLÉ" : "LOCKED"}</span>
+        <span class="pass-lock-soon">${currentLang === "fr" ? "Ouverture bientôt" : "Opening soon"}</span>`;
       banner.appendChild(ov);
     }
   } else {
