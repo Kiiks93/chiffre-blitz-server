@@ -519,6 +519,7 @@ for (const [sid, player] of Object.entries(activePlayers)) {
   socket.on('equip_cosmetic', async (itemId) => {
     const player = activePlayers[socket.id];
     if (!player) return;
+    if (typeof itemId !== 'string' || itemId.length > 40) return;  // ⬅️ anti-abus
     if (!player.inventory) player.inventory = {};
     if (!player.inventory.__equipped) player.inventory.__equipped = {};
     if (itemId === 'none' || itemId === 'standard' || !itemId) delete player.inventory.__equipped.avatar;
