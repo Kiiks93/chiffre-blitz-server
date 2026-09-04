@@ -535,6 +535,37 @@ for (const [sid, player] of Object.entries(activePlayers)) {
     socket.emit('player_registered', player);
   });
 
+  socket.on("update_profile_visuals", async (data) => {
+  try {
+    const player = activePlayers[socket.id];
+    if (!player) return;
+
+    const avatar = Math.max(1, Math.min(999, parseInt(data.avatar) || player.avatar || 1));
+    const flag = typeof data.flag === "string" ? data.flag.replace(/['"]/g, "").trim() : player.flag;
+    const inventory = data.inventory || player.inventory || {};
+
+    player.avatar = avatar;
+    player.flag = flag;
+    player.inventory = inventory;
+
+    if (player.dbId) {
+      await supabase
+        .from("players")
+        .update({
+          avatar,
+          flag,
+          inventory
+        })
+        .eq("id", player.dbId);
+    }
+
+    socket.emit("profile_visuals_updated", { ok: true });
+  } catch (err) {
+    console.error("Erreur update_profile_visuals :", err);
+    socket.emit("profile_visuals_updated", { ok: false });
+  }
+});
+
   socket.on('buy_blitz_pass', async () => {
     const player = activePlayers[socket.id];
     if (!player) return;
