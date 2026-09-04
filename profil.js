@@ -1270,11 +1270,37 @@ function saveProfileFromModal() {
     socket.emit("equip_cosmetic", "none");
   }
   
-  saveLocalPreferences();
+    saveLocalPreferences();
   updateEconomyUI();
+  SoundEngine.init();
+
+  if (isCustomizationOnly) {
+    pendingCustomization = false;
+    pendingProfileValidation = false;
+
+    const modal = document.getElementById('modal-username');
+    if (modal) modal.style.display = 'none';
+
+    if (typeof showNotificationToast === 'function') {
+      showNotificationToast(
+        currentLang === "fr" ? "✅ Personnalisation enregistrée !" : "✅ Customization saved!",
+        "gift"
+      );
+    }
+
+    if (typeof socket !== "undefined" && socket && socket.connected) {
+      socket.emit("update_profile_visuals", {
+        avatar: myProfile.avatar,
+        flag: myProfile.flag,
+        inventory: myProfile.inventory || {}
+      });
+    }
+
+    return;
+  }
+
   pendingProfileValidation = true;
   registerIfPossible();
-  SoundEngine.init();
 }
 
 function registerIfPossible() {
@@ -1512,3 +1538,59 @@ window.addEventListener('load', () => {
     if (!isProfileValid()) checkAndShowProfileModal();
   }, 1000);
 });
+/* ============================================================
+FIX ANDROID — Gestion du cycle de vie de l'app
+============================================================ */
+
+function updateLastActiveTime() {
+  localStorage.setItem("cb_last_active", Date.now().toString());
+}
+
+["click", "touchstart", "keydown", "scroll"].forEach(event => {
+  document.addEventListener(event, updateLastActiveTime, { passive: true });
+});
+
+updateLastActiveTime();
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    const lastActive = parseInt(localStorage.getItem("cb_last_active") || "0");
+    const timeAway = Date.now() - lastActive;
+    
+    if (timeAway > 30000) {
+      document.body.style.opacity = "0.99";
+      requestAnimationFrame(() => {
+        document.body.style.opacity = "1";
+      });
+      
+      if (timeAway > 120000) {
+        console.log("App en arrière-plan depuis", Math.round(timeAway / 1000), "secondes → reload");
+        location.reload();
+      }
+    }
+    
+    updateLastActiveTime();
+  }
+});
+
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) {
+    console.log("Page restaurée depuis bfcache → reload");
+    location.reload();
+  }
+});
+
+if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+  navigator.serviceWorker.addEventListener("message", (e) => {
+    if (e.data && e.data.action === "RELOAD_PAGE") {
+      console.log("Service Worker demande un reload → reload");
+      location.reload();
+    }
+  });
+  
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage("CHECK_BACKGROUND_TIME");
+    }
+  });
+}
