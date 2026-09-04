@@ -1037,6 +1037,8 @@ function submitAccountForm() {
   if (!myProfile.flag) myProfile.flag = '🇫🇷';
   pendingAccountLogin = true;
   
+  // ⬅️ Éjecté pour double-compte → on ne tente rien, le reload arrive
+if (window.__kicked) return;
   if (socket.connected) {
     socket.emit("register_player", {
       username: myProfile.username,
