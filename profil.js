@@ -64,6 +64,11 @@ socket.on("connect", () => {
   }
 });
 
+socket.on('force_disconnect', (data) => {
+  alert(`⚠️ ${data.reason}\n\nVous allez être déconnecté.`);
+  location.reload(); // Recharge la page pour nettoyer l'état
+});
+
 /* ============================================================
 3. ÉTAT GLOBAL
 ============================================================ */
