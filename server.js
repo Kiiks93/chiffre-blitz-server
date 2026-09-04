@@ -408,7 +408,19 @@ socket.on('register_player', async (data) => {
       if (!insertErr && inserted) { playerData = inserted; }
       else { console.error("ERREUR INSERT SUPABASE : ", insertErr ? insertErr.message : "aucune donnee"); playerData = { ...newRecord, id: socket.id }; }
     }
-
+    
+// 🔒 Déconnecte les anciennes sessions du même joueur (anti double-compte)
+for (const [sid, player] of Object.entries(activePlayers)) {
+  if (player.username && player.username.toLowerCase() === rawUsername.toLowerCase() && sid !== socket.id) {
+    const oldSocket = io.sockets.sockets.get(sid);
+    if (oldSocket) {
+      oldSocket.emit('force_disconnect', { reason: 'Connexion depuis un autre appareil' });
+      oldSocket.disconnect(true);
+    }
+    delete activePlayers[sid];
+    console.log(`🔒 Double session détectée pour ${rawUsername}, ancienne session ${sid} éjectée`);
+  }
+}
     const claimedNorm = normalizeClaimedTiers(playerData.claimed_pass_tiers);
     playerData.unlocked_items = playerData.unlocked_items || [];
     if (!playerData.unlocked_items.includes("frame_standard")) playerData.unlocked_items.push("frame_standard");
