@@ -1375,7 +1375,7 @@ socket.on("solo_reward_result", (data) => {
     pendingRecapAfterPopup = true;
     setTimeout(() => {
       SoundEngine.stopBoom();
-      showRewardPopUp(d.perfection_popup_text, "🏆");
+      showRewardPopUp(d.perfection_popup_text, "⭐");
       const btn = document.querySelector("#reward-popup-overlay .btn-gold");
       if (btn) btn.onclick = closeRewardPopUp;
     }, 900);
