@@ -1069,7 +1069,7 @@ socket.on("leaderboard_data", (res) => {
     const titleHtml = equippedTitle ? `<span style="font-size:8px; color:#f8b500; font-weight:bold; margin-left:4px;">[${getTitleDisplayNames()[equippedTitle] || equippedTitle}]</span>` : "";
     let rightBadge = `<span class="lb-pts" style="color:#00ff88;">${p.points} pts</span>`;
     if (category === "coins") rightBadge = `<span class="lb-pts" style="color:#f8b500;">${p.coins} 🪙</span>`;
-    else if (category === "trophies") rightBadge = `<span class="lb-pts" style="color:#fceabb;">${p.trophies} 🏆</span>`;
+    else if (category === "trophies") rightBadge = `<span class="lb-pts" style="color:#fceabb;">${p.trophies} 👑</span>`;
     else if (category === "combined") rightBadge = `<span class="lb-pts" style="color:#00d2ff; font-size:11px;">🏆${p.trophies} | ${p.points}pts</span>`;
     let rankDisplay = `#${index + 1}`, rankColor = "#00d2ff";
     if (index === 0) { rankDisplay = "🥇"; rankColor = "#f8b500"; }
