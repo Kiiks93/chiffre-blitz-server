@@ -53,6 +53,11 @@ h1 { color: var(--c-primary); margin: 0; font-size: 16px; text-shadow: 0 0 15px 
 #user-name-display { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 110px; }
 #user-title-display { width: 100%; font-size: 9px; font-weight: bold; color: var(--c-gold); white-space: normal; line-height: 1.2; text-align: center; letter-spacing: 0.3px; }
 
+@keyframes slideDown {
+  from { transform: translateX(-50%) translateY(-50px); opacity: 0; }
+  to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
 /* ============================================================
 4. BARRE D'ÉCONOMIE (pièces/trophées/points + compteur en ligne)
 ============================================================ */
