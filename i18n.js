@@ -27,7 +27,7 @@ const i18n = {
 
     /* ----- Menu principal ----- */
     menu_solo: "🏋️ ENTRAÎNEMENT SOLO", menu_1v1: "⚔️ DUEL 1v1 ONLINE", menu_tow: "🪢 Mode Corde Raide (Tug-of-War)",
-    menu_friends: "👥 SALONS & AMIS", menu_shop: "🛍️ BOUTIQUE", menu_lb: "🏆 CLASSEMENT",
+    menu_friends: "👥 SALONS & AMIS", menu_shop: "🛍️ BOUTIQUE", menu_lb: "👑 CLASSEMENT",
     menu_tourney: "🎯 TOURNOIS", menu_info: "ℹ️ Informations & Règles",
     menu_halloween: "🎃 Mode Exclusif Halloween", menu_noel: "🎄 Mode Exclusif Noël",
 
@@ -239,7 +239,7 @@ const i18n = {
 
     /* ----- Main Menu ----- */
     menu_solo: "🏋️ TRAINING", menu_1v1: "⚔️ 1v1 DUEL", menu_tow: "🪢 Tug-of-War Mode",
-    menu_friends: "👥 ROOMS", menu_shop: "🛍️ SHOP", menu_lb: "🏆 LEADERBOARD",
+    menu_friends: "👥 ROOMS", menu_shop: "🛍️ SHOP", menu_lb: "👑 LEADERBOARD",
     menu_tourney: "🎯 TOURNAMENTS", menu_info: "ℹ️ Info & Rules",
     menu_halloween: "🎃 Halloween Exclusive Mode", menu_noel: "🎄 Christmas Exclusive Mode",
 
