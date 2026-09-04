@@ -87,9 +87,9 @@ const i18n = {
     not_enough_coins: "Tu n'as pas assez de pièces 🪙 pour acheter cet objet !",
 
     /* ----- Classement ----- */
-    lb_title: "🏆 CLASSEMENT",
+    lb_title: "👑 CLASSEMENT",
     lb_reg: "📍 Région", lb_nat: "🇫🇷 France", lb_glb: "🌍 Monde",
-    lb_cat_points: "🏅 Points", lb_cat_trophies: "🏆 Trophées", lb_cat_coins: "🪙 Argent", lb_cat_combined: "⭐ Combiné",
+    lb_cat_points: "🏅 Points", lb_cat_trophies: "👑 Couronnes", lb_cat_coins: "🪙 Argent", lb_cat_combined: "⭐ Combiné",
     lb_combined_desc: "💡 Combiné : Couronnes prioritaires, départagées par les points",
     lb_regional_label: "Régional", lb_no_players: "Aucun joueur.",
 
@@ -97,7 +97,7 @@ const i18n = {
     tourney_screen_title: "🎯 Tournoi Blitz",
     tourney_teaser_title: "Bientôt disponible !",
     tourney_teaser_desc: "Ce mode est actuellement en cours de réflexion et de développement. Prépare-toi à affronter l'élite dans des tournois épiques très bientôt...",
-    tourney_rewards: "Récompenses : 200 🪙 + 1 🏆 + 50 ⭐",
+    tourney_rewards: "Récompenses : 200 🪙 + 1 👑 + 50 ⭐",
 
     /* ----- Profil & Compte ----- */
     welcome_title: "⚡ IDENTITÉ BLITZ ⚡", welcome_sub: "Personnalise ton profil compétitif :",
@@ -299,9 +299,9 @@ const i18n = {
     not_enough_coins: "You don't have enough coins 🪙 to buy this item!",
 
     /* ----- Leaderboard ----- */
-    lb_title: "🏆 LEADERBOARD",
+    lb_title: "👑 LEADERBOARD",
     lb_reg: "📍 Region", lb_nat: "🇫🇷 France", lb_glb: "🌍 World",
-    lb_cat_points: "🏅 Points", lb_cat_trophies: "🏆 Trophies", lb_cat_coins: "🪙 Money", lb_cat_combined: "⭐ Combined",
+    lb_cat_points: "🏅 Points", lb_cat_trophies: "👑 Trophies", lb_cat_coins: "🪙 Money", lb_cat_combined: "⭐ Combined",
     lb_combined_desc: "💡 Combined: Crowns first, tied by points",
     lb_regional_label: "Regional", lb_no_players: "No players.",
 
@@ -309,7 +309,7 @@ const i18n = {
     tourney_screen_title: "🎯 Blitz Tournament",
     tourney_teaser_title: "Coming soon!",
     tourney_teaser_desc: "This mode is currently under consideration and development. Get ready to face the elite in epic tournaments very soon...",
-    tourney_rewards: "Rewards: 200 🪙 + 1 🏆 + 50 ⭐",
+    tourney_rewards: "Rewards: 200 🪙 + 1 👑 + 50 ⭐",
 
     /* ----- Profile & Account ----- */
     welcome_title: "⚡ BLITZ IDENTITY ⚡", welcome_sub: "Customize your competitive profile:",
