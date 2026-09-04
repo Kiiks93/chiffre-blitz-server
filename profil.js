@@ -1288,11 +1288,11 @@ function saveProfileFromModal() {
       );
     }
 
-    if (typeof socket !== "undefined" && socket && socket.connected) {
+       if (typeof socket !== "undefined" && socket && socket.connected) {
       socket.emit("update_profile_visuals", {
         avatar: myProfile.avatar,
-        flag: myProfile.flag,
-        inventory: myProfile.inventory || {}
+        flag: myProfile.flag
+        // ⚠️ PAS d'inventaire ici ! L'équipement passe par equip_cosmetic
       });
     }
 
