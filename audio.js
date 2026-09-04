@@ -662,42 +662,48 @@ document.addEventListener("click", () => {
 
 // 🔇 Coupe le son dès que l'app n'est plus visible (mobile + PC)
 function pauseAllAudio() {
-  // Éléments <audio> HTML5
-  document.querySelectorAll('audio').forEach(a => {
-    if (!a.paused) a.pause();
-  });
-  // WebAudio (SoundEngine)
-  const ctx = window.SoundEngine && (SoundEngine.ctx || SoundEngine.audioCtx || SoundEngine.context);
-  if (ctx && ctx.state === 'running') ctx.suspend();
+  // Arrête le timer de musique (le setInterval qui joue les notes)
+  if (window.SoundEngine && window.SoundEngine.timerId) {
+    clearInterval(window.SoundEngine.timerId);
+    window.SoundEngine.timerId = null;
+  }
+  // Suspend le contexte AudioContext (arrête tous les sons en cours)
+  const ctx = window.SoundEngine && window.SoundEngine.ctx;
+  if (ctx && ctx.state === 'running') {
+    ctx.suspend();
+  }
 }
 
 function resumeAllAudio() {
-  // Éléments <audio> HTML5
-  document.querySelectorAll('audio').forEach(a => {
-    if (a.paused && a.dataset.autoplay === 'true') a.play().catch(()=>{});
-  });
-  // WebAudio (SoundEngine)
-  const ctx = window.SoundEngine && (SoundEngine.ctx || SoundEngine.audioCtx || SoundEngine.context);
-  if (ctx && ctx.state === 'suspended') ctx.resume();
+  // Relance le contexte AudioContext
+  const ctx = window.SoundEngine && window.SoundEngine.ctx;
+  if (ctx && ctx.state === 'suspended') {
+    ctx.resume();
+  }
+  // Relance la musique si un mode était actif
+  if (window.SoundEngine && window.SoundEngine.currentMode && !window.SoundEngine.isMuted) {
+    window.SoundEngine.startMusic(window.SoundEngine.currentMode);
+  }
 }
 
 // Mobile : verrouillage, retour accueil, changement d'app
 document.addEventListener('visibilitychange', () => {
-  document.hidden ? pauseAllAudio() : resumeAllAudio();
+  if (document.hidden) {
+    pauseAllAudio();
+  } else {
+    // Petit délai pour laisser le navigateur se stabiliser
+    setTimeout(resumeAllAudio, 100);
+  }
 });
 
 // PC : changement d'onglet, perte de focus
 window.addEventListener('blur', pauseAllAudio);
-window.addEventListener('focus', resumeAllAudio);
+window.addEventListener('focus', () => {
+  setTimeout(resumeAllAudio, 100);
+});
 
 // Mobile : navigation away, fermeture d'onglet
 window.addEventListener('pagehide', pauseAllAudio);
-window.addEventListener('pageshow', resumeAllAudio);
-
-
-// Reprend la musique après un reload si le jeu est actif
-window.addEventListener('load', () => {
-  if (!document.hidden && typeof gameActive !== 'undefined' && gameActive) {
-    resumeAllAudio();
-  }
+window.addEventListener('pageshow', () => {
+  setTimeout(resumeAllAudio, 100);
 });
