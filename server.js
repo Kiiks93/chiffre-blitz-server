@@ -535,27 +535,24 @@ for (const [sid, player] of Object.entries(activePlayers)) {
     socket.emit('player_registered', player);
   });
 
-  socket.on("update_profile_visuals", async (data) => {
+socket.on("update_profile_visuals", async (data) => {
   try {
     const player = activePlayers[socket.id];
     if (!player) return;
 
+    // ✅ On ne prend QUE avatar et flag, JAMAIS l'inventaire venant du client
     const avatar = Math.max(1, Math.min(999, parseInt(data.avatar) || player.avatar || 1));
-    const flag = typeof data.flag === "string" ? data.flag.replace(/['"]/g, "").trim() : player.flag;
-    const inventory = data.inventory || player.inventory || {};
+    const flag = (typeof data.flag === "string" && data.flag.length <= 8)
+      ? data.flag.replace(/['"]/g, "").trim()
+      : player.flag;
 
     player.avatar = avatar;
     player.flag = flag;
-    player.inventory = inventory;
 
     if (player.dbId) {
       await supabase
         .from("players")
-        .update({
-          avatar,
-          flag,
-          inventory
-        })
+        .update({ avatar, flag })
         .eq("id", player.dbId);
     }
 
