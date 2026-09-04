@@ -64,12 +64,49 @@ socket.on("connect", () => {
   }
 });
 
-// 🛡️ Écoute force_disconnect (marche peu importe où socket est défini)
+// 🛡️ Écoute force_disconnect : déconnexion propre + retour écran d'identification
 function attachForceDisconnect() {
   if (typeof socket !== 'undefined' && socket && socket.on) {
     socket.on('force_disconnect', (data) => {
-      alert(`⚠️ ${data.reason}\n\nVous allez être déconnecté.`);
-      location.reload();
+      // 1. Affiche une notif élégante (non bloquante)
+      const toast = document.createElement('div');
+      toast.style.cssText = `
+        position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+        background: linear-gradient(135deg, #ff416c, #ff4b2b);
+        color: white; padding: 12px 20px; border-radius: 12px;
+        font-weight: bold; font-size: 14px; z-index: 9999;
+        box-shadow: 0 4px 20px rgba(255,75,43,0.5);
+        animation: slideDown 0.3s ease-out;
+      `;
+      toast.innerHTML = `⚠️ ${data.reason}<br><small style="opacity:0.8;">Déconnexion en cours...</small>`;
+      document.body.appendChild(toast);
+
+      // 2. Vide les infos de connexion stockées
+      localStorage.removeItem('blitz_username');
+      localStorage.removeItem('blitz_secret');
+      localStorage.removeItem('blitz_code');
+      sessionStorage.clear();
+
+      // 3. Déconnecte du serveur
+      if (socket.connected) socket.disconnect();
+
+      // 4. Retour à l'écran d'identification après 1.5s
+      setTimeout(() => {
+        // Réinitialise l'affichage
+        const nameEl = document.getElementById('user-name-display');
+        if (nameEl) nameEl.innerText = 'Définir pseudo';
+        
+        // Affiche l'écran titre (page d'identification)
+        const title = document.getElementById('screen-title');
+        const menu = document.getElementById('screen-menu');
+        if (title) title.style.display = '';
+        if (menu) menu.style.display = 'none';
+        
+        // Ferme les modals ouverts
+        document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+        
+        toast.remove();
+      }, 1500);
     });
     console.log('✅ Écouteur anti double-compte activé');
   } else {
