@@ -658,3 +658,38 @@ function toggleMute() {
 document.addEventListener("click", () => {
   SoundEngine.init();
 }, { once: true });
+
+
+// 🔇 Coupe le son dès que l'app n'est plus visible (mobile + PC)
+function pauseAllAudio() {
+  // Éléments <audio> HTML5
+  document.querySelectorAll('audio').forEach(a => {
+    if (!a.paused) a.pause();
+  });
+  // WebAudio (SoundEngine)
+  const ctx = window.SoundEngine && (SoundEngine.ctx || SoundEngine.audioCtx || SoundEngine.context);
+  if (ctx && ctx.state === 'running') ctx.suspend();
+}
+
+function resumeAllAudio() {
+  // Éléments <audio> HTML5
+  document.querySelectorAll('audio').forEach(a => {
+    if (a.paused && a.dataset.autoplay === 'true') a.play().catch(()=>{});
+  });
+  // WebAudio (SoundEngine)
+  const ctx = window.SoundEngine && (SoundEngine.ctx || SoundEngine.audioCtx || SoundEngine.context);
+  if (ctx && ctx.state === 'suspended') ctx.resume();
+}
+
+// Mobile : verrouillage, retour accueil, changement d'app
+document.addEventListener('visibilitychange', () => {
+  document.hidden ? pauseAllAudio() : resumeAllAudio();
+});
+
+// PC : changement d'onglet, perte de focus
+window.addEventListener('blur', pauseAllAudio);
+window.addEventListener('focus', resumeAllAudio);
+
+// Mobile : navigation away, fermeture d'onglet
+window.addEventListener('pagehide', pauseAllAudio);
+window.addEventListener('pageshow', resumeAllAudio);
