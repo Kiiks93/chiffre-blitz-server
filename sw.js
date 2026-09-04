@@ -1,4 +1,4 @@
-const CACHE_NAME = "chiffre-blitz-v8";
+const CACHE_NAME = "chiffre-blitz-v9";
 const BASE = "/";
 const CORE_ASSETS = [
   BASE, BASE + "index.html", BASE + "manifest.json",
@@ -7,8 +7,6 @@ const CORE_ASSETS = [
   BASE + "social.js", BASE + "passe.js", BASE + "saisons.js", BASE + "fx.js", BASE + "jeu.js", BASE + "modes-catch.js",
   BASE + "icons/icon-192.png", BASE + "icons/icon-512.png"
 ];
-
-const MAX_BACKGROUNDED_TIME = 30000;
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
@@ -45,16 +43,4 @@ self.addEventListener("fetch", (e) => {
         caches.match(e.request).then((c) => c || caches.match(BASE + "index.html"))
       )
   );
-});
-
-self.addEventListener("message", (e) => {
-  if (e.data === "CHECK_BACKGROUND_TIME") {
-    const lastActive = parseInt(localStorage.getItem("cb_last_active") || "0");
-    const now = Date.now();
-    const timeAway = now - lastActive;
-    
-    if (timeAway > MAX_BACKGROUNDED_TIME) {
-      e.source.postMessage({ action: "RELOAD_PAGE" });
-    }
-  }
 });
