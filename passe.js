@@ -16,6 +16,7 @@ function applyPassLockToMenu() {
   if (!SEASON_PASS_ENABLED) {
     if (!banner.querySelector(".pass-lock-overlay")) {
       banner.classList.add("pass-locked");
+      banner.style.minHeight = "60px";
       const ov = document.createElement("div");
       ov.className = "pass-lock-overlay";
       ov.innerHTML = `
