@@ -10,7 +10,8 @@ const SoundEngine = {
   step: 0,
   bpm: 115,
   _currentBoom: null,
-  _noiseBuffers: {}, // Cache des buffers noise (performance)
+  _noiseBuffers: {},
+  _isPaused: false,  // ⬅️ Nouveau : état de pause
 
   /* ============================================================
   1. INITIALISATION & CONTRÔLE
@@ -42,28 +43,65 @@ const SoundEngine = {
 
   startMusic(mode) {
     if (this.isMuted) return;
+    if (this.timerId && this.currentMode === mode) return;  // ⬅️ Évite les doubles starts
+    
     this.init();
     if (!this.ctx) return;
     if (this.ctx.state === "suspended") this.ctx.resume();
-    if (this.timerId && this.currentMode === mode) return;
+    
     this.stopMusic(false);
     this.currentMode = mode;
     this.step = 0;
+    this._isPaused = false;
     this.bpm = (mode === "menu") ? 108 : 150;
     const intervalMs = (60 / this.bpm / 4) * 1000;
+    
     this.timerId = setInterval(() => {
-      if (this.isMuted || !this.ctx || this.ctx.state !== "running") return;
+      if (this.isMuted || !this.ctx || this.ctx.state !== "running" || this._isPaused) return;
       if (this.currentMode === "menu") this.tickMenu8Bit(this.step % 128);
       else this.tickGameMusic(this.step);
       this.step = (this.step + 1) % 256;
     }, intervalMs);
   },
 
+  // ⬅️ NOUVEAU : Pause propre (utilisée par les listeners)
+  pause() {
+    if (this._isPaused) return;
+    this._isPaused = true;
+    
+    // Arrête le timer
+    if (this.timerId) {
+      clearInterval(this.timerId);
+      this.timerId = null;
+    }
+    
+    // Suspend le contexte AudioContext
+    if (this.ctx && this.ctx.state === 'running') {
+      this.ctx.suspend();
+    }
+  },
+
+  // ⬅️ NOUVEAU : Reprise propre
+  resume() {
+    if (!this._isPaused) return;
+    this._isPaused = false;
+    
+    // Relance le contexte
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+    
+    // Relance la musique si un mode était actif
+    if (this.currentMode && !this.isMuted) {
+      this.startMusic(this.currentMode);
+    }
+  },
+
   /* ============================================================
   2. EFFETS SONORES COURTS
   ============================================================ */
   playClick() {
-    if (this.isMuted || !this.ctx) return;
+    if (this.isMuted || !this.ctx || this._isPaused) return;
     this.init();
     const t = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
@@ -80,7 +118,7 @@ const SoundEngine = {
   },
 
   playError() {
-    if (this.isMuted || !this.ctx) return;
+    if (this.isMuted || !this.ctx || this._isPaused) return;
     this.init();
     const t = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
@@ -97,11 +135,11 @@ const SoundEngine = {
   },
 
   playVictory() {
-    if (this.isMuted || !this.ctx) return;
+    if (this.isMuted || !this.ctx || this._isPaused) return;
     this.init();
     [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98].forEach((freq, i) => {
       setTimeout(() => {
-        if (this.isMuted || !this.ctx) return;
+        if (this.isMuted || !this.ctx || this._isPaused) return;
         const t = this.ctx.currentTime;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
@@ -121,7 +159,7 @@ const SoundEngine = {
   3. MUSIQUE MENU (chill 8-bit)
   ============================================================ */
   tickMenu8Bit(step) {
-    if (!this.ctx) return;
+    if (!this.ctx || this._isPaused) return;
     const t = this.ctx.currentTime;
     const bar = Math.floor(step / 16);
     const inBar = step % 16;
@@ -249,7 +287,7 @@ const SoundEngine = {
   4. MUSIQUE JEU (try hard, 4 sections)
   ============================================================ */
   tickGameMusic(step) {
-    if (!this.ctx) return;
+    if (!this.ctx || this._isPaused) return;
     const t = this.ctx.currentTime;
     const bar = Math.floor(step / 16);
     const inBar = step % 16;
@@ -420,7 +458,7 @@ const SoundEngine = {
   7. SONS DE COMBO (par thème)
   ============================================================ */
   playCrack(theme) {
-    if (this.isMuted || !this.ctx) return;
+    if (this.isMuted || !this.ctx || this._isPaused) return;
     this.init();
     const t = this.ctx.currentTime;
 
@@ -465,7 +503,7 @@ const SoundEngine = {
   },
 
   playComboTick(combo) {
-    if (this.isMuted || !this.ctx) return;
+    if (this.isMuted || !this.ctx || this._isPaused) return;
     this.init();
     const t = this.ctx.currentTime;
     const freq = 400 + Math.min(combo, 35) * 40;
@@ -482,7 +520,7 @@ const SoundEngine = {
   },
 
   playPerfectionBoom(theme) {
-    if (this.isMuted || !this.ctx) return;
+    if (this.isMuted || !this.ctx || this._isPaused) return;
     this.init();
     const t = this.ctx.currentTime;
 
@@ -617,7 +655,7 @@ SoundEngine._synthCrack = SoundEngine.playCrack;
 SoundEngine._synthBoom = SoundEngine.playPerfectionBoom;
 
 SoundEngine.playCrack = function(theme) {
-  if (this.isMuted) return;
+  if (this.isMuted || this._isPaused) return;
   const file = CRACK_FILES[theme] || CRACK_FILES.default;
   if (file) {
     const a = new Audio(file);
@@ -630,7 +668,7 @@ SoundEngine.playCrack = function(theme) {
 };
 
 SoundEngine.playPerfectionBoom = function(theme) {
-  if (this.isMuted) return;
+  if (this.isMuted || this._isPaused) return;
   this.stopBoom();
   const file = BOOM_FILES[theme] || BOOM_FILES.default;
   if (file) {
@@ -659,59 +697,72 @@ document.addEventListener("click", () => {
   SoundEngine.init();
 }, { once: true });
 
+/* ============================================================
+10. GESTION PAUSE/RESUME AUTOMATIQUE (mobile + PC)
+============================================================ */
+let _audioListenersAdded = false;
 
-// 🔇 Coupe le son dès que l'app n'est plus visible (mobile + PC)
-function pauseAllAudio() {
-  // Arrête le timer de musique (le setInterval qui joue les notes)
-  if (window.SoundEngine && window.SoundEngine.timerId) {
-    clearInterval(window.SoundEngine.timerId);
-    window.SoundEngine.timerId = null;
-  }
-  // Suspend le contexte AudioContext (arrête tous les sons en cours)
-  const ctx = window.SoundEngine && window.SoundEngine.ctx;
-  if (ctx && ctx.state === 'running') {
-    ctx.suspend();
-  }
-}
+function setupAudioListeners() {
+  if (_audioListenersAdded) return;
+  _audioListenersAdded = true;
 
-function resumeAllAudio() {
-  // Relance le contexte AudioContext
-  const ctx = window.SoundEngine && window.SoundEngine.ctx;
-  if (ctx && ctx.state === 'suspended') {
-    ctx.resume();
-  }
-  // Relance la musique si un mode était actif
-  if (window.SoundEngine && window.SoundEngine.currentMode && !window.SoundEngine.isMuted) {
-    window.SoundEngine.startMusic(window.SoundEngine.currentMode);
-  }
-}
-
-// Mobile : verrouillage, retour accueil, changement d'app
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) {
-    pauseAllAudio();
-  } else {
-    // Petit délai pour laisser le navigateur se stabiliser
-    setTimeout(resumeAllAudio, 100);
-  }
-});
-
-// PC : changement d'onglet, perte de focus
-window.addEventListener('blur', pauseAllAudio);
-window.addEventListener('focus', () => {
-  setTimeout(resumeAllAudio, 100);
-});
-
-// Mobile : navigation away, fermeture d'onglet
-window.addEventListener('pagehide', pauseAllAudio);
-window.addEventListener('pageshow', () => {
-  setTimeout(resumeAllAudio, 100);
-});
-// Reprend la musique automatiquement après un reload de fichier
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    if (!document.hidden && SoundEngine.currentMode && !SoundEngine.isMuted) {
-      SoundEngine.startMusic(SoundEngine.currentMode);
+  // ⬅️ Mobile : verrouillage écran, retour accueil, changement d'app
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      SoundEngine.pause();
+    } else {
+      setTimeout(() => SoundEngine.resume(), 100);
     }
-  }, 200);
-});
+  });
+
+  // ⬅️ PC : perte de focus (changement d'onglet, Alt+Tab)
+  window.addEventListener('blur', () => {
+    SoundEngine.pause();
+  });
+  
+  window.addEventListener('focus', () => {
+    setTimeout(() => SoundEngine.resume(), 100);
+  });
+
+  // ⬅️ Mobile : navigation away, fermeture d'onglet
+  window.addEventListener('pagehide', () => {
+    SoundEngine.pause();
+  });
+  
+  window.addEventListener('pageshow', () => {
+    setTimeout(() => SoundEngine.resume(), 100);
+  });
+
+  // ⬅️ Reprend la musique après un reload (push Render, refresh)
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      if (!document.hidden && !SoundEngine._isPaused) {
+        // Si un mode était actif avant le reload, le relancer
+        const savedMode = localStorage.getItem('cb_music_mode');
+        if (savedMode && !SoundEngine.isMuted) {
+          SoundEngine.startMusic(savedMode);
+        }
+      }
+    }, 300);
+  });
+}
+
+// ⬅️ Sauvegarde le mode de musique pour reprise après reload
+const _originalStartMusic = SoundEngine.startMusic;
+SoundEngine.startMusic = function(mode) {
+  localStorage.setItem('cb_music_mode', mode);
+  return _originalStartMusic.call(this, mode);
+};
+
+const _originalStopMusic = SoundEngine.stopMusic;
+SoundEngine.stopMusic = function(clear = true) {
+  if (clear) localStorage.removeItem('cb_music_mode');
+  return _originalStopMusic.call(this, clear);
+};
+
+// ⬅️ Initialise les listeners au chargement
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupAudioListeners);
+} else {
+  setupAudioListeners();
+}
