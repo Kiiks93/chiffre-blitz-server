@@ -20,10 +20,10 @@ const i18n = {
     rule2_desc: "Classique, Aléatoire ou Avalanche : enchaîne les chiffres, bats tes records et fais le plein de pièces (🪙).",
     rule3_title: "⚔️ Duel 1v1 Online",
     rule3_desc: "Affronte un joueur en temps réel (non classé, classé SBMM ou salon privé). Le meilleur score en 30s l'emporte !",
-    rule4_title: "🏆 Rangs & Trophées",
-    rule4_desc: "Grimpe en classé : Novice 🌱 → Chiffre 🔢 → Expert 🧠 → Calculateur ⚡, et débloque les 16 trophées de ta Salle des Trophées !",
+    rule4_title: "👑 Rangs & Couronnes",
+    rule4_desc: "Grimpe en classé pour gagner des couronnes 👑 et débloque les 16 trophées 🏆 de ta Salle des Trophées !",
     rule5_title: "🎯 Mode Tournoi",
-    rule5_desc: "Bientôt disponible ! Des tournois épiques pour affronter l'élite et décrocher le titre de Champion 👑.",
+    tourney_teaser_desc: "En cours de réflexion et de développement... Les tournois récompenseront en couronnes 👑 !",
 
     /* ----- Menu principal ----- */
     menu_solo: "🏋️ ENTRAÎNEMENT SOLO", menu_1v1: "⚔️ DUEL 1v1 ONLINE", menu_tow: "🪢 Mode Corde Raide (Tug-of-War)",
@@ -232,10 +232,10 @@ const i18n = {
     rule2_desc: "Classic, Random or Avalanche: chain numbers, beat your records and stack up coins (🪙).",
     rule3_title: "⚔️ Online 1v1 Duel",
     rule3_desc: "Face a player in real time (unranked, ranked SBMM or private room). Best score in 30s wins!",
-    rule4_title: "🏆 Ranks & Trophies",
-    rule4_desc: "Climb the ranked ladder: Novice 🌱 → Cipher 🔢 → Expert 🧠 → Calculator ⚡, and unlock the 16 trophies of your Trophy Room!",
-    rule5_title: "🎯 Tournament Mode",
-    rule5_desc: "Coming soon! Epic tournaments to face the elite and claim the Champion title 👑.",
+    rule4_title: "👑 Ranks & Crowns",
+    rule4_desc: "Climb ranked to earn crowns 👑 and unlock the 16 trophies 🏆 of your Trophy Room!",
+    rule5_desc: "Coming soon! Earn unique crowns 👑.",
+    tourney_teaser_desc: "In design and development... Tournaments will reward crowns 👑!",
 
     /* ----- Main Menu ----- */
     menu_solo: "🏋️ TRAINING", menu_1v1: "⚔️ 1v1 DUEL", menu_tow: "🪢 Tug-of-War Mode",
