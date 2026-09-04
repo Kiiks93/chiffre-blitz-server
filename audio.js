@@ -693,3 +693,11 @@ window.addEventListener('focus', resumeAllAudio);
 // Mobile : navigation away, fermeture d'onglet
 window.addEventListener('pagehide', pauseAllAudio);
 window.addEventListener('pageshow', resumeAllAudio);
+
+
+// Reprend la musique après un reload si le jeu est actif
+window.addEventListener('load', () => {
+  if (!document.hidden && typeof gameActive !== 'undefined' && gameActive) {
+    resumeAllAudio();
+  }
+});
