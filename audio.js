@@ -707,3 +707,11 @@ window.addEventListener('pagehide', pauseAllAudio);
 window.addEventListener('pageshow', () => {
   setTimeout(resumeAllAudio, 100);
 });
+// Reprend la musique automatiquement après un reload de fichier
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    if (!document.hidden && SoundEngine.currentMode && !SoundEngine.isMuted) {
+      SoundEngine.startMusic(SoundEngine.currentMode);
+    }
+  }, 200);
+});
