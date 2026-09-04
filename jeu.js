@@ -7,8 +7,14 @@ JEU.JS — LOGIQUE DE JEU COMPLÈTE
 ============================================================ */
 // ⏱️ Fenêtre combo : temps max entre 2 bons clics pour garder le combo.
 // Règle ici : 10000 = 10s (recommandé). Remets 20000 si trop dur.
-const COMBO_WINDOW_MS = 3000;   // 3s max entre 2 clics
+const getComboWindowMs() = 3000;   // 3s max entre 2 clics
 const COMBO_TIERS = { TIER1: 15, TIER2: 30, PERFECTION: 35 };
+function getComboWindowMs() {
+  const m = (typeof soloMode !== 'undefined') ? soloMode
+          : (typeof currentMode !== 'undefined') ? currentMode
+          : 'classique';
+  return (m === 'aleatoire' || m === 'random') ? 3000 : 1700;
+}
 const MALUS_POWERS = ['quake', 'micro', 'eclipse', 'chaos'];
 const SOLO_TIME_LIMIT = 50;
 const AVALANCHE_TIME_LIMIT = 30;
@@ -223,7 +229,7 @@ function startComboTimer() {
   const start = Date.now();
   const fill = document.getElementById("combo-timer-fill");
   comboTimerInterval = setInterval(() => {
-    const remaining = Math.max(0, 1 - (Date.now() - start) / COMBO_WINDOW_MS);
+    const remaining = Math.max(0, 1 - (Date.now() - start) / getComboWindowMs());
     if (fill) fill.style.width = (remaining * 100) + "%";
     if (remaining <= 0) { clearInterval(comboTimerInterval); comboTimerInterval = null; }
   }, 50);
@@ -267,7 +273,7 @@ function registerComboHit() {
   const d = i18n[currentLang];
   if (soloPerfection) return;
   const now = Date.now();
-  if (now - lastComboTime > COMBO_WINDOW_MS) {
+  if (now - lastComboTime > getComboWindowMs()) {
     currentCombo = 0;
     clearCracks();
     hideComboHUD();
