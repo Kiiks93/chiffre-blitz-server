@@ -414,9 +414,10 @@ for (const [sid, player] of Object.entries(activePlayers)) {
   if (player.username && player.username.toLowerCase() === rawUsername.toLowerCase() && sid !== socket.id) {
     const oldSocket = io.sockets.sockets.get(sid);
     if (oldSocket) {
-      oldSocket.emit('force_disconnect', { reason: 'Connexion depuis un autre appareil' });
-      oldSocket.disconnect(true);
-    }
+  oldSocket.emit('force_disconnect', { reason: 'Connexion depuis un autre appareil' });
+  // ⏱️ Laisse 800 ms au client pour recevoir l'événement avant de couper
+  setTimeout(() => oldSocket.disconnect(true), 800);
+}
     delete activePlayers[sid];
     console.log(`🔒 Double session détectée pour ${rawUsername}, ancienne session ${sid} éjectée`);
   }
