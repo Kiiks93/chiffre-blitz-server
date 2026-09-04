@@ -64,10 +64,19 @@ socket.on("connect", () => {
   }
 });
 
-socket.on('force_disconnect', (data) => {
-  alert(`⚠️ ${data.reason}\n\nVous allez être déconnecté.`);
-  location.reload(); // Recharge la page pour nettoyer l'état
-});
+// 🛡️ Écoute force_disconnect (marche peu importe où socket est défini)
+function attachForceDisconnect() {
+  if (typeof socket !== 'undefined' && socket && socket.on) {
+    socket.on('force_disconnect', (data) => {
+      alert(`⚠️ ${data.reason}\n\nVous allez être déconnecté.`);
+      location.reload();
+    });
+    console.log('✅ Écouteur anti double-compte activé');
+  } else {
+    setTimeout(attachForceDisconnect, 100);
+  }
+}
+attachForceDisconnect();
 
 /* ============================================================
 3. ÉTAT GLOBAL
