@@ -66,6 +66,7 @@ socket.on("connect", () => {
 
 // 🛡️ Écoute force_disconnect : retour à la fenêtre de connexion
 function attachForceDisconnect() {
+  window.__kicked = true;   // signale une déconnexion volontaire
   if (typeof socket !== 'undefined' && socket && socket.on) {
     socket.on('force_disconnect', (data) => {
       // 1. Toast rouge
