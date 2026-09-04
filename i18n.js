@@ -90,7 +90,7 @@ const i18n = {
     lb_title: "🏆 CLASSEMENT",
     lb_reg: "📍 Région", lb_nat: "🇫🇷 France", lb_glb: "🌍 Monde",
     lb_cat_points: "🏅 Points", lb_cat_trophies: "🏆 Trophées", lb_cat_coins: "🪙 Argent", lb_cat_combined: "⭐ Combiné",
-    lb_combined_desc: "💡 Combiné : Trophées prioritaires, départagés par les points",
+    lb_combined_desc: "💡 Combiné : Couronnes prioritaires, départagées par les points",
     lb_regional_label: "Régional", lb_no_players: "Aucun joueur.",
 
     /* ----- Tournois ----- */
@@ -302,7 +302,7 @@ const i18n = {
     lb_title: "🏆 LEADERBOARD",
     lb_reg: "📍 Region", lb_nat: "🇫🇷 France", lb_glb: "🌍 World",
     lb_cat_points: "🏅 Points", lb_cat_trophies: "🏆 Trophies", lb_cat_coins: "🪙 Money", lb_cat_combined: "⭐ Combined",
-    lb_combined_desc: "💡 Combined: Trophies priority, tie-broken by points",
+    lb_combined_desc: "💡 Combined: Crowns first, tied by points",
     lb_regional_label: "Regional", lb_no_players: "No players.",
 
     /* ----- Tournaments ----- */
