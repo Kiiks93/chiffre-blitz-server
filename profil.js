@@ -66,7 +66,6 @@ socket.on("connect", () => {
 
 // 🛡️ Écoute force_disconnect : retour à la fenêtre de connexion
 function attachForceDisconnect() {
-  window.__kicked = true;   // signale une déconnexion volontaire
   if (typeof socket !== 'undefined' && socket && socket.on) {
     socket.on('force_disconnect', (data) => {
       // 1. Toast rouge
@@ -109,6 +108,7 @@ attachForceDisconnect();
 
 // 🔁 Après reload suite à une déconnexion : rouvre directement la fenêtre de connexion
 window.addEventListener('load', () => {
+   window.__kicked = false;   // ⬅️ AJOUTE CETTE LIGNE : réinitialise le flag
   if (localStorage.getItem('cb_kicked')) {
     localStorage.removeItem('cb_kicked');
     setTimeout(() => {
