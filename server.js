@@ -1250,10 +1250,6 @@ for (const [sid, player] of Object.entries(activePlayers)) {
     socket.emit('admin_adjust_result', { ok: true, message: `${targets.length} joueur(s) modifié(s) (${amt > 0 ? '+' : ''}${amt} ${currency})` });
   });
   socket.on('disconnect', async () => {
-    socket.on('disconnect', () => {
-  if (window.__kicked) return;   // ⬅️ ne pas afficher l'erreur si éjecté pour double-compte
-  // ... ton code existant (message ❌)
-});
     leaveAllRooms(socket);
     const qIdx = matchmakingQueue.indexOf(socket.id);
     if (qIdx !== -1) matchmakingQueue.splice(qIdx, 1);
