@@ -1708,38 +1708,43 @@ function closeTrophyRoom() {
 
 socket.on('trophy_room_data', (data) => {
   if (!data || !data.ok) return;
-  document.getElementById('trophy-room-flag').innerText = data.flag || '🇫🇷';
+  document.getElementById('trophy-room-flag').innerText = data.flag || '🇫';
   document.getElementById('trophy-room-username').innerText = data.username;
   const unlockedCount = Object.keys(data.trophies_collection || {}).length;
   document.getElementById('trophy-room-count').innerText = `${unlockedCount}/16 🏆`;
-  const shelvesContainer = document.getElementById('trophy-room-shelves');
-  shelvesContainer.innerHTML = '';
-  const TROPHY_CATALOG = getTrophyCatalogClient();
-  const TROPHY_SHELVES = getTrophyShelves();
-  TROPHY_SHELVES.forEach(shelf => {
-    const shelfEl = document.createElement('div');
-    shelfEl.className = 'trophy-shelf';
-    const shelfTrophies = Object.entries(TROPHY_CATALOG).filter(([_, t]) => t.shelf === shelf.id);
-    shelfEl.innerHTML = `<div class="trophy-shelf-title" style="color:${shelf.color}; text-shadow:0 0 8px ${shelf.color};">${shelf.label}</div>`;
-    const grid = document.createElement('div');
-    grid.className = 'trophy-shelf-grid';
-    shelfTrophies.forEach(([id, trophy]) => {
-      const isUnlocked = !!(data.trophies_collection && data.trophies_collection[id]);
-      const vitrine = document.createElement('div');
-      vitrine.className = `trophy-vitrine rarity-${trophy.rarity} ${!isUnlocked ? 'locked' : ''}`;
-      vitrine.innerHTML = `
-        <div class="trophy-emoji">${isUnlocked ? trophy.emoji : '❓'}</div>
-        <div class="trophy-name">${isUnlocked ? trophy.name : '???'}</div>
-        ${!isUnlocked ? '<div class="trophy-lock">🔒</div>' : ''}
-      `;
-      vitrine.onmouseenter = (e) => showTrophyTooltip(e, trophy, data, isUnlocked);
-      vitrine.onmousemove = (e) => moveTrophyTooltip(e);
-      vitrine.onmouseleave = hideTrophyTooltip;
-      grid.appendChild(vitrine);
+
+  // 🎵 Rendu décalé : laisse la musique respirer avant de construire les 16 vitrines
+  setTimeout(() => {
+    const shelvesContainer = document.getElementById('trophy-room-shelves');
+    if (!shelvesContainer) return;
+    shelvesContainer.innerHTML = '';
+    const TROPHY_CATALOG = getTrophyCatalogClient();
+    const TROPHY_SHELVES = getTrophyShelves();
+    TROPHY_SHELVES.forEach(shelf => {
+      const shelfEl = document.createElement('div');
+      shelfEl.className = 'trophy-shelf';
+      const shelfTrophies = Object.entries(TROPHY_CATALOG).filter(([_, t]) => t.shelf === shelf.id);
+      shelfEl.innerHTML = `<div class="trophy-shelf-title" style="color:${shelf.color}; text-shadow:0 0 8px ${shelf.color};">${shelf.label}</div>`;
+      const grid = document.createElement('div');
+      grid.className = 'trophy-shelf-grid';
+      shelfTrophies.forEach(([id, trophy]) => {
+        const isUnlocked = !!(data.trophies_collection && data.trophies_collection[id]);
+        const vitrine = document.createElement('div');
+        vitrine.className = `trophy-vitrine rarity-${trophy.rarity} ${!isUnlocked ? 'locked' : ''}`;
+        vitrine.innerHTML = `
+          <div class="trophy-emoji">${isUnlocked ? trophy.emoji : '❓'}</div>
+          <div class="trophy-name">${isUnlocked ? trophy.name : '???'}</div>
+          ${!isUnlocked ? '<div class="trophy-lock">🔒</div>' : ''}
+        `;
+        vitrine.onmouseenter = (e) => showTrophyTooltip(e, trophy, data, isUnlocked);
+        vitrine.onmousemove = (e) => moveTrophyTooltip(e);
+        vitrine.onmouseleave = hideTrophyTooltip;
+        grid.appendChild(vitrine);
+      });
+      shelfEl.appendChild(grid);
+      shelvesContainer.appendChild(shelfEl);
     });
-    shelfEl.appendChild(grid);
-    shelvesContainer.appendChild(shelfEl);
-  });
+  }, 60);
 });
 
 let tooltipEl = null;
