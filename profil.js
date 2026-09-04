@@ -749,7 +749,7 @@ function updateEconomyUI() {
   if (!recapActive) {
     if (rankEl) rankEl.innerText = getRankName(myProfile.points);
     if (lastDisplayed.coins !== null && myProfile.coins !== lastDisplayed.coins) showDelta(myProfile.coins - lastDisplayed.coins, "🪙");
-    if (lastDisplayed.trophies !== null && myProfile.trophies !== lastDisplayed.trophies) showDelta(myProfile.trophies - lastDisplayed.trophies, "🏆");
+    if (lastDisplayed.trophies !== null && myProfile.trophies !== lastDisplayed.trophies) showDelta(myProfile.trophies - lastDisplayed.trophies, "👑");
     if (lastDisplayed.points !== null && myProfile.points !== lastDisplayed.points) showDelta(myProfile.points - lastDisplayed.points, "pts");
     tweenNumber(coinsEl, lastDisplayed.coins, myProfile.coins);
     tweenNumber(trophiesEl, lastDisplayed.trophies, myProfile.trophies);
