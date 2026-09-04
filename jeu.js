@@ -1070,7 +1070,7 @@ socket.on("leaderboard_data", (res) => {
     let rightBadge = `<span class="lb-pts" style="color:#00ff88;">${p.points} pts</span>`;
     if (category === "coins") rightBadge = `<span class="lb-pts" style="color:#f8b500;">${p.coins} 🪙</span>`;
     else if (category === "trophies") rightBadge = `<span class="lb-pts" style="color:#fceabb;">${p.trophies} 👑</span>`;
-    else if (category === "combined") rightBadge = `<span class="lb-pts" style="color:#00d2ff; font-size:11px;">🏆${p.trophies} | ${p.points}pts</span>`;
+    else if (category === "combined") rightBadge = `<span class="lb-pts" style="color:#00d2ff; font-size:11px;">👑${p.trophies} | ${p.points}pts</span>`;
     let rankDisplay = `#${index + 1}`, rankColor = "#00d2ff";
     if (index === 0) { rankDisplay = "🥇"; rankColor = "#f8b500"; }
     else if (index === 1) { rankDisplay = "🥈"; rankColor = "#e0e0e0"; }
@@ -1078,7 +1078,7 @@ socket.on("leaderboard_data", (res) => {
     const safeName = String(p.username || "").replace(/'/g, "\\'");
     row.innerHTML = `<span class="lb-rank" style="color:${rankColor};">${rankDisplay}</span>
       <div class="lb-user-info"><div class="lb-name-row">${badgeHtml}<span class="lb-clickable-name" onclick="openPlayerActions('${safeName}', event)">${p.username}</span>${titleHtml}</div>
-      <div class="lb-sub-details"><span>🏆 ${p.trophies}</span><span>🪙 ${p.coins}</span><span>⚔️ ${currentLang === "fr" ? "V" : "W"}:${p.wins}/${currentLang === "fr" ? "D" : "L"}:${p.losses}</span></div></div>${rightBadge}`;
+      <div class="lb-sub-details"><span>👑 ${p.trophies}</span><span>🪙 ${p.coins}</span><span>⚔️ ${currentLang === "fr" ? "V" : "W"}:${p.wins}/${currentLang === "fr" ? "D" : "L"}:${p.losses}</span></div></div>${rightBadge}`;
     container.appendChild(row);
   });
 });
