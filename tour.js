@@ -101,18 +101,15 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 
 const TOWER_COLORS={1:{acc:"#00d2ff"},2:{acc:"#74ebf5"},3:{acc:"#f8b500"},4:{acc:"#ff8a00"},5:{acc:"#8a9bb0"},6:{acc:"#ff4b2b"},7:{acc:"#ff6fa5"},8:{acc:"#2ecc71"},9:{acc:"#ff416c"}};
 const TOWER_WORLDS={
- 1:{bg:"radial-gradient(ellipse at 15% 20%,#ff00ff26,transparent 40%),radial-gradient(ellipse at 85% 35%,#00ffff26,transparent 40%),radial-gradient(ellipse at 50% 95%,#f8b50018,transparent 50%),linear-gradient(180deg,#050514,#0a0a2a 55%,#1a1030)",
-    top:"",bottom:"skyline,street",part:"neon",props:["🕹️",""]},
- 2:{bg:"radial-gradient(ellipse at 20% 8%,#ffffff22,transparent 45%),radial-gradient(ellipse at 80% 60%,#74ebf522,transparent 45%),linear-gradient(180deg,#062028,#0a2a3a 50%,#123a4a)",
-    top:"icetop",bottom:"icefloor",part:"snow",props:["🧊","💎"]},
- 3:{bg:"radial-gradient(ellipse at 50% 0%,#f8b50026,transparent 50%),radial-gradient(ellipse at 20% 85%,#ff8a0018,transparent 40%),linear-gradient(180deg,#160d00,#2b1a00 60%,#3a2a05)",
-    top:"circuit",bottom:"circuit",part:"spark",props:["⚙️","⚡"]},
- 4:{bg:"radial-gradient(ellipse at 30% 10%,#ff8a0022,transparent 45%),linear-gradient(180deg,#12041a,#2a0a33)",top:"icetop",bottom:"",part:"snow",props:["🎃","️"]},
- 5:{bg:"linear-gradient(180deg,#0a0d14,#1a2230)",top:"",bottom:"skyline",part:"snow",props:["🪦","️"]},
- 6:{bg:"radial-gradient(ellipse at 50% 10%,#ff4b2b22,transparent 50%),linear-gradient(180deg,#18040a,#330a12)",top:"",bottom:"",part:"spark",props:["🎃","🍬"]},
- 7:{bg:"radial-gradient(ellipse at 50% 10%,#ff6fa522,transparent 50%),linear-gradient(180deg,#180410,#330a20)",top:"",bottom:"icefloor",part:"snow",props:["🍭",""]},
- 8:{bg:"radial-gradient(ellipse at 50% 10%,#2ecc7122,transparent 50%),linear-gradient(180deg,#04180b,#0a3318)",top:"icetop",bottom:"icefloor",part:"snow",props:["🎄","⛄"]},
- 9:{bg:"radial-gradient(ellipse at 50% 10%,#ff416c22,transparent 50%),linear-gradient(180deg,#180404,#330a0a)",top:"",bottom:"",part:"spark",props:["🎅",""]}
+ 1:{bg:"radial-gradient(ellipse at 15% 20%,#ff00ff26,transparent 40%),radial-gradient(ellipse at 85% 35%,#00ffff26,transparent 40%),linear-gradient(180deg,#050514,#0a0a2a 55%,#1a1030)",scene:"city",part:"neon",props:["🕹️",""]},
+ 2:{bg:"radial-gradient(ellipse at 20% 8%,#ffffff22,transparent 45%),radial-gradient(ellipse at 80% 60%,#74ebf522,transparent 45%),linear-gradient(180deg,#062028,#0a2a3a 50%,#123a4a)",scene:"glacier",part:"snow",props:["","💎"]},
+ 3:{bg:"radial-gradient(ellipse at 50% 0%,#f8b50026,transparent 50%),radial-gradient(ellipse at 20% 85%,#ff8a0018,transparent 40%),linear-gradient(180deg,#160d00,#2b1a00 60%,#3a2a05)",scene:"vault",part:"spark",props:["⚙️",""]},
+ 4:{bg:"radial-gradient(ellipse at 30% 10%,#ff8a0022,transparent 45%),linear-gradient(180deg,#12041a,#2a0a33)",scene:"glacier",part:"snow",props:["🎃","️"]},
+ 5:{bg:"linear-gradient(180deg,#0a0d14,#1a2230)",scene:"glacier",part:"snow",props:["🪦","️"]},
+ 6:{bg:"radial-gradient(ellipse at 50% 10%,#ff4b2b22,transparent 50%),linear-gradient(180deg,#18040a,#330a12)",scene:"vault",part:"spark",props:["🎃","🍬"]},
+ 7:{bg:"radial-gradient(ellipse at 50% 10%,#ff6fa522,transparent 50%),linear-gradient(180deg,#180410,#330a20)",scene:"glacier",part:"snow",props:["🍭",""]},
+ 8:{bg:"radial-gradient(ellipse at 50% 10%,#2ecc7122,transparent 50%),linear-gradient(180deg,#04180b,#0a3318)",scene:"glacier",part:"snow",props:["🎄",""]},
+ 9:{bg:"radial-gradient(ellipse at 50% 10%,#ff416c22,transparent 50%),linear-gradient(180deg,#180404,#330a0a)",scene:"vault",part:"spark",props:["🎅",""]}
 };
 
 function typeLabel(t){
@@ -179,6 +176,29 @@ socket.on("tower_data",(d)=>{
   towerProgress={floor:d.floor||0,stars:d.stars||{}};
   drawRoom();
 });
+function sceneHTML(c,W,C){
+  if(W.scene==="city"){
+    let b="";const hs=[55,80,65,95,70,88,60,92];
+    const cols=["#00ffff","#ff00ff","#f8b500","#7dff8a"];
+    for(let i=0;i<8;i++){
+      let wins="";const n=7+(i%3)*3;
+      for(let w=0;w<n;w++){
+        wins+=`<span class="tw-wl" style="color:${cols[(w+i)%4]};left:${8+((w*29)%80)}%;top:${10+((w*37)%72)}%;animation-duration:${3+((w*13)%5)}s;animation-delay:${(w*0.7)%4}s;"></span>`;
+      }
+      b+=`<div class="tw-bldg" style="height:${hs[i]}%;">${wins}${i%3===0?'<span class="tw-ant"></span>':""}</div>`;
+    }
+    return `<div class="tw-city">${b}</div><div class="tw-street"></div>`;
+  }
+  if(W.scene==="glacier"){
+    let sp="";for(let i=0;i<8;i++)sp+=`<span class="tw-spark" style="left:${(i*17+c*9)%94}%;top:${15+((i*23)%60)}%;animation-delay:${i*.4}s;"></span>`;
+    return `<div class="tw-icetop"></div><div class="tw-glacier back"></div><div class="tw-glacier front"></div>${sp}`;
+  }
+  if(W.scene==="vault"){
+    let bolts="";for(let i=0;i<8;i++){const a=i*Math.PI/4;bolts+=`<span class="tw-bolt" style="left:${50+40*Math.cos(a)}%;top:${50+40*Math.sin(a)}%;"></span>`;}
+    return `<div class="tw-circuit"></div><div class="tw-vault"><div class="tw-vault-wheel"></div>${bolts}</div><div class="tw-coins">🪙🪙🪙</div>`;
+  }
+  return "";
+}
 
 function drawRoom(){
   const wrap=document.getElementById("tw-mapwrap");if(!wrap)return;
@@ -198,9 +218,7 @@ function drawRoom(){
       continue;
     }
     const W=TOWER_WORLDS[c],C=TOWER_COLORS[c];
-    let layers="";
-    if(W.top)W.top.split(",").forEach(t=>{layers+=`<div class="tw-${t}"></div>`;});
-    if(W.bottom)W.bottom.split(",").forEach(t=>{layers+=`<div class="tw-${t}"></div>`;});
+    let layers=sceneHTML(c,W,C);
     let parts="";
     for(let i=0;i<7;i++){
       parts+=`<span class="tw-part ${W.part}" style="color:${C.acc};left:${(i*13+c*7)%96}%;animation-duration:${4+(i%4)*1.5}s;animation-delay:${i*.7}s;"></span>`;
