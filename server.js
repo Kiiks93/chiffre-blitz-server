@@ -283,14 +283,15 @@ async function savePlayerToSupabase(socketId) {
     points: p.points, coins: p.coins, trophies: p.trophies, wins: p.wins, losses: p.losses,
     inventory: p.inventory, equipped_power: p.equippedPower, region: p.region, avatar: p.avatar,
     flag: p.flag, unlocked_items: p.unlocked_items, blitz_pass_premium: p.blitzPassPremium,
-    claimed_pass_tiers: p.claimedPassTiers
+    claimed_pass_tiers: p.claimedPassTiers,
+    tower_floor: p.towerFloor || 0,
+    tower_stars: p.towerStars || {}
   };
   const extra = {
     matches_played: p.matches_played || 0, win_streak: p.win_streak || 0, best_combo: p.best_combo || 0,
     best_avalanche: p.best_avalanche || 0, solo_games: p.solo_games || 0,
     total_coins_earned: p.total_coins_earned || 0, season_n1_count: p.season_n1_count || 0,
     trophies_collection: p.trophies_collection || {},
-    // ✅ Sauvegarde des compteurs quotidiens
     daily_ads: p.daily_ads || { count: 0, date: '' },
     daily_roulette: p.daily_roulette || { count: 0, date: '' }
   };
@@ -387,7 +388,6 @@ socket.on('check_username', async (rawUsername) => {
 });
   
 socket.on('register_player', async (data) => {
-  towerFloor: db.tower_floor || 0, towerStars: db.tower_stars || {}
   const rawUsername = (data.username || '').trim();
   const secretCode = (data.secretCode || '').trim();
   if (rawUsername.length < 3) { socket.emit('register_result', { ok: false, reason: 'short' }); return; }
@@ -479,7 +479,7 @@ for (const [sid, player] of Object.entries(activePlayers)) {
     }
 
     const premNow = !!(claimedNorm[seasonNow.id] && claimedNorm[seasonNow.id].premium) || (seasonNow.id === "s1" && playerData.blitz_pass_premium);
-    activePlayers[socket.id] = {
+      activePlayers[socket.id] = {
       socketId: socket.id, dbId: playerData.id || socket.id, id: socket.id,
       username: playerData.username, region: playerData.region, avatar: playerData.avatar, flag: playerData.flag,
       points: playerData.points || 0, coins: playerData.coins || 0, country: playerData.country || "FR",
@@ -493,10 +493,11 @@ for (const [sid, player] of Object.entries(activePlayers)) {
       best_combo: playerData.best_combo || 0, best_avalanche: playerData.best_avalanche || 0,
       solo_games: playerData.solo_games || 0, total_coins_earned: playerData.total_coins_earned || 0,
       season_n1_count: playerData.season_n1_count || 0, trophies_collection: playerData.trophies_collection || {},
-      // ✅ Compteurs quotidiens
       daily_ads: playerData.daily_ads || { count: 0, date: '' },
       daily_roulette: playerData.daily_roulette || { count: 0, date: '' },
-      timezone: playerTz
+      timezone: playerTz,
+      towerFloor: playerData.tower_floor || 0,
+      towerStars: playerData.tower_stars || {}
     };
     
     // ✅ Reset quotidien au chargement
