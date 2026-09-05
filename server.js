@@ -1372,6 +1372,24 @@ socket.on('tower_floor_win', async (data) => {
 });
 });
 
+// 🔄 Rejouer un étage déjà gagné pour améliorer ses étoiles
+socket.on('tower_floor_replay', async (data) => {
+  const player = activePlayers[socket.id];
+  if (!player) return;
+  const floor = parseInt(data.floor) || 0;
+  const stars = Math.max(1, Math.min(3, parseInt(data.stars) || 1));
+  // 🛡️ Uniquement un étage DÉJÀ gagné (pas de triche de progression)
+  if (floor < 1 || floor > (player.towerFloor || 0)) return;
+  player.towerStars = player.towerStars || {};
+  const old = player.towerStars[String(floor)] || 0;
+  if (stars > old) player.towerStars[String(floor)] = stars;
+  const coins = 5 + stars * 2; // récompense réduite en replay
+  player.coins = (player.coins || 0) + coins;
+  await savePlayerToSupabase(socket.id);
+  socket.emit('tower_result', { ok: true, floor, stars, coins, reward: null, replay: true });
+  socket.emit('player_registered', player);
+});
+
 /* ============================================================
 FONCTIONS ROOM / MATCH
 ============================================================ */
