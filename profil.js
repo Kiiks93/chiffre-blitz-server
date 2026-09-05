@@ -1595,31 +1595,39 @@ if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
   });
 }
 /* ============================================================
-FIX RETOUR ANDROID — ne laisse pas l'app se casser en arrière-plan
+FIX ANDROID v2 — retour arrière fiable à 100%
 ============================================================ */
 (function () {
   let hiddenAt = 0;
 
-  // Mémorise quand l'app passe en arrière-plan
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden) hiddenAt = Date.now();
-  });
-
-  // Au retour : si la vue était "gelée", on force un vrai redraw du jeu
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden && hiddenAt) {
-      const away = Date.now() - hiddenAt;
+    if (document.hidden) {
+      hiddenAt = Date.now();
+    } else {
+      const away = Date.now() - (hiddenAt || Date.now());
       hiddenAt = 0;
-      if (away > 500) {
-        // Force le navigateur à repeindre TOUTE l'interface
+
+      if (away > 800) {
+        // Cas léger : redraw forcé de l'interface
         document.body.style.display = "none";
-        void document.body.offsetHeight; // reflow forcé
+        void document.body.offsetHeight;
         document.body.style.display = "";
+        window.dispatchEvent(new Event("resize"));
+      }
+
+      if (away > 120000) {
+        // Très longue absence : reload propre
+        location.reload();
       }
     }
   });
 
-  // Si Android restaure la page depuis le bfcache (vue morte) → reload propre
+  // ⬅️ LA CLÉ : page gelée par Android = vue morte → reload systématique
+  document.addEventListener("resume", () => {
+    location.reload();
+  });
+
+  // bfcache (restauration depuis mémoire)
   window.addEventListener("pageshow", (e) => {
     if (e.persisted) location.reload();
   });
