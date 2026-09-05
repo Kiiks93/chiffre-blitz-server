@@ -37,7 +37,7 @@ const i18n = {
     avalanche_menu_title: "🧊 AVALANCHE (Difficultés)",
     diff_easy: "Facile", diff_medium: "Moyen", diff_hard: "Difficile 💀",
     solo_training_done: "🏋️ ENTRAÎNEMENT TERMINÉ", solo_score_label: "Score :",
-    solo_perfection_banner: "💥 PERFECTION x35 !", solo_perfection_reason: "PERFECTION ! Récompense maximale + Succès 🏆",
+    solo_perfection_banner: "💥 PERFECTION x35 !", solo_perfection_reason: "PERFECTION ! Récompense maximale + Succès ⭐",
 
     /* ----- 1v1 ----- */
     hub_title: "⚔️ DUEL 1v1 ONLINE", hub_subtitle: "Choisis ton mode de jeu :",
@@ -96,7 +96,6 @@ const i18n = {
     /* ----- Tournois ----- */
     tourney_screen_title: "🎯 Tournoi Blitz",
     tourney_teaser_title: "Bientôt disponible !",
-    tourney_teaser_desc: "Ce mode est actuellement en cours de réflexion et de développement. Prépare-toi à affronter l'élite dans des tournois épiques très bientôt...",
     tourney_rewards: "Récompenses : 200 🪙 + 1 👑 + 50 ⭐",
 
     /* ----- Profil & Compte ----- */
@@ -106,8 +105,10 @@ const i18n = {
     account_change: "🔑 Changer de compte", account_create: "➕ Créer un nouveau compte", account_delete: "🗑️ Supprimer mon compte",
     account_login_desc: "Entre ton pseudo + ton code secret.<br>Si le compte existe → connexion. Sinon → création.",
     account_pseudo_ph: "Pseudo", account_code_ph: "🔒 Code secret (4 min)", 
-    account_login_btn: "🔓 Accéder à mon compte ⚡",
+    account_login_btn: "🔑 Accéder à mon compte",
     account_create_btn: "✨ Créer mon compte",
+    account_tab_login: "🔑 Se connecter",
+    account_tab_create: "✨ Créer un compte",
     account_desc: "Entre ton pseudo + ton code secret. Si le compte existe → connexion. Sinon → création.",
     account_username_ph: "👤 Ton pseudo (3 caractères min)",
     account_secret_ph: "🔒 Ton code secret",
@@ -121,7 +122,6 @@ const i18n = {
     change_code_mismatch: "Les nouveaux codes ne correspondent pas.",
     recovery_key_title: "🔐 TA CLÉ DE RÉCUPÉRATION",
     recovery_key_warning: "⚠️ À CONSERVER PRÉCIEUSEMENT !",
-    account_key_warning: "Crée ton compte puis CONSERVE précieusement ta clé de récupération : elle est indispensable pour changer ton code secret.",
     recovery_key_desc: "Si tu perds ton code secret, donne-moi cette clé sur Discord/email pour prouver que c'est bien ton compte.",
     recovery_key_copy: "📋 Copier la clé", recovery_key_copied: "📋 Clé copiée !",
     recovery_key_prompt: "🔒 Entre ton code secret pour voir ta clé de récupération :",
@@ -148,7 +148,7 @@ const i18n = {
 
     /* ----- Combo ----- */
     combo_x15: "⚡ COMBO x15 !", combo_x30: "🔥 COMBO x30 !!", combo_perfection: "💥 PERFECTION x35 !!!",
-    perfection_popup_text: "⚡ PERFECTION — Combo x35 atteint ! Récompense maximale + Succès 🏆 débloqué !",
+    perfection_popup_text: "⚡ PERFECTION — Combo x35 atteint ! Récompense maximale + Succès ⭐ débloqué !",
 
     /* ----- Modes saisonniers (Catch) ----- */
     catch_how_to_play: "📖 COMMENT JOUER :",
@@ -251,7 +251,7 @@ const i18n = {
     avalanche_menu_title: "🧊 Avalanche (Difficulties)",
     diff_easy: "Easy", diff_medium: "Medium", diff_hard: "Hard 💀",
     solo_training_done: "🏋️ TRAINING DONE", solo_score_label: "Score:",
-    solo_perfection_banner: "💥 PERFECTION x35!", solo_perfection_reason: "PERFECTION! Max reward + Trophy 🏆",
+    solo_perfection_banner: "💥 PERFECTION x35!", solo_perfection_reason: "PERFECTION! Max reward + Achievement ⭐",
 
     /* ----- 1v1 ----- */
     hub_title: "⚔️ ONLINE 1v1 DUEL", hub_subtitle: "Choose your game mode:",
@@ -293,7 +293,7 @@ const i18n = {
     friend_view_trophy: "View trophy room", friend_room_created: "📤 Room created and invite sent!",
     friend_game_invite_from: "📩 Game invite from", friend_join_room: "Join room ⚡",
     friend_join: "Join ⚡", friend_room: "Room:",
-    friends_center_title: "👥 Friends Center", friends_placeholder: "Exact pseudo...",
+    friends_center_title: "👥 Friends Center", friends_placeholder: "Exact username...",
 
     /* ----- Shop ----- */
     shop_title: "🛍️ SHOP",
@@ -303,30 +303,31 @@ const i18n = {
     /* ----- Leaderboard ----- */
     lb_title: "👑 LEADERBOARD",
     lb_reg: "📍 Region", lb_nat: "🇫🇷 France", lb_glb: "🌍 World",
-    lb_cat_points: "🏅 Points", lb_cat_trophies: "👑 Trophies", lb_cat_coins: "🪙 Money", lb_cat_combined: "⭐ Combined",
+    lb_cat_points: "🏅 Points", lb_cat_trophies: "👑 Crowns", lb_cat_coins: "🪙 Money", lb_cat_combined: "⭐ Combined",
     lb_combined_desc: "💡 Combined: Crowns first, tied by points",
     lb_regional_label: "Regional", lb_no_players: "No players.",
 
     /* ----- Tournaments ----- */
     tourney_screen_title: "🎯 Blitz Tournament",
     tourney_teaser_title: "Coming soon!",
-    tourney_teaser_desc: "This mode is currently under consideration and development. Get ready to face the elite in epic tournaments very soon...",
     tourney_rewards: "Rewards: 200 🪙 + 1 👑 + 50 ⭐",
 
     /* ----- Profile & Account ----- */
     welcome_title: "⚡ BLITZ IDENTITY ⚡", welcome_sub: "Customize your competitive profile:",
-    pseudo_label: "PSEUDO", avatar_num_label: "AVATAR (1-999)", flag_label: "FLAG", region_label: "REGION",
+    pseudo_label: "USERNAME", avatar_num_label: "AVATAR (1-999)", flag_label: "FLAG", region_label: "REGION",
     account_title: "⚙️ MY ACCOUNT", account_connected: "Connected:",
     account_change: "🔑 Switch account", account_create: "➕ Create a new account", account_delete: "🗑️ Delete my account",
-    account_login_desc: "Enter your pseudo + secret code.<br>If the account exists → login. Else → creation.",
-    account_pseudo_ph: "Pseudo", account_code_ph: "🔒 Secret code (4 min)", 
-    account_login_btn: "🔓 Access my account ⚡",
-    account_desc: "Enter your pseudo + secret code. Account exists → login. Otherwise → creation.",
-    account_username_ph: "👤 Your pseudo (min 3 chars)",
+    account_login_desc: "Enter your username + secret code.<br>If the account exists → login. Else → creation.",
+    account_pseudo_ph: "Username", account_code_ph: "🔒 Secret code (4 min)", 
+    account_login_btn: "🔑 Access my account",
+    account_create_btn: "✨ Create my account",
+    account_tab_login: "🔑 Sign in",
+    account_tab_create: "✨ Create account",
+    account_desc: "Enter your username + secret code. Account exists → login. Otherwise → creation.",
+    account_username_ph: "👤 Your username (min 3 chars)",
     account_secret_ph: "🔒 Your secret code",
     account_secret_help: "8+ chars with: 1 UPPERCASE, 1 lowercase, 1 digit and 1 special char (!@#$%&*+-_)",
     account_submit: "⚡ Access my account",
-    account_create_btn: "✨ Create my account",
     account_key_warning: "Create your account then KEEP your recovery key safe: it is required to change your secret code.",
     change_code_title: "🔑 CHANGE MY SECRET CODE",
     change_code_desc: "8+ characters with <b>letters</b>, <b>digits</b> and <b>special character</b> (!@#$%&*+-_)",
@@ -334,7 +335,6 @@ const i18n = {
     change_code_success: "✅ Secret code changed successfully!", change_code_old_wrong: "Old code incorrect.",
     change_code_mismatch: "New codes don't match.",
     recovery_key_title: "🔐 YOUR RECOVERY KEY",
-    account_key_warning: "Create your account then KEEP your recovery key safe: it is required to change your secret code.",
     recovery_key_warning: "⚠️ KEEP IT SAFE!",
     recovery_key_desc: "If you lose your secret code, give me this key on Discord/email to prove it's your account.",
     recovery_key_copy: "📋 Copy key", recovery_key_copied: "📋 Key copied!",
@@ -362,7 +362,7 @@ const i18n = {
 
     /* ----- Combo ----- */
     combo_x15: "⚡ COMBO x15!", combo_x30: "🔥 COMBO x30!!", combo_perfection: "💥 PERFECTION x35!!!",
-    perfection_popup_text: "⚡ PERFECTION — Combo x35 reached! Max reward + Trophy 🏆 unlocked!",
+    perfection_popup_text: "⚡ PERFECTION — Combo x35 reached! Max reward + Achievement ⭐ unlocked!",
 
     /* ----- Seasonal Modes (Catch) ----- */
     catch_how_to_play: "📖 HOW TO PLAY:",
