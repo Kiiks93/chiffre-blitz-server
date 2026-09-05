@@ -860,8 +860,8 @@ function renderAccountContent() {
     content.innerHTML = `
       <p style="font-size:11px; text-align:center; color:#aaa; margin-bottom:8px;">${d.account_desc}</p>
       <div class="tabs" style="margin-bottom:10px;">
-        <button id="account-tab-login" class="tab-btn" onclick="switchAccountTab('login')">🔑 ${d.account_tab_login || "Se connecter"}</button>
-        <button id="account-tab-create" class="tab-btn" onclick="switchAccountTab('create')">✨ ${d.account_tab_create || "Créer un compte"}</button>
+        <button id="account-tab-login" class="tab-btn" onclick="switchAccountTab('login')"> ${d.account_tab_login || "Se connecter"}</button>
+        <button id="account-tab-create" class="tab-btn" onclick="switchAccountTab('create')"> ${d.account_tab_create || "Créer un compte"}</button>
       </div>
       <div id="account-form-container"></div>`;
     switchAccountTab(currentAccountTab);
@@ -888,7 +888,7 @@ function renderAccountForm(tab) {
     container.innerHTML = `
       <input id="account-username" placeholder="${d.account_username_ph}" maxlength="16" style="width:100%; margin-bottom:6px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
       <input id="account-secret" type="password" placeholder="${d.account_secret_ph}" maxlength="32" style="width:100%; margin-bottom:10px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
-      <button class="btn-main btn-blue" onclick="submitAccountForm('login')" style="width:100%;">🔑 ${d.account_login_btn || "Accéder à mon compte"}</button>`;
+      <button class="btn-main btn-blue" onclick="submitAccountForm('login')" style="width:100%;"> ${d.account_login_btn || "Accéder à mon compte"}</button>`;
   } else {
     // ✨ CRÉATION : pseudo + dispo en direct + code + région
     container.innerHTML = `
@@ -899,7 +899,7 @@ function renderAccountForm(tab) {
       <div style="background:rgba(248,181,0,0.12); border:1px solid #f8b500; border-radius:8px; padding:8px; margin-bottom:8px; font-size:10px; color:#f8b500; text-align:center; line-height:1.4;">⚠️ ${d.account_key_warning}</div>
       <div style="font-size:10px; color:#aaa; margin-bottom:4px; text-align:left;">🌍 ${currentLang === "fr" ? "Ta région (pour le classement régional)" : "Your region (for regional ranking)"}</div>
       <select id="account-region" style="width:100%; margin-bottom:10px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff;"></select>
-      <button class="btn-main btn-gold" onclick="submitAccountForm('create')" style="width:100%;">✨ ${d.account_create_btn || "Créer mon compte"}</button>`;
+      <button class="btn-main btn-gold" onclick="submitAccountForm('create')" style="width:100%;"> ${d.account_create_btn || "Créer mon compte"}</button>`;
 
     const srcRegion = document.getElementById("region-input");
     const dstRegion = document.getElementById("account-region");
