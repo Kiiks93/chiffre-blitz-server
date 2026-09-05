@@ -387,6 +387,7 @@ socket.on('check_username', async (rawUsername) => {
 });
   
 socket.on('register_player', async (data) => {
+  towerFloor: db.tower_floor || 0, towerStars: db.tower_stars || {}
   const rawUsername = (data.username || '').trim();
   const secretCode = (data.secretCode || '').trim();
   if (rawUsername.length < 3) { socket.emit('register_result', { ok: false, reason: 'short' }); return; }
@@ -1316,6 +1317,58 @@ socket.on("update_profile_visuals", async (data) => {
     delete activePlayers[socket.id];
     broadcastOnlineCount();
   });
+
+/* ============ 🗼 TOUR BLITZ ============ */
+const TOWER_CHAPTER_REWARDS = {
+  1: "title_grimpeur_neon",
+  2: "frame_cristal",
+  3: "frame_circuit",
+  4: "title_chasseur_hante",
+  5: "frame_toile",
+  6: "title_roi_citrouille_tour",
+  7: "title_veilleur_cimes",
+  8: "frame_aurore",
+  9: "title_maitre_tour"
+};
+
+socket.on('get_tower', () => {
+  const player = activePlayers[socket.id];
+  if (!player) return;
+  socket.emit('tower_data', { floor: player.towerFloor || 0, stars: player.towerStars || {} });
+});
+
+socket.on('tower_floor_win', async (data) => {
+  const player = activePlayers[socket.id];
+  if (!player) return;
+  const floor = parseInt(data.floor) || 0;
+  const stars = Math.max(1, Math.min(3, parseInt(data.stars) || 1));
+
+  // 🛡️ Anti-triche : uniquement le prochain étage attendu
+  if (floor !== (player.towerFloor || 0) + 1) return;
+
+  player.towerFloor = floor;
+  player.towerStars = player.towerStars || {};
+  player.towerStars[String(floor)] = Math.max(player.towerStars[String(floor)] || 0, stars);
+
+  const coins = 10 + floor * 2 + stars * 5;
+  player.coins = (player.coins || 0) + coins;
+
+  let reward = null;
+  if (floor % 10 === 0) {
+    const itemId = TOWER_CHAPTER_REWARDS[floor / 10];
+    if (itemId) {
+      player.unlocked_items = player.unlocked_items || [];
+      if (!player.unlocked_items.includes(itemId)) {
+        player.unlocked_items.push(itemId);
+        reward = itemId;
+      }
+    }
+  }
+
+  await savePlayerToSupabase(socket.id);
+  socket.emit('tower_result', { ok: true, floor, stars, coins, reward });
+  socket.emit('player_registered', player);
+});
 });
 
 /* ============================================================
