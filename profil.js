@@ -856,20 +856,94 @@ function renderAccountContent() {
       <button class="btn-main btn-blue" onclick="switchAccount()" style="margin-bottom:6px;">${d.account_change}</button>
       <button class="btn-main btn-gold" onclick="startCreateAccount()" style="margin-bottom:6px;">${d.account_create}</button>
       <button class="btn-main" onclick="askDeleteAccount()" style="background:linear-gradient(45deg,#ff4b6b,#8b0000);">${d.account_delete}</button>`;
-   } else {
+    } else {
     content.innerHTML = `
       <p style="font-size:11px; text-align:center; color:#aaa; margin-bottom:8px;">${d.account_desc}</p>
-      <div style="background:rgba(248,181,0,0.12); border:1px solid #f8b500; border-radius:8px; padding:8px; margin-bottom:10px; font-size:10px; color:#f8b500; text-align:center; line-height:1.4;">
-        ⚠️ ${d.account_key_warning}
+      <div class="tabs" style="margin-bottom:10px;">
+        <button id="account-tab-login" class="tab-btn" onclick="switchAccountTab('login')">🔑 ${d.account_tab_login || "Se connecter"}</button>
+        <button id="account-tab-create" class="tab-btn" onclick="switchAccountTab('create')">✨ ${d.account_tab_create || "Créer un compte"}</button>
       </div>
+      <div id="account-form-container"></div>`;
+    switchAccountTab(currentAccountTab);
+  }
+}
+let currentAccountTab = "login";
+
+function switchAccountTab(tab) {
+  currentAccountTab = tab;
+  const tl = document.getElementById('account-tab-login');
+  const tc = document.getElementById('account-tab-create');
+  if (tl) tl.classList.toggle('active', tab === 'login');
+  if (tc) tc.classList.toggle('active', tab === 'create');
+  renderAccountForm(tab);
+}
+
+function renderAccountForm(tab) {
+  const d = i18n[currentLang];
+  const container = document.getElementById('account-form-container');
+  if (!container) return;
+
+  if (tab === 'login') {
+    // 🔑 CONNEXION : simple et rapide
+    container.innerHTML = `
       <input id="account-username" placeholder="${d.account_username_ph}" maxlength="16" style="width:100%; margin-bottom:6px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
+      <input id="account-secret" type="password" placeholder="${d.account_secret_ph}" maxlength="32" style="width:100%; margin-bottom:10px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
+      <button class="btn-main btn-blue" onclick="submitAccountForm('login')" style="width:100%;">🔑 ${d.account_login_btn || "Accéder à mon compte"}</button>`;
+  } else {
+    // ✨ CRÉATION : pseudo + dispo en direct + code + région
+    container.innerHTML = `
+      <input id="account-username" placeholder="${d.account_username_ph}" maxlength="16" oninput="onUsernameTyping()" style="width:100%; margin-bottom:2px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
+      <div id="username-availability" style="font-size:10px; font-weight:bold; min-height:14px; margin-bottom:6px; text-align:center;"></div>
       <input id="account-secret" type="password" placeholder="${d.account_secret_ph}" maxlength="32" style="width:100%; margin-bottom:4px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
-      <div style="font-size:9px; color:#aaa; text-align:center; margin-bottom:10px; line-height:1.4;">${d.account_secret_help}</div>
+      <div style="font-size:9px; color:#aaa; text-align:center; margin-bottom:8px; line-height:1.4;">${d.account_secret_help}</div>
+      <div style="background:rgba(248,181,0,0.12); border:1px solid #f8b500; border-radius:8px; padding:8px; margin-bottom:8px; font-size:10px; color:#f8b500; text-align:center; line-height:1.4;">⚠️ ${d.account_key_warning}</div>
       <div style="font-size:10px; color:#aaa; margin-bottom:4px; text-align:left;">🌍 ${currentLang === "fr" ? "Ta région (pour le classement régional)" : "Your region (for regional ranking)"}</div>
       <select id="account-region" style="width:100%; margin-bottom:10px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff;"></select>
-      <button class="btn-main btn-blue" onclick="submitAccountForm('login')" style="width:100%; margin-bottom:6px;">🔑 ${d.account_login_btn || "Accéder à mon compte"}</button>
       <button class="btn-main btn-gold" onclick="submitAccountForm('create')" style="width:100%;">✨ ${d.account_create_btn || "Créer mon compte"}</button>`;
+
+    const srcRegion = document.getElementById("region-input");
+    const dstRegion = document.getElementById("account-region");
+    if (srcRegion && dstRegion) dstRegion.innerHTML = srcRegion.innerHTML;
   }
+}
+
+/* ============================================================
+VÉRIFICATION DU PSEUDO EN DIRECT (onglet création)
+============================================================ */
+let usernameCheckTimer = null;
+
+function onUsernameTyping() {
+  const el = document.getElementById('username-availability');
+  const input = document.getElementById('account-username');
+  if (!el || !input) return;
+  const val = input.value.trim();
+  clearTimeout(usernameCheckTimer);
+
+  if (val.length < 3) { el.innerText = ''; return; }
+
+  el.innerText = currentLang === "fr" ? "⏳ Vérification..." : "⏳ Checking...";
+  el.style.color = "#aaa";
+
+  // Anti-spam : attend 400 ms après le dernier caractère tapé
+  usernameCheckTimer = setTimeout(() => {
+    if (typeof socket !== "undefined" && socket.connected) {
+      socket.emit('check_username', val);
+    }
+  }, 400);
+}
+
+socket.on('username_check_result', (res) => {
+  const el = document.getElementById('username-availability');
+  if (!el) return;
+  if (res.taken) {
+    el.innerText = currentLang === "fr" ? "❌ Ce pseudo existe déjà" : "❌ Username already taken";
+    el.style.color = "#ff4b2b";
+  } else {
+    el.innerText = currentLang === "fr" ? "✅ Pseudo disponible" : "✅ Username available";
+    el.style.color = "#00ff88";
+  }
+});
+
       // ✅ Remplit le select avec les mêmes régions que la fenêtre profil
     const srcRegion = document.getElementById("region-input");
     const dstRegion = document.getElementById("account-region");
