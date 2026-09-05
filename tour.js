@@ -193,7 +193,10 @@ function showBriefing(def){
   closeBriefing();
   const fr=currentLang==="fr";
   const curStars=towerProgress.stars[String(def.floor)]||0;
-  const starRule=fr?"💡 ⭐ terminer · ⭐⭐ ≤2 erreurs · ⭐⭐⭐ 0 erreur + rapide !":"💡 ⭐ finish · ⭐⭐ ≤2 mistakes · ⭐⭐⭐ 0 mistake + fast!";
+  const starTime=Math.floor(def.time*0.6);
+  const starRule=fr
+    ?"💡 ⭐ terminer · ⭐⭐ ≤2 erreurs · ⭐⭐⭐ 0 erreur + moins de "+starTime+"s !"
+    :"💡 ⭐ finish · ⭐⭐ ≤2 mistakes · ⭐⭐⭐ 0 mistake + under "+starTime+"s!";
   const replayLine=def.replay?`<div style="font-size:10px;color:#f8b500;margin-bottom:6px;">${fr?"Actuel : "+"⭐".repeat(curStars)+" — rejoue pour viser 3 ⭐ !":"Current: "+"⭐".repeat(curStars)+" — replay for 3 ⭐!"}</div>`:"";
   const b=document.createElement("div");b.id="tw-brief";b.className="tw-brief";
   b.innerHTML=`<div class="tw-brief-card">
@@ -201,7 +204,8 @@ function showBriefing(def){
     <div style="font-size:11px;color:#ddd;line-height:1.5;margin-bottom:8px;">${twDesc(def.type)}</div>
     <div style="font-size:9px;color:#aaa;margin-bottom:8px;">${starRule}</div>
     ${replayLine}
-    <button class="btn-main btn-blue" style="width:100%;" onclick="closeBriefing();startTowerFloor(getFloorDef(${def.floor}))">${def.replay?"🔄 "+(fr?"REJOUER":"REPLAY"):"⚡ "+(fr?"LANCER !":"GO!")}</button>
+    <button class="btn-main btn-blue" style="width:100%;margin-bottom:6px;" onclick="closeBriefing();startTowerFloor(getFloorDef(${def.floor}))">${def.replay?"🔄 "+(fr?"REJOUER":"REPLAY"):"⚡ "+(fr?"LANCER !":"GO!")}</button>
+    <button class="btn-secondary" style="width:100%;" onclick="closeBriefing()">❌ ${fr?"Annuler":"Cancel"}</button>
   </div>`;
   document.getElementById("tw-scene").appendChild(b);
 }
