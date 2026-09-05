@@ -362,7 +362,30 @@ io.on('connection', (socket) => {
       solo_games: p.solo_games || 0, total_coins_earned: p.total_coins_earned || 0
     });
   });
+  
+// 🔍 Vérifie en direct si un pseudo existe déjà (pour l'onglet création)
+socket.on('check_username', async (rawUsername) => {
+  try {
+    // Petit anti-spam : 1 check max toutes les 300 ms
+    const now = Date.now();
+    if (socket._lastUsernameCheck && now - socket._lastUsernameCheck < 300) return;
+    socket._lastUsernameCheck = now;
 
+    const name = String(rawUsername || '').trim();
+    if (name.length < 3) { socket.emit('username_check_result', { taken: false }); return; }
+
+    const { data, error } = await supabase
+      .from('players')
+      .select('id')
+      .ilike('username', name)
+      .limit(1);
+
+    socket.emit('username_check_result', { taken: !error && data && data.length > 0 });
+  } catch (e) {
+    socket.emit('username_check_result', { taken: false });
+  }
+});
+  
 socket.on('register_player', async (data) => {
   const rawUsername = (data.username || '').trim();
   const secretCode = (data.secretCode || '').trim();
