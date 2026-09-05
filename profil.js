@@ -867,7 +867,8 @@ function renderAccountContent() {
       <div style="font-size:9px; color:#aaa; text-align:center; margin-bottom:10px; line-height:1.4;">${d.account_secret_help}</div>
       <div style="font-size:10px; color:#aaa; margin-bottom:4px; text-align:left;">🌍 ${currentLang === "fr" ? "Ta région (pour le classement régional)" : "Your region (for regional ranking)"}</div>
       <select id="account-region" style="width:100%; margin-bottom:10px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff;"></select>
-      <button class="btn-main btn-blue" onclick="submitAccountForm()" style="width:100%;">${d.account_submit}</button>`;
+      <button class="btn-main btn-blue" onclick="submitAccountForm('login')" style="width:100%; margin-bottom:6px;">🔑 ${d.account_login_btn || "Accéder à mon compte"}</button>
+      <button class="btn-main btn-gold" onclick="submitAccountForm('create')" style="width:100%;">✨ ${d.account_create_btn || "Créer mon compte"}</button>`;
   }
       // ✅ Remplit le select avec les mêmes régions que la fenêtre profil
     const srcRegion = document.getElementById("region-input");
@@ -1009,7 +1010,7 @@ socket.on('force_logout', (data) => {
   checkAndShowProfileModal();
 });
 
-function submitAccountForm() {
+function submitAccountForm(mode) {
   const pseudo = (document.getElementById('account-username').value || '').trim();
   const code = (document.getElementById('account-secret').value || '').trim();
   
@@ -1018,14 +1019,22 @@ function submitAccountForm() {
     return;
   }
   
-  if (code.length < CONFIG.MIN_CODE_LENGTH) {
-    alert('Code secret : 8 caractères minimum (avec majuscule, minuscule, chiffre et caractère spécial).');
-    return;
-  }
-  
-  if (!isStrongCode(code)) {
-    alert('⚠️ Code trop faible !\n\nUn code fort doit contenir :\n• 8+ caractères\n• 1 MAJUSCULE\n• 1 minuscule\n• 1 chiffre\n• 1 caractère spécial (!@#$%&*+-_)\n\nExemple : Blitz2026!');
-    return;
+  if (mode === 'create') {
+    // Création : code fort obligatoire
+    if (code.length < CONFIG.MIN_CODE_LENGTH) {
+      alert('Code secret : 8 caractères minimum (avec majuscule, minuscule, chiffre et caractère spécial).');
+      return;
+    }
+    if (!isStrongCode(code)) {
+      alert('⚠️ Code trop faible !\n\nUn code fort doit contenir :\n• 8+ caractères\n• 1 MAJUSCULE\n• 1 minuscule\n• 1 chiffre\n• 1 caractère spécial (!@#$%&*+-_)\n\nExemple : Blitz2026!');
+      return;
+    }
+  } else {
+    // Connexion : les anciens comptes peuvent avoir un code court
+    if (code.length < 4) {
+      alert('🔒 Entre ton code secret (4 caractères minimum).');
+      return;
+    }
   }
   
   myProfile.username = pseudo;
@@ -1047,7 +1056,7 @@ if (window.__kicked) return;
       flag: myProfile.flag,
       inventory: myProfile.inventory || {},
       secretCode: myProfile.secretCode,
-      mode: 'create',
+       mode: mode,
       timezone: getPlayerTimezone()
     });
 } else {
