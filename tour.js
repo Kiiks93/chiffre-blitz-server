@@ -26,11 +26,46 @@ function getFloorDef(floor) {
 }
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
-/* ----- CSS pièce 3D + ascenseur ----- */
+/* ----- CSS tour 1ʳ personne ----- */
 (function(){
   const s=document.createElement("style");
   s.textContent=`
-  .tw-scene{position:relative;height:300px;overflow:hidden;border-radius:12px;background:#000;}
+  .tw-scene{position:relative;height:320px;overflow:hidden;border-radius:12px;background:#000;}
+  .tw-star{position:absolute;background:#fff;border-radius:50%;animation:twTwinkle 2s infinite;}
+  @keyframes twTwinkle{50%{opacity:.15}}
+  /* --- Extérieur --- */
+  .tw-ext{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,#232355,#050514 70%);}
+  .tw-facade{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:62%;height:88%;background:linear-gradient(180deg,#141a33,#0d1226);border:2px solid #2b3a67;border-bottom:none;display:flex;flex-wrap:wrap;align-content:flex-start;gap:6% 8%;padding:10% 14% 20%;}
+  .tw-fwin{width:22%;height:7%;background:#05070f;border:1px solid #222c4e;border-radius:2px;}
+  .tw-fwin.lit{background:radial-gradient(#ffd76a,#b06000);box-shadow:0 0 8px #f8b50088;}
+  .tw-fdoor{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:36%;height:15%;display:flex;border:2px solid #00d2ff;border-bottom:none;border-radius:6px 6px 0 0;overflow:hidden;}
+  .tw-fd{width:50%;height:100%;background:linear-gradient(90deg,#2b3a67,#141a33);transition:transform .6s;}
+  .tw-fdoor.open .tw-fd:first-child{transform:translateX(-100%);}
+  .tw-fdoor.open .tw-fd:last-child{transform:translateX(100%);}
+  .tw-sign{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:900;color:#00d2ff;text-shadow:0 0 10px #00d2ff;white-space:nowrap;}
+  .tw-walker{position:absolute;left:50%;bottom:1%;transform:translateX(-50%);font-size:28px;transition:all 1.1s ease;z-index:2;}
+  .tw-walker.walk{bottom:13%;font-size:15px;}
+  /* --- Ascenseur 1ʳᵉ personne --- */
+  .tw-elv{position:absolute;inset:0;background:#0a0a14;}
+  .tw-elv-ceil{position:absolute;left:0;right:0;top:0;height:10%;background:linear-gradient(180deg,#000,#1a2142);clip-path:polygon(0 0,100% 0,78% 100%,22% 100%);}
+  .tw-elv-left{position:absolute;left:0;top:0;bottom:0;width:22%;background:linear-gradient(90deg,#000,#1a2142);clip-path:polygon(0 0,100% 10%,100% 80%,0 100%);}
+  .tw-elv-right{position:absolute;right:0;top:0;bottom:0;width:22%;background:linear-gradient(-90deg,#000,#1a2142);clip-path:polygon(100% 0,0 10%,0 80%,100% 100%);}
+  .tw-elv-floor{position:absolute;left:0;right:0;bottom:0;height:20%;background:linear-gradient(180deg,#232c4e,#0d1226);clip-path:polygon(22% 0,78% 0,100% 100%,0 100%);}
+  .tw-elv-doors{position:absolute;left:26%;right:26%;top:10%;bottom:20%;display:flex;border:3px solid #3a4670;border-radius:6px;overflow:hidden;background:#111;}
+  .tw-elv-d{width:50%;height:100%;background:linear-gradient(90deg,#2b3a67,#1a2142 55%,#2b3a67);transition:transform .7s;}
+  .tw-elv-doors.open .tw-elv-d:first-child{transform:translateX(-100%);}
+  .tw-elv-doors.open .tw-elv-d:last-child{transform:translateX(100%);}
+  .tw-elv-ind{position:absolute;left:50%;top:3%;transform:translateX(-50%);background:#000;border:2px solid #f8b500;color:#f8b500;font-weight:900;border-radius:6px;padding:2px 10px;font-size:14px;z-index:2;}
+  .tw-elv-panel{position:absolute;right:5%;top:28%;width:15%;background:#10142e;border:2px solid #3a4670;border-radius:8px;padding:6px;display:flex;flex-direction:column;gap:4px;z-index:2;}
+  .tw-elv-btn{border-radius:50%;border:2px solid #444;background:#05070f;color:#888;font-size:9px;font-weight:900;padding:5px 0;cursor:pointer;}
+  .tw-elv-btn.cur{border-color:#00d2ff;color:#00d2ff;animation:twFlick 1s steps(2) infinite;}
+  .tw-elv-btn.won{border-color:#00ff88;color:#00ff88;}
+  .tw-elv-btn.lit{background:#f8b500;color:#000;border-color:#f8b500;box-shadow:0 0 10px #f8b500;}
+  .tw-elv-btn.off{opacity:.3;}
+  .tw-scene.shake{animation:twShake .4s infinite;}
+  @keyframes twShake{25%{transform:translateY(2px)}75%{transform:translateY(-2px)}}
+  @keyframes twFlick{50%{opacity:.4}}
+  /* --- Pièce 3D --- */
   .tw-room3d{position:absolute;inset:0;}
   .tw-back{position:absolute;left:20%;right:20%;top:10%;bottom:32%;background:linear-gradient(180deg,var(--w1),var(--w2));box-shadow:inset 0 0 40px #000a;}
   .tw-ceil{position:absolute;left:0;right:0;top:0;height:10%;background:linear-gradient(180deg,#000,var(--w1));clip-path:polygon(0 0,100% 0,80% 100%,20% 100%);}
@@ -40,31 +75,22 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
   .tw-window{position:absolute;left:8%;top:12%;width:30%;height:45%;background:radial-gradient(#232355,#050514);border:3px solid var(--acc);border-radius:6px;box-shadow:0 0 12px var(--acc);}
   .tw-moon{position:absolute;right:4px;top:2px;font-size:14px;}
   .tw-obj3d{position:absolute;font-size:26px;filter:drop-shadow(0 4px 4px #000a);}
-  .tw-obj3d.a0{animation:twFloat2 2.4s ease-in-out infinite;}
+  .tw-obj3d.a0{animation:twFloat2 2.4s infinite;}
   .tw-obj3d.a1{animation:twGlow2 1.6s infinite;}
   .tw-obj3d.a2{animation:twFlick 1.1s steps(2) infinite;}
   @keyframes twFloat2{50%{transform:translateY(-5px)}}
   @keyframes twGlow2{50%{filter:drop-shadow(0 0 10px var(--acc))}}
-  @keyframes twFlick{50%{opacity:.4}}
   .tw-avatar3d{position:absolute;left:50%;bottom:24%;transform:translateX(-50%);font-size:30px;animation:twBounce 1.4s infinite;}
   @keyframes twBounce{50%{transform:translateX(-50%) translateY(-6px)}}
   .tw-here3d{position:absolute;left:50%;bottom:19%;transform:translateX(-50%);font-size:9px;color:var(--acc);font-weight:900;}
-  .tw-el{position:absolute;right:5%;top:18%;width:14%;height:50%;display:flex;border:2px solid #444;border-radius:4px;overflow:hidden;background:#111;}
-  .tw-el-d{width:50%;height:100%;background:linear-gradient(90deg,#2b3a67,#141a33);}
-  .tw-el-plaque{position:absolute;right:5%;top:10%;width:14%;text-align:center;font-size:10px;font-weight:900;color:var(--acc);}
-  .tw-travel{position:absolute;inset:0;background:#000c;display:flex;align-items:center;justify-content:center;z-index:5;}
-  .tw-travel .cnt{font-size:44px;font-weight:900;color:#00d2ff;text-shadow:0 0 20px #00d2ff;}
-  .tw-scene.shake{animation:twShake .4s infinite;}
-  @keyframes twShake{25%{transform:translateY(2px)}75%{transform:translateY(-2px)}}
+  /* --- Briefing --- */
+  .tw-brief{position:absolute;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:6;}
+  .tw-brief-card{background:#0f051d;border:2px solid #00d2ff;border-radius:12px;padding:14px;max-width:82%;text-align:center;box-shadow:0 0 20px #00d2ff66;}
+  /* --- Divers --- */
   .tw-chip{border:1px solid #333;background:#0a0a14;color:#888;border-radius:6px;font-size:10px;font-weight:900;padding:4px 6px;margin:0 1px;}
   .tw-chip.won{border-color:#00ff88;color:#00ff88;}
   .tw-chip.cur{border-color:#00d2ff;color:#00d2ff;animation:twFlick 1s steps(2) infinite;}
   .tw-chip.on{border-color:#f8b500;color:#f8b500;}
-  .tw-doors{position:fixed;inset:0;z-index:10002;pointer-events:none;display:flex;}
-  .tw-door{width:50%;height:100%;background:linear-gradient(180deg,#0f1a2e,#000);transition:transform .8s ease;border-right:2px solid #00d2ff;}
-  .tw-door.r{border-right:none;border-left:2px solid #00d2ff;}
-  .tw-doors.open .tw-door{transform:translateX(-100%);}
-  .tw-doors.open .tw-door.r{transform:translateX(100%);}
   #tower-game .tg-grid{display:grid;gap:6px;}
   .tg-tile{background:linear-gradient(180deg,#1a2142,#0d1226);border:2px solid #00d2ff55;border-radius:8px;color:#fff;font-weight:900;font-size:16px;padding:12px 0;cursor:pointer;}
   .tg-tile.sel{border-color:#f8b500;box-shadow:0 0 10px #f8b500;}
@@ -92,14 +118,47 @@ const TOWER_COLORS={
   9:{w1:"#330a0a",w2:"#180404",f1:"#451010",f2:"#200606",acc:"#ff416c"}
 };
 const OBJ_SPOTS=[[30,58],[62,58],[46,64],[26,70],[68,70],[38,74],[56,74],[46,52],[70,62]];
-let viewChap=0,prevCurrent=0,TW_travel=false;
+let viewChap=0,viewFloorOverride=null,TW_phase="idle";
 
 function typeLabel(t){
   const fr=currentLang==="fr";
   return ({classic:fr?"⚡ Croissant":"⚡ Ascending",reverse:fr?"🔽 Décroissant":"🔽 Descending",random:fr?"🎲 Chaos":"🎲 Chaos","calc+":fr?"🧮 Addition":"🧮 Addition","calc-":fr?"🧮 Soustraction":"🧮 Subtraction",sprint:fr?"⏱️ Sprint":"⏱️ Sprint",memory:fr?"🙈 Mémoire":"🙈 Memory",fog:fr?"🌫️ Brouillard":"🌫️ Fog",nofail:fr?"💎 Sans faute":"💎 No mistake",boss:fr?"⚔️ GARDIEN":"⚔️ GUARDIAN"})[t]||t;
 }
+function twDesc(t){
+  const fr=currentLang==="fr";
+  return ({
+    classic:fr?"Monte les nombres dans l'ordre croissant, le plus vite possible !":"Climb the numbers in ascending order, as fast as you can!",
+    reverse:fr?"Cette fois on descend ! Clique du plus grand au plus petit.":"This time we go down! Click from biggest to smallest.",
+    random:fr?"La cible change au hasard à chaque fois : reste concentré !":"The target changes randomly each time: stay focused!",
+    "calc+":fr?"Clique sur les DEUX cases dont la SOMME donne la cible.":"Click the TWO tiles whose SUM equals the target.",
+    "calc-":fr?"Clique sur les DEUX cases dont la DIFFÉRENCE donne la cible.":"Click the TWO tiles whose DIFFERENCE equals the target.",
+    sprint:fr?"Le temps est minuscule : vitesse pure !":"Tiny time limit: pure speed!",
+    memory:fr?"Mémorise les nombres... ils seront cachés après 2 secondes !":"Memorize the numbers... they hide after 2 seconds!",
+    fog:fr?"Le brouillard fait clignoter les nombres : accroche-toi !":"Fog makes numbers blink: hold on!",
+    nofail:fr?"UNE seule erreur et l'étage est raté. Concentration maximale.":"ONE single mistake and the floor fails. Max focus.",
+    boss:fr?"Le Gardien grimpe en même temps que toi. Finis AVANT lui !":"The Guardian climbs with you. Finish BEFORE him!"
+  })[t]||"";
+}
 
-/* ----- Ouverture ----- */
+/* ----- Sons ----- */
+function towerDing(){
+  try{SoundEngine.init();const t=SoundEngine.ctx.currentTime;
+  [880,1320].forEach((f,i)=>{const o=SoundEngine.ctx.createOscillator(),g=SoundEngine.ctx.createGain();
+  o.type="sine";o.frequency.value=f;g.gain.setValueAtTime(.08,t+i*.12);g.gain.exponentialRampToValueAtTime(.0001,t+i*.12+.25);
+  o.connect(g);g.connect(SoundEngine.ctx.destination);o.start(t+i*.12);o.stop(t+i*.12+.25);});}catch(e){}
+}
+function towerTick(){
+  try{const t=SoundEngine.ctx.currentTime;const o=SoundEngine.ctx.createOscillator(),g=SoundEngine.ctx.createGain();
+  o.type="square";o.frequency.value=220;g.gain.setValueAtTime(.04,t);g.gain.exponentialRampToValueAtTime(.0001,t+.08);
+  o.connect(g);g.connect(SoundEngine.ctx.destination);o.start(t);o.stop(t+.09);}catch(e){}
+}
+function towerRumble(ms){
+  try{const t=SoundEngine.ctx.currentTime;const o=SoundEngine.ctx.createOscillator(),g=SoundEngine.ctx.createGain();
+  o.type="sawtooth";o.frequency.value=55;g.gain.setValueAtTime(.05,t);g.gain.exponentialRampToValueAtTime(.0001,t+ms/1000);
+  o.connect(g);g.connect(SoundEngine.ctx.destination);o.start(t);o.stop(t+ms/1000);}catch(e){}
+}
+
+/* ----- Ouverture : extérieur puis ascenseur ----- */
 function openTower(){
   let m=document.getElementById("modal-tower");
   if(!m){
@@ -115,59 +174,106 @@ function openTower(){
     document.body.appendChild(m);
   }
   m.style.display="flex";
-  viewChap=0;
+  viewChap=0;viewFloorOverride=null;TW_phase="ext";
   socket.emit("get_tower");
-  const doors=document.createElement("div");doors.className="tw-doors";
-  doors.innerHTML=`<div class="tw-door"></div><div class="tw-door r"></div>`;
-  document.body.appendChild(doors);
-  setTimeout(()=>doors.classList.add("open"),150);
-  setTimeout(()=>doors.remove(),1100);
-  towerDing();
+  playExterior();
 }
 function closeTower(){document.getElementById("modal-tower").style.display="none";}
-function towerDing(){
-  try{SoundEngine.init();const t=SoundEngine.ctx.currentTime;
-  [880,1320].forEach((f,i)=>{const o=SoundEngine.ctx.createOscillator(),g=SoundEngine.ctx.createGain();
-  o.type="sine";o.frequency.value=f;g.gain.setValueAtTime(.08,t+i*.12);g.gain.exponentialRampToValueAtTime(.0001,t+i*.12+.25);
-  o.connect(g);g.connect(SoundEngine.ctx.destination);o.start(t+i*.12);o.stop(t+i*.12+.25);});}catch(e){}
-}
-function towerTick(){
-  try{const t=SoundEngine.ctx.currentTime;const o=SoundEngine.ctx.createOscillator(),g=SoundEngine.ctx.createGain();
-  o.type="square";o.frequency.value=220;g.gain.setValueAtTime(.04,t);g.gain.exponentialRampToValueAtTime(.0001,t+.08);
-  o.connect(g);g.connect(SoundEngine.ctx.destination);o.start(t);o.stop(t+.09);}catch(e){}
+
+function playExterior(){
+  const box=document.getElementById("tw-scene");if(!box)return;
+  let wins="";for(let i=0;i<12;i++)wins+=`<div class="tw-fwin ${Math.random()<.5?"lit":""}"></div>`;
+  box.innerHTML=`<div class="tw-ext">
+    <div class="tw-facade"><div class="tw-sign">🏰 TOUR BLITZ</div>${wins}
+      <div class="tw-fdoor" id="tw-fdoor"><div class="tw-fd"></div><div class="tw-fd"></div></div>
+    </div>
+    <span class="tw-walker" id="tw-walker">🧍</span></div>`;
+  for(let i=0;i<30;i++){const st=document.createElement("span");st.className="tw-star";const sz=Math.random()*2+1;
+    st.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*40}%;animation-delay:${Math.random()*2}s;`;box.appendChild(st);}
+  setTimeout(()=>{const w=document.getElementById("tw-walker");if(w)w.classList.add("walk");},150);
+  setTimeout(()=>{const d=document.getElementById("tw-fdoor");if(d)d.classList.add("open");towerTick();},1300);
+  setTimeout(()=>{showElevator();},2000);
 }
 
-/* ----- Rendu pièce 3D ----- */
-socket.on("tower_data",(d)=>{towerProgress={floor:d.floor||0,stars:d.stars||{}};renderTower();});
-
-function renderTower(){
+/* ----- Ascenseur 1ʳ personne ----- */
+function showElevator(){
+  TW_phase="elv";
   const box=document.getElementById("tw-scene");if(!box)return;
   const current=Math.min(towerProgress.floor+1,90);
-  if(!viewChap)viewChap=getTowerChapter(current).id;
-  if(prevCurrent&&current>prevCurrent&&!TW_travel){
-    TW_travel=true;
-    const from=prevCurrent,to=current;prevCurrent=current;
-    box.classList.add("shake");
-    const ov=document.createElement("div");ov.className="tw-travel";ov.innerHTML=`<div class="cnt">É${from}</div>`;
-    box.appendChild(ov);
-    const c=ov.querySelector(".cnt");let f=from;
-    const iv=setInterval(()=>{
-      f++;
-      if(f>to){clearInterval(iv);box.classList.remove("shake");ov.remove();TW_travel=false;drawRoom();return;}
-      c.innerText="É"+f;towerTick();
-    },140);
-    drawChips();return;
+  viewChap=getTowerChapter(current).id;
+  box.innerHTML=`<div class="tw-elv">
+    <div class="tw-elv-ceil"></div><div class="tw-elv-left"></div><div class="tw-elv-right"></div><div class="tw-elv-floor"></div>
+    <div class="tw-elv-ind" id="tw-elv-ind">É${Math.max(1,towerProgress.floor)}</div>
+    <div class="tw-elv-doors" id="tw-elv-doors"><div class="tw-elv-d"></div><div class="tw-elv-d"></div></div>
+    <div class="tw-elv-panel" id="tw-elv-panel"></div>
+  </div>`;
+  drawPanel();drawChips();
+  document.getElementById("tower-sub").innerText=currentLang==="fr"?"🛗 Appuie sur le bouton de ton étage !":"🛗 Press your floor button!";
+}
+function drawPanel(){
+  const p=document.getElementById("tw-elv-panel");if(!p)return;
+  const current=Math.min(towerProgress.floor+1,90);
+  let html="";
+  for(let f=viewChap*10;f>=(viewChap-1)*10+1;f--){
+    const won=f<=towerProgress.floor,cur=f===current;
+    html+=`<button class="tw-elv-btn ${won?"won":(cur?"cur":"off")}" ${cur?`onclick="pressFloor(${f})"`:(won?`onclick="viewWonFloor(${f})"`:"disabled")}>${f%10===0?"👑":f}</button>`;
   }
-  prevCurrent=current;
-  drawRoom();
+  p.innerHTML=html;
+}
+function pressFloor(f){
+  const btns=document.querySelectorAll(".tw-elv-btn");btns.forEach(b=>b.classList.remove("cur"));
+  if(event&&event.currentTarget)event.currentTarget.classList.add("lit");
+  towerTick();
+  setTimeout(()=>rideTo(f),400);
+}
+function viewWonFloor(f){
+  viewChap=getTowerChapter(f).id;viewFloorOverride=f;TW_phase="room";
+  drawRoom();drawChips();
+}
+function rideTo(f){
+  const box=document.getElementById("tw-scene");
+  const doors=document.getElementById("tw-elv-doors");
+  const ind=document.getElementById("tw-elv-ind");
+  if(doors)doors.classList.remove("open");
+  setTimeout(()=>{
+    box.classList.add("shake");towerRumble(1200);
+    let from=Math.max(1,f-1);ind.innerText="É"+from;
+    const iv=setInterval(()=>{
+      from++;
+      if(from>f){clearInterval(iv);box.classList.remove("shake");
+        if(doors)doors.classList.add("open");towerDing();
+        setTimeout(()=>arriveFloor(f),700);
+        return;}
+      ind.innerText="É"+from;towerTick();
+    },180);
+  },500);
+}
+function arriveFloor(f){
+  TW_phase="room";viewFloorOverride=null;
+  viewChap=getTowerChapter(f).id;
+  drawRoom();drawChips();
+  const current=Math.min(towerProgress.floor+1,90);
+  if(f===current)showBriefing(getFloorDef(f));
 }
 
+/* ----- Pièce 3D ----- */
+socket.on("tower_data",(d)=>{
+  towerProgress={floor:d.floor||0,stars:d.stars||{}};
+  if(TW_phase==="elv")drawPanel();
+  else if(TW_phase==="room")drawRoom();
+  drawChips();
+});
+function renderTower(){
+  const current=Math.min(towerProgress.floor+1,90);
+  if(TW_phase==="room"||TW_phase==="idle"){TW_phase="elv";showElevator();}
+  else{drawPanel();drawChips();}
+}
 function drawRoom(){
   const box=document.getElementById("tw-scene");if(!box)return;
   const current=Math.min(towerProgress.floor+1,90);
   const chap=TOWER_CHAPTERS[viewChap-1];
   const C=TOWER_COLORS[viewChap];
-  const floorShown=(viewChap===getTowerChapter(current).id)?current:viewChap*10;
+  const floorShown=viewFloorOverride||(viewChap===getTowerChapter(current).id?current:viewChap*10);
   const inChap=((floorShown-1)%10)+1;
   const isBoss=inChap===10;
   const wonInChap=Math.min(9,Math.max(0,towerProgress.floor-(viewChap-1)*10));
@@ -188,22 +294,33 @@ function drawRoom(){
     <div class="tw-back"><div class="tw-window"><span class="tw-moon">🌙</span></div></div>
     <div class="tw-floor3d"></div>
     ${objs}${center}
-    <div class="tw-el-plaque">É${floorShown}</div>
-    <div class="tw-el"><div class="tw-el-d"></div><div class="tw-el-d"></div></div>
   </div>`;
   document.getElementById("tower-sub").innerText=chap.icon+" "+chap.name+" — "+(currentLang==="fr"?"Étage":"Floor")+" "+floorShown+" / 90";
   const act=document.getElementById("tw-actions");
   if(isCurrent&&!isBoss)act.innerHTML=`<button class="btn-main btn-blue" onclick="startTowerFloor(getFloorDef(${current}))">▶ ${typeLabel(getFloorDef(current).type)}</button>`;
   else if(isCurrent&&isBoss&&wonInChap>=9)act.innerHTML=`<button class="btn-main" style="background:linear-gradient(45deg,#ff4b2b,#f8b500);color:#fff;font-weight:900;" onclick="startTowerFloor(getFloorDef(${current}))">⚔️ ${currentLang==="fr"?"DÉFIER LE GARDIEN":"CHALLENGE THE GUARDIAN"}</button>`;
   else if(!isCurrent)act.innerHTML=`<span style="font-size:10px;color:#888;">🔒 ${currentLang==="fr"?"Gagne les étages précédents !":"Clear the previous floors!"}</span>`;
-  else act.innerHTML="";
+  else act.innerHTML=`<button class="btn-secondary" onclick="showElevator()">🛗 ${currentLang==="fr"?"Ascenseur":"Elevator"}</button>`;
   drawChips();
 }
+function showBriefing(def){
+  closeBriefing();
+  const b=document.createElement("div");b.id="tw-brief";b.className="tw-brief";
+  b.innerHTML=`<div class="tw-brief-card">
+    <div style="font-size:13px;font-weight:900;color:#f8b500;margin-bottom:6px;">🛗 ${currentLang==="fr"?"ÉTAGE":"FLOOR"} ${def.floor} — ${typeLabel(def.type)}</div>
+    <div style="font-size:11px;color:#ddd;line-height:1.5;margin-bottom:10px;">${twDesc(def.type)}</div>
+    <button class="btn-main btn-blue" style="width:100%;margin-bottom:6px;" onclick="closeBriefing();startTowerFloor(getFloorDef(${def.floor}))">⚡ ${currentLang==="fr"?"LANCER !":"GO!"}</button>
+    <button class="btn-secondary" style="width:100%;" onclick="closeBriefing()">👀 ${currentLang==="fr"?"Voir la pièce":"See the room"}</button>
+  </div>`;
+  document.getElementById("tw-scene").appendChild(b);
+}
+function closeBriefing(){const b=document.getElementById("tw-brief");if(b)b.remove();}
+function afterWinTravel(){TW_phase="elv";showElevator();}
 
 function drawChips(){
   const season=currentSeasonNum();
   let tabs="";
-  TOWER_CHAPTERS.forEach(c=>{if(c.season<=season)tabs+=`<button class="tw-chip ${viewChap===c.id?"on":""}" onclick="viewChap=${c.id};drawRoom();">${c.icon}</button>`;});
+  TOWER_CHAPTERS.forEach(c=>{if(c.season<=season)tabs+=`<button class="tw-chip ${viewChap===c.id?"on":""}" onclick="viewChap=${c.id};viewFloorOverride=null;drawRoom();">${c.icon}</button>`;});
   const tc=document.getElementById("tw-chapters");if(tc)tc.innerHTML=tabs;
   const box=document.getElementById("tw-chips");if(!box)return;
   let html="";
