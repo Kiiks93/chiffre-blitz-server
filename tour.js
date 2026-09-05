@@ -26,7 +26,7 @@ function getFloorDef(floor) {
 }
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
-/* ----- CSS mondes immersifs ----- */
+/* ----- CSS mondes immersifs v2 ----- */
 (function(){
   const s=document.createElement("style");
   s.textContent=`
@@ -38,12 +38,30 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
   .tw-vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 50%,#000000c9 100%);z-index:4;}
   .tw-map{position:relative;width:100%;}
   .tw-zone{position:absolute;left:0;right:0;overflow:hidden;}
-  /* --- couches de décor --- */
-  .tw-skyline{position:absolute;bottom:0;left:0;right:0;height:32%;background:radial-gradient(#00ffff2b 1px,transparent 1.5px) 0 0/14px 16px,linear-gradient(180deg,transparent,#000000d9 65%);clip-path:polygon(0 100%,0 55%,8% 55%,8% 30%,16% 30%,16% 60%,26% 60%,26% 20%,34% 20%,34% 50%,44% 50%,44% 35%,54% 35%,54% 65%,64% 65%,64% 25%,72% 25%,72% 55%,82% 55%,82% 40%,92% 40%,92% 60%,100% 60%,100% 100%);}
-  .tw-street{position:absolute;bottom:0;left:0;right:0;height:7%;background:linear-gradient(90deg,#ff00ff44,#00ffff44,#f8b50044);filter:blur(8px);}
+  /* --- Ville néon vivante --- */
+  .tw-city{position:absolute;bottom:0;left:0;right:0;height:42%;display:flex;align-items:flex-end;gap:2%;padding:0 2%;}
+  .tw-bldg{flex:1;position:relative;background:linear-gradient(180deg,#0d0d1e,#05050c);border-radius:3px 3px 0 0;box-shadow:0 0 12px #000;}
+  .tw-ant{position:absolute;top:-14px;left:50%;width:2px;height:14px;background:#333;box-shadow:0 -3px 6px #ff4b2b;}
+  .tw-wl{position:absolute;width:3px;height:4px;background:currentColor;box-shadow:0 0 5px currentColor;animation:twWin linear infinite;}
+  @keyframes twWin{0%,38%{opacity:1}45%,88%{opacity:.08}95%,100%{opacity:1}}
+  .tw-street{position:absolute;bottom:0;left:0;right:0;height:6%;background:linear-gradient(90deg,#ff00ff44,#00ffff44,#f8b50044);filter:blur(8px);}
+  /* --- Glaciers --- */
   .tw-icetop{position:absolute;top:0;left:0;right:0;height:34px;background:linear-gradient(#ffffff55,#74ebf522);clip-path:polygon(0 0,100% 0,96% 100%,90% 25%,84% 100%,76% 20%,68% 100%,60% 25%,52% 100%,44% 20%,36% 100%,28% 25%,20% 100%,12% 20%,6% 100%,0 50%);}
-  .tw-icefloor{position:absolute;bottom:0;left:0;right:0;height:16%;background:linear-gradient(0deg,#ffffff2b,#74ebf511);clip-path:polygon(0 100%,0 40%,10% 70%,20% 30%,30% 75%,40% 35%,50% 80%,60% 30%,70% 70%,80% 35%,90% 75%,100% 40%,100% 100%);}
+  .tw-glacier{position:absolute;left:0;right:0;bottom:0;}
+  .tw-glacier.back{height:30%;background:linear-gradient(180deg,#e8fbff44,#74ebf522 60%,transparent);clip-path:polygon(0 100%,0 60%,6% 62%,12% 30%,20% 55%,28% 20%,36% 50%,45% 15%,54% 48%,62% 22%,70% 52%,78% 28%,86% 55%,93% 35%,100% 58%,100% 100%);}
+  .tw-glacier.front{height:20%;background:linear-gradient(180deg,#ffffff55,#74ebf533 70%,#74ebf511);clip-path:polygon(0 100%,0 55%,8% 70%,15% 35%,24% 65%,33% 30%,42% 68%,52% 28%,61% 62%,70% 32%,79% 66%,88% 38%,100% 60%,100% 100%);filter:drop-shadow(0 0 10px #74ebf544);}
+  .tw-spark{position:absolute;width:3px;height:3px;border-radius:50%;background:#fff;box-shadow:0 0 6px #fff;animation:twFlickP 2s steps(2) infinite;}
+  @keyframes twFlickP{50%{opacity:.15}}
+  /* --- Coffre-fort --- */
   .tw-circuit{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 70px,#f8b50014 70px 72px),repeating-linear-gradient(0deg,transparent 0 70px,#f8b50014 70px 72px);}
+  .tw-vault{position:absolute;right:7%;top:26%;width:clamp(80px,22vw,140px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8a6a1a,#3a2a05 60%,#160d00);border:4px solid #f8b50066;box-shadow:0 0 30px #f8b50033,inset 0 0 24px #000;}
+  .tw-vault-wheel{position:absolute;left:50%;top:50%;width:46%;height:46%;transform:translate(-50%,-50%);border:4px solid #f8b500;border-radius:50%;animation:twSpin 14s linear infinite;}
+  .tw-vault-wheel::before{content:"";position:absolute;inset:-4px;background:linear-gradient(#f8b500,#f8b500) 50% 0/4px 100% no-repeat,linear-gradient(#f8b500,#f8b500) 0 50%/100% 4px no-repeat;}
+  .tw-vault-wheel::after{content:"";position:absolute;left:50%;top:50%;width:18%;height:18%;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(#ffe9a8,#8a6a1a);}
+  @keyframes twSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+  .tw-bolt{position:absolute;width:7%;height:7%;border-radius:50%;background:radial-gradient(#ffe9a8,#8a6a1a);transform:translate(-50%,-50%);box-shadow:0 0 4px #000;}
+  .tw-coins{position:absolute;left:6%;bottom:5%;font-size:clamp(18px,6vw,30px);filter:drop-shadow(0 0 10px #f8b500);}
+  /* --- Particules & props --- */
   .tw-prop{position:absolute;font-size:clamp(26px,8vw,44px);opacity:.45;filter:drop-shadow(0 0 10px currentColor);animation:twFloat2 4s ease-in-out infinite;}
   @keyframes twFloat2{50%{transform:translateY(-8px)}}
   .tw-part{position:absolute;width:4px;height:4px;border-radius:50%;}
@@ -52,8 +70,7 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
   .tw-part.neon{box-shadow:0 0 8px currentColor;background:currentColor;animation:twFlickP 2.2s steps(2) infinite;}
   @keyframes twFall{0%{top:-4%}100%{top:104%}}
   @keyframes twRise{0%{top:104%}100%{top:-4%}}
-  @keyframes twFlickP{50%{opacity:.2}}
-  /* --- nœuds --- */
+  /* --- Nœuds / gates / briefing (inchangés) --- */
   .tw-node{position:absolute;width:clamp(40px,12vw,50px);height:clamp(40px,12vw,50px);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:clamp(14px,4vw,17px);color:#fff;text-shadow:0 1px 2px #000a;transform:translate(-50%,0);border:3px solid #333;background:#1a1a2e;z-index:2;}
   .tw-node.won{border-color:#ffffff44;box-shadow:0 3px 0 #00000066;}
   .tw-node.cur{background:radial-gradient(circle at 35% 30%,#a8f0ff,#00d2ff 60%,#0066aa)!important;border-color:#fff;animation:twPulse 1s infinite;cursor:pointer;}
