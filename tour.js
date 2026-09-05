@@ -26,28 +26,34 @@ function getFloorDef(floor) {
 }
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
-/* ----- CSS carte saga vivante ----- */
+/* ----- CSS écran plein + mondes ----- */
 (function(){
   const s=document.createElement("style");
   s.textContent=`
-  .tw-scene{position:relative;height:min(62vh,430px);}
-  .tw-mapwrap{position:relative;height:100%;overflow-y:auto;background:radial-gradient(ellipse at 50% 0%,#232355,#0a0a1f 70%);border-radius:12px;border:2px solid #2b3a67;}
+  #screen-tower{position:fixed;inset:0;background:#000;z-index:9990;display:none;flex-direction:column;}
+  .tw-header{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#0f051d;border-bottom:2px solid #00d2ff;}
+  .tw-header b{color:#00d2ff;font-size:15px;flex:1;text-align:center;}
+  .tw-header .tw-back{background:#1a1a2e;border:1px solid #00d2ff;color:#00d2ff;border-radius:8px;padding:6px 10px;font-size:12px;}
+  .tw-mapwrap{flex:1;overflow-y:auto;position:relative;}
   .tw-map{position:relative;width:100%;}
-  .tw-decor{position:absolute;font-size:clamp(14px,5vw,22px);opacity:.3;animation:twFloat2 3s ease-in-out infinite;z-index:0;}
-  @keyframes twFloat2{50%{transform:translateY(-6px)}}
-  .tw-node{position:absolute;width:clamp(38px,12vw,48px);height:clamp(38px,12vw,48px);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:clamp(13px,4vw,16px);color:#fff;text-shadow:0 1px 2px #000a;transform:translate(-50%,0);border:3px solid #333;background:#1a1a2e;z-index:2;}
+  .tw-zone{position:absolute;left:0;right:0;overflow:hidden;}
+  .tw-decor{position:absolute;font-size:clamp(18px,6vw,30px);opacity:.4;filter:drop-shadow(0 0 6px currentColor);animation:twFloat2 3.5s ease-in-out infinite;z-index:0;}
+  @keyframes twFloat2{50%{transform:translateY(-8px)}}
+  .tw-neon{position:absolute;height:6px;border-radius:3px;background:currentColor;box-shadow:0 0 14px currentColor;opacity:.75;}
+  .tw-ice{position:absolute;top:0;left:0;right:0;height:30px;background:linear-gradient(#ffffff55,#74ebf522);clip-path:polygon(0 0,100% 0,96% 100%,90% 25%,84% 100%,76% 20%,68% 100%,60% 25%,52% 100%,44% 20%,36% 100%,28% 25%,20% 100%,12% 20%,6% 100%,0 50%);}
+  .tw-node{position:absolute;width:clamp(40px,12vw,50px);height:clamp(40px,12vw,50px);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:clamp(14px,4vw,17px);color:#fff;text-shadow:0 1px 2px #000a;transform:translate(-50%,0);border:3px solid #333;background:#1a1a2e;z-index:2;}
   .tw-node.won{border-color:#ffffff44;box-shadow:0 3px 0 #00000066;}
-  .tw-node.cur{background:radial-gradient(circle at 35% 30%,#a8f0ff,#00d2ff 60%,#0066aa)!important;border-color:#ffffff44;animation:twPulse 1s infinite;cursor:pointer;}
+  .tw-node.cur{background:radial-gradient(circle at 35% 30%,#a8f0ff,#00d2ff 60%,#0066aa)!important;border-color:#fff;animation:twPulse 1s infinite;cursor:pointer;}
   @keyframes twPulse{50%{transform:translate(-50%,0) scale(1.15)}}
   .tw-node.lock{opacity:.35;}
-  .tw-node.boss{width:clamp(48px,15vw,60px);height:clamp(48px,15vw,60px);font-size:clamp(20px,6vw,26px);}
+  .tw-node.boss{width:clamp(50px,15vw,62px);height:clamp(50px,15vw,62px);font-size:clamp(22px,6vw,28px);}
   .tw-node .tw-st{position:absolute;bottom:-13px;left:50%;transform:translateX(-50%);font-size:clamp(7px,2.2vw,9px);color:#f8b500;white-space:nowrap;}
   .tw-ava{position:absolute;top:-27px;left:50%;transform:translateX(-50%);font-size:clamp(16px,5vw,20px);animation:twBounce2 1.2s infinite;}
   @keyframes twBounce2{50%{transform:translateX(-50%) translateY(-4px)}}
-  .tw-gate{position:absolute;left:50%;transform:translateX(-50%);background:#0f051d;border:2px solid #00d2ff;border-radius:10px;padding:4px 12px;font-size:clamp(8px,2.6vw,10px);font-weight:900;color:#00d2ff;white-space:nowrap;z-index:3;}
-  .tw-gate.lock{border-color:#333;color:#666;}
+  .tw-gate{position:absolute;left:50%;transform:translateX(-50%);background:#0f051d;border:2px solid #00d2ff;border-radius:12px;padding:5px 14px;font-size:clamp(9px,2.8vw,11px);font-weight:900;color:#00d2ff;white-space:nowrap;z-index:3;box-shadow:0 0 12px #00d2ff44;}
+  .tw-gate.lock{border-color:#333;color:#666;box-shadow:none;}
   .tw-brief{position:absolute;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:6;}
-  .tw-brief-card{background:#0f051d;border:2px solid #00d2ff;border-radius:12px;padding:14px;max-width:82%;text-align:center;box-shadow:0 0 20px #00d2ff66;}
+  .tw-brief-card{background:#0f051d;border:2px solid #00d2ff;border-radius:12px;padding:16px;max-width:82%;text-align:center;box-shadow:0 0 20px #00d2ff66;}
   .tw-stars{font-size:26px;letter-spacing:6px;text-align:center;margin:10px 0;}
   .tw-stars span{display:inline-block;animation:twPop .6s ease backwards;}
   @keyframes twPop{0%{transform:scale(0)}70%{transform:scale(1.4)}100%{transform:scale(1)}}
@@ -63,14 +69,22 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
   document.head.appendChild(s);
 })();
 
-const TOWER_COLORS={
-  1:{acc:"#00d2ff"},2:{acc:"#74ebf5"},3:{acc:"#f8b500"},4:{acc:"#ff8a00"},5:{acc:"#8a9bb0"},
-  6:{acc:"#ff4b2b"},7:{acc:"#ff6fa5"},8:{acc:"#2ecc71"},9:{acc:"#ff416c"}
+const TOWER_COLORS={1:{acc:"#00d2ff"},2:{acc:"#74ebf5"},3:{acc:"#f8b500"},4:{acc:"#ff8a00"},5:{acc:"#8a9bb0"},6:{acc:"#ff4b2b"},7:{acc:"#ff6fa5"},8:{acc:"#2ecc71"},9:{acc:"#ff416c"}};
+const TOWER_WORLDS={
+  1:{bg:"radial-gradient(ellipse at 20% 10%,#ff00ff22 0%,transparent 50%),radial-gradient(ellipse at 80% 30%,#00ffff22 0%,transparent 50%),linear-gradient(180deg,#050514,#0a0a2a 60%,#141433)",decor:["🕹️","👾","","💡","🌆","☎️"],neon:["#ff00ff","#00ffff","#f8b500"]},
+  2:{bg:"radial-gradient(ellipse at 30% 20%,#74ebf522 0%,transparent 55%),linear-gradient(180deg,#04141d,#0a2a3a 60%,#123a4a)",decor:["🧊","❄️","💎","⛏️","🌨️","⛄"],ice:true},
+  3:{bg:"radial-gradient(ellipse at 50% 15%,#f8b50022 0%,transparent 55%),linear-gradient(180deg,#160d00,#2b1a00 60%,#3a2a05)",decor:["⚡","️","🔶","","🔩",""]},
+  4:{bg:"linear-gradient(180deg,#12041a,#2a0a33)",decor:["🎃","🕸️","🦇","️","","🌙"]},
+  5:{bg:"linear-gradient(180deg,#0a0d14,#1a2230)",decor:["🪦","️","🦴","️","","⚰️"]},
+  6:{bg:"linear-gradient(180deg,#18040a,#330a12)",decor:["🎃","🍬","🦇","","🍭","️"]},
+  7:{bg:"linear-gradient(180deg,#180410,#330a20)",decor:["🍭","","🎀","","🍰",""]},
+  8:{bg:"linear-gradient(180deg,#04180b,#0a3318)",decor:["🎄","","❄️","","⭐",""]},
+  9:{bg:"linear-gradient(180deg,#180404,#330a0a)",decor:["🎅","","🦌","","🔥",""]}
 };
 
 function typeLabel(t){
   const fr=currentLang==="fr";
-  return ({classic:fr?"⚡ Croissant":"⚡ Ascending",reverse:fr?"🔽 Décroissant":"🔽 Descending",random:fr?"🎲 Chaos":" Chaos","calc+":fr?"🧮 Addition":"🧮 Addition","calc-":fr?"🧮 Soustraction":"🧮 Subtraction",sprint:fr?"⏱️ Sprint":"⏱️ Sprint",memory:fr?"🙈 Mémoire":"🙈 Memory",fog:fr?"🌫️ Brouillard":"🌫️ Fog",nofail:fr?"💎 Sans faute":"💎 No mistake",boss:fr?"⚔️ GARDIEN":"⚔️ GUARDIAN"})[t]||t;
+  return ({classic:fr?"⚡ Croissant":"⚡ Ascending",reverse:fr?"🔽 Décroissant":"🔽 Descending",random:fr?"🎲 Chaos":"🎲 Chaos","calc+":fr?"🧮 Addition":" Addition","calc-":fr?"🧮 Soustraction":"🧮 Subtraction",sprint:fr?"⏱️ Sprint":"⏱️ Sprint",memory:fr?"🙈 Mémoire":"🙈 Memory",fog:fr?"🌫️ Brouillard":"🌫️ Fog",nofail:fr?"💎 Sans faute":"💎 No mistake",boss:fr?"⚔️ GARDIEN":"⚔️ GUARDIAN"})[t]||t;
 }
 function twDesc(t){
   const fr=currentLang==="fr";
@@ -99,16 +113,18 @@ function towerTick(){
   o.connect(g);g.connect(SoundEngine.ctx.destination);o.start(t);o.stop(t+.09);}catch(e){}
 }
 
+/* ----- Écran plein ----- */
 function openTower(){
-  let m=document.getElementById("modal-tower");
+  let m=document.getElementById("screen-tower");
   if(!m){
-    m=document.createElement("div");m.id="modal-tower";m.className="modal-overlay";
-    m.innerHTML=`<div class="modal-card" style="max-width:430px;width:95%;">
-      <h3 style="color:#00d2ff;text-align:center;margin:0 0 4px 0;">🏰 TOUR BLITZ</h3>
-      <div id="tower-sub" style="text-align:center;font-size:10px;color:#aaa;margin-bottom:6px;"></div>
-      <div class="tw-scene" id="tw-scene"><div class="tw-mapwrap" id="tw-mapwrap"></div></div>
-      <div id="tw-actions" style="display:flex;gap:6px;justify-content:center;margin-top:6px;"></div>
-      <button class="btn-secondary" onclick="closeTower()">Fermer</button></div>`;
+    m=document.createElement("div");m.id="screen-tower";
+    m.innerHTML=`<div class="tw-header">
+        <button class="tw-back" onclick="closeTower()">⬅️</button>
+        <b>🏰 TOUR BLITZ</b>
+        <span id="tower-sub" style="font-size:9px;color:#aaa;"></span>
+      </div>
+      <div class="tw-mapwrap" id="tw-mapwrap"></div>
+      <div id="tw-scene" style="position:relative;"></div>`;
     document.body.appendChild(m);
   }
   m.style.display="flex";
@@ -116,7 +132,7 @@ function openTower(){
   socket.emit("get_tower");
   towerDing();
 }
-function closeTower(){document.getElementById("modal-tower").style.display="none";}
+function closeTower(){document.getElementById("screen-tower").style.display="none";}
 function drawPanel(){}
 function drawChips(){}
 function pressFloor(){}
@@ -132,34 +148,42 @@ socket.on("tower_data",(d)=>{
   drawRoom();
 });
 
-/* ----- LA CARTE VIVANTE ----- */
+/* ----- Carte + mondes ----- */
 function drawRoom(){
   const wrap=document.getElementById("tw-mapwrap");if(!wrap)return;
   const season=currentSeasonNum();
   const current=Math.min(towerProgress.floor+1,90);
   let totalStars=0;for(const k in towerProgress.stars)totalStars+=towerProgress.stars[k];
-  document.getElementById("tower-sub").innerText=(currentLang==="fr"?"Étage ":"Floor ")+Math.min(current,90)+"/90 — ⭐ "+totalStars;
+  document.getElementById("tower-sub").innerText="É"+Math.min(current,90)+" ⭐"+totalStars;
 
   const STEP=64,H=90*STEP+110;
-  let nodes="",paths="",ptsByChap={};
-  for(let f=1;f<=90;f++){
-    const chap=getTowerChapter(f);
-    const y=H-STEP*f;
-    const x=50+Math.sin(f*0.55)*30;
+  let nodes="",paths="",zones="",ptsByChap={};
+  for(let c=1;c<=9;c++){
+    const chap=TOWER_CHAPTERS[c-1];
+    const zTop=H-STEP*c*10-40,zH=STEP*10+80;
     if(chap.season>season){
-      if(f===(chap.id-1)*10+1)nodes+=`<div class="tw-gate lock" style="top:${y-8}px;">🔒 ${currentLang==="fr"?"Bientôt":"Soon"}</div>`;
+      zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:linear-gradient(180deg,#0a0a14,#050508);"></div>`;
+      nodes+=`<div class="tw-gate lock" style="top:${zTop+zH/2}px;">🔒 ${currentLang==="fr"?"Bientôt":"Soon"}</div>`;
       continue;
     }
-    (ptsByChap[chap.id]=ptsByChap[chap.id]||[]).push([x,y+23]);
-    // 🎬 Décor d'ambiance du chapitre
-    if(f===(chap.id-1)*10+1){
-      for(let i=0;i<6;i++){
-        const dy=y-20-i*STEP*1.6;
-        const dx=8+((i*53+chap.id*29)%84);
-        nodes+=`<span class="tw-decor" style="left:${dx}%;top:${dy}px;animation-delay:${i*.4}s;">${chap.objects[i%9]}</span>`;
-      }
-      nodes+=`<div class="tw-gate" style="top:${y-16}px;border-color:${TOWER_COLORS[chap.id].acc};color:${TOWER_COLORS[chap.id].acc};">${chap.icon} ${chap.name}</div>`;
+    const W=TOWER_WORLDS[c];
+    let extra="";
+    if(W.neon)W.neon.forEach((col,i)=>{extra+=`<span class="tw-neon" style="color:${col};left:${8+i*30}%;top:${15+i*22}%;width:${20+i*6}%;"></span>`;});
+    if(W.ice)extra+=`<div class="tw-ice"></div>`;
+    let decor="";
+    for(let i=0;i<6;i++){
+      const dy=20+i*(zH/6.5);
+      const dx=6+((i*53+c*29)%84);
+      decor+=`<span class="tw-decor" style="color:${TOWER_COLORS[c].acc};left:${dx}%;top:${dy}px;animation-delay:${i*.5}s;">${W.decor[i%6]}</span>`;
     }
+    zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:${W.bg};">${extra}${decor}</div>`;
+    nodes+=`<div class="tw-gate" style="top:${zTop+6}px;border-color:${TOWER_COLORS[c].acc};color:${TOWER_COLORS[c].acc};">${chap.icon} ${chap.name}</div>`;
+  }
+  for(let f=1;f<=90;f++){
+    const chap=getTowerChapter(f);
+    if(chap.season>season)continue;
+    const y=H-STEP*f,x=50+Math.sin(f*0.55)*30;
+    (ptsByChap[chap.id]=ptsByChap[chap.id]||[]).push([x,y+23]);
     const won=f<=towerProgress.floor,cur=f===current,boss=f%10===0;
     const st=towerProgress.stars[String(f)];
     const awake=boss?(towerProgress.floor>=f-1):true;
@@ -176,11 +200,10 @@ function drawRoom(){
     const pts=ptsByChap[cid];
     if(pts.length>1)paths+=`<path d="M${pts.map(p=>p[0]+" "+p[1]).join(" L ")}" fill="none" stroke="${TOWER_COLORS[cid].acc}44" stroke-width="7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
   }
-  wrap.innerHTML=`<div class="tw-map" style="height:${H}px;">
+  wrap.innerHTML=`<div class="tw-map" style="height:${H}px;">${zones}
     <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:1;" viewBox="0 0 100 ${H}" preserveAspectRatio="none">${paths}</svg>
     ${nodes}</div>`;
   setTimeout(()=>{const el=wrap.querySelector(".tw-node.cur");if(el)el.scrollIntoView({block:"center",behavior:"smooth"});},200);
-  document.getElementById("tw-actions").innerHTML=`<span style="font-size:10px;color:#888;">${currentLang==="fr"?"Touche un étage pour jouer / rejouer !":"Tap a floor to play / replay!"}</span>`;
 }
 function mapPlay(f){
   const def=getFloorDef(f);
@@ -188,7 +211,7 @@ function mapPlay(f){
   showBriefing(def);
 }
 
-/* ----- Briefing + règle des étoiles ----- */
+/* ----- Briefing ----- */
 function showBriefing(def){
   closeBriefing();
   const fr=currentLang==="fr";
@@ -207,7 +230,7 @@ function showBriefing(def){
     <button class="btn-main btn-blue" style="width:100%;margin-bottom:6px;" onclick="closeBriefing();startTowerFloor(getFloorDef(${def.floor}))">${def.replay?"🔄 "+(fr?"REJOUER":"REPLAY"):"⚡ "+(fr?"LANCER !":"GO!")}</button>
     <button class="btn-secondary" style="width:100%;" onclick="closeBriefing()">❌ ${fr?"Annuler":"Cancel"}</button>
   </div>`;
-  document.getElementById("tw-scene").appendChild(b);
+  document.getElementById("screen-tower").appendChild(b);
 }
 function closeBriefing(){const b=document.getElementById("tw-brief");if(b)b.remove();}
 
