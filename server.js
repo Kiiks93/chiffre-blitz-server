@@ -1370,8 +1370,6 @@ socket.on('tower_floor_win', async (data) => {
   socket.emit('tower_result', { ok: true, floor, stars, coins, reward });
   socket.emit('player_registered', player);
 });
-});
-
 // 🔄 Rejouer un étage déjà gagné pour améliorer ses étoiles
 socket.on('tower_floor_replay', async (data) => {
   const player = activePlayers[socket.id];
@@ -1389,6 +1387,9 @@ socket.on('tower_floor_replay', async (data) => {
   socket.emit('tower_result', { ok: true, floor, stars, coins, reward: null, replay: true });
   socket.emit('player_registered', player);
 });
+});
+
+
 
 /* ============================================================
 FONCTIONS ROOM / MATCH
