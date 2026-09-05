@@ -330,6 +330,7 @@ function mistake(){
   if(TW.def.type==="nofail")failFloor();
 }
 function winFloor(){
+  if(!TW||TW.done)return;
   TW.done=true;clearInterval(TW.int);
   const used=(Date.now()-TW.start)/1000;
   let stars=1;
