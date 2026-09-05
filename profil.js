@@ -948,7 +948,6 @@ socket.on('username_check_result', (res) => {
     const srcRegion = document.getElementById("region-input");
     const dstRegion = document.getElementById("account-region");
     if (srcRegion && dstRegion) dstRegion.innerHTML = srcRegion.innerHTML;
-}
 
 function showChangeCodeModal() {
   const d = i18n[currentLang];
