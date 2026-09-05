@@ -467,7 +467,7 @@ function showTowerWinPopup(res){
     <div style="font-size:13px;color:#f8b500;font-weight:bold;margin-bottom:6px;">+${res.coins} 🪙</div>
     <div style="font-size:12px;color:#aaa;margin-bottom:10px;">${currentLang==="fr"?"Nouvel objet placé dans la pièce :":"New object placed in the room:"} <span style="font-size:24px;">${obj}</span></div>
     ${res.reward?`<div style="font-size:12px;color:#00d2ff;font-weight:bold;margin-bottom:10px;">🎁 CHAPITRE TERMINÉ : ${res.reward} débloqué !</div>`:""}
-    <button class="btn-main btn-blue" onclick="this.closest('.modal-overlay').remove()">Continuer ⚡</button></div>`;
+    <button class="btn-main btn-blue" onclick="this.closest('.modal-overlay').remove();afterWinTravel()">Continuer ⚡</button></div>`;
   document.body.appendChild(d);
   towerDing();
 }
