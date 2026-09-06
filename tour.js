@@ -215,9 +215,11 @@ function fxHTML(c,W){
     const cols=["#00ffff","#ff00ff","#f8b500","#7dff8a"];
     wp.forEach((p,i)=>{w+=`<span class="tw-wl" style="left:${p[0]}%;top:${p[1]}%;color:${cols[i%4]};animation-duration:${2.5+(i%4)}s;animation-delay:${(i*.6)%3}s;"></span>`;});
     return `<div class="tw-reflect"></div>${w}
-      <span class="tw-car" style="bottom:5%;animation-duration:9s;"></span>
-      <span class="tw-car r" style="bottom:10%;animation-duration:13s;animation-delay:2s;"></span>
-      <span class="tw-car" style="bottom:3%;animation-duration:7s;animation-delay:4.5s;"></span>`;
+      <span class="tw-car" style="bottom:6%;animation-duration:8s;"></span>
+      <span class="tw-car r" style="bottom:12%;animation-duration:11s;animation-delay:1.5s;"></span>
+      <span class="tw-car s" style="bottom:4%;animation-duration:6.5s;animation-delay:3.2s;"></span>
+      <span class="tw-moto r" style="bottom:9%;animation-duration:5s;animation-delay:.8s;"></span>
+      <span class="tw-moto" style="bottom:14%;animation-duration:7s;animation-delay:4s;"></span>`;
   }
   if(W.scene==="vault")return `<div class="tw-sweep"></div>`;
   return "";
