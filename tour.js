@@ -191,16 +191,21 @@ function sceneHTML(c,W,C){
     return `<div class="tw-horizon"></div><div class="tw-city">${b}</div><div class="tw-street"></div>`;
   }
   if(W.scene==="glacier"){
-    const pos=[[6,6,26],[14,10,18],[76,7,30],[88,12,16],[42,5,22],[58,9,14]];
-    let cr="";pos.forEach((p,i)=>{cr+=`<span class="tw-crys" style="left:${p[0]}%;bottom:${p[1]}%;width:${p[2]}px;height:${Math.round(p[2]*1.6)}px;animation-delay:${i*.4}s;"></span>`;});
-    let sp="";for(let i=0;i<10;i++)sp+=`<span class="tw-spark" style="left:${(i*17+c*9)%94}%;top:${12+((i*23)%70)}%;animation-delay:${i*.35}s;"></span>`;
-    return `<div class="tw-icetop"></div><div class="tw-caveL"></div><div class="tw-caveR"></div>${cr}${sp}`;
+    const crys=[[36,24,60],[48,22,95],[60,24,52],[28,26,40],[68,26,44]];
+    let cr="";crys.forEach((p,i)=>{cr+=`<span class="tw-bigcrys" style="left:${p[0]}%;bottom:${p[1]}%;width:${p[2]}px;height:${Math.round(p[2]*2.2)}px;animation-delay:${i*.3}s;"></span>`;});
+    let rays="";for(let i=0;i<5;i++)rays+=`<span class="tw-ray" style="transform:translateX(-50%) rotate(${-30+i*15}deg);animation-delay:${i*.5}s;"></span>`;
+    let sp="";for(let i=0;i<14;i++)sp+=`<span class="tw-spark" style="left:${(i*13+c*7)%94}%;top:${10+((i*19)%75)}%;animation-delay:${i*.3}s;"></span>`;
+    return `<div class="tw-cavewall"></div><div class="tw-rocktop"></div>${rays}${cr}<div class="tw-icefloor2"></div><div class="tw-rockbot"></div>${sp}`;
   }
   if(W.scene==="vault"){
-    let bolts="";for(let i=0;i<8;i++){const a=i*Math.PI/4;bolts+=`<span class="tw-bolt" style="left:${50+40*Math.cos(a)}%;top:${50+40*Math.sin(a)}%;"></span>`;}
-    const bars=`<div class="tw-bars" style="left:8%;bottom:8%;"><div class="tw-bar"></div><div class="tw-bar"></div><div class="tw-bar"></div></div>
-      <div class="tw-bars" style="left:15%;bottom:8%;"><div class="tw-bar"></div><div class="tw-bar"></div></div>`;
-    return `<div class="tw-pillars"></div><div class="tw-vault"><div class="tw-vault-wheel"></div>${bolts}</div>${bars}<div class="tw-coins">🪙🪙</div>`;
+    let bolts="";for(let i=0;i<12;i++){const a=i*Math.PI/6;bolts+=`<span class="tw-vbolt" style="left:${50+44*Math.cos(a)}%;top:${50+44*Math.sin(a)}%;"></span>`;}
+    return `<div class="tw-bankwall"></div>
+      <div class="tw-vaultglow"></div>
+      <div class="tw-vaultframe"><div class="tw-vaultdoor"><div class="tw-vaultwheel"></div>${bolts}</div></div>
+      <div class="tw-bars" style="left:9%;bottom:6%;"><div class="tw-bar"></div><div class="tw-bar"></div><div class="tw-bar"></div></div>
+      <div class="tw-bars" style="left:17%;bottom:6%;"><div class="tw-bar"></div><div class="tw-bar"></div></div>
+      <div class="tw-bars" style="right:11%;bottom:6%;"><div class="tw-bar"></div><div class="tw-bar"></div><div class="tw-bar"></div></div>
+      <div class="tw-coins">🪙🪙🪙</div>`;
   }
   return "";
 }
@@ -447,6 +452,31 @@ function showTowerWinPopup(res){
   .tw-bars{position:absolute;display:flex;flex-direction:column;gap:2px;}
   .tw-bar{width:34px;height:8px;background:linear-gradient(180deg,#ffe9a8,#b06000);border-radius:2px;box-shadow:0 0 6px #f8b50088;}
   .tw-vault{width:clamp(90px,26vw,170px);right:10%;top:22%;box-shadow:0 0 40px #f8b50055,inset 0 0 24px #000;}
+  `;
+  document.head.appendChild(s);
+})();
+
+/* ----- CSS scènes v3 (WOUAH) ----- */
+(function(){
+  const s=document.createElement("style");
+  s.textContent=`
+  /* --- Banque géante --- */
+  .tw-bankwall{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 120px,#00000055 120px 124px),linear-gradient(180deg,#3a2a05,#2b1a00 40%,#160d00);}
+  .tw-vaultglow{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(92%,460px);aspect-ratio:1;border-radius:50%;background:radial-gradient(#f8b50044,transparent 70%);animation:twGlowC 3s infinite;}
+  .tw-vaultframe{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(78%,390px);aspect-ratio:1.15;background:linear-gradient(180deg,#5a4410,#2b1a00);border-radius:16px;box-shadow:0 0 40px #f8b50033,inset 0 0 30px #000;}
+  .tw-vaultdoor{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:82%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c9a227,#8a6a1a 40%,#3a2a05 75%,#160d00);border:6px solid #f8b50088;box-shadow:0 0 60px #f8b50066,inset 0 0 40px #000000aa;}
+  .tw-vaultwheel{position:absolute;left:50%;top:50%;width:44%;height:44%;transform:translate(-50%,-50%);border:6px solid #ffe9a8;border-radius:50%;animation:twSpin 16s linear infinite;box-shadow:0 0 20px #f8b50088,inset 0 0 10px #0006;}
+  .tw-vaultwheel::before{content:"";position:absolute;inset:-6px;background:linear-gradient(#ffe9a8,#ffe9a8) 50% 0/6px 100% no-repeat,linear-gradient(#ffe9a8,#ffe9a8) 0 50%/100% 6px no-repeat,linear-gradient(45deg,transparent 47%,#ffe9a8 47% 53%,transparent 53%),linear-gradient(-45deg,transparent 47%,#ffe9a8 47% 53%,transparent 53%);}
+  .tw-vaultwheel::after{content:"";position:absolute;left:50%;top:50%;width:20%;height:20%;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(#fff8dc,#8a6a1a);box-shadow:0 0 12px #ffe9a8;}
+  .tw-vbolt{position:absolute;width:5%;height:5%;border-radius:50%;background:radial-gradient(#ffe9a8,#8a6a1a);transform:translate(-50%,-50%);box-shadow:0 1px 3px #000;}
+  /* --- Grotte WOUAH --- */
+  .tw-cavewall{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 55%,#74ebf522 0%,#0a2a3a55 35%,#000000ee 78%);}
+  .tw-rocktop{position:absolute;top:0;left:0;right:0;height:26%;background:#020608;clip-path:polygon(0 0,100% 0,96% 55%,88% 25%,80% 70%,70% 30%,60% 75%,50% 35%,40% 80%,30% 30%,20% 70%,12% 28%,4% 60%,0 30%);}
+  .tw-rockbot{position:absolute;bottom:0;left:0;right:0;height:20%;background:#020608;clip-path:polygon(0 100%,100% 100%,96% 45%,88% 75%,80% 30%,70% 70%,60% 25%,50% 65%,40% 20%,30% 70%,20% 30%,12% 72%,4% 40%,0 70%);}
+  .tw-bigcrys{position:absolute;background:linear-gradient(180deg,#ffffffee,#74ebf5 55%,#0a2a3a);clip-path:polygon(50% 0,100% 100%,0 100%);box-shadow:0 0 30px #74ebf5cc,0 0 60px #74ebf566;animation:twGlowC 2.2s infinite;}
+  .tw-ray{position:absolute;top:28%;left:50%;width:7%;height:62%;background:linear-gradient(180deg,#74ebf533,transparent);transform-origin:top center;filter:blur(4px);animation:twRay 4s ease-in-out infinite;}
+  @keyframes twRay{50%{opacity:.35}}
+  .tw-icefloor2{position:absolute;bottom:0;left:0;right:0;height:16%;background:linear-gradient(180deg,#74ebf522,#04141d);box-shadow:inset 0 8px 20px #74ebf533;}
   `;
   document.head.appendChild(s);
 })();
