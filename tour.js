@@ -213,7 +213,7 @@ function fxHTML(c,W){
   if(W.scene==="city")return `<div class="tw-reflect"></div>`;
   if(W.scene==="vault")return `<div class="tw-sweep"></div>`;
   return "";
-}}
+}
 function drawRoom(){
   const wrap=document.getElementById("tw-mapwrap");if(!wrap)return;
   const season=currentSeasonNum();
