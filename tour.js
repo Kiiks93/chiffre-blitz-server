@@ -181,21 +181,26 @@ function sceneHTML(c,W,C){
     let b="";const hs=[55,80,65,95,70,88,60,92];
     const cols=["#00ffff","#ff00ff","#f8b500","#7dff8a"];
     for(let i=0;i<8;i++){
-      let wins="";const n=7+(i%3)*3;
+      let wins="";const n=10+(i%3)*4;
       for(let w=0;w<n;w++){
-        wins+=`<span class="tw-wl" style="color:${cols[(w+i)%4]};left:${8+((w*29)%80)}%;top:${10+((w*37)%72)}%;animation-duration:${3+((w*13)%5)}s;animation-delay:${(w*0.7)%4}s;"></span>`;
+        wins+=`<span class="tw-wl" style="color:${cols[(w+i)%4]};left:${6+((w*23)%84)}%;top:${8+((w*31)%78)}%;animation-duration:${2.5+((w*13)%4)}s;animation-delay:${(w*0.53)%3}s;"></span>`;
       }
-      b+=`<div class="tw-bldg" style="height:${hs[i]}%;">${wins}${i%3===0?'<span class="tw-ant"></span>':""}</div>`;
+      const sign=(i%2===0)?`<span class="tw-sign" style="color:${cols[i%4]};"></span>`:"";
+      b+=`<div class="tw-bldg" style="height:${hs[i]}%;">${wins}${sign}${i%3===0?'<span class="tw-ant"></span>':""}</div>`;
     }
-    return `<div class="tw-city">${b}</div><div class="tw-street"></div>`;
+    return `<div class="tw-horizon"></div><div class="tw-city">${b}</div><div class="tw-street"></div>`;
   }
   if(W.scene==="glacier"){
-    let sp="";for(let i=0;i<8;i++)sp+=`<span class="tw-spark" style="left:${(i*17+c*9)%94}%;top:${15+((i*23)%60)}%;animation-delay:${i*.4}s;"></span>`;
-    return `<div class="tw-icetop"></div><div class="tw-glacier back"></div><div class="tw-glacier front"></div>${sp}`;
+    const pos=[[6,6,26],[14,10,18],[76,7,30],[88,12,16],[42,5,22],[58,9,14]];
+    let cr="";pos.forEach((p,i)=>{cr+=`<span class="tw-crys" style="left:${p[0]}%;bottom:${p[1]}%;width:${p[2]}px;height:${Math.round(p[2]*1.6)}px;animation-delay:${i*.4}s;"></span>`;});
+    let sp="";for(let i=0;i<10;i++)sp+=`<span class="tw-spark" style="left:${(i*17+c*9)%94}%;top:${12+((i*23)%70)}%;animation-delay:${i*.35}s;"></span>`;
+    return `<div class="tw-icetop"></div><div class="tw-caveL"></div><div class="tw-caveR"></div>${cr}${sp}`;
   }
   if(W.scene==="vault"){
     let bolts="";for(let i=0;i<8;i++){const a=i*Math.PI/4;bolts+=`<span class="tw-bolt" style="left:${50+40*Math.cos(a)}%;top:${50+40*Math.sin(a)}%;"></span>`;}
-    return `<div class="tw-circuit"></div><div class="tw-vault"><div class="tw-vault-wheel"></div>${bolts}</div><div class="tw-coins">🪙🪙🪙</div>`;
+    const bars=`<div class="tw-bars" style="left:8%;bottom:8%;"><div class="tw-bar"></div><div class="tw-bar"></div><div class="tw-bar"></div></div>
+      <div class="tw-bars" style="left:15%;bottom:8%;"><div class="tw-bar"></div><div class="tw-bar"></div></div>`;
+    return `<div class="tw-pillars"></div><div class="tw-vault"><div class="tw-vault-wheel"></div>${bolts}</div>${bars}<div class="tw-coins">🪙🪙</div>`;
   }
   return "";
 }
@@ -424,3 +429,24 @@ function showTowerWinPopup(res){
   document.body.appendChild(d);
   towerDing();
 }
+
+/* ----- CSS scènes v2 ----- */
+(function(){
+  const s=document.createElement("style");
+  s.textContent=`
+  .tw-horizon{position:absolute;bottom:36%;left:0;right:0;height:22%;background:radial-gradient(ellipse at 50% 100%,#ff00ff33,transparent 70%),radial-gradient(ellipse at 30% 100%,#00ffff2b,transparent 60%);}
+  .tw-bldg{border-top:2px solid #00d2ff44;}
+  .tw-wl{width:4px;height:5px;}
+  .tw-sign{position:absolute;left:15%;top:12%;width:70%;height:7%;border-radius:2px;background:currentColor;box-shadow:0 0 10px currentColor,0 0 22px currentColor;opacity:.9;animation:twFlickP 3s steps(2) infinite;}
+  .tw-crys{position:absolute;background:linear-gradient(180deg,#ffffffcc,#74ebf5 60%,#0a2a3a);clip-path:polygon(50% 0,100% 100%,0 100%);box-shadow:0 0 14px #74ebf5aa;animation:twGlowC 2.5s infinite;}
+  @keyframes twGlowC{50%{filter:brightness(1.6)}}
+  .tw-caveL,.tw-caveR{position:absolute;top:0;bottom:0;width:16%;background:#000000c9;clip-path:polygon(0 0,100% 6%,55% 28%,95% 52%,45% 78%,100% 100%,0 100%);}
+  .tw-caveL{left:0;background:linear-gradient(90deg,#000c,#0000);}
+  .tw-caveR{right:0;transform:scaleX(-1);background:linear-gradient(90deg,#000c,#0000);}
+  .tw-pillars{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 90px,#f8b50012 90px 112px);}
+  .tw-bars{position:absolute;display:flex;flex-direction:column;gap:2px;}
+  .tw-bar{width:34px;height:8px;background:linear-gradient(180deg,#ffe9a8,#b06000);border-radius:2px;box-shadow:0 0 6px #f8b50088;}
+  .tw-vault{width:clamp(90px,26vw,170px);right:10%;top:22%;box-shadow:0 0 40px #f8b50055,inset 0 0 24px #000;}
+  `;
+  document.head.appendChild(s);
+})();
