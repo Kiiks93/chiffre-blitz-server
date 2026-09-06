@@ -250,7 +250,6 @@ function drawRoom(){
     zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:#05050f;">
       ${W.img?`<div class="tw-bgimg ${c%2?"kb2":""}" style="background-image:${bgImg};"></div>`:`<div style="position:absolute;inset:0;background:${W.bg};"></div>`}
       ${fxHTML(c,W)}${parts}</div>`;
-    nodes+=`<div class="tw-gate" style="top:${zTop+10}px;right:12px;left:auto;transform:none;border-color:${C.acc};color:${C.acc};">${chap.icon} ${chap.name}</div>`;
   }
   for(let f=1;f<=90;f++){
     const chap=getTowerChapter(f);
