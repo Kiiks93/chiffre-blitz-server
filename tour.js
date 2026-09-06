@@ -18,10 +18,28 @@ function currentSeasonNum() { return parseInt((myProfile.currentSeasonId || "s1"
 function getFloorDef(floor) {
   const chap = Math.ceil(floor / 10), inChap = ((floor - 1) % 10) + 1;
   const base = { floor, gridSize: 16 + (chap - 1) * 4, time: Math.max(18, 32 - chap * 2) };
+
   if (inChap === 10) return { ...base, type: "boss" };
-  const t = { 1:"classic", 2:"reverse", 3:"random", 4:"calc+", 5:"sprint", 6:"calc-", 7:"memory", 8:"fog", 9:"nofail" }[inChap];
+
+  const t = {
+    1:"classic",
+    2:"reverse",
+    3:"color",
+    4:"pairs",
+    5:"sprint",
+    6:"parity",
+    7:"forbidden",
+    8:"fog",
+    9:"nofail"
+  }[inChap];
+
   if (t === "sprint") return { ...base, type: "sprint", time: Math.max(8, 14 - chap) };
   if (t === "nofail") return { ...base, type: "nofail", time: 25 };
+  if (t === "pairs") return { ...base, type: "pairs", time: Math.max(24, 36 - chap) };
+  if (t === "color") return { ...base, type: "color", time: Math.max(20, 30 - chap) };
+  if (t === "parity") return { ...base, type: "parity", time: Math.max(20, 30 - chap) };
+  if (t === "forbidden") return { ...base, type: "forbidden", time: Math.max(18, 28 - chap) };
+
   return { ...base, type: t };
 }
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
@@ -194,7 +212,22 @@ const TOWER_WORLDS={
 
 function typeLabel(t){
   const fr=currentLang==="fr";
-  return ({classic:fr?"⚡ Croissant":"⚡ Ascending",reverse:fr?"🔽 Décroissant":"🔽 Descending",random:fr?"🎲 Chaos":"🎲 Chaos","calc+":fr?"🧮 Addition":"🧮 Addition","calc-":fr?"🧮 Soustraction":"🧮 Subtraction",sprint:fr?"⏱️ Sprint":"⏱️ Sprint",memory:fr?"🙈 Mémoire":"🙈 Memory",fog:fr?"🌫️ Brouillard":"🌫️ Fog",nofail:fr?"💎 Sans faute":"💎 No mistake",boss:fr?"⚔️ GARDIEN":"⚔️ GUARDIAN"})[t]||t;
+  return ({
+    classic:fr?"⚡ Croissant":"⚡ Ascending",
+    reverse:fr?"🔽 Décroissant":"🔽 Descending",
+    random:fr?"🎲 Chaos":"🎲 Chaos",
+    color:fr?"🎨 Couleurs":"🎨 Colors",
+    pairs:fr?"🧩 Paires":"🧩 Pairs",
+    parity:fr?"🔢 Pair / Impair":"🔢 Even / Odd",
+    forbidden:fr?"🚫 Interdit":"🚫 Forbidden",
+    "calc+":fr?"🧮 Addition":"🧮 Addition",
+    "calc-":fr?"🧮 Soustraction":"🧮 Subtraction",
+    sprint:fr?"⏱️ Sprint":"⏱️ Sprint",
+    memory:fr?"🙈 Mémoire":"🙈 Memory",
+    fog:fr?"🌫️ Brouillard":"🌫️ Fog",
+    nofail:fr?"💎 Sans faute":"💎 No mistake",
+    boss:fr?"⚔️ GARDIEN":"⚔️ GUARDIAN"
+  })[t]||t;
 }
 function twDesc(t){
   const fr=currentLang==="fr";
@@ -202,6 +235,10 @@ function twDesc(t){
     classic:fr?"Monte les nombres dans l'ordre croissant, le plus vite possible !":"Climb the numbers in ascending order, as fast as you can!",
     reverse:fr?"Cette fois on descend ! Clique du plus grand au plus petit.":"This time we go down! Click from biggest to smallest.",
     random:fr?"La cible change au hasard : reste concentré !":"The target changes randomly: stay focused!",
+    color:fr?"Clique toutes les cases de la couleur demandée. La cible change quand la couleur est terminée.":"Click all tiles matching the requested color. The target changes when that color is cleared.",
+    pairs:fr?"Retrouve les paires cachées. Mémorise bien les symboles !":"Find the hidden pairs. Memorize the symbols!",
+    parity:fr?"Clique uniquement les nombres PAIRS ou IMPAIRS selon la consigne.":"Click only EVEN or ODD numbers depending on the target.",
+    forbidden:fr?"Clique tous les nombres SAUF le nombre interdit. Ne le touche surtout pas !":"Click all numbers EXCEPT the forbidden one. Do not touch it!",
     "calc+":fr?"Clique sur les DEUX cases dont la SOMME donne la cible.":"Click the TWO tiles whose SUM equals the target.",
     "calc-":fr?"Clique sur les DEUX cases dont la DIFFÉRENCE donne la cible.":"Click the TWO tiles whose DIFFERENCE equals the target.",
     sprint:fr?"Le temps est minuscule : vitesse pure !":"Tiny time limit: pure speed!",
@@ -429,14 +466,77 @@ function startTowerFloor(def){
   },1000);
   if(def.type==="memory")setTimeout(()=>{if(TW&&!TW.done){TW.hidden=true;paintGrid();}},2000);
 }
+const TW_COLOR_POOL=[
+  {key:"cyan",name:"CYAN",hex:"#00d2ff"},
+  {key:"pink",name:"ROSE",hex:"#ff2bd6"},
+  {key:"gold",name:"OR",hex:"#f8b500"},
+  {key:"green",name:"VERT",hex:"#2ecc71"},
+  {key:"red",name:"ROUGE",hex:"#ff4b2b"},
+  {key:"violet",name:"VIOLET",hex:"#9b5cff"}
+];
+
+function chooseColorTarget(){
+  const keys=[...new Set([...TW.remaining].map(i=>TW.nums[i].key))];
+  if(!keys.length){TW.targetColor=null;return;}
+  const key=keys[Math.floor(Math.random()*keys.length)];
+  TW.targetColor=TW_COLOR_POOL.find(c=>c.key===key)||TW_COLOR_POOL[0];
+}
+
+function parityLeft(parity){
+  return [...TW.remaining].some(v=>parity==="even"?v%2===0:v%2!==0);
+}
 function buildFloor(){
-  const d=TW.def,N=d.gridSize;TW.total=N;
+  const d=TW.def,N=d.gridSize;
+  TW.total=N;
+
+  if(d.type==="color"){
+    TW.nums=[...Array(N)].map((_,i)=>TW_COLOR_POOL[(i+Math.floor(Math.random()*TW_COLOR_POOL.length))%TW_COLOR_POOL.length]);
+    TW.nums=shuffle(TW.nums);
+    TW.remaining=new Set([...Array(N)].map((_,i)=>i));
+    chooseColorTarget();
+    return;
+  }
+
+  if(d.type==="pairs"){
+    const symbols=["🍒","⭐","💎","🔥","⚡","🌙","👑","🎲","🍀","🎯","🚀","🧊","🍭","🎁","🪙","🔮","🦇","🎃","🎄","🎅","🧁","🍩","🔔","🕯️"];
+    const half=N/2;
+    TW.nums=shuffle([...symbols.slice(0,half),...symbols.slice(0,half)]);
+    TW.remaining=new Set([...Array(N)].map((_,i)=>i));
+    TW.revealed={};
+    TW.sel=null;
+    TW.lock=false;
+    return;
+  }
+
+  if(d.type==="parity"){
+    TW.nums=shuffle([...Array(N)].map((_,i)=>i+1));
+    TW.remaining=new Set(TW.nums);
+    TW.targetParity=Math.random()<.5?"even":"odd";
+    return;
+  }
+
+  if(d.type==="forbidden"){
+    TW.nums=shuffle([...Array(N)].map((_,i)=>i+1));
+    TW.remaining=new Set(TW.nums);
+    TW.forbidden=1+Math.floor(Math.random()*N);
+    TW.target=TW.forbidden;
+    return;
+  }
+
   if(d.type==="calc+"||d.type==="calc-"){
     const max=9+Math.ceil(d.floor/10)*3;
     let a=1+Math.floor(Math.random()*max),b=1+Math.floor(Math.random()*max);
-    if(d.type==="calc-"){if(a===b)b=(a%max)+1;if(b>a)[a,b]=[b,a];TW.target=a-b;TW.op="-";}
-    else{TW.target=a+b;TW.op="+";}
-    const vals=[a,b];while(vals.length<N)vals.push(1+Math.floor(Math.random()*max));
+    if(d.type==="calc-"){
+      if(a===b)b=(a%max)+1;
+      if(b>a)[a,b]=[b,a];
+      TW.target=a-b;
+      TW.op="-";
+    }else{
+      TW.target=a+b;
+      TW.op="+";
+    }
+    const vals=[a,b];
+    while(vals.length<N)vals.push(1+Math.floor(Math.random()*max));
     TW.nums=shuffle(vals);
   }else{
     TW.nums=shuffle([...Array(N)].map((_,i)=>i+1));
@@ -456,24 +556,151 @@ function paintGrid(){
   const cols=d.gridSize<=16?4:(d.gridSize<=20?5:6);
   g.style.gridTemplateColumns=`repeat(${cols},1fr)`;
   g.innerHTML="";
+
   TW.nums.forEach((v,i)=>{
     const b=document.createElement("button");
     b.className="tg-tile"+(d.type==="fog"?" foggy":"")+(TW.gone[i]?" gone":"");
-    b.textContent=TW.hidden?"?":v;
+
+    if(d.type==="color"){
+      b.className+=" tg-color";
+      b.textContent="";
+      b.style.background=`radial-gradient(circle at 35% 25%,#ffffffaa,transparent 22%),linear-gradient(180deg,${v.hex},#111827 85%)`;
+      b.style.boxShadow=`0 0 14px ${v.hex}66,inset 0 1px 0 #fff8`;
+    }else if(d.type==="pairs"){
+      const show=TW.revealed[i]||TW.sel===i;
+      b.textContent=TW.gone[i]?"":(show?v:"?");
+      if(show&&!TW.gone[i])b.classList.add("sel");
+    }else{
+      b.textContent=TW.hidden?"?":v;
+    }
+
     b.onclick=()=>twClick(i,b);
     g.appendChild(b);
   });
 }
 function renderHUD(){
   const h=document.getElementById("tg-hud");if(!h||!TW)return;
-  h.innerHTML=TW.op?`<span style="color:#f8b500;">${TW.target} ${TW.op==="+"?"➕":"➖"}</span>`:`<span>${currentLang==="fr"?"CIBLE":"TARGET"} : ${TW.target}</span>`;
+  const fr=currentLang==="fr";
+  let main="";
+
+  if(TW.def.type==="color"){
+    main=`${fr?"COULEUR":"COLOR"} : <span style="color:${TW.targetColor.hex};text-shadow:0 0 12px ${TW.targetColor.hex};">${TW.targetColor.name}</span>`;
+  }else if(TW.def.type==="pairs"){
+    main=fr?"🧩 RETROUVE LES PAIRES":"🧩 FIND THE PAIRS";
+  }else if(TW.def.type==="parity"){
+    main=TW.targetParity==="even"?(fr?"CLIQUE : PAIRS":"CLICK: EVEN"):(fr?"CLIQUE : IMPAIRS":"CLICK: ODD");
+  }else if(TW.def.type==="forbidden"){
+    main=`${fr?"INTERDIT":"FORBIDDEN"} : <span style="color:#ff4b2b;text-shadow:0 0 12px #ff4b2b;">${TW.forbidden}</span>`;
+  }else if(TW.op){
+    main=`<span style="color:#f8b500;">${TW.target} ${TW.op==="+"?"➕":"➖"}</span>`;
+  }else{
+    main=`<span>${fr?"CIBLE":"TARGET"} : ${TW.target}</span>`;
+  }
+
   const t=document.getElementById("twg-timer");
-  if(t){t.innerText="⏱️ "+TW.time+"s";t.style.color=TW.time<=5?"#ff4b2b":"#fff";}
-  document.getElementById("tg-msg").innerText=TW.def.type==="nofail"?"💎 Une seule erreur = échec !":(TW.def.type==="memory"?"🙈 Mémorise vite !":"");
+  if(t){
+    h.innerHTML=main;
+    t.innerText="⏱️ "+TW.time+"s";
+    t.style.color=TW.time<=5?"#ff4b2b":"#fff";
+  }else{
+    h.innerHTML=main+` <b style="color:${TW.time<=5?"#ff4b2b":"#fff"};">⏱️ ${TW.time}s</b>`;
+  }
+
+  document.getElementById("tg-msg").innerText=
+    TW.def.type==="nofail" ? "💎 Une seule erreur = échec !" :
+    TW.def.type==="pairs" ? "🧠 Mémorise les positions !" :
+    TW.def.type==="forbidden" ? "🚫 Ne touche pas le nombre interdit !" :
+    "";
 }
 function twClick(idx,el){
-  if(!TW||TW.done||TW.gone[idx])return;
+  if(!TW||TW.done||TW.gone[idx]||TW.lock)return;
+  const d=TW.def;
   const v=TW.nums[idx];
+
+  if(d.type==="color"){
+    if(v.key===TW.targetColor.key){
+      TW.gone[idx]=true;
+      TW.remaining.delete(idx);
+      el.classList.add("gone");
+      if(SoundEngine.playComboTick)SoundEngine.playComboTick(TW.total-TW.remaining.size);
+      if(TW.remaining.size===0)return winFloor();
+      if(![...TW.remaining].some(i=>TW.nums[i].key===TW.targetColor.key))chooseColorTarget();
+      renderHUD();
+    }else mistake();
+    return;
+  }
+
+  if(d.type==="pairs"){
+    if(TW.sel===null){
+      TW.sel=idx;
+      TW.revealed[idx]=true;
+      paintGrid();
+      return;
+    }
+
+    if(TW.sel===idx)return;
+
+    const first=TW.sel;
+    TW.revealed[idx]=true;
+    paintGrid();
+
+    if(TW.nums[first]===TW.nums[idx]){
+      setTimeout(()=>{
+        if(!TW)return;
+        TW.gone[first]=true;
+        TW.gone[idx]=true;
+        TW.remaining.delete(first);
+        TW.remaining.delete(idx);
+        TW.sel=null;
+        if(SoundEngine.playComboTick)SoundEngine.playComboTick(TW.total-TW.remaining.size);
+        if(TW.remaining.size===0)return winFloor();
+        paintGrid();
+      },220);
+    }else{
+      mistake();
+      TW.lock=true;
+      setTimeout(()=>{
+        if(!TW)return;
+        TW.revealed[first]=false;
+        TW.revealed[idx]=false;
+        TW.sel=null;
+        TW.lock=false;
+        paintGrid();
+      },520);
+    }
+    return;
+  }
+
+  if(d.type==="parity"){
+    const ok=TW.targetParity==="even"?v%2===0:v%2!==0;
+    if(ok){
+      TW.gone[idx]=true;
+      TW.remaining.delete(v);
+      el.classList.add("gone");
+      if(SoundEngine.playComboTick)SoundEngine.playComboTick(TW.total-TW.remaining.size);
+      if(TW.remaining.size===0)return winFloor();
+      if(!parityLeft(TW.targetParity)){
+        TW.targetParity=TW.targetParity==="even"?"odd":"even";
+      }
+      renderHUD();
+    }else mistake();
+    return;
+  }
+
+  if(d.type==="forbidden"){
+    if(v===TW.forbidden){
+      mistake();
+      return;
+    }
+    TW.gone[idx]=true;
+    TW.remaining.delete(v);
+    el.classList.add("gone");
+    if(SoundEngine.playComboTick)SoundEngine.playComboTick(TW.total-TW.remaining.size);
+    if(TW.remaining.size===1 && TW.remaining.has(TW.forbidden))return winFloor();
+    renderHUD();
+    return;
+  }
+
   if(TW.op){
     if(TW.sel===null){TW.sel=idx;el.classList.add("sel");return;}
     if(TW.sel===idx){el.classList.remove("sel");TW.sel=null;return;}
@@ -483,12 +710,15 @@ function twClick(idx,el){
     if(ok)winFloor();else mistake();
     return;
   }
+
   if(v===TW.target){
-    TW.gone[idx]=true;el.classList.add("gone");
+    TW.gone[idx]=true;
+    el.classList.add("gone");
     TW.remaining.delete(v);
     if(SoundEngine.playComboTick)SoundEngine.playComboTick(TW.total-TW.remaining.size);
     if(TW.remaining.size===0)return winFloor();
-    nextTarget();renderHUD();
+    nextTarget();
+    renderHUD();
   }else mistake();
 }
 function mistake(){
