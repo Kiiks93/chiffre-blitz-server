@@ -1331,7 +1331,7 @@ const TOWER_CHAPTER_REWARDS = {
   8: "frame_aurore",
   9: "title_maitre_tour"
 };
-const TOWER_FPC = 20; // même valeur que FPC côté client
+const TOWER_FPC = 50; // même valeur que FPC côté client
 socket.on('get_tower', () => {
   const player = activePlayers[socket.id];
   if (!player) return;
