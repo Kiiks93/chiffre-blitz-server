@@ -101,9 +101,9 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 
 const TOWER_COLORS={1:{acc:"#00d2ff"},2:{acc:"#74ebf5"},3:{acc:"#f8b500"},4:{acc:"#ff8a00"},5:{acc:"#8a9bb0"},6:{acc:"#ff4b2b"},7:{acc:"#ff6fa5"},8:{acc:"#2ecc71"},9:{acc:"#ff416c"}};
 const TOWER_WORLDS={
- 1:{bg:"radial-gradient(ellipse at 15% 20%,#ff00ff26,transparent 40%),radial-gradient(ellipse at 85% 35%,#00ffff26,transparent 40%),linear-gradient(180deg,#050514,#0a0a2a 55%,#1a1030)",scene:"city",part:"neon",props:["🕹️",""]},
- 2:{bg:"radial-gradient(ellipse at 20% 8%,#ffffff22,transparent 45%),radial-gradient(ellipse at 80% 60%,#74ebf522,transparent 45%),linear-gradient(180deg,#062028,#0a2a3a 50%,#123a4a)",scene:"glacier",part:"snow",props:["","💎"]},
- 3:{bg:"radial-gradient(ellipse at 50% 0%,#f8b50026,transparent 50%),radial-gradient(ellipse at 20% 85%,#ff8a0018,transparent 40%),linear-gradient(180deg,#160d00,#2b1a00 60%,#3a2a05)",scene:"vault",part:"spark",props:["⚙️",""]},
+  1:{bg:"linear-gradient(180deg,#050514,#0a0a2a 55%,#1a1030)",scene:"city",part:"neon",props:["",""],img:"img/world1.jpg"},
+  2:{bg:"linear-gradient(180deg,#062028,#0a2a3a 50%,#123a4a)",scene:"glacier",part:"snow",props:["",""],img:"img/world2.jpg"},
+  3:{bg:"linear-gradient(180deg,#160d00,#2b1a00 60%,#3a2a05)",scene:"vault",part:"spark",props:["",""],img:"img/world3.jpg"},
  4:{bg:"radial-gradient(ellipse at 30% 10%,#ff8a0022,transparent 45%),linear-gradient(180deg,#12041a,#2a0a33)",scene:"glacier",part:"snow",props:["🎃","️"]},
  5:{bg:"linear-gradient(180deg,#0a0d14,#1a2230)",scene:"glacier",part:"snow",props:["🪦","️"]},
  6:{bg:"radial-gradient(ellipse at 50% 10%,#ff4b2b22,transparent 50%),linear-gradient(180deg,#18040a,#330a12)",scene:"vault",part:"spark",props:["🎃","🍬"]},
@@ -209,7 +209,21 @@ function sceneHTML(c,W,C){
   }
   return "";
 }
-
+function fxHTML(c,W){
+  if(W.scene==="city")return `<div class="tw-reflect"></div>
+    <span class="tw-glowspot" style="left:6%;top:52%;width:12%;height:10%;background:#ff00ff;"></span>
+    <span class="tw-glowspot" style="left:20%;top:40%;width:8%;height:14%;background:#00ffff;animation-delay:.7s;"></span>
+    <span class="tw-glowspot" style="left:74%;top:30%;width:9%;height:16%;background:#ff00ff;animation-delay:1.3s;"></span>
+    <span class="tw-glowspot" style="left:86%;top:45%;width:10%;height:12%;background:#f8b500;animation-delay:.4s;"></span>`;
+  if(W.scene==="glacier")return `
+    <span class="tw-glowspot" style="left:14%;top:45%;width:22%;height:30%;background:#74ebf5;"></span>
+    <span class="tw-glowspot" style="left:64%;top:48%;width:22%;height:30%;background:#7dffea;animation-delay:1.1s;"></span>
+    <span class="tw-glowspot" style="left:40%;top:18%;width:20%;height:26%;background:#bfffff;animation-delay:.6s;"></span>`;
+  if(W.scene==="vault")return `<div class="tw-sweep"></div>
+    <span class="tw-glowspot" style="left:16%;top:70%;width:18%;height:16%;background:#f8b500;"></span>
+    <span class="tw-glowspot" style="left:62%;top:68%;width:22%;height:18%;background:#ffe9a8;animation-delay:.9s;"></span>`;
+  return "";
+}
 function drawRoom(){
   const wrap=document.getElementById("tw-mapwrap");if(!wrap)return;
   const season=currentSeasonNum();
@@ -227,15 +241,15 @@ function drawRoom(){
       nodes+=`<div class="tw-gate lock" style="top:${zTop+zH/2}px;">🔒 ${currentLang==="fr"?"Bientôt":"Soon"}</div>`;
       continue;
     }
-    const W=TOWER_WORLDS[c],C=TOWER_COLORS[c];
-    let layers=sceneHTML(c,W,C);
+        const W=TOWER_WORLDS[c],C=TOWER_COLORS[c];
     let parts="";
     for(let i=0;i<7;i++){
       parts+=`<span class="tw-part ${W.part}" style="color:${C.acc};left:${(i*13+c*7)%96}%;animation-duration:${4+(i%4)*1.5}s;animation-delay:${i*.7}s;"></span>`;
     }
-    const props=`<span class="tw-prop" style="color:${C.acc};left:5%;top:38%;">${W.props[0]}</span>
-      <span class="tw-prop" style="color:${C.acc};right:5%;top:62%;animation-delay:1s;">${W.props[1]}</span>`;
-    zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:${W.bg};">${layers}${parts}${props}</div>`;
+    const bgImg=W.img?`linear-gradient(rgba(5,5,15,.28),rgba(5,5,15,.42)),url('${W.img}')`:W.bg;
+    zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:#05050f;">
+      ${W.img?`<div class="tw-bgimg ${c%2?"kb2":""}" style="background-image:${bgImg};"></div>`:`<div style="position:absolute;inset:0;background:${W.bg};"></div>`}
+      ${fxHTML(c,W)}${parts}</div>`;
     nodes+=`<div class="tw-gate" style="top:${zTop+10}px;right:12px;left:auto;transform:none;border-color:${C.acc};color:${C.acc};">${chap.icon} ${chap.name}</div>`;
   }
   for(let f=1;f<=90;f++){
@@ -477,6 +491,22 @@ function showTowerWinPopup(res){
   .tw-ray{position:absolute;top:28%;left:50%;width:7%;height:62%;background:linear-gradient(180deg,#74ebf533,transparent);transform-origin:top center;filter:blur(4px);animation:twRay 4s ease-in-out infinite;}
   @keyframes twRay{50%{opacity:.35}}
   .tw-icefloor2{position:absolute;bottom:0;left:0;right:0;height:16%;background:linear-gradient(180deg,#74ebf522,#04141d);box-shadow:inset 0 8px 20px #74ebf533;}
+  `;
+  document.head.appendChild(s);
+})();
+
+/* ----- CSS fonds illustrés animés ----- */
+(function(){
+  const s=document.createElement("style");
+  s.textContent=`
+  .tw-bgimg{position:absolute;inset:-8%;background-size:cover;background-position:center;animation:twKen 26s ease-in-out infinite alternate;}
+  .tw-bgimg.kb2{animation-duration:32s;animation-direction:alternate-reverse;}
+  @keyframes twKen{from{transform:scale(1) translate(0,0)}to{transform:scale(1.12) translate(2%,-2%)}}
+  .tw-glowspot{position:absolute;border-radius:50%;filter:blur(8px);mix-blend-mode:screen;animation:twGlowC 2.6s ease-in-out infinite;pointer-events:none;}
+  .tw-sweep{position:absolute;top:8%;bottom:8%;width:14%;background:linear-gradient(90deg,transparent,#ffe9a855,transparent);transform:skewX(-12deg);animation:twSweep 5.5s ease-in-out infinite;pointer-events:none;}
+  @keyframes twSweep{0%{left:-20%;opacity:0}15%{opacity:1}85%{opacity:1}100%{left:110%;opacity:0}}
+  .tw-reflect{position:absolute;left:0;right:0;bottom:0;height:16%;background:linear-gradient(90deg,#ff00ff22,#00ffff22,#f8b50022,#ff00ff22);background-size:300% 100%;filter:blur(7px);animation:twSlide 6s linear infinite;pointer-events:none;}
+  @keyframes twSlide{to{background-position:300% 0}}
   `;
   document.head.appendChild(s);
 })();
