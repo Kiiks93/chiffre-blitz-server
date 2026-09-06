@@ -1,5 +1,5 @@
 /* ============================================================
-TOUR.JS — MODE AVENTURE (mondes immersifs + moteur des étages)
+TOUR.JS — MODE AVENTURE (100% CSS, immersif)
 ============================================================ */
 const TOWER_CHAPTERS = [
   { id:1, season:1, name:"Quartier Néon", icon:"🌆", boss:"🤖", objects:["💡","️","📺","","🎛️","🖥️","📻","️","🌃"] },
@@ -39,7 +39,8 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
   .tw-map{position:relative;width:100%;}
   .tw-zone{position:absolute;left:0;right:0;overflow:hidden;}
   .tw-col{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,560px);}
-  /* --- Ville néon --- */
+
+  /* ============ VILLE NÉON ============ */
   .tw-horizon{position:absolute;bottom:36%;left:0;right:0;height:22%;background:radial-gradient(ellipse at 50% 100%,#ff00ff33,transparent 70%),radial-gradient(ellipse at 30% 100%,#00ffff2b,transparent 60%);}
   .tw-city{position:absolute;bottom:0;left:0;right:0;height:42%;display:flex;align-items:flex-end;gap:2%;padding:0 2%;}
   .tw-bldg{flex:1;position:relative;background:linear-gradient(180deg,#0d0d1e,#05050c);border-radius:3px 3px 0 0;box-shadow:0 0 12px #000;border-top:2px solid #00d2ff44;}
@@ -50,28 +51,44 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
   .tw-street{position:absolute;bottom:0;left:0;right:0;height:6%;background:linear-gradient(90deg,#ff00ff44,#00ffff44,#f8b50044);filter:blur(8px);}
   .tw-reflect{position:absolute;left:0;right:0;bottom:0;height:16%;background:linear-gradient(90deg,#ff00ff22,#00ffff22,#f8b50022,#ff00ff22);background-size:300% 100%;filter:blur(7px);animation:twSlide 6s linear infinite;pointer-events:none;}
   @keyframes twSlide{to{background-position:300% 0}}
-  /* --- Voitures & motos --- */
   .tw-car{position:absolute;width:46px;height:12px;border-radius:6px 6px 3px 3px;background:linear-gradient(180deg,#3a3a48,#101018 60%,#05050a);box-shadow:inset 0 1px 0 #ffffff33,0 2px 6px #000c;z-index:3;animation:twDrive linear infinite;}
   .tw-car::before{content:"";position:absolute;right:-34px;top:2px;width:36px;height:8px;background:linear-gradient(90deg,#ffffff88,transparent);filter:blur(2px);}
   .tw-car::after{content:"";position:absolute;left:-6px;top:3px;width:8px;height:6px;background:radial-gradient(closest-side,#ff5040cc,transparent);filter:blur(1px);}
   .tw-car.s{width:34px;height:9px;}
   .tw-car.s::before{right:-26px;width:28px;}
   .tw-car.r{animation-name:twDriveR;transform:scaleX(-1);}
-  .tw-moto{position:absolute;width:26px;height:9px;border-radius:4px;background:linear-gradient(180deg,#2a2a35,#08080c);box-shadow:inset 0 1px 0 #ffffff2b,0 2px 5px #000c;z-index:3;animation:twDrive linear infinite;}
-  .tw-moto::before{content:"";position:absolute;right:-26px;top:2px;width:28px;height:6px;background:linear-gradient(90deg,#ffffff66,transparent);filter:blur(2px);}
-  .tw-moto::after{content:"";position:absolute;left:6px;top:-6px;width:6px;height:6px;border-radius:50%;background:#1a1a22;box-shadow:inset 0 1px 0 #ffffff22;}
-  .tw-moto.r{animation-name:twDriveR;transform:scaleX(-1);}
   @keyframes twDrive{from{left:-20%}to{left:115%}}
   @keyframes twDriveR{from{left:115%}to{left:-20%}}
-  /* --- Images animées (grotte + banque) --- */
-  .tw-bgblur{position:absolute;inset:-4%;background-size:cover;background-position:center;filter:blur(22px) brightness(.4) saturate(1.3);}
-  .tw-bgsharp{position:absolute;top:0;bottom:0;left:50%;width:min(100%,560px);transform:translateX(-50%);overflow:hidden;box-shadow:0 0 40px #000c;}
-  .tw-bgsharp .tw-bgimg{position:absolute;inset:-6%;background-size:cover;filter:blur(.4px);animation:twKen 40s ease-in-out infinite alternate;}
-  @keyframes twKen{from{transform:scale(1.02)}to{transform:scale(1.08) translate(1%,-1%)}}
-  .tw-bgimg.kb2{animation-duration:32s;animation-direction:alternate-reverse;}
+
+  /* ============ GROTTE DE CRISTAL ============ */
+  .tw-cavewall{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 55%,#74ebf518 0%,#0a2a3a66 35%,#000000ee 78%);}
+  .tw-rocktop{position:absolute;top:0;left:0;right:0;height:26%;background:#020608;clip-path:polygon(0 0,100% 0,96% 55%,88% 25%,80% 70%,70% 30%,60% 75%,50% 35%,40% 80%,30% 30%,20% 70%,12% 28%,4% 60%,0 30%);}
+  .tw-rockbot{position:absolute;bottom:0;left:0;right:0;height:20%;background:#020608;clip-path:polygon(0 100%,100% 100%,96% 45%,88% 75%,80% 30%,70% 70%,60% 25%,50% 65%,40% 20%,30% 70%,20% 30%,12% 72%,4% 40%,0 70%);}
+  .tw-stalac{position:absolute;top:0;background:linear-gradient(180deg,#020608,#3a5a6e 60%,#74ebf5);clip-path:polygon(30% 0,70% 0,60% 100%,40% 100%);box-shadow:0 0 6px #74ebf566;}
+  .tw-bigcrys{position:absolute;background:linear-gradient(180deg,#ffffffee,#74ebf5 55%,#0a2a3a);clip-path:polygon(50% 0,100% 100%,0 100%);box-shadow:0 0 30px #74ebf5cc,0 0 60px #74ebf566;animation:twGlowC 2.2s infinite;}
+  .tw-ray{position:absolute;top:28%;left:50%;width:7%;height:62%;background:linear-gradient(180deg,#74ebf533,transparent);transform-origin:top center;filter:blur(4px);animation:twRay 4s ease-in-out infinite;}
+  @keyframes twRay{50%{opacity:.35}}
+  .tw-icefloor{position:absolute;bottom:0;left:0;right:0;height:16%;background:linear-gradient(180deg,#74ebf522,#04141d);box-shadow:inset 0 8px 20px #74ebf533;}
+  @keyframes twGlowC{50%{filter:brightness(1.6)}}
+
+  /* ============ BANQUE DORÉE ============ */
+  .tw-bankwall{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 110px,#00000044 110px 114px),linear-gradient(180deg,#3a2a05,#2b1a00 40%,#160d00);}
+  .tw-pillar{position:absolute;top:0;bottom:0;width:8%;background:linear-gradient(90deg,#1a0f02,#5a4410 50%,#1a0f02);border-left:2px solid #8a6a1a44;border-right:2px solid #8a6a1a44;box-shadow:0 0 12px #000c;}
+  .tw-vaultglow{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(92%,440px);aspect-ratio:1;border-radius:50%;background:radial-gradient(#f8b50044,transparent 70%);animation:twGlowC 3s infinite;}
+  .tw-vaultframe{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(76%,370px);aspect-ratio:1.15;background:linear-gradient(180deg,#5a4410,#2b1a00);border-radius:14px;box-shadow:0 0 40px #f8b50033,inset 0 0 30px #000;}
+  .tw-vaultdoor{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:82%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c9a227,#8a6a1a 40%,#3a2a05 75%,#160d00);border:6px solid #f8b50088;box-shadow:0 0 60px #f8b50066,inset 0 0 40px #000000aa;}
+  .tw-vaultwheel{position:absolute;left:50%;top:50%;width:44%;height:44%;transform:translate(-50%,-50%);border:6px solid #ffe9a8;border-radius:50%;animation:twSpin 16s linear infinite;box-shadow:0 0 20px #f8b50088,inset 0 0 10px #0006;}
+  .tw-vaultwheel::before{content:"";position:absolute;inset:-6px;background:linear-gradient(#ffe9a8,#ffe9a8) 50% 0/6px 100% no-repeat,linear-gradient(#ffe9a8,#ffe9a8) 0 50%/100% 6px no-repeat,linear-gradient(45deg,transparent 47%,#ffe9a8 47% 53%,transparent 53%),linear-gradient(-45deg,transparent 47%,#ffe9a8 47% 53%,transparent 53%);}
+  .tw-vaultwheel::after{content:"";position:absolute;left:50%;top:50%;width:20%;height:20%;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(#fff8dc,#8a6a1a);box-shadow:0 0 12px #ffe9a8;}
+  @keyframes twSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+  .tw-vbolt{position:absolute;width:5%;height:5%;border-radius:50%;background:radial-gradient(#ffe9a8,#8a6a1a);transform:translate(-50%,-50%);box-shadow:0 1px 3px #000;}
+  .tw-ingot{position:absolute;width:42px;height:14px;border-radius:3px;background:linear-gradient(180deg,#ffe9a8,#c9a227 50%,#8a6a1a);box-shadow:inset 0 1px 0 #fff8,0 2px 4px #000c;}
   .tw-sweep{position:absolute;top:8%;bottom:8%;width:14%;background:linear-gradient(90deg,transparent,#ffe9a855,transparent);transform:skewX(-12deg);animation:twSweep 5.5s ease-in-out infinite;pointer-events:none;}
   @keyframes twSweep{0%{left:-20%;opacity:0}15%{opacity:1}85%{opacity:1}100%{left:110%;opacity:0}}
-  /* --- Particules --- */
+  .tw-coin{position:absolute;font-size:22px;filter:drop-shadow(0 0 8px #f8b500);animation:twCoin 2.5s ease-in-out infinite;}
+  @keyframes twCoin{50%{transform:translateY(-4px) rotate(15deg)}}
+
+  /* ============ PARTICULES ============ */
   .tw-part{position:absolute;width:4px;height:4px;border-radius:50%;}
   .tw-part.snow{background:#ffffffcc;animation:twFall linear infinite;}
   .tw-part.spark{background:#f8b500;box-shadow:0 0 6px #f8b500;animation:twRise linear infinite;}
@@ -79,7 +96,8 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
   @keyframes twFall{0%{top:-4%}100%{top:104%}}
   @keyframes twRise{0%{top:104%}100%{top:-4%}}
   @keyframes twFlickP{50%{opacity:.15}}
-  /* --- Nœuds --- */
+
+  /* ============ NŒUDS ============ */
   .tw-node{position:absolute;width:clamp(40px,12vw,50px);height:clamp(40px,12vw,50px);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:clamp(14px,4vw,17px);color:#fff;text-shadow:0 1px 2px #000a;transform:translate(-50%,0);border:3px solid #333;background:#1a1a2e;z-index:2;}
   .tw-node.won{border-color:#ffffff44;box-shadow:0 3px 0 #00000066;}
   .tw-node.cur{background:radial-gradient(circle at 35% 30%,#a8f0ff,#00d2ff 60%,#0066aa)!important;border-color:#fff;animation:twPulse 1s infinite;cursor:pointer;}
@@ -91,7 +109,8 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
   @keyframes twBounce2{50%{transform:translateX(-50%) translateY(-4px)}}
   .tw-gate{position:absolute;background:#0f051d;border:2px solid #00d2ff;border-radius:12px;padding:5px 14px;font-size:clamp(9px,2.8vw,11px);font-weight:900;color:#00d2ff;white-space:nowrap;z-index:3;box-shadow:0 0 12px #00d2ff44;}
   .tw-gate.lock{border-color:#333;color:#666;box-shadow:none;}
-  /* --- Briefing --- */
+
+  /* ============ BRIEFING ============ */
   .tw-brief{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:9995;}
   .tw-brief-card{background:#0f051d;border:2px solid #00d2ff;border-radius:12px;padding:16px;max-width:82%;text-align:center;box-shadow:0 0 20px #00d2ff66;}
   .tw-stars{font-size:26px;letter-spacing:6px;text-align:center;margin:10px 0;}
@@ -99,7 +118,8 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
   @keyframes twPop{0%{transform:scale(0)}70%{transform:scale(1.4)}100%{transform:scale(1)}}
   .btn-tower{background:linear-gradient(45deg,#7a00ff,#00d2ff)!important;animation:twBtn 2s infinite;box-shadow:0 0 14px #7a00ff88;}
   @keyframes twBtn{50%{box-shadow:0 0 22px #00d2ffcc}}
-  /* --- Jeu --- */
+
+  /* ============ JEU ============ */
   #tower-game .tg-grid{display:grid;gap:6px;}
   .tg-tile{background:linear-gradient(180deg,#1a2142,#0d1226);border:2px solid #00d2ff55;border-radius:8px;color:#fff;font-weight:900;font-size:16px;padding:12px 0;cursor:pointer;}
   .tg-tile.sel{border-color:#f8b500;box-shadow:0 0 10px #f8b500;}
@@ -112,15 +132,15 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 
 const TOWER_COLORS={1:{acc:"#00d2ff"},2:{acc:"#74ebf5"},3:{acc:"#f8b500"},4:{acc:"#ff8a00"},5:{acc:"#8a9bb0"},6:{acc:"#ff4b2b"},7:{acc:"#ff6fa5"},8:{acc:"#2ecc71"},9:{acc:"#ff416c"}};
 const TOWER_WORLDS={
-  1:{bg:"linear-gradient(180deg,#050514,#0a0a2a 55%,#1a1030)",scene:"city",part:"neon",props:["",""]},
-  2:{bg:"linear-gradient(180deg,#062028,#0a2a3a 50%,#123a4a)",scene:"glacier",part:"snow",props:["",""],img:"img/world2.jpg",pos:"22% center"},
-  3:{bg:"linear-gradient(180deg,#160d00,#2b1a00 60%,#3a2a05)",scene:"vault",part:"spark",props:["",""],img:"img/world3.jpg"},
-  4:{bg:"radial-gradient(ellipse at 30% 10%,#ff8a0022,transparent 45%),linear-gradient(180deg,#12041a,#2a0a33)",scene:"glacier",part:"snow",props:["🎃","️"]},
-  5:{bg:"linear-gradient(180deg,#0a0d14,#1a2230)",scene:"glacier",part:"snow",props:["🪦","️"]},
-  6:{bg:"radial-gradient(ellipse at 50% 10%,#ff4b2b22,transparent 50%),linear-gradient(180deg,#18040a,#330a12)",scene:"vault",part:"spark",props:["🎃","🍬"]},
-  7:{bg:"radial-gradient(ellipse at 50% 10%,#ff6fa522,transparent 50%),linear-gradient(180deg,#180410,#330a20)",scene:"glacier",part:"snow",props:["🍭",""]},
-  8:{bg:"radial-gradient(ellipse at 50% 10%,#2ecc7122,transparent 50%),linear-gradient(180deg,#04180b,#0a3318)",scene:"glacier",part:"snow",props:["🎄",""]},
-  9:{bg:"radial-gradient(ellipse at 50% 10%,#ff416c22,transparent 50%),linear-gradient(180deg,#180404,#330a0a)",scene:"vault",part:"spark",props:["🎅",""]}
+  1:{bg:"linear-gradient(180deg,#050514,#0a0a2a 55%,#1a1030)",scene:"city",part:"neon"},
+  2:{bg:"linear-gradient(180deg,#062028,#0a2a3a 50%,#123a4a)",scene:"glacier",part:"snow"},
+  3:{bg:"linear-gradient(180deg,#160d00,#2b1a00 60%,#3a2a05)",scene:"vault",part:"spark"},
+  4:{bg:"radial-gradient(ellipse at 30% 10%,#ff8a0022,transparent 45%),linear-gradient(180deg,#12041a,#2a0a33)",scene:"glacier",part:"snow"},
+  5:{bg:"linear-gradient(180deg,#0a0d14,#1a2230)",scene:"glacier",part:"snow"},
+  6:{bg:"radial-gradient(ellipse at 50% 10%,#ff4b2b22,transparent 50%),linear-gradient(180deg,#18040a,#330a12)",scene:"vault",part:"spark"},
+  7:{bg:"radial-gradient(ellipse at 50% 10%,#ff6fa522,transparent 50%),linear-gradient(180deg,#180410,#330a20)",scene:"glacier",part:"snow"},
+  8:{bg:"radial-gradient(ellipse at 50% 10%,#2ecc7122,transparent 50%),linear-gradient(180deg,#04180b,#0a3318)",scene:"glacier",part:"snow"},
+  9:{bg:"radial-gradient(ellipse at 50% 10%,#ff416c22,transparent 50%),linear-gradient(180deg,#180404,#330a0a)",scene:"vault",part:"spark"}
 };
 
 function typeLabel(t){
@@ -147,11 +167,6 @@ function towerDing(){
   [880,1320].forEach((f,i)=>{const o=SoundEngine.ctx.createOscillator(),g=SoundEngine.ctx.createGain();
   o.type="sine";o.frequency.value=f;g.gain.setValueAtTime(.08,t+i*.12);g.gain.exponentialRampToValueAtTime(.0001,t+i*.12+.25);
   o.connect(g);g.connect(SoundEngine.ctx.destination);o.start(t+i*.12);o.stop(t+i*.12+.25);});}catch(e){}
-}
-function towerTick(){
-  try{const t=SoundEngine.ctx.currentTime;const o=SoundEngine.ctx.createOscillator(),g=SoundEngine.ctx.createGain();
-  o.type="square";o.frequency.value=220;g.gain.setValueAtTime(.04,t);g.gain.exponentialRampToValueAtTime(.0001,t+.08);
-  o.connect(g);g.connect(SoundEngine.ctx.destination);o.start(t);o.stop(t+.09);}catch(e){}
 }
 
 function openTower(){
@@ -188,7 +203,7 @@ socket.on("tower_data",(d)=>{
   drawRoom();
 });
 
-/* ----- Scènes CSS (ville néon) ----- */
+/* ----- Scènes CSS ----- */
 function sceneHTML(c,W,C){
   if(W.scene==="city"){
     let b="";const hs=[55,80,65,95,70,88,60,92];
@@ -204,16 +219,35 @@ function sceneHTML(c,W,C){
     return `<div class="tw-horizon"></div><div class="tw-city">${b}</div><div class="tw-street"></div><div class="tw-reflect"></div>
       <span class="tw-car" style="bottom:2.5%;animation-duration:8s;"></span>
       <span class="tw-car r" style="bottom:4.5%;animation-duration:11s;animation-delay:1.5s;"></span>
-      <span class="tw-car s" style="bottom:1%;animation-duration:6.5s;animation-delay:3.2s;"></span>
-      <span class="tw-moto r" style="bottom:3%;animation-duration:5.5s;animation-delay:.8s;"></span>
-      <span class="tw-moto" style="bottom:5.5%;animation-duration:7s;animation-delay:3.5s;"></span>`;
+      <span class="tw-car s" style="bottom:1%;animation-duration:6.5s;animation-delay:3.2s;"></span>`;
   }
-  return "";
-}
-
-/* ----- FX images (banque/grotte) ----- */
-function fxHTML(c,W){
-  if(W.scene==="vault")return `<div class="tw-sweep"></div>`;
+  if(W.scene==="glacier"){
+    let st="";
+    [[8,28,6],[18,18,4],[30,34,5],[42,22,4],[54,30,5],[66,20,4],[78,32,5],[90,24,4]].forEach((p,i)=>{
+      st+=`<span class="tw-stalac" style="left:${p[0]}%;width:${p[2]}px;height:${p[1]}%;"></span>`;
+    });
+    const crys=[[28,22,55],[42,18,78],[58,22,62],[72,24,48],[18,26,38]];
+    let cr="";crys.forEach((p,i)=>{cr+=`<span class="tw-bigcrys" style="left:${p[0]}%;bottom:${p[1]}%;width:${p[2]}px;height:${Math.round(p[2]*2.2)}px;animation-delay:${i*.3}s;"></span>`;});
+    let rays="";for(let i=0;i<5;i++)rays+=`<span class="tw-ray" style="transform:translateX(-50%) rotate(${-30+i*15}deg);animation-delay:${i*.5}s;"></span>`;
+    return `<div class="tw-cavewall"></div><div class="tw-rocktop"></div>${st}${rays}${cr}<div class="tw-icefloor"></div><div class="tw-rockbot"></div>`;
+  }
+  if(W.scene==="vault"){
+    let bolts="";for(let i=0;i<12;i++){const a=i*Math.PI/6;bolts+=`<span class="tw-vbolt" style="left:${50+44*Math.cos(a)}%;top:${50+44*Math.sin(a)}%;"></span>`;}
+    const ingots=`<span class="tw-ingot" style="left:7%;bottom:6%;"></span>
+      <span class="tw-ingot" style="left:10%;bottom:10%;transform:rotate(-4deg);"></span>
+      <span class="tw-ingot" style="left:8%;bottom:14%;transform:rotate(3deg);"></span>
+      <span class="tw-ingot" style="right:7%;bottom:6%;"></span>
+      <span class="tw-ingot" style="right:10%;bottom:10%;transform:rotate(5deg);"></span>`;
+    const coins=`<span class="tw-coin" style="left:18%;bottom:4%;">🪙</span>
+      <span class="tw-coin" style="right:18%;bottom:3%;animation-delay:.6s;">🪙</span>
+      <span class="tw-coin" style="left:22%;bottom:18%;animation-delay:1.1s;">🪙</span>`;
+    return `<div class="tw-bankwall"></div>
+      <div class="tw-pillar" style="left:2%;"></div>
+      <div class="tw-pillar" style="right:2%;"></div>
+      <div class="tw-vaultglow"></div>
+      <div class="tw-vaultframe"><div class="tw-vaultdoor"><div class="tw-vaultwheel"></div>${bolts}</div></div>
+      ${ingots}${coins}<div class="tw-sweep"></div>`;
+  }
   return "";
 }
 
@@ -240,10 +274,7 @@ function drawRoom(){
     for(let i=0;i<7;i++){
       parts+=`<span class="tw-part ${W.part}" style="color:${C.acc};left:${(i*13+c*7)%96}%;animation-duration:${4+(i%4)*1.5}s;animation-delay:${i*.7}s;"></span>`;
     }
-    zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:#05050f;">
-      ${W.img?`<div class="tw-bgblur" style="background-image:url('${W.img}');"></div>
-      <div class="tw-bgsharp"><div class="tw-bgimg ${c%2?"kb2":""}" style="background-image:linear-gradient(rgba(5,5,15,.22),rgba(5,5,15,.38)),url('${W.img}');background-position:${W.pos||"center"};"></div>${fxHTML(c,W)}</div>`:`<div style="position:absolute;inset:0;background:${W.bg};"></div>${sceneHTML(c,W,C)}`}
-      ${parts}</div>`;
+    zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:${W.bg};">${sceneHTML(c,W,C)}${parts}</div>`;
     nodes+=`<div class="tw-gate" style="top:${zTop+10}px;right:12px;left:auto;transform:none;border-color:${C.acc};color:${C.acc};">${chap.icon} ${chap.name}</div>`;
   }
   for(let f=1;f<=90;f++){
