@@ -226,7 +226,7 @@ function drawRoom(){
     const props=`<span class="tw-prop" style="color:${C.acc};left:5%;top:38%;">${W.props[0]}</span>
       <span class="tw-prop" style="color:${C.acc};right:5%;top:62%;animation-delay:1s;">${W.props[1]}</span>`;
     zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:${W.bg};">${layers}${parts}${props}</div>`;
-    nodes+=`<div class="tw-gate" style="top:${H-STEP*((c-1)*10+1)+46}px;border-color:${C.acc};color:${C.acc};">${chap.icon} ${chap.name}</div>`;
+    nodes+=`<div class="tw-gate" style="top:${zTop+10}px;right:12px;left:auto;transform:none;border-color:${C.acc};color:${C.acc};">${chap.icon} ${chap.name}</div>`;
   }
   for(let f=1;f<=90;f++){
     const chap=getTowerChapter(f);
