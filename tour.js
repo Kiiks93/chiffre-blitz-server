@@ -309,7 +309,6 @@ function sceneHTML(c,W,C){
       <div class="tw-laser d" style="top:50%;animation-duration:7s;animation-delay:1s;"></div>
       <div class="tw-laser" style="top:72%;animation-duration:6s;animation-delay:2s;"></div>
       <div class="tw-gloss"></div><div class="tw-goldspill"></div>
-      <div class="tw-sweep"></div>`;
   }
   return "";
 }
