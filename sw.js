@@ -5,6 +5,9 @@ const CORE_ASSETS = [
   BASE + "style.css", BASE + "saisons.css",
   BASE + "i18n.js", BASE + "audio.js", BASE + "son-saisons.js", BASE + "profil.js", BASE + "admin.js",
   BASE + "social.js", BASE + "passe.js", BASE + "saisons.js", BASE + "fx.js", BASE + "jeu.js", BASE + "modes-catch.js",
+  BASE + "img/world1.jpg",
+  BASE + "img/world2.jpg",
+  BASE + "img/world3.jpg",
   BASE + "icons/icon-192.png", BASE + "icons/icon-512.png"
 ];
 
