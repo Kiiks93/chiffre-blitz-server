@@ -1353,6 +1353,7 @@ socket.on('tower_floor_win', async (data) => {
 
   const coins = 10 + floor * 2 + stars * 5;
   player.coins = (player.coins || 0) + coins;
+  await logPlayerAction(player, 'tower_win', `Étage ${floor} (${stars}⭐)`, 'coins', coins, player.coins);
 
   let reward = null;
     if (floor % TOWER_FPC === 0) {
@@ -1383,6 +1384,7 @@ socket.on('tower_floor_replay', async (data) => {
   if (stars > old) player.towerStars[String(floor)] = stars;
   const coins = 5 + stars * 2; // récompense réduite en replay
   player.coins = (player.coins || 0) + coins;
+  await logPlayerAction(player, 'tower_replay', `Replay étage ${floor} (${stars}⭐)`, 'coins', coins, player.coins);
   await savePlayerToSupabase(socket.id);
   socket.emit('tower_result', { ok: true, floor, stars, coins, reward: null, replay: true });
   socket.emit('player_registered', player);
