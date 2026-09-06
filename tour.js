@@ -149,7 +149,7 @@ function openTower(){
     m=document.createElement("div");m.id="screen-tower";
     m.innerHTML=`<div class="tw-header">
         <button class="tw-back" onclick="closeTower()">⬅️</button>
-        <b>🏰 TOUR BLITZ</b>
+        <b>🗺️ MODE AVENTURE</b>
         <span id="tower-sub" style="font-size:9px;color:#aaa;"></span>
       </div>
       <div class="tw-mapwrap" id="tw-mapwrap"></div>
