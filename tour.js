@@ -305,6 +305,9 @@ function sceneHTML(c,W,C){
           ${bolts}
         </div>
       </div>
+      <div class="tw-laser" style="top:28%;animation-duration:5s;"></div>
+      <div class="tw-laser d" style="top:50%;animation-duration:7s;animation-delay:1s;"></div>
+      <div class="tw-laser" style="top:72%;animation-duration:6s;animation-delay:2s;"></div>
       <div class="tw-gloss"></div><div class="tw-goldspill"></div>
       <div class="tw-sweep"></div>`;
   }
@@ -566,6 +569,20 @@ function showTowerWinPopup(res){
   .tw-marble{position:absolute;inset:0;background:linear-gradient(115deg,transparent 40%,#ffffff08 40% 42%,transparent 42%),linear-gradient(65deg,transparent 55%,#ffffff06 55% 57%,transparent 57%),linear-gradient(150deg,transparent 70%,#ffffff05 70% 71%,transparent 71%);}
   .tw-spot{position:absolute;top:0;width:16%;height:70%;background:linear-gradient(180deg,#ffe9a833,transparent 80%);clip-path:polygon(40% 0,60% 0,100% 100%,0 100%);filter:blur(3px);animation:twGlowC 4s infinite;}
   .tw-gloss{position:absolute;bottom:0;left:0;right:0;height:12%;background:linear-gradient(180deg,#0000,#f8b50018 40%,#00000088);box-shadow:inset 0 6px 14px #000a;}
+  `;
+  document.head.appendChild(s);
+})();
+/* ----- CSS lasers de sécurité ----- */
+(function(){
+  const s=document.createElement("style");
+  s.textContent=`
+  .tw-laser{position:absolute;left:9%;right:9%;height:2px;background:linear-gradient(90deg,transparent,#ff2020 8%,#ff7070 50%,#ff2020 92%,transparent);box-shadow:0 0 8px #ff2020cc,0 0 20px #ff202066;opacity:.85;animation:twLaserV ease-in-out infinite alternate;z-index:1;}
+  .tw-laser::before,.tw-laser::after{content:"";position:absolute;top:-3px;width:9px;height:9px;border-radius:2px;background:#1a0505;box-shadow:0 0 7px #ff2020,inset 0 0 3px #ff7070;animation:twFlickP 1.6s steps(2) infinite;}
+  .tw-laser::before{left:-3px;}
+  .tw-laser::after{right:-3px;}
+  @keyframes twLaserV{from{transform:translateY(-26px)}to{transform:translateY(26px)}}
+  .tw-laser.d{animation-name:twLaserD;}
+  @keyframes twLaserD{from{transform:rotate(-5deg) translateY(-18px)}to{transform:rotate(5deg) translateY(18px)}}
   `;
   document.head.appendChild(s);
 })();
