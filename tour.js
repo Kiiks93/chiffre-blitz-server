@@ -210,20 +210,10 @@ function sceneHTML(c,W,C){
   return "";
 }
 function fxHTML(c,W){
-  if(W.scene==="city")return `<div class="tw-reflect"></div>
-    <span class="tw-glowspot" style="left:6%;top:52%;width:12%;height:10%;background:#ff00ff;"></span>
-    <span class="tw-glowspot" style="left:20%;top:40%;width:8%;height:14%;background:#00ffff;animation-delay:.7s;"></span>
-    <span class="tw-glowspot" style="left:74%;top:30%;width:9%;height:16%;background:#ff00ff;animation-delay:1.3s;"></span>
-    <span class="tw-glowspot" style="left:86%;top:45%;width:10%;height:12%;background:#f8b500;animation-delay:.4s;"></span>`;
-  if(W.scene==="glacier")return `
-    <span class="tw-glowspot" style="left:14%;top:45%;width:22%;height:30%;background:#74ebf5;"></span>
-    <span class="tw-glowspot" style="left:64%;top:48%;width:22%;height:30%;background:#7dffea;animation-delay:1.1s;"></span>
-    <span class="tw-glowspot" style="left:40%;top:18%;width:20%;height:26%;background:#bfffff;animation-delay:.6s;"></span>`;
-  if(W.scene==="vault")return `<div class="tw-sweep"></div>
-    <span class="tw-glowspot" style="left:16%;top:70%;width:18%;height:16%;background:#f8b500;"></span>
-    <span class="tw-glowspot" style="left:62%;top:68%;width:22%;height:18%;background:#ffe9a8;animation-delay:.9s;"></span>`;
+  if(W.scene==="city")return `<div class="tw-reflect"></div>`;
+  if(W.scene==="vault")return `<div class="tw-sweep"></div>`;
   return "";
-}
+}}
 function drawRoom(){
   const wrap=document.getElementById("tw-mapwrap");if(!wrap)return;
   const season=currentSeasonNum();
@@ -506,6 +496,15 @@ function showTowerWinPopup(res){
   @keyframes twSweep{0%{left:-20%;opacity:0}15%{opacity:1}85%{opacity:1}100%{left:110%;opacity:0}}
   .tw-reflect{position:absolute;left:0;right:0;bottom:0;height:16%;background:linear-gradient(90deg,#ff00ff22,#00ffff22,#f8b50022,#ff00ff22);background-size:300% 100%;filter:blur(7px);animation:twSlide 6s linear infinite;pointer-events:none;}
   @keyframes twSlide{to{background-position:300% 0}}
+  `;
+  document.head.appendChild(s);
+})();
+/* ----- CSS cadrage propre ----- */
+(function(){
+  const s=document.createElement("style");
+  s.textContent=`
+  .tw-map{max-width:560px;margin:0 auto;}
+  @keyframes twKen{from{transform:scale(1.02) translate(0,0)}to{transform:scale(1.10) translate(1.5%,-1.5%)}}
   `;
   document.head.appendChild(s);
 })();
