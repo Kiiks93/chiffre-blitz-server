@@ -13,33 +13,22 @@ const TOWER_CHAPTERS = [
   { id:9, season:3, name:"Atelier du Père Noël", icon:"🎅", boss:"🎅", objects:["🎅","🤶","","🦌","","🔥","","🥛",""] }
 ];
 let towerProgress = { floor: 0, stars: {} };
+const FPC = 20;               // étages par chapitre (change ICI pour plus/moins)
+const TOTAL_FLOORS = 9 * FPC; // total d'étages de l'aventure
 function getTowerChapter(f) { return TOWER_CHAPTERS[Math.ceil(f / 10) - 1]; }
 function currentSeasonNum() { return parseInt((myProfile.currentSeasonId || "s1").replace("s", "")) || 1; }
 function getFloorDef(floor) {
-  const chap = Math.ceil(floor / 10), inChap = ((floor - 1) % 10) + 1;
+  const chap = Math.ceil(floor / FPC), inChap = ((floor - 1) % FPC) + 1;
   const base = { floor, gridSize: 16 + (chap - 1) * 4, time: Math.max(18, 32 - chap * 2) };
-
-  if (inChap === 10) return { ...base, type: "boss" };
-
-  const t = {
-    1:"classic",
-    2:"reverse",
-    3:"color",
-    4:"pairs",
-    5:"sprint",
-    6:"parity",
-    7:"forbidden",
-    8:"fog",
-    9:"nofail"
-  }[inChap];
-
+  if (inChap === FPC) return { ...base, type: "boss" };
+  const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","fog","nofail"];
+  const t = seq[(inChap - 1) % 9];
   if (t === "sprint") return { ...base, type: "sprint", time: Math.max(8, 14 - chap) };
   if (t === "nofail") return { ...base, type: "nofail", time: 25 };
   if (t === "pairs") return { ...base, type: "pairs", time: Math.max(24, 36 - chap) };
   if (t === "color") return { ...base, type: "color", time: Math.max(20, 30 - chap) };
   if (t === "parity") return { ...base, gridSize: 24 + (chap - 1) * 6, type: "parity", time: Math.max(24, 40 - chap * 2) };
   if (t === "forbidden") return { ...base, type: "forbidden", time: Math.max(18, 28 - chap) };
-
   return { ...base, type: t };
 }
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
@@ -354,15 +343,15 @@ function sceneHTML(c,W,C){
 function drawRoom(){
   const wrap=document.getElementById("tw-mapwrap");if(!wrap)return;
   const season=currentSeasonNum();
-  const current=Math.min(towerProgress.floor+1,90);
+  const current=Math.min(towerProgress.floor+1,TOTAL_FLOORS);
   let totalStars=0;for(const k in towerProgress.stars)totalStars+=towerProgress.stars[k];
   document.getElementById("tower-sub").innerText="É"+Math.min(current,90)+" ⭐"+totalStars;
 
-  const STEP=64,H=90*STEP+110;
+  const STEP=64,H=TOTAL_FLOORS*STEP+110;
   let nodes="",paths="",zones="",ptsByChap={};
   for(let c=1;c<=9;c++){
     const chap=TOWER_CHAPTERS[c-1];
-    const zTop=H-STEP*c*10-32,zH=STEP*10;
+    const zTop=H-STEP*c*FPC-32,zH=STEP*FPC;
     if(chap.season>season){
       zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:linear-gradient(180deg,#0a0a14,#050508);"></div>`;
       nodes+=`<div class="tw-gate lock" style="top:${zTop+10}px;right:12px;left:auto;transform:none;">🔒 ${currentLang==="fr"?"Bientôt":"Soon"}</div>`;
@@ -376,12 +365,12 @@ function drawRoom(){
     zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:${W.bg};">${sceneHTML(c,W,C)}${parts}</div>`;
     nodes+=`<div class="tw-gate" style="top:${zTop+10}px;right:12px;left:auto;transform:none;border-color:${C.acc};color:${C.acc};">${chap.icon} ${chap.name}</div>`;
   }
-  for(let f=1;f<=90;f++){
+  for(let f=1;f<=TOTAL_FLOORS;f++){
     const chap=getTowerChapter(f);
     if(chap.season>season)continue;
     const y=H-STEP*f,x=50+Math.sin(f*0.55)*16;
     (ptsByChap[chap.id]=ptsByChap[chap.id]||[]).push([x,y+23]);
-    const won=f<=towerProgress.floor,cur=f===current,boss=f%10===0;
+    const won=f<=towerProgress.floor,cur=f===current,boss=f%FPC===0;
     const st=towerProgress.stars[String(f)];
     const awake=boss?(towerProgress.floor>=f-1):true;
     const clickable=(cur&&awake)||won;
@@ -759,7 +748,8 @@ socket.on("tower_result",(res)=>{
 });
 function showTowerWinPopup(res){
   const chap=getTowerChapter(res.floor);
-  const obj=res.floor%10===0?chap.boss:chap.objects[((res.floor-1)%10)];
+  const inChap=((res.floor-1)%FPC)+1;
+  const obj=inChap===FPC?chap.boss:chap.objects[(inChap-1)%9];
   const d=document.createElement("div");d.className="modal-overlay";d.style.display="flex";
   d.innerHTML=`<div class="modal-card" style="max-width:300px;text-align:center;">
     <h3 style="color:#00ff88;margin:0 0 6px 0;">✅ ÉTAGE ${res.floor} VAINCU !</h3>
