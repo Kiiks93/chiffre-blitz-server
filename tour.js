@@ -101,7 +101,7 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 
 const TOWER_COLORS={1:{acc:"#00d2ff"},2:{acc:"#74ebf5"},3:{acc:"#f8b500"},4:{acc:"#ff8a00"},5:{acc:"#8a9bb0"},6:{acc:"#ff4b2b"},7:{acc:"#ff6fa5"},8:{acc:"#2ecc71"},9:{acc:"#ff416c"}};
 const TOWER_WORLDS={
-  1:{bg:"linear-gradient(180deg,#050514,#0a0a2a 55%,#1a1030)",scene:"city",part:"neon",props:["",""],img:"img/world1.jpg"},
+  1:{bg:"linear-gradient(180deg,#050514,#0a0a2a 55%,#1a1030)",scene:"city",part:"neon",props:["",""],
   2:{bg:"linear-gradient(180deg,#062028,#0a2a3a 50%,#123a4a)",scene:"glacier",part:"snow",props:["",""],img:"img/world2.jpg",pos:"22% center"},
   3:{bg:"linear-gradient(180deg,#160d00,#2b1a00 60%,#3a2a05)",scene:"vault",part:"spark",props:["",""],img:"img/world3.jpg"},
  4:{bg:"radial-gradient(ellipse at 30% 10%,#ff8a0022,transparent 45%),linear-gradient(180deg,#12041a,#2a0a33)",scene:"glacier",part:"snow",props:["🎃","️"]},
@@ -188,39 +188,15 @@ function sceneHTML(c,W,C){
       const sign=(i%2===0)?`<span class="tw-sign" style="color:${cols[i%4]};"></span>`:"";
       b+=`<div class="tw-bldg" style="height:${hs[i]}%;">${wins}${sign}${i%3===0?'<span class="tw-ant"></span>':""}</div>`;
     }
-    return `<div class="tw-horizon"></div><div class="tw-city">${b}</div><div class="tw-street"></div>`;
-  }
-  if(W.scene==="glacier"){
-    const crys=[[36,24,60],[48,22,95],[60,24,52],[28,26,40],[68,26,44]];
-    let cr="";crys.forEach((p,i)=>{cr+=`<span class="tw-bigcrys" style="left:${p[0]}%;bottom:${p[1]}%;width:${p[2]}px;height:${Math.round(p[2]*2.2)}px;animation-delay:${i*.3}s;"></span>`;});
-    let rays="";for(let i=0;i<5;i++)rays+=`<span class="tw-ray" style="transform:translateX(-50%) rotate(${-30+i*15}deg);animation-delay:${i*.5}s;"></span>`;
-    let sp="";for(let i=0;i<14;i++)sp+=`<span class="tw-spark" style="left:${(i*13+c*7)%94}%;top:${10+((i*19)%75)}%;animation-delay:${i*.3}s;"></span>`;
-    return `<div class="tw-cavewall"></div><div class="tw-rocktop"></div>${rays}${cr}<div class="tw-icefloor2"></div><div class="tw-rockbot"></div>${sp}`;
-  }
-  if(W.scene==="vault"){
-    let bolts="";for(let i=0;i<12;i++){const a=i*Math.PI/6;bolts+=`<span class="tw-vbolt" style="left:${50+44*Math.cos(a)}%;top:${50+44*Math.sin(a)}%;"></span>`;}
-    return `<div class="tw-bankwall"></div>
-      <div class="tw-vaultglow"></div>
-      <div class="tw-vaultframe"><div class="tw-vaultdoor"><div class="tw-vaultwheel"></div>${bolts}</div></div>
-      <div class="tw-bars" style="left:9%;bottom:6%;"><div class="tw-bar"></div><div class="tw-bar"></div><div class="tw-bar"></div></div>
-      <div class="tw-bars" style="left:17%;bottom:6%;"><div class="tw-bar"></div><div class="tw-bar"></div></div>
-      <div class="tw-bars" style="right:11%;bottom:6%;"><div class="tw-bar"></div><div class="tw-bar"></div><div class="tw-bar"></div></div>
-      <div class="tw-coins">🪙🪙🪙</div>`;
+    return `<div class="tw-horizon"></div><div class="tw-city">${b}</div><div class="tw-street"></div>
+      <span class="tw-car" style="bottom:2.5%;animation-duration:8s;"></span>
+      <span class="tw-car r" style="bottom:4.5%;animation-duration:11s;animation-delay:1.5s;"></span>
+      <span class="tw-moto r" style="bottom:1.5%;animation-duration:5.5s;animation-delay:.8s;"></span>
+      <span class="tw-moto" style="bottom:5.5%;animation-duration:7s;animation-delay:3.5s;"></span>`;
   }
   return "";
 }
 function fxHTML(c,W){
-  if(W.scene==="city"){
-    let w="";const wp=[[6,30],[10,42],[14,26],[18,50],[8,58],[22,36],[78,32],[82,46],[86,28],[90,54],[76,60],[94,40],[12,66],[88,66],[30,22],[70,20]];
-    const cols=["#00ffff","#ff00ff","#f8b500","#7dff8a"];
-    wp.forEach((p,i)=>{w+=`<span class="tw-wl" style="left:${p[0]}%;top:${p[1]}%;color:${cols[i%4]};animation-duration:${2.5+(i%4)}s;animation-delay:${(i*.6)%3}s;"></span>`;});
-    return `<div class="tw-reflect"></div>${w}
-      <span class="tw-car" style="bottom:6%;animation-duration:8s;"></span>
-      <span class="tw-car r" style="bottom:12%;animation-duration:11s;animation-delay:1.5s;"></span>
-      <span class="tw-car s" style="bottom:4%;animation-duration:6.5s;animation-delay:3.2s;"></span>
-      <span class="tw-moto r" style="bottom:9%;animation-duration:5s;animation-delay:.8s;"></span>
-      <span class="tw-moto" style="bottom:14%;animation-duration:7s;animation-delay:4s;"></span>`;
-  }
   if(W.scene==="vault")return `<div class="tw-sweep"></div>`;
   return "";
 }
@@ -248,7 +224,7 @@ function drawRoom(){
     }
       zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:#05050f;">
       ${W.img?`<div class="tw-bgblur" style="background-image:url('${W.img}');"></div>
-      <div class="tw-bgsharp"><div class="tw-bgimg ${c%2?"kb2":""}" style="background-image:linear-gradient(rgba(5,5,15,.22),rgba(5,5,15,.38)),url('${W.img}');background-position:${W.pos||"center"};"></div>${fxHTML(c,W)}</div>`:`<div style="position:absolute;inset:0;background:${W.bg};"></div>`}
+      <div class="tw-bgsharp"><div class="tw-bgimg ${c%2?"kb2":""}" style="background-image:linear-gradient(rgba(5,5,15,.22),rgba(5,5,15,.38)),url('${W.img}');background-position:${W.pos||"center"};"></div>${fxHTML(c,W)}</div>`:`<div style="position:absolute;inset:0;background:${W.bg};"></div>${sceneHTML(c,W,C)}`}
       ${parts}</div>`;
   }
   for(let f=1;f<=90;f++){
