@@ -102,7 +102,7 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 const TOWER_COLORS={1:{acc:"#00d2ff"},2:{acc:"#74ebf5"},3:{acc:"#f8b500"},4:{acc:"#ff8a00"},5:{acc:"#8a9bb0"},6:{acc:"#ff4b2b"},7:{acc:"#ff6fa5"},8:{acc:"#2ecc71"},9:{acc:"#ff416c"}};
 const TOWER_WORLDS={
   1:{bg:"linear-gradient(180deg,#050514,#0a0a2a 55%,#1a1030)",scene:"city",part:"neon",props:["",""],img:"img/world1.jpg"},
-  2:{bg:"linear-gradient(180deg,#062028,#0a2a3a 50%,#123a4a)",scene:"glacier",part:"snow",props:["",""],img:"img/world2.jpg"},
+  2:{bg:"linear-gradient(180deg,#062028,#0a2a3a 50%,#123a4a)",scene:"glacier",part:"snow",props:["",""],img:"img/world2.jpg",pos:"22% center"},
   3:{bg:"linear-gradient(180deg,#160d00,#2b1a00 60%,#3a2a05)",scene:"vault",part:"spark",props:["",""],img:"img/world3.jpg"},
  4:{bg:"radial-gradient(ellipse at 30% 10%,#ff8a0022,transparent 45%),linear-gradient(180deg,#12041a,#2a0a33)",scene:"glacier",part:"snow",props:["🎃","️"]},
  5:{bg:"linear-gradient(180deg,#0a0d14,#1a2230)",scene:"glacier",part:"snow",props:["🪦","️"]},
@@ -210,7 +210,15 @@ function sceneHTML(c,W,C){
   return "";
 }
 function fxHTML(c,W){
-  if(W.scene==="city")return `<div class="tw-reflect"></div>`;
+  if(W.scene==="city"){
+    let w="";const wp=[[6,30],[10,42],[14,26],[18,50],[8,58],[22,36],[78,32],[82,46],[86,28],[90,54],[76,60],[94,40],[12,66],[88,66],[30,22],[70,20]];
+    const cols=["#00ffff","#ff00ff","#f8b500","#7dff8a"];
+    wp.forEach((p,i)=>{w+=`<span class="tw-wl" style="left:${p[0]}%;top:${p[1]}%;color:${cols[i%4]};animation-duration:${2.5+(i%4)}s;animation-delay:${(i*.6)%3}s;"></span>`;});
+    return `<div class="tw-reflect"></div>${w}
+      <span class="tw-car" style="bottom:5%;animation-duration:9s;"></span>
+      <span class="tw-car r" style="bottom:10%;animation-duration:13s;animation-delay:2s;"></span>
+      <span class="tw-car" style="bottom:3%;animation-duration:7s;animation-delay:4.5s;"></span>`;
+  }
   if(W.scene==="vault")return `<div class="tw-sweep"></div>`;
   return "";
 }
@@ -236,10 +244,10 @@ function drawRoom(){
     for(let i=0;i<7;i++){
       parts+=`<span class="tw-part ${W.part}" style="color:${C.acc};left:${(i*13+c*7)%96}%;animation-duration:${4+(i%4)*1.5}s;animation-delay:${i*.7}s;"></span>`;
     }
-    const bgImg=W.img?`linear-gradient(rgba(5,5,15,.28),rgba(5,5,15,.42)),url('${W.img}')`:W.bg;
-    zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:#05050f;">
-      ${W.img?`<div class="tw-bgimg ${c%2?"kb2":""}" style="background-image:${bgImg};"></div>`:`<div style="position:absolute;inset:0;background:${W.bg};"></div>`}
-      ${fxHTML(c,W)}${parts}</div>`;
+      zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:#05050f;">
+      ${W.img?`<div class="tw-bgblur" style="background-image:url('${W.img}');"></div>
+      <div class="tw-bgsharp"><div class="tw-bgimg ${c%2?"kb2":""}" style="background-image:linear-gradient(rgba(5,5,15,.22),rgba(5,5,15,.38)),url('${W.img}');background-position:${W.pos||"center"};"></div>${fxHTML(c,W)}</div>`:`<div style="position:absolute;inset:0;background:${W.bg};"></div>`}
+      ${parts}</div>`;
   }
   for(let f=1;f<=90;f++){
     const chap=getTowerChapter(f);
@@ -262,9 +270,11 @@ function drawRoom(){
     const pts=ptsByChap[cid];
     if(pts.length>1)paths+=`<path d="M${pts.map(p=>p[0]+" "+p[1]).join(" L ")}" fill="none" stroke="${TOWER_COLORS[cid].acc}44" stroke-width="7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
   }
-  wrap.innerHTML=`<div class="tw-map" style="height:${H}px;">${zones}
-    <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:1;" viewBox="0 0 100 ${H}" preserveAspectRatio="none">${paths}</svg>
-    ${nodes}</div>`;
+    wrap.innerHTML=`<div class="tw-map" style="height:${H}px;">${zones}
+    <div class="tw-col">
+      <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:1;" viewBox="0 0 100 ${H}" preserveAspectRatio="none">${paths}</svg>
+      ${nodes}
+    </div></div>`;
   setTimeout(()=>{const el=wrap.querySelector(".tw-node.cur");if(el)el.scrollIntoView({block:"center",behavior:"smooth"});},200);
 }
 function mapPlay(f){
@@ -505,6 +515,44 @@ function showTowerWinPopup(res){
   s.textContent=`
   .tw-map{max-width:560px;margin:0 auto;}
   @keyframes twKen{from{transform:scale(1.02) translate(0,0)}to{transform:scale(1.10) translate(1.5%,-1.5%)}}
+  `;
+  document.head.appendChild(s);
+})();
+/* ----- CSS PC cinéma + ville vivante ----- */
+(function(){
+  const s=document.createElement("style");
+  s.textContent=`
+  .tw-map{max-width:none;margin:0;}
+  .tw-col{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,560px);}
+  .tw-bgblur{position:absolute;inset:-4%;background-size:cover;background-position:center;filter:blur(22px) brightness(.4) saturate(1.3);}
+  .tw-bgsharp{position:absolute;top:0;bottom:0;left:50%;width:min(100%,560px);transform:translateX(-50%);overflow:hidden;box-shadow:0 0 40px #000c;}
+  .tw-bgsharp .tw-bgimg{position:absolute;inset:-6%;background-size:cover;filter:blur(.4px);animation:twKen 40s ease-in-out infinite alternate;}
+  @keyframes twKen{from{transform:scale(1.02)}to{transform:scale(1.08) translate(1%,-1%)}}
+  .tw-car{position:absolute;height:8px;width:30px;border-radius:4px;background:#05050c;box-shadow:0 2px 6px #000;animation:twDrive linear infinite;}
+  .tw-car::before{content:"";position:absolute;right:-8px;top:0;width:12px;height:8px;background:radial-gradient(closest-side,#ffffff88,transparent);}
+  .tw-car::after{content:"";position:absolute;left:-7px;top:1px;width:10px;height:6px;background:radial-gradient(closest-side,#ff4b2b99,transparent);}
+  .tw-car.r{animation-name:twDriveR;}
+  @keyframes twDrive{from{left:-15%}to{left:110%}}
+  @keyframes twDriveR{from{left:110%}to{left:-15%}}
+  `;
+  document.head.appendChild(s);
+})();
+/* ----- CSS voitures & motos animées ----- */
+(function(){
+  const s=document.createElement("style");
+  s.textContent=`
+  .tw-car{position:absolute;width:46px;height:12px;border-radius:6px 6px 3px 3px;background:linear-gradient(180deg,#3a3a48,#101018 60%,#05050a);box-shadow:inset 0 1px 0 #ffffff33,0 2px 6px #000c;z-index:3;animation:twDrive linear infinite;}
+  .tw-car::before{content:"";position:absolute;right:-34px;top:2px;width:36px;height:8px;background:linear-gradient(90deg,#ffffff88,transparent);filter:blur(2px);}
+  .tw-car::after{content:"";position:absolute;left:-6px;top:3px;width:8px;height:6px;background:radial-gradient(closest-side,#ff5040cc,transparent);filter:blur(1px);}
+  .tw-car.s{width:34px;height:9px;}
+  .tw-car.s::before{right:-26px;width:28px;}
+  .tw-car.r{animation-name:twDriveR;transform:scaleX(-1);}
+  .tw-moto{position:absolute;width:26px;height:9px;border-radius:4px;background:linear-gradient(180deg,#2a2a35,#08080c);box-shadow:inset 0 1px 0 #ffffff2b,0 2px 5px #000c;z-index:3;animation:twDrive linear infinite;}
+  .tw-moto::before{content:"";position:absolute;right:-26px;top:2px;width:28px;height:6px;background:linear-gradient(90deg,#ffffff66,transparent);filter:blur(2px);}
+  .tw-moto::after{content:"";position:absolute;left:6px;top:-6px;width:6px;height:6px;border-radius:50%;background:#1a1a22;box-shadow:inset 0 1px 0 #ffffff22;}
+  .tw-moto.r{animation-name:twDriveR;transform:scaleX(-1);}
+  @keyframes twDrive{from{left:-20%}to{left:115%}}
+  @keyframes twDriveR{from{left:115%}to{left:-20%}}
   `;
   document.head.appendChild(s);
 })();
