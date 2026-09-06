@@ -37,7 +37,7 @@ function getFloorDef(floor) {
   if (t === "nofail") return { ...base, type: "nofail", time: 25 };
   if (t === "pairs") return { ...base, type: "pairs", time: Math.max(24, 36 - chap) };
   if (t === "color") return { ...base, type: "color", time: Math.max(20, 30 - chap) };
-  if (t === "parity") return { ...base, type: "parity", time: Math.max(20, 30 - chap) };
+  if (t === "parity") return { ...base, gridSize: 24 + (chap - 1) * 6, type: "parity", time: Math.max(24, 40 - chap * 2) };
   if (t === "forbidden") return { ...base, type: "forbidden", time: Math.max(18, 28 - chap) };
 
   return { ...base, type: t };
@@ -237,7 +237,7 @@ function twDesc(t){
     random:fr?"La cible change au hasard : reste concentré !":"The target changes randomly: stay focused!",
     color:fr?"Clique toutes les cases de la couleur demandée. La cible change quand la couleur est terminée.":"Click all tiles matching the requested color. The target changes when that color is cleared.",
     pairs:fr?"Retrouve les paires cachées. Mémorise bien les symboles !":"Find the hidden pairs. Memorize the symbols!",
-    parity:fr?"Clique uniquement les nombres PAIRS ou IMPAIRS selon la consigne.":"Click only EVEN or ODD numbers depending on the target.",
+    parity:fr?"Clique UNIQUEMENT les nombres demandés (pairs OU impairs). Les autres sont des pièges : ne les touche pas !":"Click ONLY the requested numbers (even OR odd). The others are traps: don't touch them!",
     forbidden:fr?"Clique tous les nombres SAUF le nombre interdit. Ne le touche surtout pas !":"Click all numbers EXCEPT the forbidden one. Do not touch it!",
     "calc+":fr?"Clique sur les DEUX cases dont la SOMME donne la cible.":"Click the TWO tiles whose SUM equals the target.",
     "calc-":fr?"Clique sur les DEUX cases dont la DIFFÉRENCE donne la cible.":"Click the TWO tiles whose DIFFERENCE equals the target.",
@@ -508,10 +508,10 @@ function buildFloor(){
     return;
   }
 
-  if(d.type==="parity"){
+   if(d.type==="parity"){
     TW.nums=shuffle([...Array(N)].map((_,i)=>i+1));
-    TW.remaining=new Set(TW.nums);
     TW.targetParity=Math.random()<.5?"even":"odd";
+    TW.remaining=new Set(TW.nums.filter(v=>TW.targetParity==="even"?v%2===0:v%2!==0));
     return;
   }
 
@@ -624,7 +624,6 @@ function twClick(idx,el){
       el.classList.add("gone");
       if(SoundEngine.playComboTick)SoundEngine.playComboTick(TW.total-TW.remaining.size);
       if(TW.remaining.size===0)return winFloor();
-      if(![...TW.remaining].some(i=>TW.nums[i].key===TW.targetColor.key))chooseColorTarget();
       renderHUD();
     }else mistake();
     return;
