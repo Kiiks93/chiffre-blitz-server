@@ -255,37 +255,43 @@ socket.on("tower_data",(d)=>{
 /* ----- Scènes CSS ----- */
 function sceneHTML(c,W,C){
   if(W.scene==="city"){
-    let b="";const hs=[55,80,65,95,70,88,60,92];
+    let sky=`<span class="tw-moon"></span>`;
+    for(let i=0;i<16;i++)sky+=`<span class="tw-star2" style="left:${(i*61)%96}%;top:${(i*29)%30}%;animation-delay:${(i*.4)%3}s;"></span>`;
+    sky+=`<span class="tw-cloud" style="top:10%;width:26%;animation-duration:60s;"></span><span class="tw-cloud" style="top:20%;width:18%;animation-duration:80s;animation-delay:12s;"></span>`;
+    let back="";const hb=[70,88,76,96,82,90];
+    for(let i=0;i<6;i++)back+=`<div class="tw-bldg" style="height:${hb[i]}%;flex:${i%2?1.3:1};"></div>`;
+    let b="";const hs=[42,62,50,74,56,68,46,70];const hf=[1,1.25,.9,1.15,1,.85,1.2,1];
     const cols=["#00ffff","#ff00ff","#f8b500","#7dff8a"];
     for(let i=0;i<8;i++){
-      let wins="";const n=10+(i%3)*4;
+      let wins="";const n=8+(i%3)*3;
       for(let w=0;w<n;w++){
         wins+=`<span class="tw-wl" style="color:${cols[(w+i)%4]};left:${6+((w*23)%84)}%;top:${8+((w*31)%78)}%;animation-duration:${2.5+((w*13)%4)}s;animation-delay:${(w*0.53)%3}s;"></span>`;
       }
-      const sign=(i%2===0)?`<span class="tw-sign" style="color:${cols[i%4]};"></span>`:"";
-      b+=`<div class="tw-bldg" style="height:${hs[i]}%;">${wins}${sign}${i%3===0?'<span class="tw-ant"></span>':""}</div>`;
+      b+=`<div class="tw-bldg" style="height:${hs[i]}%;flex:${hf[i]};">${wins}${i%3===0?'<span class="tw-ant"></span>':""}</div>`;
     }
-    const car=(cls,bottom,dur,delay)=>`<span class="tw-car ${cls}" style="bottom:${bottom};animation-duration:${dur};animation-delay:${delay};"><i class="cb"></i><i class="cc"></i><i class="w1"></i><i class="w2"></i><i class="hl"></i><i class="tl"></i></span>`;
-    return `<div class="tw-horizon"></div><div class="tw-city">${b}</div>
+    const car=(cls,bottom,dur,delay,col)=>`<span class="tw-car ${cls}" style="bottom:${bottom};animation-duration:${dur};animation-delay:${delay};color:${col};"><i class="cb"></i><i class="cc"></i><i class="ug"></i><i class="w1"></i><i class="w2"></i><i class="hl"></i><i class="tl"></i></span>`;
+    return `${sky}<div class="tw-horizon"></div><div class="tw-cityback">${back}</div><div class="tw-city">${b}</div>
       <div class="tw-road"><span class="tw-lane"></span></div><div class="tw-reflect"></div>
-      ${car("","2.5%","9s","0s")}${car("r","8%","12s","2s")}${car("s","9%","7s","4.5s")}`;
+      ${car("","2.5%","9s","0s","#00d2ff")}${car("r","8%","12s","2s","#ff2bd6")}${car("s","9%","7s","4.5s","#f8b500")}`;
   }
   if(W.scene==="glacier"){
     let ice="";
     [[6,16],[14,10],[22,18],[31,9],[40,15],[49,8],[58,17],[67,10],[76,16],[85,9],[93,14]].forEach((p,i)=>{
       ice+=`<span class="tw-icicle" style="left:${p[0]}%;height:${p[1]}%;"></span>`;
     });
+    let stag="";[[10,10],[26,7],[52,9],[64,6],[84,8]].forEach(p=>{stag+=`<span class="tw-stalag" style="left:${p[0]}%;height:${p[1]}%;"></span>`;});
     const cluster=(x,s,d)=>`<span class="tw-cryscl" style="left:${x}%;bottom:14%;transform:scale(${s});animation-delay:${d};"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span>`;
     return `<div class="tw-cavewall"></div><div class="tw-rocktop"></div>${ice}
       <div class="tw-mist m1"></div><div class="tw-mist m2"></div>
       ${cluster(14,1,"0s")}${cluster(68,.85,".8s")}
       <span class="tw-cryscl" style="left:44%;bottom:12%;transform:scale(.45);animation-delay:1.4s;"><i class="c c1"></i><i class="c c2"></i></span>
-      <div class="tw-icefloor"></div><div class="tw-rockbot"></div>`;
+      <div class="tw-icefloor"></div>${stag}<div class="tw-rockbot"></div>`;
   }
   if(W.scene==="vault"){
     let bolts="";for(let i=0;i<12;i++){const a=i*Math.PI/6;bolts+=`<span class="tw-vbolt" style="left:${50+44*Math.cos(a)}%;top:${50+44*Math.sin(a)}%;"></span>`;}
     let knobs="";for(let i=0;i<6;i++){const a=i*Math.PI/3;knobs+=`<span class="tw-knob" style="left:${50+38*Math.cos(a)}%;top:${50+38*Math.sin(a)}%;"></span>`;}
-    return `<div class="tw-bankwall"></div>
+    return `<div class="tw-bankwall"></div><div class="tw-marble"></div>
+      <div class="tw-spot" style="left:22%;"></div><div class="tw-spot" style="left:62%;animation-delay:1.5s;"></div>
       <div class="tw-pillar" style="left:2%;"></div><div class="tw-pillar" style="right:2%;"></div>
       <div class="tw-vaultglow"></div>
       <div class="tw-vaultframe">
@@ -299,7 +305,7 @@ function sceneHTML(c,W,C){
           ${bolts}
         </div>
       </div>
-      <div class="tw-goldspill"></div>
+      <div class="tw-gloss"></div><div class="tw-goldspill"></div>
       <div class="tw-sweep"></div>`;
   }
   return "";
@@ -530,3 +536,36 @@ function showTowerWinPopup(res){
   document.body.appendChild(d);
   towerDing();
 }
+/* ----- CSS correctifs v3 ----- */
+(function(){
+  const s=document.createElement("style");
+  s.textContent=`
+  /* --- Ciel : lune + étoiles + nuages --- */
+  .tw-moon{position:absolute;top:6%;right:12%;width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff8e8,#d8c9a8 60%,#a89878);box-shadow:0 0 24px #fff8e866,0 0 60px #fff8e833;}
+  .tw-star2{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;animation:twFlickP 3s steps(2) infinite;}
+  .tw-cloud{position:absolute;height:10px;border-radius:6px;background:linear-gradient(90deg,transparent,#8888aa22 30%,#8888aa22 70%,transparent);filter:blur(3px);animation:twCloud linear infinite;}
+  @keyframes twCloud{from{left:-30%}to{left:110%}}
+  /* --- Immeubles proportionnés (2 rangées) --- */
+  .tw-cityback{position:absolute;bottom:14%;left:0;right:0;height:52%;display:flex;align-items:flex-end;gap:1%;padding:0 1%;opacity:.5;filter:brightness(.5);}
+  .tw-cityback .tw-bldg{border-top:none;}
+  /* --- Voitures futuristes (lévitation) --- */
+  .tw-car .w1,.tw-car .w2{display:none;}
+  .tw-car .cb{border-radius:8px 14px 6px 6px;background:linear-gradient(180deg,#3d3d52,#12121c 70%);box-shadow:inset 0 1px 0 #ffffff55,0 0 10px #00d2ff44;}
+  .tw-car .ug{position:absolute;bottom:-3px;left:6%;right:6%;height:4px;border-radius:2px;background:currentColor;box-shadow:0 0 10px currentColor,0 0 20px currentColor;opacity:.9;}
+  .tw-car .cc{border-radius:8px 10px 0 0;background:linear-gradient(180deg,#2a2a3a,#151520);}
+  .tw-car .cc::after{background:linear-gradient(180deg,#7ff4ff88,#20405066);}
+  .tw-car .hl{background:linear-gradient(90deg,#bffcffcc,transparent);height:5px;}
+  .tw-car .tl{background:radial-gradient(closest-side,#ff2bd6,transparent);box-shadow:0 0 8px #ff2bd6;}
+  /* --- Grotte améliorée --- */
+  .tw-cryscl{filter:drop-shadow(0 0 22px #74ebf5cc);}
+  .tw-cryscl .c{background:linear-gradient(115deg,transparent 38%,#ffffffaa 38% 44%,transparent 44% 62%,#ffffff66 62% 66%,transparent 66%),linear-gradient(180deg,#f4feff,#8ff2ff 45%,#2a8ba8 80%,#14506a);clip-path:polygon(50% 0,76% 12%,90% 62%,70% 100%,30% 100%,10% 62%,24% 12%);}
+  .tw-cryscl .c::before{content:"";position:absolute;left:50%;top:6%;width:2px;height:80%;background:linear-gradient(#ffffffcc,transparent);}
+  .tw-icicle{width:22px;background:linear-gradient(180deg,#5a8ea0aa,#bfefffcc 55%,#ffffff);clip-path:polygon(0 0,100% 0,70% 45%,60% 80%,52% 100%,48% 100%,40% 80%,30% 45%);filter:drop-shadow(0 0 6px #74ebf5aa);}
+  .tw-stalag{position:absolute;bottom:0;width:26px;background:linear-gradient(0deg,#5a8ea0aa,#bfefffcc 55%,#ffffff);clip-path:polygon(48% 0,52% 0,62% 30%,72% 60%,100% 100%,0 100%,28% 60%,38% 30%);filter:drop-shadow(0 0 6px #74ebf5aa);}
+  /* --- Banque : marbre + spots + sol brillant --- */
+  .tw-marble{position:absolute;inset:0;background:linear-gradient(115deg,transparent 40%,#ffffff08 40% 42%,transparent 42%),linear-gradient(65deg,transparent 55%,#ffffff06 55% 57%,transparent 57%),linear-gradient(150deg,transparent 70%,#ffffff05 70% 71%,transparent 71%);}
+  .tw-spot{position:absolute;top:0;width:16%;height:70%;background:linear-gradient(180deg,#ffe9a833,transparent 80%);clip-path:polygon(40% 0,60% 0,100% 100%,0 100%);filter:blur(3px);animation:twGlowC 4s infinite;}
+  .tw-gloss{position:absolute;bottom:0;left:0;right:0;height:12%;background:linear-gradient(180deg,#0000,#f8b50018 40%,#00000088);box-shadow:inset 0 6px 14px #000a;}
+  `;
+  document.head.appendChild(s);
+})();
