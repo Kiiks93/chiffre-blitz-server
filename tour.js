@@ -130,6 +130,55 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
   document.head.appendChild(s);
 })();
 
+/* ----- CSS correctifs v2 ----- */
+(function(){
+  const s=document.createElement("style");
+  s.textContent=`
+  /* --- Route + voitures réalistes --- */
+  .tw-city{bottom:14%;height:36%;}
+  .tw-street{display:none;}
+  .tw-reflect{height:14%;opacity:.45;}
+  .tw-road{position:absolute;bottom:0;left:0;right:0;height:14%;background:linear-gradient(180deg,#23232e,#101016 30%,#0a0a0e);box-shadow:inset 0 4px 10px #000c;}
+  .tw-lane{position:absolute;left:0;right:0;top:46%;height:3px;background:repeating-linear-gradient(90deg,#f8b50088 0 34px,transparent 34px 70px);opacity:.7;}
+  .tw-car{position:absolute;width:54px;height:16px;z-index:3;animation:twDrive linear infinite;}
+  .tw-car::before,.tw-car::after{content:none;}
+  .tw-car i{position:absolute;display:block;}
+  .tw-car .cb{bottom:3px;left:0;right:0;height:9px;border-radius:5px 7px 3px 3px;background:linear-gradient(180deg,#52526a,#16161e 70%);box-shadow:inset 0 1px 0 #ffffff44,0 2px 4px #000c;}
+  .tw-car .cc{bottom:10px;left:12px;width:26px;height:8px;border-radius:5px 5px 0 0;background:linear-gradient(180deg,#3d3d4e,#1a1a24);box-shadow:inset 0 1px 0 #ffffff33;}
+  .tw-car .cc::after{content:"";position:absolute;inset:2px 3px 1px 3px;background:linear-gradient(180deg,#7fd8ff55,#20304055);border-radius:3px;}
+  .tw-car .w1,.tw-car .w2{bottom:0;width:9px;height:9px;border-radius:50%;background:radial-gradient(#666 25%,#111 60%);box-shadow:0 1px 2px #000;}
+  .tw-car .w1{left:8px;}
+  .tw-car .w2{right:8px;}
+  .tw-car .hl{right:-32px;bottom:5px;width:34px;height:7px;background:linear-gradient(90deg,#ffffffaa,transparent);filter:blur(2px);}
+  .tw-car .tl{left:-4px;bottom:6px;width:7px;height:5px;background:radial-gradient(closest-side,#ff5040,transparent);}
+  .tw-car.r{animation-name:twDriveR;transform:scaleX(-1);}
+  .tw-car.s{transform:scale(.8);transform-origin:bottom left;}
+  .tw-car.s.r{transform:scale(.8) scaleX(-1);}
+  /* --- Grotte : vrais cristaux + stalactites + brume --- */
+  .tw-icicle{position:absolute;top:0;width:14px;background:linear-gradient(180deg,#9fd8e8aa,#e8fbffdd 70%,#ffffff);clip-path:polygon(0 0,100% 0,62% 60%,54% 100%,46% 100%,38% 60%);filter:drop-shadow(0 0 4px #74ebf588);}
+  .tw-cryscl{position:absolute;width:90px;height:120px;filter:drop-shadow(0 0 18px #74ebf5aa);animation:twGlowC 2.6s infinite;}
+  .tw-cryscl .c{position:absolute;bottom:0;background:linear-gradient(115deg,transparent 42%,#ffffff88 42% 48%,transparent 48%),linear-gradient(180deg,#e8fbff,#74ebf5 55%,#1a5a6e);clip-path:polygon(50% 0,80% 16%,88% 68%,68% 100%,32% 100%,12% 68%,20% 16%);}
+  .tw-cryscl .c1{left:30%;width:40%;height:100%;}
+  .tw-cryscl .c2{left:0;width:30%;height:62%;transform:rotate(-14deg);}
+  .tw-cryscl .c3{right:0;width:30%;height:70%;transform:rotate(12deg);}
+  .tw-mist{position:absolute;left:50%;top:40%;width:60%;height:30%;transform:translateX(-50%);background:radial-gradient(ellipse,#74ebf522,transparent 70%);filter:blur(10px);animation:twMist 7s ease-in-out infinite;}
+  .tw-mist.m2{top:55%;width:45%;animation-delay:2.5s;}
+  @keyframes twMist{50%{transform:translateX(-46%) scale(1.08);opacity:.7}}
+  /* --- Banque : coffre enrichi, sans lingots/pièces --- */
+  .tw-vaultframe{width:min(86%,430px);}
+  .tw-fbolt{position:absolute;width:10px;height:10px;border-radius:50%;background:radial-gradient(#ffe9a8,#8a6a1a);box-shadow:0 1px 3px #000;}
+  .tw-hinge{position:absolute;left:-4%;width:10%;height:12%;background:linear-gradient(180deg,#c9a227,#8a6a1a);border-radius:4px;box-shadow:0 2px 4px #000c;}
+  .tw-hinge.h1{top:22%;}
+  .tw-hinge.h2{bottom:22%;}
+  .tw-knob{position:absolute;width:9%;height:9%;border-radius:50%;background:radial-gradient(#fff8dc,#c9a227);transform:translate(-50%,-50%);box-shadow:0 0 6px #ffe9a8aa;}
+  .tw-dial{position:absolute;right:16%;top:44%;width:14%;height:14%;border-radius:50%;background:radial-gradient(#c9a227,#8a6a1a);box-shadow:inset 0 0 6px #0008,0 0 4px #0008;}
+  .tw-dial::before{content:"";position:absolute;inset:30%;background:linear-gradient(#160d00,#160d00) 50% 0/3px 100% no-repeat,linear-gradient(#160d00,#160d00) 0 50%/100% 3px no-repeat,linear-gradient(45deg,transparent 40%,#160d00 40% 60%,transparent 60%);}
+  .tw-handle{position:absolute;right:8%;top:30%;width:4%;height:40%;border-radius:4px;background:linear-gradient(90deg,#c9a227,#ffe9a8 50%,#c9a227);box-shadow:0 0 6px #0008;}
+  .tw-goldspill{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:70%;height:18%;background:radial-gradient(ellipse at 50% 100%,#f8b50055,transparent 70%);filter:blur(6px);}
+  `;
+  document.head.appendChild(s);
+})();
+
 const TOWER_COLORS={1:{acc:"#00d2ff"},2:{acc:"#74ebf5"},3:{acc:"#f8b500"},4:{acc:"#ff8a00"},5:{acc:"#8a9bb0"},6:{acc:"#ff4b2b"},7:{acc:"#ff6fa5"},8:{acc:"#2ecc71"},9:{acc:"#ff416c"}};
 const TOWER_WORLDS={
   1:{bg:"linear-gradient(180deg,#050514,#0a0a2a 55%,#1a1030)",scene:"city",part:"neon"},
@@ -216,37 +265,42 @@ function sceneHTML(c,W,C){
       const sign=(i%2===0)?`<span class="tw-sign" style="color:${cols[i%4]};"></span>`:"";
       b+=`<div class="tw-bldg" style="height:${hs[i]}%;">${wins}${sign}${i%3===0?'<span class="tw-ant"></span>':""}</div>`;
     }
-    return `<div class="tw-horizon"></div><div class="tw-city">${b}</div><div class="tw-street"></div><div class="tw-reflect"></div>
-      <span class="tw-car" style="bottom:2.5%;animation-duration:8s;"></span>
-      <span class="tw-car r" style="bottom:4.5%;animation-duration:11s;animation-delay:1.5s;"></span>
-      <span class="tw-car s" style="bottom:1%;animation-duration:6.5s;animation-delay:3.2s;"></span>`;
+    const car=(cls,bottom,dur,delay)=>`<span class="tw-car ${cls}" style="bottom:${bottom};animation-duration:${dur};animation-delay:${delay};"><i class="cb"></i><i class="cc"></i><i class="w1"></i><i class="w2"></i><i class="hl"></i><i class="tl"></i></span>`;
+    return `<div class="tw-horizon"></div><div class="tw-city">${b}</div>
+      <div class="tw-road"><span class="tw-lane"></span></div><div class="tw-reflect"></div>
+      ${car("","2.5%","9s","0s")}${car("r","8%","12s","2s")}${car("s","9%","7s","4.5s")}`;
   }
   if(W.scene==="glacier"){
-    let st="";
-    [[8,28,6],[18,18,4],[30,34,5],[42,22,4],[54,30,5],[66,20,4],[78,32,5],[90,24,4]].forEach((p,i)=>{
-      st+=`<span class="tw-stalac" style="left:${p[0]}%;width:${p[2]}px;height:${p[1]}%;"></span>`;
+    let ice="";
+    [[6,16],[14,10],[22,18],[31,9],[40,15],[49,8],[58,17],[67,10],[76,16],[85,9],[93,14]].forEach((p,i)=>{
+      ice+=`<span class="tw-icicle" style="left:${p[0]}%;height:${p[1]}%;"></span>`;
     });
-    const crys=[[28,22,55],[42,18,78],[58,22,62],[72,24,48],[18,26,38]];
-    let cr="";crys.forEach((p,i)=>{cr+=`<span class="tw-bigcrys" style="left:${p[0]}%;bottom:${p[1]}%;width:${p[2]}px;height:${Math.round(p[2]*2.2)}px;animation-delay:${i*.3}s;"></span>`;});
-    let rays="";for(let i=0;i<5;i++)rays+=`<span class="tw-ray" style="transform:translateX(-50%) rotate(${-30+i*15}deg);animation-delay:${i*.5}s;"></span>`;
-    return `<div class="tw-cavewall"></div><div class="tw-rocktop"></div>${st}${rays}${cr}<div class="tw-icefloor"></div><div class="tw-rockbot"></div>`;
+    const cluster=(x,s,d)=>`<span class="tw-cryscl" style="left:${x}%;bottom:14%;transform:scale(${s});animation-delay:${d};"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span>`;
+    return `<div class="tw-cavewall"></div><div class="tw-rocktop"></div>${ice}
+      <div class="tw-mist m1"></div><div class="tw-mist m2"></div>
+      ${cluster(14,1,"0s")}${cluster(68,.85,".8s")}
+      <span class="tw-cryscl" style="left:44%;bottom:12%;transform:scale(.45);animation-delay:1.4s;"><i class="c c1"></i><i class="c c2"></i></span>
+      <div class="tw-icefloor"></div><div class="tw-rockbot"></div>`;
   }
   if(W.scene==="vault"){
     let bolts="";for(let i=0;i<12;i++){const a=i*Math.PI/6;bolts+=`<span class="tw-vbolt" style="left:${50+44*Math.cos(a)}%;top:${50+44*Math.sin(a)}%;"></span>`;}
-    const ingots=`<span class="tw-ingot" style="left:7%;bottom:6%;"></span>
-      <span class="tw-ingot" style="left:10%;bottom:10%;transform:rotate(-4deg);"></span>
-      <span class="tw-ingot" style="left:8%;bottom:14%;transform:rotate(3deg);"></span>
-      <span class="tw-ingot" style="right:7%;bottom:6%;"></span>
-      <span class="tw-ingot" style="right:10%;bottom:10%;transform:rotate(5deg);"></span>`;
-    const coins=`<span class="tw-coin" style="left:18%;bottom:4%;">🪙</span>
-      <span class="tw-coin" style="right:18%;bottom:3%;animation-delay:.6s;">🪙</span>
-      <span class="tw-coin" style="left:22%;bottom:18%;animation-delay:1.1s;">🪙</span>`;
+    let knobs="";for(let i=0;i<6;i++){const a=i*Math.PI/3;knobs+=`<span class="tw-knob" style="left:${50+38*Math.cos(a)}%;top:${50+38*Math.sin(a)}%;"></span>`;}
     return `<div class="tw-bankwall"></div>
-      <div class="tw-pillar" style="left:2%;"></div>
-      <div class="tw-pillar" style="right:2%;"></div>
+      <div class="tw-pillar" style="left:2%;"></div><div class="tw-pillar" style="right:2%;"></div>
       <div class="tw-vaultglow"></div>
-      <div class="tw-vaultframe"><div class="tw-vaultdoor"><div class="tw-vaultwheel"></div>${bolts}</div></div>
-      ${ingots}${coins}<div class="tw-sweep"></div>`;
+      <div class="tw-vaultframe">
+        <span class="tw-fbolt" style="left:5%;top:7%;"></span><span class="tw-fbolt" style="right:5%;top:7%;"></span>
+        <span class="tw-fbolt" style="left:5%;bottom:7%;"></span><span class="tw-fbolt" style="right:5%;bottom:7%;"></span>
+        <span class="tw-hinge h1"></span><span class="tw-hinge h2"></span>
+        <div class="tw-vaultdoor">
+          <div class="tw-vaultwheel">${knobs}</div>
+          <span class="tw-dial"></span>
+          <span class="tw-handle"></span>
+          ${bolts}
+        </div>
+      </div>
+      <div class="tw-goldspill"></div>
+      <div class="tw-sweep"></div>`;
   }
   return "";
 }
