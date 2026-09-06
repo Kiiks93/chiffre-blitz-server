@@ -727,7 +727,8 @@ function showTowerWinPopup(res){
   .twg-msg{text-align:center;font-size:11px;color:#aaa;padding:6px 10px 12px;}
   `;
   document.head.appendChild(s);
-})();/* ============================================================
+})();
+/* ============================================================
 TOUR.JS — MODE AVENTURE (100% CSS, immersif)
 ============================================================ */
 const TOWER_CHAPTERS = [
