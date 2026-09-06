@@ -1331,7 +1331,7 @@ const TOWER_CHAPTER_REWARDS = {
   8: "frame_aurore",
   9: "title_maitre_tour"
 };
-
+const TOWER_FPC = 20; // même valeur que FPC côté client
 socket.on('get_tower', () => {
   const player = activePlayers[socket.id];
   if (!player) return;
@@ -1355,8 +1355,8 @@ socket.on('tower_floor_win', async (data) => {
   player.coins = (player.coins || 0) + coins;
 
   let reward = null;
-  if (floor % 10 === 0) {
-    const itemId = TOWER_CHAPTER_REWARDS[floor / 10];
+    if (floor % TOWER_FPC === 0) {
+    const itemId = TOWER_CHAPTER_REWARDS[floor / TOWER_FPC];
     if (itemId) {
       player.unlocked_items = player.unlocked_items || [];
       if (!player.unlocked_items.includes(itemId)) {
