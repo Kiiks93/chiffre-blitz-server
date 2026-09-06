@@ -4,7 +4,7 @@ TOUR.JS — TOUR BLITZ (citadelle néon + moteur des étages)
 const TOWER_CHAPTERS = [
   { id:1, season:1, name:"Quartier Néon", icon:"🌆", boss:"🤖", objects:["💡","️","📺","","🎛️","🖥️","📻","️","🌃"] },
   { id:2, season:1, name:"Grottes de Cristal", icon:"🧊", boss:"🗿", objects:["🕯️","🔮","💎","⛏️","🪞","❄️","🫧","🌀","🧊"] },
-  { id:3, season:1, name:"Circuit Doré", icon:"⚡", boss:"👾", objects:["⚙️","🔋","","🧲","","🪛","","🔩",""] },
+  { id:3, season:1, name:"Banque Dorée", icon:"🏦", boss:"👾", objects:["🪙","💰","💵","💳","🥇","🔐","🪙","","🏅"] },
   { id:4, season:2, name:"Tour Hantée", icon:"🎃", boss:"🧛", objects:["🕸️","🎃","🕯️","🦇","🪦","","🐈⬛","","⚰️"] },
   { id:5, season:2, name:"Cimetière Brumeux", icon:"🌫️", boss:"💀", objects:["🪦","🌫️","🕯️","","🌙","🕷️","️","","🖤"] },
   { id:6, season:2, name:"Antre Citrouille", icon:"👑", boss:"🎃", objects:["🎃","🍬","️","🦇","🧹","🍭","🕸️","","🏆"] },
@@ -211,7 +211,7 @@ function drawRoom(){
   let nodes="",paths="",zones="",ptsByChap={};
   for(let c=1;c<=9;c++){
     const chap=TOWER_CHAPTERS[c-1];
-    const zTop=H-STEP*c*10-40,zH=STEP*10+80;
+    const zTop=H-STEP*c*10-32,zH=STEP*10;
     if(chap.season>season){
       zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:linear-gradient(180deg,#0a0a14,#050508);"></div>`;
       nodes+=`<div class="tw-gate lock" style="top:${zTop+zH/2}px;">🔒 ${currentLang==="fr"?"Bientôt":"Soon"}</div>`;
@@ -226,7 +226,7 @@ function drawRoom(){
     const props=`<span class="tw-prop" style="color:${C.acc};left:5%;top:38%;">${W.props[0]}</span>
       <span class="tw-prop" style="color:${C.acc};right:5%;top:62%;animation-delay:1s;">${W.props[1]}</span>`;
     zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:${W.bg};">${layers}${parts}${props}</div>`;
-    nodes+=`<div class="tw-gate" style="top:${zTop+6}px;border-color:${C.acc};color:${C.acc};">${chap.icon} ${chap.name}</div>`;
+    nodes+=`<div class="tw-gate" style="top:${H-STEP*((c-1)*10+1)+46}px;border-color:${C.acc};color:${C.acc};">${chap.icon} ${chap.name}</div>`;
   }
   for(let f=1;f<=90;f++){
     const chap=getTowerChapter(f);
@@ -294,6 +294,7 @@ function startTowerFloor(def){
       <div id="tg-msg" style="text-align:center;font-size:10px;color:#aaa;margin-top:8px;"></div></div>`;
     document.body.appendChild(ov);}
   ov.style.display="flex";
+  const tgBar=document.getElementById("tg-bar");if(tgBar){tgBar.style.display="none";tgBar.innerHTML="";}
   TW={def,mistakes:0,sel:null,start:Date.now(),time:def.time,ai:0,done:false,gone:{},hidden:false,op:null};
   buildFloor();paintGrid();renderHUD();
   TW.int=setInterval(()=>{
