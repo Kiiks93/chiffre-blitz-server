@@ -400,14 +400,19 @@ let TW=null;
 function startTowerFloor(def){
   if(TW)return;
   let ov=document.getElementById("tower-game");
-  if(!ov){ov=document.createElement("div");ov.id="tower-game";ov.className="modal-overlay";
-    ov.innerHTML=`<div class="modal-card" style="max-width:380px;width:95%;">
-      <div id="tg-hud" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"></div>
-      <div id="tg-bar" style="height:8px;background:#200010;border-radius:4px;overflow:hidden;margin-bottom:8px;display:none;"></div>
-      <div id="tg-grid" class="tg-grid"></div>
-      <div id="tg-msg" style="text-align:center;font-size:10px;color:#aaa;margin-top:8px;"></div></div>`;
+  if(!ov){ov=document.createElement("div");ov.id="tower-game";ov.className="twg-screen";
+    ov.innerHTML=`<div class="twg-header">
+        <button class="tw-back" onclick="quitFloor()">⬅️</button>
+        <b id="twg-title"></b>
+        <span id="twg-timer">⏱️</span>
+      </div>
+      <div id="tg-bar" class="twg-bar"></div>
+      <div id="tg-hud" class="twg-hud"></div>
+      <div class="twg-gridwrap"><div id="tg-grid" class="tg-grid"></div></div>
+      <div id="tg-msg" class="twg-msg"></div>`;
     document.body.appendChild(ov);}
   ov.style.display="flex";
+  document.getElementById("twg-title").innerText="🏰 "+(currentLang==="fr"?"ÉTAGE":"FLOOR")+" "+def.floor+" — "+typeLabel(def.type);
   const tgBar=document.getElementById("tg-bar");if(tgBar){tgBar.style.display="none";tgBar.innerHTML="";}
   TW={def,mistakes:0,sel:null,start:Date.now(),time:def.time,ai:0,done:false,gone:{},hidden:false,op:null};
   buildFloor();paintGrid();renderHUD();
@@ -461,9 +466,9 @@ function paintGrid(){
 }
 function renderHUD(){
   const h=document.getElementById("tg-hud");if(!h||!TW)return;
-  const left=TW.op?`<b style="color:#f8b500;font-size:16px;">${TW.target} ${TW.op==="+"?"➕":"➖"}</b>`
-    :`<b style="color:#00d2ff;font-size:15px;">CIBLE : ${TW.target}</b>`;
-  h.innerHTML=left+`<b style="color:${TW.time<=5?"#ff4b2b":"#fff"};">⏱️ ${TW.time}s</b>`;
+  h.innerHTML=TW.op?`<span style="color:#f8b500;">${TW.target} ${TW.op==="+"?"➕":"➖"}</span>`:`<span>${currentLang==="fr"?"CIBLE":"TARGET"} : ${TW.target}</span>`;
+  const t=document.getElementById("twg-timer");
+  if(t){t.innerText="⏱️ "+TW.time+"s";t.style.color=TW.time<=5?"#ff4b2b":"#fff";}
   document.getElementById("tg-msg").innerText=TW.def.type==="nofail"?"💎 Une seule erreur = échec !":(TW.def.type==="memory"?"🙈 Mémorise vite !":"");
 }
 function twClick(idx,el){
@@ -582,6 +587,23 @@ function showTowerWinPopup(res){
   @keyframes twLaserV{from{transform:translateY(-26px)}to{transform:translateY(26px)}}
   .tw-laser.d{animation-name:twLaserD;}
   @keyframes twLaserD{from{transform:rotate(-5deg) translateY(-18px)}to{transform:rotate(5deg) translateY(18px)}}
+  `;
+  document.head.appendChild(s);
+})();
+/* ----- CSS jeu plein écran ----- */
+(function(){
+  const s=document.createElement("style");
+  s.textContent=`
+  .twg-screen{position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,#1a2142,#05050f 70%);z-index:9996;display:none;flex-direction:column;}
+  .twg-header{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#0f051d;border-bottom:2px solid #00d2ff;}
+  .twg-header b{color:#00d2ff;font-size:13px;flex:1;text-align:center;}
+  #twg-timer{color:#fff;font-weight:900;font-size:15px;min-width:56px;text-align:right;}
+  .twg-hud{text-align:center;padding:10px 6px 4px;font-size:clamp(20px,6vw,28px);font-weight:900;color:#00d2ff;text-shadow:0 0 14px #00d2ff88;}
+  .twg-bar{height:10px;margin:4px 16px;background:#200010;border-radius:5px;overflow:hidden;display:none;}
+  .twg-gridwrap{flex:1;display:flex;align-items:center;justify-content:center;padding:10px;overflow:hidden;}
+  #tower-game .tg-grid{gap:8px;width:100%;max-width:520px;}
+  .tg-tile{padding:0;aspect-ratio:1;font-size:clamp(18px,5vw,26px);display:flex;align-items:center;justify-content:center;border-radius:12px;}
+  .twg-msg{text-align:center;font-size:11px;color:#aaa;padding:6px 10px 12px;}
   `;
   document.head.appendChild(s);
 })();
