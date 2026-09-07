@@ -56,18 +56,18 @@ const TowerUtils = {
   getTowerChapter(f) { return TOWER_CHAPTERS[Math.ceil(f / FPC) - 1]; },
   currentSeasonNum() { return parseInt((myProfile.currentSeasonId || "s1").replace("s", "")) || 1; },
   getFloorDef(floor) {
-    const chap = Math.ceil(floor / FPC), inChap = ((floor - 1) % FPC) + 1;
-    const global = (floor - 1) / (TOTAL_FLOORS - 1);
-    let gridSize = Math.min(36, Math.round(12 + global * 24));
-    let time = Math.max(14, Math.round(34 - global * 20));
+  const chap = Math.ceil(floor / FPC), inChap = ((floor - 1) % FPC) + 1;
+  const global = (floor - 1) / (TOTAL_FLOORS - 1);
+  let gridSize = Math.min(48, Math.round(16 + global * 32));  // 16→48 au lieu de 12→36
+  let time = Math.max(12, Math.round(28 - global * 16));       // 28→12 au lieu de 34→14
     if (inChap === FPC) return { floor, gridSize, time, type: "boss" };
     if (inChap % 50 === 0) return { floor, gridSize, time, type: "boss" };
     const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","fog","nofail"];
     const t = seq[(inChap - 1) % 9];
-    if (t === "sprint") return { floor, gridSize, time: Math.max(8, Math.round(time * 0.5)), type: "sprint" };
-    if (t === "nofail") return { floor, gridSize, time: Math.max(15, Math.round(time * 0.8)), type: "nofail" };
-    if (t === "pairs") { let g = gridSize; if (g % 2) g++; return { floor, gridSize: g, time: Math.max(20, time + 6), type: "pairs" }; }
-    if (t === "parity") return { floor, gridSize: Math.min(48, gridSize + 8), time: time + 4, type: "parity" };
+  if (t === "sprint") return { floor, gridSize, time: Math.max(6, Math.round(time * 0.4)), type: "sprint" };
+  if (t === "nofail") return { floor, gridSize, time: Math.max(14, Math.round(time * 0.7)), type: "nofail" };
+  if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; return { floor, gridSize: g, time: Math.max(18, time + 4), type: "pairs" }; }
+  if (t === "parity") return { floor, gridSize: Math.min(60, gridSize + 12), time: time + 3, type: "parity" };
     return { floor, gridSize, time, type: t };
   },
   typeLabel(t) {
