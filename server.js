@@ -1447,10 +1447,10 @@ io.on('connection', (socket) => {
         } else {
           mistake = true; s.lock = true;
           setTimeout(() => {
-            if (s.done) return;
-            s.revealed[first] = false; s.revealed[idx] = false; s.sel = null; s.lock = false;
-            socket.emit('tower_state', towerStatePayload(s));
-          }, 520);
+          if (s.done) return;
+          s.revealed[first] = false; s.revealed[idx] = false; s.sel = null; s.lock = false;
+          socket.emit('tower_state', towerStatePayload(s));
+          }, 280);  // ⬅️ 520ms → 280ms (beaucoup plus nerveux)
         }
       }
     } else if (s.type === "parity") {
