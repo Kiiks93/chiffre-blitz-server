@@ -1053,7 +1053,7 @@ io.on('connection', (socket) => {
   socket.on('claim_solo_reward', async (payload) => {
     const player = activePlayers[socket.id];
     if (!player) return;
-    const cd = checkCooldown(player, 'solo_reward', 8000);
+    const cd = checkCooldown(player, 'solo_reward', 3000);  // 3s au lieu de 8s
     if (!cd.ok) { socket.emit('solo_reward_result', { baseCoins: 0, rushBonus: 0, earnedCoins: 0, triggerWheel: false, globalEvents, perfection: false, error: 'cooldown' }); return; }
     if (!player._soloStart) {
       await logPlayerAction(player, 'solo_no_start', 'Pas de solo_start enregistré', null, null, null);
