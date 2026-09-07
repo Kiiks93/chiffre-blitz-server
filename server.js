@@ -371,7 +371,7 @@ function getFloorDefServer(floor) {
   const t = seq[(inChap - 1) % 9];
   if (t === "sprint") return { floor, gridSize, time: Math.max(6, Math.round(time * 0.4)), type: "sprint" };
   if (t === "nofail") return { floor, gridSize, time: Math.max(14, Math.round(time * 0.7)), type: "nofail" };
-  if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; return { floor, gridSize: g, time: Math.max(18, time + 4), type: "pairs" }; }
+  if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; const pr = g / 2; return { floor, gridSize: g, time: Math.max(20, Math.round(pr * 3)), type: "pairs" }; }
   if (t === "parity") return { floor, gridSize: Math.min(60, gridSize + 12), time: time + 3, type: "parity" };
   return { floor, gridSize, time, type: t };
 }
@@ -429,11 +429,14 @@ async function towerWin(player, s){
   let stars=1;
   
   // 🎯 RÈGLES SPÉCIFIQUES PAR TYPE
-  if (s.type === "pairs") {
-    // ✅ Paires : vitesse pure, erreurs ignorées
-    if (used <= 15) stars = 3;
-    else if (used <= 25) stars = 2;
+    if (s.type === "pairs") {
+    // ✅ Paires : vitesse pure (erreurs ignorées), seuils selon le nombre de paires
+    const pr = s.total / 2;
+    const t3 = Math.round(pr * 1.5), t2 = Math.round(pr * 2.5);
+    if (used <= t3) stars = 3;
+    else if (used <= t2) stars = 2;
     else stars = 1;
+  }
   } else if (s.type === "sprint") {
   // ✅ Sprint : seuils proportionnels à la grille (réaliste et atteignable)
   const n = s.total;
