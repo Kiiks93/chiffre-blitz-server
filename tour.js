@@ -387,6 +387,10 @@ function startTowerFloor(def){
   ov.style.display="flex";
   document.getElementById("twg-title").innerText="🏰 "+(currentLang==="fr"?"ÉTAGE":"FLOOR")+" "+def.floor+" — "+typeLabel(def.type);
   const tgBar=document.getElementById("tg-bar");if(tgBar){tgBar.style.display="none";tgBar.innerHTML="";}
+  
+  // 🔧 FIX : détecter automatiquement si c'est un replay
+  def.replay = def.floor <= towerProgress.floor;
+  
   TW={def,mistakes:0,sel:null,start:Date.now(),time:def.time,ai:0,done:false,gone:{},hidden:false,op:null};
   buildFloor();paintGrid();renderHUD();
   TW.int=setInterval(()=>{
