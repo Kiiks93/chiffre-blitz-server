@@ -240,66 +240,52 @@ const TowerUtils = {
 /* ----- 5. GÉNÉRATION DE SCÈNES (avec cache) ----- */
 function generateSceneHTML(c, W, C) {
   if (SCENE_CACHE[c]) return SCENE_CACHE[c];
+  
   let html = "";
-
   if (W.scene === "city") {
     html += `<span class="tw-moon"></span>`;
-    for (let i = 0; i < 50; i++) html += `<span class="tw-star2" style="left:${(i*37)%96}%;top:${(i*5)%16}%;animation-delay:${(i*.3)%3}s;"></span>`;
+    for (let i = 0; i < 60; i++) html += `<span class="tw-star2" style="left:${(i*37)%96}%;top:${(i*7)%20}%;animation-delay:${(i*.3)%3}s;"></span>`;
+    for (let i = 0; i < 3; i++) html += `<span class="tw-cloud" style="top:${3+i*5}%;width:${20+(i*7)%14}%;animation-duration:${60+i*20}s;animation-delay:${i*9}s;"></span>`;
+    
     const cols = ["#00ffff","#ff00ff","#f8b500","#7dff8a"];
-    // Immeubles ISOLÉS et variés, alternés gauche/droite le long de l'ascension
-    for (let i = 0; i < 12; i++) {
-      const top = 6 + i * 7.6;
-      const left = (i % 2 === 0);
-      const off = 4 + (i * 13) % 14;
-      const h = 120 + ((i * 53) % 200);
-      const w = 60 + ((i * 29) % 50);
-      let wins = "";
-      const nw = 3 + (i % 4);
-      for (let w = 0; w < nw; w++) wins += `<span class="tw-wl" style="color:${cols[(w+i)%4]};left:${10+((w*27)%70)}%;top:${8+((w*31)%70)}%;animation-duration:${2.5+((w*13)%4)}s;animation-delay:${(w*.5)%3}s;"></span>`;
-      html += `<div class="tw-bldg-solo" style="top:${top}%;${left?("left:"+off+"%"):("right:"+off+"%")};height:${h}px;width:${w}px;">${wins}${i%3===0?'<span class="tw-ant"></span>':""}</div>`;
-    }
+    const rows = [{top:"16%",h:200,op:.35,n:7,w:4},{top:"34%",h:250,op:.55,n:7,w:6},{top:"52%",h:300,op:.75,n:6,w:8},{top:"70%",h:340,op:.9,n:6,w:10},{top:"86%",h:380,op:1,n:5,w:12}];
+    rows.forEach((r, ri) => {
+      let b = "";
+      for (let i = 0; i < r.n; i++) {
+        let wins = "";
+        for (let w = 0; w < r.w; w++) wins += `<span class="tw-wl" style="color:${cols[(w+i+ri)%4]};left:${6+((w*23)%84)}%;top:${8+((w*31)%78)}%;animation-duration:${2.5+((w*13)%4)}s;animation-delay:${(w*.53)%3}s;"></span>`;
+        b += `<div class="tw-bldg" style="height:${60+((i*37+ri*17)%r.h)}px;flex:${i%2?1.2:1};">${wins}${(i+ri)%3===0?'<span class="tw-ant"></span>':""}</div>`;
+      }
+      html += `<div class="tw-row" style="top:${r.top};height:${r.h}px;opacity:${r.op};">${b}</div>`;
+    });
     html += `<div class="tw-road"></div><div class="tw-reflect"></div>`;
     const car = (cls, bottom, dur, delay, col) => `<span class="tw-car ${cls}" style="bottom:${bottom};animation-duration:${dur};animation-delay:${delay};color:${col};"><i class="cb"></i><i class="cc"></i><i class="ug"></i><i class="w1"></i><i class="w2"></i><i class="hl"></i><i class="tl"></i></span>`;
-    html += car("", "20px", "9s", "0s", "#00d2ff") + car("r", "60px", "12s", "2s", "#ff2bd6") + car("s", "70px", "7s", "4.5s", "#f8b500");
+    html += car("", "2.5%", "9s", "0s", "#00d2ff") + car("r", "8%", "12s", "2s", "#ff2bd6") + car("s", "9%", "7s", "4.5s", "#f8b500");
   }
-
-  else if (W.scene === "glacier") {
-    [[6,110],[20,80],[36,130],[52,90],[68,120],[84,85],[94,105]].forEach(p => { html += `<span class="tw-icicle" style="left:${p[0]}%;height:${p[1]}px;"></span>`; });
-    // Cristaux ISOLÉS variés, alternés gauche/droite
-    for (let i = 0; i < 10; i++) {
-      const top = 8 + i * 8.6;
-      const left = (i % 2 === 0);
-      const off = 6 + (i * 17) % 16;
-      const s = .7 + ((i * 13) % 5) / 10;
-      html += `<span class="tw-cryscl" style="top:${top}%;bottom:auto;${left?("left:"+off+"%"):("right:"+off+"%")};transform:scale(${s});animation-delay:${(i*.5)%2}s;"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span>`;
-    }
-    html += `<div class="tw-mist m1" style="top:35%;"></div><div class="tw-mist m2" style="top:65%;"></div>`;
-    html += `<div class="tw-icefloor"></div>`;
-    [[10,70],[30,55],[55,65],[75,50],[90,60]].forEach(p => { html += `<span class="tw-stalag" style="left:${p[0]}%;height:${p[1]}px;"></span>`; });
+  
+  if (W.scene === "glacier") {
+    [[6,120],[16,90],[26,140],[38,80],[50,120],[62,90],[74,130],[86,85],[94,110]].forEach(p => { html += `<span class="tw-icicle" style="left:${p[0]}%;height:${p[1]}px;"></span>`; });
+    html += `<div class="tw-ray" style="top:4%;"></div><div class="tw-ray" style="top:6%;left:30%;animation-delay:1s;"></div>`;
+    [{top:"16%",s:1,l:12},{top:"34%",s:.85,l:34},{top:"52%",s:1.1,l:56},{top:"70%",s:.9,l:76}].forEach((cl, ci) => {
+      html += `<span class="tw-cryscl" style="left:${cl.l}%;top:${cl.top};bottom:auto;transform:scale(${cl.s});animation-delay:${ci*.6}s;"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span>`;
+    });
+    html += `<div class="tw-mist m1" style="top:40%;"></div><div class="tw-mist m2" style="top:60%;"></div><div class="tw-icefloor"></div>`;
+    [[10,80],[26,60],[52,70],[64,50],[84,65]].forEach(p => { html += `<span class="tw-stalag" style="left:${p[0]}%;height:${p[1]}px;"></span>`; });
   }
-
-  else if (W.scene === "vault") {
-    html += `<div class="tw-marble"></div>`;
-    html += `<div class="tw-spot" style="left:18%;"></div><div class="tw-spot" style="left:62%;animation-delay:1.5s;"></div>`;
-    // Mini-coffres ISOLÉS répartis
-    for (let i = 0; i < 6; i++) {
-      const top = 12 + i * 13;
-      const left = (i % 2 === 0);
-      const off = 8 + (i * 11) % 14;
-      html += `<div class="tw-minivault" style="top:${top}%;${left?("left:"+off+"%"):("right:"+off+"%")}"></div>`;
-    }
-    // Coffre principal au milieu
+  
+  if (W.scene === "vault") {
+    html += `<div class="tw-marble"></div><div class="tw-spot" style="left:20%;"></div><div class="tw-spot" style="left:60%;animation-delay:1.5s;"></div>`;
     let bolts = ""; for (let i = 0; i < 12; i++) { const a = i*Math.PI/6; bolts += `<span class="tw-vbolt" style="left:${50+44*Math.cos(a)}%;top:${50+44*Math.sin(a)}%;"></span>`; }
     let knobs = ""; for (let i = 0; i < 6; i++) { const a = i*Math.PI/3; knobs += `<span class="tw-knob" style="left:${50+38*Math.cos(a)}%;top:${50+38*Math.sin(a)}%;"></span>`; }
     html += `<div class="tw-vaultglow"></div><div class="tw-vaultframe"><span class="tw-fbolt" style="left:5%;top:7%;"></span><span class="tw-fbolt" style="right:5%;top:7%;"></span><span class="tw-fbolt" style="left:5%;bottom:7%;"></span><span class="tw-fbolt" style="right:5%;bottom:7%;"></span><span class="tw-hinge h1"></span><span class="tw-hinge h2"></span><div class="tw-vaultdoor"><div class="tw-vaultwheel">${knobs}</div><span class="tw-dial"></span><span class="tw-handle"></span>${bolts}</div></div>`;
-    html += `<div class="tw-laser" style="top:26%;animation-duration:5s;"></div><div class="tw-laser d" style="top:46%;animation-duration:7s;animation-delay:1s;"></div><div class="tw-laser" style="top:66%;animation-duration:6s;animation-delay:2s;"></div><div class="tw-laser d" style="top:84%;animation-duration:8s;animation-delay:.5s;"></div>`;
-    for (let i = 0; i < 8; i++) html += `<span class="tw-ingot" style="left:${8+i*11}%;bottom:${10+(i%3)*10}px;"></span>`;
+    html += `<div class="tw-laser" style="top:30%;animation-duration:5s;"></div><div class="tw-laser d" style="top:48%;animation-duration:7s;animation-delay:1s;"></div><div class="tw-laser" style="top:64%;animation-duration:6s;animation-delay:2s;"></div>`;
+    for (let i = 0; i < 8; i++) html += `<span class="tw-ingot" style="left:${8+i*11}%;bottom:${6+(i%3)*8}px;"></span>`;
     html += `<div class="tw-gloss"></div><div class="tw-goldspill"></div>`;
   }
-
+  
   let parts = "";
   for (let i = 0; i < 7; i++) parts += `<span class="tw-part ${W.part}" style="color:${C.acc};left:${(i*13+c*7)%96}%;animation-duration:${4+(i%4)*1.5}s;animation-delay:${i*.7}s;"></span>`;
-
+  
   const result = html + parts;
   SCENE_CACHE[c] = result;
   return result;
@@ -736,16 +722,3 @@ function renderTower() {
 // Aliases pour compatibilité
 function showElevator() { drawRoom(); }
 function afterWinTravel() { drawRoom(); }
-/* ----- CSS décor isolé ----- */
-(function(){
-  const s=document.createElement("style");
-  s.textContent=`
-  .tw-bldg-solo{position:absolute;background:linear-gradient(180deg,#0d0d1e,#05050c);border-radius:3px 3px 0 0;border-top:2px solid #00d2ff44;box-shadow:0 0 12px #000;}
-  .tw-minivault{position:absolute;width:70px;height:54px;background:linear-gradient(180deg,#5a4410,#2b1a00);border-radius:8px;border:2px solid #f8b50055;box-shadow:0 0 14px #f8b50033,inset 0 0 8px #000;}
-  .tw-minivault::after{content:"";position:absolute;left:50%;top:50%;width:18px;height:18px;transform:translate(-50%,-50%);border-radius:50%;border:3px solid #ffe9a8;box-shadow:0 0 6px #ffe9a8;}
-  .tw-road{height:120px;}
-  .tw-reflect{height:90px;}
-  .tw-icefloor{height:140px;}
-  `;
-  document.head.appendChild(s);
-})();
