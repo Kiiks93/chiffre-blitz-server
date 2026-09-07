@@ -342,7 +342,7 @@ const TW_COLOR_POOL = [
   {key:"gold",name:"OR",hex:"#f8b500"}, {key:"green",name:"VERT",hex:"#2ecc71"},
   {key:"red",name:"ROUGE",hex:"#ff4b2b"}, {key:"violet",name:"VIOLET",hex:"#9b5cff"}
 ];
-const TW_PAIR_SYMBOLS = ["🍒","⭐","💎","","⚡","🌙","👑","🎲","🍀","","🚀","","🍭","","🪙","","🦇","","🎄","","🧁","","🔔","️"];
+const TW_PAIR_SYMBOLS = ["🍒","⭐","💎","🔥","⚡","🌙","👑","🎲","🍀","🎯","🚀","🧊","🍭","🎁","🪙","🔮","🦇","🎃","🎄","🎅","🧁","🍩","🔔","🕯️"];
 
 function towerShuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
@@ -354,7 +354,7 @@ function getFloorDefServer(floor) {
   const t = seq[(inChap - 1) % 9];
   if (t === "sprint") return { ...base, type: "sprint", time: Math.max(8, 14 - chap) };
   if (t === "nofail") return { ...base, type: "nofail", time: 25 };
-  if (t === "pairs") { let g = base.gridSize; if (g % 2) g++; return { ...base, gridSize: g, type: "pairs", time: Math.max(24, 36 - chap) }; }
+  if (t === "pairs") { return { ...base, gridSize: 12, type: "pairs", time: Math.max(20, 28 - chap) }; }
   if (t === "color") return { ...base, type: "color", time: Math.max(20, 30 - chap) };
   if (t === "parity") return { ...base, gridSize: 24 + (chap - 1) * 6, type: "parity", time: Math.max(24, 40 - chap * 2) };
   if (t === "forbidden") return { ...base, type: "forbidden", time: Math.max(18, 28 - chap) };
