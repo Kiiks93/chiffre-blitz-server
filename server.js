@@ -1443,7 +1443,7 @@ io.on('connection', (socket) => {
     socket.emit('tower_data', { floor: player.towerFloor || 0, stars: player.towerStars || {} });
   });
 
-  socket.on('tower_floor_start', (data) => {
+  socket.on('tower_floor_start', async (data) => {
     const player = activePlayers[socket.id];
     if (!player) return;
     const floor = parseInt(data && data.floor) || 0;
