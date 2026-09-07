@@ -404,16 +404,15 @@ function showBriefing(def){
   const curStars=towerProgress.stars[String(def.floor)]||0;
   const starTime=Math.floor(def.time*0.6);
   let starRule;
-if (def.type === "pairs") {
-  starRule = fr ? "💡 ⭐ finir · ⭐⭐ en 25s · ⭐⭐⭐ en 15s (erreurs OK !)" : "💡 ⭐ finish · ⭐⭐ under 25s · ⭐⭐⭐ under 15s (mistakes OK!)";
-} else if (def.type === "sprint") {
-  const t3 = Math.round(def.gridSize * 0.45);
-  const t2 = Math.round(def.gridSize * 0.75);
-  starRule = fr ? "💡 ⭐ finir · ⭐⭐ en " + t2 + "s · ⭐⭐⭐ en " + t3 + "s" : "💡 ⭐ finish · ⭐⭐ under " + t2 + "s · ⭐⭐⭐ under " + t3 + "s";
-}
-} else {
-  starRule = fr ? "💡 ⭐ terminer · ⭐⭐ ≤2 erreurs · ⭐⭐⭐ 0 erreur + moins de " + starTime + "s !" : "💡 ⭐ finish · ⭐⭐ ≤2 mistakes · ⭐⭐⭐ 0 mistake + under " + starTime + "s!";
-}
+  if(def.type==="pairs"){
+    starRule=fr?"💡 ⭐ finir · ⭐ en 25s · ⭐⭐⭐ en 15s (erreurs OK !)":"💡 ⭐ finish · ⭐ under 25s · ⭐⭐⭐ under 15s (mistakes OK!)";
+  } else if(def.type==="sprint"){
+    const t3=Math.round(def.gridSize*0.45);
+    const t2=Math.round(def.gridSize*0.75);
+    starRule=fr?"💡 ⭐ finir · ⭐⭐ en "+t2+"s · ⭐⭐⭐ en "+t3+"s":"💡 ⭐ finish · ⭐ under "+t2+"s · ⭐⭐⭐ under "+t3+"s";
+  } else {
+    starRule=fr?"💡 ⭐ terminer · ⭐⭐ ≤2 erreurs · ⭐⭐⭐ 0 erreur + moins de "+starTime+"s !":"💡 ⭐ finish · ⭐⭐ ≤2 mistakes · ⭐⭐⭐ 0 mistake + under "+starTime+"s!";
+  }
   const replayLine=def.replay?`<div style="font-size:10px;color:#f8b500;margin-bottom:6px;">${fr?"Actuel : "+"⭐".repeat(curStars)+" — rejoue pour viser 3 ⭐ !":"Current: "+"⭐".repeat(curStars)+" — replay for 3 ⭐!"}</div>`:"";
   const b=document.createElement("div");b.id="tw-brief";b.className="tw-brief";
   b.innerHTML=`<div class="tw-brief-card">
