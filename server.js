@@ -338,6 +338,19 @@ const TOWER_CHAPTER_REWARDS = {
 };
 const TOWER_FPC = 200;
 const TOWER_TOTAL = 9 * TOWER_FPC; // 1800
+const TOWER_WORLD_QUOTA = 240; // 40% des 600 étoiles d'un monde
+function towerStarsInWorld(player, w){
+  let s=0; const start=(w-1)*TOWER_FPC+1, end=w*TOWER_FPC;
+  for(let f=start; f<=end; f++){ s += (player.towerStars && player.towerStars[String(f)]) || 0; }
+  return s;
+}
+function towerWorldUnlocked(player, world){
+  if(world<=1) return true;
+  for(let w=2; w<=world; w++){
+    if(towerStarsInWorld(player, w-1) < TOWER_WORLD_QUOTA) return false;
+  }
+  return true;
+}
 const TW_COLOR_POOL = [
   {key:"cyan",name:"CYAN",hex:"#00d2ff"}, {key:"pink",name:"ROSE",hex:"#ff2bd6"},
   {key:"gold",name:"OR",hex:"#f8b500"}, {key:"green",name:"VERT",hex:"#2ecc71"},
@@ -1435,6 +1448,11 @@ io.on('connection', (socket) => {
     if (!player) return;
     const floor = parseInt(data && data.floor) || 0;
     if (floor < 1 || floor > (player.towerFloor || 0) + 1) return;
+    const world = Math.ceil(floor / TOWER_FPC);
+    if (!towerWorldUnlocked(player, world)) {
+    await logPlayerAction(player, 'tower_locked', `Monde ${world} verrouillé (quota étoiles)`, null, null, null);
+    return;
+  }
     const s = buildTowerSession(player, floor);
     towerSessions[socket.id] = s;
     socket.emit('tower_state', towerStatePayload(s));
