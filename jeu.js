@@ -1441,7 +1441,11 @@ function startSoloTraining(mode) {
   resetCombo();
   comboFXEnabled = true;
   if (myProfile.equippedPower && (myProfile.inventory[myProfile.equippedPower] || 0) > 0) currentSoloCharges[myProfile.equippedPower] = 1;
+  
+  // ✅ ANTI-TRICHE : annoncer le début de la partie solo au serveur
+  socket.emit("solo_start");
   socket.emit("start_solo_training", { mode: activeTrainingMode, loadout: getOptionalLoadout ? getOptionalLoadout() : [] });
+  
   document.getElementById("screen-game").style.display = "block";
   document.getElementById("hud-solo").style.display = "grid";
   document.getElementById("hud-1v1").style.display = "none";
@@ -1541,7 +1545,11 @@ function startAvalancheGame(speed, initialCount) {
   if (myProfile.equippedPower && (myProfile.inventory[myProfile.equippedPower] || 0) > 0) {
     currentSoloCharges[myProfile.equippedPower] = 1;
   }
+  
+  // ✅ ANTI-TRICHE : annoncer le début de la partie au serveur
+  socket.emit("solo_start");
   socket.emit("start_solo_training", { mode: "avalanche", loadout: getOptionalLoadout ? getOptionalLoadout() : [] });
+  
   document.getElementById("solo-score").innerText = soloScore;
   document.getElementById("game-timer").innerText = avalancheTimeLeft;
   avalancheGridData = Array(16).fill(null);
