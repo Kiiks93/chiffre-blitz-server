@@ -626,12 +626,14 @@ function mistake(){
 function winFloor(){
   if(!TW||TW.done)return;
   TW.done=true;clearInterval(TW.int);
-  const used=(Date.now()-TW.start)/1000;
+  const used=(Date.now()-TW.start)/1000; // ⬅️ temps réel
   let stars=1;
   if(TW.mistakes===0&&used<=TW.def.time*0.6)stars=3;
   else if(TW.mistakes<=2)stars=2;
   document.getElementById("tower-game").style.display="none";
-  socket.emit(TW.def.replay?"tower_floor_replay":"tower_floor_win",{floor:TW.def.floor,stars});
+  socket.emit(TW.def.replay?"tower_floor_replay":"tower_floor_win",{
+    floor:TW.def.floor, stars, time:used  // ⬅️ ajout time
+  });
   TW=null;
 }
 function failFloor(){
