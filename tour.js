@@ -707,3 +707,11 @@ function showTowerWinPopup(res){
   `;
   document.head.appendChild(s);
 })();
+/* ----- CSS tuiles de scène ----- */
+(function(){
+  const s=document.createElement("style");
+  s.textContent=`
+  .tw-scenetile{position:absolute;left:0;right:0;overflow:hidden;}
+  `;
+  document.head.appendChild(s);
+})();
