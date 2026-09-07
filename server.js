@@ -424,50 +424,52 @@ function towerStatePayload(s){
   };
 }
 async function towerWin(player, s){
-  s.done=true;
-  const used=(Date.now()-s.start)/1000;
-  let stars=1;
-  
-  // 🎯 RÈGLES SPÉCIFIQUES PAR TYPE
-    if (s.type === "pairs") {
-    // ✅ Paires : vitesse pure (erreurs ignorées), seuils selon le nombre de paires
+  s.done = true;
+  const used = (Date.now() - s.start) / 1000;
+  let stars = 1;
+
+  // 🎯 Règles d'étoiles spécifiques par type
+  if (s.type === "pairs") {
     const pr = s.total / 2;
     const t3 = Math.round(pr * 1.5), t2 = Math.round(pr * 2.5);
     if (used <= t3) stars = 3;
     else if (used <= t2) stars = 2;
     else stars = 1;
-  }
   } else if (s.type === "sprint") {
-  // ✅ Sprint : seuils proportionnels à la grille (réaliste et atteignable)
-  const n = s.total;
-  if (used <= n * 0.45) stars = 3;       // ex: 16 cases → ≤7s · 20 cases → ≤9s
-  else if (used <= n * 0.75) stars = 2;  // ex: 16 cases → ≤12s · 20 cases → ≤15s
-  else stars = 1;
-} else {
-    // ✅ Autres modes : précision + vitesse
-    if(s.mistakes===0 && used<=s.def.time*0.6) stars=3;
-    else if(s.mistakes<=2) stars=2;
+    const n = s.total;
+    if (used <= n * 0.45) stars = 3;
+    else if (used <= n * 0.75) stars = 2;
+    else stars = 1;
+  } else {
+    if (s.mistakes === 0 && used <= s.def.time * 0.6) stars = 3;
+    else if (s.mistakes <= 2) stars = 2;
+    else stars = 1;
   }
-   let coins, reward=null;
+
+  let coins, reward = null;
   const chap = Math.ceil(s.floor / TOWER_FPC);
-  if(!s.replay){
+  if (!s.replay) {
     player.towerFloor = s.floor;
-    coins = 10 + s.floor*2 + stars*5;
-    if (s.floor % 20 === 0 && s.floor % TOWER_FPC !== 0) coins += 20 + chap*5;      // cache
-    if (s.floor % 50 === 0 && s.floor % TOWER_FPC !== 0) coins += 50 + chap*10;     // gardien
-    if (s.floor % TOWER_FPC === 0){                                                  // boss final
+    coins = 10 + s.floor * 2 + stars * 5;
+    if (s.floor % 20 === 0 && s.floor % TOWER_FPC !== 0) coins += 20 + chap * 5;      // cache
+    if (s.floor % 50 === 0 && s.floor % TOWER_FPC !== 0) coins += 50 + chap * 10;     // gardien
+    if (s.floor % TOWER_FPC === 0) {                                                   // boss final
       const itemId = TOWER_CHAPTER_REWARDS[s.floor / TOWER_FPC];
-      if (itemId){ player.unlocked_items = player.unlocked_items||[]; if(!player.unlocked_items.includes(itemId)){ player.unlocked_items.push(itemId); reward=itemId; } }
+      if (itemId) {
+        player.unlocked_items = player.unlocked_items || [];
+        if (!player.unlocked_items.includes(itemId)) { player.unlocked_items.push(itemId); reward = itemId; }
+      }
     }
   } else {
-    coins = 5 + stars*2;
+    coins = 5 + stars * 2;
   }
-  player.towerStars = player.towerStars||{};
-  player.towerStars[String(s.floor)] = Math.max(player.towerStars[String(s.floor)]||0, stars);
-  player.coins = (player.coins||0)+coins;
-  await logPlayerAction(player, s.replay?'tower_replay':'tower_win', `Étage ${s.floor} (${stars}⭐) en ${used.toFixed(1)}s, ${s.mistakes} faute(s)`, 'coins', coins, player.coins);
+
+  player.towerStars = player.towerStars || {};
+  player.towerStars[String(s.floor)] = Math.max(player.towerStars[String(s.floor)] || 0, stars);
+  player.coins = (player.coins || 0) + coins;
+  await logPlayerAction(player, s.replay ? 'tower_replay' : 'tower_win', `Étage ${s.floor} (${stars}⭐) en ${used.toFixed(1)}s, ${s.mistakes} faute(s)`, 'coins', coins, player.coins);
   await savePlayerToSupabase(player.socketId);
-  return { ok:true, floor:s.floor, stars, coins, reward, replay:s.replay };
+  return { ok: true, floor: s.floor, stars, coins, reward, replay: s.replay };
 }
 async function towerFail(player, s, reason){
   s.done=true;
