@@ -36,7 +36,7 @@ let towerProgress = { floor: 0, stars: {} };
 let TW = null, TW_dom = null, TW_buttons = [], TW_lastFloor = 0;
 let TW_hudCache = "", TW_localTimer = null, TW_lastClick = 0, TW_pairsLock = false;
 let TW_nodesRaf = null;
-const SCENE_CACHE = {}; // Cache des scènes HTML par chapitre
+const SCENE_CACHE = {};
 
 /* ----- 3. UTILITAIRES ----- */
 const TowerUtils = {
@@ -46,7 +46,6 @@ const TowerUtils = {
     for (let f = start; f <= end; f++) s += towerProgress.stars[String(f)] || 0;
     return s;
   },
-  
   worldUnlockedByStars(w) {
     if (w <= 1) return true;
     for (let x = 2; x <= w; x++) {
@@ -54,48 +53,37 @@ const TowerUtils = {
     }
     return true;
   },
-  
-  getTowerChapter(f) {
-    return TOWER_CHAPTERS[Math.ceil(f / FPC) - 1];
-  },
-  
-  currentSeasonNum() {
-    return parseInt((myProfile.currentSeasonId || "s1").replace("s", "")) || 1;
-  },
-  
+  getTowerChapter(f) { return TOWER_CHAPTERS[Math.ceil(f / FPC) - 1]; },
+  currentSeasonNum() { return parseInt((myProfile.currentSeasonId || "s1").replace("s", "")) || 1; },
   getFloorDef(floor) {
     const chap = Math.ceil(floor / FPC), inChap = ((floor - 1) % FPC) + 1;
     const global = (floor - 1) / (TOTAL_FLOORS - 1);
     let gridSize = Math.min(36, Math.round(12 + global * 24));
     let time = Math.max(14, Math.round(34 - global * 20));
-    
     if (inChap === FPC) return { floor, gridSize, time, type: "boss" };
     if (inChap % 50 === 0) return { floor, gridSize, time, type: "boss" };
-    
     const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","fog","nofail"];
     const t = seq[(inChap - 1) % 9];
-    
     if (t === "sprint") return { floor, gridSize, time: Math.max(8, Math.round(time * 0.5)), type: "sprint" };
     if (t === "nofail") return { floor, gridSize, time: Math.max(15, Math.round(time * 0.8)), type: "nofail" };
     if (t === "pairs") { let g = gridSize; if (g % 2) g++; return { floor, gridSize: g, time: Math.max(20, time + 6), type: "pairs" }; }
     if (t === "parity") return { floor, gridSize: Math.min(48, gridSize + 8), time: time + 4, type: "parity" };
     return { floor, gridSize, time, type: t };
   },
-  
   typeLabel(t) {
     const fr = currentLang === "fr";
     return ({classic:fr?"⚡ Croissant":"⚡ Ascending",reverse:fr?"🔽 Décroissant":"🔽 Descending",random:fr?"🎲 Chaos":"🎲 Chaos",color:fr?"🎨 Couleurs":"🎨 Colors",pairs:fr?"🧩 Paires":"🧩 Pairs",parity:fr?"🔢 Pair / Impair":"🔢 Even / Odd",forbidden:fr?"🚫 Interdit":"🚫 Forbidden","calc+":fr?"🧮 Addition":"🧮 Addition","calc-":fr?"🧮 Soustraction":"🧮 Subtraction",sprint:fr?"⏱️ Sprint":"⏱️ Sprint",memory:fr?"🙈 Mémoire":"🙈 Memory",fog:fr?"🌫️ Brouillard":"🌫️ Fog",nofail:fr?"💎 Sans faute":"💎 No mistake",boss:fr?"⚔️ GARDIEN":"⚔️ GUARDIAN"})[t] || t;
   },
-  
   twDesc(t) {
     const fr = currentLang === "fr";
-    return ({classic:fr?"Monte les nombres dans l'ordre croissant, le plus vite possible !":"Climb the numbers in ascending order, as fast as you can!",reverse:fr?"Cette fois on descend ! Clique du plus grand au plus petit.":"This time we go down! Click from biggest to smallest.",random:fr?"La cible change au hasard : reste concentré !":"The target changes randomly: stay focused!",color:fr?"Clique toutes les cases de la couleur demandée. La cible change quand la couleur est terminée.":"Click all tiles matching the requested color. The target changes when that color is cleared.",pairs:fr?"Retrouve les paires cachées. Mémorise bien les symboles !":"Find the hidden pairs. Memorize the symbols!",parity:fr?"Clique UNIQUEMENT les nombres demandés (pairs OU impairs). Les autres sont des pièges : ne les touche pas !":"Click ONLY the requested numbers (even OR odd). The others are traps: don't touch them!",forbidden:fr?"Clique tous les nombres SAUF le nombre interdit. Ne le touche surtout pas !":"Click all numbers EXCEPT the forbidden one. Do not touch it!","calc+":fr?"Clique sur les DEUX cases dont la SOMME donne la cible.":"Click the TWO tiles whose SUM equals the target.","calc-":fr?"Clique sur les DEUX cases dont la DIFFÉRENCE donne la cible.":"Click the TWO tiles whose DIFFERENCE equals the target.",sprint:fr?"Le temps est minuscule : vitesse pure !":"Tiny time limit: pure speed!",memory:fr?"Mémorise les nombres... ils seront cachés après 2 secondes !":"Memorize the numbers... they hide after 2 seconds!",fog:fr?"Le brouillard fait clignoter les nombres !":"Fog makes numbers blink!",nofail:fr?"UNE seule erreur et l'étage est raté. Concentration maximale.":"ONE single mistake and the floor fails. Max focus.",boss:fr?"Le Gardien grimpe en même temps que toi. Finis AVANT lui !":"The Guardian climbs with you. Finish BEFORE him!"})[t] || "";
+    return ({classic:fr?"Monte les nombres dans l'ordre croissant, le plus vite possible !":"Climb the numbers in ascending order, as fast as you can!",reverse:fr?"Cette fois on descend ! Clique du plus grand au plus petit.":"This time we go down! Click from biggest to smallest.",random:fr?"La cible change au hasard : reste concentré !":"The target changes randomly: stay focused!",color:fr?"Clique toutes les cases de la couleur demandée.":"Click all tiles matching the requested color.",pairs:fr?"Retrouve les paires cachées. Mémorise bien les symboles !":"Find the hidden pairs. Memorize the symbols!",parity:fr?"Clique UNIQUEMENT les nombres demandés (pairs OU impairs).":"Click ONLY the requested numbers (even OR odd).",forbidden:fr?"Clique tous les nombres SAUF le nombre interdit.":"Click all numbers EXCEPT the forbidden one.","calc+":fr?"Clique sur les DEUX cases dont la SOMME donne la cible.":"Click the TWO tiles whose SUM equals the target.","calc-":fr?"Clique sur les DEUX cases dont la DIFFÉRENCE donne la cible.":"Click the TWO tiles whose DIFFERENCE equals the target.",sprint:fr?"Le temps est minuscule : vitesse pure !":"Tiny time limit: pure speed!",memory:fr?"Mémorise les nombres... ils seront cachés après 2 secondes !":"Memorize the numbers... they hide after 2 seconds!",fog:fr?"Le brouillard fait clignoter les nombres !":"Fog makes numbers blink!",nofail:fr?"UNE seule erreur et l'étage est raté. Concentration maximale.":"ONE single mistake and the floor fails. Max focus.",boss:fr?"Le Gardien grimpe en même temps que toi. Finis AVANT lui !":"The Guardian climbs with you. Finish BEFORE him!"})[t] || "";
   }
 };
 
-/* ----- 4. CSS CONSOLIDÉ ----- */
+/* ----- 4. CSS CONSOLIDÉ (un seul bloc) ----- */
 (function() {
-  const css = `
+  const style = document.createElement('style');
+  style.textContent = `
   /* === LAYOUT === */
   #screen-tower{position:fixed;inset:0;background:#000;z-index:9990;display:none;flex-direction:column;}
   .tw-header{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#0f051d;border-bottom:2px solid #00d2ff;z-index:6;}
@@ -106,9 +94,7 @@ const TowerUtils = {
   .tw-map{position:relative;width:100%;}
   .tw-zone{position:absolute;left:0;right:0;overflow:hidden;}
   .tw-col{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,560px);}
-  .tw-row{position:absolute;left:0;right:0;display:flex;align-items:flex-end;gap:2%;padding:0 2%;}
-  .tw-scenetile{position:absolute;left:0;right:0;overflow:hidden;}
-  
+
   /* === NODES === */
   .tw-node{position:absolute;width:clamp(40px,12vw,50px);height:clamp(40px,12vw,50px);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:clamp(14px,4vw,17px);color:#fff;text-shadow:0 1px 2px #000a;transform:translate(-50%,0);border:3px solid #333;background:#1a1a2e;z-index:2;}
   .tw-node.won{border-color:#ffffff44;box-shadow:0 3px 0 #00000066;}
@@ -119,47 +105,56 @@ const TowerUtils = {
   .tw-ava{position:absolute;top:-27px;left:50%;transform:translateX(-50%);font-size:clamp(16px,5vw,20px);animation:twBounce2 1.2s infinite;}
   .tw-gate{position:absolute;background:#0f051d;border:2px solid #00d2ff;border-radius:12px;padding:5px 14px;font-size:clamp(9px,2.8vw,11px);font-weight:900;color:#00d2ff;white-space:nowrap;z-index:3;box-shadow:0 0 12px #00d2ff44;}
   .tw-gate.lock{border-color:#333;color:#666;box-shadow:none;}
-  
-  /* === SCÈNES CITY === */
-  .tw-moon{position:absolute;top:1.5%;right:12%;width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff8e8,#d8c9a8 60%,#a89878);box-shadow:0 0 24px #fff8e866,0 0 60px #fff8e833;}
+
+  /* === CITY SCENE === */
+  .tw-moon{position:absolute;top:2%;right:10%;width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff8e8,#d8c9a8 60%,#a89878);box-shadow:0 0 30px #fff8e866,0 0 80px #fff8e833;}
   .tw-star2{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;animation:twFlickP 3s steps(2) infinite;}
   .tw-cloud{position:absolute;height:10px;border-radius:6px;background:linear-gradient(90deg,transparent,#8888aa22 30%,#8888aa22 70%,transparent);filter:blur(3px);animation:twCloud linear infinite;}
+  .tw-horizon{position:absolute;bottom:14%;left:0;right:0;height:18%;background:radial-gradient(ellipse at 50% 100%,#ff00ff33,transparent 70%),radial-gradient(ellipse at 30% 100%,#00ffff2b,transparent 60%);}
+  .tw-cityback{position:absolute;bottom:14%;left:0;right:0;height:52%;display:flex;align-items:flex-end;gap:1%;padding:0 1%;opacity:.45;filter:brightness(.5);}
+  .tw-cityback .tw-bldg{border-top:none;}
+  .tw-city{position:absolute;bottom:14%;left:0;right:0;height:42%;display:flex;align-items:flex-end;gap:2%;padding:0 2%;}
   .tw-bldg{flex:1;position:relative;background:linear-gradient(180deg,#0d0d1e,#05050c);border-radius:3px 3px 0 0;box-shadow:0 0 12px #000;border-top:2px solid #00d2ff44;}
   .tw-ant{position:absolute;top:-14px;left:50%;width:2px;height:14px;background:#333;box-shadow:0 -3px 6px #ff4b2b;}
   .tw-wl{position:absolute;width:4px;height:5px;background:currentColor;box-shadow:0 0 5px currentColor;animation:twWin linear infinite;}
   .tw-road{position:absolute;bottom:0;left:0;right:0;height:14%;background:linear-gradient(180deg,#23232e,#101016 30%,#0a0a0e);box-shadow:inset 0 4px 10px #000c;}
+  .tw-lane{position:absolute;left:0;right:0;top:46%;height:3px;background:repeating-linear-gradient(90deg,#f8b50088 0 34px,transparent 34px 70px);opacity:.7;}
   .tw-reflect{position:absolute;left:0;right:0;bottom:0;height:14%;background:linear-gradient(90deg,#ff00ff22,#00ffff22,#f8b50022,#ff00ff22);background-size:300% 100%;filter:blur(7px);animation:twSlide 6s linear infinite;pointer-events:none;opacity:.45;}
   .tw-car{position:absolute;width:54px;height:16px;z-index:3;animation:twDrive linear infinite;}
   .tw-car i{position:absolute;display:block;}
-  .tw-car .cb{bottom:3px;left:0;right:0;height:9px;border-radius:5px 7px 3px 3px;background:linear-gradient(180deg,#3d3d52,#12121c 70%);box-shadow:inset 0 1px 0 #ffffff55,0 0 10px #00d2ff44;}
+  .tw-car .cb{bottom:3px;left:0;right:0;height:9px;border-radius:8px 14px 6px 6px;background:linear-gradient(180deg,#3d3d52,#12121c 70%);box-shadow:inset 0 1px 0 #ffffff55,0 0 10px #00d2ff44;}
   .tw-car .cc{bottom:10px;left:12px;width:26px;height:8px;border-radius:8px 10px 0 0;background:linear-gradient(180deg,#2a2a3a,#151520);box-shadow:inset 0 1px 0 #ffffff33;}
   .tw-car .cc::after{content:"";position:absolute;inset:2px 3px 1px 3px;background:linear-gradient(180deg,#7ff4ff88,#20405066);border-radius:3px;}
   .tw-car .ug{position:absolute;bottom:-3px;left:6%;right:6%;height:4px;border-radius:2px;background:currentColor;box-shadow:0 0 10px currentColor,0 0 20px currentColor;opacity:.9;}
-  .tw-car .w1,.tw-car .w2{bottom:0;width:9px;height:9px;border-radius:50%;background:radial-gradient(#666 25%,#111 60%);box-shadow:0 1px 2px #000;}
-  .tw-car .w1{left:8px;}.tw-car .w2{right:8px;}
+  .tw-car .w1,.tw-car .w2{bottom:0;width:9px;height:9px;border-radius:50%;background:radial-gradient(#666 25%,#111 60%);box-shadow:0 1px 2px #000;display:none;}
   .tw-car .hl{right:-32px;bottom:5px;width:34px;height:5px;background:linear-gradient(90deg,#bffcffcc,transparent);filter:blur(2px);}
   .tw-car .tl{left:-4px;bottom:6px;width:7px;height:5px;background:radial-gradient(closest-side,#ff2bd6,transparent);box-shadow:0 0 8px #ff2bd6;}
   .tw-car.r{animation-name:twDriveR;transform:scaleX(-1);}
   .tw-car.s{transform:scale(.8);transform-origin:bottom left;}
   .tw-car.s.r{transform:scale(.8) scaleX(-1);}
-  
-  /* === SCÈNES GLACIER === */
+
+  /* === GLACIER SCENE === */
   .tw-icicle{position:absolute;top:0;width:22px;background:linear-gradient(180deg,#5a8ea0aa,#bfefffcc 55%,#ffffff);clip-path:polygon(0 0,100% 0,70% 45%,60% 80%,52% 100%,48% 100%,40% 80%,30% 45%);filter:drop-shadow(0 0 6px #74ebf5aa);}
-  .tw-ray{position:absolute;top:28%;left:50%;width:7%;height:62%;background:linear-gradient(180deg,#74ebf533,transparent);transform-origin:top center;filter:blur(4px);animation:twRay 4s ease-in-out infinite;}
+  .tw-cavewall{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 55%,#74ebf518 0%,#0a2a3a66 35%,#000000ee 78%);}
+  .tw-rocktop{position:absolute;top:0;left:0;right:0;height:22%;background:#020608;clip-path:polygon(0 0,100% 0,96% 55%,88% 25%,80% 70%,70% 30%,60% 75%,50% 35%,40% 80%,30% 30%,20% 70%,12% 28%,4% 60%,0 30%);}
+  .tw-rockbot{position:absolute;bottom:0;left:0;right:0;height:18%;background:#020608;clip-path:polygon(0 100%,100% 100%,96% 45%,88% 75%,80% 30%,70% 70%,60% 25%,50% 65%,40% 20%,30% 70%,20% 30%,12% 72%,4% 40%,0 70%);}
+  .tw-ray{position:absolute;left:50%;width:7%;height:62%;background:linear-gradient(180deg,#74ebf533,transparent);transform-origin:top center;filter:blur(4px);animation:twRay 4s ease-in-out infinite;}
+  .tw-bigcrys{position:absolute;background:linear-gradient(180deg,#ffffffee,#74ebf5 55%,#0a2a3a);clip-path:polygon(50% 0,100% 100%,0 100%);box-shadow:0 0 30px #74ebf5cc,0 0 60px #74ebf566;animation:twGlowC 2.2s infinite;}
   .tw-cryscl{position:absolute;width:90px;height:120px;filter:drop-shadow(0 0 22px #74ebf5cc);animation:twGlowC 2.6s infinite;}
   .tw-cryscl .c{position:absolute;bottom:0;background:linear-gradient(115deg,transparent 38%,#ffffffaa 38% 44%,transparent 44% 62%,#ffffff66 62% 66%,transparent 66%),linear-gradient(180deg,#f4feff,#8ff2ff 45%,#2a8ba8 80%,#14506a);clip-path:polygon(50% 0,76% 12%,90% 62%,70% 100%,30% 100%,10% 62%,24% 12%);}
   .tw-cryscl .c::before{content:"";position:absolute;left:50%;top:6%;width:2px;height:80%;background:linear-gradient(#ffffffcc,transparent);}
   .tw-cryscl .c1{left:30%;width:40%;height:100%;}
   .tw-cryscl .c2{left:0;width:30%;height:62%;transform:rotate(-14deg);}
   .tw-cryscl .c3{right:0;width:30%;height:70%;transform:rotate(12deg);}
-  .tw-mist{position:absolute;left:50%;top:40%;width:60%;height:30%;transform:translateX(-50%);background:radial-gradient(ellipse,#74ebf522,transparent 70%);filter:blur(10px);animation:twMist 7s ease-in-out infinite;}
-  .tw-mist.m2{top:55%;width:45%;animation-delay:2.5s;}
+  .tw-mist{position:absolute;left:50%;width:60%;height:30%;transform:translateX(-50%);background:radial-gradient(ellipse,#74ebf522,transparent 70%);filter:blur(10px);animation:twMist 7s ease-in-out infinite;}
+  .tw-mist.m2{width:45%;animation-delay:2.5s;}
   .tw-icefloor{position:absolute;bottom:0;left:0;right:0;height:16%;background:linear-gradient(180deg,#74ebf522,#04141d);box-shadow:inset 0 8px 20px #74ebf533;}
   .tw-stalag{position:absolute;bottom:0;width:26px;background:linear-gradient(0deg,#5a8ea0aa,#bfefffcc 55%,#ffffff);clip-path:polygon(48% 0,52% 0,62% 30%,72% 60%,100% 100%,0 100%,28% 60%,38% 30%);filter:drop-shadow(0 0 6px #74ebf5aa);}
-  
-  /* === SCÈNES VAULT === */
+
+  /* === VAULT SCENE === */
   .tw-marble{position:absolute;inset:0;background:linear-gradient(115deg,transparent 40%,#ffffff08 40% 42%,transparent 42%),linear-gradient(65deg,transparent 55%,#ffffff06 55% 57%,transparent 57%),linear-gradient(150deg,transparent 70%,#ffffff05 70% 71%,transparent 71%);}
   .tw-spot{position:absolute;top:0;width:16%;height:70%;background:linear-gradient(180deg,#ffe9a833,transparent 80%);clip-path:polygon(40% 0,60% 0,100% 100%,0 100%);filter:blur(3px);animation:twGlowC 4s infinite;}
+  .tw-pillar{position:absolute;top:0;bottom:0;width:8%;background:linear-gradient(90deg,#1a0f02,#5a4410 50%,#1a0f02);border-left:2px solid #8a6a1a44;border-right:2px solid #8a6a1a44;box-shadow:0 0 12px #000c;}
   .tw-vaultglow{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(92%,440px);aspect-ratio:1;border-radius:50%;background:radial-gradient(#f8b50044,transparent 70%);animation:twGlowC 3s infinite;}
   .tw-vaultframe{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(86%,430px);aspect-ratio:1.15;background:linear-gradient(180deg,#5a4410,#2b1a00);border-radius:14px;box-shadow:0 0 40px #f8b50033,inset 0 0 30px #000;}
   .tw-vaultdoor{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:82%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c9a227,#8a6a1a 40%,#3a2a05 75%,#160d00);border:6px solid #f8b50088;box-shadow:0 0 60px #f8b50066,inset 0 0 40px #000000aa;}
@@ -181,20 +176,22 @@ const TowerUtils = {
   .tw-laser.d{animation-name:twLaserD;}
   .tw-gloss{position:absolute;bottom:0;left:0;right:0;height:12%;background:linear-gradient(180deg,#0000,#f8b50018 40%,#00000088);box-shadow:inset 0 6px 14px #000a;}
   .tw-goldspill{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:70%;height:18%;background:radial-gradient(ellipse at 50% 100%,#f8b50055,transparent 70%);filter:blur(6px);}
-  
+  .tw-sweep{position:absolute;top:8%;bottom:8%;width:14%;background:linear-gradient(90deg,transparent,#ffe9a855,transparent);transform:skewX(-12deg);animation:twSweep 5.5s ease-in-out infinite;pointer-events:none;}
+  .tw-coin{position:absolute;font-size:22px;filter:drop-shadow(0 0 8px #f8b500);animation:twCoin 2.5s ease-in-out infinite;}
+
   /* === PARTICULES === */
   .tw-part{position:absolute;width:4px;height:4px;border-radius:50%;}
   .tw-part.snow{background:#ffffffcc;animation:twFall linear infinite;}
   .tw-part.spark{background:#f8b500;box-shadow:0 0 6px #f8b500;animation:twRise linear infinite;}
   .tw-part.neon{box-shadow:0 0 8px currentColor;background:currentColor;animation:twFlickP 2.2s steps(2) infinite;}
-  
+
   /* === BRIEFING === */
   .tw-brief{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:9995;}
   .tw-brief-card{background:#0f051d;border:2px solid #00d2ff;border-radius:12px;padding:16px;max-width:82%;text-align:center;box-shadow:0 0 20px #00d2ff66;}
   .tw-stars{font-size:26px;letter-spacing:6px;text-align:center;margin:10px 0;}
   .tw-stars span{display:inline-block;animation:twPop .6s ease backwards;}
   .btn-tower{background:linear-gradient(45deg,#7a00ff,#00d2ff)!important;animation:twBtn 2s infinite;box-shadow:0 0 14px #7a00ff88;}
-  
+
   /* === GAME SCREEN === */
   .twg-screen{position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,#1a2142,#05050f 70%);z-index:9996;display:none;flex-direction:column;}
   .twg-header{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#0f051d;border-bottom:2px solid #00d2ff;}
@@ -209,7 +206,7 @@ const TowerUtils = {
   .tg-tile.gone{opacity:0;pointer-events:none;transform:scale(.4);transition:all .3s;}
   .tg-tile.foggy{animation:twFog 2s infinite;}
   .twg-msg{text-align:center;font-size:11px;color:#aaa;padding:6px 10px 12px;}
-  
+
   /* === ANIMATIONS === */
   @keyframes twPulse{50%{transform:translate(-50%,0) scale(1.15)}}
   @keyframes twBounce2{50%{transform:translateX(-50%) translateY(-4px)}}
@@ -230,62 +227,92 @@ const TowerUtils = {
   @keyframes twFall{0%{top:-4%}100%{top:104%}}
   @keyframes twRise{0%{top:104%}100%{top:-4%}}
   @keyframes twSlide{to{background-position:300% 0}}
+  @keyframes twSweep{0%{left:-20%;opacity:0}15%{opacity:1}85%{opacity:1}100%{left:110%;opacity:0}}
+  @keyframes twCoin{50%{transform:translateY(-4px) rotate(15deg)}}
   `;
-  
-  const style = document.createElement('style');
-  style.textContent = css;
   document.head.appendChild(style);
 })();
 
 /* ----- 5. GÉNÉRATION DE SCÈNES (avec cache) ----- */
 function generateSceneHTML(c, W, C) {
   if (SCENE_CACHE[c]) return SCENE_CACHE[c];
-  
   let html = "";
+
   if (W.scene === "city") {
+    /* 🌙 LUNE tout en haut */
     html += `<span class="tw-moon"></span>`;
-    for (let i = 0; i < 60; i++) html += `<span class="tw-star2" style="left:${(i*37)%96}%;top:${(i*7)%20}%;animation-delay:${(i*.3)%3}s;"></span>`;
-    for (let i = 0; i < 3; i++) html += `<span class="tw-cloud" style="top:${3+i*5}%;width:${20+(i*7)%14}%;animation-duration:${60+i*20}s;animation-delay:${i*9}s;"></span>`;
-    
+    /* ✨ CIEL : 140 étoiles couvrant le haut (0-44%) */
+    for (let i = 0; i < 140; i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%44}%;animation-delay:${(i*.23)%3}s;"></span>`;
+    /* ☁️ Nuages */
+    for (let i = 0; i < 4; i++) html += `<span class="tw-cloud" style="top:${3+i*6}%;width:${22+(i*9)%16}%;animation-duration:${70+i*25}s;animation-delay:${i*11}s;"></span>`;
+    /* 🌆 Horizon glow */
+    html += `<div class="tw-horizon"></div>`;
+    /* 🏢 Silhouettes arrière-plan (hautes, foncées) */
     const cols = ["#00ffff","#ff00ff","#f8b500","#7dff8a"];
-    const rows = [{top:"16%",h:200,op:.35,n:7,w:4},{top:"34%",h:250,op:.55,n:7,w:6},{top:"52%",h:300,op:.75,n:6,w:8},{top:"70%",h:340,op:.9,n:6,w:10},{top:"86%",h:380,op:1,n:5,w:12}];
-    rows.forEach((r, ri) => {
-      let b = "";
-      for (let i = 0; i < r.n; i++) {
-        let wins = "";
-        for (let w = 0; w < r.w; w++) wins += `<span class="tw-wl" style="color:${cols[(w+i+ri)%4]};left:${6+((w*23)%84)}%;top:${8+((w*31)%78)}%;animation-duration:${2.5+((w*13)%4)}s;animation-delay:${(w*.53)%3}s;"></span>`;
-        b += `<div class="tw-bldg" style="height:${60+((i*37+ri*17)%r.h)}px;flex:${i%2?1.2:1};">${wins}${(i+ri)%3===0?'<span class="tw-ant"></span>':""}</div>`;
-      }
-      html += `<div class="tw-row" style="top:${r.top};height:${r.h}px;opacity:${r.op};">${b}</div>`;
-    });
-    html += `<div class="tw-road"></div><div class="tw-reflect"></div>`;
+    let back = "";
+    const hb = [70,88,76,96,82,90,74,92,80,86];
+    for (let i = 0; i < 10; i++) back += `<div class="tw-bldg" style="height:${hb[i]}%;flex:${i%2?1.3:1};"></div>`;
+    html += `<div class="tw-cityback">${back}</div>`;
+    /* 🏢 Immeubles principaux ALLONGÉS EN HAUTEUR avec fenêtres */
+    let b = "";
+    const hs = [42,62,50,74,56,68,46,70];
+    const hf = [1,1.25,.9,1.15,1,.85,1.2,1];
+    for (let i = 0; i < 8; i++) {
+      let wins = "";
+      const n = 26 + (i % 3) * 10;
+      for (let w = 0; w < n; w++) wins += `<span class="tw-wl" style="color:${cols[(w+i)%4]};left:${6+((w*23)%84)}%;top:${4+((w*31)%92)}%;animation-duration:${2.5+((w*13)%4)}s;animation-delay:${(w*0.53)%3}s;"></span>`;
+      b += `<div class="tw-bldg" style="height:${hs[i]}%;flex:${hf[i]};">${wins}${i%3===0?'<span class="tw-ant"></span>':""}</div>`;
+    }
+    html += `<div class="tw-city">${b}</div>`;
+    /* 🚗 ROUTE + voitures tout en bas */
+    html += `<div class="tw-road"><span class="tw-lane"></span></div><div class="tw-reflect"></div>`;
     const car = (cls, bottom, dur, delay, col) => `<span class="tw-car ${cls}" style="bottom:${bottom};animation-duration:${dur};animation-delay:${delay};color:${col};"><i class="cb"></i><i class="cc"></i><i class="ug"></i><i class="w1"></i><i class="w2"></i><i class="hl"></i><i class="tl"></i></span>`;
-    html += car("", "2.5%", "9s", "0s", "#00d2ff") + car("r", "8%", "12s", "2s", "#ff2bd6") + car("s", "9%", "7s", "4.5s", "#f8b500");
+    html += car("", "22px", "9s", "0s", "#00d2ff") + car("r", "62px", "12s", "2s", "#ff2bd6") + car("s", "80px", "7s", "4.5s", "#f8b500");
   }
-  
+
   if (W.scene === "glacier") {
-    [[6,120],[16,90],[26,140],[38,80],[50,120],[62,90],[74,130],[86,85],[94,110]].forEach(p => { html += `<span class="tw-icicle" style="left:${p[0]}%;height:${p[1]}px;"></span>`; });
+    html += `<div class="tw-cavewall"></div><div class="tw-rocktop"></div>`;
+    /* Stalactites en haut */
+    [[6,120],[16,90],[26,140],[38,80],[50,120],[62,90],[74,130],[86,85],[94,110]].forEach(p => {
+      html += `<span class="tw-icicle" style="left:${p[0]}%;height:${p[1]}px;"></span>`;
+    });
+    /* Rayons de lumière */
     html += `<div class="tw-ray" style="top:4%;"></div><div class="tw-ray" style="top:6%;left:30%;animation-delay:1s;"></div>`;
-    [{top:"16%",s:1,l:12},{top:"34%",s:.85,l:34},{top:"52%",s:1.1,l:56},{top:"70%",s:.9,l:76}].forEach((cl, ci) => {
+    /* Cristaux */
+    [{top:"28%",s:1,l:12},{top:"42%",s:.85,l:34},{top:"56%",s:1.1,l:56},{top:"68%",s:.9,l:76},{top:"38%",s:.75,l:88}].forEach((cl, ci) => {
       html += `<span class="tw-cryscl" style="left:${cl.l}%;top:${cl.top};bottom:auto;transform:scale(${cl.s});animation-delay:${ci*.6}s;"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span>`;
     });
-    html += `<div class="tw-mist m1" style="top:40%;"></div><div class="tw-mist m2" style="top:60%;"></div><div class="tw-icefloor"></div>`;
-    [[10,80],[26,60],[52,70],[64,50],[84,65]].forEach(p => { html += `<span class="tw-stalag" style="left:${p[0]}%;height:${p[1]}px;"></span>`; });
+    /* Brume */
+    html += `<div class="tw-mist" style="top:40%;"></div><div class="tw-mist m2" style="top:60%;"></div>`;
+    /* Sol de glace + stalagmites */
+    html += `<div class="tw-icefloor"></div><div class="tw-rockbot"></div>`;
+    [[10,80],[26,60],[42,75],[58,55],[74,70],[90,60]].forEach(p => {
+      html += `<span class="tw-stalag" style="left:${p[0]}%;height:${p[1]}px;"></span>`;
+    });
   }
-  
+
   if (W.scene === "vault") {
-    html += `<div class="tw-marble"></div><div class="tw-spot" style="left:20%;"></div><div class="tw-spot" style="left:60%;animation-delay:1.5s;"></div>`;
+    html += `<div class="tw-marble"></div>`;
+    /* Piliers latéraux */
+    html += `<div class="tw-pillar" style="left:4%;"></div><div class="tw-pillar" style="right:4%;"></div>`;
+    /* Spots lumineux */
+    html += `<div class="tw-spot" style="left:18%;"></div><div class="tw-spot" style="left:62%;animation-delay:1.5s;"></div>`;
+    /* Coffre principal */
     let bolts = ""; for (let i = 0; i < 12; i++) { const a = i*Math.PI/6; bolts += `<span class="tw-vbolt" style="left:${50+44*Math.cos(a)}%;top:${50+44*Math.sin(a)}%;"></span>`; }
     let knobs = ""; for (let i = 0; i < 6; i++) { const a = i*Math.PI/3; knobs += `<span class="tw-knob" style="left:${50+38*Math.cos(a)}%;top:${50+38*Math.sin(a)}%;"></span>`; }
     html += `<div class="tw-vaultglow"></div><div class="tw-vaultframe"><span class="tw-fbolt" style="left:5%;top:7%;"></span><span class="tw-fbolt" style="right:5%;top:7%;"></span><span class="tw-fbolt" style="left:5%;bottom:7%;"></span><span class="tw-fbolt" style="right:5%;bottom:7%;"></span><span class="tw-hinge h1"></span><span class="tw-hinge h2"></span><div class="tw-vaultdoor"><div class="tw-vaultwheel">${knobs}</div><span class="tw-dial"></span><span class="tw-handle"></span>${bolts}</div></div>`;
-    html += `<div class="tw-laser" style="top:30%;animation-duration:5s;"></div><div class="tw-laser d" style="top:48%;animation-duration:7s;animation-delay:1s;"></div><div class="tw-laser" style="top:64%;animation-duration:6s;animation-delay:2s;"></div>`;
-    for (let i = 0; i < 8; i++) html += `<span class="tw-ingot" style="left:${8+i*11}%;bottom:${6+(i%3)*8}px;"></span>`;
-    html += `<div class="tw-gloss"></div><div class="tw-goldspill"></div>`;
+    /* Lasers de sécurité */
+    html += `<div class="tw-laser" style="top:28%;animation-duration:5s;"></div><div class="tw-laser d" style="top:46%;animation-duration:7s;animation-delay:1s;"></div><div class="tw-laser" style="top:64%;animation-duration:6s;animation-delay:2s;"></div>`;
+    /* Lingots */
+    for (let i = 0; i < 8; i++) html += `<span class="tw-ingot" style="left:${8+i*11}%;bottom:${10+(i%3)*10}px;"></span>`;
+    /* Reflets */
+    html += `<div class="tw-sweep"></div><div class="tw-gloss"></div><div class="tw-goldspill"></div>`;
   }
-  
+
+  /* Particules flottantes */
   let parts = "";
   for (let i = 0; i < 7; i++) parts += `<span class="tw-part ${W.part}" style="color:${C.acc};left:${(i*13+c*7)%96}%;animation-duration:${4+(i%4)*1.5}s;animation-delay:${i*.7}s;"></span>`;
-  
+
   const result = html + parts;
   SCENE_CACHE[c] = result;
   return result;
@@ -295,47 +322,42 @@ function generateSceneHTML(c, W, C) {
 function drawRoom() {
   const wrap = document.getElementById("tw-mapwrap");
   if (!wrap) return;
-  
   const season = TowerUtils.currentSeasonNum();
   const current = Math.min(towerProgress.floor + 1, TOTAL_FLOORS);
   let totalStars = 0;
   for (const k in towerProgress.stars) totalStars += towerProgress.stars[k];
   document.getElementById("tower-sub").innerText = "É" + current + " ⭐" + totalStars;
-  
+
   const H = TOTAL_FLOORS * STEP + 110;
   let zones = "", gates = "", paths = "", ptsByChap = {};
-  
+
   for (let c = 1; c <= 9; c++) {
-    const chap = TOWER_CHAPTERS[c-1];
+    const chap = TOWER_CHAPTERS[c - 1];
     const zTop = H - STEP * c * FPC - 32, zH = STEP * FPC;
     const starLock = !TowerUtils.worldUnlockedByStars(c);
-    
     if (chap.season > season || starLock) {
       zones += `<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:linear-gradient(180deg,#0a0a14,#050508);"></div>`;
-      const label = (chap.season > season) ? `🔒 ${currentLang==="fr"?"Bientôt":"Soon"}` : `🔒 ${TowerUtils.starsInWorld(c-1)}/${WORLD_QUOTA} ⭐`;
-      gates += `<div class="tw-gate lock" style="top:${zTop+10}px;right:12px;left:auto;transform:none;">${label}</div>`;
+      const label = (chap.season > season) ? `🔒 ${currentLang === "fr" ? "Bientôt" : "Soon"}` : `🔒 ${TowerUtils.starsInWorld(c - 1)}/${WORLD_QUOTA} ⭐`;
+      gates += `<div class="tw-gate lock" style="top:${zTop + 10}px;right:12px;left:auto;transform:none;">${label}</div>`;
       continue;
     }
-    
     const W = TOWER_WORLDS[c], C = TOWER_COLORS[c];
     zones += `<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:${W.bg};">${generateSceneHTML(c, W, C)}</div>`;
-    gates += `<div class="tw-gate" style="top:${zTop+10}px;right:12px;left:auto;transform:none;border-color:${C.acc};color:${C.acc};">${chap.icon} ${chap.name}</div>`;
+    gates += `<div class="tw-gate" style="top:${zTop + 10}px;right:12px;left:auto;transform:none;border-color:${C.acc};color:${C.acc};">${chap.icon} ${chap.name}</div>`;
   }
-  
+
   for (let f = 1; f <= TOTAL_FLOORS; f++) {
     const chap = TowerUtils.getTowerChapter(f);
     if (chap.season > season || !TowerUtils.worldUnlockedByStars(chap.id)) continue;
     const y = H - STEP * f, x = 50 + Math.sin(f * 0.55) * 16;
     (ptsByChap[chap.id] = ptsByChap[chap.id] || []).push([x, y + 23]);
   }
-  
   for (const cid in ptsByChap) {
     const pts = ptsByChap[cid];
-    if (pts.length > 1) paths += `<path d="M${pts.map(p=>p[0]+" "+p[1]).join(" L ")}" fill="none" stroke="${TOWER_COLORS[cid].acc}44" stroke-width="7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
+    if (pts.length > 1) paths += `<path d="M${pts.map(p => p[0] + " " + p[1]).join(" L ")}" fill="none" stroke="${TOWER_COLORS[cid].acc}44" stroke-width="7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
   }
-  
-  wrap.innerHTML = `<div class="tw-map" style="height:${H}px;">${zones}<div id="tw-scenes" style="position:absolute;inset:0;z-index:1;pointer-events:none;"></div><div class="tw-col"><svg style="position:absolute;inset:0;width:100%;height:100%;z-index:2;" viewBox="0 0 100 ${H}" preserveAspectRatio="none">${paths}</svg><div id="tw-nodes" style="position:absolute;inset:0;z-index:3;"></div>${gates}</div></div>`;
-  
+
+  wrap.innerHTML = `<div class="tw-map" style="height:${H}px;">${zones}<div class="tw-col"><svg style="position:absolute;inset:0;width:100%;height:100%;z-index:1;" viewBox="0 0 100 ${H}" preserveAspectRatio="none">${paths}</svg><div id="tw-nodes" style="position:absolute;inset:0;z-index:2;"></div>${gates}</div></div>`;
   wrap.onscroll = scheduleRenderWindow;
   const yCur = H - STEP * current;
   wrap.scrollTop = Math.max(0, yCur - wrap.clientHeight / 2);
@@ -350,28 +372,23 @@ function scheduleRenderWindow() {
 function renderWindow() {
   const wrap = document.getElementById("tw-mapwrap");
   if (!wrap) return;
-  
-  const scenesLayer = document.getElementById("tw-scenes");
-  const nodesLayer = document.getElementById("tw-nodes");
-  if (!scenesLayer || !nodesLayer) return;
-  
+  const layer = document.getElementById("tw-nodes");
+  if (!layer) return;
   const H = TOTAL_FLOORS * STEP + 110;
   const top = wrap.scrollTop, vh = wrap.clientHeight;
   const season = TowerUtils.currentSeasonNum();
   const current = Math.min(towerProgress.floor + 1, TOTAL_FLOORS);
   const worldOk = {};
-  for (let c = 1; c <= 9; c++) worldOk[c] = (TOWER_CHAPTERS[c-1].season <= season) && TowerUtils.worldUnlockedByStars(c);
-  
-  // Rendu virtuel des nœuds
+  for (let c = 1; c <= 9; c++) worldOk[c] = (TOWER_CHAPTERS[c - 1].season <= season) && TowerUtils.worldUnlockedByStars(c);
+
   const yTop = top - 300, yBot = top + vh + 300;
   const hi = Math.min(TOTAL_FLOORS, Math.floor((H - yTop) / STEP) + 1);
   const lo = Math.max(1, Math.ceil((H - yBot) / STEP) - 1);
-  
+
   let nhtml = "";
   for (let f = lo; f <= hi; f++) {
     const chap = TowerUtils.getTowerChapter(f);
     if (!worldOk[chap.id]) continue;
-    
     const y = H - STEP * f, x = 50 + Math.sin(f * 0.55) * 16;
     const won = f <= towerProgress.floor, cur = f === current;
     const inChap = ((f - 1) % FPC) + 1;
@@ -381,14 +398,13 @@ function renderWindow() {
     const clickable = (cur && awake) || won;
     const C = TOWER_COLORS[chap.id];
     const wonBg = won ? `background:radial-gradient(circle at 35% 30%,#ffffffb3,${C.acc} 55%,#000000c9);` : "";
-    
-    nhtml += `<div class="tw-node ${won?"won":(cur&&awake?"cur":"lock")} ${(boss||guardian)?"boss":""}" style="left:${x}%;top:${y}px;${wonBg}${(boss||guardian)?`border-color:${C.acc};`:""}" ${clickable?`onclick="mapPlay(${f})"`:""}>
-      ${boss?chap.boss:(guardian?"⚔️":f)}
-      ${won&&st?`<span class="tw-st">${"⭐".repeat(st)}</span>`:""}
-      ${cur?`<span class="tw-ava">🧍</span>`:""}
+    nhtml += `<div class="tw-node ${won ? "won" : (cur && awake ? "cur" : "lock")} ${(boss || guardian) ? "boss" : ""}" style="left:${x}%;top:${y}px;${wonBg}${(boss || guardian) ? `border-color:${C.acc};` : ""}" ${clickable ? `onclick="mapPlay(${f})"` : ""}>
+      ${boss ? chap.boss : (guardian ? "⚔️" : f)}
+      ${won && st ? `<span class="tw-st">${"⭐".repeat(st)}</span>` : ""}
+      ${cur ? `<span class="tw-ava">🧍</span>` : ""}
     </div>`;
   }
-  nodesLayer.innerHTML = nhtml;
+  layer.innerHTML = nhtml;
 }
 
 /* ----- 7. NAVIGATION & BRIEFING ----- */
@@ -420,7 +436,6 @@ function showBriefing(def) {
   const fr = currentLang === "fr";
   const curStars = towerProgress.stars[String(def.floor)] || 0;
   const starTime = Math.floor(def.time * 0.6);
-  
   let starRule;
   if (def.type === "pairs") {
     starRule = fr ? "💡 ⭐ finir · ⭐⭐ en 25s · ⭐⭐⭐ en 15s (erreurs OK !)" : "💡 ⭐ finish · ⭐⭐ under 25s · ⭐⭐⭐ under 15s (mistakes OK!)";
@@ -431,19 +446,17 @@ function showBriefing(def) {
   } else {
     starRule = fr ? `💡 ⭐ terminer · ⭐⭐ ≤2 erreurs · ⭐⭐⭐ 0 erreur + moins de ${starTime}s !` : `💡 ⭐ finish · ⭐⭐ ≤2 mistakes · ⭐⭐⭐ 0 mistake + under ${starTime}s!`;
   }
-  
-  const replayLine = def.replay ? `<div style="font-size:10px;color:#f8b500;margin-bottom:6px;">${fr?"Actuel : "+"⭐".repeat(curStars)+" — rejoue pour viser 3 ⭐ !":"Current: "+"⭐".repeat(curStars)+" — replay for 3 ⭐!"}</div>` : "";
-  
+  const replayLine = def.replay ? `<div style="font-size:10px;color:#f8b500;margin-bottom:6px;">${fr ? "Actuel : " + "⭐".repeat(curStars) + " — rejoue pour viser 3 ⭐ !" : "Current: " + "⭐".repeat(curStars) + " — replay for 3 ⭐!"}</div>` : "";
   const b = document.createElement("div");
   b.id = "tw-brief";
   b.className = "tw-brief";
   b.innerHTML = `<div class="tw-brief-card">
-    <div style="font-size:13px;font-weight:900;color:#f8b500;margin-bottom:6px;">🏰 ${fr?"ÉTAGE":"FLOOR"} ${def.floor} — ${TowerUtils.typeLabel(def.type)}</div>
+    <div style="font-size:13px;font-weight:900;color:#f8b500;margin-bottom:6px;">🏰 ${fr ? "ÉTAGE" : "FLOOR"} ${def.floor} — ${TowerUtils.typeLabel(def.type)}</div>
     <div style="font-size:11px;color:#ddd;line-height:1.5;margin-bottom:8px;">${TowerUtils.twDesc(def.type)}</div>
     <div style="font-size:9px;color:#aaa;margin-bottom:8px;">${starRule}</div>
     ${replayLine}
-    <button class="btn-main btn-blue" style="width:100%;margin-bottom:6px;" onclick="closeBriefing();startTowerFloor(TowerUtils.getFloorDef(${def.floor}))">${def.replay?"🔄 "+(fr?"REJOUER":"REPLAY"):"⚡ "+(fr?"LANCER !":"GO!")}</button>
-    <button class="btn-secondary" style="width:100%;" onclick="closeBriefing()">❌ ${fr?"Annuler":"Cancel"}</button>
+    <button class="btn-main btn-blue" style="width:100%;margin-bottom:6px;" onclick="closeBriefing();startTowerFloor(TowerUtils.getFloorDef(${def.floor}))">${def.replay ? "🔄 " + (fr ? "REJOUER" : "REPLAY") : "⚡ " + (fr ? "LANCER !" : "GO!")}</button>
+    <button class="btn-secondary" style="width:100%;" onclick="closeBriefing()">❌ ${fr ? "Annuler" : "Cancel"}</button>
   </div>`;
   document.body.appendChild(b);
 }
@@ -453,7 +466,7 @@ function closeBriefing() {
   if (b) b.remove();
 }
 
-/* ----- 8. MOTEUR DE JEU (Niveau 2) ----- */
+/* ----- 8. MOTEUR DE JEU (Niveau 2 optimistic) ----- */
 function ensureTowerOverlay() {
   let ov = document.getElementById("tower-game");
   if (!ov) {
@@ -496,12 +509,10 @@ function buildGridFromState(st) {
   g.style.gridTemplateColumns = `repeat(${cols},1fr)`;
   g.innerHTML = "";
   TW_buttons = [];
-  
   st.display.forEach((v, i) => {
     const b = document.createElement("button");
     b.className = "tg-tile" + (st.type === "fog" ? " foggy" : "");
     if (st.gone[i]) b.classList.add("gone");
-    
     if (st.type === "color" && v) {
       b.style.background = `radial-gradient(circle at 35% 25%,#ffffffaa,transparent 22%),linear-gradient(180deg,${v.hex},#111827 85%)`;
       b.style.boxShadow = `0 0 14px ${v.hex}66,inset 0 1px 0 #fff8`;
@@ -512,7 +523,6 @@ function buildGridFromState(st) {
     } else {
       b.textContent = v;
     }
-    
     b.onclick = () => handleTowerClick(i, b);
     g.appendChild(b);
     TW_buttons[i] = b;
@@ -523,10 +533,8 @@ function syncDomToState(st) {
   for (let i = 0; i < st.display.length; i++) {
     const b = TW_buttons[i];
     if (!b) continue;
-    
     const wasGone = !!TW_dom.gone[i], isGone = !!st.gone[i];
     if (isGone !== wasGone) b.classList.toggle("gone", isGone);
-    
     if (st.type === "pairs") {
       const dv = st.display[i], ov = TW_dom.display[i];
       if (dv !== ov) b.textContent = isGone ? "" : (dv === null ? "?" : dv);
@@ -543,24 +551,23 @@ function handleTowerClick(i, b) {
   TW_lastClick = now;
   if (!TW_dom || TW_dom.gone[i]) return;
   if (TW_pairsLock) return;
-  
+
   b.style.transform = "scale(0.9)";
   setTimeout(() => { if (b) b.style.transform = ""; }, 120);
-  
+
   const t = TW_dom.type;
   if (t === "pairs") {
     socket.emit("tower_click", { index: i });
     return;
   }
-  
+
   const v = TW_dom.display[i];
   let success = null;
-  
   if (t === "color" && TW_dom.targetColor) success = (v && v.key === TW_dom.targetColor.key);
   else if (t === "parity") success = (TW_dom.targetParity === "even" ? (v % 2 === 0) : (v % 2 !== 0));
   else if (t === "forbidden") success = (v !== TW_dom.forbidden);
   else if (TW_dom.target !== null && TW_dom.target !== undefined) success = (v === TW_dom.target);
-  
+
   if (success === true) {
     TW_dom.gone[i] = true;
     b.classList.add("gone");
@@ -570,7 +577,6 @@ function handleTowerClick(i, b) {
   } else if (success === false) {
     if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
   }
-  
   socket.emit("tower_click", { index: i });
 }
 
@@ -590,39 +596,36 @@ function startLocalTimer(tl) {
 function renderHUDFromState() {
   const h = document.getElementById("tg-hud");
   if (!h || !TW) return;
-  
   const fr = currentLang === "fr";
   let main = "";
-  
-  if (TW.type === "color" && TW.targetColor) main = `${fr?"COULEUR":"COLOR"} : <span style="color:${TW.targetColor.hex};text-shadow:0 0 12px ${TW.targetColor.hex};">${TW.targetColor.name}</span>`;
+  if (TW.type === "color" && TW.targetColor) main = `${fr ? "COULEUR" : "COLOR"} : <span style="color:${TW.targetColor.hex};text-shadow:0 0 12px ${TW.targetColor.hex};">${TW.targetColor.name}</span>`;
   else if (TW.type === "pairs") main = fr ? "🧩 RETROUVE LES PAIRES" : "🧩 FIND THE PAIRS";
   else if (TW.type === "parity") main = TW.targetParity === "even" ? (fr ? "CLIQUE : PAIRS" : "CLICK: EVEN") : (fr ? "CLIQUE : IMPAIRS" : "CLICK: ODD");
-  else if (TW.type === "forbidden") main = `${fr?"INTERDIT":"FORBIDDEN"} : <span style="color:#ff4b2b;text-shadow:0 0 12px #ff4b2b;">${TW.forbidden}</span>`;
-  else if (TW.target !== null && TW.target !== undefined) main = `<span>${fr?"CIBLE":"TARGET"} : ${TW.target}</span>`;
-  
+  else if (TW.type === "forbidden") main = `${fr ? "INTERDIT" : "FORBIDDEN"} : <span style="color:#ff4b2b;text-shadow:0 0 12px #ff4b2b;">${TW.forbidden}</span>`;
+  else if (TW.target !== null && TW.target !== undefined) main = `<span>${fr ? "CIBLE" : "TARGET"} : ${TW.target}</span>`;
   if (main !== TW_hudCache) { h.innerHTML = main; TW_hudCache = main; }
-  
+
   const bar = document.getElementById("tg-bar");
   if (bar) {
-    if (TW.type === "boss") { bar.style.display = "block"; bar.innerHTML = `<div style="width:${Math.min(100,TW.ai/TW.total*100)}%;height:100%;background:linear-gradient(90deg,#ff4b2b,#f8b500);"></div>`; }
+    if (TW.type === "boss") { bar.style.display = "block"; bar.innerHTML = `<div style="width:${Math.min(100, TW.ai / TW.total * 100)}%;height:100%;background:linear-gradient(90deg,#ff4b2b,#f8b500);"></div>`; }
     else bar.style.display = "none";
   }
-  
   document.getElementById("twg-title").innerText = "🏰 " + (fr ? "ÉTAGE" : "FLOOR") + " " + TW.floor + " — " + TowerUtils.typeLabel(TW.type);
-  
-  const msg = TW.type === "nofail" ? "💎 Une seule erreur = échec !" : (TW.type === "pairs" ? "🧠 Mémorise les positions !" : (TW.type === "forbidden" ? "🚫 Ne touche pas le nombre interdit !" : ""));
+
+  const msg = TW.type === "nofail" ? (fr ? "💎 Une seule erreur = échec !" : "💎 One mistake = fail!") : (TW.type === "pairs" ? (fr ? "🧠 Mémorise les positions !" : "🧠 Memorize positions!") : (TW.type === "forbidden" ? (fr ? "🚫 Ne touche pas le nombre interdit !" : "🚫 Don't touch the forbidden number!") : ""));
   const msgEl = document.getElementById("tg-msg");
   if (msgEl && msgEl.innerText !== msg) msgEl.innerText = msg;
 }
 
 function showFailUI(r) {
+  const fr = currentLang === "fr";
   const ov = ensureTowerOverlay();
   ov.style.display = "flex";
   document.getElementById("tg-bar").style.display = "none";
   document.getElementById("tg-hud").innerHTML = "";
   const g = document.getElementById("tg-grid");
   g.style.gridTemplateColumns = "1fr";
-  g.innerHTML = `<div style="text-align:center;"><div style="font-size:30px;">💥</div><div style="color:#ff4b2b;font-weight:900;margin:6px 0;">ÉTAGE RATÉ !</div><button class="btn-main btn-blue" onclick="retryFloor()">🔄 Réessayer</button><button class="btn-secondary" onclick="quitFloor()">Quitter</button></div>`;
+  g.innerHTML = `<div style="text-align:center;"><div style="font-size:30px;">💥</div><div style="color:#ff4b2b;font-weight:900;margin:6px 0;">${fr ? "ÉTAGE RATÉ !" : "FLOOR FAILED!"}</div><button class="btn-main btn-blue" onclick="retryFloor()">🔄 ${fr ? "Réessayer" : "Retry"}</button><button class="btn-secondary" onclick="quitFloor()">${fr ? "Quitter" : "Quit"}</button></div>`;
 }
 
 function retryFloor() {
@@ -638,21 +641,21 @@ function quitFloor() {
 }
 
 function showTowerWinPopup(res) {
+  const fr = currentLang === "fr";
   const chap = TowerUtils.getTowerChapter(res.floor);
   const inChap = ((res.floor - 1) % FPC) + 1;
   const obj = inChap === FPC ? chap.boss : chap.objects[(inChap - 1) % 9];
-  
   const d = document.createElement("div");
   d.className = "modal-overlay";
   d.style.display = "flex";
   d.innerHTML = `<div class="modal-card" style="max-width:300px;text-align:center;">
-    <h3 style="color:#00ff88;margin:0 0 6px 0;">✅ ÉTAGE ${res.floor} VAINCU !</h3>
-    <div class="tw-stars">${[1,2,3].map(i=>`<span style="animation-delay:${i*0.2}s;${i<=res.stars?"":"filter:grayscale(1);opacity:.3;"}">⭐</span>`).join("")}</div>
+    <h3 style="color:#00ff88;margin:0 0 6px 0;">✅ ${fr ? "ÉTAGE" : "FLOOR"} ${res.floor} ${fr ? "VAINCU !" : "CLEARED!"}</h3>
+    <div class="tw-stars">${[1, 2, 3].map(i => `<span style="animation-delay:${i * 0.2}s;${i <= res.stars ? "" : "filter:grayscale(1);opacity:.3;"}">⭐</span>`).join("")}</div>
     <div style="font-size:13px;color:#f8b500;font-weight:bold;margin-bottom:6px;">+${res.coins} 🪙</div>
-    <div style="font-size:9px;color:#aaa;margin-bottom:6px;">💡 ${currentLang==="fr"?"3⭐ = 0 erreur + rapide !":"3⭐ = 0 mistake + fast!"}</div>
-    <div style="font-size:12px;color:#aaa;margin-bottom:10px;">${currentLang==="fr"?"Nouvel objet placé dans la pièce :":"New object placed in the room:"} <span style="font-size:24px;">${obj}</span></div>
-    ${res.reward?`<div style="font-size:12px;color:#00d2ff;font-weight:bold;margin-bottom:10px;">🎁 CHAPITRE TERMINÉ : ${res.reward} débloqué !</div>`:""}
-    <button class="btn-main btn-blue" onclick="this.closest('.modal-overlay').remove();renderTower()">Continuer ⚡</button>
+    <div style="font-size:9px;color:#aaa;margin-bottom:6px;">💡 ${fr ? "3⭐ = 0 erreur + rapide !" : "3⭐ = 0 mistake + fast!"}</div>
+    <div style="font-size:12px;color:#aaa;margin-bottom:10px;">${fr ? "Nouvel objet placé dans la pièce :" : "New object placed in the room:"} <span style="font-size:24px;">${obj}</span></div>
+    ${res.reward ? `<div style="font-size:12px;color:#00d2ff;font-weight:bold;margin-bottom:10px;">🎁 ${fr ? "CHAPITRE TERMINÉ" : "CHAPTER COMPLETE"} : ${res.reward} ${fr ? "débloqué !" : "unlocked!"}</div>` : ""}
+    <button class="btn-main btn-blue" onclick="this.closest('.modal-overlay').remove();renderTower()">${fr ? "Continuer" : "Continue"} ⚡</button>
   </div>`;
   document.body.appendChild(d);
   towerDing();
@@ -669,7 +672,6 @@ socket.on("tower_state", (st) => {
   const first = TW_buttons.length === 0;
   TW = st;
   TW_lastFloor = st.floor;
-  
   if (first) {
     buildGridFromState(st);
     TW_dom = cloneState(st);
@@ -677,7 +679,6 @@ socket.on("tower_state", (st) => {
     syncDomToState(st);
     TW_dom = cloneState(st);
   }
-  
   renderHUDFromState();
   startLocalTimer(st.timeLeft);
 });
@@ -692,14 +693,13 @@ socket.on("tower_result", (res) => {
   const ov = document.getElementById("tower-game");
   if (ov) ov.style.display = "none";
   if (!res.ok) return;
-  
   towerProgress.floor = Math.max(towerProgress.floor, res.floor);
   towerProgress.stars[String(res.floor)] = Math.max(towerProgress.stars[String(res.floor)] || 0, res.stars);
   showTowerWinPopup(res);
   renderTower();
 });
 
-/* ----- 10. HELPERS ----- */
+/* ----- 10. HELPERS & ALIASES ----- */
 function towerDing() {
   try {
     SoundEngine.init();
@@ -715,10 +715,6 @@ function towerDing() {
   } catch (e) {}
 }
 
-function renderTower() {
-  drawRoom();
-}
-
-// Aliases pour compatibilité
+function renderTower() { drawRoom(); }
 function showElevator() { drawRoom(); }
 function afterWinTravel() { drawRoom(); }
