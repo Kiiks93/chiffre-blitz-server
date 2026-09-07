@@ -57,18 +57,18 @@ const TowerUtils = {
   getTowerChapter(f) { return TOWER_CHAPTERS[Math.ceil(f / FPC) - 1]; },
   currentSeasonNum() { return parseInt((myProfile.currentSeasonId || "s1").replace("s", "")) || 1; },
   getFloorDef(floor) {
-  const chap = Math.ceil(floor / FPC), inChap = ((floor - 1) % FPC) + 1;
-  const global = (floor - 1) / (TOTAL_FLOORS - 1);
-  let gridSize = Math.min(48, Math.round(16 + global * 32));  // 16→48 au lieu de 12→36
-  let time = Math.max(12, Math.round(28 - global * 16));       // 28→12 au lieu de 34→14
+    const chap = Math.ceil(floor / FPC), inChap = ((floor - 1) % FPC) + 1;
+    const global = (floor - 1) / (TOTAL_FLOORS - 1);
+    let gridSize = Math.min(48, Math.round(16 + global * 32));
+    let time = Math.max(12, Math.round(28 - global * 16));
     if (inChap === FPC) return { floor, gridSize, time, type: "boss" };
     if (inChap % 50 === 0) return { floor, gridSize, time, type: "boss" };
     const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","fog","nofail"];
     const t = seq[(inChap - 1) % 9];
-  if (t === "sprint") return { floor, gridSize, time: Math.max(6, Math.round(time * 0.4)), type: "sprint" };
-  if (t === "nofail") return { floor, gridSize, time: Math.max(14, Math.round(time * 0.7)), type: "nofail" };
-  if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; const pr = g / 2; return { floor, gridSize: g, time: Math.max(20, Math.round(pr * 3)), type: "pairs" }; }
-  if (t === "parity") return { floor, gridSize: Math.min(60, gridSize + 12), time: time + 3, type: "parity" };
+    if (t === "sprint") return { floor, gridSize, time: Math.max(6, Math.round(time * 0.4)), type: "sprint" };
+    if (t === "nofail") return { floor, gridSize, time: Math.max(14, Math.round(time * 0.7)), type: "nofail" };
+    if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; const pr = g / 2; return { floor, gridSize: g, time: Math.max(20, Math.round(pr * 3)), type: "pairs" }; }
+    if (t === "parity") return { floor, gridSize: Math.min(60, gridSize + 12), time: time + 3, type: "parity" };
     return { floor, gridSize, time, type: t };
   },
   typeLabel(t) {
@@ -81,7 +81,7 @@ const TowerUtils = {
   }
 };
 
-/* ----- 4. CSS CONSOLIDÉ (un seul bloc) ----- */
+/* ----- 4. CSS CONSOLIDÉ (un seul bloc optimisé) ----- */
 (function() {
   const style = document.createElement('style');
   style.textContent = `
@@ -107,20 +107,20 @@ const TowerUtils = {
   .tw-gate{position:absolute;background:#0f051d;border:2px solid #00d2ff;border-radius:12px;padding:5px 14px;font-size:clamp(9px,2.8vw,11px);font-weight:900;color:#00d2ff;white-space:nowrap;z-index:3;box-shadow:0 0 12px #00d2ff44;}
   .tw-gate.lock{border-color:#333;color:#666;box-shadow:none;}
 
-  /* === CITY SCENE === */
+  /* === CITY SCENE (route fixe + immeubles collés) === */
   .tw-moon{position:absolute;top:2%;right:10%;width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff8e8,#d8c9a8 60%,#a89878);box-shadow:0 0 30px #fff8e866,0 0 80px #fff8e833;}
   .tw-star2{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;animation:twFlickP 3s steps(2) infinite;}
   .tw-cloud{position:absolute;height:10px;border-radius:6px;background:linear-gradient(90deg,transparent,#8888aa22 30%,#8888aa22 70%,transparent);filter:blur(3px);animation:twCloud linear infinite;}
-  .tw-horizon{position:absolute;bottom:14%;left:0;right:0;height:18%;background:radial-gradient(ellipse at 50% 100%,#ff00ff33,transparent 70%),radial-gradient(ellipse at 30% 100%,#00ffff2b,transparent 60%);}
-  .tw-cityback{position:absolute;bottom:14%;left:0;right:0;height:52%;display:flex;align-items:flex-end;gap:1%;padding:0 1%;opacity:.45;filter:brightness(.5);}
+  .tw-horizon{position:absolute;bottom:180px;left:0;right:0;height:18%;background:radial-gradient(ellipse at 50% 100%,#ff00ff33,transparent 70%),radial-gradient(ellipse at 30% 100%,#00ffff2b,transparent 60%);}
+  .tw-cityback{position:absolute;bottom:180px;left:0;right:0;height:52%;display:flex;align-items:flex-end;gap:1%;padding:0 1%;opacity:.45;filter:brightness(.5);}
   .tw-cityback .tw-bldg{border-top:none;}
-  .tw-city{position:absolute;bottom:14%;left:0;right:0;height:42%;display:flex;align-items:flex-end;gap:2%;padding:0 2%;}
+  .tw-city{position:absolute;bottom:180px;left:0;right:0;height:42%;display:flex;align-items:flex-end;gap:2%;padding:0 2%;}
   .tw-bldg{flex:1;position:relative;background:linear-gradient(180deg,#0d0d1e,#05050c);border-radius:3px 3px 0 0;box-shadow:0 0 12px #000;border-top:2px solid #00d2ff44;}
   .tw-ant{position:absolute;top:-14px;left:50%;width:2px;height:14px;background:#333;box-shadow:0 -3px 6px #ff4b2b;}
-  .tw-wl{position:absolute;width:4px;height:5px;background:currentColor;box-shadow:0 0 5px currentColor;animation:twWin linear infinite;}
-  .tw-road{position:absolute;bottom:0;left:0;right:0;height:14%;background:linear-gradient(180deg,#23232e,#101016 30%,#0a0a0e);box-shadow:inset 0 4px 10px #000c;}
-  .tw-lane{position:absolute;left:0;right:0;top:46%;height:3px;background:repeating-linear-gradient(90deg,#f8b50088 0 34px,transparent 34px 70px);opacity:.7;}
-  .tw-reflect{position:absolute;left:0;right:0;bottom:0;height:14%;background:linear-gradient(90deg,#ff00ff22,#00ffff22,#f8b50022,#ff00ff22);background-size:300% 100%;filter:blur(7px);animation:twSlide 6s linear infinite;pointer-events:none;opacity:.45;}
+  .tw-wl{position:absolute;width:7px;height:9px;background:currentColor;box-shadow:0 0 8px currentColor,0 0 16px currentColor;animation:twWin linear infinite;}
+  .tw-road{position:absolute;bottom:0;left:0;right:0;height:180px;background:linear-gradient(180deg,#23232e,#101016 30%,#0a0a0e);box-shadow:inset 0 4px 10px #000c;}
+  .tw-lane{position:absolute;left:0;right:0;top:50%;height:3px;background:repeating-linear-gradient(90deg,#f8b50088 0 34px,transparent 34px 70px);opacity:.7;}
+  .tw-reflect{position:absolute;left:0;right:0;bottom:0;height:180px;background:linear-gradient(90deg,#ff00ff22,#00ffff22,#f8b50022,#ff00ff22);background-size:300% 100%;filter:blur(7px);animation:twSlide 6s linear infinite;pointer-events:none;opacity:.45;}
   .tw-car{position:absolute;width:54px;height:16px;z-index:3;animation:twDrive linear infinite;}
   .tw-car i{position:absolute;display:block;}
   .tw-car .cb{bottom:3px;left:0;right:0;height:9px;border-radius:8px 14px 6px 6px;background:linear-gradient(180deg,#3d3d52,#12121c 70%);box-shadow:inset 0 1px 0 #ffffff55,0 0 10px #00d2ff44;}
@@ -230,6 +230,18 @@ const TowerUtils = {
   @keyframes twSlide{to{background-position:300% 0}}
   @keyframes twSweep{0%{left:-20%;opacity:0}15%{opacity:1}85%{opacity:1}100%{left:110%;opacity:0}}
   @keyframes twCoin{50%{transform:translateY(-4px) rotate(15deg)}}
+
+  /* === MOBILE PERF === */
+  @media (max-width:760px), (pointer:coarse){
+    .tw-wl{animation:none;box-shadow:none;}
+    .tw-star2{animation:none;}
+    .tw-part{display:none;}
+    .tw-cloud{display:none;}
+    .tw-reflect{display:none;}
+    .tw-mist{display:none;}
+    .tw-car .hl,.tw-car .tl{display:none;}
+    .tw-cryscl{filter:none;animation:none;}
+  }
   `;
   document.head.appendChild(style);
 })();
@@ -239,7 +251,7 @@ function generateSceneHTML(c, W, C) {
   if (SCENE_CACHE[c]) return SCENE_CACHE[c];
   let html = "";
 
-    if (W.scene === "city") {
+  if (W.scene === "city") {
     html += `<span class="tw-moon"></span>`;
     const starsN = IS_MOBILE ? 40 : 140;
     for (let i = 0; i < starsN; i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%44}%;animation-delay:${(i*.23)%3}s;"></span>`;
@@ -274,19 +286,14 @@ function generateSceneHTML(c, W, C) {
 
   if (W.scene === "glacier") {
     html += `<div class="tw-cavewall"></div><div class="tw-rocktop"></div>`;
-    /* Stalactites en haut */
     [[6,120],[16,90],[26,140],[38,80],[50,120],[62,90],[74,130],[86,85],[94,110]].forEach(p => {
       html += `<span class="tw-icicle" style="left:${p[0]}%;height:${p[1]}px;"></span>`;
     });
-    /* Rayons de lumière */
     html += `<div class="tw-ray" style="top:4%;"></div><div class="tw-ray" style="top:6%;left:30%;animation-delay:1s;"></div>`;
-    /* Cristaux */
     [{top:"28%",s:1,l:12},{top:"42%",s:.85,l:34},{top:"56%",s:1.1,l:56},{top:"68%",s:.9,l:76},{top:"38%",s:.75,l:88}].forEach((cl, ci) => {
       html += `<span class="tw-cryscl" style="left:${cl.l}%;top:${cl.top};bottom:auto;transform:scale(${cl.s});animation-delay:${ci*.6}s;"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span>`;
     });
-    /* Brume */
     html += `<div class="tw-mist" style="top:40%;"></div><div class="tw-mist m2" style="top:60%;"></div>`;
-    /* Sol de glace + stalagmites */
     html += `<div class="tw-icefloor"></div><div class="tw-rockbot"></div>`;
     [[10,80],[26,60],[42,75],[58,55],[74,70],[90,60]].forEach(p => {
       html += `<span class="tw-stalag" style="left:${p[0]}%;height:${p[1]}px;"></span>`;
@@ -295,23 +302,16 @@ function generateSceneHTML(c, W, C) {
 
   if (W.scene === "vault") {
     html += `<div class="tw-marble"></div>`;
-    /* Piliers latéraux */
     html += `<div class="tw-pillar" style="left:4%;"></div><div class="tw-pillar" style="right:4%;"></div>`;
-    /* Spots lumineux */
     html += `<div class="tw-spot" style="left:18%;"></div><div class="tw-spot" style="left:62%;animation-delay:1.5s;"></div>`;
-    /* Coffre principal */
     let bolts = ""; for (let i = 0; i < 12; i++) { const a = i*Math.PI/6; bolts += `<span class="tw-vbolt" style="left:${50+44*Math.cos(a)}%;top:${50+44*Math.sin(a)}%;"></span>`; }
     let knobs = ""; for (let i = 0; i < 6; i++) { const a = i*Math.PI/3; knobs += `<span class="tw-knob" style="left:${50+38*Math.cos(a)}%;top:${50+38*Math.sin(a)}%;"></span>`; }
     html += `<div class="tw-vaultglow"></div><div class="tw-vaultframe"><span class="tw-fbolt" style="left:5%;top:7%;"></span><span class="tw-fbolt" style="right:5%;top:7%;"></span><span class="tw-fbolt" style="left:5%;bottom:7%;"></span><span class="tw-fbolt" style="right:5%;bottom:7%;"></span><span class="tw-hinge h1"></span><span class="tw-hinge h2"></span><div class="tw-vaultdoor"><div class="tw-vaultwheel">${knobs}</div><span class="tw-dial"></span><span class="tw-handle"></span>${bolts}</div></div>`;
-    /* Lasers de sécurité */
     html += `<div class="tw-laser" style="top:28%;animation-duration:5s;"></div><div class="tw-laser d" style="top:46%;animation-duration:7s;animation-delay:1s;"></div><div class="tw-laser" style="top:64%;animation-duration:6s;animation-delay:2s;"></div>`;
-    /* Lingots */
     for (let i = 0; i < 8; i++) html += `<span class="tw-ingot" style="left:${8+i*11}%;bottom:${10+(i%3)*10}px;"></span>`;
-    /* Reflets */
     html += `<div class="tw-sweep"></div><div class="tw-gloss"></div><div class="tw-goldspill"></div>`;
   }
 
-  /* Particules flottantes */
   let parts = "";
   for (let i = 0; i < 7; i++) parts += `<span class="tw-part ${W.part}" style="color:${C.acc};left:${(i*13+c*7)%96}%;animation-duration:${4+(i%4)*1.5}s;animation-delay:${i*.7}s;"></span>`;
 
@@ -319,76 +319,7 @@ function generateSceneHTML(c, W, C) {
   SCENE_CACHE[c] = result;
   return result;
 }
-/* ----- CSS Bat-Signal + grosses fenêtres ----- */
-(function(){
-  const s=document.createElement("style");
-  s.textContent=`
-  /* Fenêtres PLUS grosses + PLUS lumineuses */
-  .tw-wl{position:absolute;width:7px;height:9px;background:currentColor;box-shadow:0 0 8px currentColor,0 0 16px currentColor;animation:twWin linear infinite;}
 
-  /* 🦇 Halo + logo CHIFFRE BLITZ dans le ciel */
-  .tw-skyhalo{position:absolute;top:3.5%;left:50%;transform:translateX(-50%);width:min(72%,540px);height:110px;background:radial-gradient(ellipse,#00d2ff2e,transparent 70%);filter:blur(8px);}
-  .tw-skylogo{position:absolute;top:5%;left:50%;transform:translateX(-50%);font-size:clamp(18px,3.5vw,32px);font-weight:900;letter-spacing:8px;color:#fff;white-space:nowrap;z-index:2;
-    text-shadow:0 0 12px #00d2ff,0 0 30px #00d2ffaa,0 0 60px #ff00ff77;opacity:.92;animation:twLogoPulse 3.2s ease-in-out infinite;}
-
-  /* 🦇 Faisceaux des projecteurs (convergent vers le logo) */
-  .tw-beam{position:absolute;bottom:50%;width:90px;height:46%;filter:blur(3px);opacity:.5;transform-origin:bottom center;
-    background:linear-gradient(to top,rgba(255,255,255,.30),rgba(255,255,255,.06) 60%,transparent);
-    clip-path:polygon(42% 100%,58% 100%,100% 0,0 0);animation:twBeamFlicker 5s ease-in-out infinite;}
-  .tw-beam.b1{left:16%;transform:rotate(10deg);}
-  .tw-beam.b2{right:16%;transform:rotate(-10deg);animation-delay:2s;}
-
-  /* 🦇 Les projecteurs sur les toits */
-  .tw-projector{position:absolute;bottom:50%;width:26px;height:16px;background:linear-gradient(180deg,#3a3a48,#14141c);border-radius:4px 4px 2px 2px;box-shadow:0 0 10px #00d2ff66;}
-  .tw-projector::after{content:"";position:absolute;top:-4px;left:50%;transform:translateX(-50%);width:12px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 12px #fff,0 0 24px #00d2ff;}
-  .tw-projector.p1{left:calc(16% + 32px);}
-  .tw-projector.p2{right:calc(16% + 32px);}
-
-  @keyframes twBeamFlicker{0%,100%{opacity:.5}45%{opacity:.32}55%{opacity:.55}70%{opacity:.38}}
-  @keyframes twLogoPulse{0%,100%{opacity:.92;transform:translateX(-50%) scale(1)}50%{opacity:.7;transform:translateX(-50%) scale(1.03)}}
-  `;
-  document.head.appendChild(s);
-})();
-
-/* ----- CSS route fixe + Bat-Signal ignition ----- */
-(function(){
-  const s=document.createElement("style");
-  s.textContent=`
-  /* Route à hauteur FIXE (plus de bande géante vide) */
-  .tw-road{height:180px;}
-  .tw-lane{top:50%;}
-  .tw-reflect{height:150px;}
-  document.head.appendChild(s);
-})();
-
-/* ----- CSS immeubles collés à la route ----- */
-(function(){
-  const s=document.createElement("style");
-  s.textContent=`
-  .tw-city{bottom:180px;}
-  .tw-cityback{bottom:180px;}
-  .tw-horizon{bottom:180px;}
-  .tw-reflect{height:180px;}
-  `;
-  document.head.appendChild(s);
-})();
-/* ----- CSS perf mobile ----- */
-(function(){
-  const s=document.createElement("style");
-  s.textContent=`
-  @media (max-width:760px), (pointer:coarse){
-    .tw-wl{animation:none;box-shadow:none;}
-    .tw-star2{animation:none;}
-    .tw-part{display:none;}
-    .tw-cloud{display:none;}
-    .tw-reflect{display:none;}
-    .tw-mist{display:none;}
-    .tw-car .hl,.tw-car .tl{display:none;}
-    .tw-cryscl{filter:none;animation:none;}
-  }
-  `;
-  document.head.appendChild(s);
-})();
 /* ----- 6. RENDU CARTE ----- */
 function drawRoom() {
   const wrap = document.getElementById("tw-mapwrap");
@@ -508,10 +439,10 @@ function showBriefing(def) {
   const curStars = towerProgress.stars[String(def.floor)] || 0;
   const starTime = Math.floor(def.time * 0.6);
   let starRule;
-    if (def.type === "pairs") {
+  if (def.type === "pairs") {
     const pr = def.gridSize / 2;
     const t3 = Math.round(pr * 1.5), t2 = Math.round(pr * 2.5);
-    starRule = fr ? `💡 ⭐ finir · ⭐⭐ en ${t2}s · ⭐⭐⭐ en ${t3}s` : `💡 ⭐ finish · ⭐ under ${t2}s · ⭐⭐⭐ under ${t3}s`;
+    starRule = fr ? `💡 ⭐ finir · ⭐⭐ en ${t2}s · ⭐⭐⭐ en ${t3}s` : `💡 ⭐ finish · ⭐⭐ under ${t2}s · ⭐⭐⭐ under ${t3}s`;
   } else if (def.type === "sprint") {
     const t3 = Math.round(def.gridSize * 0.45);
     const t2 = Math.round(def.gridSize * 0.75);
@@ -715,14 +646,12 @@ function quitFloor() {
 
 function showTowerWinPopup(res) {
   const fr = currentLang === "fr";
-
-  // 🎯 Calcule le prochain palier (cache 20 / gardien 50 / boss 200)
   let ms = res.floor + 1, label = "";
   while (ms <= res.floor + FPC) {
     const ic = ((ms - 1) % FPC) + 1;
-    if (ic === FPC)      { label = fr ? "👑 Boss" : "👑 Boss"; break; }
-    if (ic % 50 === 0)   { label = fr ? "⚔️ Gardien" : "⚔️ Guardian"; break; }
-    if (ic % 20 === 0)   { label = fr ? "🎁 Cache" : "🎁 Cache"; break; }
+    if (ic === FPC) { label = fr ? "👑 Boss" : "👑 Boss"; break; }
+    if (ic % 50 === 0) { label = fr ? "⚔️ Gardien" : "⚔️ Guardian"; break; }
+    if (ic % 20 === 0) { label = fr ? "🎁 Cache" : "🎁 Cache"; break; }
     ms++;
   }
 
