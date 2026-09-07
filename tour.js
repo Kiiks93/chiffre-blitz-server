@@ -25,7 +25,7 @@ function getFloorDef(floor) {
   const t = seq[(inChap - 1) % 9];
   if (t === "sprint") return { ...base, type: "sprint", time: Math.max(8, 14 - chap) };
   if (t === "nofail") return { ...base, type: "nofail", time: 25 };
-  if (t === "pairs") return { ...base, type: "pairs", time: Math.max(24, 36 - chap) };
+  if (t === "pairs") { let g = base.gridSize; if (g % 2) g++; return { ...base, gridSize: g, type: "pairs", time: Math.max(24, 36 - chap) }; }
   if (t === "color") return { ...base, type: "color", time: Math.max(20, 30 - chap) };
   if (t === "parity") return { ...base, gridSize: 24 + (chap - 1) * 6, type: "parity", time: Math.max(24, 40 - chap * 2) };
   if (t === "forbidden") return { ...base, type: "forbidden", time: Math.max(18, 28 - chap) };
@@ -358,7 +358,10 @@ function showBriefing(def){
 if (def.type === "pairs") {
   starRule = fr ? "💡 ⭐ finir · ⭐⭐ en 25s · ⭐⭐⭐ en 15s (erreurs OK !)" : "💡 ⭐ finish · ⭐⭐ under 25s · ⭐⭐⭐ under 15s (mistakes OK!)";
 } else if (def.type === "sprint") {
-  starRule = fr ? "💡 ⭐ finir · ⭐⭐ en 10s · ⭐⭐⭐ en 6s" : "💡 ⭐ finish · ⭐⭐ under 10s · ⭐⭐⭐ under 6s";
+  const t3 = Math.round(def.gridSize * 0.45);
+  const t2 = Math.round(def.gridSize * 0.75);
+  starRule = fr ? "💡 ⭐ finir · ⭐⭐ en " + t2 + "s · ⭐⭐⭐ en " + t3 + "s" : "💡 ⭐ finish · ⭐⭐ under " + t2 + "s · ⭐⭐⭐ under " + t3 + "s";
+}
 } else {
   starRule = fr ? "💡 ⭐ terminer · ⭐⭐ ≤2 erreurs · ⭐⭐⭐ 0 erreur + moins de " + starTime + "s !" : "💡 ⭐ finish · ⭐⭐ ≤2 mistakes · ⭐⭐⭐ 0 mistake + under " + starTime + "s!";
 }
