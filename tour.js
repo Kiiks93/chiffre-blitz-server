@@ -752,9 +752,17 @@ function quitFloor() {
 
 function showTowerWinPopup(res) {
   const fr = currentLang === "fr";
-  const chap = TowerUtils.getTowerChapter(res.floor);
-  const inChap = ((res.floor - 1) % FPC) + 1;
-  const obj = inChap === FPC ? chap.boss : chap.objects[(inChap - 1) % 9];
+
+  // 🎯 Calcule le prochain palier (cache 20 / gardien 50 / boss 200)
+  let ms = res.floor + 1, label = "";
+  while (ms <= res.floor + FPC) {
+    const ic = ((ms - 1) % FPC) + 1;
+    if (ic === FPC)      { label = fr ? "👑 Boss" : "👑 Boss"; break; }
+    if (ic % 50 === 0)   { label = fr ? "⚔️ Gardien" : "⚔️ Guardian"; break; }
+    if (ic % 20 === 0)   { label = fr ? "🎁 Cache" : "🎁 Cache"; break; }
+    ms++;
+  }
+
   const d = document.createElement("div");
   d.className = "modal-overlay";
   d.style.display = "flex";
@@ -762,8 +770,7 @@ function showTowerWinPopup(res) {
     <h3 style="color:#00ff88;margin:0 0 6px 0;">✅ ${fr ? "ÉTAGE" : "FLOOR"} ${res.floor} ${fr ? "VAINCU !" : "CLEARED!"}</h3>
     <div class="tw-stars">${[1, 2, 3].map(i => `<span style="animation-delay:${i * 0.2}s;${i <= res.stars ? "" : "filter:grayscale(1);opacity:.3;"}">⭐</span>`).join("")}</div>
     <div style="font-size:13px;color:#f8b500;font-weight:bold;margin-bottom:6px;">+${res.coins} 🪙</div>
-    <div style="font-size:9px;color:#aaa;margin-bottom:6px;">💡 ${fr ? "3⭐ = 0 erreur + rapide !" : "3⭐ = 0 mistake + fast!"}</div>
-    <div style="font-size:12px;color:#aaa;margin-bottom:10px;">${fr ? "Nouvel objet placé dans la pièce :" : "New object placed in the room:"} <span style="font-size:24px;">${obj}</span></div>
+    <div style="font-size:11px;color:#00d2ff;margin-bottom:10px;">🎯 ${fr ? "Prochain palier" : "Next milestone"} : ${label} ${fr ? "à l'étage" : "at floor"} ${ms}</div>
     ${res.reward ? `<div style="font-size:12px;color:#00d2ff;font-weight:bold;margin-bottom:10px;">🎁 ${fr ? "CHAPITRE TERMINÉ" : "CHAPTER COMPLETE"} : ${res.reward} ${fr ? "débloqué !" : "unlocked!"}</div>` : ""}
     <button class="btn-main btn-blue" onclick="this.closest('.modal-overlay').remove();renderTower()">${fr ? "Continuer" : "Continue"} ⚡</button>
   </div>`;
