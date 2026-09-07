@@ -412,8 +412,23 @@ async function towerWin(player, s){
   s.done=true;
   const used=(Date.now()-s.start)/1000;
   let stars=1;
-  if(s.mistakes===0 && used<=s.def.time*0.6) stars=3;
-  else if(s.mistakes<=2) stars=2;
+  
+  // 🎯 RÈGLES SPÉCIFIQUES PAR TYPE
+  if (s.type === "pairs") {
+    // ✅ Paires : vitesse pure, erreurs ignorées
+    if (used <= 15) stars = 3;
+    else if (used <= 25) stars = 2;
+    else stars = 1;
+  } else if (s.type === "sprint") {
+    // ✅ Sprint : vitesse pure
+    if (used <= 6) stars = 3;
+    else if (used <= 10) stars = 2;
+    else stars = 1;
+  } else {
+    // ✅ Autres modes : précision + vitesse
+    if(s.mistakes===0 && used<=s.def.time*0.6) stars=3;
+    else if(s.mistakes<=2) stars=2;
+  }
   let coins, reward=null;
   if(!s.replay){
     player.towerFloor = s.floor;
