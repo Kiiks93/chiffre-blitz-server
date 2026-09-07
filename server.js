@@ -354,7 +354,7 @@ function getFloorDefServer(floor) {
   const t = seq[(inChap - 1) % 9];
   if (t === "sprint") return { ...base, type: "sprint", time: Math.max(8, 14 - chap) };
   if (t === "nofail") return { ...base, type: "nofail", time: 25 };
-  if (t === "pairs") { return { ...base, gridSize: 12, type: "pairs", time: Math.max(20, 28 - chap) }; }
+  if (t === "pairs") { let g = base.gridSize; if (g % 2) g++; return { ...base, gridSize: g, type: "pairs", time: Math.max(24, 36 - chap) }; }
   if (t === "color") return { ...base, type: "color", time: Math.max(20, 30 - chap) };
   if (t === "parity") return { ...base, gridSize: 24 + (chap - 1) * 6, type: "parity", time: Math.max(24, 40 - chap * 2) };
   if (t === "forbidden") return { ...base, type: "forbidden", time: Math.max(18, 28 - chap) };
@@ -420,11 +420,12 @@ async function towerWin(player, s){
     else if (used <= 25) stars = 2;
     else stars = 1;
   } else if (s.type === "sprint") {
-    // ✅ Sprint : vitesse pure
-    if (used <= 6) stars = 3;
-    else if (used <= 10) stars = 2;
-    else stars = 1;
-  } else {
+  // ✅ Sprint : seuils proportionnels à la grille (réaliste et atteignable)
+  const n = s.total;
+  if (used <= n * 0.45) stars = 3;       // ex: 16 cases → ≤7s · 20 cases → ≤9s
+  else if (used <= n * 0.75) stars = 2;  // ex: 16 cases → ≤12s · 20 cases → ≤15s
+  else stars = 1;
+} else {
     // ✅ Autres modes : précision + vitesse
     if(s.mistakes===0 && used<=s.def.time*0.6) stars=3;
     else if(s.mistakes<=2) stars=2;
