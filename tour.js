@@ -66,7 +66,7 @@ const TowerUtils = {
     const t = seq[(inChap - 1) % 9];
   if (t === "sprint") return { floor, gridSize, time: Math.max(6, Math.round(time * 0.4)), type: "sprint" };
   if (t === "nofail") return { floor, gridSize, time: Math.max(14, Math.round(time * 0.7)), type: "nofail" };
-  if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; return { floor, gridSize: g, time: Math.max(18, time + 4), type: "pairs" }; }
+  if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; const pr = g / 2; return { floor, gridSize: g, time: Math.max(20, Math.round(pr * 3)), type: "pairs" }; }
   if (t === "parity") return { floor, gridSize: Math.min(60, gridSize + 12), time: time + 3, type: "parity" };
     return { floor, gridSize, time, type: t };
   },
@@ -500,8 +500,10 @@ function showBriefing(def) {
   const curStars = towerProgress.stars[String(def.floor)] || 0;
   const starTime = Math.floor(def.time * 0.6);
   let starRule;
-  if (def.type === "pairs") {
-    starRule = fr ? "💡 ⭐ finir · ⭐⭐ en 25s · ⭐⭐⭐ en 15s (erreurs OK !)" : "💡 ⭐ finish · ⭐⭐ under 25s · ⭐⭐⭐ under 15s (mistakes OK!)";
+    if (def.type === "pairs") {
+    const pr = def.gridSize / 2;
+    const t3 = Math.round(pr * 1.5), t2 = Math.round(pr * 2.5);
+    starRule = fr ? `💡 ⭐ finir · ⭐⭐ en ${t2}s · ⭐⭐⭐ en ${t3}s` : `💡 ⭐ finish · ⭐ under ${t2}s · ⭐⭐⭐ under ${t3}s`;
   } else if (def.type === "sprint") {
     const t3 = Math.round(def.gridSize * 0.45);
     const t2 = Math.round(def.gridSize * 0.75);
