@@ -1367,6 +1367,21 @@ function showGameOverRecap(data) {
 ============================================================ */
 socket.on("solo_reward_result", (data) => {
   const d = i18n[currentLang];
+  
+  // 🛡️ Gestion des erreurs serveur
+  if (data.error === 'cooldown') {
+    currentCoinsGained = 0;
+    document.getElementById("recap-coins-gained").innerHTML = `<span style="color:#ff4b2b;">Partie trop courte (min 3s)</span>`;
+    document.getElementById("recap-reason").innerText = "⚠️ Anti-triche : les parties très courtes ne donnent pas de récompenses";
+    return;
+  }
+  if (data.error === 'suspicious') {
+    currentCoinsGained = 0;
+    document.getElementById("recap-coins-gained").innerHTML = `<span style="color:#ff4b2b;">Partie non enregistrée</span>`;
+    document.getElementById("recap-reason").innerText = "⚠️ La partie n'a pas été correctement enregistrée par le serveur";
+    return;
+  }
+  
   currentCoinsGained = data.earnedCoins;
   let htmlCoins = `+${data.baseCoins}`;
   if (data.rushBonus > 0) htmlCoins += `<span style="color:#ff8a00;">+${data.rushBonus} ${d.rush_bonus}</span>`;
