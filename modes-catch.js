@@ -141,6 +141,8 @@ socket.on('game_over_1v1', (data) => {
 ============================================================ */
 function beginCatch(theme, is1v1, opponent) {
   clearCatchArena();
+  // ✅ ANTI-TRICHE : annonce le début de la partie catch SOLO au serveur (timestamp de référence)
+  if (!is1v1 && typeof socket !== "undefined" && socket.connected) socket.emit("catch_solo_start");
   catchState = {
     theme,
     is1v1,
@@ -411,8 +413,18 @@ function endCatchSolo() {
 
 socket.on('catch_solo_result', (data) => {
   const d = i18n[currentLang];
+  // 🛡️ Si le serveur refuse (partie non enregistrée / cooldown), message clair au lieu d'un récap à 0
+  if (data && data.error) {
+    clearCatchArena();
+    catchState = null;
+    hideAllScreens();
+    if (typeof showMainMenu === "function") showMainMenu();
+    showNotificationToast(currentLang === 'fr'
+      ? '⚠️ Récompense refusée par le serveur (partie non enregistrée). Relance une partie normalement.'
+      : '⚠️ Reward denied by server (unregistered game). Start a new game normally.', 'announcement');
+    return;
+  }
   const score = catchState ? catchState.score : 0;
-  const bonus = catchState ? catchState.bonus : 0;
   
   clearCatchArena();
   catchState = null;
