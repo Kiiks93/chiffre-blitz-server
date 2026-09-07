@@ -40,7 +40,33 @@ function ensureDailyCounters(p) {
   if (!p.daily_ads || p.daily_ads.date !== today) p.daily_ads = { count: 0, date: today };
   if (!p.daily_roulette || p.daily_roulette.date !== today) p.daily_roulette = { count: 0, date: today };
 }
+// ✅ Anti-triche : timestamps serveur pour cooldowns
+function setLastAction(p, key) { 
+  p._cooldowns = p._cooldowns || {}; 
+  p._cooldowns[key] = Date.now(); 
+}
+function getLastAction(p, key) { 
+  return (p._cooldowns && p._cooldowns[key]) || 0; 
+}
 
+// ✅ Anti-triche : vérifie temps min entre 2 actions
+function checkCooldown(p, key, minMs) {
+  const last = getLastAction(p, key);
+  const elapsed = Date.now() - last;
+  if (elapsed < minMs) return { ok: false, remaining: minMs - elapsed };
+  return { ok: true };
+}
+
+// ✅ Anti-triche : temps min réaliste pour une victoire Tour
+// Un humain clique ~3 cases/s → étage 16 cases = min 5-6s
+// Plus la grille est grande, plus le temps min augmente
+function getMinFloorTime(floor, type) {
+  const base = Math.max(3, Math.min(8, 3 + Math.floor(floor / 20)));
+  if (type === 'pairs') return base * 1.5;
+  if (type === 'color') return base * 0.9;
+  if (type === 'sprint') return Math.max(2, base * 0.5);
+  return base;
+}
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*", methods: ["GET", "POST"] } });
@@ -704,16 +730,23 @@ socket.on("update_profile_visuals", async (data) => {
     }
   });
 
- socket.on('spin_jackpot_wheel', async () => {
+socket.on('spin_jackpot_wheel', async () => {
   const player = activePlayers[socket.id];
   if (!player) return;
   
-  // ✅ Reset quotidien + cap 5 spins/jour
   ensureDailyCounters(player);
   if (player.daily_roulette.count >= 5) {
     socket.emit('wheel_limit_reached', { limit: 5, used: player.daily_roulette.count });
     return;
   }
+  
+  // 🛡️ Cooldown : 30s entre 2 spins (anti-spam)
+  const cd = checkCooldown(player, 'spin_wheel', 30000);
+  if (!cd.ok) {
+    socket.emit('wheel_limit_reached', { limit: 0, used: 0, cooldown: Math.ceil(cd.remaining / 1000) });
+    return;
+  }
+  
   player.daily_roulette.count++;
   
   const roll = Math.random();
@@ -728,11 +761,11 @@ socket.on("update_profile_visuals", async (data) => {
   }
   else if (roll < 0.70) { outcome = 'banqueroute'; coinDelta = -150; }
 
-  const coinsBefore = player.coins;
   if (coinDelta < 0) player.coins = Math.max(0, player.coins + coinDelta);
   else player.coins += coinDelta;
   lastMatchEarnings[socket.id] = (lastMatchEarnings[socket.id] || 0) + coinDelta;
 
+  setLastAction(player, 'spin_wheel');
   await savePlayerToSupabase(socket.id);
   await logPlayerAction(player, 'spin_wheel', `Outcome: ${outcome}, Delta: ${coinDelta}${itemId ? ', Item: ' + itemId : ''}`, coinDelta !== 0 ? 'coins' : null, coinDelta !== 0 ? coinDelta : null, player.coins);
   socket.emit('player_registered', player);
@@ -808,6 +841,13 @@ socket.on("update_profile_visuals", async (data) => {
   socket.on('send_friend_request', async (targetUsername) => {
     const player = activePlayers[socket.id];
     if (!player || !targetUsername) return;
+    // 🛡️ Rate-limit : max 10 demandes / minute
+  const cd = checkCooldown(player, 'friend_request', 6000);
+  if (!cd.ok) {
+    socket.emit('friend_error', "Trop de demandes, attends un peu.");
+    return;
+  }
+    setLastAction(player, 'friend_request');
     const cleanTarget = targetUsername.trim();
     if (cleanTarget.toLowerCase() === player.username.toLowerCase()) { socket.emit('friend_error', "Tu ne peux pas t'ajouter toi-meme !"); return; }
     const { data: targetExists } = await supabase.from('players').select('username').ilike('username', cleanTarget).single();
@@ -907,7 +947,7 @@ socket.on("update_profile_visuals", async (data) => {
     const pData = match.players[socket.id];
     if (!pData) return;
     const now = Date.now();
-    if (pData.lastClick && now - pData.lastClick < 60) return; // trop rapide = bot, ignoré
+    if (pData.lastClick && now - pData.lastClick < 180) return; // 180ms = humain réaliste
     pData.lastClick = now;
     const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
     if (typeof clickedIndex !== 'number' || clickedIndex < 0 || clickedIndex >= pData.pool.length) return;
@@ -938,7 +978,7 @@ socket.on("update_profile_visuals", async (data) => {
     const pData = match.players[socket.id];
     if (!pData) return;
     const nowC = Date.now();
-    if (pData.lastCatch && nowC - pData.lastCatch < 50) return; // anti-bot
+    if (pData.lastCatch && nowC - pData.lastCatch < 150) return; // 150ms = humain réaliste
     pData.lastCatch = nowC;
     pData.score = Math.max(0, pData.score + delta);
     const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
@@ -946,68 +986,124 @@ socket.on("update_profile_visuals", async (data) => {
   });
 
   socket.on('claim_catch_solo', async (payload) => {
-    const player = activePlayers[socket.id];
-    if (!player) return;
-    const score = Math.max(0, Math.min(20000, Number(payload && payload.score) || 0));
-    const bonus = Math.max(0, Math.min(20000, Number(payload && payload.bonus) || 0));
-    const baseCoins = Math.min(100, Math.floor(score / 3));
-    const bonusCoins = Math.min(100, Math.floor(bonus / 3));
-    const rushBonus = globalEvents.coinRush ? baseCoins : 0;
-    const earned = baseCoins + bonusCoins + rushBonus;
-    const coinsBefore = player.coins;
-    player.coins += earned;
-    player.solo_games = (player.solo_games || 0) + 1;
-    player.total_coins_earned = (player.total_coins_earned || 0) + earned;
-    await savePlayerToSupabase(socket.id);
-    await logPlayerAction(player, 'catch_solo', `Score: ${score}, Bonus: ${bonus}`, 'coins', earned, player.coins);
-    socket.emit('player_registered', player);
-    socket.emit('catch_solo_result', { baseCoins, bonusCoins, rushBonus, earnedCoins: earned });
-  });
-
-  socket.on('claim_solo_reward', async (payload) => {
-    const player = activePlayers[socket.id];
-    if (!player) return;
-    const score = (typeof payload === 'object' && payload !== null) ? (payload.score || 0) : payload;
-    const perfection = (typeof payload === 'object' && payload !== null) ? !!payload.perfection : false;
-    const normalizedScore = Number(score);
-    if (!Number.isFinite(normalizedScore) || normalizedScore < 0 || normalizedScore > 20000) return;
-    let baseCoins = perfection ? 100 : Math.min(100, Math.floor(normalizedScore / 3));
-    let rushBonus = globalEvents.coinRush ? baseCoins : 0;
-    let earnedCoins = baseCoins + rushBonus;
-    const coinsBefore = player.coins;
-    player.coins += earnedCoins;
-    player.solo_games = (player.solo_games || 0) + 1;
-    player.total_coins_earned = (player.total_coins_earned || 0) + earnedCoins;
-    if (payload && typeof payload.best_combo === 'number') player.best_combo = Math.max(player.best_combo || 0, payload.best_combo);
-    if (payload && typeof payload.avalanche_score === 'number') player.best_avalanche = Math.max(player.best_avalanche || 0, payload.avalanche_score);
-    const unlockedTrophies = evaluateTrophies(player);
-    if (unlockedTrophies.length > 0) socket.emit('trophy_unlocked', unlockedTrophies.map(t => ({ id: Object.keys(TROPHY_CATALOG).find(k => TROPHY_CATALOG[k] === t), ...t })));
-    lastMatchEarnings[socket.id] = earnedCoins;
-    if (perfection) { player.unlocked_items = player.unlocked_items || []; if (!player.unlocked_items.includes('achievement_perfection')) player.unlocked_items.push('achievement_perfection'); }
-    let triggerWheel = (globalEvents.jackpotEclair && Math.random() < 0.10);
-    await savePlayerToSupabase(socket.id);
-    await logPlayerAction(player, 'solo_reward', `Score: ${normalizedScore}, Perfection: ${perfection}`, 'coins', earnedCoins, player.coins);
-    socket.emit('player_registered', player);
-    socket.emit('solo_reward_result', { baseCoins, rushBonus, earnedCoins, triggerWheel, globalEvents, perfection });
-  });
-
- socket.on('double_reward', async () => {
   const player = activePlayers[socket.id];
   if (!player) return;
   
-  // ✅ Reset quotidien + cap 15 pubs/jour
+  // 🛡️ Cooldown : 8s minimum entre 2 catch solo
+  const cd = checkCooldown(player, 'catch_solo', 8000);
+  if (!cd.ok) {
+    socket.emit('catch_solo_result', { baseCoins: 0, bonusCoins: 0, rushBonus: 0, earnedCoins: 0, error: 'cooldown' });
+    return;
+  }
+  
+  const score = Math.max(0, Math.min(20000, Number(payload && payload.score) || 0));
+  const bonus = Math.max(0, Math.min(20000, Number(payload && payload.bonus) || 0));
+  const clientDuration = Number(payload && payload.duration) || 0;
+  
+  // 🛡️ Anti-bot : score > 1000 en <5s = impossible
+  if ((score + bonus) > 1000 && clientDuration < 5) {
+    await logPlayerAction(player, 'catch_solo_bot_detected', `Score ${score}+${bonus} en ${clientDuration}s`, null, null, null);
+    socket.emit('catch_solo_result', { baseCoins: 0, bonusCoins: 0, rushBonus: 0, earnedCoins: 0, error: 'suspicious' });
+    return;
+  }
+  
+  // 🛡️ Plafonne selon durée
+  const maxAllowed = Math.min(20000, Math.max(500, clientDuration * 800));
+  const safeScore = Math.min(score, maxAllowed);
+  const safeBonus = Math.min(bonus, maxAllowed);
+  
+  const baseCoins = Math.min(100, Math.floor(safeScore / 3));
+  const bonusCoins = Math.min(100, Math.floor(safeBonus / 3));
+  const rushBonus = globalEvents.coinRush ? baseCoins : 0;
+  const earned = baseCoins + bonusCoins + rushBonus;
+  
+  player.coins += earned;
+  player.solo_games = (player.solo_games || 0) + 1;
+  player.total_coins_earned = (player.total_coins_earned || 0) + earned;
+  
+  setLastAction(player, 'catch_solo');
+  await savePlayerToSupabase(socket.id);
+  await logPlayerAction(player, 'catch_solo', `Score: ${safeScore}+${safeBonus}, Duration: ${clientDuration}s`, 'coins', earned, player.coins);
+  socket.emit('player_registered', player);
+  socket.emit('catch_solo_result', { baseCoins, bonusCoins, rushBonus, earnedCoins: earned });
+});
+
+ socket.on('claim_solo_reward', async (payload) => {
+  const player = activePlayers[socket.id];
+  if (!player) return;
+  
+  // 🛡️ Cooldown : 8s minimum entre 2 solo (temps d'une vraie partie)
+  const cd = checkCooldown(player, 'solo_reward', 8000);
+  if (!cd.ok) {
+    socket.emit('solo_reward_result', { baseCoins: 0, rushBonus: 0, earnedCoins: 0, triggerWheel: false, globalEvents, perfection: false, error: 'cooldown' });
+    return;
+  }
+  
+  const score = (typeof payload === 'object' && payload !== null) ? (payload.score || 0) : payload;
+  const perfection = (typeof payload === 'object' && payload !== null) ? !!payload.perfection : false;
+  const clientDuration = (typeof payload === 'object' && payload !== null) ? (payload.duration || 0) : 0;
+  const normalizedScore = Number(score);
+  
+  // 🛡️ Anti-triche : vérifications
+  if (!Number.isFinite(normalizedScore) || normalizedScore < 0 || normalizedScore > 20000) return;
+  
+  // 🛡️ Anti-bot : durée trop courte = bot (score élevé en <5s = impossible)
+  if (normalizedScore > 1000 && clientDuration < 5) {
+    await logPlayerAction(player, 'solo_reward_bot_detected', `Score ${normalizedScore} en ${clientDuration}s`, null, null, null);
+    socket.emit('solo_reward_result', { baseCoins: 0, rushBonus: 0, earnedCoins: 0, triggerWheel: false, globalEvents, perfection: false, error: 'suspicious' });
+    return;
+  }
+  
+  // 🛡️ Plafonne le score acceptable en fonction de la durée
+  // Max ~800 points/s pour un humain très bon → durée * 800
+  const maxAllowed = Math.min(20000, Math.max(500, clientDuration * 800));
+  const safeScore = Math.min(normalizedScore, maxAllowed);
+  
+  let baseCoins = perfection ? 100 : Math.min(100, Math.floor(safeScore / 3));
+  let rushBonus = globalEvents.coinRush ? baseCoins : 0;
+  let earnedCoins = baseCoins + rushBonus;
+  
+  player.coins += earnedCoins;
+  player.solo_games = (player.solo_games || 0) + 1;
+  player.total_coins_earned = (player.total_coins_earned || 0) + earnedCoins;
+  if (payload && typeof payload.best_combo === 'number') player.best_combo = Math.max(player.best_combo || 0, payload.best_combo);
+  if (payload && typeof payload.avalanche_score === 'number') player.best_avalanche = Math.max(player.best_avalanche || 0, payload.avalanche_score);
+  const unlockedTrophies = evaluateTrophies(player);
+  if (unlockedTrophies.length > 0) socket.emit('trophy_unlocked', unlockedTrophies.map(t => ({ id: Object.keys(TROPHY_CATALOG).find(k => TROPHY_CATALOG[k] === t), ...t })));
+  lastMatchEarnings[socket.id] = earnedCoins;
+  if (perfection) { player.unlocked_items = player.unlocked_items || []; if (!player.unlocked_items.includes('achievement_perfection')) player.unlocked_items.push('achievement_perfection'); }
+  let triggerWheel = (globalEvents.jackpotEclair && Math.random() < 0.10);
+  
+  setLastAction(player, 'solo_reward');
+  await savePlayerToSupabase(socket.id);
+  await logPlayerAction(player, 'solo_reward', `Score: ${safeScore}${safeScore !== normalizedScore ? ' (tronqué de ' + normalizedScore + ')' : ''}, Duration: ${clientDuration}s`, 'coins', earnedCoins, player.coins);
+  socket.emit('player_registered', player);
+  socket.emit('solo_reward_result', { baseCoins, rushBonus, earnedCoins, triggerWheel, globalEvents, perfection });
+});
+
+socket.on('double_reward', async () => {
+  const player = activePlayers[socket.id];
+  if (!player) return;
+  
   ensureDailyCounters(player);
   if (player.daily_ads.count >= 15) {
     socket.emit('ad_limit_reached', { limit: 15, used: player.daily_ads.count });
     return;
   }
   
+  // 🛡️ Cooldown : 15s entre 2 pubs (temps d'une vraie pub)
+  const cd = checkCooldown(player, 'double_reward', 15000);
+  if (!cd.ok) {
+    socket.emit('ad_limit_reached', { limit: 0, used: 0, cooldown: Math.ceil(cd.remaining / 1000) });
+    return;
+  }
+  
   const earnings = lastMatchEarnings[socket.id] || 0;
   if (earnings > 0) {
-    const coinsBefore = player.coins;
     player.coins += earnings;
     player.daily_ads.count++;
     lastMatchEarnings[socket.id] = 0;
+    setLastAction(player, 'double_reward');
     await savePlayerToSupabase(socket.id);
     await logPlayerAction(player, 'double_reward', `+${earnings}🪙 (ad)`, 'coins', earnings, player.coins);
     socket.emit('player_registered', player);
@@ -1383,21 +1479,32 @@ socket.on('tower_floor_win', async (data) => {
   if (!player) return;
   const floor = parseInt(data.floor) || 0;
   const stars = Math.max(1, Math.min(3, parseInt(data.stars) || 1));
+  const clientTime = Number(data.time) || 0; // ⬅️ le client doit envoyer le temps réel
 
   // 🛡️ Anti-triche : uniquement le prochain étage attendu
-  if (floor !== (player.towerFloor || 0) + 1) return;
+  if (floor !== (player.towerFloor || 0) + 1) {
+    await logPlayerAction(player, 'tower_cheat_attempt', `Floor ${floor} attendu ${(player.towerFloor || 0) + 1}`, null, null, null);
+    return;
+  }
+
+  // 🛡️ Anti-bot : temps min réaliste pour finir l'étage
+  const def = getFloorDefClient(floor);
+  const minTime = getMinFloorTime(floor, def.type);
+  if (clientTime > 0 && clientTime < minTime) {
+    await logPlayerAction(player, 'tower_bot_detected', `Floor ${floor} en ${clientTime}s (min ${minTime}s)`, null, null, null);
+    return;
+  }
 
   player.towerFloor = floor;
   player.towerStars = player.towerStars || {};
   player.towerStars[String(floor)] = Math.max(player.towerStars[String(floor)] || 0, stars);
 
   const coins = 10 + floor * 2 + stars * 5;
-  const coinsBefore = player.coins;
   player.coins = (player.coins || 0) + coins;
-  await logPlayerAction(player, 'tower_win', `Étage ${floor} (${stars}⭐)`, 'coins', coins, player.coins);
+  await logPlayerAction(player, 'tower_win', `Étage ${floor} (${stars}⭐) en ${clientTime}s`, 'coins', coins, player.coins);
 
   let reward = null;
-    if (floor % TOWER_FPC === 0) {
+  if (floor % TOWER_FPC === 0) {
     const itemId = TOWER_CHAPTER_REWARDS[floor / TOWER_FPC];
     if (itemId) {
       player.unlocked_items = player.unlocked_items || [];
@@ -1412,6 +1519,15 @@ socket.on('tower_floor_win', async (data) => {
   socket.emit('tower_result', { ok: true, floor, stars, coins, reward });
   socket.emit('player_registered', player);
 });
+
+// Helper serveur pour avoir la définition d'un étage (copie minimale de getFloorDef client)
+function getFloorDefClient(floor) {
+  const FPC = 50;
+  const chap = Math.ceil(floor / FPC), inChap = ((floor - 1) % FPC) + 1;
+  const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","fog","nofail"];
+  const t = seq[(inChap - 1) % 9];
+  return { type: inChap === FPC ? 'boss' : t };
+}
 // 🔄 Rejouer un étage déjà gagné pour améliorer ses étoiles
 socket.on('tower_floor_replay', async (data) => {
   const player = activePlayers[socket.id];
