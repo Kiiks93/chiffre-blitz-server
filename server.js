@@ -336,7 +336,8 @@ const TOWER_CHAPTER_REWARDS = {
   4: "title_chasseur_hante", 5: "frame_toile", 6: "title_roi_citrouille_tour",
   7: "title_veilleur_cimes", 8: "frame_aurore", 9: "title_maitre_tour"
 };
-const TOWER_FPC = 20; // ⚠️ DOIT correspondre au FPC du client (passera à 200 des deux côtés plus tard)
+const TOWER_FPC = 200;
+const TOWER_TOTAL = 9 * TOWER_FPC; // 1800
 const TW_COLOR_POOL = [
   {key:"cyan",name:"CYAN",hex:"#00d2ff"}, {key:"pink",name:"ROSE",hex:"#ff2bd6"},
   {key:"gold",name:"OR",hex:"#f8b500"}, {key:"green",name:"VERT",hex:"#2ecc71"},
@@ -348,17 +349,18 @@ function towerShuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.r
 
 function getFloorDefServer(floor) {
   const chap = Math.ceil(floor / TOWER_FPC), inChap = ((floor - 1) % TOWER_FPC) + 1;
-  const base = { floor, gridSize: 16 + (chap - 1) * 4, time: Math.max(18, 32 - chap * 2) };
-  if (inChap === TOWER_FPC) return { ...base, type: "boss" };
+  const global = (floor - 1) / (TOWER_TOTAL - 1);
+  let gridSize = Math.min(36, Math.round(12 + global * 24));
+  let time = Math.max(14, Math.round(34 - global * 20));
+  if (inChap === TOWER_FPC) return { floor, gridSize, time, type: "boss" };
+  if (inChap % 50 === 0) return { floor, gridSize, time, type: "boss" }; // gardien
   const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","fog","nofail"];
   const t = seq[(inChap - 1) % 9];
-  if (t === "sprint") return { ...base, type: "sprint", time: Math.max(8, 14 - chap) };
-  if (t === "nofail") return { ...base, type: "nofail", time: 25 };
-  if (t === "pairs") { let g = base.gridSize; if (g % 2) g++; return { ...base, gridSize: g, type: "pairs", time: Math.max(24, 36 - chap) }; }
-  if (t === "color") return { ...base, type: "color", time: Math.max(20, 30 - chap) };
-  if (t === "parity") return { ...base, gridSize: 24 + (chap - 1) * 6, type: "parity", time: Math.max(24, 40 - chap * 2) };
-  if (t === "forbidden") return { ...base, type: "forbidden", time: Math.max(18, 28 - chap) };
-  return { ...base, type: t };
+  if (t === "sprint") return { floor, gridSize, time: Math.max(8, Math.round(time * 0.5)), type: "sprint" };
+  if (t === "nofail") return { floor, gridSize, time: Math.max(15, Math.round(time * 0.8)), type: "nofail" };
+  if (t === "pairs") { let g = gridSize; if (g % 2) g++; return { floor, gridSize: g, time: Math.max(20, time + 6), type: "pairs" }; }
+  if (t === "parity") return { floor, gridSize: Math.min(48, gridSize + 8), time: time + 4, type: "parity" };
+  return { floor, gridSize, time, type: t };
 }
 function pickColorTarget(s){
   const keys=[...new Set([...s.remaining].map(i=>s.nums[i].key))];
@@ -430,11 +432,14 @@ async function towerWin(player, s){
     if(s.mistakes===0 && used<=s.def.time*0.6) stars=3;
     else if(s.mistakes<=2) stars=2;
   }
-  let coins, reward=null;
+   let coins, reward=null;
+  const chap = Math.ceil(s.floor / TOWER_FPC);
   if(!s.replay){
     player.towerFloor = s.floor;
     coins = 10 + s.floor*2 + stars*5;
-    if (s.floor % TOWER_FPC === 0){
+    if (s.floor % 20 === 0 && s.floor % TOWER_FPC !== 0) coins += 20 + chap*5;      // cache
+    if (s.floor % 50 === 0 && s.floor % TOWER_FPC !== 0) coins += 50 + chap*10;     // gardien
+    if (s.floor % TOWER_FPC === 0){                                                  // boss final
       const itemId = TOWER_CHAPTER_REWARDS[s.floor / TOWER_FPC];
       if (itemId){ player.unlocked_items = player.unlocked_items||[]; if(!player.unlocked_items.includes(itemId)){ player.unlocked_items.push(itemId); reward=itemId; } }
     }
