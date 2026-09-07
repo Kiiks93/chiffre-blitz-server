@@ -245,9 +245,9 @@ function generateSceneHTML(c, W, C) {
     for (let i = 0; i < 140; i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%44}%;animation-delay:${(i*.23)%3}s;"></span>`;
     /* ☁️ Nuages */
     for (let i = 0; i < 4; i++) html += `<span class="tw-cloud" style="top:${3+i*6}%;width:${22+(i*9)%16}%;animation-duration:${70+i*25}s;animation-delay:${i*11}s;"></span>`;
-    /* 🦇 BAT-SIGNAL : halo + logo CHIFFRE BLITZ projeté dans le ciel */
-    html += `<div class="tw-skyhalo"></div><div class="tw-skylogo">CHIFFRE BLITZ</div>`;
-    /* 🦇 2 projecteurs + faisceaux */
+        /* 🦇 Titre à GAUCHE + logo à DROITE (hors du centre des niveaux) */
+    html += `<div class="tw-side-title">CHIFFRE BLITZ</div><div class="tw-side-logo">⚡</div>`;
+    /* 🦇 Projecteurs ancrés sur les toits + faisceaux vers les côtés */
     html += `<div class="tw-beam b1"></div><div class="tw-beam b2"></div><div class="tw-projector p1"></div><div class="tw-projector p2"></div>`;
     /* 🌆 Horizon glow */
     html += `<div class="tw-horizon"></div>`;
@@ -390,6 +390,39 @@ function generateSceneHTML(c, W, C) {
   .tw-cityback{bottom:180px;}
   .tw-horizon{bottom:180px;}
   .tw-reflect{height:180px;}
+  `;
+  document.head.appendChild(s);
+})();
+
+/* ----- CSS Bat-Signal propre (toits + côtés) ----- */
+(function(){
+  const s=document.createElement("style");
+  s.textContent=`
+  /* 🦇 Titre vertical sur le bord GAUCHE (hors du centre) */
+  .tw-side-title{position:absolute;left:2.5%;top:10%;writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);
+    font-size:clamp(16px,2.6vw,26px);font-weight:900;letter-spacing:10px;color:#fff;white-space:nowrap;z-index:2;
+    text-shadow:0 0 12px #00d2ff,0 0 30px #00d2ffaa,0 0 60px #ff00ff77;opacity:.92;
+    animation:twSideOn 2.2s ease-out both, twSidePulse 3.2s ease-in-out 2.2s infinite;}
+  /* 🦇 Logo emblème sur le bord DROIT */
+  .tw-side-logo{position:absolute;right:3%;top:10%;width:70px;height:70px;border-radius:50%;z-index:2;
+    display:flex;align-items:center;justify-content:center;font-size:34px;color:#fff;
+    background:radial-gradient(circle,#00d2ff33,transparent 70%);
+    border:2px solid #00d2ff88;box-shadow:0 0 20px #00d2ff88,inset 0 0 20px #00d2ff44;
+    animation:twSideOn 2.2s ease-out both, twSidePulse 3.2s ease-in-out 2.2s infinite;}
+  /* 🦇 Faisceaux ANCRÉS SUR LES TOITS (~32%), pointant vers les côtés */
+  .tw-beam{position:absolute;bottom:32%;width:80px;height:55%;filter:blur(3px);transform-origin:bottom center;
+    background:linear-gradient(to top,rgba(255,255,255,.30),rgba(255,255,255,.06) 60%,transparent);
+    clip-path:polygon(42% 100%,58% 100%,100% 0,0 0);
+    animation:twBeamOn 1.6s ease-out both, twBeamFlicker 5s ease-in-out 1.6s infinite;}
+  .tw-beam.b1{--rot:-14deg;left:10%;}
+  .tw-beam.b2{--rot:14deg;right:10%;animation-delay:1.6s,3.2s;}
+  /* 🦇 Projecteurs posés sur les toits */
+  .tw-projector{position:absolute;bottom:32%;width:26px;height:16px;background:linear-gradient(180deg,#3a3a48,#14141c);border-radius:4px 4px 2px 2px;box-shadow:0 0 10px #00d2ff66;}
+  .tw-projector::after{content:"";position:absolute;top:-4px;left:50%;transform:translateX(-50%);width:12px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 12px #fff,0 0 24px #00d2ff;}
+  .tw-projector.p1{left:calc(10% + 27px);}
+  .tw-projector.p2{right:calc(10% + 27px);}
+  @keyframes twSideOn{0%{opacity:0;filter:blur(10px)}35%{opacity:.5}45%{opacity:.15}55%{opacity:.85}65%{opacity:.3}80%{opacity:.9}100%{opacity:.92;filter:blur(0)}}
+  @keyframes twSidePulse{0%,100%{opacity:.92}50%{opacity:.7}}
   `;
   document.head.appendChild(s);
 })();
