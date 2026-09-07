@@ -1,5 +1,5 @@
 /* ============================================================
-TOUR.JS — MODE AVENTURE (100% CSS, immersif)
+TOUR.JS — MODE AVENTURE (100% CSS, immersif, NIVEAU 2)
 ============================================================ */
 const TOWER_CHAPTERS = [
   { id:1, season:1, name:"Quartier Néon", icon:"🌆", boss:"🤖", objects:["💡","️","📺","","🎛️","🖥️","📻","️","🌃"] },
@@ -369,9 +369,10 @@ function showBriefing(def){
 }
 function closeBriefing(){const b=document.getElementById("tw-brief");if(b)b.remove();}
 
+/* ================= MOTEUR DES ÉTAGES — NIVEAU 2 (server-authoritative) ================= */
 let TW=null;
-function startTowerFloor(def){
-  if(TW)return;
+let TW_lastFloor=0;
+function ensureTowerOverlay(){
   let ov=document.getElementById("tower-game");
   if(!ov){ov=document.createElement("div");ov.id="tower-game";ov.className="twg-screen";
     ov.innerHTML=`<div class="twg-header">
@@ -384,273 +385,87 @@ function startTowerFloor(def){
       <div class="twg-gridwrap"><div id="tg-grid" class="tg-grid"></div></div>
       <div id="tg-msg" class="twg-msg"></div>`;
     document.body.appendChild(ov);}
+  return ov;
+}
+function startTowerFloor(def){
+  if(TW)return;
+  const ov=ensureTowerOverlay();
   ov.style.display="flex";
+  TW_lastFloor=def.floor;
+  TW={pending:true};
   document.getElementById("twg-title").innerText="🏰 "+(currentLang==="fr"?"ÉTAGE":"FLOOR")+" "+def.floor+" — "+typeLabel(def.type);
-  const tgBar=document.getElementById("tg-bar");if(tgBar){tgBar.style.display="none";tgBar.innerHTML="";}
-  
-  // 🔧 FIX : détecter automatiquement si c'est un replay
-  def.replay = def.floor <= towerProgress.floor;
-  
-  TW={def,mistakes:0,sel:null,start:Date.now(),time:def.time,ai:0,done:false,gone:{},hidden:false,op:null};
-  buildFloor();paintGrid();renderHUD();
-  TW.int=setInterval(()=>{
-    if(!TW||TW.done)return;
-    TW.time--;
-    if(TW.def.type==="boss"){TW.ai+=0.8+Math.ceil(TW.def.floor/10)*0.15;
-      const p=Math.min(100,TW.ai/TW.total*100);
-      const bar=document.getElementById("tg-bar");bar.style.display="block";
-      bar.innerHTML=`<div style="width:${p}%;height:100%;background:linear-gradient(90deg,#ff4b2b,#f8b500);"></div>`;
-      if(TW.ai>=TW.total)return failFloor();}
-    if(TW.time<=0)return failFloor();
-    renderHUD();
-  },1000);
-  if(def.type==="memory")setTimeout(()=>{if(TW&&!TW.done){TW.hidden=true;paintGrid();}},2000);
+  socket.emit("tower_floor_start",{floor:def.floor});
 }
-const TW_COLOR_POOL=[
-  {key:"cyan",name:"CYAN",hex:"#00d2ff"},
-  {key:"pink",name:"ROSE",hex:"#ff2bd6"},
-  {key:"gold",name:"OR",hex:"#f8b500"},
-  {key:"green",name:"VERT",hex:"#2ecc71"},
-  {key:"red",name:"ROUGE",hex:"#ff4b2b"},
-  {key:"violet",name:"VIOLET",hex:"#9b5cff"}
-];
-
-function chooseColorTarget(){
-  const keys=[...new Set([...TW.remaining].map(i=>TW.nums[i].key))];
-  if(!keys.length){TW.targetColor=null;return;}
-  const key=keys[Math.floor(Math.random()*keys.length)];
-  TW.targetColor=TW_COLOR_POOL.find(c=>c.key===key)||TW_COLOR_POOL[0];
-}
-
-function parityLeft(parity){
-  return [...TW.remaining].some(v=>parity==="even"?v%2===0:v%2!==0);
-}
-function buildFloor(){
-  const d=TW.def,N=d.gridSize;
-  TW.total=N;
-  if(d.type==="color"){
-    TW.nums=[...Array(N)].map((_,i)=>TW_COLOR_POOL[(i+Math.floor(Math.random()*TW_COLOR_POOL.length))%TW_COLOR_POOL.length]);
-    TW.nums=shuffle(TW.nums);
-    TW.remaining=new Set([...Array(N)].map((_,i)=>i));
-    chooseColorTarget();
-    return;
-  }
-  if(d.type==="pairs"){
-    const symbols=["🍒","⭐","💎","🔥","⚡","🌙","👑","🎲","🍀","🎯","🚀","🧊","🍭","🎁","🪙","🔮","🦇","🎃","🎄","🎅","🧁","🍩","🔔","🕯️"];
-    const half=N/2;
-    TW.nums=shuffle([...symbols.slice(0,half),...symbols.slice(0,half)]);
-    TW.remaining=new Set([...Array(N)].map((_,i)=>i));
-    TW.revealed={};
-    TW.sel=null;
-    TW.lock=false;
-    return;
-  }
-  if(d.type==="parity"){
-    TW.nums=shuffle([...Array(N)].map((_,i)=>i+1));
-    TW.targetParity=Math.random()<.5?"even":"odd";
-    TW.remaining=new Set(TW.nums.filter(v=>TW.targetParity==="even"?v%2===0:v%2!==0));
-    return;
-  }
-  if(d.type==="forbidden"){
-    TW.nums=shuffle([...Array(N)].map((_,i)=>i+1));
-    TW.remaining=new Set(TW.nums);
-    TW.forbidden=1+Math.floor(Math.random()*N);
-    TW.target=TW.forbidden;
-    return;
-  }
-  if(d.type==="calc+"||d.type==="calc-"){
-    const max=9+Math.ceil(d.floor/10)*3;
-    let a=1+Math.floor(Math.random()*max),b=1+Math.floor(Math.random()*max);
-    if(d.type==="calc-"){if(a===b)b=(a%max)+1;if(b>a)[a,b]=[b,a];TW.target=a-b;TW.op="-";}
-    else{TW.target=a+b;TW.op="+";}
-    const vals=[a,b];while(vals.length<N)vals.push(1+Math.floor(Math.random()*max));
-    TW.nums=shuffle(vals);
-  }else{
-    TW.nums=shuffle([...Array(N)].map((_,i)=>i+1));
-    TW.remaining=new Set(TW.nums);
-    TW.target=d.type==="reverse"?N:1;
-    if(d.type==="random")nextTarget();
-  }
-}
-function nextTarget(){
-  const t=TW.def.type;
-  if(t==="reverse")TW.target--;
-  else if(t==="random"){const arr=[...TW.remaining];TW.target=arr[Math.floor(Math.random()*arr.length)];}
-  else TW.target++;
-}
-function paintGrid(){
-  const g=document.getElementById("tg-grid"),d=TW.def;
-  const cols=d.gridSize<=16?4:(d.gridSize<=20?5:6);
+socket.on("tower_state",(st)=>{
+  TW=st;
+  TW_lastFloor=st.floor;
+  paintFromState();
+  renderHUDFromState();
+});
+socket.on("tower_fail",(r)=>{
+  TW=null;
+  showFailUI(r);
+});
+function paintFromState(){
+  const g=document.getElementById("tg-grid");if(!g||!TW||!TW.display)return;
+  const cols=TW.gridSize<=16?4:(TW.gridSize<=20?5:6);
   g.style.gridTemplateColumns=`repeat(${cols},1fr)`;
   g.innerHTML="";
-  TW.nums.forEach((v,i)=>{
+  TW.display.forEach((v,i)=>{
     const b=document.createElement("button");
-    b.className="tg-tile"+(d.type==="fog"?" foggy":"")+(TW.gone[i]?" gone":"");
-    if(d.type==="color"){
-      b.className+=" tg-color";
-      b.textContent="";
+    b.className="tg-tile"+(TW.type==="fog"?" foggy":"")+(TW.gone[i]?" gone":"");
+    if(TW.type==="color"){
       b.style.background=`radial-gradient(circle at 35% 25%,#ffffffaa,transparent 22%),linear-gradient(180deg,${v.hex},#111827 85%)`;
       b.style.boxShadow=`0 0 14px ${v.hex}66,inset 0 1px 0 #fff8`;
-    }else if(d.type==="pairs"){
-      const show=TW.revealed[i]||TW.sel===i;
-      b.textContent=TW.gone[i]?"":(show?v:"?");
-      if(show&&!TW.gone[i])b.classList.add("sel");
+      b.textContent="";
+    }else if(TW.type==="pairs"){
+      b.textContent=TW.gone[i]?"":(v===null?"?":v);
+      if(v!==null&&!TW.gone[i])b.classList.add("sel");
     }else{
-      b.textContent=TW.hidden?"?":v;
+      b.textContent=v;
     }
-    b.onclick=()=>twClick(i,b);
+    b.onclick=()=>socket.emit("tower_click",{index:i});
     g.appendChild(b);
   });
 }
-function renderHUD(){
+function renderHUDFromState(){
   const h=document.getElementById("tg-hud");if(!h||!TW)return;
   const fr=currentLang==="fr";
   let main="";
-  if(TW.def.type==="color"){
-    main=`${fr?"COULEUR":"COLOR"} : <span style="color:${TW.targetColor.hex};text-shadow:0 0 12px ${TW.targetColor.hex};">${TW.targetColor.name}</span>`;
-  }else if(TW.def.type==="pairs"){
-    main=fr?"🧩 RETROUVE LES PAIRES":"🧩 FIND THE PAIRS";
-  }else if(TW.def.type==="parity"){
-    main=TW.targetParity==="even"?(fr?"CLIQUE : PAIRS":"CLICK: EVEN"):(fr?"CLIQUE : IMPAIRS":"CLICK: ODD");
-  }else if(TW.def.type==="forbidden"){
-    main=`${fr?"INTERDIT":"FORBIDDEN"} : <span style="color:#ff4b2b;text-shadow:0 0 12px #ff4b2b;">${TW.forbidden}</span>`;
-  }else if(TW.op){
-    main=`<span style="color:#f8b500;">${TW.target} ${TW.op==="+"?"➕":"➖"}</span>`;
-  }else{
-    main=`<span>${fr?"CIBLE":"TARGET"} : ${TW.target}</span>`;
-  }
+  if(TW.type==="color"&&TW.targetColor)main=`${fr?"COULEUR":"COLOR"} : <span style="color:${TW.targetColor.hex};text-shadow:0 0 12px ${TW.targetColor.hex};">${TW.targetColor.name}</span>`;
+  else if(TW.type==="pairs")main=fr?"🧩 RETROUVE LES PAIRES":"🧩 FIND THE PAIRS";
+  else if(TW.type==="parity")main=TW.targetParity==="even"?(fr?"CLIQUE : PAIRS":"CLICK: EVEN"):(fr?"CLIQUE : IMPAIRS":"CLICK: ODD");
+  else if(TW.type==="forbidden")main=`${fr?"INTERDIT":"FORBIDDEN"} : <span style="color:#ff4b2b;text-shadow:0 0 12px #ff4b2b;">${TW.forbidden}</span>`;
+  else main=`<span>${fr?"CIBLE":"TARGET"} : ${TW.target}</span>`;
+  h.innerHTML=main;
   const t=document.getElementById("twg-timer");
-  if(t){
-    h.innerHTML=main;
-    t.innerText="⏱️ "+TW.time+"s";
-    t.style.color=TW.time<=5?"#ff4b2b":"#fff";
-  }else{
-    h.innerHTML=main+` <b style="color:${TW.time<=5?"#ff4b2b":"#fff"};">⏱️ ${TW.time}s</b>`;
+  if(t){t.innerText="⏱️ "+TW.timeLeft+"s";t.style.color=TW.timeLeft<=5?"#ff4b2b":"#fff";}
+  const bar=document.getElementById("tg-bar");
+  if(bar){
+    if(TW.type==="boss"){bar.style.display="block";bar.innerHTML=`<div style="width:${Math.min(100,TW.ai/TW.total*100)}%;height:100%;background:linear-gradient(90deg,#ff4b2b,#f8b500);"></div>`;}
+    else bar.style.display="none";
   }
-  document.getElementById("tg-msg").innerText=TW.def.type==="nofail"?"💎 Une seule erreur = échec !":(TW.def.type==="pairs"?"🧠 Mémorise les positions !":(TW.def.type==="forbidden"?"🚫 Ne touche pas le nombre interdit !":""));
+  document.getElementById("twg-title").innerText="🏰 "+(fr?"ÉTAGE":"FLOOR")+" "+TW.floor+" — "+typeLabel(TW.type);
+  document.getElementById("tg-msg").innerText=TW.type==="nofail"?"💎 Une seule erreur = échec !":(TW.type==="pairs"?"🧠 Mémorise les positions !":(TW.type==="forbidden"?"🚫 Ne touche pas le nombre interdit !":""));
 }
-function twClick(idx,el){
-  if(!TW||TW.done||TW.gone[idx]||TW.lock)return;
-  const d=TW.def;
-  const v=TW.nums[idx];
-  if(d.type==="color"){
-    if(v.key===TW.targetColor.key){
-      TW.gone[idx]=true;
-      TW.remaining.delete(idx);
-      el.classList.add("gone");
-      if(SoundEngine.playComboTick)SoundEngine.playComboTick(TW.total-TW.remaining.size);
-      if(TW.remaining.size===0)return winFloor();
-      if(![...TW.remaining].some(i=>TW.nums[i].key===TW.targetColor.key))chooseColorTarget();
-      renderHUD();
-    }else mistake();
-    return;
-  }
-  if(d.type==="pairs"){
-    if(TW.sel===null){TW.sel=idx;TW.revealed[idx]=true;paintGrid();return;}
-    if(TW.sel===idx)return;
-    const first=TW.sel;
-    TW.revealed[idx]=true;
-    paintGrid();
-    if(TW.nums[first]===TW.nums[idx]){
-      setTimeout(()=>{
-        if(!TW)return;
-        TW.gone[first]=true;
-        TW.gone[idx]=true;
-        TW.remaining.delete(first);
-        TW.remaining.delete(idx);
-        TW.sel=null;
-        if(SoundEngine.playComboTick)SoundEngine.playComboTick(TW.total-TW.remaining.size);
-        if(TW.remaining.size===0)return winFloor();
-        paintGrid();
-      },220);
-    }else{
-      mistake();
-      TW.lock=true;
-      setTimeout(()=>{
-        if(!TW)return;
-        TW.revealed[first]=false;
-        TW.revealed[idx]=false;
-        TW.sel=null;
-        TW.lock=false;
-        paintGrid();
-      },520);
-    }
-    return;
-  }
-  if(d.type==="parity"){
-    const ok=TW.targetParity==="even"?v%2===0:v%2!==0;
-    if(ok){
-      TW.gone[idx]=true;
-      TW.remaining.delete(v);
-      el.classList.add("gone");
-      if(SoundEngine.playComboTick)SoundEngine.playComboTick(TW.total-TW.remaining.size);
-      if(TW.remaining.size===0)return winFloor();
-      renderHUD();
-    }else mistake();
-    return;
-  }
-  if(d.type==="forbidden"){
-    if(v===TW.forbidden){mistake();return;}
-    TW.gone[idx]=true;
-    TW.remaining.delete(v);
-    el.classList.add("gone");
-    if(SoundEngine.playComboTick)SoundEngine.playComboTick(TW.total-TW.remaining.size);
-    if(TW.remaining.size===1&&TW.remaining.has(TW.forbidden))return winFloor();
-    renderHUD();
-    return;
-  }
-  if(TW.op){
-    if(TW.sel===null){TW.sel=idx;el.classList.add("sel");return;}
-    if(TW.sel===idx){el.classList.remove("sel");TW.sel=null;return;}
-    const a=TW.nums[TW.sel];
-    const ok=TW.op==="+"?(a+v===TW.target):(Math.abs(a-v)===TW.target);
-    TW.sel=null;
-    if(ok)winFloor();else mistake();
-    return;
-  }
-  if(v===TW.target){
-    TW.gone[idx]=true;
-    el.classList.add("gone");
-    TW.remaining.delete(v);
-    if(SoundEngine.playComboTick)SoundEngine.playComboTick(TW.total-TW.remaining.size);
-    if(TW.remaining.size===0)return winFloor();
-    nextTarget();
-    renderHUD();
-  }else mistake();
-}
-function mistake(){
-  if(!TW||TW.done)return;
-  TW.mistakes++;if(SoundEngine.playError)SoundEngine.playError();
-  if(TW.def.type==="nofail")failFloor();
-}
-function winFloor(){
-  if(!TW||TW.done)return;
-  TW.done=true;clearInterval(TW.int);
-  const used=(Date.now()-TW.start)/1000; // ⬅️ temps réel
-  let stars=1;
-  if(TW.mistakes===0&&used<=TW.def.time*0.6)stars=3;
-  else if(TW.mistakes<=2)stars=2;
-  document.getElementById("tower-game").style.display="none";
-  socket.emit(TW.def.replay?"tower_floor_replay":"tower_floor_win",{
-    floor:TW.def.floor, stars, time:used  // ⬅️ ajout time
-  });
-  TW=null;
-}
-function failFloor(){
-  if(!TW||TW.done)return;
-  TW.done=true;clearInterval(TW.int);
+function showFailUI(r){
+  const ov=ensureTowerOverlay();
+  ov.style.display="flex";
   document.getElementById("tg-bar").style.display="none";
   document.getElementById("tg-hud").innerHTML="";
-  document.getElementById("tg-grid").style.gridTemplateColumns="1fr";
-  document.getElementById("tg-grid").innerHTML=`<div style="text-align:center;"><div style="font-size:30px;">💥</div>
+  const g=document.getElementById("tg-grid");
+  g.style.gridTemplateColumns="1fr";
+  g.innerHTML=`<div style="text-align:center;"><div style="font-size:30px;">💥</div>
     <div style="color:#ff4b2b;font-weight:900;margin:6px 0;">ÉTAGE RATÉ !</div>
     <button class="btn-main btn-blue" onclick="retryFloor()">🔄 Réessayer</button>
     <button class="btn-secondary" onclick="quitFloor()">Quitter</button></div>`;
 }
-function retryFloor(){const d=TW?TW.def:null;TW=null;if(d)startTowerFloor(d);}
-function quitFloor(){TW=null;document.getElementById("tower-game").style.display="none";}
+function retryFloor(){TW=null;startTowerFloor({floor:TW_lastFloor});}
+function quitFloor(){TW=null;socket.emit("tower_quit");const ov=document.getElementById("tower-game");if(ov)ov.style.display="none";}
 
 socket.on("tower_result",(res)=>{
+  TW=null;
+  const ov=document.getElementById("tower-game");if(ov)ov.style.display="none";
   if(!res.ok)return;
   towerProgress.floor=Math.max(towerProgress.floor,res.floor);
   towerProgress.stars[String(res.floor)]=Math.max(towerProgress.stars[String(res.floor)]||0,res.stars);
