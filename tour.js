@@ -354,7 +354,14 @@ function showBriefing(def){
   const fr=currentLang==="fr";
   const curStars=towerProgress.stars[String(def.floor)]||0;
   const starTime=Math.floor(def.time*0.6);
-  const starRule=fr?"💡 ⭐ terminer · ⭐⭐ ≤2 erreurs · ⭐⭐⭐ 0 erreur + moins de "+starTime+"s !":"💡 ⭐ finish · ⭐⭐ ≤2 mistakes · ⭐⭐⭐ 0 mistake + under "+starTime+"s!";
+  let starRule;
+if (def.type === "pairs") {
+  starRule = fr ? "💡 ⭐ finir · ⭐⭐ en 25s · ⭐⭐⭐ en 15s (erreurs OK !)" : "💡 ⭐ finish · ⭐⭐ under 25s · ⭐⭐⭐ under 15s (mistakes OK!)";
+} else if (def.type === "sprint") {
+  starRule = fr ? "💡 ⭐ finir · ⭐⭐ en 10s · ⭐⭐⭐ en 6s" : "💡 ⭐ finish · ⭐⭐ under 10s · ⭐⭐⭐ under 6s";
+} else {
+  starRule = fr ? "💡 ⭐ terminer · ⭐⭐ ≤2 erreurs · ⭐⭐⭐ 0 erreur + moins de " + starTime + "s !" : "💡 ⭐ finish · ⭐⭐ ≤2 mistakes · ⭐⭐⭐ 0 mistake + under " + starTime + "s!";
+}
   const replayLine=def.replay?`<div style="font-size:10px;color:#f8b500;margin-bottom:6px;">${fr?"Actuel : "+"⭐".repeat(curStars)+" — rejoue pour viser 3 ⭐ !":"Current: "+"⭐".repeat(curStars)+" — replay for 3 ⭐!"}</div>`:"";
   const b=document.createElement("div");b.id="tw-brief";b.className="tw-brief";
   b.innerHTML=`<div class="tw-brief-card">
