@@ -271,10 +271,10 @@ function generateSceneHTML(c, W, C) {
     /* 🚗 ROUTE + 6 voitures réparties sur les 2 voies */
     html += `<div class="tw-road"><span class="tw-lane"></span></div><div class="tw-reflect"></div>`;
     const car = (cls, bottom, dur, delay, col) => `<span class="tw-car ${cls}" style="bottom:${bottom};animation-duration:${dur};animation-delay:${delay};color:${col};"><i class="cb"></i><i class="cc"></i><i class="ug"></i><i class="w1"></i><i class="w2"></i><i class="hl"></i><i class="tl"></i></span>`;
-    // Voie 1 (bas, vers la droite)
-    html += car("", "30px", "9s", "0s", "#00d2ff") + car("", "55px", "11s", "3s", "#f8b500") + car("s", "42px", "7s", "5.5s", "#7dff8a");
+       // Voie 1 (bas, vers la droite)
+    html += car("", "20px", "9s", "0s", "#00d2ff") + car("", "40px", "11s", "3s", "#f8b500") + car("s", "30px", "7s", "5.5s", "#7dff8a");
     // Voie 2 (haut, vers la gauche = .r)
-    html += car("r", "120px", "10s", "1.5s", "#ff2bd6") + car("r", "150px", "12s", "4s", "#00d2ff") + car("r s", "135px", "8s", "6.5s", "#ff8a00");
+    html += car("r", "100px", "10s", "1.5s", "#ff2bd6") + car("r", "124px", "12s", "4s", "#00d2ff") + car("r s", "112px", "8s", "6.5s", "#ff8a00");
   }
 
   if (W.scene === "glacier") {
