@@ -10,20 +10,14 @@ const RECOVERY_SECRET = process.env.RECOVERY_SECRET || 'change-moi-en-prod-une-l
 function generateRecoveryKey(username) {
   return crypto.createHmac('sha256', RECOVERY_SECRET)
     .update(String(username).toLowerCase().trim())
-    .digest('hex')
-    .substring(0, 12)
-    .toUpperCase()
-    .match(/.{4}/g)
-    .join('-');
+    .digest('hex').substring(0, 12).toUpperCase().match(/.{4}/g).join('-');
 }
-
 function generateSecureCode() {
   const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*+-';
   let code = '';
   for (let i = 0; i < 10; i++) code += chars[Math.floor(Math.random() * chars.length)];
   return code;
 }
-
 function isStrongCode(code) {
   if (!code || code.length < 8) return false;
   const hasLetter = /[a-zA-Z]/.test(code);
@@ -34,39 +28,21 @@ function isStrongCode(code) {
 function hashSecret(code) { return crypto.createHash('sha256').update(String(code)).digest('hex'); }
 function isHashed(v) { return /^[a-f0-9]{64}$/.test(v || ''); }
 
-// ✅ Helper : remet à zéro les compteurs quotidiens au fuseau du joueur
 function ensureDailyCounters(p) {
   const today = new Date().toLocaleDateString('sv-SE', { timeZone: p.timezone || 'Europe/Paris' });
   if (!p.daily_ads || p.daily_ads.date !== today) p.daily_ads = { count: 0, date: today };
   if (!p.daily_roulette || p.daily_roulette.date !== today) p.daily_roulette = { count: 0, date: today };
 }
-// ✅ Anti-triche : timestamps serveur pour cooldowns
-function setLastAction(p, key) { 
-  p._cooldowns = p._cooldowns || {}; 
-  p._cooldowns[key] = Date.now(); 
-}
-function getLastAction(p, key) { 
-  return (p._cooldowns && p._cooldowns[key]) || 0; 
-}
 
-// ✅ Anti-triche : vérifie temps min entre 2 actions
+// ✅ Anti-triche : cooldowns serveur
+function setLastAction(p, key) { p._cooldowns = p._cooldowns || {}; p._cooldowns[key] = Date.now(); }
+function getLastAction(p, key) { return (p._cooldowns && p._cooldowns[key]) || 0; }
 function checkCooldown(p, key, minMs) {
-  const last = getLastAction(p, key);
-  const elapsed = Date.now() - last;
+  const elapsed = Date.now() - getLastAction(p, key);
   if (elapsed < minMs) return { ok: false, remaining: minMs - elapsed };
   return { ok: true };
 }
 
-// ✅ Anti-triche : temps min réaliste pour une victoire Tour
-// Un humain clique ~3 cases/s → étage 16 cases = min 5-6s
-// Plus la grille est grande, plus le temps min augmente
-function getMinFloorTime(floor, type) {
-  const base = Math.max(3, Math.min(8, 3 + Math.floor(floor / 20)));
-  if (type === 'pairs') return base * 1.5;
-  if (type === 'color') return base * 0.9;
-  if (type === 'sprint') return Math.max(2, base * 0.5);
-  return base;
-}
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*", methods: ["GET", "POST"] } });
@@ -254,7 +230,6 @@ function normalizeClaimedTiers(cpt) {
   return cpt;
 }
 
-/* ---------- Dates saisons modifiables (admin) ---------- */
 function applySeasonDates(dates) {
   if (!dates) return;
   SEASONS.forEach(s => { const d = dates[s.id]; if (d && d.start) s.start = d.start; if (d && d.end) s.end = d.end; });
@@ -279,6 +254,7 @@ let halloweenQueue = [];
 let noelQueue = [];
 const activeMatches = {};
 const lastMatchEarnings = {};
+const towerSessions = {}; // 🗼 sessions Tower server-authoritative
 
 let globalEvents = { coinRush: false, rankShield: false, expressoMatch: false, chaosMode: false, jackpotEclair: false, tugOfWarMode: false, halloweenMode: false, noelMode: false };
 let eventSchedules = {
@@ -336,9 +312,7 @@ function getOnlineCount() {
   }
   return set.size;
 }
-function broadcastOnlineCount() {
-  io.emit('online_count', { online: getOnlineCount() });
-}
+function broadcastOnlineCount() { io.emit('online_count', { online: getOnlineCount() }); }
 async function logPlayerAction(p, action, detail, currency, amount, balanceAfter) {
   try {
     await supabase.from('player_logs').insert([{
@@ -353,6 +327,134 @@ function buildAdminCatalog() {
   const trophies = Object.keys(TROPHY_CATALOG).map(id => ({ id, name: TROPHY_CATALOG[id].name }));
   return { items, trophies };
 }
+
+/* ============================================================
+🗼 TOUR BLITZ — NIVEAU 2 (server-authoritative)
+============================================================ */
+const TOWER_CHAPTER_REWARDS = {
+  1: "title_grimpeur_neon", 2: "frame_cristal", 3: "frame_circuit",
+  4: "title_chasseur_hante", 5: "frame_toile", 6: "title_roi_citrouille_tour",
+  7: "title_veilleur_cimes", 8: "frame_aurore", 9: "title_maitre_tour"
+};
+const TOWER_FPC = 20; // ⚠️ DOIT correspondre au FPC du client (passera à 200 des deux côtés plus tard)
+const TW_COLOR_POOL = [
+  {key:"cyan",name:"CYAN",hex:"#00d2ff"}, {key:"pink",name:"ROSE",hex:"#ff2bd6"},
+  {key:"gold",name:"OR",hex:"#f8b500"}, {key:"green",name:"VERT",hex:"#2ecc71"},
+  {key:"red",name:"ROUGE",hex:"#ff4b2b"}, {key:"violet",name:"VIOLET",hex:"#9b5cff"}
+];
+const TW_PAIR_SYMBOLS = ["🍒","⭐","💎","","⚡","🌙","👑","🎲","🍀","","🚀","","🍭","","🪙","","🦇","","🎄","","🧁","","🔔","️"];
+
+function towerShuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function getFloorDefServer(floor) {
+  const chap = Math.ceil(floor / TOWER_FPC), inChap = ((floor - 1) % TOWER_FPC) + 1;
+  const base = { floor, gridSize: 16 + (chap - 1) * 4, time: Math.max(18, 32 - chap * 2) };
+  if (inChap === TOWER_FPC) return { ...base, type: "boss" };
+  const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","fog","nofail"];
+  const t = seq[(inChap - 1) % 9];
+  if (t === "sprint") return { ...base, type: "sprint", time: Math.max(8, 14 - chap) };
+  if (t === "nofail") return { ...base, type: "nofail", time: 25 };
+  if (t === "pairs") { let g = base.gridSize; if (g % 2) g++; return { ...base, gridSize: g, type: "pairs", time: Math.max(24, 36 - chap) }; }
+  if (t === "color") return { ...base, type: "color", time: Math.max(20, 30 - chap) };
+  if (t === "parity") return { ...base, gridSize: 24 + (chap - 1) * 6, type: "parity", time: Math.max(24, 40 - chap * 2) };
+  if (t === "forbidden") return { ...base, type: "forbidden", time: Math.max(18, 28 - chap) };
+  return { ...base, type: t };
+}
+function pickColorTarget(s){
+  const keys=[...new Set([...s.remaining].map(i=>s.nums[i].key))];
+  if(!keys.length) return null;
+  const key=keys[Math.floor(Math.random()*keys.length)];
+  return TW_COLOR_POOL.find(c=>c.key===key)||TW_COLOR_POOL[0];
+}
+function buildTowerSession(player, floor){
+  const def = getFloorDefServer(floor);
+  const N = def.gridSize;
+  const s = { floor, def, type: def.type, total: N, mistakes: 0, gone: {}, revealed: {}, sel: null, lock: false, done: false, start: Date.now(), ai: 0, replay: floor <= (player.towerFloor||0) };
+  if (def.type === "color") {
+    s.nums = towerShuffle([...Array(N)].map((_,i)=>TW_COLOR_POOL[(i+Math.floor(Math.random()*TW_COLOR_POOL.length))%TW_COLOR_POOL.length]));
+    s.remaining = new Set([...Array(N)].map((_,i)=>i));
+    s.targetColor = pickColorTarget(s);
+  } else if (def.type === "pairs") {
+    const half = N/2;
+    s.nums = towerShuffle([...TW_PAIR_SYMBOLS.slice(0,half), ...TW_PAIR_SYMBOLS.slice(0,half)]);
+    s.remaining = new Set([...Array(N)].map((_,i)=>i));
+  } else if (def.type === "parity") {
+    s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
+    s.targetParity = Math.random()<.5?"even":"odd";
+    s.remaining = new Set(s.nums.filter(v=>s.targetParity==="even"?v%2===0:v%2!==0));
+  } else if (def.type === "forbidden") {
+    s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
+    s.forbidden = 1+Math.floor(Math.random()*N);
+    s.remaining = new Set(s.nums);
+  } else {
+    s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
+    s.remaining = new Set(s.nums);
+    s.target = def.type==="reverse"?N:1;
+    if (def.type==="random") s.target = s.nums[Math.floor(Math.random()*s.nums.length)];
+  }
+  return s;
+}
+function towerDisplay(s){
+  if (s.type==="pairs") return s.nums.map((v,i)=> s.gone[i] ? "" : (s.revealed[i] ? v : null));
+  if (s.type==="color") return s.nums.map(c=>({key:c.key,hex:c.hex}));
+  return s.nums.slice();
+}
+function towerStatePayload(s){
+  return {
+    floor:s.floor, type:s.type, total:s.total,
+    timeLeft: Math.max(0, s.def.time - Math.floor((Date.now()-s.start)/1000)),
+    mistakes:s.mistakes, gone:s.gone, display:towerDisplay(s),
+    target:s.target||null, targetColor:s.targetColor||null, targetParity:s.targetParity||null, forbidden:s.forbidden||null,
+    revealed:s.revealed, sel:s.sel, ai:s.ai, defTime:s.def.time, gridSize:s.def.gridSize, replay:s.replay
+  };
+}
+async function towerWin(player, s){
+  s.done=true;
+  const used=(Date.now()-s.start)/1000;
+  let stars=1;
+  if(s.mistakes===0 && used<=s.def.time*0.6) stars=3;
+  else if(s.mistakes<=2) stars=2;
+  let coins, reward=null;
+  if(!s.replay){
+    player.towerFloor = s.floor;
+    coins = 10 + s.floor*2 + stars*5;
+    if (s.floor % TOWER_FPC === 0){
+      const itemId = TOWER_CHAPTER_REWARDS[s.floor / TOWER_FPC];
+      if (itemId){ player.unlocked_items = player.unlocked_items||[]; if(!player.unlocked_items.includes(itemId)){ player.unlocked_items.push(itemId); reward=itemId; } }
+    }
+  } else {
+    coins = 5 + stars*2;
+  }
+  player.towerStars = player.towerStars||{};
+  player.towerStars[String(s.floor)] = Math.max(player.towerStars[String(s.floor)]||0, stars);
+  player.coins = (player.coins||0)+coins;
+  await logPlayerAction(player, s.replay?'tower_replay':'tower_win', `Étage ${s.floor} (${stars}⭐) en ${used.toFixed(1)}s, ${s.mistakes} faute(s)`, 'coins', coins, player.coins);
+  await savePlayerToSupabase(player.socketId);
+  return { ok:true, floor:s.floor, stars, coins, reward, replay:s.replay };
+}
+async function towerFail(player, s, reason){
+  s.done=true;
+  await logPlayerAction(player, 'tower_fail', `Étage ${s.floor} : ${reason}`, null, null, null);
+  return { ok:false, floor:s.floor, reason };
+}
+
+// ⏱️ Sweeper Tower : timeouts + IA boss + refresh état (chaque seconde)
+setInterval(async () => {
+  for (const sid in towerSessions){
+    const s = towerSessions[sid];
+    const player = activePlayers[sid];
+    if (!s || s.done){ delete towerSessions[sid]; continue; }
+    if (!player){ delete towerSessions[sid]; continue; }
+    const elapsed = (Date.now()-s.start)/1000;
+    if (elapsed > s.def.time){ const r = await towerFail(player, s, 'timeout'); delete towerSessions[sid]; io.to(sid).emit('tower_fail', r); continue; }
+    if (s.type==="boss"){
+      s.ai += 0.8 + Math.ceil(s.floor / TOWER_FPC) * 0.15;
+      if (s.ai >= s.total){ const r = await towerFail(player, s, 'boss'); delete towerSessions[sid]; io.to(sid).emit('tower_fail', r); continue; }
+    }
+    io.to(sid).emit('tower_state', towerStatePayload(s));
+  }
+}, 1000);
+
 /* ============================================================
 SOCKET
 ============================================================ */
@@ -389,170 +491,130 @@ io.on('connection', (socket) => {
       solo_games: p.solo_games || 0, total_coins_earned: p.total_coins_earned || 0
     });
   });
-  
-// 🔍 Vérifie en direct si un pseudo existe déjà (pour l'onglet création)
-socket.on('check_username', async (rawUsername) => {
-  try {
-    // Petit anti-spam : 1 check max toutes les 300 ms
-    const now = Date.now();
-    if (socket._lastUsernameCheck && now - socket._lastUsernameCheck < 300) return;
-    socket._lastUsernameCheck = now;
 
-    const name = String(rawUsername || '').trim();
-    if (name.length < 3) { socket.emit('username_check_result', { taken: false }); return; }
+  socket.on('check_username', async (rawUsername) => {
+    try {
+      const now = Date.now();
+      if (socket._lastUsernameCheck && now - socket._lastUsernameCheck < 300) return;
+      socket._lastUsernameCheck = now;
+      const name = String(rawUsername || '').trim();
+      if (name.length < 3) { socket.emit('username_check_result', { taken: false }); return; }
+      const { data, error } = await supabase.from('players').select('id').ilike('username', name).limit(1);
+      socket.emit('username_check_result', { taken: !error && data && data.length > 0 });
+    } catch (e) { socket.emit('username_check_result', { taken: false }); }
+  });
 
-    const { data, error } = await supabase
-      .from('players')
-      .select('id')
-      .ilike('username', name)
-      .limit(1);
-
-    socket.emit('username_check_result', { taken: !error && data && data.length > 0 });
-  } catch (e) {
-    socket.emit('username_check_result', { taken: false });
-  }
-});
-  
-socket.on('register_player', async (data) => {
-  const rawUsername = (data.username || '').trim();
-  const secretCode = (data.secretCode || '').trim();
-  if (rawUsername.length < 3) { socket.emit('register_result', { ok: false, reason: 'short' }); return; }
-  if (secretCode.length < 4) { socket.emit('register_result', { ok: false, reason: 'nocode' }); return; }
-  try {
-    let wasCreated = false;
-    let { data: matchedPlayers, error } = await supabase.from('players').select('*').ilike('username', rawUsername);
-    let playerData;
-    if (!error && matchedPlayers && matchedPlayers.length > 0) {
-      const existing = matchedPlayers[0];
-      const storedCode = (existing.secret_code || '').trim();
-      if (storedCode) {
-        const ok = isHashed(storedCode) ? (hashSecret(secretCode) === storedCode) : (storedCode.toLowerCase() === secretCode.toLowerCase());
-        if (!ok) { socket.emit('register_result', { ok: false, reason: 'taken' }); return; }
-        if (!isHashed(storedCode)) await supabase.from('players').update({ secret_code: hashSecret(secretCode) }).eq('id', existing.id);
-      }
-      const updates = {};
-      if (Object.keys(updates).length > 0) {
-        const { data: updated } = await supabase.from('players').update(updates).eq('id', existing.id).select().single();
-        playerData = updated || existing;
-      } else { playerData = existing; }
-    } else {
-      // ✅ Garde-fou wipe sticky : en mode login, on refuse si compte absent
-      if (data.mode === 'login') {
-        socket.emit('register_result', { ok: false, reason: 'not_found' });
-        return;
-      }
-      wasCreated = true;
-      const newRecord = {
-        username: rawUsername, secret_code: hashSecret(secretCode), region: data.region || "Hauts-de-France",
-        country: data.flag ? data.flag.replace(/['"]/g, '').trim() : "FR", avatar: data.avatar || 1, flag: data.flag || "🇫🇷",
-        points: 0, coins: 100, trophies: 0, wins: 0, losses: 0,
-        inventory: { __equipped: { frame: "frame_standard" } }, equipped_power: null, unlocked_items: ["frame_standard"],
-        blitz_pass_premium: false, claimed_pass_tiers: {}, season_progress: {},
-        matches_played: 0, win_streak: 0, best_combo: 0, best_avalanche: 0, solo_games: 0, total_coins_earned: 0,
-        season_n1_count: 0, trophies_collection: {},
-        // ✅ Compteurs quotidiens
-        daily_ads: { count: 0, date: '' },
-        daily_roulette: { count: 0, date: '' }
-      };
-      const { data: inserted, error: insertErr } = await supabase.from('players').insert([newRecord]).select().single();
-      if (!insertErr && inserted) { playerData = inserted; }
-      else { console.error("ERREUR INSERT SUPABASE : ", insertErr ? insertErr.message : "aucune donnee"); playerData = { ...newRecord, id: socket.id }; }
-    }
-    
-// 🔒 Déconnecte les anciennes sessions du même joueur (anti double-compte)
-for (const [sid, player] of Object.entries(activePlayers)) {
-  if (player.username && player.username.toLowerCase() === rawUsername.toLowerCase() && sid !== socket.id) {
-    const oldSocket = io.sockets.sockets.get(sid);
-    if (oldSocket) {
-  oldSocket.emit('force_disconnect', { reason: 'Connexion depuis un autre appareil' });
-  // ⏱️ Laisse 800 ms au client pour recevoir l'événement avant de couper
-  setTimeout(() => oldSocket.disconnect(true), 800);
-}
-    delete activePlayers[sid];
-    console.log(`🔒 Double session détectée pour ${rawUsername}, ancienne session ${sid} éjectée`);
-  }
-}
-    const claimedNorm = normalizeClaimedTiers(playerData.claimed_pass_tiers);
-    playerData.unlocked_items = playerData.unlocked_items || [];
-    if (!playerData.unlocked_items.includes("frame_standard")) playerData.unlocked_items.push("frame_standard");
-    playerData.inventory = playerData.inventory || {};
-    playerData.inventory.__equipped = playerData.inventory.__equipped || {};
-    if (!playerData.inventory.__equipped.frame) playerData.inventory.__equipped.frame = "frame_standard";
-    if (claimedNorm["s2"] && claimedNorm["s2"]["24_premium"] && !playerData.unlocked_items.includes("theme_fantome")) playerData.unlocked_items.push("theme_fantome");
-
-    const seasonNow = getCurrentSeason();
-
-    // ✅ Progression "1 palier / jour" — GELÉE tant que SEASON_PASS_ENABLED = false
-    if (!playerData.season_progress) playerData.season_progress = {};
-    const playerTz = (typeof data.timezone === 'string' && data.timezone)
-      ? data.timezone
-      : (playerData.timezone || 'Europe/Paris');
-    let today;
-    try { today = new Date().toLocaleDateString('sv-SE', { timeZone: playerTz }); }
-    catch (e) { today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Paris' }); }
-
-    const progress = playerData.season_progress[seasonNow.id] || { unlocked_tier: 0, last_login_date: null };
-    if (SEASON_PASS_ENABLED) {
-      if (progress.last_login_date !== today || playerData.timezone !== playerTz) {
-        if (progress.last_login_date !== today) {
-          progress.unlocked_tier = Math.min(30, (progress.unlocked_tier || 0) + 1);
-          progress.last_login_date = today;
+  socket.on('register_player', async (data) => {
+    const rawUsername = (data.username || '').trim();
+    const secretCode = (data.secretCode || '').trim();
+    if (rawUsername.length < 3) { socket.emit('register_result', { ok: false, reason: 'short' }); return; }
+    if (secretCode.length < 4) { socket.emit('register_result', { ok: false, reason: 'nocode' }); return; }
+    try {
+      let wasCreated = false;
+      let { data: matchedPlayers, error } = await supabase.from('players').select('*').ilike('username', rawUsername);
+      let playerData;
+      if (!error && matchedPlayers && matchedPlayers.length > 0) {
+        const existing = matchedPlayers[0];
+        const storedCode = (existing.secret_code || '').trim();
+        if (storedCode) {
+          const ok = isHashed(storedCode) ? (hashSecret(secretCode) === storedCode) : (storedCode.toLowerCase() === secretCode.toLowerCase());
+          if (!ok) { socket.emit('register_result', { ok: false, reason: 'taken' }); return; }
+          if (!isHashed(storedCode)) await supabase.from('players').update({ secret_code: hashSecret(secretCode) }).eq('id', existing.id);
         }
-        playerData.season_progress[seasonNow.id] = progress;
-        playerData.timezone = playerTz;
-        await supabase.from('players').update({ season_progress: playerData.season_progress, timezone: playerTz }).eq('id', playerData.id);
+        playerData = existing;
+      } else {
+        if (data.mode === 'login') { socket.emit('register_result', { ok: false, reason: 'not_found' }); return; }
+        wasCreated = true;
+        const newRecord = {
+          username: rawUsername, secret_code: hashSecret(secretCode), region: data.region || "Hauts-de-France",
+          country: data.flag ? data.flag.replace(/['"]/g, '').trim() : "FR", avatar: data.avatar || 1, flag: data.flag || "🇫🇷",
+          points: 0, coins: 100, trophies: 0, wins: 0, losses: 0,
+          inventory: { __equipped: { frame: "frame_standard" } }, equipped_power: null, unlocked_items: ["frame_standard"],
+          blitz_pass_premium: false, claimed_pass_tiers: {}, season_progress: {},
+          matches_played: 0, win_streak: 0, best_combo: 0, best_avalanche: 0, solo_games: 0, total_coins_earned: 0,
+          season_n1_count: 0, trophies_collection: {},
+          daily_ads: { count: 0, date: '' }, daily_roulette: { count: 0, date: '' }
+        };
+        const { data: inserted, error: insertErr } = await supabase.from('players').insert([newRecord]).select().single();
+        if (!insertErr && inserted) { playerData = inserted; }
+        else { console.error("ERREUR INSERT SUPABASE : ", insertErr ? insertErr.message : "aucune donnee"); playerData = { ...newRecord, id: socket.id }; }
       }
-    }
 
-    const premNow = !!(claimedNorm[seasonNow.id] && claimedNorm[seasonNow.id].premium) || (seasonNow.id === "s1" && playerData.blitz_pass_premium);
+      for (const [sid, player] of Object.entries(activePlayers)) {
+        if (player.username && player.username.toLowerCase() === rawUsername.toLowerCase() && sid !== socket.id) {
+          const oldSocket = io.sockets.sockets.get(sid);
+          if (oldSocket) {
+            oldSocket.emit('force_disconnect', { reason: 'Connexion depuis un autre appareil' });
+            setTimeout(() => oldSocket.disconnect(true), 800);
+          }
+          delete activePlayers[sid];
+          console.log(`🔒 Double session détectée pour ${rawUsername}, ancienne session ${sid} éjectée`);
+        }
+      }
+      const claimedNorm = normalizeClaimedTiers(playerData.claimed_pass_tiers);
+      playerData.unlocked_items = playerData.unlocked_items || [];
+      if (!playerData.unlocked_items.includes("frame_standard")) playerData.unlocked_items.push("frame_standard");
+      playerData.inventory = playerData.inventory || {};
+      playerData.inventory.__equipped = playerData.inventory.__equipped || {};
+      if (!playerData.inventory.__equipped.frame) playerData.inventory.__equipped.frame = "frame_standard";
+      if (claimedNorm["s2"] && claimedNorm["s2"]["24_premium"] && !playerData.unlocked_items.includes("theme_fantome")) playerData.unlocked_items.push("theme_fantome");
+
+      const seasonNow = getCurrentSeason();
+      if (!playerData.season_progress) playerData.season_progress = {};
+      const playerTz = (typeof data.timezone === 'string' && data.timezone) ? data.timezone : (playerData.timezone || 'Europe/Paris');
+      let today;
+      try { today = new Date().toLocaleDateString('sv-SE', { timeZone: playerTz }); }
+      catch (e) { today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Paris' }); }
+
+      const progress = playerData.season_progress[seasonNow.id] || { unlocked_tier: 0, last_login_date: null };
+      if (SEASON_PASS_ENABLED) {
+        if (progress.last_login_date !== today || playerData.timezone !== playerTz) {
+          if (progress.last_login_date !== today) {
+            progress.unlocked_tier = Math.min(30, (progress.unlocked_tier || 0) + 1);
+            progress.last_login_date = today;
+          }
+          playerData.season_progress[seasonNow.id] = progress;
+          playerData.timezone = playerTz;
+          await supabase.from('players').update({ season_progress: playerData.season_progress, timezone: playerTz }).eq('id', playerData.id);
+        }
+      }
+
+      const premNow = !!(claimedNorm[seasonNow.id] && claimedNorm[seasonNow.id].premium) || (seasonNow.id === "s1" && playerData.blitz_pass_premium);
       activePlayers[socket.id] = {
-      socketId: socket.id, dbId: playerData.id || socket.id, id: socket.id,
-      username: playerData.username, region: playerData.region, avatar: playerData.avatar, flag: playerData.flag,
-      points: playerData.points || 0, coins: playerData.coins || 0, country: playerData.country || "FR",
-      trophies: playerData.trophies || 0, wins: playerData.wins || 0, losses: playerData.losses || 0,
-      inventory: playerData.inventory, equippedPower: playerData.equipped_power || null,
-      unlocked_items: playerData.unlocked_items, blitzPassPremium: premNow, claimedPassTiers: claimedNorm,
-      current_season: seasonNow.id,
-      seasonProgress: playerData.season_progress,
-      unlockedTier: progress.unlocked_tier || 0,
-      matches_played: playerData.matches_played || 0, win_streak: playerData.win_streak || 0,
-      best_combo: playerData.best_combo || 0, best_avalanche: playerData.best_avalanche || 0,
-      solo_games: playerData.solo_games || 0, total_coins_earned: playerData.total_coins_earned || 0,
-      season_n1_count: playerData.season_n1_count || 0, trophies_collection: playerData.trophies_collection || {},
-      daily_ads: playerData.daily_ads || { count: 0, date: '' },
-      daily_roulette: playerData.daily_roulette || { count: 0, date: '' },
-      timezone: playerTz,
-      towerFloor: playerData.tower_floor || 0,
-      towerStars: playerData.tower_stars || {}
-    };
-    
-    // ✅ Reset quotidien au chargement
-    ensureDailyCounters(activePlayers[socket.id]);
-    
-    // 📊 LOG : création de compte
-    if (wasCreated) {
-      await logPlayerAction(activePlayers[socket.id], 'account_created', `Username: ${rawUsername}`, null, null, null);
-    }
-    
-    socket.emit('register_result', { ok: true, created: wasCreated });
-    socket.emit('player_registered', activePlayers[socket.id]);
-    broadcastOnlineCount();
-  } catch (err) { console.error("Erreur enregistrement Supabase : ", err); socket.emit('register_result', { ok: false, reason: 'error' }); }
-});
+        socketId: socket.id, dbId: playerData.id || socket.id, id: socket.id,
+        username: playerData.username, region: playerData.region, avatar: playerData.avatar, flag: playerData.flag,
+        points: playerData.points || 0, coins: playerData.coins || 0, country: playerData.country || "FR",
+        trophies: playerData.trophies || 0, wins: playerData.wins || 0, losses: playerData.losses || 0,
+        inventory: playerData.inventory, equippedPower: playerData.equipped_power || null,
+        unlocked_items: playerData.unlocked_items, blitzPassPremium: premNow, claimedPassTiers: claimedNorm,
+        current_season: seasonNow.id, seasonProgress: playerData.season_progress, unlockedTier: progress.unlocked_tier || 0,
+        matches_played: playerData.matches_played || 0, win_streak: playerData.win_streak || 0,
+        best_combo: playerData.best_combo || 0, best_avalanche: playerData.best_avalanche || 0,
+        solo_games: playerData.solo_games || 0, total_coins_earned: playerData.total_coins_earned || 0,
+        season_n1_count: playerData.season_n1_count || 0, trophies_collection: playerData.trophies_collection || {},
+        daily_ads: playerData.daily_ads || { count: 0, date: '' }, daily_roulette: playerData.daily_roulette || { count: 0, date: '' },
+        timezone: playerTz, towerFloor: playerData.tower_floor || 0, towerStars: playerData.tower_stars || {}
+      };
+      ensureDailyCounters(activePlayers[socket.id]);
+      if (wasCreated) await logPlayerAction(activePlayers[socket.id], 'account_created', `Username: ${rawUsername}`, null, null, null);
+      socket.emit('register_result', { ok: true, created: wasCreated });
+      socket.emit('player_registered', activePlayers[socket.id]);
+      broadcastOnlineCount();
+    } catch (err) { console.error("Erreur enregistrement Supabase : ", err); socket.emit('register_result', { ok: false, reason: 'error' }); }
+  });
 
   socket.on('buy_item', async (itemId) => {
     const player = activePlayers[socket.id];
     if (!player) return;
     const item = ITEM_CATALOG[itemId];
     if (!item || !isShopItem(itemId)) { socket.emit('room_error', "Cet objet ne peut pas etre achete en boutique."); return; }
-    if (player.coins < item.price) { 
+    if (player.coins < item.price) {
       await logPlayerAction(player, 'buy_item_fail', `Fonds insuffisants pour ${itemId} (besoin: ${item.price}, avoir: ${player.coins})`, 'coins', 0, player.coins);
-      socket.emit('room_error', "Tu n'as pas assez de pieces !"); 
-      return; 
+      socket.emit('room_error', "Tu n'as pas assez de pieces !");
+      return;
     }
     player.inventory = player.inventory || {};
     player.unlocked_items = player.unlocked_items || [];
-    const coinsBefore = player.coins;
     if (item.type === 'power') { player.coins -= item.price; player.inventory[itemId] = (player.inventory[itemId] || 0) + 1; }
     else if (item.type === 'pack') {
       const ownedAll = item.items.every(i => player.unlocked_items.includes(i));
@@ -573,18 +635,18 @@ for (const [sid, player] of Object.entries(activePlayers)) {
     const player = activePlayers[socket.id];
     if (!player) return;
     if (!POWER_IDS.includes(powerId)) return;
-    if ((player.inventory[powerId] || 0) > 0) { 
-      player.equippedPower = powerId; 
-      await savePlayerToSupabase(socket.id); 
+    if ((player.inventory[powerId] || 0) > 0) {
+      player.equippedPower = powerId;
+      await savePlayerToSupabase(socket.id);
       await logPlayerAction(player, 'equip_power', `Power: ${powerId}`, null, null, null);
-      socket.emit('player_registered', player); 
+      socket.emit('player_registered', player);
     }
   });
 
   socket.on('equip_cosmetic', async (itemId) => {
     const player = activePlayers[socket.id];
     if (!player) return;
-    if (typeof itemId !== 'string' || itemId.length > 40) return;  // ⬅️ anti-abus
+    if (typeof itemId !== 'string' || itemId.length > 40) return;
     if (!player.inventory) player.inventory = {};
     if (!player.inventory.__equipped) player.inventory.__equipped = {};
     if (itemId === 'none' || itemId === 'standard' || !itemId) delete player.inventory.__equipped.avatar;
@@ -602,34 +664,22 @@ for (const [sid, player] of Object.entries(activePlayers)) {
     socket.emit('player_registered', player);
   });
 
-socket.on("update_profile_visuals", async (data) => {
-  try {
-    const player = activePlayers[socket.id];
-    if (!player) return;
-
-    // ✅ On ne prend QUE avatar et flag, JAMAIS l'inventaire venant du client
-    const avatar = Math.max(1, Math.min(999, parseInt(data.avatar) || player.avatar || 1));
-    const flag = (typeof data.flag === "string" && data.flag.length <= 8)
-      ? data.flag.replace(/['"]/g, "").trim()
-      : player.flag;
-
-    player.avatar = avatar;
-    player.flag = flag;
-
-    if (player.dbId) {
-      await supabase
-        .from("players")
-        .update({ avatar, flag })
-        .eq("id", player.dbId);
+  socket.on("update_profile_visuals", async (data) => {
+    try {
+      const player = activePlayers[socket.id];
+      if (!player) return;
+      const avatar = Math.max(1, Math.min(999, parseInt(data.avatar) || player.avatar || 1));
+      const flag = (typeof data.flag === "string" && data.flag.length <= 8) ? data.flag.replace(/['"]/g, "").trim() : player.flag;
+      player.avatar = avatar;
+      player.flag = flag;
+      if (player.dbId) await supabase.from("players").update({ avatar, flag }).eq("id", player.dbId);
+      await logPlayerAction(player, 'profile_visuals', `Avatar: ${avatar}, Flag: ${flag}`, null, null, null);
+      socket.emit("profile_visuals_updated", { ok: true });
+    } catch (err) {
+      console.error("Erreur update_profile_visuals :", err);
+      socket.emit("profile_visuals_updated", { ok: false });
     }
-
-    await logPlayerAction(player, 'profile_visuals', `Avatar: ${avatar}, Flag: ${flag}`, null, null, null);
-    socket.emit("profile_visuals_updated", { ok: true });
-  } catch (err) {
-    console.error("Erreur update_profile_visuals :", err);
-    socket.emit("profile_visuals_updated", { ok: false });
-  }
-});
+  });
 
   socket.on('buy_blitz_pass', async () => {
     const player = activePlayers[socket.id];
@@ -639,7 +689,6 @@ socket.on("update_profile_visuals", async (data) => {
     player.claimedPassTiers[seasonId] = player.claimedPassTiers[seasonId] || {};
     if (player.claimedPassTiers[seasonId].premium) return;
     if (player.coins >= 1000) {
-      const coinsBefore = player.coins;
       player.coins -= 1000;
       player.claimedPassTiers[seasonId].premium = true;
       player.blitzPassPremium = true;
@@ -648,43 +697,36 @@ socket.on("update_profile_visuals", async (data) => {
       socket.emit('player_registered', player);
       socket.emit('blitz_pass_updated', { coins: player.coins, blitzPassPremium: true, claimedPassTiers: player.claimedPassTiers });
       socket.emit('pass_reward_received', { message: "Passe Premium « " + getCurrentSeason().name + " » activé !" });
-    } else { 
+    } else {
       await logPlayerAction(player, 'buy_blitz_pass_fail', `Fonds insuffisants (besoin: 1000, avoir: ${player.coins})`, 'coins', 0, player.coins);
-      socket.emit('room_error', "Tu n'as pas assez de pieces !"); 
+      socket.emit('room_error', "Tu n'as pas assez de pieces !");
     }
   });
 
   socket.on('claim_pass_tier', async (data) => {
-  const player = activePlayers[socket.id];
-  if (!player) return;
-  const { tier, track } = data;
-  const seasonId = getCurrentSeason().id;
-  player.claimedPassTiers = normalizeClaimedTiers(player.claimedPassTiers);
-  player.claimedPassTiers[seasonId] = player.claimedPassTiers[seasonId] || {};
-  const seasonData = player.claimedPassTiers[seasonId];
-  const key = tier + "_" + track;
-  
-  // ✅ NOUVEAU : vérifier que le palier est débloqué
-  const unlockedTier = (player.seasonProgress && player.seasonProgress[seasonId] && player.seasonProgress[seasonId].unlocked_tier) || 0;
-  if (tier > unlockedTier) {
-    socket.emit('pass_claim_denied', { tier, track, reason: "tier_locked", unlocked: unlockedTier });
-    return;
-  }
-  
-  if (seasonData[key]) { socket.emit('pass_claim_denied', { tier, track, reason: "already_claimed" }); return; }
-  if (track === 'premium' && !seasonData.premium) { socket.emit('pass_claim_denied', { tier, track, reason: "premium_required" }); return; }
-  
-  seasonData[key] = true;
-  player.blitzPassPremium = !!seasonData.premium;
-  applyPassReward(player, tier, track, seasonId);
-  const unlockedTrophies = evaluateTrophies(player);
-  if (unlockedTrophies.length > 0) socket.emit('trophy_unlocked', unlockedTrophies.map(t => ({ id: Object.keys(TROPHY_CATALOG).find(k => TROPHY_CATALOG[k] === t), ...t })));
-  await savePlayerToSupabase(socket.id);
-  await logPlayerAction(player, 'claim_pass_tier', `Tier ${tier} (${track})`, null, null, null);
-  socket.emit('player_registered', player);
-  socket.emit('pass_tier_claimed', { tier, track });
-  socket.emit('pass_reward_received', { message: "Recompense du Palier " + tier + " (" + track + ") recuperee !" });
-});
+    const player = activePlayers[socket.id];
+    if (!player) return;
+    const { tier, track } = data;
+    const seasonId = getCurrentSeason().id;
+    player.claimedPassTiers = normalizeClaimedTiers(player.claimedPassTiers);
+    player.claimedPassTiers[seasonId] = player.claimedPassTiers[seasonId] || {};
+    const seasonData = player.claimedPassTiers[seasonId];
+    const key = tier + "_" + track;
+    const unlockedTier = (player.seasonProgress && player.seasonProgress[seasonId] && player.seasonProgress[seasonId].unlocked_tier) || 0;
+    if (tier > unlockedTier) { socket.emit('pass_claim_denied', { tier, track, reason: "tier_locked", unlocked: unlockedTier }); return; }
+    if (seasonData[key]) { socket.emit('pass_claim_denied', { tier, track, reason: "already_claimed" }); return; }
+    if (track === 'premium' && !seasonData.premium) { socket.emit('pass_claim_denied', { tier, track, reason: "premium_required" }); return; }
+    seasonData[key] = true;
+    player.blitzPassPremium = !!seasonData.premium;
+    applyPassReward(player, tier, track, seasonId);
+    const unlockedTrophies = evaluateTrophies(player);
+    if (unlockedTrophies.length > 0) socket.emit('trophy_unlocked', unlockedTrophies.map(t => ({ id: Object.keys(TROPHY_CATALOG).find(k => TROPHY_CATALOG[k] === t), ...t })));
+    await savePlayerToSupabase(socket.id);
+    await logPlayerAction(player, 'claim_pass_tier', `Tier ${tier} (${track})`, null, null, null);
+    socket.emit('player_registered', player);
+    socket.emit('pass_tier_claimed', { tier, track });
+    socket.emit('pass_reward_received', { message: "Recompense du Palier " + tier + " (" + track + ") recuperee !" });
+  });
 
   socket.on('use_power', async (powerId) => {
     const player = activePlayers[socket.id];
@@ -730,47 +772,34 @@ socket.on("update_profile_visuals", async (data) => {
     }
   });
 
-socket.on('spin_jackpot_wheel', async () => {
-  const player = activePlayers[socket.id];
-  if (!player) return;
-  
-  ensureDailyCounters(player);
-  if (player.daily_roulette.count >= 5) {
-    socket.emit('wheel_limit_reached', { limit: 5, used: player.daily_roulette.count });
-    return;
-  }
-  
-  // 🛡️ Cooldown : 30s entre 2 spins (anti-spam)
-  const cd = checkCooldown(player, 'spin_wheel', 30000);
-  if (!cd.ok) {
-    socket.emit('wheel_limit_reached', { limit: 0, used: 0, cooldown: Math.ceil(cd.remaining / 1000) });
-    return;
-  }
-  
-  player.daily_roulette.count++;
-  
-  const roll = Math.random();
-  let outcome = 'rien', coinDelta = 0, itemId = null;
-  const possiblePowerRewards = ["spotlight", "freeze", "joker", "quake"];
-  if (roll < 0.30) { outcome = 'jackpot'; coinDelta = 250; }
-  else if (roll < 0.45) {
-    outcome = 'objet';
-    itemId = possiblePowerRewards[Math.floor(Math.random() * possiblePowerRewards.length)];
-    player.inventory = player.inventory || {};
-    player.inventory[itemId] = (player.inventory[itemId] || 0) + 1;
-  }
-  else if (roll < 0.70) { outcome = 'banqueroute'; coinDelta = -150; }
-
-  if (coinDelta < 0) player.coins = Math.max(0, player.coins + coinDelta);
-  else player.coins += coinDelta;
-  lastMatchEarnings[socket.id] = (lastMatchEarnings[socket.id] || 0) + coinDelta;
-
-  setLastAction(player, 'spin_wheel');
-  await savePlayerToSupabase(socket.id);
-  await logPlayerAction(player, 'spin_wheel', `Outcome: ${outcome}, Delta: ${coinDelta}${itemId ? ', Item: ' + itemId : ''}`, coinDelta !== 0 ? 'coins' : null, coinDelta !== 0 ? coinDelta : null, player.coins);
-  socket.emit('player_registered', player);
-  socket.emit('jackpot_wheel_result', { outcome, coinDelta, itemId, newCoins: player.coins });
-});
+  socket.on('spin_jackpot_wheel', async () => {
+    const player = activePlayers[socket.id];
+    if (!player) return;
+    ensureDailyCounters(player);
+    if (player.daily_roulette.count >= 5) { socket.emit('wheel_limit_reached', { limit: 5, used: player.daily_roulette.count }); return; }
+    const cd = checkCooldown(player, 'spin_wheel', 30000);
+    if (!cd.ok) { socket.emit('wheel_limit_reached', { limit: 0, used: 0, cooldown: Math.ceil(cd.remaining / 1000) }); return; }
+    player.daily_roulette.count++;
+    const roll = Math.random();
+    let outcome = 'rien', coinDelta = 0, itemId = null;
+    const possiblePowerRewards = ["spotlight", "freeze", "joker", "quake"];
+    if (roll < 0.30) { outcome = 'jackpot'; coinDelta = 250; }
+    else if (roll < 0.45) {
+      outcome = 'objet';
+      itemId = possiblePowerRewards[Math.floor(Math.random() * possiblePowerRewards.length)];
+      player.inventory = player.inventory || {};
+      player.inventory[itemId] = (player.inventory[itemId] || 0) + 1;
+    }
+    else if (roll < 0.70) { outcome = 'banqueroute'; coinDelta = -150; }
+    if (coinDelta < 0) player.coins = Math.max(0, player.coins + coinDelta);
+    else player.coins += coinDelta;
+    lastMatchEarnings[socket.id] = (lastMatchEarnings[socket.id] || 0) + coinDelta;
+    setLastAction(player, 'spin_wheel');
+    await savePlayerToSupabase(socket.id);
+    await logPlayerAction(player, 'spin_wheel', `Outcome: ${outcome}, Delta: ${coinDelta}${itemId ? ', Item: ' + itemId : ''}`, coinDelta !== 0 ? 'coins' : null, coinDelta !== 0 ? coinDelta : null, player.coins);
+    socket.emit('player_registered', player);
+    socket.emit('jackpot_wheel_result', { outcome, coinDelta, itemId, newCoins: player.coins });
+  });
 
   socket.on('get_leaderboard', async (type) => {
     try {
@@ -841,12 +870,8 @@ socket.on('spin_jackpot_wheel', async () => {
   socket.on('send_friend_request', async (targetUsername) => {
     const player = activePlayers[socket.id];
     if (!player || !targetUsername) return;
-    // 🛡️ Rate-limit : max 10 demandes / minute
-  const cd = checkCooldown(player, 'friend_request', 6000);
-  if (!cd.ok) {
-    socket.emit('friend_error', "Trop de demandes, attends un peu.");
-    return;
-  }
+    const cd = checkCooldown(player, 'friend_request', 6000);
+    if (!cd.ok) { socket.emit('friend_error', "Trop de demandes, attends un peu."); return; }
     setLastAction(player, 'friend_request');
     const cleanTarget = targetUsername.trim();
     if (cleanTarget.toLowerCase() === player.username.toLowerCase()) { socket.emit('friend_error', "Tu ne peux pas t'ajouter toi-meme !"); return; }
@@ -865,7 +890,6 @@ socket.on('spin_jackpot_wheel', async () => {
     io.to(data.targetSocketId).emit('receive_game_invite', { from: player.username, roomCode: data.roomCode || null });
   });
 
-  /* ---------- MATCHMAKING (anti match-contre-soi) ---------- */
   socket.on('find_1v1_match', () => {
     if (!matchmakingQueue.includes(socket.id)) matchmakingQueue.push(socket.id);
     if (matchmakingQueue.length >= 2) {
@@ -947,7 +971,7 @@ socket.on('spin_jackpot_wheel', async () => {
     const pData = match.players[socket.id];
     if (!pData) return;
     const now = Date.now();
-    if (pData.lastClick && now - pData.lastClick < 180) return; // 180ms = humain réaliste
+    if (pData.lastClick && now - pData.lastClick < 180) return;
     pData.lastClick = now;
     const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
     if (typeof clickedIndex !== 'number' || clickedIndex < 0 || clickedIndex >= pData.pool.length) return;
@@ -978,137 +1002,110 @@ socket.on('spin_jackpot_wheel', async () => {
     const pData = match.players[socket.id];
     if (!pData) return;
     const nowC = Date.now();
-    if (pData.lastCatch && nowC - pData.lastCatch < 150) return; // 150ms = humain réaliste
+    if (pData.lastCatch && nowC - pData.lastCatch < 150) return;
     pData.lastCatch = nowC;
     pData.score = Math.max(0, pData.score + delta);
     const oppId = (match.id1 === socket.id) ? match.id2 : match.id1;
     io.to(oppId).emit('catch_opp_score', { score: pData.score });
   });
 
+  // ⏱️ Début de partie solo : le serveur enregistre le timestamp (source de vérité)
+  socket.on('solo_start', () => {
+    const p = activePlayers[socket.id];
+    if (p) p._soloStart = Date.now();
+  });
+  socket.on('catch_solo_start', () => {
+    const p = activePlayers[socket.id];
+    if (p) p._catchStart = Date.now();
+  });
+
   socket.on('claim_catch_solo', async (payload) => {
-  const player = activePlayers[socket.id];
-  if (!player) return;
-  
-  // 🛡️ Cooldown : 8s minimum entre 2 catch solo
-  const cd = checkCooldown(player, 'catch_solo', 8000);
-  if (!cd.ok) {
-    socket.emit('catch_solo_result', { baseCoins: 0, bonusCoins: 0, rushBonus: 0, earnedCoins: 0, error: 'cooldown' });
-    return;
-  }
-  
-  const score = Math.max(0, Math.min(20000, Number(payload && payload.score) || 0));
-  const bonus = Math.max(0, Math.min(20000, Number(payload && payload.bonus) || 0));
-  const clientDuration = Number(payload && payload.duration) || 0;
-  
-  // 🛡️ Anti-bot : score > 1000 en <5s = impossible
-  if ((score + bonus) > 1000 && clientDuration < 5) {
-    await logPlayerAction(player, 'catch_solo_bot_detected', `Score ${score}+${bonus} en ${clientDuration}s`, null, null, null);
-    socket.emit('catch_solo_result', { baseCoins: 0, bonusCoins: 0, rushBonus: 0, earnedCoins: 0, error: 'suspicious' });
-    return;
-  }
-  
-  // 🛡️ Plafonne selon durée
-  const maxAllowed = Math.min(20000, Math.max(500, clientDuration * 800));
-  const safeScore = Math.min(score, maxAllowed);
-  const safeBonus = Math.min(bonus, maxAllowed);
-  
-  const baseCoins = Math.min(100, Math.floor(safeScore / 3));
-  const bonusCoins = Math.min(100, Math.floor(safeBonus / 3));
-  const rushBonus = globalEvents.coinRush ? baseCoins : 0;
-  const earned = baseCoins + bonusCoins + rushBonus;
-  
-  player.coins += earned;
-  player.solo_games = (player.solo_games || 0) + 1;
-  player.total_coins_earned = (player.total_coins_earned || 0) + earned;
-  
-  setLastAction(player, 'catch_solo');
-  await savePlayerToSupabase(socket.id);
-  await logPlayerAction(player, 'catch_solo', `Score: ${safeScore}+${safeBonus}, Duration: ${clientDuration}s`, 'coins', earned, player.coins);
-  socket.emit('player_registered', player);
-  socket.emit('catch_solo_result', { baseCoins, bonusCoins, rushBonus, earnedCoins: earned });
-});
-
- socket.on('claim_solo_reward', async (payload) => {
-  const player = activePlayers[socket.id];
-  if (!player) return;
-  
-  // 🛡️ Cooldown : 8s minimum entre 2 solo (temps d'une vraie partie)
-  const cd = checkCooldown(player, 'solo_reward', 8000);
-  if (!cd.ok) {
-    socket.emit('solo_reward_result', { baseCoins: 0, rushBonus: 0, earnedCoins: 0, triggerWheel: false, globalEvents, perfection: false, error: 'cooldown' });
-    return;
-  }
-  
-  const score = (typeof payload === 'object' && payload !== null) ? (payload.score || 0) : payload;
-  const perfection = (typeof payload === 'object' && payload !== null) ? !!payload.perfection : false;
-  const clientDuration = (typeof payload === 'object' && payload !== null) ? (payload.duration || 0) : 0;
-  const normalizedScore = Number(score);
-  
-  // 🛡️ Anti-triche : vérifications
-  if (!Number.isFinite(normalizedScore) || normalizedScore < 0 || normalizedScore > 20000) return;
-  
-  // 🛡️ Anti-bot : durée trop courte = bot (score élevé en <5s = impossible)
-  if (normalizedScore > 1000 && clientDuration < 5) {
-    await logPlayerAction(player, 'solo_reward_bot_detected', `Score ${normalizedScore} en ${clientDuration}s`, null, null, null);
-    socket.emit('solo_reward_result', { baseCoins: 0, rushBonus: 0, earnedCoins: 0, triggerWheel: false, globalEvents, perfection: false, error: 'suspicious' });
-    return;
-  }
-  
-  // 🛡️ Plafonne le score acceptable en fonction de la durée
-  // Max ~800 points/s pour un humain très bon → durée * 800
-  const maxAllowed = Math.min(20000, Math.max(500, clientDuration * 800));
-  const safeScore = Math.min(normalizedScore, maxAllowed);
-  
-  let baseCoins = perfection ? 100 : Math.min(100, Math.floor(safeScore / 3));
-  let rushBonus = globalEvents.coinRush ? baseCoins : 0;
-  let earnedCoins = baseCoins + rushBonus;
-  
-  player.coins += earnedCoins;
-  player.solo_games = (player.solo_games || 0) + 1;
-  player.total_coins_earned = (player.total_coins_earned || 0) + earnedCoins;
-  if (payload && typeof payload.best_combo === 'number') player.best_combo = Math.max(player.best_combo || 0, payload.best_combo);
-  if (payload && typeof payload.avalanche_score === 'number') player.best_avalanche = Math.max(player.best_avalanche || 0, payload.avalanche_score);
-  const unlockedTrophies = evaluateTrophies(player);
-  if (unlockedTrophies.length > 0) socket.emit('trophy_unlocked', unlockedTrophies.map(t => ({ id: Object.keys(TROPHY_CATALOG).find(k => TROPHY_CATALOG[k] === t), ...t })));
-  lastMatchEarnings[socket.id] = earnedCoins;
-  if (perfection) { player.unlocked_items = player.unlocked_items || []; if (!player.unlocked_items.includes('achievement_perfection')) player.unlocked_items.push('achievement_perfection'); }
-  let triggerWheel = (globalEvents.jackpotEclair && Math.random() < 0.10);
-  
-  setLastAction(player, 'solo_reward');
-  await savePlayerToSupabase(socket.id);
-  await logPlayerAction(player, 'solo_reward', `Score: ${safeScore}${safeScore !== normalizedScore ? ' (tronqué de ' + normalizedScore + ')' : ''}, Duration: ${clientDuration}s`, 'coins', earnedCoins, player.coins);
-  socket.emit('player_registered', player);
-  socket.emit('solo_reward_result', { baseCoins, rushBonus, earnedCoins, triggerWheel, globalEvents, perfection });
-});
-
-socket.on('double_reward', async () => {
-  const player = activePlayers[socket.id];
-  if (!player) return;
-  
-  ensureDailyCounters(player);
-  if (player.daily_ads.count >= 15) {
-    socket.emit('ad_limit_reached', { limit: 15, used: player.daily_ads.count });
-    return;
-  }
-  
-  // 🛡️ Cooldown : 15s entre 2 pubs (temps d'une vraie pub)
-  const cd = checkCooldown(player, 'double_reward', 15000);
-  if (!cd.ok) {
-    socket.emit('ad_limit_reached', { limit: 0, used: 0, cooldown: Math.ceil(cd.remaining / 1000) });
-    return;
-  }
-  
-  const earnings = lastMatchEarnings[socket.id] || 0;
-  if (earnings > 0) {
-    player.coins += earnings;
-    player.daily_ads.count++;
-    lastMatchEarnings[socket.id] = 0;
-    setLastAction(player, 'double_reward');
+    const player = activePlayers[socket.id];
+    if (!player) return;
+    const cd = checkCooldown(player, 'catch_solo', 8000);
+    if (!cd.ok) { socket.emit('catch_solo_result', { baseCoins: 0, bonusCoins: 0, rushBonus: 0, earnedCoins: 0, error: 'cooldown' }); return; }
+    if (!player._catchStart) {
+      await logPlayerAction(player, 'catch_no_start', 'Pas de catch_solo_start enregistré', null, null, null);
+      socket.emit('catch_solo_result', { baseCoins: 0, bonusCoins: 0, rushBonus: 0, earnedCoins: 0, error: 'suspicious' });
+      return;
+    }
+    const serverDuration = (Date.now() - player._catchStart) / 1000;
+    player._catchStart = null;
+    const score = Math.max(0, Math.min(20000, Number(payload && payload.score) || 0));
+    const bonus = Math.max(0, Math.min(20000, Number(payload && payload.bonus) || 0));
+    const maxAllowed = Math.min(20000, Math.max(500, serverDuration * 800));
+    const safeScore = Math.min(score, maxAllowed);
+    const safeBonus = Math.min(bonus, maxAllowed);
+    const baseCoins = Math.min(100, Math.floor(safeScore / 3));
+    const bonusCoins = Math.min(100, Math.floor(safeBonus / 3));
+    const rushBonus = globalEvents.coinRush ? baseCoins : 0;
+    const earned = baseCoins + bonusCoins + rushBonus;
+    player.coins += earned;
+    player.solo_games = (player.solo_games || 0) + 1;
+    player.total_coins_earned = (player.total_coins_earned || 0) + earned;
+    setLastAction(player, 'catch_solo');
     await savePlayerToSupabase(socket.id);
-    await logPlayerAction(player, 'double_reward', `+${earnings}🪙 (ad)`, 'coins', earnings, player.coins);
+    await logPlayerAction(player, 'catch_solo', `Score: ${safeScore}+${safeBonus}, Durée serveur: ${serverDuration.toFixed(1)}s`, 'coins', earned, player.coins);
     socket.emit('player_registered', player);
-  }
-});
+    socket.emit('catch_solo_result', { baseCoins, bonusCoins, rushBonus, earnedCoins: earned });
+  });
+
+  socket.on('claim_solo_reward', async (payload) => {
+    const player = activePlayers[socket.id];
+    if (!player) return;
+    const cd = checkCooldown(player, 'solo_reward', 8000);
+    if (!cd.ok) { socket.emit('solo_reward_result', { baseCoins: 0, rushBonus: 0, earnedCoins: 0, triggerWheel: false, globalEvents, perfection: false, error: 'cooldown' }); return; }
+    if (!player._soloStart) {
+      await logPlayerAction(player, 'solo_no_start', 'Pas de solo_start enregistré', null, null, null);
+      socket.emit('solo_reward_result', { baseCoins: 0, rushBonus: 0, earnedCoins: 0, triggerWheel: false, globalEvents, perfection: false, error: 'suspicious' });
+      return;
+    }
+    const serverDuration = (Date.now() - player._soloStart) / 1000;
+    player._soloStart = null;
+    const score = (typeof payload === 'object' && payload !== null) ? (payload.score || 0) : payload;
+    const perfection = (typeof payload === 'object' && payload !== null) ? !!payload.perfection : false;
+    const normalizedScore = Number(score);
+    if (!Number.isFinite(normalizedScore) || normalizedScore < 0 || normalizedScore > 20000) return;
+    const maxAllowed = Math.min(20000, Math.max(500, serverDuration * 800));
+    const safeScore = Math.min(normalizedScore, maxAllowed);
+    let baseCoins = perfection ? 100 : Math.min(100, Math.floor(safeScore / 3));
+    let rushBonus = globalEvents.coinRush ? baseCoins : 0;
+    let earnedCoins = baseCoins + rushBonus;
+    player.coins += earnedCoins;
+    player.solo_games = (player.solo_games || 0) + 1;
+    player.total_coins_earned = (player.total_coins_earned || 0) + earnedCoins;
+    if (payload && typeof payload.best_combo === 'number') player.best_combo = Math.max(player.best_combo || 0, payload.best_combo);
+    if (payload && typeof payload.avalanche_score === 'number') player.best_avalanche = Math.max(player.best_avalanche || 0, payload.avalanche_score);
+    const unlockedTrophies = evaluateTrophies(player);
+    if (unlockedTrophies.length > 0) socket.emit('trophy_unlocked', unlockedTrophies.map(t => ({ id: Object.keys(TROPHY_CATALOG).find(k => TROPHY_CATALOG[k] === t), ...t })));
+    lastMatchEarnings[socket.id] = earnedCoins;
+    if (perfection) { player.unlocked_items = player.unlocked_items || []; if (!player.unlocked_items.includes('achievement_perfection')) player.unlocked_items.push('achievement_perfection'); }
+    let triggerWheel = (globalEvents.jackpotEclair && Math.random() < 0.10);
+    setLastAction(player, 'solo_reward');
+    await savePlayerToSupabase(socket.id);
+    await logPlayerAction(player, 'solo_reward', `Score: ${safeScore}${safeScore !== normalizedScore ? ' (tronqué de ' + normalizedScore + ')' : ''}, Durée serveur: ${serverDuration.toFixed(1)}s`, 'coins', earnedCoins, player.coins);
+    socket.emit('player_registered', player);
+    socket.emit('solo_reward_result', { baseCoins, rushBonus, earnedCoins, triggerWheel, globalEvents, perfection });
+  });
+
+  socket.on('double_reward', async () => {
+    const player = activePlayers[socket.id];
+    if (!player) return;
+    ensureDailyCounters(player);
+    if (player.daily_ads.count >= 15) { socket.emit('ad_limit_reached', { limit: 15, used: player.daily_ads.count }); return; }
+    const cd = checkCooldown(player, 'double_reward', 15000);
+    if (!cd.ok) { socket.emit('ad_limit_reached', { limit: 0, used: 0, cooldown: Math.ceil(cd.remaining / 1000) }); return; }
+    const earnings = lastMatchEarnings[socket.id] || 0;
+    if (earnings > 0) {
+      player.coins += earnings;
+      player.daily_ads.count++;
+      lastMatchEarnings[socket.id] = 0;
+      setLastAction(player, 'double_reward');
+      await savePlayerToSupabase(socket.id);
+      await logPlayerAction(player, 'double_reward', `+${earnings}🪙 (ad)`, 'coins', earnings, player.coins);
+      socket.emit('player_registered', player);
+    }
+  });
 
   socket.on('delete_account', async (data) => {
     const player = activePlayers[socket.id];
@@ -1120,10 +1117,10 @@ socket.on('double_reward', async () => {
       const row = matched[0];
       const stored = (row.secret_code || '').trim();
       const okCode = isHashed(stored) ? (hashSecret(code) === stored) : (stored.toLowerCase() === code.toLowerCase());
-      if (stored && !okCode) { 
+      if (stored && !okCode) {
         await logPlayerAction(player, 'delete_account_fail', 'Bad code', null, null, null);
-        socket.emit('delete_account_result', { ok: false, reason: 'bad_code' }); 
-        return; 
+        socket.emit('delete_account_result', { ok: false, reason: 'bad_code' });
+        return;
       }
       await logPlayerAction(player, 'account_deleted', `Username: ${player.username}`, null, null, null);
       await supabase.from('players').delete().eq('id', row.id);
@@ -1232,7 +1229,7 @@ socket.on('double_reward', async () => {
     socket.emit('admin_season_result', { ok: true, season: seasonNow.id });
   });
 
-    socket.on('admin_get_catalog', () => {
+  socket.on('admin_get_catalog', () => {
     if (!socket.isAdmin) return;
     socket.emit('admin_catalog', buildAdminCatalog());
   });
@@ -1244,48 +1241,29 @@ socket.on('double_reward', async () => {
     if (!clean || !itemId) return;
     const isPower = kind === 'item' && ITEM_CATALOG[itemId] && ITEM_CATALOG[itemId].type === 'power';
 
-    /* ---------- ADMIN : RÉINITIALISER CODE D'UN JOUEUR ---------- */
-  socket.on('admin_reset_password', async (data) => {
-    if (!socket.isAdmin) return;
-    const targetUsername = (data && data.username || '').trim();
-    const providedKey = (data && data.recoveryKey || '').trim().toUpperCase().replace(/\s/g, '');
-    if (!targetUsername || !providedKey) { socket.emit('admin_reset_result', { ok: false, message: 'Pseudo et clé requis.' }); return; }
-
-    // Vérifie la clé
-    const expectedKey = generateRecoveryKey(targetUsername).replace(/-/g, '');
-    if (providedKey !== expectedKey) {
-      socket.emit('admin_reset_result', { ok: false, message: '❌ Clé de récupération incorrecte.' });
-      return;
-    }
-
-    // Génère un nouveau code
-    const newCode = generateSecureCode();
-    try {
-      const { data: matched, error } = await supabase.from('players').select('*').ilike('username', targetUsername).limit(1);
-      if (error || !matched || matched.length === 0) { socket.emit('admin_reset_result', { ok: false, message: 'Pseudo introuvable.' }); return; }
-      const row = matched[0];
-      await supabase.from('players').update({ secret_code: hashSecret(newCode) }).eq('id', row.id);
-
-      // Si le joueur est en ligne, on le déconnecte (son localStorage devient invalide)
-      for (const sId in activePlayers) {
-        if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === row.username.toLowerCase()) {
-          io.to(sId).emit('force_logout', { reason: 'password_reset' });
+    socket.on('admin_reset_password', async (data2) => {
+      if (!socket.isAdmin) return;
+      const targetUsername = (data2 && data2.username || '').trim();
+      const providedKey = (data2 && data2.recoveryKey || '').trim().toUpperCase().replace(/\s/g, '');
+      if (!targetUsername || !providedKey) { socket.emit('admin_reset_result', { ok: false, message: 'Pseudo et clé requis.' }); return; }
+      const expectedKey = generateRecoveryKey(targetUsername).replace(/-/g, '');
+      if (providedKey !== expectedKey) { socket.emit('admin_reset_result', { ok: false, message: '❌ Clé de récupération incorrecte.' }); return; }
+      const newCode = generateSecureCode();
+      try {
+        const { data: matched, error } = await supabase.from('players').select('*').ilike('username', targetUsername).limit(1);
+        if (error || !matched || matched.length === 0) { socket.emit('admin_reset_result', { ok: false, message: 'Pseudo introuvable.' }); return; }
+        const row = matched[0];
+        await supabase.from('players').update({ secret_code: hashSecret(newCode) }).eq('id', row.id);
+        for (const sId in activePlayers) {
+          if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === row.username.toLowerCase()) {
+            io.to(sId).emit('force_logout', { reason: 'password_reset' });
+          }
         }
-      }
+        socket.emit('admin_reset_result', { ok: true, message: `✅ Nouveau code pour ${row.username} : ${newCode}`, newCode, username: row.username });
+        logPlayerAction({ username: row.username, socketId: null }, 'admin_reset_password', 'Réinitialisation par admin (clé vérifiée)');
+      } catch (e) { socket.emit('admin_reset_result', { ok: false, message: 'Erreur serveur : ' + e.message }); }
+    });
 
-      socket.emit('admin_reset_result', {
-        ok: true,
-        message: `✅ Nouveau code pour ${row.username} : ${newCode}`,
-        newCode,
-        username: row.username
-      });
-      logPlayerAction({ username: row.username, socketId: null }, 'admin_reset_password', 'Réinitialisation par admin (clé vérifiée)');
-    } catch (e) {
-      socket.emit('admin_reset_result', { ok: false, message: 'Erreur serveur : ' + e.message });
-    }
-  });
-
-    // --- Joueur EN LIGNE ---
     let targetId = null;
     for (const sId in activePlayers) {
       if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === clean.toLowerCase()) { targetId = sId; break; }
@@ -1308,8 +1286,6 @@ socket.on('double_reward', async () => {
       socket.emit('admin_give_result', { ok: true, message: itemId + ' → ' + p.username });
       return;
     }
-
-    // --- Joueur HORS-LIGNE (mise à jour base) ---
     const { data: matched, error } = await supabase.from('players').select('*').ilike('username', clean).limit(1);
     if (error || !matched || matched.length === 0) { socket.emit('admin_give_result', { ok: false, message: 'Pseudo introuvable.' }); return; }
     const row = matched[0];
@@ -1334,12 +1310,10 @@ socket.on('double_reward', async () => {
     socket.emit('admin_give_result', { ok: true, message: itemId + ' → ' + row.username + ' (hors-ligne)' });
   });
 
-    /* ---------- JOUEUR : VOIR SA CLÉ DE RÉCUPÉRATION ---------- */
   socket.on('get_recovery_key', (data) => {
     const player = activePlayers[socket.id];
     if (!player) return;
     const providedCode = (data && data.secretCode) || '';
-    // Vérifie le code actuel
     supabase.from('players').select('secret_code').eq('id', player.dbId).single().then(({ data: row, error }) => {
       if (error || !row) { socket.emit('recovery_key_result', { ok: false, message: 'Erreur serveur.' }); return; }
       const stored = (row.secret_code || '').trim();
@@ -1350,7 +1324,6 @@ socket.on('double_reward', async () => {
     });
   });
 
-  /* ---------- JOUEUR : CHANGER SON CODE SECRET ---------- */
   socket.on('change_secret_code', async (data) => {
     const player = activePlayers[socket.id];
     if (!player) return;
@@ -1365,20 +1338,17 @@ socket.on('double_reward', async () => {
       if (error || !row) { socket.emit('change_code_result', { ok: false, message: 'Erreur serveur.' }); return; }
       const stored = (row.secret_code || '').trim();
       const okOld = isHashed(stored) ? (hashSecret(oldCode) === stored) : (stored.toLowerCase() === oldCode.toLowerCase());
-      if (!okOld) { 
-        await logPlayerAction(player, 'change_code_fail', 'Old code wrong', null, null, null);
-        socket.emit('change_code_result', { ok: false, message: 'Ancien code incorrect.' }); 
-        return; 
+      if (!okOld) {
+        await logPlayerAction(player, 'change_code_fail', 'Ancien code incorrect', null, null, null);
+        socket.emit('change_code_result', { ok: false, message: 'Ancien code incorrect.' });
+        return;
       }
       await supabase.from('players').update({ secret_code: hashSecret(newCode) }).eq('id', player.dbId);
-      await logPlayerAction(player, 'change_code_success', 'Code changed', null, null, null);
+      await logPlayerAction(player, 'change_code_success', 'Code secret changé', null, null, null);
       socket.emit('change_code_result', { ok: true, message: '✅ Code secret changé avec succès !' });
-    } catch (e) {
-      socket.emit('change_code_result', { ok: false, message: 'Erreur serveur.' });
-    }
+    } catch (e) { socket.emit('change_code_result', { ok: false, message: 'Erreur serveur.' }); }
   });
 
-  /* ---------- STATS : joueurs réellement en ligne ---------- */
   socket.on('admin_get_stats', () => {
     if (!socket.isAdmin) return;
     socket.emit('admin_stats', { online: getOnlineCount() });
@@ -1392,8 +1362,6 @@ socket.on('double_reward', async () => {
     socket.emit('admin_logs_data', { username, rows: (!error && rows) ? rows : [] });
   });
 
-  
-  /* ---------- AJUSTER PIÈCES / POINTS / TROPHÉES ---------- */
   socket.on('admin_adjust_currency', async (data) => {
     if (!socket.isAdmin) return;
     const { mode, currency, amount, pseudo, count } = data || {};
@@ -1401,15 +1369,12 @@ socket.on('double_reward', async () => {
     const amt = parseInt(amount) || 0;
     if (amt === 0) return;
     const apply = (p) => { p[currency] = Math.max(0, (p[currency] || 0) + amt); };
-
     let targets = [];
-    if (mode === 'all') {
-      targets = Object.keys(activePlayers);
-    } else if (mode === 'pseudo') {
+    if (mode === 'all') targets = Object.keys(activePlayers);
+    else if (mode === 'pseudo') {
       const clean = (pseudo || '').trim();
       const low = clean.toLowerCase();
       targets = Object.keys(activePlayers).filter(id => activePlayers[id].username && activePlayers[id].username.toLowerCase() === low);
-      // Si le joueur est hors-ligne → mise à jour directe en base
       if (targets.length === 0 && clean) {
         const { data: matched, error } = await supabase.from('players').select('*').ilike('username', clean).limit(1);
         if (!error && matched && matched.length > 0) {
@@ -1417,9 +1382,7 @@ socket.on('double_reward', async () => {
           const newVal = Math.max(0, (t[currency] || 0) + amt);
           await supabase.from('players').update({ [currency]: newVal }).eq('id', t.id);
           socket.emit('admin_adjust_result', { ok: true, message: `${t.username} (hors-ligne) : ${currency} → ${newVal}` });
-        } else {
-          socket.emit('admin_adjust_result', { ok: false, message: "Pseudo introuvable." });
-        }
+        } else socket.emit('admin_adjust_result', { ok: false, message: "Pseudo introuvable." });
         return;
       }
     } else if (mode === 'random') {
@@ -1428,7 +1391,6 @@ socket.on('double_reward', async () => {
       for (let i = ids.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [ids[i], ids[j]] = [ids[j], ids[i]]; }
       targets = ids.slice(0, n);
     }
-
     for (const id of targets) {
       const p = activePlayers[id];
       if (!p) continue;
@@ -1439,6 +1401,97 @@ socket.on('double_reward', async () => {
     }
     socket.emit('admin_adjust_result', { ok: true, message: `${targets.length} joueur(s) modifié(s) (${amt > 0 ? '+' : ''}${amt} ${currency})` });
   });
+
+  /* ---------- 🗼 TOUR : handlers niveau 2 ---------- */
+  socket.on('get_tower', () => {
+    const player = activePlayers[socket.id];
+    if (!player) return;
+    socket.emit('tower_data', { floor: player.towerFloor || 0, stars: player.towerStars || {} });
+  });
+
+  socket.on('tower_floor_start', (data) => {
+    const player = activePlayers[socket.id];
+    if (!player) return;
+    const floor = parseInt(data && data.floor) || 0;
+    if (floor < 1 || floor > (player.towerFloor || 0) + 1) return;
+    const s = buildTowerSession(player, floor);
+    towerSessions[socket.id] = s;
+    socket.emit('tower_state', towerStatePayload(s));
+  });
+
+  socket.on('tower_click', async (data) => {
+    const player = activePlayers[socket.id];
+    const s = towerSessions[socket.id];
+    if (!player || !s || s.done || s.lock) return;
+    const idx = parseInt(data && data.index);
+    if (!Number.isFinite(idx) || idx < 0 || idx >= s.total || s.gone[idx]) return;
+    const elapsed = (Date.now() - s.start) / 1000;
+    if (elapsed > s.def.time) { const r = await towerFail(player, s, 'timeout'); delete towerSessions[socket.id]; socket.emit('tower_fail', r); return; }
+    const v = s.nums[idx];
+    let win = false, mistake = false;
+
+    if (s.type === "color") {
+      if (v.key === s.targetColor.key) {
+        s.gone[idx] = true; s.remaining.delete(idx);
+        if (s.remaining.size === 0) win = true;
+        else if (![...s.remaining].some(i => s.nums[i].key === s.targetColor.key)) s.targetColor = pickColorTarget(s);
+      } else mistake = true;
+    } else if (s.type === "pairs") {
+      if (s.sel === null) { s.sel = idx; s.revealed[idx] = true; }
+      else if (s.sel === idx) { /* re-clic même case : ignoré */ }
+      else {
+        const first = s.sel; s.revealed[idx] = true;
+        if (s.nums[first] === s.nums[idx]) {
+          s.gone[first] = true; s.gone[idx] = true; s.remaining.delete(first); s.remaining.delete(idx); s.sel = null;
+          if (s.remaining.size === 0) win = true;
+        } else {
+          mistake = true; s.lock = true;
+          setTimeout(() => {
+            if (s.done) return;
+            s.revealed[first] = false; s.revealed[idx] = false; s.sel = null; s.lock = false;
+            socket.emit('tower_state', towerStatePayload(s));
+          }, 520);
+        }
+      }
+    } else if (s.type === "parity") {
+      const ok = s.targetParity === "even" ? v % 2 === 0 : v % 2 !== 0;
+      if (ok) { s.gone[idx] = true; s.remaining.delete(v); if (s.remaining.size === 0) win = true; }
+      else mistake = true;
+    } else if (s.type === "forbidden") {
+      if (v === s.forbidden) mistake = true;
+      else { s.gone[idx] = true; s.remaining.delete(v); if (s.remaining.size === 1 && s.remaining.has(s.forbidden)) win = true; }
+    } else {
+      if (v === s.target) {
+        s.gone[idx] = true; s.remaining.delete(v);
+        if (s.remaining.size === 0) win = true;
+        else {
+          if (s.type === "reverse") s.target--;
+          else if (s.type === "random") s.target = [...s.remaining][Math.floor(Math.random() * s.remaining.size)];
+          else s.target++;
+        }
+      } else mistake = true;
+    }
+
+    if (mistake) {
+      s.mistakes++;
+      if (s.type === "nofail") { const r = await towerFail(player, s, 'nofail'); delete towerSessions[socket.id]; socket.emit('tower_fail', r); return; }
+    }
+    if (win) {
+      const r = await towerWin(player, s);
+      delete towerSessions[socket.id];
+      socket.emit('tower_result', r);
+      socket.emit('player_registered', player);
+      return;
+    }
+    socket.emit('tower_state', towerStatePayload(s));
+  });
+
+  socket.on('tower_quit', () => {
+    const s = towerSessions[socket.id];
+    if (s && !s.done) { s.done = true; }
+    delete towerSessions[socket.id];
+  });
+
   socket.on('disconnect', async () => {
     leaveAllRooms(socket);
     const qIdx = matchmakingQueue.indexOf(socket.id);
@@ -1450,106 +1503,12 @@ socket.on('double_reward', async () => {
     noelQueue = noelQueue.filter(id => id !== socket.id);
     delete activeMatches[socket.id];
     delete lastMatchEarnings[socket.id];
+    delete towerSessions[socket.id];
     await savePlayerToSupabase(socket.id);
     delete activePlayers[socket.id];
     broadcastOnlineCount();
   });
-
-/* ============ 🗼 TOUR BLITZ ============ */
-const TOWER_CHAPTER_REWARDS = {
-  1: "title_grimpeur_neon",
-  2: "frame_cristal",
-  3: "frame_circuit",
-  4: "title_chasseur_hante",
-  5: "frame_toile",
-  6: "title_roi_citrouille_tour",
-  7: "title_veilleur_cimes",
-  8: "frame_aurore",
-  9: "title_maitre_tour"
-};
-const TOWER_FPC = 50; // même valeur que FPC côté client
-socket.on('get_tower', () => {
-  const player = activePlayers[socket.id];
-  if (!player) return;
-  socket.emit('tower_data', { floor: player.towerFloor || 0, stars: player.towerStars || {} });
 });
-
-socket.on('tower_floor_win', async (data) => {
-  const player = activePlayers[socket.id];
-  if (!player) return;
-  const floor = parseInt(data.floor) || 0;
-  const stars = Math.max(1, Math.min(3, parseInt(data.stars) || 1));
-  const clientTime = Number(data.time) || 0; // ⬅️ le client doit envoyer le temps réel
-
-  // 🛡️ Anti-triche : uniquement le prochain étage attendu
-  if (floor !== (player.towerFloor || 0) + 1) {
-    await logPlayerAction(player, 'tower_cheat_attempt', `Floor ${floor} attendu ${(player.towerFloor || 0) + 1}`, null, null, null);
-    return;
-  }
-
-  // 🛡️ Anti-bot : temps min réaliste pour finir l'étage
-  const def = getFloorDefClient(floor);
-  const minTime = getMinFloorTime(floor, def.type);
-  if (clientTime > 0 && clientTime < minTime) {
-    await logPlayerAction(player, 'tower_bot_detected', `Floor ${floor} en ${clientTime}s (min ${minTime}s)`, null, null, null);
-    return;
-  }
-
-  player.towerFloor = floor;
-  player.towerStars = player.towerStars || {};
-  player.towerStars[String(floor)] = Math.max(player.towerStars[String(floor)] || 0, stars);
-
-  const coins = 10 + floor * 2 + stars * 5;
-  player.coins = (player.coins || 0) + coins;
-  await logPlayerAction(player, 'tower_win', `Étage ${floor} (${stars}⭐) en ${clientTime}s`, 'coins', coins, player.coins);
-
-  let reward = null;
-  if (floor % TOWER_FPC === 0) {
-    const itemId = TOWER_CHAPTER_REWARDS[floor / TOWER_FPC];
-    if (itemId) {
-      player.unlocked_items = player.unlocked_items || [];
-      if (!player.unlocked_items.includes(itemId)) {
-        player.unlocked_items.push(itemId);
-        reward = itemId;
-      }
-    }
-  }
-
-  await savePlayerToSupabase(socket.id);
-  socket.emit('tower_result', { ok: true, floor, stars, coins, reward });
-  socket.emit('player_registered', player);
-});
-
-// Helper serveur pour avoir la définition d'un étage (copie minimale de getFloorDef client)
-function getFloorDefClient(floor) {
-  const FPC = 50;
-  const chap = Math.ceil(floor / FPC), inChap = ((floor - 1) % FPC) + 1;
-  const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","fog","nofail"];
-  const t = seq[(inChap - 1) % 9];
-  return { type: inChap === FPC ? 'boss' : t };
-}
-// 🔄 Rejouer un étage déjà gagné pour améliorer ses étoiles
-socket.on('tower_floor_replay', async (data) => {
-  const player = activePlayers[socket.id];
-  if (!player) return;
-  const floor = parseInt(data.floor) || 0;
-  const stars = Math.max(1, Math.min(3, parseInt(data.stars) || 1));
-  // 🛡️ Uniquement un étage DÉJÀ gagné (pas de triche de progression)
-  if (floor < 1 || floor > (player.towerFloor || 0)) return;
-  player.towerStars = player.towerStars || {};
-  const old = player.towerStars[String(floor)] || 0;
-  if (stars > old) player.towerStars[String(floor)] = stars;
-  const coins = 5 + stars * 2; // récompense réduite en replay
-  const coinsBefore = player.coins;
-  player.coins = (player.coins || 0) + coins;
-  await logPlayerAction(player, 'tower_replay', `Replay étage ${floor} (${stars}⭐)`, 'coins', coins, player.coins);
-  await savePlayerToSupabase(socket.id);
-  socket.emit('tower_result', { ok: true, floor, stars, coins, reward: null, replay: true });
-  socket.emit('player_registered', player);
-});
-});
-
-
 
 /* ============================================================
 FONCTIONS ROOM / MATCH
@@ -1575,7 +1534,7 @@ function buildMatchCharges(playerObj) {
 }
 
 function startMatchBetween(id1, id2, isRanked = false, isOnline = true, isTugOfWar = false) {
-  const p1 = activePlayers[id1] || { socketId: id1, username: "Joueur 1", avatar: 1, flag: "🇫", points: 0 };
+  const p1 = activePlayers[id1] || { socketId: id1, username: "Joueur 1", avatar: 1, flag: "🇫🇷", points: 0 };
   const p2 = activePlayers[id2] || { socketId: id2, username: "Joueur 2", avatar: 2, flag: "🇫🇷", points: 0 };
   const isExpressoActive = globalEvents.expressoMatch && isOnline && !isRanked && !isTugOfWar;
   const match = {
@@ -1817,13 +1776,10 @@ async function endMatch(id1, id2, matchData, isRanked) {
       const isWinner = (winnerId === sId);
       let baseCoins = isWinner ? 30 : 10;
       let rushBonus = globalEvents.coinRush ? baseCoins : 0;
-      const coinsBefore = p.coins;
       p.coins += baseCoins + rushBonus;
       lastMatchEarnings[sId] = baseCoins + rushBonus;
       matchRewards[sId] = { baseCoins, rushBonus, totalCoins: baseCoins + rushBonus };
       if (isWinner && globalEvents.jackpotEclair && Math.random() < 0.10) io.to(sId).emit('trigger_jackpot_wheel');
-      
-      // 📊 LOG fin de match
       const matchType = matchData.isRanked ? 'match_ranked' : (matchData.isTugOfWar ? 'match_tug' : (matchData.isCatch ? `match_catch_${matchData.catchTheme}` : 'match_1v1'));
       const oppId = (sId === id1) ? id2 : id1;
       const oppPlayer = activePlayers[oppId];
