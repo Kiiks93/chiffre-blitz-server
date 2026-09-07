@@ -315,26 +315,20 @@ function drawRoom(){
   for(let c=1;c<=9;c++){
     const chap=TOWER_CHAPTERS[c-1];
     const zTop=H-STEP*c*FPC-32,zH=STEP*FPC;
-       const starLock=!worldUnlockedByStars(c);
-    if(chap.season>season || starLock){
+    const starLock=!worldUnlockedByStars(c);
+    if(chap.season>season||starLock){
       zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:linear-gradient(180deg,#0a0a14,#050508);"></div>`;
-      const label=(chap.season>season)
-        ? `🔒 ${currentLang==="fr"?"Bientôt":"Soon"}`
-        : `🔒 ${starsInWorld(c-1)}/${WORLD_QUOTA} ⭐`;
+      const label=(chap.season>season)?`🔒 ${currentLang==="fr"?"Bientôt":"Soon"}`:`🔒 ${starsInWorld(c-1)}/${WORLD_QUOTA} ⭐`;
       gates+=`<div class="tw-gate lock" style="top:${zTop+10}px;right:12px;left:auto;transform:none;">${label}</div>`;
       continue;
     }
-    const W=TOWER_WORLDS[c],C=TOWER_COLORS[c];
-    let parts="";
-    for(let i=0;i<7;i++){
-      parts+=`<span class="tw-part ${W.part}" style="color:${C.acc};left:${(i*13+c*7)%96}%;animation-duration:${4+(i%4)*1.5}s;animation-delay:${i*.7}s;"></span>`;
-    }
-    zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:${W.bg};">${sceneHTML(c,W,C)}${parts}</div>`;
-    gates+=`<div class="tw-gate" style="top:${zTop+10}px;right:12px;left:auto;transform:none;border-color:${C.acc};color:${C.acc};">${chap.icon} ${chap.name}</div>`;
+    const W=TOWER_WORLDS[c];
+    zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:${W.bg};"></div>`;
+    gates+=`<div class="tw-gate" style="top:${zTop+10}px;right:12px;left:auto;transform:none;border-color:${TOWER_COLORS[c].acc};color:${TOWER_COLORS[c].acc};">${chap.icon} ${chap.name}</div>`;
   }
   for(let f=1;f<=TOTAL_FLOORS;f++){
     const chap=getTowerChapter(f);
-    if(chap.season>season)continue;
+    if(chap.season>season||!worldUnlockedByStars(chap.id))continue;
     const y=H-STEP*f,x=50+Math.sin(f*0.55)*16;
     (ptsByChap[chap.id]=ptsByChap[chap.id]||[]).push([x,y+23]);
   }
@@ -343,35 +337,58 @@ function drawRoom(){
     if(pts.length>1)paths+=`<path d="M${pts.map(p=>p[0]+" "+p[1]).join(" L ")}" fill="none" stroke="${TOWER_COLORS[cid].acc}44" stroke-width="7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
   }
   wrap.innerHTML=`<div class="tw-map" style="height:${H}px;">${zones}
+    <div id="tw-scenes" style="position:absolute;inset:0;z-index:1;pointer-events:none;"></div>
     <div class="tw-col">
-      <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:1;" viewBox="0 0 100 ${H}" preserveAspectRatio="none">${paths}</svg>
-      <div id="tw-nodes" style="position:absolute;inset:0;z-index:2;"></div>
+      <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:2;" viewBox="0 0 100 ${H}" preserveAspectRatio="none">${paths}</svg>
+      <div id="tw-nodes" style="position:absolute;inset:0;z-index:3;"></div>
       ${gates}
     </div></div>`;
   wrap.onscroll=scheduleRenderNodes;
   const yCur=H-STEP*current;
   wrap.scrollTop=Math.max(0,yCur-wrap.clientHeight/2);
-  renderNodesWindow();
+  renderWindow();
 }
-
 let TW_nodesRaf=null;
-function scheduleRenderNodes(){
-  if(TW_nodesRaf)return;
-  TW_nodesRaf=requestAnimationFrame(()=>{TW_nodesRaf=null;renderNodesWindow();});
+const SCENE_TILE=1200;
+function partsHTML(c,W,C){
+  let parts="";
+  for(let i=0;i<7;i++){
+    parts+=`<span class="tw-part ${W.part}" style="color:${C.acc};left:${(i*13+c*7)%96}%;animation-duration:${4+(i%4)*1.5}s;animation-delay:${i*.7}s;"></span>`;
+  }
+  return parts;
 }
-function renderNodesWindow(){
+function renderWindow(){
   const wrap=document.getElementById("tw-mapwrap");if(!wrap)return;
-  const layer=document.getElementById("tw-nodes");if(!layer)return;
+  const scenesLayer=document.getElementById("tw-scenes");
+  const nodesLayer=document.getElementById("tw-nodes");
+  if(!scenesLayer||!nodesLayer)return;
   const H=TOTAL_FLOORS*STEP+110;
   const top=wrap.scrollTop, vh=wrap.clientHeight;
+  const season=currentSeasonNum();
+  const current=Math.min(towerProgress.floor+1,TOTAL_FLOORS);
+
+  // --- SCÈNES (tuiles de 1200px, seules les visibles) ---
+  const tLo=Math.max(0,Math.floor((top-SCENE_TILE)/SCENE_TILE));
+  const tHi=Math.min(Math.ceil(H/SCENE_TILE)-1, Math.ceil((top+vh+SCENE_TILE)/SCENE_TILE));
+  let shtml="";
+  for(let t=tLo;t<=tHi;t++){
+    const y=t*SCENE_TILE;
+    const f=Math.max(1,Math.min(TOTAL_FLOORS,Math.round((H-y-560)/STEP)));
+    const c=getTowerChapter(f).id;
+    const chap=TOWER_CHAPTERS[c-1];
+    if(chap.season>season||!worldUnlockedByStars(c))continue;
+    const W=TOWER_WORLDS[c],C=TOWER_COLORS[c];
+    shtml+=`<div class="tw-scenetile" style="top:${y}px;height:${SCENE_TILE}px;">${sceneHTML(c,W,C)}${partsHTML(c,W,C)}</div>`;
+  }
+  scenesLayer.innerHTML=shtml;
+
+  // --- NŒUDS (fenêtre glissante) ---
   const yTop=top-300, yBot=top+vh+300;
   const hi=Math.min(TOTAL_FLOORS,Math.floor((H-yTop)/STEP)+1);
   const lo=Math.max(1,Math.ceil((H-yBot)/STEP)-1);
-   const season=currentSeasonNum();
-  const current=Math.min(towerProgress.floor+1,TOTAL_FLOORS);
   const worldOk={};
   for(let c=1;c<=9;c++) worldOk[c]=(TOWER_CHAPTERS[c-1].season<=season)&&worldUnlockedByStars(c);
-  let html="";
+  let nhtml="";
   for(let f=lo;f<=hi;f++){
     const chap=getTowerChapter(f);
     if(!worldOk[chap.id])continue;
@@ -384,15 +401,18 @@ function renderNodesWindow(){
     const clickable=(cur&&awake)||won;
     const C=TOWER_COLORS[chap.id];
     const wonBg=won?`background:radial-gradient(circle at 35% 30%,#ffffffb3,${C.acc} 55%,#000000c9);`:"";
-    html+=`<div class="tw-node ${won?"won":(cur&&awake?"cur":"lock")} ${(boss||guardian)?"boss":""}" style="left:${x}%;top:${y}px;${wonBg}${(boss||guardian)?`border-color:${C.acc};`:""}" ${clickable?`onclick="mapPlay(${f})"`:""}>
+    nhtml+=`<div class="tw-node ${won?"won":(cur&&awake?"cur":"lock")} ${(boss||guardian)?"boss":""}" style="left:${x}%;top:${y}px;${wonBg}${(boss||guardian)?`border-color:${C.acc};`:""}" ${clickable?`onclick="mapPlay(${f})"`:""}>
       ${boss?chap.boss:(guardian?"⚔️":f)}
       ${won&&st?`<span class="tw-st">${"⭐".repeat(st)}</span>`:""}
       ${cur?`<span class="tw-ava">🧍</span>`:""}
     </div>`;
   }
-  layer.innerHTML=html;
+  nodesLayer.innerHTML=nhtml;
 }
-
+function scheduleRenderNodes(){
+  if(TW_nodesRaf)return;
+  TW_nodesRaf=requestAnimationFrame(()=>{TW_nodesRaf=null;renderWindow();});
+}
 function mapPlay(f){
   const def=getFloorDef(f);
   def.replay=f<=towerProgress.floor;
