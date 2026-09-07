@@ -16,6 +16,17 @@ let towerProgress = { floor: 0, stars: {} };
 const FPC = 200;
 const TOTAL_FLOORS = 9 * FPC; // 1800
 const STEP = 48;
+const WORLD_QUOTA = 240;
+function starsInWorld(w){
+  let s=0; const start=(w-1)*FPC+1, end=w*FPC;
+  for(let f=start; f<=end; f++){ s += towerProgress.stars[String(f)]||0; }
+  return s;
+}
+function worldUnlockedByStars(w){
+  if(w<=1) return true;
+  for(let x=2;x<=w;x++){ if(starsInWorld(x-1)<WORLD_QUOTA) return false; }
+  return true;
+}
 function getTowerChapter(f) { return TOWER_CHAPTERS[Math.ceil(f / FPC) - 1]; }
 function currentSeasonNum() { return parseInt((myProfile.currentSeasonId || "s1").replace("s", "")) || 1; }
 function getFloorDef(floor) {
@@ -304,9 +315,13 @@ function drawRoom(){
   for(let c=1;c<=9;c++){
     const chap=TOWER_CHAPTERS[c-1];
     const zTop=H-STEP*c*FPC-32,zH=STEP*FPC;
-    if(chap.season>season){
+       const starLock=!worldUnlockedByStars(c);
+    if(chap.season>season || starLock){
       zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:linear-gradient(180deg,#0a0a14,#050508);"></div>`;
-      gates+=`<div class="tw-gate lock" style="top:${zTop+10}px;right:12px;left:auto;transform:none;">🔒 ${currentLang==="fr"?"Bientôt":"Soon"}</div>`;
+      const label=(chap.season>season)
+        ? `🔒 ${currentLang==="fr"?"Bientôt":"Soon"}`
+        : `🔒 ${starsInWorld(c-1)}/${WORLD_QUOTA} ⭐`;
+      gates+=`<div class="tw-gate lock" style="top:${zTop+10}px;right:12px;left:auto;transform:none;">${label}</div>`;
       continue;
     }
     const W=TOWER_WORLDS[c],C=TOWER_COLORS[c];
@@ -352,12 +367,14 @@ function renderNodesWindow(){
   const yTop=top-300, yBot=top+vh+300;
   const hi=Math.min(TOTAL_FLOORS,Math.floor((H-yTop)/STEP)+1);
   const lo=Math.max(1,Math.ceil((H-yBot)/STEP)-1);
-  const season=currentSeasonNum();
+   const season=currentSeasonNum();
   const current=Math.min(towerProgress.floor+1,TOTAL_FLOORS);
+  const worldOk={};
+  for(let c=1;c<=9;c++) worldOk[c]=(TOWER_CHAPTERS[c-1].season<=season)&&worldUnlockedByStars(c);
   let html="";
   for(let f=lo;f<=hi;f++){
     const chap=getTowerChapter(f);
-    if(chap.season>season)continue;
+    if(!worldOk[chap.id])continue;
     const y=H-STEP*f,x=50+Math.sin(f*0.55)*16;
     const won=f<=towerProgress.floor,cur=f===current;
     const inChap=((f-1)%FPC)+1;
