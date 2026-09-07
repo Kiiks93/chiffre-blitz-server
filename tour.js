@@ -354,6 +354,33 @@ function generateSceneHTML(c, W, C) {
   `;
   document.head.appendChild(s);
 })();
+
+/* ----- CSS route fixe + Bat-Signal ignition ----- */
+(function(){
+  const s=document.createElement("style");
+  s.textContent=`
+  /* Route à hauteur FIXE (plus de bande géante vide) */
+  .tw-road{height:180px;}
+  .tw-lane{top:50%;}
+  .tw-reflect{height:150px;}
+
+  /* 🦇 Faisceaux : allumage dramatique (scaleY depuis le projecteur) puis scintillement */
+  .tw-beam{position:absolute;bottom:50%;width:90px;height:46%;filter:blur(3px);transform-origin:bottom center;
+    background:linear-gradient(to top,rgba(255,255,255,.30),rgba(255,255,255,.06) 60%,transparent);
+    clip-path:polygon(42% 100%,58% 100%,100% 0,0 0);
+    animation:twBeamOn 1.6s ease-out both, twBeamFlicker 5s ease-in-out 1.6s infinite;}
+  .tw-beam.b1{--rot:10deg;left:16%;}
+  .tw-beam.b2{--rot:-10deg;right:16%;animation-delay:1.6s,3.2s;}
+  @keyframes twBeamOn{0%{transform:rotate(var(--rot)) scaleY(0);opacity:0}55%{opacity:.65}70%{opacity:.35}100%{transform:rotate(var(--rot)) scaleY(1);opacity:.5}}
+  @keyframes twBeamFlicker{0%,100%{transform:rotate(var(--rot)) scaleY(1);opacity:.5}45%{opacity:.3}55%{opacity:.58}70%{opacity:.36}}
+
+  /* 🦇 Logo CHIFFRE BLITZ : ignition façon Bat-Signal (flicker) puis pulse */
+  .tw-skylogo{animation:twLogoOn 2.2s ease-out both, twLogoPulse 3.2s ease-in-out 2.2s infinite;}
+  @keyframes twLogoOn{0%{opacity:0;transform:translateX(-50%) scale(.6);filter:blur(10px)}35%{opacity:.5}45%{opacity:.15}55%{opacity:.85}65%{opacity:.3}80%{opacity:.9}100%{opacity:.92;transform:translateX(-50%) scale(1);filter:blur(0)}}
+  @keyframes twLogoPulse{0%,100%{opacity:.92;transform:translateX(-50%) scale(1)}50%{opacity:.72;transform:translateX(-50%) scale(1.03)}}
+  `;
+  document.head.appendChild(s);
+})();
 /* ----- 6. RENDU CARTE ----- */
 function drawRoom() {
   const wrap = document.getElementById("tw-mapwrap");
