@@ -246,60 +246,53 @@ socket.on("tower_data",(d)=>{
 
 function sceneHTML(c,W,C){
   if(W.scene==="city"){
-    let sky=`<span class="tw-moon"></span>`;
-    for(let i=0;i<16;i++)sky+=`<span class="tw-star2" style="left:${(i*61)%96}%;top:${(i*29)%30}%;animation-delay:${(i*.4)%3}s;"></span>`;
-    sky+=`<span class="tw-cloud" style="top:10%;width:26%;animation-duration:60s;"></span><span class="tw-cloud" style="top:20%;width:18%;animation-duration:80s;animation-delay:12s;"></span>`;
-    let back="";const hb=[70,88,76,96,82,90];
-    for(let i=0;i<6;i++)back+=`<div class="tw-bldg" style="height:${hb[i]}%;flex:${i%2?1.3:1};"></div>`;
-    let b="";const hs=[42,62,50,74,56,68,46,70];const hf=[1,1.25,.9,1.15,1,.85,1.2,1];
+    let html=`<span class="tw-moon" style="top:1.5%;"></span>`;
+    for(let i=0;i<60;i++)html+=`<span class="tw-star2" style="left:${(i*37)%96}%;top:${(i*7)%20}%;animation-delay:${(i*.3)%3}s;"></span>`;
+    for(let i=0;i<3;i++)html+=`<span class="tw-cloud" style="top:${3+i*5}%;width:${20+(i*7)%14}%;animation-duration:${60+i*20}s;animation-delay:${i*9}s;"></span>`;
     const cols=["#00ffff","#ff00ff","#f8b500","#7dff8a"];
-    for(let i=0;i<8;i++){
-      let wins="";const n=8+(i%3)*3;
-      for(let w=0;w<n;w++){
-        wins+=`<span class="tw-wl" style="color:${cols[(w+i)%4]};left:${6+((w*23)%84)}%;top:${8+((w*31)%78)}%;animation-duration:${2.5+((w*13)%4)}s;animation-delay:${(w*0.53)%3}s;"></span>`;
+    const rows=[{top:"16%",h:200,op:.35,n:7,w:4},{top:"34%",h:250,op:.55,n:7,w:6},{top:"52%",h:300,op:.75,n:6,w:8},{top:"70%",h:340,op:.9,n:6,w:10},{top:"86%",h:380,op:1,n:5,w:12}];
+    rows.forEach((r,ri)=>{
+      let b="";
+      for(let i=0;i<r.n;i++){
+        let wins="";
+        for(let w=0;w<r.w;w++)wins+=`<span class="tw-wl" style="color:${cols[(w+i+ri)%4]};left:${6+((w*23)%84)}%;top:${8+((w*31)%78)}%;animation-duration:${2.5+((w*13)%4)}s;animation-delay:${(w*.53)%3}s;"></span>`;
+        b+=`<div class="tw-bldg" style="height:${60+((i*37+ri*17)%r.h)}px;flex:${i%2?1.2:1};">${wins}${(i+ri)%3===0?'<span class="tw-ant"></span>':""}</div>`;
       }
-      b+=`<div class="tw-bldg" style="height:${hs[i]}%;flex:${hf[i]};">${wins}${i%3===0?'<span class="tw-ant"></span>':""}</div>`;
-    }
+      html+=`<div class="tw-row" style="top:${r.top};height:${r.h}px;opacity:${r.op};">${b}</div>`;
+    });
+    html+=`<div class="tw-road"></div><div class="tw-reflect"></div>`;
     const car=(cls,bottom,dur,delay,col)=>`<span class="tw-car ${cls}" style="bottom:${bottom};animation-duration:${dur};animation-delay:${delay};color:${col};"><i class="cb"></i><i class="cc"></i><i class="ug"></i><i class="w1"></i><i class="w2"></i><i class="hl"></i><i class="tl"></i></span>`;
-    return `${sky}<div class="tw-horizon"></div><div class="tw-cityback">${back}</div><div class="tw-city">${b}</div>
-      <div class="tw-road"><span class="tw-lane"></span></div><div class="tw-reflect"></div>
-      ${car("","2.5%","9s","0s","#00d2ff")}${car("r","8%","12s","2s","#ff2bd6")}${car("s","9%","7s","4.5s","#f8b500")}`;
+    html+=car("","2.5%","9s","0s","#00d2ff")+car("r","8%","12s","2s","#ff2bd6")+car("s","9%","7s","4.5s","#f8b500");
+    return html;
   }
   if(W.scene==="glacier"){
-    let ice="";
-    [[6,16],[14,10],[22,18],[31,9],[40,15],[49,8],[58,17],[67,10],[76,16],[85,9],[93,14]].forEach((p,i)=>{
-      ice+=`<span class="tw-icicle" style="left:${p[0]}%;height:${p[1]}%;"></span>`;
+    let html="";
+    [[6,120],[16,90],[26,140],[38,80],[50,120],[62,90],[74,130],[86,85],[94,110]].forEach(p=>{html+=`<span class="tw-icicle" style="left:${p[0]}%;height:${p[1]}px;"></span>`;});
+    html+=`<div class="tw-ray" style="top:4%;"></div><div class="tw-ray" style="top:6%;left:30%;animation-delay:1s;"></div>`;
+    [{top:"16%",s:1,l:12},{top:"34%",s:.85,l:34},{top:"52%",s:1.1,l:56},{top:"70%",s:.9,l:76}].forEach((cl,ci)=>{
+      html+=`<span class="tw-cryscl" style="left:${cl.l}%;top:${cl.top};bottom:auto;transform:scale(${cl.s});animation-delay:${ci*.6}s;"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span>`;
     });
-    let stag="";[[10,10],[26,7],[52,9],[64,6],[84,8]].forEach(p=>{stag+=`<span class="tw-stalag" style="left:${p[0]}%;height:${p[1]}%;"></span>`;});
-    const cluster=(x,s,d)=>`<span class="tw-cryscl" style="left:${x}%;bottom:14%;transform:scale(${s});animation-delay:${d};"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span>`;
-    return `<div class="tw-cavewall"></div><div class="tw-rocktop"></div>${ice}
-      <div class="tw-mist m1"></div><div class="tw-mist m2"></div>
-      ${cluster(14,1,"0s")}${cluster(68,.85,".8s")}
-      <span class="tw-cryscl" style="left:44%;bottom:12%;transform:scale(.45);animation-delay:1.4s;"><i class="c c1"></i><i class="c c2"></i></span>
-      <div class="tw-icefloor"></div>${stag}<div class="tw-rockbot"></div>`;
+    html+=`<div class="tw-mist m1" style="top:40%;"></div><div class="tw-mist m2" style="top:60%;"></div>`;
+    html+=`<div class="tw-icefloor"></div>`;
+    [[10,80],[26,60],[52,70],[64,50],[84,65]].forEach(p=>{html+=`<span class="tw-stalag" style="left:${p[0]}%;height:${p[1]}px;"></span>`;});
+    return html;
   }
   if(W.scene==="vault"){
+    let html=`<div class="tw-marble"></div>`;
+    html+=`<div class="tw-spot" style="left:20%;"></div><div class="tw-spot" style="left:60%;animation-delay:1.5s;"></div>`;
     let bolts="";for(let i=0;i<12;i++){const a=i*Math.PI/6;bolts+=`<span class="tw-vbolt" style="left:${50+44*Math.cos(a)}%;top:${50+44*Math.sin(a)}%;"></span>`;}
     let knobs="";for(let i=0;i<6;i++){const a=i*Math.PI/3;knobs+=`<span class="tw-knob" style="left:${50+38*Math.cos(a)}%;top:${50+38*Math.sin(a)}%;"></span>`;}
-    return `<div class="tw-bankwall"></div><div class="tw-marble"></div>
-      <div class="tw-spot" style="left:22%;"></div><div class="tw-spot" style="left:62%;animation-delay:1.5s;"></div>
-      <div class="tw-pillar" style="left:2%;"></div><div class="tw-pillar" style="right:2%;"></div>
-      <div class="tw-vaultglow"></div>
+    html+=`<div class="tw-vaultglow"></div>
       <div class="tw-vaultframe">
         <span class="tw-fbolt" style="left:5%;top:7%;"></span><span class="tw-fbolt" style="right:5%;top:7%;"></span>
         <span class="tw-fbolt" style="left:5%;bottom:7%;"></span><span class="tw-fbolt" style="right:5%;bottom:7%;"></span>
         <span class="tw-hinge h1"></span><span class="tw-hinge h2"></span>
-        <div class="tw-vaultdoor">
-          <div class="tw-vaultwheel">${knobs}</div>
-          <span class="tw-dial"></span>
-          <span class="tw-handle"></span>
-          ${bolts}
-        </div>
-      </div>
-      <div class="tw-laser" style="top:28%;animation-duration:5s;"></div>
-      <div class="tw-laser d" style="top:50%;animation-duration:7s;animation-delay:1s;"></div>
-      <div class="tw-laser" style="top:72%;animation-duration:6s;animation-delay:2s;"></div>
-      <div class="tw-gloss"></div><div class="tw-goldspill"></div>`;
+        <div class="tw-vaultdoor"><div class="tw-vaultwheel">${knobs}</div><span class="tw-dial"></span><span class="tw-handle"></span>${bolts}</div>
+      </div>`;
+    html+=`<div class="tw-laser" style="top:30%;animation-duration:5s;"></div><div class="tw-laser d" style="top:48%;animation-duration:7s;animation-delay:1s;"></div><div class="tw-laser" style="top:64%;animation-duration:6s;animation-delay:2s;"></div>`;
+    for(let i=0;i<8;i++)html+=`<span class="tw-ingot" style="left:${8+i*11}%;bottom:${6+(i%3)*8}px;"></span>`;
+    html+=`<div class="tw-gloss"></div><div class="tw-goldspill"></div>`;
+    return html;
   }
   return "";
 }
@@ -322,9 +315,9 @@ function drawRoom(){
       gates+=`<div class="tw-gate lock" style="top:${zTop+10}px;right:12px;left:auto;transform:none;">${label}</div>`;
       continue;
     }
-    const W=TOWER_WORLDS[c];
-    zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:${W.bg};"></div>`;
-    gates+=`<div class="tw-gate" style="top:${zTop+10}px;right:12px;left:auto;transform:none;border-color:${TOWER_COLORS[c].acc};color:${TOWER_COLORS[c].acc};">${chap.icon} ${chap.name}</div>`;
+    const W=TOWER_WORLDS[c],C=TOWER_COLORS[c];
+    zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:${W.bg};">${sceneHTML(c,W,C)}</div>`;
+    gates+=`<div class="tw-gate" style="top:${zTop+10}px;right:12px;left:auto;transform:none;border-color:${C.acc};color:${C.acc};">${chap.icon} ${chap.name}</div>`;
   }
   for(let f=1;f<=TOTAL_FLOORS;f++){
     const chap=getTowerChapter(f);
@@ -337,16 +330,53 @@ function drawRoom(){
     if(pts.length>1)paths+=`<path d="M${pts.map(p=>p[0]+" "+p[1]).join(" L ")}" fill="none" stroke="${TOWER_COLORS[cid].acc}44" stroke-width="7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
   }
   wrap.innerHTML=`<div class="tw-map" style="height:${H}px;">${zones}
-    <div id="tw-scenes" style="position:absolute;inset:0;z-index:1;pointer-events:none;"></div>
     <div class="tw-col">
-      <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:2;" viewBox="0 0 100 ${H}" preserveAspectRatio="none">${paths}</svg>
-      <div id="tw-nodes" style="position:absolute;inset:0;z-index:3;"></div>
+      <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:1;" viewBox="0 0 100 ${H}" preserveAspectRatio="none">${paths}</svg>
+      <div id="tw-nodes" style="position:absolute;inset:0;z-index:2;"></div>
       ${gates}
     </div></div>`;
   wrap.onscroll=scheduleRenderNodes;
   const yCur=H-STEP*current;
   wrap.scrollTop=Math.max(0,yCur-wrap.clientHeight/2);
-  renderWindow();
+  renderNodesWindow();
+}
+let TW_nodesRaf=null;
+function scheduleRenderNodes(){
+  if(TW_nodesRaf)return;
+  TW_nodesRaf=requestAnimationFrame(()=>{TW_nodesRaf=null;renderNodesWindow();});
+}
+function renderNodesWindow(){
+  const wrap=document.getElementById("tw-mapwrap");if(!wrap)return;
+  const layer=document.getElementById("tw-nodes");if(!layer)return;
+  const H=TOTAL_FLOORS*STEP+110;
+  const top=wrap.scrollTop, vh=wrap.clientHeight;
+  const yTop=top-300, yBot=top+vh+300;
+  const hi=Math.min(TOTAL_FLOORS,Math.floor((H-yTop)/STEP)+1);
+  const lo=Math.max(1,Math.ceil((H-yBot)/STEP)-1);
+  const season=currentSeasonNum();
+  const current=Math.min(towerProgress.floor+1,TOTAL_FLOORS);
+  const worldOk={};
+  for(let c=1;c<=9;c++) worldOk[c]=(TOWER_CHAPTERS[c-1].season<=season)&&worldUnlockedByStars(c);
+  let html="";
+  for(let f=lo;f<=hi;f++){
+    const chap=getTowerChapter(f);
+    if(!worldOk[chap.id])continue;
+    const y=H-STEP*f,x=50+Math.sin(f*0.55)*16;
+    const won=f<=towerProgress.floor,cur=f===current;
+    const inChap=((f-1)%FPC)+1;
+    const boss=inChap===FPC, guardian=!boss&&(inChap%50===0);
+    const st=towerProgress.stars[String(f)];
+    const awake=(boss||guardian)?(towerProgress.floor>=f-1):true;
+    const clickable=(cur&&awake)||won;
+    const C=TOWER_COLORS[chap.id];
+    const wonBg=won?`background:radial-gradient(circle at 35% 30%,#ffffffb3,${C.acc} 55%,#000000c9);`:"";
+    html+=`<div class="tw-node ${won?"won":(cur&&awake?"cur":"lock")} ${(boss||guardian)?"boss":""}" style="left:${x}%;top:${y}px;${wonBg}${(boss||guardian)?`border-color:${C.acc};`:""}" ${clickable?`onclick="mapPlay(${f})"`:""}>
+      ${boss?chap.boss:(guardian?"⚔️":f)}
+      ${won&&st?`<span class="tw-st">${"⭐".repeat(st)}</span>`:""}
+      ${cur?`<span class="tw-ava">🧍</span>`:""}
+    </div>`;
+  }
+  layer.innerHTML=html;
 }
 let TW_nodesRaf=null;
 const SCENE_TILE=1200;
@@ -732,6 +762,14 @@ function showTowerWinPopup(res){
   const s=document.createElement("style");
   s.textContent=`
   .tw-scenetile{position:absolute;left:0;right:0;overflow:hidden;}
+  `;
+  document.head.appendChild(s);
+})();
+/* ----- CSS DA ascension ----- */
+(function(){
+  const s=document.createElement("style");
+  s.textContent=`
+  .tw-row{position:absolute;left:0;right:0;display:flex;align-items:flex-end;gap:2%;padding:0 2%;}
   `;
   document.head.appendChild(s);
 })();
