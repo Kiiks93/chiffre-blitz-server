@@ -1487,8 +1487,17 @@ function generateSoloGrid() {
   for (let i = 1; i <= 50; i++) {
     if (i !== soloTarget) candidates.push(i);
   }
-  candidates.sort(() => Math.random() - 0.5);
-  pool = pool.concat(candidates.slice(0, 11)).sort(() => Math.random() - 0.5);
+  // ✅ Fisher-Yates shuffle (vraiment aléatoire)
+  for (let i = candidates.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+  }
+  pool = pool.concat(candidates.slice(0, 11));
+  // ✅ Fisher-Yates sur le pool final
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
   renderGrid(pool, handleSoloTileClick);
 }
 
