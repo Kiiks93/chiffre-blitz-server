@@ -13,23 +13,25 @@ const TOWER_CHAPTERS = [
   { id:9, season:3, name:"Atelier du Père Noël", icon:"🎅", boss:"🎅", objects:["🎅","🤶","","🦌","","🔥","","🥛",""] }
 ];
 let towerProgress = { floor: 0, stars: {} };
-const FPC = 20;
-const TOTAL_FLOORS = 9 * FPC;
+const FPC = 200;
+const TOTAL_FLOORS = 9 * FPC; // 1800
+const STEP = 48;
 function getTowerChapter(f) { return TOWER_CHAPTERS[Math.ceil(f / FPC) - 1]; }
 function currentSeasonNum() { return parseInt((myProfile.currentSeasonId || "s1").replace("s", "")) || 1; }
 function getFloorDef(floor) {
   const chap = Math.ceil(floor / FPC), inChap = ((floor - 1) % FPC) + 1;
-  const base = { floor, gridSize: 16 + (chap - 1) * 4, time: Math.max(18, 32 - chap * 2) };
-  if (inChap === FPC) return { ...base, type: "boss" };
+  const global = (floor - 1) / (TOTAL_FLOORS - 1);
+  let gridSize = Math.min(36, Math.round(12 + global * 24));
+  let time = Math.max(14, Math.round(34 - global * 20));
+  if (inChap === FPC) return { floor, gridSize, time, type: "boss" };
+  if (inChap % 50 === 0) return { floor, gridSize, time, type: "boss" };
   const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","fog","nofail"];
   const t = seq[(inChap - 1) % 9];
-  if (t === "sprint") return { ...base, type: "sprint", time: Math.max(8, 14 - chap) };
-  if (t === "nofail") return { ...base, type: "nofail", time: 25 };
-  if (t === "pairs") { let g = base.gridSize; if (g % 2) g++; return { ...base, gridSize: g, type: "pairs", time: Math.max(24, 36 - chap) }; }
-  if (t === "color") return { ...base, type: "color", time: Math.max(20, 30 - chap) };
-  if (t === "parity") return { ...base, gridSize: 24 + (chap - 1) * 6, type: "parity", time: Math.max(24, 40 - chap * 2) };
-  if (t === "forbidden") return { ...base, type: "forbidden", time: Math.max(18, 28 - chap) };
-  return { ...base, type: t };
+  if (t === "sprint") return { floor, gridSize, time: Math.max(8, Math.round(time * 0.5)), type: "sprint" };
+  if (t === "nofail") return { floor, gridSize, time: Math.max(15, Math.round(time * 0.8)), type: "nofail" };
+  if (t === "pairs") { let g = gridSize; if (g % 2) g++; return { floor, gridSize: g, time: Math.max(20, time + 6), type: "pairs" }; }
+  if (t === "parity") return { floor, gridSize: Math.min(48, gridSize + 8), time: time + 4, type: "parity" };
+  return { floor, gridSize, time, type: t };
 }
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
@@ -297,14 +299,14 @@ function drawRoom(){
   const current=Math.min(towerProgress.floor+1,TOTAL_FLOORS);
   let totalStars=0;for(const k in towerProgress.stars)totalStars+=towerProgress.stars[k];
   document.getElementById("tower-sub").innerText="É"+current+" ⭐"+totalStars;
-  const STEP=64,H=TOTAL_FLOORS*STEP+110;
-  let nodes="",paths="",zones="",ptsByChap={};
+  const H=TOTAL_FLOORS*STEP+110;
+  let zones="",gates="",paths="",ptsByChap={};
   for(let c=1;c<=9;c++){
     const chap=TOWER_CHAPTERS[c-1];
     const zTop=H-STEP*c*FPC-32,zH=STEP*FPC;
     if(chap.season>season){
       zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:linear-gradient(180deg,#0a0a14,#050508);"></div>`;
-      nodes+=`<div class="tw-gate lock" style="top:${zTop+10}px;right:12px;left:auto;transform:none;">🔒 ${currentLang==="fr"?"Bientôt":"Soon"}</div>`;
+      gates+=`<div class="tw-gate lock" style="top:${zTop+10}px;right:12px;left:auto;transform:none;">🔒 ${currentLang==="fr"?"Bientôt":"Soon"}</div>`;
       continue;
     }
     const W=TOWER_WORLDS[c],C=TOWER_COLORS[c];
@@ -313,24 +315,13 @@ function drawRoom(){
       parts+=`<span class="tw-part ${W.part}" style="color:${C.acc};left:${(i*13+c*7)%96}%;animation-duration:${4+(i%4)*1.5}s;animation-delay:${i*.7}s;"></span>`;
     }
     zones+=`<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:${W.bg};">${sceneHTML(c,W,C)}${parts}</div>`;
-    nodes+=`<div class="tw-gate" style="top:${zTop+10}px;right:12px;left:auto;transform:none;border-color:${C.acc};color:${C.acc};">${chap.icon} ${chap.name}</div>`;
+    gates+=`<div class="tw-gate" style="top:${zTop+10}px;right:12px;left:auto;transform:none;border-color:${C.acc};color:${C.acc};">${chap.icon} ${chap.name}</div>`;
   }
   for(let f=1;f<=TOTAL_FLOORS;f++){
     const chap=getTowerChapter(f);
     if(chap.season>season)continue;
     const y=H-STEP*f,x=50+Math.sin(f*0.55)*16;
     (ptsByChap[chap.id]=ptsByChap[chap.id]||[]).push([x,y+23]);
-    const won=f<=towerProgress.floor,cur=f===current,boss=f%FPC===0;
-    const st=towerProgress.stars[String(f)];
-    const awake=boss?(towerProgress.floor>=f-1):true;
-    const clickable=(cur&&awake)||won;
-    const C=TOWER_COLORS[chap.id];
-    const wonBg=won?`background:radial-gradient(circle at 35% 30%,#ffffffb3,${C.acc} 55%,#000000c9);`:"";
-    nodes+=`<div class="tw-node ${won?"won":(cur&&awake?"cur":"lock")} ${boss?"boss":""}" style="left:${x}%;top:${y}px;${wonBg}${boss?`border-color:${C.acc};`:""}" ${clickable?`onclick="mapPlay(${f})"`:""}>
-      ${boss?chap.boss:f}
-      ${won&&st?`<span class="tw-st">${"⭐".repeat(st)}</span>`:""}
-      ${cur?`<span class="tw-ava">🧍</span>`:""}
-    </div>`;
   }
   for(const cid in ptsByChap){
     const pts=ptsByChap[cid];
@@ -339,9 +330,50 @@ function drawRoom(){
   wrap.innerHTML=`<div class="tw-map" style="height:${H}px;">${zones}
     <div class="tw-col">
       <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:1;" viewBox="0 0 100 ${H}" preserveAspectRatio="none">${paths}</svg>
-      ${nodes}
+      <div id="tw-nodes" style="position:absolute;inset:0;z-index:2;"></div>
+      ${gates}
     </div></div>`;
-  setTimeout(()=>{const el=wrap.querySelector(".tw-node.cur");if(el)el.scrollIntoView({block:"center",behavior:"smooth"});},200);
+  wrap.onscroll=scheduleRenderNodes;
+  const yCur=H-STEP*current;
+  wrap.scrollTop=Math.max(0,yCur-wrap.clientHeight/2);
+  renderNodesWindow();
+}
+
+let TW_nodesRaf=null;
+function scheduleRenderNodes(){
+  if(TW_nodesRaf)return;
+  TW_nodesRaf=requestAnimationFrame(()=>{TW_nodesRaf=null;renderNodesWindow();});
+}
+function renderNodesWindow(){
+  const wrap=document.getElementById("tw-mapwrap");if(!wrap)return;
+  const layer=document.getElementById("tw-nodes");if(!layer)return;
+  const H=TOTAL_FLOORS*STEP+110;
+  const top=wrap.scrollTop, vh=wrap.clientHeight;
+  const yTop=top-300, yBot=top+vh+300;
+  const hi=Math.min(TOTAL_FLOORS,Math.floor((H-yTop)/STEP)+1);
+  const lo=Math.max(1,Math.ceil((H-yBot)/STEP)-1);
+  const season=currentSeasonNum();
+  const current=Math.min(towerProgress.floor+1,TOTAL_FLOORS);
+  let html="";
+  for(let f=lo;f<=hi;f++){
+    const chap=getTowerChapter(f);
+    if(chap.season>season)continue;
+    const y=H-STEP*f,x=50+Math.sin(f*0.55)*16;
+    const won=f<=towerProgress.floor,cur=f===current;
+    const inChap=((f-1)%FPC)+1;
+    const boss=inChap===FPC, guardian=!boss&&(inChap%50===0);
+    const st=towerProgress.stars[String(f)];
+    const awake=(boss||guardian)?(towerProgress.floor>=f-1):true;
+    const clickable=(cur&&awake)||won;
+    const C=TOWER_COLORS[chap.id];
+    const wonBg=won?`background:radial-gradient(circle at 35% 30%,#ffffffb3,${C.acc} 55%,#000000c9);`:"";
+    html+=`<div class="tw-node ${won?"won":(cur&&awake?"cur":"lock")} ${(boss||guardian)?"boss":""}" style="left:${x}%;top:${y}px;${wonBg}${(boss||guardian)?`border-color:${C.acc};`:""}" ${clickable?`onclick="mapPlay(${f})"`:""}>
+      ${boss?chap.boss:(guardian?"⚔️":f)}
+      ${won&&st?`<span class="tw-st">${"⭐".repeat(st)}</span>`:""}
+      ${cur?`<span class="tw-ava">🧍</span>`:""}
+    </div>`;
+  }
+  layer.innerHTML=html;
 }
 
 function mapPlay(f){
