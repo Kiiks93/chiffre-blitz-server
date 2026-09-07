@@ -369,10 +369,10 @@ function getFloorDefServer(floor) {
   if (inChap % 50 === 0) return { floor, gridSize, time, type: "boss" }; // gardien
   const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","fog","nofail"];
   const t = seq[(inChap - 1) % 9];
-  if (t === "sprint") return { floor, gridSize, time: Math.max(8, Math.round(time * 0.5)), type: "sprint" };
-  if (t === "nofail") return { floor, gridSize, time: Math.max(15, Math.round(time * 0.8)), type: "nofail" };
-  if (t === "pairs") { let g = gridSize; if (g % 2) g++; return { floor, gridSize: g, time: Math.max(20, time + 6), type: "pairs" }; }
-  if (t === "parity") return { floor, gridSize: Math.min(48, gridSize + 8), time: time + 4, type: "parity" };
+  if (t === "sprint") return { floor, gridSize, time: Math.max(6, Math.round(time * 0.4)), type: "sprint" };
+  if (t === "nofail") return { floor, gridSize, time: Math.max(14, Math.round(time * 0.7)), type: "nofail" };
+  if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; return { floor, gridSize: g, time: Math.max(18, time + 4), type: "pairs" }; }
+  if (t === "parity") return { floor, gridSize: Math.min(60, gridSize + 12), time: time + 3, type: "parity" };
   return { floor, gridSize, time, type: t };
 }
 function pickColorTarget(s){
