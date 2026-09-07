@@ -1505,8 +1505,13 @@ function handleSoloTileClick(num, index) {
   if (soloTimeLeft <= 0) return;
   const tiles = document.querySelectorAll("#grid .tile");
   if (tiles[index]) {
+    // ✅ Feedback tactile instantané
     tiles[index].classList.add("ripple-active");
-    setTimeout(() => { tiles[index].classList.remove("ripple-active"); }, 400);
+    tiles[index].style.transform = "scale(0.92)";
+    setTimeout(() => { 
+      tiles[index].classList.remove("ripple-active"); 
+      if (tiles[index]) tiles[index].style.transform = "";
+    }, 150);
   }
   if (activeTrainingMode === "classic") {
     if (num === soloTarget) {
