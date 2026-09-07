@@ -238,36 +238,43 @@ function generateSceneHTML(c, W, C) {
   if (SCENE_CACHE[c]) return SCENE_CACHE[c];
   let html = "";
 
-  if (W.scene === "city") {
-    /* 🌙 LUNE tout en haut */
+    if (W.scene === "city") {
+    /* 🌙 LUNE */
     html += `<span class="tw-moon"></span>`;
-    /* ✨ CIEL : 140 étoiles couvrant le haut (0-44%) */
+    /* ✨ CIEL : 140 étoiles */
     for (let i = 0; i < 140; i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%44}%;animation-delay:${(i*.23)%3}s;"></span>`;
     /* ☁️ Nuages */
     for (let i = 0; i < 4; i++) html += `<span class="tw-cloud" style="top:${3+i*6}%;width:${22+(i*9)%16}%;animation-duration:${70+i*25}s;animation-delay:${i*11}s;"></span>`;
+    /* 🦇 BAT-SIGNAL : halo + logo CHIFFRE BLITZ projeté dans le ciel */
+    html += `<div class="tw-skyhalo"></div><div class="tw-skylogo">CHIFFRE BLITZ</div>`;
+    /* 🦇 2 projecteurs + faisceaux */
+    html += `<div class="tw-beam b1"></div><div class="tw-beam b2"></div><div class="tw-projector p1"></div><div class="tw-projector p2"></div>`;
     /* 🌆 Horizon glow */
     html += `<div class="tw-horizon"></div>`;
-    /* 🏢 Silhouettes arrière-plan (hautes, foncées) */
+    /* 🏢 Silhouettes arrière-plan */
     const cols = ["#00ffff","#ff00ff","#f8b500","#7dff8a"];
     let back = "";
     const hb = [70,88,76,96,82,90,74,92,80,86];
     for (let i = 0; i < 10; i++) back += `<div class="tw-bldg" style="height:${hb[i]}%;flex:${i%2?1.3:1};"></div>`;
     html += `<div class="tw-cityback">${back}</div>`;
-    /* 🏢 Immeubles principaux ALLONGÉS EN HAUTEUR avec fenêtres */
+    /* 🏢 Immeubles principaux + PLUS de fenêtres PLUS grosses */
     let b = "";
     const hs = [42,62,50,74,56,68,46,70];
     const hf = [1,1.25,.9,1.15,1,.85,1.2,1];
     for (let i = 0; i < 8; i++) {
       let wins = "";
-      const n = 26 + (i % 3) * 10;
-      for (let w = 0; w < n; w++) wins += `<span class="tw-wl" style="color:${cols[(w+i)%4]};left:${6+((w*23)%84)}%;top:${4+((w*31)%92)}%;animation-duration:${2.5+((w*13)%4)}s;animation-delay:${(w*0.53)%3}s;"></span>`;
+      const n = 40 + (i % 3) * 15;   // 40 à 70 fenêtres par immeuble
+      for (let w = 0; w < n; w++) wins += `<span class="tw-wl" style="color:${cols[(w+i)%4]};left:${5+((w*19)%88)}%;top:${3+((w*29)%94)}%;animation-duration:${2.5+((w*13)%4)}s;animation-delay:${(w*0.37)%3}s;"></span>`;
       b += `<div class="tw-bldg" style="height:${hs[i]}%;flex:${hf[i]};">${wins}${i%3===0?'<span class="tw-ant"></span>':""}</div>`;
     }
     html += `<div class="tw-city">${b}</div>`;
-    /* 🚗 ROUTE + voitures tout en bas */
+    /* 🚗 ROUTE + 6 voitures réparties sur les 2 voies */
     html += `<div class="tw-road"><span class="tw-lane"></span></div><div class="tw-reflect"></div>`;
     const car = (cls, bottom, dur, delay, col) => `<span class="tw-car ${cls}" style="bottom:${bottom};animation-duration:${dur};animation-delay:${delay};color:${col};"><i class="cb"></i><i class="cc"></i><i class="ug"></i><i class="w1"></i><i class="w2"></i><i class="hl"></i><i class="tl"></i></span>`;
-    html += car("", "22px", "9s", "0s", "#00d2ff") + car("r", "62px", "12s", "2s", "#ff2bd6") + car("s", "80px", "7s", "4.5s", "#f8b500");
+    // Voie 1 (bas, vers la droite)
+    html += car("", "30px", "9s", "0s", "#00d2ff") + car("", "55px", "11s", "3s", "#f8b500") + car("s", "42px", "7s", "5.5s", "#7dff8a");
+    // Voie 2 (haut, vers la gauche = .r)
+    html += car("r", "120px", "10s", "1.5s", "#ff2bd6") + car("r", "150px", "12s", "4s", "#00d2ff") + car("r s", "135px", "8s", "6.5s", "#ff8a00");
   }
 
   if (W.scene === "glacier") {
@@ -317,7 +324,36 @@ function generateSceneHTML(c, W, C) {
   SCENE_CACHE[c] = result;
   return result;
 }
+/* ----- CSS Bat-Signal + grosses fenêtres ----- */
+(function(){
+  const s=document.createElement("style");
+  s.textContent=`
+  /* Fenêtres PLUS grosses + PLUS lumineuses */
+  .tw-wl{position:absolute;width:7px;height:9px;background:currentColor;box-shadow:0 0 8px currentColor,0 0 16px currentColor;animation:twWin linear infinite;}
 
+  /* 🦇 Halo + logo CHIFFRE BLITZ dans le ciel */
+  .tw-skyhalo{position:absolute;top:3.5%;left:50%;transform:translateX(-50%);width:min(72%,540px);height:110px;background:radial-gradient(ellipse,#00d2ff2e,transparent 70%);filter:blur(8px);}
+  .tw-skylogo{position:absolute;top:5%;left:50%;transform:translateX(-50%);font-size:clamp(18px,3.5vw,32px);font-weight:900;letter-spacing:8px;color:#fff;white-space:nowrap;z-index:2;
+    text-shadow:0 0 12px #00d2ff,0 0 30px #00d2ffaa,0 0 60px #ff00ff77;opacity:.92;animation:twLogoPulse 3.2s ease-in-out infinite;}
+
+  /* 🦇 Faisceaux des projecteurs (convergent vers le logo) */
+  .tw-beam{position:absolute;bottom:50%;width:90px;height:46%;filter:blur(3px);opacity:.5;transform-origin:bottom center;
+    background:linear-gradient(to top,rgba(255,255,255,.30),rgba(255,255,255,.06) 60%,transparent);
+    clip-path:polygon(42% 100%,58% 100%,100% 0,0 0);animation:twBeamFlicker 5s ease-in-out infinite;}
+  .tw-beam.b1{left:16%;transform:rotate(10deg);}
+  .tw-beam.b2{right:16%;transform:rotate(-10deg);animation-delay:2s;}
+
+  /* 🦇 Les projecteurs sur les toits */
+  .tw-projector{position:absolute;bottom:50%;width:26px;height:16px;background:linear-gradient(180deg,#3a3a48,#14141c);border-radius:4px 4px 2px 2px;box-shadow:0 0 10px #00d2ff66;}
+  .tw-projector::after{content:"";position:absolute;top:-4px;left:50%;transform:translateX(-50%);width:12px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 12px #fff,0 0 24px #00d2ff;}
+  .tw-projector.p1{left:calc(16% + 32px);}
+  .tw-projector.p2{right:calc(16% + 32px);}
+
+  @keyframes twBeamFlicker{0%,100%{opacity:.5}45%{opacity:.32}55%{opacity:.55}70%{opacity:.38}}
+  @keyframes twLogoPulse{0%,100%{opacity:.92;transform:translateX(-50%) scale(1)}50%{opacity:.7;transform:translateX(-50%) scale(1.03)}}
+  `;
+  document.head.appendChild(s);
+})();
 /* ----- 6. RENDU CARTE ----- */
 function drawRoom() {
   const wrap = document.getElementById("tw-mapwrap");
