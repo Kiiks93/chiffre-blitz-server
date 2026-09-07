@@ -369,11 +369,14 @@ function showBriefing(def){
 }
 function closeBriefing(){const b=document.getElementById("tw-brief");if(b)b.remove();}
 
-/* ================= MOTEUR DES ÉTAGES — NIVEAU 2 OPTIMISÉ ================= */
+/* ================= MOTEUR DES ÉTAGES — NIVEAU 2 FLUIDE ================= */
 let TW=null;
 let TW_lastFloor=0;
-let TW_buttons=[]; // cache DOM des boutons
-let TW_lastState=null; // dernier état pour diffing
+let TW_buttons=[];
+let TW_lastState=null;
+let TW_localLock=false;      // lock local anti-spam
+let TW_pairsLocalLock=false; // lock local pour paires (520ms)
+let TW_lastClickTime=0;      // timestamp dernier clic
 
 function ensureTowerOverlay(){
   let ov=document.getElementById("tower-game");
@@ -390,6 +393,7 @@ function ensureTowerOverlay(){
     document.body.appendChild(ov);}
   return ov;
 }
+
 function startTowerFloor(def){
   if(TW)return;
   const ov=ensureTowerOverlay();
@@ -398,18 +402,53 @@ function startTowerFloor(def){
   TW={pending:true};
   TW_buttons=[];
   TW_lastState=null;
+  TW_localLock=false;
+  TW_pairsLocalLock=false;
   document.getElementById("tg-grid").innerHTML="";
   document.getElementById("twg-title").innerText="🏰 "+(currentLang==="fr"?"ÉTAGE":"FLOOR")+" "+def.floor+" — "+typeLabel(def.type);
   socket.emit("tower_floor_start",{floor:def.floor});
 }
+
+// 🎯 Handler de clic optimisé
+function handleTowerClick(i,b){
+  const now=Date.now();
+  
+  // Anti-spam : 120ms entre 2 clics
+  if(now-TW_lastClickTime<120)return;
+  TW_lastClickTime=now;
+  
+  // Lock paires actif
+  if(TW_pairsLocalLock)return;
+  
+  // Case déjà disparue
+  if(TW&&TW.gone&&TW.gone[i])return;
+  
+  // 🚀 FEEDBACK INSTANTANÉ (avant réponse serveur)
+  b.style.transform="scale(0.88)";
+  b.style.filter="brightness(1.3)";
+  setTimeout(()=>{
+    if(b){b.style.transform="";b.style.filter="";}
+  },150);
+  
+  // 🔒 Lock paires local : si déjà 1ère case sélectionnée, on verrouille 520ms après 2ème clic
+  if(TW&&TW.type==="pairs"&&TW.sel!==null&&TW.sel!==i){
+    TW_pairsLocalLock=true;
+    setTimeout(()=>{TW_pairsLocalLock=false;},550); // 550ms > 520ms serveur
+  }
+  
+  socket.emit("tower_click",{index:i});
+}
+
 socket.on("tower_state",(st)=>{
   if(!st||!st.display)return;
-  const firstPaint=!TW_lastState;
+  const firstPaint=!TW_lastState||TW_buttons.length===0;
+  const prevState=TW_lastState;
   TW=st;
   TW_lastFloor=st.floor;
   
-  // 🔥 DOM DIFFING : on ne recrée pas la grille à chaque tick
   const g=document.getElementById("tg-grid");
+  
+  // 🎨 PREMIER RENDU : créer les boutons
   if(firstPaint){
     const cols=TW.gridSize<=16?4:(TW.gridSize<=20?5:6);
     g.style.gridTemplateColumns=`repeat(${cols},1fr)`;
@@ -418,70 +457,87 @@ socket.on("tower_state",(st)=>{
     TW.display.forEach((v,i)=>{
       const b=document.createElement("button");
       b.className="tg-tile"+(TW.type==="fog"?" foggy":"");
-      b.onclick=()=>{
-        // 🚀 OPTIMISTIC : feedback instantané avant le serveur
-        if(!TW.gone[i]){
-          b.style.transform="scale(0.92)";
-          setTimeout(()=>b.style.transform="",120);
-        }
-        socket.emit("tower_click",{index:i});
-      };
+      b.onclick=()=>handleTowerClick(i,b);
+      applyVisual(b,i,v,TW);
       g.appendChild(b);
       TW_buttons[i]=b;
     });
   }
+  // 🔄 UPDATES INCRÉMENTALES
+  else{
+    TW.display.forEach((v,i)=>{
+      const b=TW_buttons[i];if(!b)return;
+      updateVisual(b,i,v,TW,prevState);
+    });
+  }
   
-  // Mise à jour incrémentale uniquement
-  TW.display.forEach((v,i)=>{
-    const b=TW_buttons[i];if(!b)return;
-    const gone=TW.gone[i];
-    const prevGone=TW_lastState&&TW_lastState.gone[i];
-    const prevV=TW_lastState&&TW_lastState.display[i];
-    const prevRevealed=TW_lastState&&TW_lastState.revealed&&TW_lastState.revealed[i];
-    const curRevealed=TW.revealed&&TW.revealed[i];
-    
-    // Classe gone
-    if(gone!==prevGone){
-      if(gone)b.classList.add("gone");
-      else b.classList.remove("gone");
-    }
-    
-    // Paires : révélé ?
-    if(TW.type==="pairs"){
-      const prevText=prevV===null?"?":(prevV||"");
-      const curText=v===null?"?":(v||"");
-      const prevSel=TW_lastState&&TW_lastState.sel===i;
-      const curSel=TW.sel===i;
-      if(b.textContent!==curText||prevSel!==curSel){
-        b.textContent=gone?"":curText;
-        if(curSel||curRevealed)b.classList.add("sel");
-        else b.classList.remove("sel");
-      }
-    }
-    // Couleurs : ne change pas sauf gone
-    else if(TW.type==="color"){
-      if(firstPaint||gone!==prevGone){
-        if(!gone){
-          b.style.background=`radial-gradient(circle at 35% 25%,#ffffffaa,transparent 22%),linear-gradient(180deg,${v.hex},#111827 85%)`;
-          b.style.boxShadow=`0 0 14px ${v.hex}66,inset 0 1px 0 #fff8`;
-        }
-        b.textContent="";
-      }
-    }
-    // Autres modes : chiffres
-    else{
-      if(b.textContent!=v&&!gone)b.textContent=v;
-    }
-  });
-  
-  TW_lastState=Object.assign({},st);
+  TW_lastState={...st,gone:{...st.gone},revealed:{...(st.revealed||{})},display:[...st.display]};
   renderHUDFromState();
 });
+
 socket.on("tower_fail",(r)=>{
   TW=null;
   TW_lastState=null;
+  TW_pairsLocalLock=false;
   showFailUI(r);
 });
+
+// 🎨 Applique l'état initial à un bouton
+function applyVisual(b,i,v,st){
+  if(st.gone[i]){b.classList.add("gone");return;}
+  if(st.type==="color"){
+    b.style.background=`radial-gradient(circle at 35% 25%,#ffffffaa,transparent 22%),linear-gradient(180deg,${v.hex},#111827 85%)`;
+    b.style.boxShadow=`0 0 14px ${v.hex}66,inset 0 1px 0 #fff8`;
+    b.textContent="";
+  }else if(st.type==="pairs"){
+    const revealed=st.revealed&&st.revealed[i];
+    b.textContent=v===null?"?":v;
+    if(revealed||st.sel===i)b.classList.add("sel");
+  }else{
+    b.textContent=v;
+  }
+}
+
+// 🔄 Met à jour seulement ce qui a changé
+function updateVisual(b,i,v,st,prev){
+  const gone=st.gone[i];
+  const prevGone=prev&&prev.gone[i];
+  
+  // Disparition
+  if(gone&&!prevGone){
+    b.classList.add("gone");
+    return;
+  }
+  if(gone)return;
+  
+  if(st.type==="color"){
+    // Les couleurs ne changent jamais (sauf gone)
+    return;
+  }
+  
+  if(st.type==="pairs"){
+    const revealed=st.revealed&&st.revealed[i];
+    const prevRevealed=prev&&prev.revealed&&prev.revealed[i];
+    const prevV=prev&&prev.display[i];
+    const sel=st.sel===i;
+    const prevSel=prev&&prev.sel===i;
+    
+    // Texte a changé (révélation)
+    if(v!==prevV){
+      b.textContent=v===null?"?":v;
+    }
+    // Sélection a changé
+    if((revealed||sel)!==(prevRevealed||prevSel)){
+      if(revealed||sel)b.classList.add("sel");
+      else b.classList.remove("sel");
+    }
+    return;
+  }
+  
+  // Autres modes : mise à jour du texte si changé
+  if(b.textContent!=v)b.textContent=v;
+}
+
 function renderHUDFromState(){
   const h=document.getElementById("tg-hud");if(!h||!TW)return;
   const fr=currentLang==="fr";
@@ -501,6 +557,7 @@ function renderHUDFromState(){
   }
   document.getElementById("tg-msg").innerText=TW.type==="nofail"?"💎 Une seule erreur = échec !":(TW.type==="pairs"?"🧠 Mémorise les positions !":(TW.type==="forbidden"?"🚫 Ne touche pas le nombre interdit !":""));
 }
+
 function showFailUI(r){
   const ov=ensureTowerOverlay();
   ov.style.display="flex";
@@ -513,8 +570,9 @@ function showFailUI(r){
     <button class="btn-main btn-blue" onclick="retryFloor()">🔄 Réessayer</button>
     <button class="btn-secondary" onclick="quitFloor()">Quitter</button></div>`;
 }
+
 function retryFloor(){TW=null;TW_lastState=null;startTowerFloor({floor:TW_lastFloor});}
-function quitFloor(){TW=null;TW_lastState=null;socket.emit("tower_quit");const ov=document.getElementById("tower-game");if(ov)ov.style.display="none";}
+function quitFloor(){TW=null;TW_lastState=null;TW_pairsLocalLock=false;socket.emit("tower_quit");const ov=document.getElementById("tower-game");if(ov)ov.style.display="none";}
 
 socket.on("tower_result",(res)=>{
   TW=null;
