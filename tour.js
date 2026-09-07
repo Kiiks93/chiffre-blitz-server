@@ -369,9 +369,12 @@ function showBriefing(def){
 }
 function closeBriefing(){const b=document.getElementById("tw-brief");if(b)b.remove();}
 
-/* ================= MOTEUR DES ÉTAGES — NIVEAU 2 (server-authoritative) ================= */
+/* ================= MOTEUR DES ÉTAGES — NIVEAU 2 OPTIMISÉ ================= */
 let TW=null;
 let TW_lastFloor=0;
+let TW_buttons=[]; // cache DOM des boutons
+let TW_lastState=null; // dernier état pour diffing
+
 function ensureTowerOverlay(){
   let ov=document.getElementById("tower-game");
   if(!ov){ov=document.createElement("div");ov.id="tower-game";ov.className="twg-screen";
@@ -393,41 +396,92 @@ function startTowerFloor(def){
   ov.style.display="flex";
   TW_lastFloor=def.floor;
   TW={pending:true};
+  TW_buttons=[];
+  TW_lastState=null;
+  document.getElementById("tg-grid").innerHTML="";
   document.getElementById("twg-title").innerText="🏰 "+(currentLang==="fr"?"ÉTAGE":"FLOOR")+" "+def.floor+" — "+typeLabel(def.type);
   socket.emit("tower_floor_start",{floor:def.floor});
 }
 socket.on("tower_state",(st)=>{
+  if(!st||!st.display)return;
+  const firstPaint=!TW_lastState;
   TW=st;
   TW_lastFloor=st.floor;
-  paintFromState();
+  
+  // 🔥 DOM DIFFING : on ne recrée pas la grille à chaque tick
+  const g=document.getElementById("tg-grid");
+  if(firstPaint){
+    const cols=TW.gridSize<=16?4:(TW.gridSize<=20?5:6);
+    g.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+    g.innerHTML="";
+    TW_buttons=[];
+    TW.display.forEach((v,i)=>{
+      const b=document.createElement("button");
+      b.className="tg-tile"+(TW.type==="fog"?" foggy":"");
+      b.onclick=()=>{
+        // 🚀 OPTIMISTIC : feedback instantané avant le serveur
+        if(!TW.gone[i]){
+          b.style.transform="scale(0.92)";
+          setTimeout(()=>b.style.transform="",120);
+        }
+        socket.emit("tower_click",{index:i});
+      };
+      g.appendChild(b);
+      TW_buttons[i]=b;
+    });
+  }
+  
+  // Mise à jour incrémentale uniquement
+  TW.display.forEach((v,i)=>{
+    const b=TW_buttons[i];if(!b)return;
+    const gone=TW.gone[i];
+    const prevGone=TW_lastState&&TW_lastState.gone[i];
+    const prevV=TW_lastState&&TW_lastState.display[i];
+    const prevRevealed=TW_lastState&&TW_lastState.revealed&&TW_lastState.revealed[i];
+    const curRevealed=TW.revealed&&TW.revealed[i];
+    
+    // Classe gone
+    if(gone!==prevGone){
+      if(gone)b.classList.add("gone");
+      else b.classList.remove("gone");
+    }
+    
+    // Paires : révélé ?
+    if(TW.type==="pairs"){
+      const prevText=prevV===null?"?":(prevV||"");
+      const curText=v===null?"?":(v||"");
+      const prevSel=TW_lastState&&TW_lastState.sel===i;
+      const curSel=TW.sel===i;
+      if(b.textContent!==curText||prevSel!==curSel){
+        b.textContent=gone?"":curText;
+        if(curSel||curRevealed)b.classList.add("sel");
+        else b.classList.remove("sel");
+      }
+    }
+    // Couleurs : ne change pas sauf gone
+    else if(TW.type==="color"){
+      if(firstPaint||gone!==prevGone){
+        if(!gone){
+          b.style.background=`radial-gradient(circle at 35% 25%,#ffffffaa,transparent 22%),linear-gradient(180deg,${v.hex},#111827 85%)`;
+          b.style.boxShadow=`0 0 14px ${v.hex}66,inset 0 1px 0 #fff8`;
+        }
+        b.textContent="";
+      }
+    }
+    // Autres modes : chiffres
+    else{
+      if(b.textContent!=v&&!gone)b.textContent=v;
+    }
+  });
+  
+  TW_lastState=Object.assign({},st);
   renderHUDFromState();
 });
 socket.on("tower_fail",(r)=>{
   TW=null;
+  TW_lastState=null;
   showFailUI(r);
 });
-function paintFromState(){
-  const g=document.getElementById("tg-grid");if(!g||!TW||!TW.display)return;
-  const cols=TW.gridSize<=16?4:(TW.gridSize<=20?5:6);
-  g.style.gridTemplateColumns=`repeat(${cols},1fr)`;
-  g.innerHTML="";
-  TW.display.forEach((v,i)=>{
-    const b=document.createElement("button");
-    b.className="tg-tile"+(TW.type==="fog"?" foggy":"")+(TW.gone[i]?" gone":"");
-    if(TW.type==="color"){
-      b.style.background=`radial-gradient(circle at 35% 25%,#ffffffaa,transparent 22%),linear-gradient(180deg,${v.hex},#111827 85%)`;
-      b.style.boxShadow=`0 0 14px ${v.hex}66,inset 0 1px 0 #fff8`;
-      b.textContent="";
-    }else if(TW.type==="pairs"){
-      b.textContent=TW.gone[i]?"":(v===null?"?":v);
-      if(v!==null&&!TW.gone[i])b.classList.add("sel");
-    }else{
-      b.textContent=v;
-    }
-    b.onclick=()=>socket.emit("tower_click",{index:i});
-    g.appendChild(b);
-  });
-}
 function renderHUDFromState(){
   const h=document.getElementById("tg-hud");if(!h||!TW)return;
   const fr=currentLang==="fr";
@@ -445,7 +499,6 @@ function renderHUDFromState(){
     if(TW.type==="boss"){bar.style.display="block";bar.innerHTML=`<div style="width:${Math.min(100,TW.ai/TW.total*100)}%;height:100%;background:linear-gradient(90deg,#ff4b2b,#f8b500);"></div>`;}
     else bar.style.display="none";
   }
-  document.getElementById("twg-title").innerText="🏰 "+(fr?"ÉTAGE":"FLOOR")+" "+TW.floor+" — "+typeLabel(TW.type);
   document.getElementById("tg-msg").innerText=TW.type==="nofail"?"💎 Une seule erreur = échec !":(TW.type==="pairs"?"🧠 Mémorise les positions !":(TW.type==="forbidden"?"🚫 Ne touche pas le nombre interdit !":""));
 }
 function showFailUI(r){
@@ -460,8 +513,8 @@ function showFailUI(r){
     <button class="btn-main btn-blue" onclick="retryFloor()">🔄 Réessayer</button>
     <button class="btn-secondary" onclick="quitFloor()">Quitter</button></div>`;
 }
-function retryFloor(){TW=null;startTowerFloor({floor:TW_lastFloor});}
-function quitFloor(){TW=null;socket.emit("tower_quit");const ov=document.getElementById("tower-game");if(ov)ov.style.display="none";}
+function retryFloor(){TW=null;TW_lastState=null;startTowerFloor({floor:TW_lastFloor});}
+function quitFloor(){TW=null;TW_lastState=null;socket.emit("tower_quit");const ov=document.getElementById("tower-game");if(ov)ov.style.display="none";}
 
 socket.on("tower_result",(res)=>{
   TW=null;
