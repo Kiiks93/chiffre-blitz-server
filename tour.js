@@ -271,10 +271,10 @@ function generateSceneHTML(c, W, C) {
     /* 🚗 ROUTE + 6 voitures réparties sur les 2 voies */
     html += `<div class="tw-road"><span class="tw-lane"></span></div><div class="tw-reflect"></div>`;
     const car = (cls, bottom, dur, delay, col) => `<span class="tw-car ${cls}" style="bottom:${bottom};animation-duration:${dur};animation-delay:${delay};color:${col};"><i class="cb"></i><i class="cc"></i><i class="ug"></i><i class="w1"></i><i class="w2"></i><i class="hl"></i><i class="tl"></i></span>`;
-       // Voie 1 (bas, vers la droite)
-    html += car("", "20px", "9s", "0s", "#00d2ff") + car("", "40px", "11s", "3s", "#f8b500") + car("s", "30px", "7s", "5.5s", "#7dff8a");
-    // Voie 2 (haut, vers la gauche = .r)
-    html += car("r", "100px", "10s", "1.5s", "#ff2bd6") + car("r", "124px", "12s", "4s", "#00d2ff") + car("r s", "112px", "8s", "6.5s", "#ff8a00");
+      // Voie 1 (bas, vers la droite) - 5 voitures
+    html += car("", "16px", "9s", "0s", "#00d2ff") + car("", "34px", "11s", "2.5s", "#f8b500") + car("s", "24px", "7s", "5s", "#7dff8a") + car("", "44px", "13s", "7.5s", "#ff8a00") + car("s", "18px", "8s", "9.5s", "#ff2bd6");
+    // Voie 2 (haut, vers la gauche = .r) - 5 voitures
+    html += car("r", "96px", "10s", "1.5s", "#ff2bd6") + car("r", "114px", "12s", "4s", "#00d2ff") + car("r s", "104px", "8s", "6.5s", "#ff8a00") + car("r", "126px", "14s", "8.5s", "#7dff8a") + car("r s", "98px", "9s", "11s", "#f8b500");
   }
 
   if (W.scene === "glacier") {
@@ -378,6 +378,18 @@ function generateSceneHTML(c, W, C) {
   .tw-skylogo{animation:twLogoOn 2.2s ease-out both, twLogoPulse 3.2s ease-in-out 2.2s infinite;}
   @keyframes twLogoOn{0%{opacity:0;transform:translateX(-50%) scale(.6);filter:blur(10px)}35%{opacity:.5}45%{opacity:.15}55%{opacity:.85}65%{opacity:.3}80%{opacity:.9}100%{opacity:.92;transform:translateX(-50%) scale(1);filter:blur(0)}}
   @keyframes twLogoPulse{0%,100%{opacity:.92;transform:translateX(-50%) scale(1)}50%{opacity:.72;transform:translateX(-50%) scale(1.03)}}
+  `;
+  document.head.appendChild(s);
+})();
+
+/* ----- CSS immeubles collés à la route ----- */
+(function(){
+  const s=document.createElement("style");
+  s.textContent=`
+  .tw-city{bottom:180px;}
+  .tw-cityback{bottom:180px;}
+  .tw-horizon{bottom:180px;}
+  .tw-reflect{height:180px;}
   `;
   document.head.appendChild(s);
 })();
