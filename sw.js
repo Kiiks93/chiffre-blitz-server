@@ -1,49 +1,37 @@
-const CACHE_NAME = "chiffre-blitz-v9";
-const BASE = "/";
-const CORE_ASSETS = [
-  BASE, BASE + "index.html", BASE + "manifest.json",
-  BASE + "style.css", BASE + "saisons.css",
-  BASE + "i18n.js", BASE + "audio.js", BASE + "son-saisons.js", BASE + "profil.js", BASE + "admin.js",
-  BASE + "social.js", BASE + "passe.js", BASE + "saisons.js", BASE + "fx.js", BASE + "jeu.js", BASE + "modes-catch.js",
-  BASE + "img/world1.jpg",
-  BASE + "img/world2.jpg",
-  BASE + "img/world3.jpg",
-  BASE + "icons/icon-192.png", BASE + "icons/icon-512.png"
-];
+const CACHE = "chiffre-blitz-v3"; // ⬅️ incrémente (v4, v5…) à chaque grosse mise à jour
 
-self.addEventListener("install", (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((c) =>
-      Promise.allSettled(CORE_ASSETS.map((a) => c.add(a)))
-    )
-  );
-  self.skipWaiting();
-});
+self.addEventListener("install", () => self.skipWaiting());
 
 self.addEventListener("activate", (e) => {
   e.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
     )
   );
   self.clients.claim();
 });
 
 self.addEventListener("fetch", (e) => {
+  if (e.request.method !== "GET") return;
   const url = new URL(e.request.url);
-  if (url.hostname.includes("onrender.com") || url.pathname.startsWith("/socket.io")) return;
+  const isCode = url.pathname.endsWith(".js") || url.pathname.endsWith(".html") || url.pathname === "/";
 
-  e.respondWith(
-    fetch(e.request)
-      .then((res) => {
-        if (e.request.method === "GET" && res.ok && res.status === 200 && res.type === "basic") {
+  if (isCode) {
+    // NETWORK-FIRST : toujours la version fraîche du serveur
+    e.respondWith(
+      fetch(e.request)
+        .then((res) => {
           const copy = res.clone();
-          caches.open(CACHE_NAME).then((c) => c.put(e.request, copy));
-        }
-        return res;
-      })
-      .catch(() =>
-        caches.match(e.request).then((c) => c || caches.match(BASE + "index.html"))
-      )
+          caches.open(CACHE).then((c) => c.put(e.request, copy));
+          return res;
+        })
+        .catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // CACHE-FIRST pour le reste (images, sons…)
+  e.respondWith(
+    caches.match(e.request).then((cached) => cached || fetch(e.request))
   );
 });
