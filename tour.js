@@ -280,18 +280,17 @@ function generateSceneHTML(c, W, C) {
     }
     html += `<div class="tw-city">${b}</div>`;
 
-    // 🏙️ MILIEU : immeubles isolés (ascension) + vie du ciel
-    const soloN = IS_MOBILE ? 4 : 8;
-    for (let i = 0; i < soloN; i++) {
-      const top = 12 + i * (58 / soloN);
-      const left = (i % 2 === 0);
-      const off = 5 + (i * 11) % 16;
-      const h = 160 + ((i * 53) % 140);
-      const w = 70 + ((i * 29) % 40);
+       // 🏙️ Tours géantes ANCRÉES au sol (elles percent le milieu) + vie du ciel
+    const roadH = IS_MOBILE ? 140 : 180;
+    const tpos = IS_MOBILE ? [{o:8,l:true},{o:10,l:false}] : [{o:5,l:true},{o:9,l:false},{o:22,l:true}];
+    for (let i = 0; i < tpos.length; i++) {
+      const p = tpos[i];
+      const h = 1400 + i * 500;
+      const w = 90 + (i * 23) % 40;
       let wins2 = "";
-      const nw = IS_MOBILE ? (4 + (i%2)*2) : (8 + (i%3)*3);
-      for (let wI = 0; wI < nw; wI++) wins2 += `<span class="tw-wl" style="color:${cols[(wI+i)%4]};left:${8+((wI*23)%78)}%;top:${6+((wI*31)%82)}%;animation-duration:${2.5+((wI*13)%4)}s;animation-delay:${(wI*0.4)%3}s;"></span>`;
-      html += `<div class="tw-bldg-solo" style="top:${top}%;${left?("left:"+off+"%"):("right:"+off+"%")};height:${h}px;width:${w}px;">${wins2}</div>`;
+      const nw = IS_MOBILE ? 10 : 22;
+      for (let wI = 0; wI < nw; wI++) wins2 += `<span class="tw-wl" style="color:${cols[(wI+i)%4]};left:${8+((wI*23)%78)}%;top:${2+((wI*17)%94)}%;animation-duration:${2.5+((wI*13)%4)}s;animation-delay:${(wI*0.4)%3}s;"></span>`;
+      html += `<div class="tw-bldg-solo" style="bottom:${roadH}px;${p.l?("left:"+p.o+"%"):("right:"+p.o+"%")};height:${h}px;width:${w}px;opacity:.85;">${wins2}</div>`;
     }
     if (!IS_MOBILE) {
       html += `<div class="tw-blimp" style="top:26%;animation-duration:55s;color:#00d2ff;"><span class="neo"></span></div>`;
