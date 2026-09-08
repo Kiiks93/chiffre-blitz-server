@@ -261,7 +261,15 @@ const TowerUtils = {
   `;
   document.head.appendChild(style);
 })();
-
+/* ----- CSS grotte diamant v5 ----- */
+(function(){const s=document.createElement("style");s.textContent=`
+  .tw-diamondcage{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(46%,280px);height:210px;background:linear-gradient(160deg,#ffffff66,#bfefff33 40%,#74ebf522 70%,#ffffff11);clip-path:polygon(50% 0,85% 16%,100% 55%,82% 100%,18% 100%,0 55%,15% 16%);box-shadow:0 0 50px #bfefff66,inset 0 0 40px #ffffff44;z-index:2;}
+  .tw-diamondcage::before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 40%,#ffffff66 40% 44%,transparent 44% 60%,#ffffff33 60% 63%,transparent 63%);mix-blend-mode:screen;}
+  .tw-lightray{position:absolute;top:0;width:8%;height:70%;background:linear-gradient(180deg,#bfefff33,transparent 85%);transform-origin:top center;filter:blur(5px);animation:twRaySway 5s ease-in-out infinite;}
+  @keyframes twRaySway{50%{transform:rotate(6deg);opacity:.5}}
+  .tw-facet{position:absolute;width:26px;height:34px;background:linear-gradient(135deg,#ffffff88,#74ebf5 50%,#2a8ba8);clip-path:polygon(50% 0,100% 35%,80% 100%,20% 100%,0 35%);box-shadow:0 0 14px #74ebf5;animation:twGlowC 2.4s infinite;}
+  .tw-icelake{position:absolute;bottom:0;left:0;right:0;height:14%;background:linear-gradient(180deg,#74ebf533,#04141d);box-shadow:inset 0 6px 20px #74ebf544;}
+`;document.head.appendChild(s);})();
 /* ----- 5. GÉNÉRATION DES FONDS ----- */
 function generateSceneHTML(c, W, C) {
   if (SCENE_CACHE[c]) return SCENE_CACHE[c];
@@ -315,28 +323,51 @@ function generateSceneHTML(c, W, C) {
 
   if (W.scene === "glacier") {
     html += `<div class="tw-cavewall"></div>`;
-    let treasure = "";
-    for (let i = 0; i < 6; i++) treasure += `<span class="tw-ingot" style="left:${16+i*11}%;bottom:${16+(i%2)*10}px;"></span>`;
-    for (let i = 0; i < 8; i++) treasure += `<span class="tw-coinp" style="left:${12+i*10}%;bottom:${6+(i%3)*6}px;"></span>`;
-    treasure += `<span class="tw-gem" style="left:22%;bottom:44px;background:#ff2bd6;box-shadow:0 0 12px #ff2bd6;"></span>`;
-    html += `<div class="tw-iceblock">${treasure}</div>`;
+    // Rayons de lumière qui percent du plafond
+    if (!IS_MOBILE) {
+      html += `<div class="tw-lightray" style="left:22%;"></div>`;
+      html += `<div class="tw-lightray" style="left:48%;animation-delay:1.2s;"></div>`;
+      html += `<div class="tw-lightray" style="left:72%;animation-delay:2.4s;"></div>`;
+    }
+    // 💎 Trésor scellé dans un cristal à facettes (pyramide d'or)
+    let gold = "";
+    [[20,8],[40,8],[60,8],[30,22],[50,22],[40,36]].forEach(p => { gold += `<span class="tw-ingot" style="left:${p[0]}%;bottom:${p[1]}px;"></span>`; });
+    for (let i = 0; i < 6; i++) gold += `<span class="tw-coinp" style="left:${14+i*12}%;bottom:4px;"></span>`;
+    gold += `<span class="tw-gem" style="left:26%;bottom:52px;background:#ff2bd6;box-shadow:0 0 12px #ff2bd6;"></span>`;
+    gold += `<span class="tw-gem" style="right:26%;bottom:56px;background:#7dff8a;box-shadow:0 0 12px #7dff8a;"></span>`;
+    html += `<div class="tw-diamondcage">${gold}</div>`;
+    // Parois + facettes de diamant incrustées
     html += `<div class="tw-gwall"></div><div class="tw-gwall r"></div>`;
-    const gemN = IS_MOBILE ? 8 : 16;
+    const facetN = IS_MOBILE ? 6 : 12;
+    for (let i = 0; i < facetN; i++) {
+      const L = (i % 2 === 0);
+      html += `<span class="tw-facet" style="${L?("left:"+(3+(i*5)%9)+"%"):("right:"+(3+(i*5)%9)+"%")};top:${8+(i*13)%80}%;animation-delay:${(i*.3)%2}s;"></span>`;
+    }
+    const gemN = IS_MOBILE ? 6 : 12;
     for (let i = 0; i < gemN; i++) {
       const L = (i % 2 === 0);
-      html += `<span class="tw-gem" style="${L?("left:"+(2+(i*7)%8)+"%"):("right:"+(2+(i*7)%8)+"%")};top:${10+(i*11)%80}%;animation-delay:${(i*.4)%2}s;"></span>`;
+      html += `<span class="tw-gem" style="${L?("left:"+(2+(i*7)%8)+"%"):("right:"+(2+(i*7)%8)+"%")};top:${12+(i*11)%76}%;animation-delay:${(i*.4)%2}s;"></span>`;
     }
+    // Plafond + stalactites
     html += `<div class="tw-gceil"></div>`;
     [[6,180],[16,130],[26,210],[38,110],[50,180],[62,130],[74,200],[86,120],[94,160]].forEach(p => { html += `<span class="tw-stalac" style="left:${p[0]}%;height:${p[1]}px;"></span>`; });
-    html += `<div class="tw-gfloor"></div>`;
-    [[10,130],[26,100],[42,120],[58,90],[74,110],[90,100]].forEach(p => { html += `<span class="tw-stalag" style="left:${p[0]}%;height:${p[1]}px;"></span>`; });
+    // Étagères de cristaux (parois)
     const shelfN = IS_MOBILE ? 5 : 8;
     for (let i = 0; i < shelfN; i++) {
-      const top = 18 + i * (60 / shelfN), L = (i % 2 === 0), s = .7 + ((i*13)%4)/10;
+      const top = 20 + i * (58 / shelfN), L = (i % 2 === 0), s = .7 + ((i*13)%4)/10;
       html += `<div class="tw-shelf ${L?"":"r"}" style="top:${top}%;${L?"left:0;":"right:0;"}"><span class="rock"></span><span class="tw-cryscl ${["","pink","gold","green","violet"][i%5]} ${["","tall","wide"][i%3]}" style="bottom:18px;left:22%;transform:scale(${s});animation-delay:${i*.5}s;"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span></div>`;
     }
-    const flyN = IS_MOBILE ? 4 : 8;
+    // Amas centraux (remplissent le milieu)
+    if (!IS_MOBILE) {
+      html += `<span class="tw-cryscl violet" style="left:30%;top:52%;transform:scale(.8);"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span>`;
+      html += `<span class="tw-cryscl green" style="left:62%;top:64%;transform:scale(.9);"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span>`;
+    }
+    // Lucioles
+    const flyN = IS_MOBILE ? 4 : 10;
     for (let i = 0; i < flyN; i++) html += `<span class="tw-firefly" style="left:${10+(i*29)%80}%;top:${12+(i*17)%70}%;animation-duration:${5+(i%4)*2}s;animation-delay:${i*.6}s;"></span>`;
+    // Sol : lac glacé réfléchissant + stalagmites
+    html += `<div class="tw-icelake"></div>`;
+    [[10,130],[26,100],[42,120],[58,90],[74,110],[90,100]].forEach(p => { html += `<span class="tw-stalag" style="left:${p[0]}%;height:${p[1]}px;"></span>`; });
   }
 
   if (W.scene === "vault") {
