@@ -366,36 +366,6 @@ function generateSceneHTML(c, W, C) {
     // 🌑 Voile assombrissant (grotte profonde, sans flou)
     html += `<div class="tw-cavedark"></div>`;
   }
-
-  if (W.scene === "vault") {
-    html += `<div class="tw-vaultroom"></div>`;
-    const safeCols = ["#00d2ff","#ff2bd6","#f8b500","#7dff8a","#ff8a00","#c28aff"];
-    const rows = IS_MOBILE ? 8 : 12;
-    for (let i = 0; i < rows; i++) {
-      const top = 6 + i * (88 / rows);
-      html += `<span class="tw-safebox" style="left:3%;top:${top}%;color:${safeCols[i%6]};"></span>`;
-      html += `<span class="tw-safebox" style="left:9%;top:${top+2}%;color:${safeCols[(i+1)%6]};"></span>`;
-      html += `<span class="tw-safebox" style="right:3%;top:${top}%;color:${safeCols[(i+3)%6]};"></span>`;
-      html += `<span class="tw-safebox" style="right:9%;top:${top+2}%;color:${safeCols[(i+4)%6]};"></span>`;
-    }
-    html += `<div class="tw-vspot" style="left:20%;"></div><div class="tw-vspot" style="left:50%;animation-delay:1s;"></div><div class="tw-vspot" style="left:78%;animation-delay:2s;"></div>`;
-    html += `<div class="tw-vaultdoorround"><div class="tw-ring"></div><div class="tw-keypad"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>`;
-    [{top:20,rot:8,col:"#ff2020"},{top:34,rot:-10,col:"#2bff8a"},{top:50,rot:6,col:"#00d2ff"},{top:66,rot:-8,col:"#ff2bd6"},{top:80,rot:10,col:"#f8b500"}].forEach((b,i)=>{
-      html += `<span class="tw-beam2" style="top:${b.top}%;left:6%;right:6%;color:${b.col};transform:rotate(${b.rot}deg);animation-delay:${i*.5}s;"></span>`;
-    });
-    html += `<div class="tw-ncam" style="left:14%;top:24%;color:#ff2020;"><span class="beam"></span></div>`;
-    html += `<div class="tw-ncam" style="right:14%;top:40%;color:#00d2ff;"><span class="beam"></span></div>`;
-    for (let i = 0; i < 8; i++) html += `<span class="tw-ingot" style="left:${8+i*11}%;bottom:${12+(i%3)*12}px;"></span>`;
-    html += `<div class="tw-gloss"></div><div class="tw-goldspill"></div>`;
-  }
-
-  let parts = "";
-  for (let i = 0; i < (IS_MOBILE?0:7); i++) parts += `<span class="tw-part ${W.part}" style="color:${C.acc};left:${(i*13+c*7)%96}%;animation-duration:${4+(i%4)*1.5}s;animation-delay:${i*.7}s;"></span>`;
-
-  const result = html + parts;
-  SCENE_CACHE[c] = result;
-  return result;
-}
 /* ----- CSS grotte brumeuse v6 ----- */
 (function(){const s=document.createElement("style");s.textContent=`
   .tw-glowspot{position:absolute;width:130px;height:130px;border-radius:50%;background:radial-gradient(circle,currentColor 0%,transparent 70%);opacity:.22;filter:blur(18px);animation:twGlowPulse 5s ease-in-out infinite;}
@@ -406,6 +376,66 @@ function generateSceneHTML(c, W, C) {
 (function(){const s=document.createElement("style");s.textContent=`
   .tw-cavedark{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,#00000055 0%,#000000aa 55%,#000000e6 100%);z-index:3;pointer-events:none;}
 `;document.head.appendChild(s);})();
+ 
+    if (W.scene === "vault") {
+    html += `<div class="tw-marble"></div>`;
+    // Murs de coffres DORÉS (colonnes or/bronze)
+    const rows = IS_MOBILE ? 8 : 12;
+    for (let i = 0; i < rows; i++) {
+      const top = 6 + i * (88 / rows);
+      html += `<span class="tw-safebox" style="left:3%;top:${top}%;color:#f8b500;"></span>`;
+      html += `<span class="tw-safebox" style="left:9%;top:${top+2}%;color:#c9a227;"></span>`;
+      html += `<span class="tw-safebox" style="right:3%;top:${top}%;color:#f8b500;"></span>`;
+      html += `<span class="tw-safebox" style="right:9%;top:${top+2}%;color:#c9a227;"></span>`;
+    }
+    // Spots dorés
+    html += `<div class="tw-spot" style="left:18%;"></div><div class="tw-spot" style="left:50%;animation-delay:1s;"></div><div class="tw-spot" style="left:78%;animation-delay:2s;"></div>`;
+    // Colonnes
+    html += `<div class="tw-pillar" style="left:4%;"></div><div class="tw-pillar" style="right:4%;"></div>`;
+    // 🏦 GROS COFFRE central + molette qui tourne
+    let bolts = ""; for (let i = 0; i < 12; i++) { const a = i*Math.PI/6; bolts += `<span class="tw-vbolt" style="left:${50+44*Math.cos(a)}%;top:${50+44*Math.sin(a)}%;"></span>`; }
+    let knobs = ""; for (let i = 0; i < 6; i++) { const a = i*Math.PI/3; knobs += `<span class="tw-knob" style="left:${50+38*Math.cos(a)}%;top:${50+38*Math.sin(a)}%;"></span>`; }
+    html += `<div class="tw-vaultglow"></div><div class="tw-vaultframe"><span class="tw-fbolt" style="left:5%;top:7%;"></span><span class="tw-fbolt" style="right:5%;top:7%;"></span><span class="tw-fbolt" style="left:5%;bottom:7%;"></span><span class="tw-fbolt" style="right:5%;bottom:7%;"></span><span class="tw-hinge h1"></span><span class="tw-hinge h2"></span><div class="tw-vaultdoor"><div class="tw-vaultwheel">${knobs}</div><span class="tw-dial"></span><span class="tw-handle"></span>${bolts}</div></div>`;
+    // 🚨 Lasers ROUGES qui balayent
+    html += `<div class="tw-laser" style="top:30%;animation-duration:5s;"></div>`;
+    html += `<div class="tw-laser d" style="top:48%;animation-duration:7s;animation-delay:1s;"></div>`;
+    html += `<div class="tw-laser" style="top:66%;animation-duration:6s;animation-delay:2s;"></div>`;
+    // Caméras rouges
+    html += `<div class="tw-ncam" style="left:14%;top:24%;color:#ff2020;"><span class="beam"></span></div>`;
+    html += `<div class="tw-ncam" style="right:14%;top:40%;color:#ff2020;"><span class="beam"></span></div>`;
+    // Sol doré (sans lingots éparpillés)
+    html += `<div class="tw-gloss"></div><div class="tw-goldspill"></div>`;
+  }
+/* ----- CSS coffre doré v8 (gros coffre + molette) ----- */
+(function(){const s=document.createElement("style");s.textContent=`
+  .tw-vaultglow{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(92%,440px);aspect-ratio:1;border-radius:50%;background:radial-gradient(#f8b50044,transparent 70%);animation:twGlowC 3s infinite;}
+  .tw-vaultframe{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(86%,430px);aspect-ratio:1.15;background:linear-gradient(180deg,#5a4410,#2b1a00);border-radius:14px;box-shadow:0 0 40px #f8b50033,inset 0 0 30px #000;z-index:2;}
+  .tw-vaultdoor{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:82%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c9a227,#8a6a1a 40%,#3a2a05 75%,#160d00);border:6px solid #f8b50088;box-shadow:0 0 60px #f8b50066,inset 0 0 40px #000000aa;}
+  .tw-vaultwheel{position:absolute;left:50%;top:50%;width:44%;height:44%;transform:translate(-50%,-50%);border:6px solid #ffe9a8;border-radius:50%;animation:twSpin 16s linear infinite;box-shadow:0 0 20px #f8b50088,inset 0 0 10px #0006;}
+  .tw-vaultwheel::before{content:"";position:absolute;inset:-6px;background:linear-gradient(#ffe9a8,#ffe9a8) 50% 0/6px 100% no-repeat,linear-gradient(#ffe9a8,#ffe9a8) 0 50%/100% 6px no-repeat,linear-gradient(45deg,transparent 47%,#ffe9a8 47% 53%,transparent 53%),linear-gradient(-45deg,transparent 47%,#ffe9a8 47% 53%,transparent 53%);}
+  .tw-vaultwheel::after{content:"";position:absolute;left:50%;top:50%;width:20%;height:20%;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(#fff8dc,#8a6a1a);box-shadow:0 0 12px #ffe9a8;}
+  .tw-fbolt{position:absolute;width:10px;height:10px;border-radius:50%;background:radial-gradient(#ffe9a8,#8a6a1a);box-shadow:0 1px 3px #000;}
+  .tw-hinge{position:absolute;left:-4%;width:10%;height:12%;background:linear-gradient(180deg,#c9a227,#8a6a1a);border-radius:4px;box-shadow:0 2px 4px #000c;}
+  .tw-hinge.h1{top:22%;}.tw-hinge.h2{bottom:22%;}
+  .tw-knob{position:absolute;width:9%;height:9%;border-radius:50%;background:radial-gradient(#fff8dc,#c9a227);transform:translate(-50%,-50%);box-shadow:0 0 6px #ffe9a8aa;}
+  .tw-dial{position:absolute;right:16%;top:44%;width:14%;height:14%;border-radius:50%;background:radial-gradient(#c9a227,#8a6a1a);box-shadow:inset 0 0 6px #0008,0 0 4px #0008;}
+  .tw-dial::before{content:"";position:absolute;inset:30%;background:linear-gradient(#160d00,#160d00) 50% 0/3px 100% no-repeat,linear-gradient(#160d00,#160d00) 0 50%/100% 3px no-repeat,linear-gradient(45deg,transparent 40%,#160d00 40% 60%,transparent 60%);}
+  .tw-handle{position:absolute;right:8%;top:30%;width:4%;height:40%;border-radius:4px;background:linear-gradient(90deg,#c9a227,#ffe9a8 50%,#c9a227);box-shadow:0 0 6px #0008;}
+  .tw-vbolt{position:absolute;width:5%;height:5%;border-radius:50%;background:radial-gradient(#ffe9a8,#8a6a1a);transform:translate(-50%,-50%);box-shadow:0 1px 3px #000;}
+  .tw-laser{position:absolute;left:9%;right:9%;height:2px;background:linear-gradient(90deg,transparent,#ff2020 8%,#ff7070 50%,#ff2020 92%,transparent);box-shadow:0 0 8px #ff2020cc,0 0 20px #ff202066;opacity:.85;animation:twLaserV ease-in-out infinite alternate;z-index:1;}
+  .tw-laser::before,.tw-laser::after{content:"";position:absolute;top:-3px;width:9px;height:9px;border-radius:2px;background:#1a0505;box-shadow:0 0 7px #ff2020,inset 0 0 3px #ff7070;animation:twFlickP 1.6s steps(2) infinite;}
+  .tw-laser::before{left:-3px;}.tw-laser::after{right:-3px;}
+  .tw-laser.d{animation-name:twLaserD;}
+  @keyframes twLaserV{from{transform:translateY(-26px)}to{transform:translateY(26px)}}
+  @keyframes twLaserD{from{transform:rotate(-5deg) translateY(-18px)}to{transform:rotate(5deg) translateY(18px)}}
+`;document.head.appendChild(s);})();
+  let parts = "";
+  for (let i = 0; i < (IS_MOBILE?0:7); i++) parts += `<span class="tw-part ${W.part}" style="color:${C.acc};left:${(i*13+c*7)%96}%;animation-duration:${4+(i%4)*1.5}s;animation-delay:${i*.7}s;"></span>`;
+
+  const result = html + parts;
+  SCENE_CACHE[c] = result;
+  return result;
+}
 /* ----- 6. ÉCRAN AVENTURE (fixe) ----- */
 function openTower() {
   let m = document.getElementById("screen-tower");
