@@ -274,6 +274,9 @@ function generateSceneHTML(c, W, C) {
     const cloudsN = IS_MOBILE ? 2 : 4;
     for (let i = 0; i < cloudsN; i++) html += `<span class="tw-cloud" style="top:${3+i*7}%;width:${22+(i*9)%16}%;animation-duration:${70+i*25}s;animation-delay:${i*11}s;"></span>`;
     html += `<div class="tw-horizon"></div>`;
+    // 🔦 Bat-signal : projecteurs + logo projeté dans le ciel
+    html += `<div class="tw-signalbeam l"></div><div class="tw-signalbeam r"></div>`;
+    html += `<div class="tw-batsignal">⚡ CHIFFRE BLITZ</div>`;
     const cols = ["#00ffff","#ff00ff","#f8b500","#7dff8a"];
     let back = "";
     const hb = [72,92,80,96,86,90,78];
@@ -365,7 +368,12 @@ function generateSceneHTML(c, W, C) {
   SCENE_CACHE[c] = result;
   return result;
 }
-
+  /* === BAT-SIGNAL CHIFFRE BLITZ === */
+  .tw-batsignal{position:absolute;top:5%;left:50%;transform:translateX(-50%);font-size:clamp(26px,6vw,64px);font-weight:900;letter-spacing:8px;color:#fff;white-space:nowrap;text-shadow:0 0 20px #ffffffdd,0 0 50px #ffffff99,0 0 90px #ffffff55;opacity:.92;filter:blur(.6px);animation:twSignalPulse 4s ease-in-out infinite;z-index:1;}
+  .tw-signalbeam{position:absolute;bottom:26%;width:110px;height:62%;background:linear-gradient(0deg,#ffffff55,#ffffff2b 45%,#ffffff0d 100%);clip-path:polygon(35% 100%,65% 100%,100% 0,0 0);filter:blur(7px);transform-origin:bottom center;z-index:0;animation:twGlowC 4s infinite;}
+  .tw-signalbeam.l{left:34%;transform:rotate(14deg);}
+  .tw-signalbeam.r{left:66%;transform:rotate(-14deg);}
+  @keyframes twSignalPulse{50%{opacity:.55;filter:blur(1.6px)}}
 /* ----- 6. ÉCRAN AVENTURE (fixe) ----- */
 function openTower() {
   let m = document.getElementById("screen-tower");
