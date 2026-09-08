@@ -20,6 +20,7 @@ const STEP = 48;
 const WORLD_QUOTA = 240;
 const IS_MOBILE = /Android|iPhone|iPad|iPod|Tablet|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 2 && Math.min(screen.width, screen.height) < 900);
 const TOWER_COLORS = {1:{acc:"#00d2ff"},2:{acc:"#74ebf5"},3:{acc:"#f8b500"},4:{acc:"#ff8a00"},5:{acc:"#8a9bb0"},6:{acc:"#ff4b2b"},7:{acc:"#ff6fa5"},8:{acc:"#2ecc71"},9:{acc:"#ff416c"}};
+const TRAIL_COLORS = {1:{e:"#7a00ff",c:"#00d2ff"},2:{e:"#2a8ba8",c:"#bfefff"},3:{e:"#8a6a1a",c:"#ffd75e"},4:{e:"#7a2a00",c:"#ff8a00"},5:{e:"#3a4a5a",c:"#8a9bb0"},6:{e:"#7a1a0a",c:"#ff4b2b"},7:{e:"#7a2a4a",c:"#ff6fa5"},8:{e:"#0a5a2a",c:"#2ecc71"},9:{e:"#7a1a2a",c:"#ff416c"}};
 const TOWER_WORLDS = {
   1:{bg:"linear-gradient(180deg,#050514,#0a0a2a 55%,#1a1030)",scene:"city",part:"neon"},
   2:{bg:"linear-gradient(180deg,#062028,#0a2a3a 50%,#123a4a)",scene:"glacier",part:"snow"},
@@ -280,13 +281,11 @@ function generateSceneHTML(c, W, C) {
     for (let i = 0; i < cloudsN; i++) html += `<span class="tw-cloud" style="top:${3+i*7}%;width:${22+(i*9)%16}%;animation-duration:${70+i*25}s;animation-delay:${i*11}s;"></span>`;
     html += `<div class="tw-horizon"></div>`;
     const cols = ["#00ffff","#ff00ff","#f8b500","#7dff8a"];
-
     let back = "";
     const hb = [72,92,80,96,86,90,78];
     const backN = IS_MOBILE ? 6 : 7;
     for (let i = 0; i < backN; i++) back += `<div class="tw-bldg" style="height:${hb[i]}%;flex:${i%2?1.25:1};"></div>`;
     html += `<div class="tw-cityback">${back}</div>`;
-
     let b = "";
     const hs = [48,72,56,86,62,76];
     const hf = [1,1.2,.95,1.15,1,.9];
@@ -298,7 +297,6 @@ function generateSceneHTML(c, W, C) {
       b += `<div class="tw-bldg" style="height:${hs[i]}%;flex:${hf[i]};">${wins}${(!IS_MOBILE && i%3===0)?'<span class="tw-ant"></span>':""}</div>`;
     }
     html += `<div class="tw-city">${b}</div>`;
-
     const roadH = IS_MOBILE ? 140 : 180;
     const tpos = IS_MOBILE ? [{o:8,l:true},{o:10,l:false}] : [{o:5,l:true},{o:9,l:false},{o:22,l:true}];
     for (let i = 0; i < tpos.length; i++) {
@@ -310,7 +308,6 @@ function generateSceneHTML(c, W, C) {
       for (let wI = 0; wI < nw; wI++) wins2 += `<span class="tw-wl" style="color:${cols[(wI+i)%4]};left:${8+((wI*23)%78)}%;top:${2+((wI*17)%94)}%;animation-duration:${2.5+((wI*13)%4)}s;animation-delay:${(wI*0.4)%3}s;"></span>`;
       html += `<div class="tw-bldg-solo" style="bottom:${roadH}px;${p.l?("left:"+p.o+"%"):("right:"+p.o+"%")};height:${h}px;width:${w}px;opacity:.85;">${wins2}</div>`;
     }
-
     html += `<div class="tw-blimp" style="top:26%;animation-duration:55s;animation-delay:-20s;color:#00d2ff;"><span class="neo"></span></div>`;
     if (!IS_MOBILE) {
       html += `<div class="tw-blimp" style="top:58%;animation-duration:70s;animation-delay:-45s;color:#ff2bd6;"><span class="neo"></span></div>`;
@@ -319,7 +316,6 @@ function generateSceneHTML(c, W, C) {
     }
     html += `<span class="tw-shoot" style="left:70%;top:18%;animation-delay:2s;"></span>`;
     html += `<span class="tw-shoot" style="left:20%;top:50%;animation-delay:5s;"></span>`;
-
     html += `<div class="tw-road"><span class="tw-lane"></span></div>`;
     if (!IS_MOBILE) html += `<div class="tw-reflect"></div>`;
     const car = (cls, bottom, dur, delay, col) => `<span class="tw-car ${cls}" style="bottom:${bottom};animation-duration:${dur};animation-delay:${delay};color:${col};"><i class="cb"></i><i class="cc"></i><i class="ug"></i><i class="w1"></i><i class="w2"></i><i class="hl"></i><i class="tl"></i></span>`;
@@ -329,27 +325,30 @@ function generateSceneHTML(c, W, C) {
       html += car("", "16px", "9s", "0s", "#00d2ff") + car("", "34px", "11s", "2.5s", "#f8b500") + car("s", "24px", "7s", "5s", "#7dff8a") + car("", "44px", "13s", "7.5s", "#ff8a00") + car("s", "18px", "8s", "9.5s", "#ff2bd6");
       html += car("r", "96px", "10s", "1.5s", "#ff2bd6") + car("r", "114px", "12s", "4s", "#00d2ff") + car("r s", "104px", "8s", "6.5s", "#ff8a00") + car("r", "126px", "14s", "8.5s", "#7dff8a") + car("r s", "98px", "9s", "11s", "#f8b500");
     }
+    [25,50,75].forEach(t => { html += `<span class="tw-tier" style="top:${t}%;color:#00d2ff;"></span>`; });
   }
 
   if (W.scene === "glacier") {
     html += `<div class="tw-cavewall"></div>`;
+    let treasure = "";
+    for (let i = 0; i < 6; i++) treasure += `<span class="tw-ingot" style="left:${16+i*11}%;bottom:${16+(i%2)*10}px;"></span>`;
+    for (let i = 0; i < 8; i++) treasure += `<span class="tw-coinp" style="left:${12+i*10}%;bottom:${6+(i%3)*6}px;"></span>`;
+    treasure += `<span class="tw-gem" style="left:22%;bottom:44px;background:#ff2bd6;box-shadow:0 0 12px #ff2bd6;"></span>`;
+    treasure += `<span class="tw-gem" style="right:22%;bottom:48px;background:#7dff8a;box-shadow:0 0 12px #7dff8a;"></span>`;
+    html += `<div class="tw-iceblock">${treasure}</div>`;
     html += `<div class="tw-gwall"></div><div class="tw-gwall r"></div>`;
     const gemN = IS_MOBILE ? 8 : 16;
     for (let i = 0; i < gemN; i++) {
       const leftSide = (i % 2 === 0);
-      html += `<span class="tw-gem" style="${leftSide ? ("left:" + (2 + (i*7)%8) + "%") : ("right:" + (2 + (i*7)%8) + "%")};top:${4 + (i*11)%90}%;animation-delay:${(i*.4)%2}s;"></span>`;
+      html += `<span class="tw-gem" style="${leftSide ? ("left:" + (2 + (i*7)%8) + "%") : ("right:" + (2 + (i*7)%8) + "%")};top:${10 + (i*11)%80}%;animation-delay:${(i*.4)%2}s;"></span>`;
     }
     html += `<div class="tw-gceil"></div>`;
     [[6,220],[16,160],[26,260],[38,140],[50,220],[62,160],[74,240],[86,150],[94,200]].forEach(p => {
       html += `<span class="tw-stalac" style="left:${p[0]}%;height:${p[1]}px;"></span>`;
     });
-    html += `<div class="tw-gfloor"></div>`;
-    [[10,160],[26,120],[42,150],[58,110],[74,140],[90,120]].forEach(p => {
-      html += `<span class="tw-stalag" style="left:${p[0]}%;height:${p[1]}px;"></span>`;
-    });
     const shelfN = IS_MOBILE ? 6 : 10;
     for (let i = 0; i < shelfN; i++) {
-      const top = 12 + i * (70 / shelfN);
+      const top = 16 + i * (62 / shelfN);
       const leftSide = (i % 2 === 0);
       const s = .7 + ((i * 13) % 4) / 10;
       html += `<div class="tw-shelf ${leftSide ? "" : "r"}" style="top:${top}%;${leftSide ? "left:0;" : "right:0;"}">
@@ -361,18 +360,55 @@ function generateSceneHTML(c, W, C) {
     for (let i = 0; i < flyN; i++) {
       html += `<span class="tw-firefly" style="left:${10+(i*29)%80}%;top:${12+(i*17)%70}%;animation-duration:${5+(i%4)*2}s;animation-delay:${i*.6}s;"></span>`;
     }
+    html += `<div class="tw-gfloor" style="bottom:20%;height:120px;"></div>`;
+    [[10,160],[26,120],[42,150],[58,110],[74,140],[90,120]].forEach(p => {
+      html += `<span class="tw-stalag" style="left:${p[0]}%;bottom:20%;height:${p[1]}px;"></span>`;
+    });
+    html += `<div class="tw-icepath"></div>`;
+    let nb = "";
+    const nbc = ["#00d2ff","#ff2bd6","#f8b500","#7dff8a","#ff8a00","#c28aff"];
+    const nbN = IS_MOBILE ? 7 : 10;
+    for (let i = 0; i < nbN; i++) {
+      const h = 60 + ((i*37)%120);
+      nb += `<span class="tw-nbldg" style="left:${i*(100/nbN)}%;height:${h}px;color:${nbc[i%6]};"></span>`;
+    }
+    html += `<div class="tw-citybelow">${nb}</div>`;
+    [25,50,75].forEach(t => { html += `<span class="tw-tier" style="top:${t}%;color:#bfefff;"></span>`; });
   }
 
   if (W.scene === "vault") {
-    html += `<div class="tw-marble"></div>`;
-    html += `<div class="tw-pillar" style="left:4%;"></div><div class="tw-pillar" style="right:4%;"></div>`;
-    html += `<div class="tw-spot" style="left:18%;"></div><div class="tw-spot" style="left:62%;animation-delay:1.5s;"></div>`;
-    let bolts = ""; for (let i = 0; i < 12; i++) { const a = i*Math.PI/6; bolts += `<span class="tw-vbolt" style="left:${50+44*Math.cos(a)}%;top:${50+44*Math.sin(a)}%;"></span>`; }
-    let knobs = ""; for (let i = 0; i < 6; i++) { const a = i*Math.PI/3; knobs += `<span class="tw-knob" style="left:${50+38*Math.cos(a)}%;top:${50+38*Math.sin(a)}%;"></span>`; }
-    html += `<div class="tw-vaultglow"></div><div class="tw-vaultframe"><span class="tw-fbolt" style="left:5%;top:7%;"></span><span class="tw-fbolt" style="right:5%;top:7%;"></span><span class="tw-fbolt" style="left:5%;bottom:7%;"></span><span class="tw-fbolt" style="right:5%;bottom:7%;"></span><span class="tw-hinge h1"></span><span class="tw-hinge h2"></span><div class="tw-vaultdoor"><div class="tw-vaultwheel">${knobs}</div><span class="tw-dial"></span><span class="tw-handle"></span>${bolts}</div></div>`;
-    html += `<div class="tw-laser" style="top:28%;animation-duration:5s;"></div><div class="tw-laser d" style="top:46%;animation-duration:7s;animation-delay:1s;"></div><div class="tw-laser" style="top:64%;animation-duration:6s;animation-delay:2s;"></div>`;
-    for (let i = 0; i < 8; i++) html += `<span class="tw-ingot" style="left:${8+i*11}%;bottom:${10+(i%3)*10}px;"></span>`;
-    html += `<div class="tw-sweep"></div><div class="tw-gloss"></div><div class="tw-goldspill"></div>`;
+    html += `<div class="tw-vaultroom"></div>`;
+    const safeCols = ["#00d2ff","#ff2bd6","#f8b500","#7dff8a","#ff8a00","#c28aff"];
+    const rows = IS_MOBILE ? 10 : 16;
+    for (let i = 0; i < rows; i++) {
+      const top = 4 + i * (92 / rows);
+      html += `<span class="tw-safebox" style="left:3%;top:${top}%;color:${safeCols[i%6]};animation-delay:${(i*.3)%2}s;"></span>`;
+      html += `<span class="tw-safebox" style="left:9%;top:${top+2}%;color:${safeCols[(i+1)%6]};animation-delay:${(i*.4)%2}s;"></span>`;
+      html += `<span class="tw-safebox" style="right:3%;top:${top}%;color:${safeCols[(i+3)%6]};animation-delay:${(i*.35)%2}s;"></span>`;
+      html += `<span class="tw-safebox" style="right:9%;top:${top+2}%;color:${safeCols[(i+4)%6]};animation-delay:${(i*.45)%2}s;"></span>`;
+    }
+    html += `<div class="tw-vspot" style="left:20%;"></div><div class="tw-vspot" style="left:50%;animation-delay:1s;"></div><div class="tw-vspot" style="left:78%;animation-delay:2s;"></div>`;
+    html += `<div class="tw-vaultdoorround"><div class="tw-ring"></div><div class="tw-keypad"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>`;
+    const beams = [
+      {top:18, rot:8, col:"#ff2020"},
+      {top:30, rot:-10, col:"#2bff8a"},
+      {top:44, rot:6, col:"#00d2ff"},
+      {top:58, rot:-8, col:"#ff2bd6"},
+      {top:70, rot:10, col:"#f8b500"},
+      {top:82, rot:-6, col:"#2bff8a"}
+    ];
+    beams.forEach((b, i) => {
+      html += `<span class="tw-beam2" style="top:${b.top}%;left:6%;right:6%;color:${b.col};transform:rotate(${b.rot}deg);animation-delay:${i*.5}s;"></span>`;
+    });
+    html += `<div class="tw-ncam" style="left:14%;top:22%;color:#ff2020;"><span class="beam"></span></div>`;
+    html += `<div class="tw-ncam" style="right:14%;top:36%;color:#00d2ff;"><span class="beam"></span></div>`;
+    html += `<div class="tw-ncam" style="left:16%;top:64%;color:#ff2bd6;"><span class="beam"></span></div>`;
+    for (let i = 0; i < 10; i++) html += `<span class="tw-ingot" style="left:${6+i*9}%;bottom:${12+(i%3)*12}px;"></span>`;
+    let gc = "";
+    for (let i = 0; i < 8; i++) gc += `<span class="gc" style="left:${4+i*12}%;height:${40+(i*17)%50}px;"></span>`;
+    html += `<div class="tw-glacierbelow">${gc}</div>`;
+    html += `<div class="tw-gloss"></div><div class="tw-goldspill"></div>`;
+    [25,50,75].forEach(t => { html += `<span class="tw-tier" style="top:${t}%;color:#ffd75e;"></span>`; });
   }
 
   let parts = "";
@@ -401,6 +437,14 @@ function generateSceneHTML(c, W, C) {
   .tw-sweep{position:absolute;top:8%;bottom:8%;width:14%;background:linear-gradient(90deg,transparent,#ffe9a855,transparent);transform:skewX(-12deg);animation:twSweep 5.5s ease-in-out infinite;pointer-events:none;}
   @keyframes twSweep{0%{left:-20%;opacity:0}15%{opacity:1}85%{opacity:1}100%{left:110%;opacity:0}}
 `;document.head.appendChild(s);})();
+
+/* ----- CSS paliers + transitions ----- */
+(function(){const s=document.createElement("style");s.textContent=`
+  .tw-tier{position:absolute;left:0;right:0;height:2px;opacity:.4;background:linear-gradient(90deg,transparent,currentColor 20%,currentColor 80%,transparent);box-shadow:0 0 12px currentColor;}
+  .tw-glacierbelow{position:absolute;bottom:0;left:0;right:0;height:18%;opacity:.5;filter:blur(1px);}
+  .tw-glacierbelow .gc{position:absolute;bottom:0;width:40px;height:70px;background:linear-gradient(180deg,#e8fbff,#74ebf5 60%,#2a8ba8);clip-path:polygon(50% 0,100% 100%,0 100%);filter:drop-shadow(0 0 8px #74ebf5);opacity:.8;}
+`;document.head.appendChild(s);})();
+
 /* ----- 6. RENDU CARTE ----- */
 function drawRoom() {
   const wrap = document.getElementById("tw-mapwrap");
@@ -412,7 +456,7 @@ function drawRoom() {
   document.getElementById("tower-sub").innerText = "É" + current + " ⭐" + totalStars;
 
   const H = TOTAL_FLOORS * STEP + 110;
-  let zones = "", gates = "", paths = "", ptsByChap = {}, quotas = "";
+  let zones = "", gates = "", paths = "", trailEdge = "", trailCore = "", ptsByChap = {}, quotas = "";
 
   for (let c = 1; c <= 9; c++) {
     const chap = TOWER_CHAPTERS[c - 1];
@@ -445,10 +489,16 @@ function drawRoom() {
   }
   for (const cid in ptsByChap) {
     const pts = ptsByChap[cid];
-    if (pts.length > 1) paths += `<path d="M${pts.map(p => p[0] + " " + p[1]).join(" L ")}" fill="none" stroke="${TOWER_COLORS[cid].acc}44" stroke-width="7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
+    if (pts.length > 1) {
+      const d = `M${pts.map(p => p[0] + " " + p[1]).join(" L ")}`;
+      const T = TRAIL_COLORS[cid] || {e:"#333",c:"#666"};
+      trailEdge += `<path d="${d}" fill="none" stroke="${T.e}" stroke-width="26" stroke-linecap="round" vector-effect="non-scaling-stroke" opacity=".35"/>`;
+      trailCore += `<path d="${d}" fill="none" stroke="${T.c}" stroke-width="12" stroke-linecap="round" vector-effect="non-scaling-stroke" opacity=".75"/>`;
+      paths += `<path d="${d}" fill="none" stroke="${TOWER_COLORS[cid].acc}44" stroke-width="7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
+    }
   }
 
-  wrap.innerHTML = `<div class="tw-map" style="height:${H}px;">${zones}${quotas}<div class="tw-col"><svg style="position:absolute;inset:0;width:100%;height:100%;z-index:1;" viewBox="0 0 100 ${H}" preserveAspectRatio="none">${paths}</svg><div id="tw-nodes" style="position:absolute;inset:0;z-index:2;"></div>${gates}</div></div>`;
+  wrap.innerHTML = `<div class="tw-map" style="height:${H}px;">${zones}${quotas}<div class="tw-col"><svg style="position:absolute;inset:0;width:100%;height:100%;z-index:1;" viewBox="0 0 100 ${H}" preserveAspectRatio="none">${trailEdge}${trailCore}${paths}</svg><div id="tw-nodes" style="position:absolute;inset:0;z-index:2;"></div>${gates}</div></div>`;
   wrap.onscroll = scheduleRenderWindow;
   const yCur = H - STEP * current;
   wrap.scrollTop = Math.max(0, yCur - wrap.clientHeight / 2);
