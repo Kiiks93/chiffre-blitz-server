@@ -162,18 +162,15 @@ const TowerUtils = {
   .tw-signalbeam.l{left:34%;transform:rotate(14deg);}
   .tw-signalbeam.r{left:66%;transform:rotate(-14deg);}
 
-  /* === GLACIER (diamant v5) === */
+  /* === GLACIER (grotte assombrie) === */
   .tw-cavewall{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 55%,#74ebf518 0%,#0a2a3a66 35%,#000000ee 78%);}
   .tw-gceil{position:absolute;top:0;left:0;right:0;height:160px;background:linear-gradient(0deg,#0a2a3a,#04141d);}
+  .tw-cavedark{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,#00000055 0%,#000000aa 55%,#000000e6 100%);z-index:3;pointer-events:none;}
   .tw-stalac{position:absolute;top:0;width:44px;background:linear-gradient(180deg,#04141d,#74ebf5 60%,#e8fbff);clip-path:polygon(48% 100%,52% 100%,62% 60%,72% 30%,100% 0,0 0,28% 30%,38% 60%);filter:drop-shadow(0 0 10px #74ebf5cc);}
   .tw-stalag{position:absolute;bottom:0;width:44px;background:linear-gradient(0deg,#5a8ea0aa,#bfefffcc 55%,#ffffff);clip-path:polygon(48% 0,52% 0,62% 30%,72% 60%,100% 100%,0 100%,28% 60%,38% 30%);filter:drop-shadow(0 0 10px #74ebf5cc);}
   .tw-gwall{position:absolute;top:0;bottom:0;width:12%;background:linear-gradient(90deg,#04141d,#0a2a3a);clip-path:polygon(0 0,100% 3%,70% 8%,100% 14%,75% 22%,100% 30%,70% 38%,100% 46%,75% 55%,100% 63%,70% 72%,100% 80%,75% 88%,100% 95%,70% 100%,0 100%);}
   .tw-gwall.r{left:auto;right:0;background:linear-gradient(270deg,#04141d,#0a2a3a);clip-path:polygon(100% 0,0 3%,30% 8%,0 14%,25% 22%,0 30%,30% 38%,0 46%,25% 55%,0 63%,30% 72%,0 80%,25% 88%,0 95%,30% 100%,100% 100%);}
   .tw-gem{position:absolute;width:9px;height:9px;background:#74ebf5;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);box-shadow:0 0 10px #74ebf5;animation:twGlowC 2s infinite;}
-  .tw-facet{position:absolute;width:26px;height:34px;background:linear-gradient(135deg,#ffffff88,#74ebf5 50%,#2a8ba8);clip-path:polygon(50% 0,100% 35%,80% 100%,20% 100%,0 35%);box-shadow:0 0 14px #74ebf5;animation:twGlowC 2.4s infinite;}
-  .tw-lightray{position:absolute;top:0;width:8%;height:70%;background:linear-gradient(180deg,#bfefff33,transparent 85%);transform-origin:top center;filter:blur(5px);animation:twRaySway 5s ease-in-out infinite;}
-  .tw-diamondcage{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(46%,280px);height:210px;background:linear-gradient(160deg,#ffffff66,#bfefff33 40%,#74ebf522 70%,#ffffff11);clip-path:polygon(50% 0,85% 16%,100% 55%,82% 100%,18% 100%,0 55%,15% 16%);box-shadow:0 0 50px #bfefff66,inset 0 0 40px #ffffff44;z-index:2;}
-  .tw-diamondcage::before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 40%,#ffffff66 40% 44%,transparent 44% 60%,#ffffff33 60% 63%,transparent 63%);mix-blend-mode:screen;}
   .tw-icelake{position:absolute;bottom:0;left:0;right:0;height:14%;background:linear-gradient(180deg,#74ebf533,#04141d);box-shadow:inset 0 6px 20px #74ebf544;}
   .tw-shelf{position:absolute;width:24%;height:130px;}
   .tw-shelf .rock{position:absolute;bottom:0;left:0;right:0;height:26px;background:linear-gradient(180deg,#123a4a,#04141d);clip-path:polygon(0 0,100% 25%,88% 100%,0 100%);}
@@ -191,23 +188,59 @@ const TowerUtils = {
   .tw-cryscl.tall{width:60px;height:150px;}
   .tw-cryscl.wide{width:110px;height:90px;}
   .tw-firefly{position:absolute;width:5px;height:5px;border-radius:50%;background:#bffcff;box-shadow:0 0 10px #74ebf5;animation:twFly ease-in-out infinite;}
-  .tw-coinp{position:absolute;width:14px;height:14px;border-radius:50%;background:radial-gradient(#ffe9a8,#c9a227);box-shadow:0 0 8px #f8b500;}
-  .tw-ingot{position:absolute;width:42px;height:14px;border-radius:3px;background:linear-gradient(180deg,#ffe9a8,#c9a227 50%,#8a6a1a);box-shadow:inset 0 1px 0 #fff8,0 2px 4px #000c;}
 
-  /* === VAULT === */
+  /* === VAULT (coffre doré) === */
   .tw-vaultroom{position:absolute;inset:0;background:linear-gradient(180deg,#08080f,#101018 45%,#08080f);}
-  .tw-safebox{position:absolute;width:36px;height:28px;border-radius:5px;background:linear-gradient(180deg,#161622,#0b0b14);border:2px solid currentColor;box-shadow:0 0 10px currentColor;animation:twFlickP 3s steps(2) infinite;}
-  .tw-vspot{position:absolute;top:0;width:14%;height:40%;background:linear-gradient(180deg,#ffe9a844,transparent 85%);clip-path:polygon(42% 0,58% 0,100% 100%,0 100%);filter:blur(3px);animation:twGlowC 4s infinite;}
-  .tw-vaultdoorround{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(70%,420px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 38% 32%,#3a3a48,#1c1c26 55%,#0c0c12 85%);border:8px solid #f8b50066;box-shadow:0 0 60px #f8b50044;}
-  .tw-vaultdoorround .tw-ring{position:absolute;inset:10%;border-radius:50%;border:5px solid #00d2ff88;box-shadow:0 0 20px #00d2ff66;animation:twSpin 14s linear infinite;}
-  .tw-keypad{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:34%;height:40%;background:linear-gradient(180deg,#1a2142,#0d1226);border:3px solid #7dff8a88;border-radius:8px;box-shadow:0 0 16px #7dff8a55;display:grid;grid-template-columns:repeat(3,1fr);gap:6%;padding:8%;}
-  .tw-keypad i{background:linear-gradient(180deg,#2a3a5a,#16203a);border-radius:3px;}
-  .tw-beam2{position:absolute;height:3px;background:currentColor;box-shadow:0 0 10px currentColor,0 0 20px currentColor;opacity:.85;animation:twBeamPulse 2s ease-in-out infinite;}
+  .tw-marble{position:absolute;inset:0;background:linear-gradient(115deg,transparent 40%,#ffffff08 40% 42%,transparent 42%),linear-gradient(65deg,transparent 55%,#ffffff06 55% 57%,transparent 57%),linear-gradient(150deg,transparent 70%,#ffffff05 70% 71%,transparent 71%);}
+  .tw-spot{position:absolute;top:0;width:14%;height:40%;background:linear-gradient(180deg,#ffe9a844,transparent 85%);clip-path:polygon(42% 0,58% 0,100% 100%,0 100%);filter:blur(3px);animation:twGlowC 4s infinite;}
+  .tw-pillar{position:absolute;top:0;bottom:0;width:8%;background:linear-gradient(90deg,#1a0f02,#5a4410 50%,#1a0f02);border-left:2px solid #8a6a1a44;border-right:2px solid #8a6a1a44;box-shadow:0 0 12px #000c;}
   .tw-ncam{position:absolute;width:36px;height:26px;background:linear-gradient(180deg,#2a2a38,#14141c);border-radius:6px 6px 4px 4px;border:2px solid currentColor;box-shadow:0 0 12px currentColor;}
   .tw-ncam::after{content:"";position:absolute;left:50%;top:58%;width:10px;height:10px;transform:translateX(-50%);border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor;animation:twFlickP 1.4s steps(2) infinite;}
   .tw-ncam .beam{position:absolute;left:50%;top:100%;width:70px;height:100px;transform-origin:top center;background:linear-gradient(180deg,currentColor,transparent);opacity:.18;clip-path:polygon(45% 0,55% 0,100% 100%,0 100%);animation:twCamSweep 4s ease-in-out infinite alternate;}
   .tw-gloss{position:absolute;bottom:0;left:0;right:0;height:12%;background:linear-gradient(180deg,#0000,#f8b50018 40%,#00000088);}
   .tw-goldspill{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:70%;height:18%;background:radial-gradient(ellipse at 50% 100%,#f8b50055,transparent 70%);filter:blur(6px);}
+  
+  /* Gros coffre central */
+  .tw-vaultglow{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(92%,440px);aspect-ratio:1;border-radius:50%;background:radial-gradient(#f8b50044,transparent 70%);animation:twGlowC 3s infinite;}
+  .tw-vaultframe{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(86%,430px);aspect-ratio:1.15;background:linear-gradient(180deg,#5a4410,#2b1a00);border-radius:14px;box-shadow:0 0 40px #f8b50033,inset 0 0 30px #000;z-index:2;}
+  .tw-vaultdoor{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:82%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c9a227,#8a6a1a 40%,#3a2a05 75%,#160d00);border:6px solid #f8b50088;box-shadow:0 0 60px #f8b50066,inset 0 0 40px #000000aa;}
+  .tw-vaultwheel{position:absolute;left:50%;top:50%;width:44%;height:44%;transform:translate(-50%,-50%);border:6px solid #ffe9a8;border-radius:50%;animation:twSpin 16s linear infinite;box-shadow:0 0 20px #f8b50088,inset 0 0 10px #0006;}
+  .tw-vaultwheel::before{content:"";position:absolute;inset:-6px;background:linear-gradient(#ffe9a8,#ffe9a8) 50% 0/6px 100% no-repeat,linear-gradient(#ffe9a8,#ffe9a8) 0 50%/100% 6px no-repeat,linear-gradient(45deg,transparent 47%,#ffe9a8 47% 53%,transparent 53%),linear-gradient(-45deg,transparent 47%,#ffe9a8 47% 53%,transparent 53%);}
+  .tw-vaultwheel::after{content:"";position:absolute;left:50%;top:50%;width:20%;height:20%;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(#fff8dc,#8a6a1a);box-shadow:0 0 12px #ffe9a8;}
+  .tw-fbolt{position:absolute;width:10px;height:10px;border-radius:50%;background:radial-gradient(#ffe9a8,#8a6a1a);box-shadow:0 1px 3px #000;}
+  .tw-hinge{position:absolute;left:-4%;width:10%;height:12%;background:linear-gradient(180deg,#c9a227,#8a6a1a);border-radius:4px;box-shadow:0 2px 4px #000c;}
+  .tw-hinge.h1{top:22%;}.tw-hinge.h2{bottom:22%;}
+  .tw-knob{position:absolute;width:9%;height:9%;border-radius:50%;background:radial-gradient(#fff8dc,#c9a227);transform:translate(-50%,-50%);box-shadow:0 0 6px #ffe9a8aa;}
+  .tw-dial{position:absolute;right:16%;top:44%;width:14%;height:14%;border-radius:50%;background:radial-gradient(#c9a227,#8a6a1a);box-shadow:inset 0 0 6px #0008,0 0 4px #0008;}
+  .tw-dial::before{content:"";position:absolute;inset:30%;background:linear-gradient(#160d00,#160d00) 50% 0/3px 100% no-repeat,linear-gradient(#160d00,#160d00) 0 50%/100% 3px no-repeat,linear-gradient(45deg,transparent 40%,#160d00 40% 60%,transparent 60%);}
+  .tw-handle{position:absolute;right:8%;top:30%;width:4%;height:40%;border-radius:4px;background:linear-gradient(90deg,#c9a227,#ffe9a8 50%,#c9a227);box-shadow:0 0 6px #0008;}
+  .tw-vbolt{position:absolute;width:5%;height:5%;border-radius:50%;background:radial-gradient(#ffe9a8,#8a6a1a);transform:translate(-50%,-50%);box-shadow:0 1px 3px #000;}
+  
+  /* Lasers rouges */
+  .tw-laser{position:absolute;left:9%;right:9%;height:2px;background:linear-gradient(90deg,transparent,#ff2020 8%,#ff7070 50%,#ff2020 92%,transparent);box-shadow:0 0 8px #ff2020cc,0 0 20px #ff202066;opacity:.85;animation:twLaserV ease-in-out infinite alternate;z-index:1;}
+  .tw-laser::before,.tw-laser::after{content:"";position:absolute;top:-3px;width:9px;height:9px;border-radius:2px;background:#1a0505;box-shadow:0 0 7px #ff2020,inset 0 0 3px #ff7070;animation:twFlickP 1.6s steps(2) infinite;}
+  .tw-laser::before{left:-3px;}.tw-laser::after{right:-3px;}
+  .tw-laser.d{animation-name:twLaserD;}
+  
+  /* Coffres muraux réalistes */
+  #tw-bg .tw-safebox{position:absolute;width:46px;height:36px;border-radius:4px;border:1px solid #5a4410;animation:none;
+    background:
+      radial-gradient(circle at 10% 14%,#fff8dc 0 2px,transparent 2px),
+      radial-gradient(circle at 90% 14%,#fff8dc 0 2px,transparent 2px),
+      radial-gradient(circle at 10% 86%,#fff8dc 0 2px,transparent 2px),
+      radial-gradient(circle at 90% 86%,#fff8dc 0 2px,transparent 2px),
+      linear-gradient(135deg,#e8c86a 0%,#b8942a 25%,#8a6a1a 50%,#c9a227 75%,#e8c86a 100%);
+    box-shadow:inset 0 2px 3px #ffffff55,inset 0 -2px 3px #00000088,0 2px 5px #000000bb,0 0 10px #f8b50022;
+  }
+  #tw-bg .tw-safebox.bz{background:
+      radial-gradient(circle at 10% 14%,#e8d8b8 0 2px,transparent 2px),
+      radial-gradient(circle at 90% 14%,#e8d8b8 0 2px,transparent 2px),
+      radial-gradient(circle at 10% 86%,#e8d8b8 0 2px,transparent 2px),
+      radial-gradient(circle at 90% 86%,#e8d8b8 0 2px,transparent 2px),
+      linear-gradient(135deg,#c8a86a 0%,#98742a 25%,#6a4a1a 50%,#a88227 75%,#c8a86a 100%);
+  }
+  #tw-bg .tw-safebox::before{content:"";position:absolute;left:50%;top:50%;width:13px;height:13px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff8dc,#8a6a1a 60%,#3a2a05);box-shadow:0 1px 3px #0009,inset 0 1px 2px #ffffff66;}
+  #tw-bg .tw-safebox::after{content:"";position:absolute;inset:3px;border:1px solid #ffffff22;border-radius:3px;background:linear-gradient(115deg,transparent 42%,#ffffff33 42% 47%,transparent 47%);}
 
   .tw-part{position:absolute;width:4px;height:4px;border-radius:50%;}
   .tw-part.snow{background:#ffffffcc;animation:twFall linear infinite;}
@@ -245,15 +278,16 @@ const TowerUtils = {
   @keyframes twShoot{0%{opacity:0;transform:rotate(-30deg) translateX(0)}5%{opacity:.9}12%{opacity:0;transform:rotate(-30deg) translateX(-240px)}100%{opacity:0}}
   @keyframes twSignalPulse{50%{opacity:.55;filter:blur(1.6px)}}
   @keyframes twGlowC{50%{filter:brightness(1.6)}}
-  @keyframes twRaySway{50%{transform:rotate(6deg);opacity:.5}}
   @keyframes twFly{0%,100%{transform:translate(0,0);opacity:.9}25%{transform:translate(14px,-18px);opacity:.5}50%{transform:translate(-10px,-30px);opacity:.9}75%{transform:translate(8px,-12px);opacity:.6}}
   @keyframes twSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
-  @keyframes twBeamPulse{50%{opacity:.4}}
   @keyframes twCamSweep{from{transform:translateX(-50%) rotate(-25deg)}to{transform:translateX(-50%) rotate(25deg)}}
   @keyframes twFall{0%{top:-4%}100%{top:104%}}
   @keyframes twRise{0%{top:104%}100%{top:-4%}}
   @keyframes twPop{0%{transform:scale(0)}70%{transform:scale(1.4)}100%{transform:scale(1)}}
   @keyframes twFog{50%{opacity:.25}}
+  @keyframes twLaserV{from{transform:translateY(-26px)}to{transform:translateY(26px)}}
+  @keyframes twLaserD{from{transform:rotate(-5deg) translateY(-18px)}to{transform:rotate(5deg) translateY(18px)}}
+
   /* === POP-UP SÉLECTION NIVEAU === */
   .tw-lvlpop{position:fixed;inset:0;background:#000c;z-index:9997;display:flex;align-items:center;justify-content:center;}
   .tw-lvlpop-card{background:#0f051d;border:2px solid #00d2ff;border-radius:14px;padding:14px;width:min(94%,420px);max-height:80%;display:flex;flex-direction:column;box-shadow:0 0 20px #00d2ff66;}
@@ -264,6 +298,7 @@ const TowerUtils = {
   .tw-lvl-cell.cur{border-color:#00d2ff;box-shadow:0 0 12px #00d2ff66;}
   .tw-lvl-cell.lock{opacity:.35;cursor:default;}
   .tw-lvl-cell.boss{border-color:#ff4b2b;}
+
   /* === MOBILE PERF === */
   @media (max-width:760px), (pointer:coarse){
     .tw-road{height:140px;}
@@ -279,9 +314,7 @@ const TowerUtils = {
     .tw-cryscl{filter:none;animation:none;}
     .tw-signalbeam{display:none;}
     .tw-batsignal{font-size:20px;letter-spacing:4px;}
-    .tw-lightray{display:none;}
     .tw-panel .num{font-size:36px;}
-    .tw-cavefog{backdrop-filter:none;}
   }
   `;
   document.head.appendChild(style);
@@ -299,7 +332,6 @@ function generateSceneHTML(c, W, C) {
     const cloudsN = IS_MOBILE ? 2 : 4;
     for (let i = 0; i < cloudsN; i++) html += `<span class="tw-cloud" style="top:${3+i*7}%;width:${22+(i*9)%16}%;animation-duration:${70+i*25}s;animation-delay:${i*11}s;"></span>`;
     html += `<div class="tw-horizon"></div>`;
-    // 🔦 Bat-signal Chiffre Blitz
     html += `<div class="tw-signalbeam l"></div><div class="tw-signalbeam r"></div>`;
     html += `<div class="tw-batsignal">⚡ CHIFFRE BLITZ</div>`;
     const cols = ["#00ffff","#ff00ff","#f8b500","#7dff8a"];
@@ -338,48 +370,30 @@ function generateSceneHTML(c, W, C) {
     else html += car("","16px","9s","0s","#00d2ff")+car("","34px","11s","2.5s","#f8b500")+car("s","24px","7s","5s","#7dff8a")+car("r","96px","10s","1.5s","#ff2bd6")+car("r s","104px","8s","6.5s","#ff8a00");
   }
 
-   if (W.scene === "glacier") {
+  if (W.scene === "glacier") {
     html += `<div class="tw-cavewall"></div>`;
-    // Parois rocheuses
     html += `<div class="tw-gwall"></div><div class="tw-gwall r"></div>`;
-    // Gemmes incrustées (lueurs nettes dans le noir)
     const gemN = IS_MOBILE ? 6 : 12;
     for (let i = 0; i < gemN; i++) {
       const L = (i % 2 === 0);
       html += `<span class="tw-gem" style="${L?("left:"+(2+(i*7)%8)+"%"):("right:"+(2+(i*7)%8)+"%")};top:${12+(i*11)%76}%;animation-delay:${(i*.4)%2}s;"></span>`;
     }
-    // Plafond + stalactites
     html += `<div class="tw-gceil"></div>`;
     [[6,180],[16,130],[26,210],[38,110],[50,180],[62,130],[74,200],[86,120],[94,160]].forEach(p => { html += `<span class="tw-stalac" style="left:${p[0]}%;height:${p[1]}px;"></span>`; });
-    // Étagères de cristaux NETS (ils brillent dans le noir)
     const shelfN = IS_MOBILE ? 5 : 8;
     for (let i = 0; i < shelfN; i++) {
       const top = 20 + i * (58 / shelfN), L = (i % 2 === 0), s = .7 + ((i*13)%4)/10;
       html += `<div class="tw-shelf ${L?"":"r"}" style="top:${top}%;${L?"left:0;":"right:0;"}"><span class="rock"></span><span class="tw-cryscl ${["","pink","gold","green","violet"][i%5]} ${["","tall","wide"][i%3]}" style="bottom:18px;left:22%;transform:scale(${s});animation-delay:${i*.5}s;"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span></div>`;
     }
-    // Lucioles
     const flyN = IS_MOBILE ? 4 : 10;
     for (let i = 0; i < flyN; i++) html += `<span class="tw-firefly" style="left:${10+(i*29)%80}%;top:${12+(i*17)%70}%;animation-duration:${5+(i%4)*2}s;animation-delay:${i*.6}s;"></span>`;
-    // Sol : lac glacé + stalagmites
     html += `<div class="tw-icelake"></div>`;
     [[10,130],[26,100],[42,120],[58,90],[74,110],[90,100]].forEach(p => { html += `<span class="tw-stalag" style="left:${p[0]}%;height:${p[1]}px;"></span>`; });
-    // 🌑 Voile assombrissant (grotte profonde, sans flou)
     html += `<div class="tw-cavedark"></div>`;
   }
-/* ----- CSS grotte brumeuse v6 ----- */
-(function(){const s=document.createElement("style");s.textContent=`
-  .tw-glowspot{position:absolute;width:130px;height:130px;border-radius:50%;background:radial-gradient(circle,currentColor 0%,transparent 70%);opacity:.22;filter:blur(18px);animation:twGlowPulse 5s ease-in-out infinite;}
-  @keyframes twGlowPulse{50%{opacity:.42}}
-  .tw-cavefog{position:absolute;inset:0;background:linear-gradient(180deg,#04141d99,#0a2a3a55 50%,#04141d99);backdrop-filter:blur(2px);z-index:3;pointer-events:none;}
-`;document.head.appendChild(s);})();
-/* ----- CSS grotte assombrie v7 ----- */
-(function(){const s=document.createElement("style");s.textContent=`
-  .tw-cavedark{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,#00000055 0%,#000000aa 55%,#000000e6 100%);z-index:3;pointer-events:none;}
-`;document.head.appendChild(s);})();
- 
-    if (W.scene === "vault") {
+
+  if (W.scene === "vault") {
     html += `<div class="tw-marble"></div>`;
-    // Murs de coffres DORÉS (colonnes or/bronze)
     const rows = IS_MOBILE ? 8 : 12;
     for (let i = 0; i < rows; i++) {
       const top = 6 + i * (88 / rows);
@@ -388,74 +402,25 @@ function generateSceneHTML(c, W, C) {
       html += `<span class="tw-safebox" style="right:3%;top:${top}%;"></span>`;
       html += `<span class="tw-safebox bz" style="right:9%;top:${top+2}%;"></span>`;
     }
-    // Spots dorés
     html += `<div class="tw-spot" style="left:18%;"></div><div class="tw-spot" style="left:50%;animation-delay:1s;"></div><div class="tw-spot" style="left:78%;animation-delay:2s;"></div>`;
-    // Colonnes
     html += `<div class="tw-pillar" style="left:4%;"></div><div class="tw-pillar" style="right:4%;"></div>`;
-    // 🏦 GROS COFFRE central + molette qui tourne
     let bolts = ""; for (let i = 0; i < 12; i++) { const a = i*Math.PI/6; bolts += `<span class="tw-vbolt" style="left:${50+44*Math.cos(a)}%;top:${50+44*Math.sin(a)}%;"></span>`; }
     let knobs = ""; for (let i = 0; i < 6; i++) { const a = i*Math.PI/3; knobs += `<span class="tw-knob" style="left:${50+38*Math.cos(a)}%;top:${50+38*Math.sin(a)}%;"></span>`; }
     html += `<div class="tw-vaultglow"></div><div class="tw-vaultframe"><span class="tw-fbolt" style="left:5%;top:7%;"></span><span class="tw-fbolt" style="right:5%;top:7%;"></span><span class="tw-fbolt" style="left:5%;bottom:7%;"></span><span class="tw-fbolt" style="right:5%;bottom:7%;"></span><span class="tw-hinge h1"></span><span class="tw-hinge h2"></span><div class="tw-vaultdoor"><div class="tw-vaultwheel">${knobs}</div><span class="tw-dial"></span><span class="tw-handle"></span>${bolts}</div></div>`;
-    // 🚨 Lasers ROUGES qui balayent
     html += `<div class="tw-laser" style="top:30%;animation-duration:5s;"></div>`;
     html += `<div class="tw-laser d" style="top:48%;animation-duration:7s;animation-delay:1s;"></div>`;
     html += `<div class="tw-laser" style="top:66%;animation-duration:6s;animation-delay:2s;"></div>`;
-    // Caméras rouges
     html += `<div class="tw-ncam" style="left:14%;top:24%;color:#ff2020;"><span class="beam"></span></div>`;
     html += `<div class="tw-ncam" style="right:14%;top:40%;color:#ff2020;"><span class="beam"></span></div>`;
-    // Sol doré (sans lingots éparpillés)
     html += `<div class="tw-gloss"></div><div class="tw-goldspill"></div>`;
   }
-/* ----- CSS coffre doré v8 (gros coffre + molette) ----- */
-(function(){const s=document.createElement("style");s.textContent=`
-  .tw-vaultglow{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(92%,440px);aspect-ratio:1;border-radius:50%;background:radial-gradient(#f8b50044,transparent 70%);animation:twGlowC 3s infinite;}
-  .tw-vaultframe{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(86%,430px);aspect-ratio:1.15;background:linear-gradient(180deg,#5a4410,#2b1a00);border-radius:14px;box-shadow:0 0 40px #f8b50033,inset 0 0 30px #000;z-index:2;}
-  .tw-vaultdoor{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:82%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c9a227,#8a6a1a 40%,#3a2a05 75%,#160d00);border:6px solid #f8b50088;box-shadow:0 0 60px #f8b50066,inset 0 0 40px #000000aa;}
-  .tw-vaultwheel{position:absolute;left:50%;top:50%;width:44%;height:44%;transform:translate(-50%,-50%);border:6px solid #ffe9a8;border-radius:50%;animation:twSpin 16s linear infinite;box-shadow:0 0 20px #f8b50088,inset 0 0 10px #0006;}
-  .tw-vaultwheel::before{content:"";position:absolute;inset:-6px;background:linear-gradient(#ffe9a8,#ffe9a8) 50% 0/6px 100% no-repeat,linear-gradient(#ffe9a8,#ffe9a8) 0 50%/100% 6px no-repeat,linear-gradient(45deg,transparent 47%,#ffe9a8 47% 53%,transparent 53%),linear-gradient(-45deg,transparent 47%,#ffe9a8 47% 53%,transparent 53%);}
-  .tw-vaultwheel::after{content:"";position:absolute;left:50%;top:50%;width:20%;height:20%;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(#fff8dc,#8a6a1a);box-shadow:0 0 12px #ffe9a8;}
-  .tw-fbolt{position:absolute;width:10px;height:10px;border-radius:50%;background:radial-gradient(#ffe9a8,#8a6a1a);box-shadow:0 1px 3px #000;}
-  .tw-hinge{position:absolute;left:-4%;width:10%;height:12%;background:linear-gradient(180deg,#c9a227,#8a6a1a);border-radius:4px;box-shadow:0 2px 4px #000c;}
-  .tw-hinge.h1{top:22%;}.tw-hinge.h2{bottom:22%;}
-  .tw-knob{position:absolute;width:9%;height:9%;border-radius:50%;background:radial-gradient(#fff8dc,#c9a227);transform:translate(-50%,-50%);box-shadow:0 0 6px #ffe9a8aa;}
-  .tw-dial{position:absolute;right:16%;top:44%;width:14%;height:14%;border-radius:50%;background:radial-gradient(#c9a227,#8a6a1a);box-shadow:inset 0 0 6px #0008,0 0 4px #0008;}
-  .tw-dial::before{content:"";position:absolute;inset:30%;background:linear-gradient(#160d00,#160d00) 50% 0/3px 100% no-repeat,linear-gradient(#160d00,#160d00) 0 50%/100% 3px no-repeat,linear-gradient(45deg,transparent 40%,#160d00 40% 60%,transparent 60%);}
-  .tw-handle{position:absolute;right:8%;top:30%;width:4%;height:40%;border-radius:4px;background:linear-gradient(90deg,#c9a227,#ffe9a8 50%,#c9a227);box-shadow:0 0 6px #0008;}
-  .tw-vbolt{position:absolute;width:5%;height:5%;border-radius:50%;background:radial-gradient(#ffe9a8,#8a6a1a);transform:translate(-50%,-50%);box-shadow:0 1px 3px #000;}
-  .tw-laser{position:absolute;left:9%;right:9%;height:2px;background:linear-gradient(90deg,transparent,#ff2020 8%,#ff7070 50%,#ff2020 92%,transparent);box-shadow:0 0 8px #ff2020cc,0 0 20px #ff202066;opacity:.85;animation:twLaserV ease-in-out infinite alternate;z-index:1;}
-  .tw-laser::before,.tw-laser::after{content:"";position:absolute;top:-3px;width:9px;height:9px;border-radius:2px;background:#1a0505;box-shadow:0 0 7px #ff2020,inset 0 0 3px #ff7070;animation:twFlickP 1.6s steps(2) infinite;}
-  .tw-laser::before{left:-3px;}.tw-laser::after{right:-3px;}
-  .tw-laser.d{animation-name:twLaserD;}
-  @keyframes twLaserV{from{transform:translateY(-26px)}to{transform:translateY(26px)}}
-  @keyframes twLaserD{from{transform:rotate(-5deg) translateY(-18px)}to{transform:rotate(5deg) translateY(18px)}}  
-`;document.head.appendChild(s);})();
+
   let parts = "";
   for (let i = 0; i < (IS_MOBILE?0:7); i++) parts += `<span class="tw-part ${W.part}" style="color:${C.acc};left:${(i*13+c*7)%96}%;animation-duration:${4+(i%4)*1.5}s;animation-delay:${i*.7}s;"></span>`;
 
   const result = html + parts;
   SCENE_CACHE[c] = result;
   return result;
-  /* ----- CSS coffres muraux réalistes ----- */
-(function(){const s=document.createElement("style");s.textContent=`
-  .tw-safebox{position:absolute;width:46px;height:36px;border-radius:4px;border:1px solid #5a4410;animation:none;
-    background:
-      radial-gradient(circle at 10% 14%,#fff8dc 0 2px,transparent 2px),
-      radial-gradient(circle at 90% 14%,#fff8dc 0 2px,transparent 2px),
-      radial-gradient(circle at 10% 86%,#fff8dc 0 2px,transparent 2px),
-      radial-gradient(circle at 90% 86%,#fff8dc 0 2px,transparent 2px),
-      linear-gradient(135deg,#e8c86a 0%,#b8942a 25%,#8a6a1a 50%,#c9a227 75%,#e8c86a 100%);
-    box-shadow:inset 0 2px 3px #ffffff55,inset 0 -2px 3px #00000088,0 2px 5px #000000bb,0 0 10px #f8b50022;
-  }
-  .tw-safebox.bz{background:
-      radial-gradient(circle at 10% 14%,#e8d8b8 0 2px,transparent 2px),
-      radial-gradient(circle at 90% 14%,#e8d8b8 0 2px,transparent 2px),
-      radial-gradient(circle at 10% 86%,#e8d8b8 0 2px,transparent 2px),
-      radial-gradient(circle at 90% 86%,#e8d8b8 0 2px,transparent 2px),
-      linear-gradient(135deg,#c8a86a 0%,#98742a 25%,#6a4a1a 50%,#a88227 75%,#c8a86a 100%);
-  }
-  .tw-safebox::before{content:"";position:absolute;left:50%;top:50%;width:13px;height:13px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff8dc,#8a6a1a 60%,#3a2a05);box-shadow:0 1px 3px #0009,inset 0 1px 2px #ffffff66;}
-  .tw-safebox::after{content:"";position:absolute;inset:3px;border:1px solid #ffffff22;border-radius:3px;background:linear-gradient(115deg,transparent 42%,#ffffff33 42% 47%,transparent 47%);}
-`;document.head.appendChild(s);})();
 }
 
 /* ----- 6. ÉCRAN AVENTURE (fixe) ----- */
@@ -505,7 +470,6 @@ function renderAdventure() {
   const chap = TOWER_CHAPTERS[world - 1];
   const W = TOWER_WORLDS[world], C = TOWER_COLORS[world];
   document.getElementById("tw-bg").innerHTML = generateSceneHTML(world, W, C);
-
   const unlocked = TowerUtils.worldUnlocked(world);
   const stars = TowerUtils.starsInWorld(world);
   const pct = Math.min(100, Math.round(stars / WORLD_QUOTA * 100));
@@ -514,7 +478,6 @@ function renderAdventure() {
   document.getElementById("tw-worldtag").innerText = `${chap.icon} ${chap.name}`;
   document.getElementById("tw-coins-n").innerText = (myProfile.coins || 0);
   document.getElementById("tw-lives-n").innerText = twLives;
-
   const def = TowerUtils.getFloorDef(twViewFloor);
   const inChap = ((twViewFloor - 1) % FPC) + 1;
   const isBoss = (inChap === FPC || inChap % 50 === 0);
@@ -523,16 +486,13 @@ function renderAdventure() {
   document.getElementById("tw-panel-typ").innerText = isBoss ? `⚔️ ${chap.boss} GARDIEN` : TowerUtils.typeLabel(def.type);
   const stGot = towerProgress.stars[String(twViewFloor)] || 0;
   document.getElementById("tw-panel-stars").innerHTML = [1,2,3].map(i => `<span class="${i <= stGot ? "on" : ""}">⭐</span>`).join("");
-
   const lock = document.getElementById("tw-lockmsg");
-  if (!unlocked) { lock.style.display = "block"; lock.innerText = `🔒 Quota  ${WORLD_QUOTA} requis dans le monde précédent`; }
+  if (!unlocked) { lock.style.display = "block"; lock.innerText = `🔒 Quota ⭐ ${WORLD_QUOTA} requis dans le monde précédent`; }
   else lock.style.display = "none";
-
   document.getElementById("tw-play").disabled = !unlocked || twLives <= 0;
   document.getElementById("tw-prev").disabled = twViewFloor <= 1;
   document.getElementById("tw-next").disabled = twViewFloor >= Math.min(towerProgress.floor + 1, TOTAL_FLOORS);
 }
-
 function advPrev() { if (twViewFloor > 1) { twViewFloor--; renderAdventure(); } }
 function advNext() { if (twViewFloor < Math.min(towerProgress.floor + 1, TOTAL_FLOORS)) { twViewFloor++; renderAdventure(); } }
 function advPlay() {
@@ -540,6 +500,7 @@ function advPlay() {
   def.replay = twViewFloor <= towerProgress.floor;
   showBriefing(def);
 }
+
 /* ----- SÉLECTION DE NIVEAU ----- */
 function openLevelSelect() {
   closeLevelSelect();
@@ -563,13 +524,13 @@ function openLevelSelect() {
     <button class="btn-secondary" style="width:100%;margin-top:10px;" onclick="closeLevelSelect()">❌ ${currentLang==="fr"?"Fermer":"Close"}</button>
   </div>`;
   document.body.appendChild(d);
-  // Se positionne sur le DERNIER palier débloqué (pas le 1er)
   const grid = document.getElementById("tw-lvl-grid");
   const target = grid.querySelector(".tw-lvl-cell.cur") || grid.children[Math.max(0, maxPlayable - start)];
   if (target) grid.scrollTop = Math.max(0, target.offsetTop - grid.clientHeight / 2);
 }
 function closeLevelSelect() { const s = document.getElementById("tw-lvlpop"); if (s) s.remove(); }
 function pickLevel(f) { twViewFloor = f; closeLevelSelect(); renderAdventure(); }
+
 function showWorldTransition(w) {
   const chap = TOWER_CHAPTERS[w - 1];
   let f = document.createElement("div");
