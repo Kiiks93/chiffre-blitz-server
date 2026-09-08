@@ -4,15 +4,15 @@ TOUR.JS — MODE AVENTURE OPTIMISÉ
 
 /* ----- 1. CONFIGURATION ----- */
 const TOWER_CHAPTERS = [
-  { id:1, season:1, name:"Quartier Néon", icon:"🌆", boss:"🤖", objects:["💡","⚡","📺","🔌","🎛️","🖥️","📻","💾","🌃"] },
-  { id:2, season:1, name:"Grottes de Cristal", icon:"🧊", boss:"🗿", objects:["🕯️","🔮","💎","⛏️","🪞","❄️","🫧","🌀","🧊"] },
-  { id:3, season:1, name:"Banque Dorée", icon:"🏦", boss:"👾", objects:["🪙","💰","💵","💳","🥇","🔐","💎","🏅","📜"] },
-  { id:4, season:2, name:"Tour Hantée", icon:"🎃", boss:"🧛", objects:["🕸️","🎃","🕯️","🦇","🪦","👻","🐈‍⬛","🔮","⚰️"] },
-  { id:5, season:2, name:"Cimetière Brumeux", icon:"🌫️", boss:"💀", objects:["🪦","🌫️","🕯️","⚰️","🌙","🕷️","💀","🦴","🖤"] },
-  { id:6, season:2, name:"Antre Citrouille", icon:"👑", boss:"🎃", objects:["🎃","🍬","🔮","🦇","🧹","🍭","🕸️","👻","🏆"] },
-  { id:7, season:3, name:"Cime Bonbon", icon:"🍭", boss:"🧝", objects:["🍭","🍬","🎀","🎂","🧁","🥐","🍰","🍩","🍫"] },
-  { id:8, season:3, name:"Forêt de Sapins", icon:"🎄", boss:"⛄", objects:["🎄","🎁","❄️","🔔","🕯️","⭐","🧦","🍪","🦌"] },
-  { id:9, season:3, name:"Atelier du Père Noël", icon:"🎅", boss:"🎅", objects:["🎅","🤶","🧝","🦌","🔥","🎁","⛄","🥛","🍪"] }
+  { id:1, season:1, name:"Quartier Néon", icon:"🌆", boss:"🤖", objects:["💡","⚡","📺","🔌","🎛️","🖥️","","💾",""] },
+  { id:2, season:1, name:"Grottes de Cristal", icon:"🧊", boss:"🗿", objects:["🕯️","🔮","💎","⛏️","","❄️","🫧","🌀","🧊"] },
+  { id:3, season:1, name:"Banque Dorée", icon:"🏦", boss:"👾", objects:["🪙","💰","💵","💳","","🔐","💎","🏅","📜"] },
+  { id:4, season:2, name:"Tour Hantée", icon:"🎃", boss:"🧛", objects:["🕸️","🎃","🕯️","🦇","","👻","‍⬛","","⚰️"] },
+  { id:5, season:2, name:"Cimetière Brumeux", icon:"🌫️", boss:"💀", objects:["🪦","🌫️","️","️","🌙","️","💀","","🖤"] },
+  { id:6, season:2, name:"Antre Citrouille", icon:"👑", boss:"🎃", objects:["🎃","🍬","🔮","","🧹","","🕸️","","🏆"] },
+  { id:7, season:3, name:"Cime Bonbon", icon:"🍭", boss:"🧝", objects:["🍭","","🎀","","🧁","🥐","🍰","🍩","🍫"] },
+  { id:8, season:3, name:"Forêt de Sapins", icon:"🎄", boss:"⛄", objects:["🎄","","❄️","","🕯️","⭐","🧦","","🦌"] },
+  { id:9, season:3, name:"Atelier du Père Noël", icon:"🎅", boss:"🎅", objects:["🎅","","🧝","","🔥","","⛄","","🍪"] }
 ];
 const FPC = 200;
 const TOTAL_FLOORS = 9 * FPC;
@@ -21,15 +21,15 @@ const WORLD_QUOTA = 240;
 const IS_MOBILE = /Android|iPhone|iPad|iPod|Tablet|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 2 && Math.min(screen.width, screen.height) < 900);
 const TOWER_COLORS = {1:{acc:"#00d2ff"},2:{acc:"#74ebf5"},3:{acc:"#f8b500"},4:{acc:"#ff8a00"},5:{acc:"#8a9bb0"},6:{acc:"#ff4b2b"},7:{acc:"#ff6fa5"},8:{acc:"#2ecc71"},9:{acc:"#ff416c"}};
 const TOWER_WORLDS = {
-  1:{bg:"linear-gradient(180deg,#050514,#0a0a2a 55%,#1a1030)",scene:"city",part:"neon",edge:"#1a1030"},
-  2:{bg:"linear-gradient(180deg,#062028,#0a2a3a 50%,#123a4a)",scene:"glacier",part:"snow",edge:"#123a4a"},
-  3:{bg:"linear-gradient(180deg,#160d00,#2b1a00 60%,#3a2a05)",scene:"vault",part:"spark",edge:"#3a2a05"},
-  4:{bg:"radial-gradient(ellipse at 30% 10%,#ff8a0022,transparent 45%),linear-gradient(180deg,#12041a,#2a0a33)",scene:"glacier",part:"snow",edge:"#2a0a33"},
-  5:{bg:"linear-gradient(180deg,#0a0d14,#1a2230)",scene:"glacier",part:"snow",edge:"#1a2230"},
-  6:{bg:"radial-gradient(ellipse at 50% 10%,#ff4b2b22,transparent 50%),linear-gradient(180deg,#18040a,#330a12)",scene:"vault",part:"spark",edge:"#330a12"},
-  7:{bg:"radial-gradient(ellipse at 50% 10%,#ff6fa522,transparent 50%),linear-gradient(180deg,#180410,#330a20)",scene:"glacier",part:"snow",edge:"#330a20"},
-  8:{bg:"radial-gradient(ellipse at 50% 10%,#2ecc7122,transparent 50%),linear-gradient(180deg,#04180b,#0a3318)",scene:"glacier",part:"snow",edge:"#0a3318"},
-  9:{bg:"radial-gradient(ellipse at 50% 10%,#ff416c22,transparent 50%),linear-gradient(180deg,#180404,#330a0a)",scene:"vault",part:"spark",edge:"#330a0a"}
+  1:{bg:"linear-gradient(180deg,#050514,#0a0a2a 55%,#1a1030)",scene:"city",part:"neon"},
+  2:{bg:"linear-gradient(180deg,#062028,#0a2a3a 50%,#123a4a)",scene:"glacier",part:"snow"},
+  3:{bg:"linear-gradient(180deg,#160d00,#2b1a00 60%,#3a2a05)",scene:"vault",part:"spark"},
+  4:{bg:"radial-gradient(ellipse at 30% 10%,#ff8a0022,transparent 45%),linear-gradient(180deg,#12041a,#2a0a33)",scene:"glacier",part:"snow"},
+  5:{bg:"linear-gradient(180deg,#0a0d14,#1a2230)",scene:"glacier",part:"snow"},
+  6:{bg:"radial-gradient(ellipse at 50% 10%,#ff4b2b22,transparent 50%),linear-gradient(180deg,#18040a,#330a12)",scene:"vault",part:"spark"},
+  7:{bg:"radial-gradient(ellipse at 50% 10%,#ff6fa522,transparent 50%),linear-gradient(180deg,#180410,#330a20)",scene:"glacier",part:"snow"},
+  8:{bg:"radial-gradient(ellipse at 50% 10%,#2ecc7122,transparent 50%),linear-gradient(180deg,#04180b,#0a3318)",scene:"glacier",part:"snow"},
+  9:{bg:"radial-gradient(ellipse at 50% 10%,#ff416c22,transparent 50%),linear-gradient(180deg,#180404,#330a0a)",scene:"vault",part:"spark"}
 };
 
 /* ----- 2. ÉTAT GLOBAL ----- */
@@ -73,7 +73,7 @@ const TowerUtils = {
   },
   typeLabel(t) {
     const fr = currentLang === "fr";
-    return ({classic:fr?"⚡ Croissant":"⚡ Ascending",reverse:fr?"🔽 Décroissant":"🔽 Descending",random:fr?"🎲 Chaos":"🎲 Chaos",color:fr?"🎨 Couleurs":"🎨 Colors",pairs:fr?"🧩 Paires":"🧩 Pairs",parity:fr?"🔢 Pair / Impair":"🔢 Even / Odd",forbidden:fr?"🚫 Interdit":"🚫 Forbidden","calc+":fr?"🧮 Addition":"🧮 Addition","calc-":fr?"🧮 Soustraction":"🧮 Subtraction",sprint:fr?"⏱️ Sprint":"⏱️ Sprint",memory:fr?"🙈 Mémoire":"🙈 Memory",fog:fr?"🌫️ Brouillard":"🌫️ Fog",nofail:fr?"💎 Sans faute":"💎 No mistake",boss:fr?"⚔️ GARDIEN":"⚔️ GUARDIAN"})[t] || t;
+    return ({classic:fr?"⚡ Croissant":"⚡ Ascending",reverse:fr?"🔽 Décroissant":"🔽 Descending",random:fr?"🎲 Chaos":" Chaos",color:fr?"🎨 Couleurs":"🎨 Colors",pairs:fr?"🧩 Paires":"🧩 Pairs",parity:fr?"🔢 Pair / Impair":"🔢 Even / Odd",forbidden:fr?"🚫 Interdit":"🚫 Forbidden","calc+":fr?"🧮 Addition":"🧮 Addition","calc-":fr?"🧮 Soustraction":"🧮 Subtraction",sprint:fr?"⏱️ Sprint":"⏱️ Sprint",memory:fr?"🙈 Mémoire":"🙈 Memory",fog:fr?"🌫️ Brouillard":"🌫️ Fog",nofail:fr?"💎 Sans faute":"💎 No mistake",boss:fr?"⚔️ GARDIEN":"⚔️ GUARDIAN"})[t] || t;
   },
   twDesc(t) {
     const fr = currentLang === "fr";
@@ -148,8 +148,8 @@ const TowerUtils = {
   .tw-cavewall{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 55%,#74ebf518 0%,#0a2a3a66 35%,#000000ee 78%);}
   .tw-gceil{position:absolute;top:0;left:0;right:0;height:200px;background:linear-gradient(0deg,#0a2a3a,#04141d);}
   .tw-gfloor{position:absolute;bottom:0;left:0;right:0;height:200px;background:linear-gradient(180deg,#0a2a3a,#04141d);box-shadow:inset 0 8px 20px #74ebf533;}
-  .tw-stalac{position:absolute;top:0;width:26px;background:linear-gradient(180deg,#04141d,#74ebf5 60%,#e8fbff);clip-path:polygon(48% 100%,52% 100%,62% 60%,72% 30%,100% 0,0 0,28% 30%,38% 60%);filter:drop-shadow(0 0 6px #74ebf5aa);}
-  .tw-stalag{position:absolute;bottom:0;width:26px;background:linear-gradient(0deg,#5a8ea0aa,#bfefffcc 55%,#ffffff);clip-path:polygon(48% 0,52% 0,62% 30%,72% 60%,100% 100%,0 100%,28% 60%,38% 30%);filter:drop-shadow(0 0 6px #74ebf5aa);}
+  .tw-stalac{position:absolute;top:0;width:44px;background:linear-gradient(180deg,#04141d,#74ebf5 60%,#e8fbff);clip-path:polygon(48% 100%,52% 100%,62% 60%,72% 30%,100% 0,0 0,28% 30%,38% 60%);filter:drop-shadow(0 0 10px #74ebf5cc);}
+  .tw-stalag{position:absolute;bottom:0;width:44px;background:linear-gradient(0deg,#5a8ea0aa,#bfefffcc 55%,#ffffff);clip-path:polygon(48% 0,52% 0,62% 30%,72% 60%,100% 100%,0 100%,28% 60%,38% 30%);filter:drop-shadow(0 0 10px #74ebf5cc);}
   .tw-gwall{position:absolute;top:0;bottom:0;width:12%;background:linear-gradient(90deg,#04141d,#0a2a3a);clip-path:polygon(0 0,100% 3%,70% 8%,100% 14%,75% 22%,100% 30%,70% 38%,100% 46%,75% 55%,100% 63%,70% 72%,100% 80%,75% 88%,100% 95%,70% 100%,0 100%);}
   .tw-gwall.r{left:auto;right:0;background:linear-gradient(270deg,#04141d,#0a2a3a);clip-path:polygon(100% 0,0 3%,30% 8%,0 14%,25% 22%,0 30%,30% 38%,0 46%,25% 55%,0 63%,30% 72%,0 80%,25% 88%,0 95%,30% 100%,100% 100%);}
   .tw-gem{position:absolute;width:9px;height:9px;background:#74ebf5;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);box-shadow:0 0 10px #74ebf5,0 0 18px #74ebf588;animation:twGlowC 2s infinite;}
@@ -171,33 +171,31 @@ const TowerUtils = {
   .tw-cryscl.wide{width:110px;height:90px;}
   .tw-firefly{position:absolute;width:5px;height:5px;border-radius:50%;background:#bffcff;box-shadow:0 0 10px #74ebf5,0 0 20px #74ebf5;animation:twFly ease-in-out infinite;}
 
-  /* === VAULT SCENE === */
+  /* === VAULT SCENE (v3 réaliste) === */
   .tw-marble{position:absolute;inset:0;background:linear-gradient(115deg,transparent 40%,#ffffff08 40% 42%,transparent 42%),linear-gradient(65deg,transparent 55%,#ffffff06 55% 57%,transparent 57%),linear-gradient(150deg,transparent 70%,#ffffff05 70% 71%,transparent 71%);}
   .tw-spot{position:absolute;top:0;width:16%;height:70%;background:linear-gradient(180deg,#ffe9a833,transparent 80%);clip-path:polygon(40% 0,60% 0,100% 100%,0 100%);filter:blur(3px);animation:twGlowC 4s infinite;}
   .tw-pillar{position:absolute;top:0;bottom:0;width:8%;background:linear-gradient(90deg,#1a0f02,#5a4410 50%,#1a0f02);border-left:2px solid #8a6a1a44;border-right:2px solid #8a6a1a44;box-shadow:0 0 12px #000c;}
-  .tw-vaultglow{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(92%,440px);aspect-ratio:1;border-radius:50%;background:radial-gradient(#f8b50044,transparent 70%);animation:twGlowC 3s infinite;}
-  .tw-vaultframe{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(86%,430px);aspect-ratio:1.15;background:linear-gradient(180deg,#5a4410,#2b1a00);border-radius:14px;box-shadow:0 0 40px #f8b50033,inset 0 0 30px #000;}
-  .tw-vaultdoor{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:82%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c9a227,#8a6a1a 40%,#3a2a05 75%,#160d00);border:6px solid #f8b50088;box-shadow:0 0 60px #f8b50066,inset 0 0 40px #000000aa;}
-  .tw-vaultwheel{position:absolute;left:50%;top:50%;width:44%;height:44%;transform:translate(-50%,-50%);border:6px solid #ffe9a8;border-radius:50%;animation:twSpin 16s linear infinite;box-shadow:0 0 20px #f8b50088,inset 0 0 10px #0006;}
-  .tw-vaultwheel::before{content:"";position:absolute;inset:-6px;background:linear-gradient(#ffe9a8,#ffe9a8) 50% 0/6px 100% no-repeat,linear-gradient(#ffe9a8,#ffe9a8) 0 50%/100% 6px no-repeat,linear-gradient(45deg,transparent 47%,#ffe9a8 47% 53%,transparent 53%),linear-gradient(-45deg,transparent 47%,#ffe9a8 47% 53%,transparent 53%);}
-  .tw-vaultwheel::after{content:"";position:absolute;left:50%;top:50%;width:20%;height:20%;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(#fff8dc,#8a6a1a);box-shadow:0 0 12px #ffe9a8;}
-  .tw-fbolt{position:absolute;width:10px;height:10px;border-radius:50%;background:radial-gradient(#ffe9a8,#8a6a1a);box-shadow:0 1px 3px #000;}
-  .tw-hinge{position:absolute;left:-4%;width:10%;height:12%;background:linear-gradient(180deg,#c9a227,#8a6a1a);border-radius:4px;box-shadow:0 2px 4px #000c;}
-  .tw-hinge.h1{top:22%;}.tw-hinge.h2{bottom:22%;}
-  .tw-knob{position:absolute;width:9%;height:9%;border-radius:50%;background:radial-gradient(#fff8dc,#c9a227);transform:translate(-50%,-50%);box-shadow:0 0 6px #ffe9a8aa;}
-  .tw-dial{position:absolute;right:16%;top:44%;width:14%;height:14%;border-radius:50%;background:radial-gradient(#c9a227,#8a6a1a);box-shadow:inset 0 0 6px #0008,0 0 4px #0008;}
-  .tw-dial::before{content:"";position:absolute;inset:30%;background:linear-gradient(#160d00,#160d00) 50% 0/3px 100% no-repeat,linear-gradient(#160d00,#160d00) 0 50%/100% 3px no-repeat,linear-gradient(45deg,transparent 40%,#160d00 40% 60%,transparent 60%);}
-  .tw-handle{position:absolute;right:8%;top:30%;width:4%;height:40%;border-radius:4px;background:linear-gradient(90deg,#c9a227,#ffe9a8 50%,#c9a227);box-shadow:0 0 6px #0008;}
-  .tw-vbolt{position:absolute;width:5%;height:5%;border-radius:50%;background:radial-gradient(#ffe9a8,#8a6a1a);transform:translate(-50%,-50%);box-shadow:0 1px 3px #000;}
+  .tw-vaultwall{position:absolute;left:0;right:0;top:30%;height:44%;background:linear-gradient(180deg,#4a4a40,#2a2a22 50%,#16160f);box-shadow:inset 0 12px 40px #000c,inset 0 -12px 40px #000c;}
+  .tw-vaultopening{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);width:min(64%,400px);aspect-ratio:1;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 40%,#fff8dc 0%,#ffd700 25%,#b8860b 60%,#5a4410 100%);box-shadow:inset 0 0 50px #00000088,0 0 70px #f8b50077;border:10px solid #8a6a1a;z-index:2;}
+  .tw-vaultbars{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 30px,#c9a227cc 30px 40px);box-shadow:inset 0 0 20px #0006;}
+  .tw-vaultdooropen{position:absolute;left:3%;top:33%;width:min(50%,330px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 38% 32%,#f0f0e8,#a8a89e 40%,#606058 72%,#2e2e28);box-shadow:0 14px 50px #000d,inset 0 0 40px #00000066,inset 0 4px 10px #ffffff44;transform:perspective(900px) rotateY(38deg);z-index:3;}
+  .tw-vaultdooropen::before{content:"";position:absolute;inset:12%;border-radius:50%;background:radial-gradient(circle at 40% 35%,#d8d8d0,#808078 50%,#404038 80%);box-shadow:inset 0 0 20px #0008;}
+  .tw-vaultdooropen::after{content:"";position:absolute;inset:36%;border-radius:50%;background:radial-gradient(circle at 40% 35%,#c0c0b8,#606058 60%,#303028);box-shadow:inset 0 2px 8px #ffffff44,0 2px 10px #0008;}
+  .tw-doorspokes{position:absolute;inset:22%;}
+  .tw-doorspokes i{position:absolute;left:50%;top:50%;width:48%;height:6px;margin-top:-3px;background:linear-gradient(90deg,#909088,#505048);transform-origin:left center;border-radius:3px;}
+  .tw-bankgrille{position:absolute;left:0;right:0;height:150px;background:repeating-linear-gradient(90deg,#3a3a30 0 10px,transparent 10px 46px),linear-gradient(180deg,#5a5a50,#2a2a22);box-shadow:0 0 20px #000c,inset 0 0 20px #0008;}
+  .tw-goldlogo{position:absolute;top:9%;left:50%;transform:translateX(-50%);font-size:clamp(28px,6vw,58px);font-weight:900;letter-spacing:8px;white-space:nowrap;background:linear-gradient(180deg,#fff8dc,#ffd700 30%,#b8860b 55%,#ffd700 78%,#fff8dc);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;filter:drop-shadow(0 2px 0 #8a6a1a) drop-shadow(0 4px 0 #5a4410) drop-shadow(0 7px 10px #000);animation:twGlowC 3s infinite;}
   .tw-ingot{position:absolute;width:42px;height:14px;border-radius:3px;background:linear-gradient(180deg,#ffe9a8,#c9a227 50%,#8a6a1a);box-shadow:inset 0 1px 0 #fff8,0 2px 4px #000c;}
   .tw-laser{position:absolute;left:9%;right:9%;height:2px;background:linear-gradient(90deg,transparent,#ff2020 8%,#ff7070 50%,#ff2020 92%,transparent);box-shadow:0 0 8px #ff2020cc,0 0 20px #ff202066;opacity:.85;animation:twLaserV ease-in-out infinite alternate;z-index:1;}
   .tw-laser::before,.tw-laser::after{content:"";position:absolute;top:-3px;width:9px;height:9px;border-radius:2px;background:#1a0505;box-shadow:0 0 7px #ff2020,inset 0 0 3px #ff7070;animation:twFlickP 1.6s steps(2) infinite;}
   .tw-laser::before{left:-3px;}.tw-laser::after{right:-3px;}
   .tw-laser.d{animation-name:twLaserD;}
+  .tw-cam{position:absolute;width:34px;height:24px;background:linear-gradient(180deg,#3a3a48,#14141c);border-radius:6px 6px 4px 4px;box-shadow:0 2px 6px #000;}
+  .tw-cam::after{content:"";position:absolute;left:50%;top:60%;width:10px;height:10px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(#ff6060,#801010);box-shadow:0 0 10px #ff2020;animation:twFlickP 1.5s steps(2) infinite;}
+  .tw-cam .beam{position:absolute;left:50%;top:100%;width:60px;height:90px;transform-origin:top center;background:linear-gradient(180deg,#ff202033,transparent);clip-path:polygon(45% 0,55% 0,100% 100%,0 100%);animation:twCamSweep 4s ease-in-out infinite alternate;}
+  .tw-sensor{position:absolute;width:14px;height:6px;border-radius:3px;background:#1a0505;box-shadow:0 0 8px #ff2020,inset 0 1px 2px #ff7070;animation:twFlickP 1.2s steps(2) infinite;}
   .tw-gloss{position:absolute;bottom:0;left:0;right:0;height:12%;background:linear-gradient(180deg,#0000,#f8b50018 40%,#00000088);box-shadow:inset 0 6px 14px #000a;}
   .tw-goldspill{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:70%;height:18%;background:radial-gradient(ellipse at 50% 100%,#f8b50055,transparent 70%);filter:blur(6px);}
-  .tw-sweep{position:absolute;top:8%;bottom:8%;width:14%;background:linear-gradient(90deg,transparent,#ffe9a855,transparent);transform:skewX(-12deg);animation:twSweep 5.5s ease-in-out infinite;pointer-events:none;}
-  .tw-coin{position:absolute;font-size:22px;filter:drop-shadow(0 0 8px #f8b500);animation:twCoin 2.5s ease-in-out infinite;}
 
   /* === PARTICULES === */
   .tw-part{position:absolute;width:4px;height:4px;border-radius:50%;}
@@ -238,21 +236,18 @@ const TowerUtils = {
   @keyframes twDrive{from{left:-20%}to{left:115%}}
   @keyframes twDriveR{from{left:115%}to{left:-20%}}
   @keyframes twFlickP{50%{opacity:.15}}
-  @keyframes twRay{50%{opacity:.35}}
   @keyframes twGlowC{50%{filter:brightness(1.6)}}
-  @keyframes twMist{50%{transform:translateX(-46%) scale(1.08);opacity:.7}}
   @keyframes twSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
   @keyframes twLaserV{from{transform:translateY(-26px)}to{transform:translateY(26px)}}
   @keyframes twLaserD{from{transform:rotate(-5deg) translateY(-18px)}to{transform:rotate(5deg) translateY(18px)}}
   @keyframes twFall{0%{top:-4%}100%{top:104%}}
   @keyframes twRise{0%{top:104%}100%{top:-4%}}
   @keyframes twSlide{to{background-position:300% 0}}
-  @keyframes twSweep{0%{left:-20%;opacity:0}15%{opacity:1}85%{opacity:1}100%{left:110%;opacity:0}}
-  @keyframes twCoin{50%{transform:translateY(-4px) rotate(15deg)}}
   @keyframes twBlimp{from{left:-15%}to{left:110%}}
   @keyframes twPlaneX{from{left:110%}to{left:-10%}}
   @keyframes twShoot{0%{opacity:0;transform:rotate(-30deg) translateX(0)}5%{opacity:.9}12%{opacity:0;transform:rotate(-30deg) translateX(-240px)}100%{opacity:0}}
   @keyframes twFly{0%,100%{transform:translate(0,0);opacity:.9}25%{transform:translate(14px,-18px);opacity:.5}50%{transform:translate(-10px,-30px);opacity:.9}75%{transform:translate(8px,-12px);opacity:.6}}
+  @keyframes twCamSweep{from{transform:translateX(-50%) rotate(-25deg)}to{transform:translateX(-50%) rotate(25deg)}}
 
   /* === MOBILE PERF === */
   @media (max-width:760px), (pointer:coarse){
@@ -265,7 +260,6 @@ const TowerUtils = {
     .tw-part{display:none;}
     .tw-cloud{display:none;}
     .tw-reflect{display:none;}
-    .tw-mist{display:none;}
     .tw-car .hl,.tw-car .tl{display:none;}
     .tw-cryscl{filter:none;animation:none;}
   }
@@ -346,11 +340,11 @@ function generateSceneHTML(c, W, C) {
       html += `<span class="tw-gem" style="${leftSide ? ("left:" + (2 + (i*7)%8) + "%") : ("right:" + (2 + (i*7)%8) + "%")};top:${4 + (i*11)%90}%;animation-delay:${(i*.4)%2}s;"></span>`;
     }
     html += `<div class="tw-gceil"></div>`;
-    [[6,110],[16,80],[26,130],[38,70],[50,110],[62,80],[74,120],[86,75],[94,100]].forEach(p => {
+    [[6,220],[16,160],[26,260],[38,140],[50,220],[62,160],[74,240],[86,150],[94,200]].forEach(p => {
       html += `<span class="tw-stalac" style="left:${p[0]}%;height:${p[1]}px;"></span>`;
     });
     html += `<div class="tw-gfloor"></div>`;
-    [[10,70],[26,55],[42,65],[58,50],[74,60],[90,55]].forEach(p => {
+    [[10,160],[26,120],[42,150],[58,110],[74,140],[90,120]].forEach(p => {
       html += `<span class="tw-stalag" style="left:${p[0]}%;height:${p[1]}px;"></span>`;
     });
     const shelfN = IS_MOBILE ? 6 : 10;
@@ -369,22 +363,24 @@ function generateSceneHTML(c, W, C) {
     }
   }
 
-   if (W.scene === "vault") {
+  if (W.scene === "vault") {
     html += `<div class="tw-marble"></div>`;
-    // 🏆 HAUT : intérieur du coffre (or + logo 3D)
-    html += `<div class="tw-vaultinside"></div>`;
-    html += `<div class="tw-goldlogo">CHIFFRE BLITZ</div>`;
-    for (let i = 0; i < 10; i++) html += `<span class="tw-ingot" style="left:${6+i*9}%;top:${16+(i%3)*6}%;"></span>`;
-    // 🏦 MILIEU : coffre géant en premier plan
-    let bolts = ""; for (let i = 0; i < 12; i++) { const a = i*Math.PI/6; bolts += `<span class="tw-vbolt" style="left:${50+44*Math.cos(a)}%;top:${50+44*Math.sin(a)}%;"></span>`; }
-    let knobs = ""; for (let i = 0; i < 6; i++) { const a = i*Math.PI/3; knobs += `<span class="tw-knob" style="left:${50+38*Math.cos(a)}%;top:${50+38*Math.sin(a)}%;"></span>`; }
-    html += `<div class="tw-vaultglow" style="top:46%;"></div><div class="tw-vaultframe"><span class="tw-fbolt" style="left:5%;top:7%;"></span><span class="tw-fbolt" style="right:5%;top:7%;"></span><span class="tw-fbolt" style="left:5%;bottom:7%;"></span><span class="tw-fbolt" style="right:5%;bottom:7%;"></span><span class="tw-hinge h1"></span><span class="tw-hinge h2"></span><div class="tw-vaultdoor"><div class="tw-vaultwheel">${knobs}</div><span class="tw-dial"></span><span class="tw-handle"></span>${bolts}</div></div>`;
-    // 🚨 BAS : systèmes de sécurité (approche)
-    html += `<div class="tw-laser" style="top:66%;animation-duration:5s;"></div><div class="tw-laser d" style="top:74%;animation-duration:7s;animation-delay:1s;"></div><div class="tw-laser" style="top:82%;animation-duration:6s;animation-delay:2s;"></div>`;
-    html += `<div class="tw-cam" style="left:12%;top:62%;"><span class="beam"></span></div><div class="tw-cam" style="right:12%;top:70%;"><span class="beam"></span></div>`;
-    html += `<div class="tw-grille" style="bottom:200px;"></div>`;
-    for (let i = 0; i < 6; i++) html += `<span class="tw-sensor" style="left:${10+i*15}%;bottom:190px;"></span>`;
-    // Colonnes + sol
+    html += `<div class="tw-spot" style="left:16%;"></div><div class="tw-spot" style="left:64%;animation-delay:1.5s;"></div>`;
+    html += `<div class="tw-vaultwall"></div>`;
+    let ingots = "";
+    for (let i = 0; i < 10; i++) ingots += `<span class="tw-ingot" style="left:${10+(i%5)*16}%;bottom:${6+Math.floor(i/5)*15}px;"></span>`;
+    html += `<div class="tw-vaultopening">
+      <div class="tw-vaultbars"></div>
+      <div class="tw-goldlogo" style="top:26%;font-size:clamp(14px,3vw,28px);letter-spacing:4px;">CHIFFRE BLITZ</div>
+      ${ingots}
+    </div>`;
+    let spokes = "";
+    for (let i = 0; i < 8; i++) spokes += `<i style="transform:rotate(${i*45}deg);"></i>`;
+    html += `<div class="tw-vaultdooropen"><div class="tw-doorspokes">${spokes}</div></div>`;
+    html += `<div class="tw-bankgrille" style="bottom:190px;"></div>`;
+    html += `<div class="tw-laser" style="top:70%;animation-duration:5s;"></div><div class="tw-laser d" style="top:78%;animation-duration:7s;animation-delay:1s;"></div>`;
+    html += `<div class="tw-cam" style="left:10%;top:66%;"><span class="beam"></span></div><div class="tw-cam" style="right:10%;top:74%;"><span class="beam"></span></div>`;
+    for (let i = 0; i < 6; i++) html += `<span class="tw-sensor" style="left:${10+i*15}%;bottom:180px;"></span>`;
     html += `<div class="tw-pillar" style="left:4%;"></div><div class="tw-pillar" style="right:4%;"></div>`;
     html += `<div class="tw-gloss"></div><div class="tw-goldspill"></div>`;
   }
@@ -396,26 +392,7 @@ function generateSceneHTML(c, W, C) {
   SCENE_CACHE[c] = result;
   return result;
 }
-/* ----- CSS coffre v2 ----- */
-(function(){
-  const s=document.createElement("style");
-  s.textContent=`
-  .tw-vaultframe{width:min(90%,700px);}
-  .tw-vaultglow{width:min(95%,780px);}
-  .tw-vaultinside{position:absolute;top:0;left:0;right:0;height:28%;background:radial-gradient(ellipse at 50% 40%,#ffe9a866,#f8b50033 45%,#160d00 85%);box-shadow:inset 0 -20px 40px #000a;}
-  .tw-goldlogo{position:absolute;top:9%;left:50%;transform:translateX(-50%);font-size:clamp(28px,6vw,58px);font-weight:900;letter-spacing:8px;white-space:nowrap;
-    background:linear-gradient(180deg,#fff8dc,#ffd700 30%,#b8860b 55%,#ffd700 78%,#fff8dc);
-    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
-    filter:drop-shadow(0 2px 0 #8a6a1a) drop-shadow(0 4px 0 #5a4410) drop-shadow(0 7px 10px #000);animation:twGlowC 3s infinite;}
-  .tw-cam{position:absolute;width:34px;height:24px;background:linear-gradient(180deg,#3a3a48,#14141c);border-radius:6px 6px 4px 4px;box-shadow:0 2px 6px #000;}
-  .tw-cam::after{content:"";position:absolute;left:50%;top:60%;width:10px;height:10px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(#ff6060,#801010);box-shadow:0 0 10px #ff2020;animation:twFlickP 1.5s steps(2) infinite;}
-  .tw-cam .beam{position:absolute;left:50%;top:100%;width:60px;height:90px;transform-origin:top center;background:linear-gradient(180deg,#ff202033,transparent);clip-path:polygon(45% 0,55% 0,100% 100%,0 100%);animation:twCamSweep 4s ease-in-out infinite alternate;}
-  @keyframes twCamSweep{from{transform:translateX(-50%) rotate(-25deg)}to{transform:translateX(-50%) rotate(25deg)}}
-  .tw-grille{position:absolute;left:0;right:0;height:120px;background:repeating-linear-gradient(90deg,#5a4410 0 8px,transparent 8px 40px);opacity:.6;box-shadow:0 0 12px #000;}
-  .tw-sensor{position:absolute;width:14px;height:6px;border-radius:3px;background:#1a0505;box-shadow:0 0 8px #ff2020,inset 0 1px 2px #ff7070;animation:twFlickP 1.2s steps(2) infinite;}
-  `;
-  document.head.appendChild(s);
-})();
+
 /* ----- 6. RENDU CARTE ----- */
 function drawRoom() {
   const wrap = document.getElementById("tw-mapwrap");
@@ -427,7 +404,7 @@ function drawRoom() {
   document.getElementById("tower-sub").innerText = "É" + current + " ⭐" + totalStars;
 
   const H = TOTAL_FLOORS * STEP + 110;
-    let zones = "", gates = "", paths = "", ptsByChap = {}, quotas = "";
+  let zones = "", gates = "", paths = "", ptsByChap = {}, quotas = "";
 
   for (let c = 1; c <= 9; c++) {
     const chap = TOWER_CHAPTERS[c - 1];
