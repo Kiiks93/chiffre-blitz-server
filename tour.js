@@ -254,7 +254,16 @@ const TowerUtils = {
   @keyframes twRise{0%{top:104%}100%{top:-4%}}
   @keyframes twPop{0%{transform:scale(0)}70%{transform:scale(1.4)}100%{transform:scale(1)}}
   @keyframes twFog{50%{opacity:.25}}
-
+  /* === POP-UP SÉLECTION NIVEAU === */
+  .tw-lvlpop{position:fixed;inset:0;background:#000c;z-index:9997;display:flex;align-items:center;justify-content:center;}
+  .tw-lvlpop-card{background:#0f051d;border:2px solid #00d2ff;border-radius:14px;padding:14px;width:min(94%,420px);max-height:80%;display:flex;flex-direction:column;box-shadow:0 0 20px #00d2ff66;}
+  .tw-lvlpop-card h3{color:#00d2ff;text-align:center;margin:0 0 10px;font-size:15px;}
+  .tw-lvl-grid{overflow-y:auto;display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:4px;}
+  .tw-lvl-cell{aspect-ratio:1;border-radius:10px;background:#1a1a2e;border:2px solid #333;color:#fff;font-weight:900;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;cursor:pointer;}
+  .tw-lvl-cell .st{font-size:8px;color:#f8b500;line-height:1;}
+  .tw-lvl-cell.cur{border-color:#00d2ff;box-shadow:0 0 12px #00d2ff66;}
+  .tw-lvl-cell.lock{opacity:.35;cursor:default;}
+  .tw-lvl-cell.boss{border-color:#ff4b2b;}
   /* === MOBILE PERF === */
   @media (max-width:760px), (pointer:coarse){
     .tw-road{height:140px;}
@@ -411,7 +420,8 @@ function openTower() {
         <button class="tw-back" onclick="closeTower()">⬅️</button>
         <div class="tw-lives">❤️ <span id="tw-lives-n">${twLives}</span></div>
         <div class="tw-coins">🪙 <span id="tw-coins-n">0</span></div>
-        <button class="tw-shopbtn" onclick="openShop()">🛒</button>
+        <button class="tw-shopbtn" onclick="openLevelSelect()">🎯</button>
+        <button class="tw-shopbtn" style="margin-left:0;" onclick="openShop()">🛒</button>
       </div>
       <div class="tw-qwrap"><span class="lbl" id="tw-q-lbl">⭐ 0/240</span><div class="tw-qbar"><div id="tw-q-fill" style="width:0%"></div></div></div>
       <div class="tw-center">
@@ -480,7 +490,36 @@ function advPlay() {
   def.replay = twViewFloor <= towerProgress.floor;
   showBriefing(def);
 }
-
+/* ----- SÉLECTION DE NIVEAU ----- */
+function openLevelSelect() {
+  closeLevelSelect();
+  const world = TowerUtils.getTowerChapter(twViewFloor).id;
+  const start = (world - 1) * FPC + 1, end = world * FPC;
+  const maxPlayable = Math.min(towerProgress.floor + 1, end);
+  let cells = "";
+  for (let f = start; f <= end; f++) {
+    const st = towerProgress.stars[String(f)] || 0;
+    const inChap = ((f - 1) % FPC) + 1;
+    const isBoss = (inChap === FPC || inChap % 50 === 0);
+    const lock = f > maxPlayable;
+    const cur = f === twViewFloor;
+    cells += `<button class="tw-lvl-cell ${lock?"lock":""} ${cur?"cur":""} ${isBoss?"boss":""}" ${lock?"disabled":""} onclick="pickLevel(${f})">${f}<span class="st">${st?"⭐".repeat(st):""}</span></button>`;
+  }
+  const d = document.createElement("div");
+  d.className = "tw-lvlpop"; d.id = "tw-lvlpop";
+  d.innerHTML = `<div class="tw-lvlpop-card">
+    <h3>🎯 ${currentLang==="fr"?"Choisis ton niveau":"Pick your level"}</h3>
+    <div class="tw-lvl-grid" id="tw-lvl-grid">${cells}</div>
+    <button class="btn-secondary" style="width:100%;margin-top:10px;" onclick="closeLevelSelect()">❌ ${currentLang==="fr"?"Fermer":"Close"}</button>
+  </div>`;
+  document.body.appendChild(d);
+  // Se positionne sur le DERNIER palier débloqué (pas le 1er)
+  const grid = document.getElementById("tw-lvl-grid");
+  const target = grid.querySelector(".tw-lvl-cell.cur") || grid.children[Math.max(0, maxPlayable - start)];
+  if (target) grid.scrollTop = Math.max(0, target.offsetTop - grid.clientHeight / 2);
+}
+function closeLevelSelect() { const s = document.getElementById("tw-lvlpop"); if (s) s.remove(); }
+function pickLevel(f) { twViewFloor = f; closeLevelSelect(); renderAdventure(); }
 function showWorldTransition(w) {
   const chap = TOWER_CHAPTERS[w - 1];
   let f = document.createElement("div");
