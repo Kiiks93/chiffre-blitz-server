@@ -262,7 +262,16 @@ const TowerUtils = {
   `;
   document.head.appendChild(style);
 })();
-
+/* ----- CSS grotte v3 (parois + gemmes) ----- */
+(function(){
+  const s=document.createElement("style");
+  s.textContent=`
+  .tw-gwall{position:absolute;top:0;bottom:0;width:12%;background:linear-gradient(90deg,#04141d,#0a2a3a);clip-path:polygon(0 0,100% 3%,70% 8%,100% 14%,75% 22%,100% 30%,70% 38%,100% 46%,75% 55%,100% 63%,70% 72%,100% 80%,75% 88%,100% 95%,70% 100%,0 100%);}
+  .tw-gwall.r{left:auto;right:0;background:linear-gradient(270deg,#04141d,#0a2a3a);clip-path:polygon(100% 0,0 3%,30% 8%,0 14%,25% 22%,0 30%,30% 38%,0 46%,25% 55%,0 63%,30% 72%,0 80%,25% 88%,0 95%,30% 100%,100% 100%);}
+  .tw-gem{position:absolute;width:9px;height:9px;background:#74ebf5;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);box-shadow:0 0 10px #74ebf5,0 0 18px #74ebf588;animation:twGlowC 2s infinite;}
+  `;
+  document.head.appendChild(s);
+})();
 /* ----- 5. GÉNÉRATION DE SCÈNES (avec cache) ----- */
 function generateSceneHTML(c, W, C) {
   if (SCENE_CACHE[c]) return SCENE_CACHE[c];
@@ -330,9 +339,17 @@ function generateSceneHTML(c, W, C) {
     }
   }
 
-    if (W.scene === "glacier") {
+     if (W.scene === "glacier") {
     html += `<div class="tw-cavewall"></div>`;
-    // Plafond + stalactites qui pendent
+    // Parois rocheuses continues (profondeur de grotte)
+    html += `<div class="tw-gwall"></div><div class="tw-gwall r"></div>`;
+    // Gemmes incrustées dans les parois
+    const gemN = IS_MOBILE ? 8 : 16;
+    for (let i = 0; i < gemN; i++) {
+      const leftSide = (i % 2 === 0);
+      html += `<span class="tw-gem" style="${leftSide ? ("left:" + (2 + (i*7)%8) + "%") : ("right:" + (2 + (i*7)%8) + "%")};top:${4 + (i*11)%90}%;animation-delay:${(i*.4)%2}s;"></span>`;
+    }
+    // Plafond + stalactites
     html += `<div class="tw-gceil"></div>`;
     [[6,110],[16,80],[26,130],[38,70],[50,110],[62,80],[74,120],[86,75],[94,100]].forEach(p => {
       html += `<span class="tw-stalac" style="left:${p[0]}%;height:${p[1]}px;"></span>`;
@@ -342,10 +359,10 @@ function generateSceneHTML(c, W, C) {
     [[10,70],[26,55],[42,65],[58,50],[74,60],[90,55]].forEach(p => {
       html += `<span class="tw-stalag" style="left:${p[0]}%;height:${p[1]}px;"></span>`;
     });
-    // Étagères de cristaux ANCRÉES aux parois (alternées G/D)
-    const shelfN = IS_MOBILE ? 4 : 7;
+    // Étagères de cristaux PLUS nombreuses
+    const shelfN = IS_MOBILE ? 6 : 10;
     for (let i = 0; i < shelfN; i++) {
-      const top = 14 + i * (66 / shelfN);
+      const top = 12 + i * (70 / shelfN);
       const leftSide = (i % 2 === 0);
       const s = .7 + ((i * 13) % 4) / 10;
       html += `<div class="tw-shelf ${leftSide ? "" : "r"}" style="top:${top}%;${leftSide ? "left:0;" : "right:0;"}">
@@ -353,7 +370,7 @@ function generateSceneHTML(c, W, C) {
         <span class="tw-cryscl" style="bottom:18px;left:22%;transform:scale(${s});animation-delay:${i*.5}s;"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span>
       </div>`;
     }
-    // Lucioles lumineuses qui flottent
+    // Lucioles
     const flyN = IS_MOBILE ? 4 : 9;
     for (let i = 0; i < flyN; i++) {
       html += `<span class="tw-firefly" style="left:${10+(i*29)%80}%;top:${12+(i*17)%70}%;animation-duration:${5+(i%4)*2}s;animation-delay:${i*.6}s;"></span>`;
@@ -419,7 +436,7 @@ function drawRoom() {
       } else {
         const stars = TowerUtils.starsInWorld(c - 1);
         const pct = Math.min(100, Math.round(stars / WORLD_QUOTA * 100));
-        gates += `<div class="tw-quota" style="top:${zTop - 36}px;">
+        gates += `<div class="tw-quota" style="top:${zTop + zH + 8}px;">
           <div class="tw-quota-label">🔒 ${chap.icon} ${chap.name} — ⭐ ${stars}/${WORLD_QUOTA}</div>
           <div class="tw-quota-bar"><div style="width:${pct}%"></div></div>
         </div>`;
