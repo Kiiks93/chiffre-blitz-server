@@ -251,33 +251,41 @@ function generateSceneHTML(c, W, C) {
   if (SCENE_CACHE[c]) return SCENE_CACHE[c];
   let html = "";
 
-  if (W.scene === "city") {
+    if (W.scene === "city") {
     html += `<span class="tw-moon"></span>`;
-    const starsN = IS_MOBILE ? 40 : 140;
-    for (let i = 0; i < starsN; i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%44}%;animation-delay:${(i*.23)%3}s;"></span>`;
+    const starsN = IS_MOBILE ? 45 : 140;
+    for (let i = 0; i < starsN; i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%62}%;animation-delay:${(i*.23)%3}s;"></span>`;
     const cloudsN = IS_MOBILE ? 2 : 4;
-    for (let i = 0; i < cloudsN; i++) html += `<span class="tw-cloud" style="top:${3+i*6}%;width:${22+(i*9)%16}%;animation-duration:${70+i*25}s;animation-delay:${i*11}s;"></span>`;
+    for (let i = 0; i < cloudsN; i++) html += `<span class="tw-cloud" style="top:${3+i*7}%;width:${22+(i*9)%16}%;animation-duration:${70+i*25}s;animation-delay:${i*11}s;"></span>`;
     html += `<div class="tw-horizon"></div>`;
     const cols = ["#00ffff","#ff00ff","#f8b500","#7dff8a"];
+
+    // Silhouettes arrière (moins nombreuses, espacées)
     let back = "";
-    const hb = [70,88,76,96,82,90,74,92,80,86];
-    for (let i = 0; i < 10; i++) back += `<div class="tw-bldg" style="height:${hb[i]}%;flex:${i%2?1.3:1};"></div>`;
+    const hb = [72,92,80,96,86,90,78];
+    const backN = IS_MOBILE ? 6 : 7;
+    for (let i = 0; i < backN; i++) back += `<div class="tw-bldg" style="height:${hb[i]}%;flex:${i%2?1.25:1};"></div>`;
     html += `<div class="tw-cityback">${back}</div>`;
+
+    // Immeubles principaux : MOINS nombreux, MOINS hauts, plus espacés
     let b = "";
-    const hs = [42,62,50,74,56,68,46,70];
-    const hf = [1,1.25,.9,1.15,1,.85,1.2,1];
-    for (let i = 0; i < 8; i++) {
+    const hs = [48,72,56,86,62,76];
+    const hf = [1,1.2,.95,1.15,1,.9];
+    const mainN = IS_MOBILE ? 5 : 6;
+    for (let i = 0; i < mainN; i++) {
       let wins = "";
-      const n = IS_MOBILE ? (10 + (i%3)*5) : (40 + (i%3)*15);
-      for (let w = 0; w < n; w++) wins += `<span class="tw-wl" style="color:${cols[(w+i)%4]};left:${5+((w*19)%88)}%;top:${3+((w*29)%94)}%;animation-duration:${2.5+((w*13)%4)}s;animation-delay:${(w*0.37)%3}s;"></span>`;
+      const n = IS_MOBILE ? (6 + (i%3)*3) : (14 + (i%3)*6);
+      for (let w = 0; w < n; w++) wins += `<span class="tw-wl" style="color:${cols[(w+i)%4]};left:${6+((w*23)%82)}%;top:${4+((w*29)%88)}%;animation-duration:${2.5+((w*13)%4)}s;animation-delay:${(w*0.37)%3}s;"></span>`;
       b += `<div class="tw-bldg" style="height:${hs[i]}%;flex:${hf[i]};">${wins}${(!IS_MOBILE && i%3===0)?'<span class="tw-ant"></span>':""}</div>`;
     }
     html += `<div class="tw-city">${b}</div>`;
+
+    // Route + voitures
     html += `<div class="tw-road"><span class="tw-lane"></span></div>`;
     if (!IS_MOBILE) html += `<div class="tw-reflect"></div>`;
     const car = (cls, bottom, dur, delay, col) => `<span class="tw-car ${cls}" style="bottom:${bottom};animation-duration:${dur};animation-delay:${delay};color:${col};"><i class="cb"></i><i class="cc"></i><i class="ug"></i><i class="w1"></i><i class="w2"></i><i class="hl"></i><i class="tl"></i></span>`;
     if (IS_MOBILE) {
-      html += car("", "20px", "9s", "0s", "#00d2ff") + car("s", "34px", "7s", "3s", "#f8b500") + car("r", "100px", "10s", "1.5s", "#ff2bd6") + car("r s", "114px", "8s", "5s", "#7dff8a");
+      html += car("", "14px", "9s", "0s", "#00d2ff") + car("s", "28px", "7s", "3s", "#f8b500") + car("r", "78px", "10s", "1.5s", "#ff2bd6") + car("r s", "96px", "8s", "5s", "#7dff8a");
     } else {
       html += car("", "16px", "9s", "0s", "#00d2ff") + car("", "34px", "11s", "2.5s", "#f8b500") + car("s", "24px", "7s", "5s", "#7dff8a") + car("", "44px", "13s", "7.5s", "#ff8a00") + car("s", "18px", "8s", "9.5s", "#ff2bd6");
       html += car("r", "96px", "10s", "1.5s", "#ff2bd6") + car("r", "114px", "12s", "4s", "#00d2ff") + car("r s", "104px", "8s", "6.5s", "#ff8a00") + car("r", "126px", "14s", "8.5s", "#7dff8a") + car("r s", "98px", "9s", "11s", "#f8b500");
@@ -319,7 +327,24 @@ function generateSceneHTML(c, W, C) {
   SCENE_CACHE[c] = result;
   return result;
 }
+/* ----- CSS ville proportionnée (hauteurs fixes) ----- */
+(function(){
+  const s=document.createElement("style");
+  s.textContent=`
+  /* Bandes de ville en hauteur FIXE = proportions d'origine retrouvées */
+  .tw-horizon{bottom:180px;height:200px;}
+  .tw-cityback{bottom:180px;height:600px;gap:2%;}
+  .tw-city{bottom:180px;height:480px;gap:3%;}
 
+  @media (max-width:760px), (pointer:coarse){
+    .tw-road{height:140px;}
+    .tw-horizon{bottom:140px;height:160px;}
+    .tw-cityback{bottom:140px;height:440px;}
+    .tw-city{bottom:140px;height:340px;}
+  }
+  `;
+  document.head.appendChild(s);
+})();
 /* ----- 6. RENDU CARTE ----- */
 function drawRoom() {
   const wrap = document.getElementById("tw-mapwrap");
