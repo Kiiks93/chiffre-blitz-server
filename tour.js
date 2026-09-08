@@ -4,15 +4,15 @@ TOUR.JS — AVENTURE « MATCH FACTORY » (écran fixe par monde)
 
 /* ----- 1. CONFIGURATION ----- */
 const TOWER_CHAPTERS = [
-  { id:1, season:1, name:"Quartier Néon", icon:"🌆", boss:"🤖", objects:["💡","⚡","📺","🔌","🎛️","🖥️","📻","","🌃"] },
-  { id:2, season:1, name:"Grottes de Cristal", icon:"🧊", boss:"🗿", objects:["🕯️","","💎","️","","❄️","🫧","🌀","🧊"] },
-  { id:3, season:1, name:"Banque Dorée", icon:"🏦", boss:"👾", objects:["🪙","💰","💵","💳","🥇","","💎","🏅",""] },
-  { id:4, season:2, name:"Tour Hantée", icon:"🎃", boss:"🧛", objects:["🕸️","","🕯️","🦇","","👻","🐈⬛","","⚰️"] },
+  { id:1, season:1, name:"Quartier Néon", icon:"🌆", boss:"🤖", objects:["💡","","📺","🔌","🎛️","🖥️","📻","💾","🌃"] },
+  { id:2, season:1, name:"Grottes de Cristal", icon:"🧊", boss:"🗿", objects:["🕯️","🔮","","⛏️","🪞","️","🫧","🌀","🧊"] },
+  { id:3, season:1, name:"Banque Dorée", icon:"🏦", boss:"👾", objects:["🪙","💰","💵","💳","","🔐","💎","🏅","📜"] },
+  { id:4, season:2, name:"Tour Hantée", icon:"🎃", boss:"🧛", objects:["🕸️","🎃","🕯️","🦇","","👻","‍","🔮","️"] },
   { id:5, season:2, name:"Cimetière Brumeux", icon:"🌫️", boss:"💀", objects:["🪦","🌫️","🕯️","️","","🕷️","","🦴","🖤"] },
-  { id:6, season:2, name:"Antre Citrouille", icon:"👑", boss:"🎃", objects:["🎃","🍬","","🦇","🧹","🍭","️","","🏆"] },
-  { id:7, season:3, name:"Cime Bonbon", icon:"🍭", boss:"🧝", objects:["🍭","","🎀","🎂","🧁","🥐","🍰","🍩",""] },
-  { id:8, season:3, name:"Forêt de Sapins", icon:"🎄", boss:"⛄", objects:["🎄","🎁","❄️","🔔","️","⭐","🧦","🍪","🦌"] },
-  { id:9, season:3, name:"Atelier du Père Noël", icon:"🎅", boss:"🎅", objects:["🎅","🤶","","🦌","🔥","","⛄","","🍪"] }
+  { id:6, season:2, name:"Antre Citrouille", icon:"👑", boss:"🎃", objects:["🎃","🍬","🔮","","🧹","","🕸️","👻",""] },
+  { id:7, season:3, name:"Cime Bonbon", icon:"🍭", boss:"🧝", objects:["🍭","","🎀","🎂","🧁","🥐","🍰","🍩","🍫"] },
+  { id:8, season:3, name:"Forêt de Sapins", icon:"🎄", boss:"⛄", objects:["🎄","🎁","❄️","🔔","🕯️","⭐","🧦","🍪",""] },
+  { id:9, season:3, name:"Atelier du Père Noël", icon:"🎅", boss:"🎅", objects:["🎅","🤶","","🦌","","🎁","","🥛","🍪"] }
 ];
 const FPC = 200;
 const TOTAL_FLOORS = 9 * FPC;
@@ -82,7 +82,7 @@ const TowerUtils = {
   }
 };
 
-/* ----- 4. CSS CONSOLIDÉ ----- */
+/* ----- 4. CSS CONSOLIDÉ (UN SEUL BLOC) ----- */
 (function() {
   const style = document.createElement('style');
   style.textContent = `
@@ -92,7 +92,6 @@ const TowerUtils = {
   .tw-hud{position:relative;z-index:5;display:flex;align-items:center;gap:8px;padding:10px 12px;}
   .tw-hud .tw-back{background:#1a1a2e;border:1px solid #00d2ff;color:#00d2ff;border-radius:8px;padding:6px 10px;font-size:14px;}
   .tw-lives{display:flex;align-items:center;gap:5px;background:#1a1a2ecc;border:2px solid #ff4b2b;border-radius:10px;padding:4px 10px;color:#fff;font-weight:900;font-size:14px;}
-  .tw-lives small{color:#aaa;font-weight:600;font-size:10px;}
   .tw-coins{display:flex;align-items:center;gap:5px;background:#1a1a2ecc;border:2px solid #f8b500;border-radius:10px;padding:4px 10px;color:#ffd75e;font-weight:900;font-size:14px;}
   .tw-shopbtn{margin-left:auto;width:44px;height:44px;border-radius:10px;background:#1a1a2ecc;border:2px solid #f8b500;font-size:22px;cursor:pointer;}
   .tw-qwrap{position:relative;z-index:5;margin:0 12px 4px;display:flex;align-items:center;gap:8px;}
@@ -129,7 +128,7 @@ const TowerUtils = {
   .tw-shop-item .nm{flex:1;color:#fff;font-weight:700;font-size:13px;}
   .tw-shop-item .buy{background:linear-gradient(180deg,#f8b500,#c9a227);border:none;border-radius:8px;padding:7px 12px;font-weight:900;color:#3a2a05;cursor:pointer;}
 
-  /* === SCÈNES (fonds) === */
+  /* === CITY === */
   .tw-moon{position:absolute;top:2%;right:10%;width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff8e8,#d8c9a8 60%,#a89878);box-shadow:0 0 30px #fff8e866;}
   .tw-star2{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;animation:twFlickP 3s steps(2) infinite;}
   .tw-cloud{position:absolute;height:10px;border-radius:6px;background:linear-gradient(90deg,transparent,#8888aa22 30%,#8888aa22 70%,transparent);filter:blur(3px);animation:twCloud linear infinite;}
@@ -158,15 +157,24 @@ const TowerUtils = {
   .tw-blimp .neo{position:absolute;left:12%;right:12%;top:38%;height:6px;border-radius:3px;background:currentColor;box-shadow:0 0 10px currentColor;animation:twFlickP 2s steps(2) infinite;}
   .tw-plane{position:absolute;width:34px;height:8px;background:linear-gradient(90deg,transparent,#bffcffcc 60%,#fff);border-radius:4px;filter:blur(1px);animation:twPlaneX linear infinite;}
   .tw-shoot{position:absolute;width:90px;height:2px;background:linear-gradient(90deg,#fff,transparent);transform:rotate(-30deg);opacity:0;animation:twShoot 7s linear infinite;}
+  .tw-batsignal{position:absolute;top:5%;left:50%;transform:translateX(-50%);font-size:clamp(26px,6vw,64px);font-weight:900;letter-spacing:8px;color:#fff;white-space:nowrap;text-shadow:0 0 20px #ffffffdd,0 0 50px #ffffff99,0 0 90px #ffffff55;opacity:.92;filter:blur(.6px);animation:twSignalPulse 4s ease-in-out infinite;z-index:1;}
+  .tw-signalbeam{position:absolute;bottom:26%;width:110px;height:62%;background:linear-gradient(0deg,#ffffff55,#ffffff2b 45%,#ffffff0d 100%);clip-path:polygon(35% 100%,65% 100%,100% 0,0 0);filter:blur(7px);transform-origin:bottom center;z-index:0;animation:twGlowC 4s infinite;}
+  .tw-signalbeam.l{left:34%;transform:rotate(14deg);}
+  .tw-signalbeam.r{left:66%;transform:rotate(-14deg);}
 
+  /* === GLACIER (diamant v5) === */
   .tw-cavewall{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 55%,#74ebf518 0%,#0a2a3a66 35%,#000000ee 78%);}
   .tw-gceil{position:absolute;top:0;left:0;right:0;height:160px;background:linear-gradient(0deg,#0a2a3a,#04141d);}
-  .tw-gfloor{position:absolute;bottom:0;left:0;right:0;height:160px;background:linear-gradient(180deg,#0a2a3a,#04141d);}
   .tw-stalac{position:absolute;top:0;width:44px;background:linear-gradient(180deg,#04141d,#74ebf5 60%,#e8fbff);clip-path:polygon(48% 100%,52% 100%,62% 60%,72% 30%,100% 0,0 0,28% 30%,38% 60%);filter:drop-shadow(0 0 10px #74ebf5cc);}
   .tw-stalag{position:absolute;bottom:0;width:44px;background:linear-gradient(0deg,#5a8ea0aa,#bfefffcc 55%,#ffffff);clip-path:polygon(48% 0,52% 0,62% 30%,72% 60%,100% 100%,0 100%,28% 60%,38% 30%);filter:drop-shadow(0 0 10px #74ebf5cc);}
   .tw-gwall{position:absolute;top:0;bottom:0;width:12%;background:linear-gradient(90deg,#04141d,#0a2a3a);clip-path:polygon(0 0,100% 3%,70% 8%,100% 14%,75% 22%,100% 30%,70% 38%,100% 46%,75% 55%,100% 63%,70% 72%,100% 80%,75% 88%,100% 95%,70% 100%,0 100%);}
   .tw-gwall.r{left:auto;right:0;background:linear-gradient(270deg,#04141d,#0a2a3a);clip-path:polygon(100% 0,0 3%,30% 8%,0 14%,25% 22%,0 30%,30% 38%,0 46%,25% 55%,0 63%,30% 72%,0 80%,25% 88%,0 95%,30% 100%,100% 100%);}
   .tw-gem{position:absolute;width:9px;height:9px;background:#74ebf5;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);box-shadow:0 0 10px #74ebf5;animation:twGlowC 2s infinite;}
+  .tw-facet{position:absolute;width:26px;height:34px;background:linear-gradient(135deg,#ffffff88,#74ebf5 50%,#2a8ba8);clip-path:polygon(50% 0,100% 35%,80% 100%,20% 100%,0 35%);box-shadow:0 0 14px #74ebf5;animation:twGlowC 2.4s infinite;}
+  .tw-lightray{position:absolute;top:0;width:8%;height:70%;background:linear-gradient(180deg,#bfefff33,transparent 85%);transform-origin:top center;filter:blur(5px);animation:twRaySway 5s ease-in-out infinite;}
+  .tw-diamondcage{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(46%,280px);height:210px;background:linear-gradient(160deg,#ffffff66,#bfefff33 40%,#74ebf522 70%,#ffffff11);clip-path:polygon(50% 0,85% 16%,100% 55%,82% 100%,18% 100%,0 55%,15% 16%);box-shadow:0 0 50px #bfefff66,inset 0 0 40px #ffffff44;z-index:2;}
+  .tw-diamondcage::before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 40%,#ffffff66 40% 44%,transparent 44% 60%,#ffffff33 60% 63%,transparent 63%);mix-blend-mode:screen;}
+  .tw-icelake{position:absolute;bottom:0;left:0;right:0;height:14%;background:linear-gradient(180deg,#74ebf533,#04141d);box-shadow:inset 0 6px 20px #74ebf544;}
   .tw-shelf{position:absolute;width:24%;height:130px;}
   .tw-shelf .rock{position:absolute;bottom:0;left:0;right:0;height:26px;background:linear-gradient(180deg,#123a4a,#04141d);clip-path:polygon(0 0,100% 25%,88% 100%,0 100%);}
   .tw-shelf.r{transform:scaleX(-1);}
@@ -183,10 +191,10 @@ const TowerUtils = {
   .tw-cryscl.tall{width:60px;height:150px;}
   .tw-cryscl.wide{width:110px;height:90px;}
   .tw-firefly{position:absolute;width:5px;height:5px;border-radius:50%;background:#bffcff;box-shadow:0 0 10px #74ebf5;animation:twFly ease-in-out infinite;}
-  .tw-iceblock{position:absolute;left:50%;top:5%;transform:translateX(-50%);width:min(62%,380px);height:170px;background:linear-gradient(180deg,#ffffffcc,#bfefff88 40%,#74ebf544 70%,#74ebf522);border-radius:14px;box-shadow:0 0 40px #bfefff88;clip-path:polygon(6% 0,94% 0,100% 30%,96% 100%,4% 100%,0 30%);z-index:2;}
   .tw-coinp{position:absolute;width:14px;height:14px;border-radius:50%;background:radial-gradient(#ffe9a8,#c9a227);box-shadow:0 0 8px #f8b500;}
   .tw-ingot{position:absolute;width:42px;height:14px;border-radius:3px;background:linear-gradient(180deg,#ffe9a8,#c9a227 50%,#8a6a1a);box-shadow:inset 0 1px 0 #fff8,0 2px 4px #000c;}
 
+  /* === VAULT === */
   .tw-vaultroom{position:absolute;inset:0;background:linear-gradient(180deg,#08080f,#101018 45%,#08080f);}
   .tw-safebox{position:absolute;width:36px;height:28px;border-radius:5px;background:linear-gradient(180deg,#161622,#0b0b14);border:2px solid currentColor;box-shadow:0 0 10px currentColor;animation:twFlickP 3s steps(2) infinite;}
   .tw-vspot{position:absolute;top:0;width:14%;height:40%;background:linear-gradient(180deg,#ffe9a844,transparent 85%);clip-path:polygon(42% 0,58% 0,100% 100%,0 100%);filter:blur(3px);animation:twGlowC 4s infinite;}
@@ -206,7 +214,7 @@ const TowerUtils = {
   .tw-part.spark{background:#f8b500;box-shadow:0 0 6px #f8b500;animation:twRise linear infinite;}
   .tw-part.neon{box-shadow:0 0 8px currentColor;background:currentColor;animation:twFlickP 2.2s steps(2) infinite;}
 
-  /* === BRIEFING + JEU (inchangés) === */
+  /* === BRIEFING + JEU === */
   .tw-brief{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:9995;}
   .tw-brief-card{background:#0f051d;border:2px solid #00d2ff;border-radius:12px;padding:16px;max-width:82%;text-align:center;}
   .tw-stars{font-size:26px;letter-spacing:6px;text-align:center;margin:10px 0;}
@@ -225,6 +233,7 @@ const TowerUtils = {
   .tg-tile.foggy{animation:twFog 2s infinite;}
   .twg-msg{text-align:center;font-size:11px;color:#aaa;padding:6px 10px 12px;}
 
+  /* === ANIMATIONS === */
   @keyframes twFlickP{50%{opacity:.15}}
   @keyframes twCloud{from{left:-30%}to{left:110%}}
   @keyframes twWin{0%,38%{opacity:1}45%,88%{opacity:.08}95%,100%{opacity:1}}
@@ -234,7 +243,9 @@ const TowerUtils = {
   @keyframes twBlimp{from{left:-15%}to{left:110%}}
   @keyframes twPlaneX{from{left:110%}to{left:-10%}}
   @keyframes twShoot{0%{opacity:0;transform:rotate(-30deg) translateX(0)}5%{opacity:.9}12%{opacity:0;transform:rotate(-30deg) translateX(-240px)}100%{opacity:0}}
+  @keyframes twSignalPulse{50%{opacity:.55;filter:blur(1.6px)}}
   @keyframes twGlowC{50%{filter:brightness(1.6)}}
+  @keyframes twRaySway{50%{transform:rotate(6deg);opacity:.5}}
   @keyframes twFly{0%,100%{transform:translate(0,0);opacity:.9}25%{transform:translate(14px,-18px);opacity:.5}50%{transform:translate(-10px,-30px);opacity:.9}75%{transform:translate(8px,-12px);opacity:.6}}
   @keyframes twSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
   @keyframes twBeamPulse{50%{opacity:.4}}
@@ -244,6 +255,7 @@ const TowerUtils = {
   @keyframes twPop{0%{transform:scale(0)}70%{transform:scale(1.4)}100%{transform:scale(1)}}
   @keyframes twFog{50%{opacity:.25}}
 
+  /* === MOBILE PERF === */
   @media (max-width:760px), (pointer:coarse){
     .tw-road{height:140px;}
     .tw-horizon{bottom:140px;}
@@ -256,20 +268,15 @@ const TowerUtils = {
     .tw-reflect{display:none;}
     .tw-car .hl,.tw-car .tl{display:none;}
     .tw-cryscl{filter:none;animation:none;}
+    .tw-signalbeam{display:none;}
+    .tw-batsignal{font-size:20px;letter-spacing:4px;}
+    .tw-lightray{display:none;}
     .tw-panel .num{font-size:36px;}
   }
   `;
   document.head.appendChild(style);
 })();
-/* ----- CSS grotte diamant v5 ----- */
-(function(){const s=document.createElement("style");s.textContent=`
-  .tw-diamondcage{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(46%,280px);height:210px;background:linear-gradient(160deg,#ffffff66,#bfefff33 40%,#74ebf522 70%,#ffffff11);clip-path:polygon(50% 0,85% 16%,100% 55%,82% 100%,18% 100%,0 55%,15% 16%);box-shadow:0 0 50px #bfefff66,inset 0 0 40px #ffffff44;z-index:2;}
-  .tw-diamondcage::before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 40%,#ffffff66 40% 44%,transparent 44% 60%,#ffffff33 60% 63%,transparent 63%);mix-blend-mode:screen;}
-  .tw-lightray{position:absolute;top:0;width:8%;height:70%;background:linear-gradient(180deg,#bfefff33,transparent 85%);transform-origin:top center;filter:blur(5px);animation:twRaySway 5s ease-in-out infinite;}
-  @keyframes twRaySway{50%{transform:rotate(6deg);opacity:.5}}
-  .tw-facet{position:absolute;width:26px;height:34px;background:linear-gradient(135deg,#ffffff88,#74ebf5 50%,#2a8ba8);clip-path:polygon(50% 0,100% 35%,80% 100%,20% 100%,0 35%);box-shadow:0 0 14px #74ebf5;animation:twGlowC 2.4s infinite;}
-  .tw-icelake{position:absolute;bottom:0;left:0;right:0;height:14%;background:linear-gradient(180deg,#74ebf533,#04141d);box-shadow:inset 0 6px 20px #74ebf544;}
-`;document.head.appendChild(s);})();
+
 /* ----- 5. GÉNÉRATION DES FONDS ----- */
 function generateSceneHTML(c, W, C) {
   if (SCENE_CACHE[c]) return SCENE_CACHE[c];
@@ -282,7 +289,7 @@ function generateSceneHTML(c, W, C) {
     const cloudsN = IS_MOBILE ? 2 : 4;
     for (let i = 0; i < cloudsN; i++) html += `<span class="tw-cloud" style="top:${3+i*7}%;width:${22+(i*9)%16}%;animation-duration:${70+i*25}s;animation-delay:${i*11}s;"></span>`;
     html += `<div class="tw-horizon"></div>`;
-    // 🔦 Bat-signal : projecteurs + logo projeté dans le ciel
+    // 🔦 Bat-signal Chiffre Blitz
     html += `<div class="tw-signalbeam l"></div><div class="tw-signalbeam r"></div>`;
     html += `<div class="tw-batsignal">⚡ CHIFFRE BLITZ</div>`;
     const cols = ["#00ffff","#ff00ff","#f8b500","#7dff8a"];
@@ -323,20 +330,17 @@ function generateSceneHTML(c, W, C) {
 
   if (W.scene === "glacier") {
     html += `<div class="tw-cavewall"></div>`;
-    // Rayons de lumière qui percent du plafond
     if (!IS_MOBILE) {
       html += `<div class="tw-lightray" style="left:22%;"></div>`;
       html += `<div class="tw-lightray" style="left:48%;animation-delay:1.2s;"></div>`;
       html += `<div class="tw-lightray" style="left:72%;animation-delay:2.4s;"></div>`;
     }
-    // 💎 Trésor scellé dans un cristal à facettes (pyramide d'or)
     let gold = "";
     [[20,8],[40,8],[60,8],[30,22],[50,22],[40,36]].forEach(p => { gold += `<span class="tw-ingot" style="left:${p[0]}%;bottom:${p[1]}px;"></span>`; });
     for (let i = 0; i < 6; i++) gold += `<span class="tw-coinp" style="left:${14+i*12}%;bottom:4px;"></span>`;
     gold += `<span class="tw-gem" style="left:26%;bottom:52px;background:#ff2bd6;box-shadow:0 0 12px #ff2bd6;"></span>`;
     gold += `<span class="tw-gem" style="right:26%;bottom:56px;background:#7dff8a;box-shadow:0 0 12px #7dff8a;"></span>`;
     html += `<div class="tw-diamondcage">${gold}</div>`;
-    // Parois + facettes de diamant incrustées
     html += `<div class="tw-gwall"></div><div class="tw-gwall r"></div>`;
     const facetN = IS_MOBILE ? 6 : 12;
     for (let i = 0; i < facetN; i++) {
@@ -348,24 +352,19 @@ function generateSceneHTML(c, W, C) {
       const L = (i % 2 === 0);
       html += `<span class="tw-gem" style="${L?("left:"+(2+(i*7)%8)+"%"):("right:"+(2+(i*7)%8)+"%")};top:${12+(i*11)%76}%;animation-delay:${(i*.4)%2}s;"></span>`;
     }
-    // Plafond + stalactites
     html += `<div class="tw-gceil"></div>`;
     [[6,180],[16,130],[26,210],[38,110],[50,180],[62,130],[74,200],[86,120],[94,160]].forEach(p => { html += `<span class="tw-stalac" style="left:${p[0]}%;height:${p[1]}px;"></span>`; });
-    // Étagères de cristaux (parois)
     const shelfN = IS_MOBILE ? 5 : 8;
     for (let i = 0; i < shelfN; i++) {
       const top = 20 + i * (58 / shelfN), L = (i % 2 === 0), s = .7 + ((i*13)%4)/10;
       html += `<div class="tw-shelf ${L?"":"r"}" style="top:${top}%;${L?"left:0;":"right:0;"}"><span class="rock"></span><span class="tw-cryscl ${["","pink","gold","green","violet"][i%5]} ${["","tall","wide"][i%3]}" style="bottom:18px;left:22%;transform:scale(${s});animation-delay:${i*.5}s;"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span></div>`;
     }
-    // Amas centraux (remplissent le milieu)
     if (!IS_MOBILE) {
       html += `<span class="tw-cryscl violet" style="left:30%;top:52%;transform:scale(.8);"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span>`;
       html += `<span class="tw-cryscl green" style="left:62%;top:64%;transform:scale(.9);"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span>`;
     }
-    // Lucioles
     const flyN = IS_MOBILE ? 4 : 10;
     for (let i = 0; i < flyN; i++) html += `<span class="tw-firefly" style="left:${10+(i*29)%80}%;top:${12+(i*17)%70}%;animation-duration:${5+(i%4)*2}s;animation-delay:${i*.6}s;"></span>`;
-    // Sol : lac glacé réfléchissant + stalagmites
     html += `<div class="tw-icelake"></div>`;
     [[10,130],[26,100],[42,120],[58,90],[74,110],[90,100]].forEach(p => { html += `<span class="tw-stalag" style="left:${p[0]}%;height:${p[1]}px;"></span>`; });
   }
@@ -399,12 +398,7 @@ function generateSceneHTML(c, W, C) {
   SCENE_CACHE[c] = result;
   return result;
 }
-  /* === BAT-SIGNAL CHIFFRE BLITZ === */
-  .tw-batsignal{position:absolute;top:5%;left:50%;transform:translateX(-50%);font-size:clamp(26px,6vw,64px);font-weight:900;letter-spacing:8px;color:#fff;white-space:nowrap;text-shadow:0 0 20px #ffffffdd,0 0 50px #ffffff99,0 0 90px #ffffff55;opacity:.92;filter:blur(.6px);animation:twSignalPulse 4s ease-in-out infinite;z-index:1;}
-  .tw-signalbeam{position:absolute;bottom:26%;width:110px;height:62%;background:linear-gradient(0deg,#ffffff55,#ffffff2b 45%,#ffffff0d 100%);clip-path:polygon(35% 100%,65% 100%,100% 0,0 0);filter:blur(7px);transform-origin:bottom center;z-index:0;animation:twGlowC 4s infinite;}
-  .tw-signalbeam.l{left:34%;transform:rotate(14deg);}
-  .tw-signalbeam.r{left:66%;transform:rotate(-14deg);}
-  @keyframes twSignalPulse{50%{opacity:.55;filter:blur(1.6px)}}
+
 /* ----- 6. ÉCRAN AVENTURE (fixe) ----- */
 function openTower() {
   let m = document.getElementById("screen-tower");
@@ -415,14 +409,14 @@ function openTower() {
       <div id="tw-bg"></div>
       <div class="tw-hud">
         <button class="tw-back" onclick="closeTower()">⬅️</button>
-        <div class="tw-lives">❤️ <span id="tw-lives-n">${twLives}</span><small id="tw-lives-t"></small></div>
+        <div class="tw-lives">❤️ <span id="tw-lives-n">${twLives}</span></div>
         <div class="tw-coins">🪙 <span id="tw-coins-n">0</span></div>
         <button class="tw-shopbtn" onclick="openShop()">🛒</button>
       </div>
       <div class="tw-qwrap"><span class="lbl" id="tw-q-lbl">⭐ 0/240</span><div class="tw-qbar"><div id="tw-q-fill" style="width:0%"></div></div></div>
       <div class="tw-center">
         <div class="tw-worldtag" id="tw-worldtag"></div>
-          <div class="tw-panel" id="tw-panel">
+        <div class="tw-panel" id="tw-panel">
           <div class="num" id="tw-panel-num">1</div>
           <div class="typ" id="tw-panel-typ"></div>
           <div class="tw-panel-stars" id="tw-panel-stars"></div>
@@ -442,7 +436,6 @@ function openTower() {
   renderAdventure();
   towerDing();
 }
-
 function closeTower() { document.getElementById("screen-tower").style.display = "none"; }
 
 function renderAdventure() {
@@ -465,21 +458,17 @@ function renderAdventure() {
   const def = TowerUtils.getFloorDef(twViewFloor);
   const inChap = ((twViewFloor - 1) % FPC) + 1;
   const isBoss = (inChap === FPC || inChap % 50 === 0);
-  const panel = document.getElementById("tw-panel");
-  panel.classList.toggle("boss", isBoss);
+  document.getElementById("tw-panel").classList.toggle("boss", isBoss);
   document.getElementById("tw-panel-num").innerText = twViewFloor;
   document.getElementById("tw-panel-typ").innerText = isBoss ? `⚔️ ${chap.boss} GARDIEN` : TowerUtils.typeLabel(def.type);
   const stGot = towerProgress.stars[String(twViewFloor)] || 0;
   document.getElementById("tw-panel-stars").innerHTML = [1,2,3].map(i => `<span class="${i <= stGot ? "on" : ""}">⭐</span>`).join("");
 
   const lock = document.getElementById("tw-lockmsg");
-  if (!unlocked) {
-    lock.style.display = "block";
-    lock.innerText = `🔒 Quota ⭐ ${WORLD_QUOTA} requis dans le monde précédent`;
-  } else lock.style.display = "none";
+  if (!unlocked) { lock.style.display = "block"; lock.innerText = `🔒 Quota  ${WORLD_QUOTA} requis dans le monde précédent`; }
+  else lock.style.display = "none";
 
-  const play = document.getElementById("tw-play");
-  play.disabled = !unlocked || twLives <= 0;
+  document.getElementById("tw-play").disabled = !unlocked || twLives <= 0;
   document.getElementById("tw-prev").disabled = twViewFloor <= 1;
   document.getElementById("tw-next").disabled = twViewFloor >= Math.min(towerProgress.floor + 1, TOTAL_FLOORS);
 }
@@ -511,8 +500,7 @@ function showWorldTransition(w) {
 function openShop() {
   closeShop();
   const d = document.createElement("div");
-  d.className = "tw-shop";
-  d.id = "tw-shop";
+  d.className = "tw-shop"; d.id = "tw-shop";
   let items = "";
   SHOP_ITEMS.forEach(it => {
     items += `<div class="tw-shop-item"><span class="ic">${it.icon}</span><span class="nm">${it.name}</span><button class="buy" onclick="shopBuy('${it.id}')">${it.iap ? "Bientôt" : it.price + " 🪙"}</button></div>`;
@@ -644,7 +632,6 @@ function startLocalTimer(tl) {
 }
 function renderHUDFromState() {
   const h = document.getElementById("tg-hud"); if (!h || !TW) return;
-  const fr = currentLang === "fr";
   let main = "";
   if (TW.type === "color" && TW.targetColor) main = `COULEUR : <span style="color:${TW.targetColor.hex};">${TW.targetColor.name}</span>`;
   else if (TW.type === "pairs") main = "🧩 RETROUVE LES PAIRES";
