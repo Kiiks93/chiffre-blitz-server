@@ -436,7 +436,7 @@ function drawRoom() {
       } else {
         const stars = TowerUtils.starsInWorld(c - 1);
         const pct = Math.min(100, Math.round(stars / WORLD_QUOTA * 100));
-        gates += `<div class="tw-quota" style="top:${zTop + zH + 8}px;">
+        gates += `<div class="tw-quota" style="top:${zTop + 10}px;right:12px;left:auto;transform:none;">
           <div class="tw-quota-label">🔒 ${chap.icon} ${chap.name} — ⭐ ${stars}/${WORLD_QUOTA}</div>
           <div class="tw-quota-bar"><div style="width:${pct}%"></div></div>
         </div>`;
