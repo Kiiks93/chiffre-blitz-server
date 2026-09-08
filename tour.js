@@ -434,9 +434,10 @@ function drawRoom() {
     const zTop = H - STEP * c * FPC - 32, zH = STEP * FPC;
     const starLock = !TowerUtils.worldUnlockedByStars(c);
     if (chap.season > season || starLock) {
-      const prevEdgeL = (TOWER_WORLDS[c-1] && TOWER_WORLDS[c-1].edge) ? TOWER_WORLDS[c-1].edge : "transparent";
       zones += `<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:linear-gradient(180deg,#0a0a14,#050508);"></div>`;
-       else {
+      if (chap.season > season) {
+        gates += `<div class="tw-gate lock" style="top:${zTop + 10}px;right:12px;left:auto;transform:none;">🔒 ${currentLang === "fr" ? "Bientôt" : "Soon"}</div>`;
+      } else {
         const stars = TowerUtils.starsInWorld(c - 1);
         const pct = Math.min(100, Math.round(stars / WORLD_QUOTA * 100));
         gates += `<div class="tw-quota" style="top:${zTop + 10}px;right:12px;left:auto;transform:none;">
@@ -447,9 +448,27 @@ function drawRoom() {
       continue;
     }
     const W = TOWER_WORLDS[c], C = TOWER_COLORS[c];
-    const prevEdge = (TOWER_WORLDS[c-1] && TOWER_WORLDS[c-1].edge) ? TOWER_WORLDS[c-1].edge : "transparent";
     zones += `<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:${W.bg};">${generateSceneHTML(c, W, C)}</div>`;
+    gates += `<div class="tw-gate" style="top:${zTop + 10}px;right:12px;left:auto;transform:none;border-color:${C.acc};color:${C.acc};">${chap.icon} ${chap.name}</div>`;
   }
+
+  for (let f = 1; f <= TOTAL_FLOORS; f++) {
+    const chap = TowerUtils.getTowerChapter(f);
+    if (chap.season > season || !TowerUtils.worldUnlockedByStars(chap.id)) continue;
+    const y = H - STEP * f, x = 50 + Math.sin(f * 0.55) * 16;
+    (ptsByChap[chap.id] = ptsByChap[chap.id] || []).push([x, y + 23]);
+  }
+  for (const cid in ptsByChap) {
+    const pts = ptsByChap[cid];
+    if (pts.length > 1) paths += `<path d="M${pts.map(p => p[0] + " " + p[1]).join(" L ")}" fill="none" stroke="${TOWER_COLORS[cid].acc}44" stroke-width="7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
+  }
+
+  wrap.innerHTML = `<div class="tw-map" style="height:${H}px;">${zones}<div class="tw-col"><svg style="position:absolute;inset:0;width:100%;height:100%;z-index:1;" viewBox="0 0 100 ${H}" preserveAspectRatio="none">${paths}</svg><div id="tw-nodes" style="position:absolute;inset:0;z-index:2;"></div>${gates}</div></div>`;
+  wrap.onscroll = scheduleRenderWindow;
+  const yCur = H - STEP * current;
+  wrap.scrollTop = Math.max(0, yCur - wrap.clientHeight / 2);
+  renderWindow();
+}
 
   for (let f = 1; f <= TOTAL_FLOORS; f++) {
     const chap = TowerUtils.getTowerChapter(f);
