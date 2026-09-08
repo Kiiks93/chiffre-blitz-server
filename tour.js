@@ -251,7 +251,7 @@ function generateSceneHTML(c, W, C) {
   if (SCENE_CACHE[c]) return SCENE_CACHE[c];
   let html = "";
 
-    if (W.scene === "city") {
+     if (W.scene === "city") {
     html += `<span class="tw-moon"></span>`;
     const starsN = IS_MOBILE ? 45 : 140;
     for (let i = 0; i < starsN; i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%62}%;animation-delay:${(i*.23)%3}s;"></span>`;
@@ -260,14 +260,14 @@ function generateSceneHTML(c, W, C) {
     html += `<div class="tw-horizon"></div>`;
     const cols = ["#00ffff","#ff00ff","#f8b500","#7dff8a"];
 
-    // Silhouettes arrière (moins nombreuses, espacées)
+    // Silhouettes arrière
     let back = "";
     const hb = [72,92,80,96,86,90,78];
     const backN = IS_MOBILE ? 6 : 7;
     for (let i = 0; i < backN; i++) back += `<div class="tw-bldg" style="height:${hb[i]}%;flex:${i%2?1.25:1};"></div>`;
     html += `<div class="tw-cityback">${back}</div>`;
 
-    // Immeubles principaux : MOINS nombreux, MOINS hauts, plus espacés
+    // Immeubles principaux (proportionnés)
     let b = "";
     const hs = [48,72,56,86,62,76];
     const hf = [1,1.2,.95,1.15,1,.9];
@@ -279,6 +279,28 @@ function generateSceneHTML(c, W, C) {
       b += `<div class="tw-bldg" style="height:${hs[i]}%;flex:${hf[i]};">${wins}${(!IS_MOBILE && i%3===0)?'<span class="tw-ant"></span>':""}</div>`;
     }
     html += `<div class="tw-city">${b}</div>`;
+
+    // 🏙️ MILIEU : immeubles isolés (ascension) + vie du ciel
+    const soloN = IS_MOBILE ? 4 : 8;
+    for (let i = 0; i < soloN; i++) {
+      const top = 12 + i * (58 / soloN);
+      const left = (i % 2 === 0);
+      const off = 5 + (i * 11) % 16;
+      const h = 160 + ((i * 53) % 140);
+      const w = 70 + ((i * 29) % 40);
+      let wins2 = "";
+      const nw = IS_MOBILE ? (4 + (i%2)*2) : (8 + (i%3)*3);
+      for (let wI = 0; wI < nw; wI++) wins2 += `<span class="tw-wl" style="color:${cols[(wI+i)%4]};left:${8+((wI*23)%78)}%;top:${6+((wI*31)%82)}%;animation-duration:${2.5+((wI*13)%4)}s;animation-delay:${(wI*0.4)%3}s;"></span>`;
+      html += `<div class="tw-bldg-solo" style="top:${top}%;${left?("left:"+off+"%"):("right:"+off+"%")};height:${h}px;width:${w}px;">${wins2}</div>`;
+    }
+    if (!IS_MOBILE) {
+      html += `<div class="tw-blimp" style="top:26%;animation-duration:55s;color:#00d2ff;"><span class="neo"></span></div>`;
+      html += `<div class="tw-blimp" style="top:58%;animation-duration:70s;animation-delay:8s;color:#ff2bd6;"><span class="neo"></span></div>`;
+      html += `<div class="tw-plane" style="top:20%;animation-duration:16s;"></div>`;
+      html += `<div class="tw-plane" style="top:44%;animation-duration:22s;animation-delay:6s;"></div>`;
+    }
+    html += `<span class="tw-shoot" style="left:70%;top:18%;animation-delay:2s;"></span>`;
+    html += `<span class="tw-shoot" style="left:20%;top:50%;animation-delay:5s;"></span>`;
 
     // Route + voitures
     html += `<div class="tw-road"><span class="tw-lane"></span></div>`;
@@ -342,6 +364,23 @@ function generateSceneHTML(c, W, C) {
     .tw-cityback{bottom:140px;height:440px;}
     .tw-city{bottom:140px;height:340px;}
   }
+  `;
+  document.head.appendChild(s);
+})();
+
+/* ----- CSS milieu : ville verticale + vie du ciel ----- */
+(function(){
+  const s=document.createElement("style");
+  s.textContent=`
+  .tw-bldg-solo{position:absolute;background:linear-gradient(180deg,#0d0d1e,#05050c);border-radius:3px 3px 0 0;border-top:2px solid #00d2ff44;box-shadow:0 0 12px #000;}
+  .tw-blimp{position:absolute;width:120px;height:44px;border-radius:50%;background:linear-gradient(180deg,#3a3a52,#14141f);box-shadow:0 0 20px #00d2ff44,inset 0 2px 6px #ffffff22;animation:twBlimp linear infinite;}
+  .tw-blimp::after{content:"";position:absolute;left:50%;top:100%;transform:translateX(-50%);width:26px;height:12px;border-radius:4px;background:#1a1a28;box-shadow:0 2px 4px #000;}
+  .tw-blimp .neo{position:absolute;left:12%;right:12%;top:38%;height:6px;border-radius:3px;background:currentColor;box-shadow:0 0 10px currentColor;animation:twFlickP 2s steps(2) infinite;}
+  @keyframes twBlimp{from{left:-15%}to{left:110%}}
+  .tw-plane{position:absolute;width:34px;height:8px;background:linear-gradient(90deg,transparent,#bffcffcc 60%,#fff);border-radius:4px;filter:blur(1px);animation:twPlaneX linear infinite;}
+  @keyframes twPlaneX{from{left:110%}to{left:-10%}}
+  .tw-shoot{position:absolute;width:90px;height:2px;background:linear-gradient(90deg,#fff,transparent);transform:rotate(-30deg);opacity:0;animation:twShoot 7s linear infinite;}
+  @keyframes twShoot{0%{opacity:0;transform:rotate(-30deg) translateX(0)}5%{opacity:.9}12%{opacity:0;transform:rotate(-30deg) translateX(-240px)}100%{opacity:0}}
   `;
   document.head.appendChild(s);
 })();
