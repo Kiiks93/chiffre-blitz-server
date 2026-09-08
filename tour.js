@@ -365,24 +365,14 @@ function generateSceneHTML(c, W, C) {
 
   if (W.scene === "vault") {
     html += `<div class="tw-marble"></div>`;
-    html += `<div class="tw-spot" style="left:16%;"></div><div class="tw-spot" style="left:64%;animation-delay:1.5s;"></div>`;
-    html += `<div class="tw-vaultwall"></div>`;
-    let ingots = "";
-    for (let i = 0; i < 10; i++) ingots += `<span class="tw-ingot" style="left:${10+(i%5)*16}%;bottom:${6+Math.floor(i/5)*15}px;"></span>`;
-    html += `<div class="tw-vaultopening">
-      <div class="tw-vaultbars"></div>
-      <div class="tw-goldlogo" style="top:26%;font-size:clamp(14px,3vw,28px);letter-spacing:4px;">CHIFFRE BLITZ</div>
-      ${ingots}
-    </div>`;
-    let spokes = "";
-    for (let i = 0; i < 8; i++) spokes += `<i style="transform:rotate(${i*45}deg);"></i>`;
-    html += `<div class="tw-vaultdooropen"><div class="tw-doorspokes">${spokes}</div></div>`;
-    html += `<div class="tw-bankgrille" style="bottom:190px;"></div>`;
-    html += `<div class="tw-laser" style="top:70%;animation-duration:5s;"></div><div class="tw-laser d" style="top:78%;animation-duration:7s;animation-delay:1s;"></div>`;
-    html += `<div class="tw-cam" style="left:10%;top:66%;"><span class="beam"></span></div><div class="tw-cam" style="right:10%;top:74%;"><span class="beam"></span></div>`;
-    for (let i = 0; i < 6; i++) html += `<span class="tw-sensor" style="left:${10+i*15}%;bottom:180px;"></span>`;
     html += `<div class="tw-pillar" style="left:4%;"></div><div class="tw-pillar" style="right:4%;"></div>`;
-    html += `<div class="tw-gloss"></div><div class="tw-goldspill"></div>`;
+    html += `<div class="tw-spot" style="left:18%;"></div><div class="tw-spot" style="left:62%;animation-delay:1.5s;"></div>`;
+    let bolts = ""; for (let i = 0; i < 12; i++) { const a = i*Math.PI/6; bolts += `<span class="tw-vbolt" style="left:${50+44*Math.cos(a)}%;top:${50+44*Math.sin(a)}%;"></span>`; }
+    let knobs = ""; for (let i = 0; i < 6; i++) { const a = i*Math.PI/3; knobs += `<span class="tw-knob" style="left:${50+38*Math.cos(a)}%;top:${50+38*Math.sin(a)}%;"></span>`; }
+    html += `<div class="tw-vaultglow"></div><div class="tw-vaultframe"><span class="tw-fbolt" style="left:5%;top:7%;"></span><span class="tw-fbolt" style="right:5%;top:7%;"></span><span class="tw-fbolt" style="left:5%;bottom:7%;"></span><span class="tw-fbolt" style="right:5%;bottom:7%;"></span><span class="tw-hinge h1"></span><span class="tw-hinge h2"></span><div class="tw-vaultdoor"><div class="tw-vaultwheel">${knobs}</div><span class="tw-dial"></span><span class="tw-handle"></span>${bolts}</div></div>`;
+    html += `<div class="tw-laser" style="top:28%;animation-duration:5s;"></div><div class="tw-laser d" style="top:46%;animation-duration:7s;animation-delay:1s;"></div><div class="tw-laser" style="top:64%;animation-duration:6s;animation-delay:2s;"></div>`;
+    for (let i = 0; i < 8; i++) html += `<span class="tw-ingot" style="left:${8+i*11}%;bottom:${10+(i%3)*10}px;"></span>`;
+    html += `<div class="tw-sweep"></div><div class="tw-gloss"></div><div class="tw-goldspill"></div>`;
   }
 
   let parts = "";
@@ -392,7 +382,25 @@ function generateSceneHTML(c, W, C) {
   SCENE_CACHE[c] = result;
   return result;
 }
-
+/* ----- CSS coffre ancien (restauré) ----- */
+(function(){const s=document.createElement("style");s.textContent=`
+  .tw-vaultglow{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(92%,440px);aspect-ratio:1;border-radius:50%;background:radial-gradient(#f8b50044,transparent 70%);animation:twGlowC 3s infinite;}
+  .tw-vaultframe{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(86%,430px);aspect-ratio:1.15;background:linear-gradient(180deg,#5a4410,#2b1a00);border-radius:14px;box-shadow:0 0 40px #f8b50033,inset 0 0 30px #000;}
+  .tw-vaultdoor{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:82%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c9a227,#8a6a1a 40%,#3a2a05 75%,#160d00);border:6px solid #f8b50088;box-shadow:0 0 60px #f8b50066,inset 0 0 40px #000000aa;}
+  .tw-vaultwheel{position:absolute;left:50%;top:50%;width:44%;height:44%;transform:translate(-50%,-50%);border:6px solid #ffe9a8;border-radius:50%;animation:twSpin 16s linear infinite;box-shadow:0 0 20px #f8b50088,inset 0 0 10px #0006;}
+  .tw-vaultwheel::before{content:"";position:absolute;inset:-6px;background:linear-gradient(#ffe9a8,#ffe9a8) 50% 0/6px 100% no-repeat,linear-gradient(#ffe9a8,#ffe9a8) 0 50%/100% 6px no-repeat,linear-gradient(45deg,transparent 47%,#ffe9a8 47% 53%,transparent 53%),linear-gradient(-45deg,transparent 47%,#ffe9a8 47% 53%,transparent 53%);}
+  .tw-vaultwheel::after{content:"";position:absolute;left:50%;top:50%;width:20%;height:20%;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(#fff8dc,#8a6a1a);box-shadow:0 0 12px #ffe9a8;}
+  .tw-fbolt{position:absolute;width:10px;height:10px;border-radius:50%;background:radial-gradient(#ffe9a8,#8a6a1a);box-shadow:0 1px 3px #000;}
+  .tw-hinge{position:absolute;left:-4%;width:10%;height:12%;background:linear-gradient(180deg,#c9a227,#8a6a1a);border-radius:4px;box-shadow:0 2px 4px #000c;}
+  .tw-hinge.h1{top:22%;}.tw-hinge.h2{bottom:22%;}
+  .tw-knob{position:absolute;width:9%;height:9%;border-radius:50%;background:radial-gradient(#fff8dc,#c9a227);transform:translate(-50%,-50%);box-shadow:0 0 6px #ffe9a8aa;}
+  .tw-dial{position:absolute;right:16%;top:44%;width:14%;height:14%;border-radius:50%;background:radial-gradient(#c9a227,#8a6a1a);box-shadow:inset 0 0 6px #0008,0 0 4px #0008;}
+  .tw-dial::before{content:"";position:absolute;inset:30%;background:linear-gradient(#160d00,#160d00) 50% 0/3px 100% no-repeat,linear-gradient(#160d00,#160d00) 0 50%/100% 3px no-repeat,linear-gradient(45deg,transparent 40%,#160d00 40% 60%,transparent 60%);}
+  .tw-handle{position:absolute;right:8%;top:30%;width:4%;height:40%;border-radius:4px;background:linear-gradient(90deg,#c9a227,#ffe9a8 50%,#c9a227);box-shadow:0 0 6px #0008;}
+  .tw-vbolt{position:absolute;width:5%;height:5%;border-radius:50%;background:radial-gradient(#ffe9a8,#8a6a1a);transform:translate(-50%,-50%);box-shadow:0 1px 3px #000;}
+  .tw-sweep{position:absolute;top:8%;bottom:8%;width:14%;background:linear-gradient(90deg,transparent,#ffe9a855,transparent);transform:skewX(-12deg);animation:twSweep 5.5s ease-in-out infinite;pointer-events:none;}
+  @keyframes twSweep{0%{left:-20%;opacity:0}15%{opacity:1}85%{opacity:1}100%{left:110%;opacity:0}}
+`;document.head.appendChild(s);})();
 /* ----- 6. RENDU CARTE ----- */
 function drawRoom() {
   const wrap = document.getElementById("tw-mapwrap");
