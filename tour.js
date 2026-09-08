@@ -106,6 +106,10 @@ const TowerUtils = {
   .tw-ava{position:absolute;top:-27px;left:50%;transform:translateX(-50%);font-size:clamp(16px,5vw,20px);animation:twBounce2 1.2s infinite;}
   .tw-gate{position:absolute;background:#0f051d;border:2px solid #00d2ff;border-radius:12px;padding:5px 14px;font-size:clamp(9px,2.8vw,11px);font-weight:900;color:#00d2ff;white-space:nowrap;z-index:3;box-shadow:0 0 12px #00d2ff44;}
   .tw-gate.lock{border-color:#333;color:#666;box-shadow:none;}
+  .tw-quota{position:absolute;left:50%;transform:translateX(-50%);background:#0f051dee;border:2px solid #f8b500;border-radius:14px;padding:9px 18px;z-index:3;text-align:center;box-shadow:0 0 16px #f8b50044;min-width:220px;}
+  .tw-quota-label{font-size:clamp(10px,3vw,13px);font-weight:900;color:#f8b500;margin-bottom:6px;white-space:nowrap;}
+  .tw-quota-bar{height:9px;background:#200010;border-radius:5px;overflow:hidden;}
+  .tw-quota-bar div{height:100%;background:linear-gradient(90deg,#f8b500,#ffd700);border-radius:5px;box-shadow:0 0 8px #f8b50088;}
 
   /* === CITY SCENE (route fixe + immeubles collés) === */
   .tw-moon{position:absolute;top:2%;right:10%;width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff8e8,#d8c9a8 60%,#a89878);box-shadow:0 0 30px #fff8e866,0 0 80px #fff8e833;}
@@ -379,10 +383,18 @@ function drawRoom() {
     const chap = TOWER_CHAPTERS[c - 1];
     const zTop = H - STEP * c * FPC - 32, zH = STEP * FPC;
     const starLock = !TowerUtils.worldUnlockedByStars(c);
-    if (chap.season > season || starLock) {
+       if (chap.season > season || starLock) {
       zones += `<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:linear-gradient(180deg,#0a0a14,#050508);"></div>`;
-      const label = (chap.season > season) ? `🔒 ${currentLang === "fr" ? "Bientôt" : "Soon"}` : `🔒 ${TowerUtils.starsInWorld(c - 1)}/${WORLD_QUOTA} ⭐`;
-      gates += `<div class="tw-gate lock" style="top:${zTop + 10}px;right:12px;left:auto;transform:none;">${label}</div>`;
+      if (chap.season > season) {
+        gates += `<div class="tw-gate lock" style="top:${zTop + 10}px;right:12px;left:auto;transform:none;">🔒 ${currentLang === "fr" ? "Bientôt" : "Soon"}</div>`;
+      } else {
+        const stars = TowerUtils.starsInWorld(c - 1);
+        const pct = Math.min(100, Math.round(stars / WORLD_QUOTA * 100));
+        gates += `<div class="tw-quota" style="top:${zTop - 36}px;">
+          <div class="tw-quota-label">🔒 ${chap.icon} ${chap.name} — ⭐ ${stars}/${WORLD_QUOTA}</div>
+          <div class="tw-quota-bar"><div style="width:${pct}%"></div></div>
+        </div>`;
+      }
       continue;
     }
     const W = TOWER_WORLDS[c], C = TOWER_COLORS[c];
