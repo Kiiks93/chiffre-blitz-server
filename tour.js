@@ -281,6 +281,7 @@ const TowerUtils = {
     .tw-batsignal{font-size:20px;letter-spacing:4px;}
     .tw-lightray{display:none;}
     .tw-panel .num{font-size:36px;}
+    .tw-cavefog{backdrop-filter:none;}
   }
   `;
   document.head.appendChild(style);
@@ -339,43 +340,31 @@ function generateSceneHTML(c, W, C) {
 
   if (W.scene === "glacier") {
     html += `<div class="tw-cavewall"></div>`;
-    if (!IS_MOBILE) {
-      html += `<div class="tw-lightray" style="left:22%;"></div>`;
-      html += `<div class="tw-lightray" style="left:48%;animation-delay:1.2s;"></div>`;
-      html += `<div class="tw-lightray" style="left:72%;animation-delay:2.4s;"></div>`;
+    // ✨ Lueurs diffuses à peine visibles (colorées, floues)
+    const glowCols = ["#74ebf5","#ff8ac2","#ffd75e","#7dff8a","#c28aff"];
+    const glowN = IS_MOBILE ? 6 : 12;
+    for (let i = 0; i < glowN; i++) {
+      html += `<span class="tw-glowspot" style="left:${5+(i*17)%85}%;top:${8+(i*23)%80}%;color:${glowCols[i%5]};animation-delay:${(i*.7)%4}s;"></span>`;
     }
-    let gold = "";
-    [[20,8],[40,8],[60,8],[30,22],[50,22],[40,36]].forEach(p => { gold += `<span class="tw-ingot" style="left:${p[0]}%;bottom:${p[1]}px;"></span>`; });
-    for (let i = 0; i < 6; i++) gold += `<span class="tw-coinp" style="left:${14+i*12}%;bottom:4px;"></span>`;
-    gold += `<span class="tw-gem" style="left:26%;bottom:52px;background:#ff2bd6;box-shadow:0 0 12px #ff2bd6;"></span>`;
-    gold += `<span class="tw-gem" style="right:26%;bottom:56px;background:#7dff8a;box-shadow:0 0 12px #7dff8a;"></span>`;
-    html += `<div class="tw-diamondcage">${gold}</div>`;
+    // Parois rocheuses
     html += `<div class="tw-gwall"></div><div class="tw-gwall r"></div>`;
-    const facetN = IS_MOBILE ? 6 : 12;
-    for (let i = 0; i < facetN; i++) {
-      const L = (i % 2 === 0);
-      html += `<span class="tw-facet" style="${L?("left:"+(3+(i*5)%9)+"%"):("right:"+(3+(i*5)%9)+"%")};top:${8+(i*13)%80}%;animation-delay:${(i*.3)%2}s;"></span>`;
-    }
-    const gemN = IS_MOBILE ? 6 : 12;
-    for (let i = 0; i < gemN; i++) {
-      const L = (i % 2 === 0);
-      html += `<span class="tw-gem" style="${L?("left:"+(2+(i*7)%8)+"%"):("right:"+(2+(i*7)%8)+"%")};top:${12+(i*11)%76}%;animation-delay:${(i*.4)%2}s;"></span>`;
-    }
-    html += `<div class="tw-gceil"></div>`;
-    [[6,180],[16,130],[26,210],[38,110],[50,180],[62,130],[74,200],[86,120],[94,160]].forEach(p => { html += `<span class="tw-stalac" style="left:${p[0]}%;height:${p[1]}px;"></span>`; });
-    const shelfN = IS_MOBILE ? 5 : 8;
+    // Quelques cristaux ESTOMPÉS (à peine aperçus dans la brume)
+    const shelfN = IS_MOBILE ? 4 : 6;
     for (let i = 0; i < shelfN; i++) {
-      const top = 20 + i * (58 / shelfN), L = (i % 2 === 0), s = .7 + ((i*13)%4)/10;
-      html += `<div class="tw-shelf ${L?"":"r"}" style="top:${top}%;${L?"left:0;":"right:0;"}"><span class="rock"></span><span class="tw-cryscl ${["","pink","gold","green","violet"][i%5]} ${["","tall","wide"][i%3]}" style="bottom:18px;left:22%;transform:scale(${s});animation-delay:${i*.5}s;"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span></div>`;
+      const top = 22 + i * (56 / shelfN), L = (i % 2 === 0), s = .6 + ((i*13)%3)/10;
+      html += `<div class="tw-shelf ${L?"":"r"}" style="top:${top}%;${L?"left:0;":"right:0;"}opacity:.4;filter:blur(1.5px);"><span class="rock"></span><span class="tw-cryscl ${["","pink","gold","green","violet"][i%5]}" style="bottom:18px;left:22%;transform:scale(${s});"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span></div>`;
     }
-    if (!IS_MOBILE) {
-      html += `<span class="tw-cryscl violet" style="left:30%;top:52%;transform:scale(.8);"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span>`;
-      html += `<span class="tw-cryscl green" style="left:62%;top:64%;transform:scale(.9);"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span>`;
-    }
+    // Plafond + stalactites estompées
+    html += `<div class="tw-gceil"></div>`;
+    [[6,180],[16,130],[26,210],[38,110],[50,180],[62,130],[74,200],[86,120],[94,160]].forEach(p => { html += `<span class="tw-stalac" style="left:${p[0]}%;height:${p[1]}px;opacity:.5;"></span>`; });
+    // Lucioles = lueurs vivantes qui flottent
     const flyN = IS_MOBILE ? 4 : 10;
     for (let i = 0; i < flyN; i++) html += `<span class="tw-firefly" style="left:${10+(i*29)%80}%;top:${12+(i*17)%70}%;animation-duration:${5+(i%4)*2}s;animation-delay:${i*.6}s;"></span>`;
+    // Sol : lac glacé + stalagmites estompés
     html += `<div class="tw-icelake"></div>`;
-    [[10,130],[26,100],[42,120],[58,90],[74,110],[90,100]].forEach(p => { html += `<span class="tw-stalag" style="left:${p[0]}%;height:${p[1]}px;"></span>`; });
+    [[10,130],[26,100],[42,120],[58,90],[74,110],[90,100]].forEach(p => { html += `<span class="tw-stalag" style="left:${p[0]}%;height:${p[1]}px;opacity:.5;"></span>`; });
+    // 🌫️ Voile de brume (brouille le fond, pas le panneau)
+    html += `<div class="tw-cavefog"></div>`;
   }
 
   if (W.scene === "vault") {
@@ -407,6 +396,12 @@ function generateSceneHTML(c, W, C) {
   SCENE_CACHE[c] = result;
   return result;
 }
+/* ----- CSS grotte brumeuse v6 ----- */
+(function(){const s=document.createElement("style");s.textContent=`
+  .tw-glowspot{position:absolute;width:130px;height:130px;border-radius:50%;background:radial-gradient(circle,currentColor 0%,transparent 70%);opacity:.22;filter:blur(18px);animation:twGlowPulse 5s ease-in-out infinite;}
+  @keyframes twGlowPulse{50%{opacity:.42}}
+  .tw-cavefog{position:absolute;inset:0;background:linear-gradient(180deg,#04141d99,#0a2a3a55 50%,#04141d99);backdrop-filter:blur(2px);z-index:3;pointer-events:none;}
+`;document.head.appendChild(s);})();
 
 /* ----- 6. ÉCRAN AVENTURE (fixe) ----- */
 function openTower() {
