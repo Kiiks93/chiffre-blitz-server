@@ -95,7 +95,6 @@ const TowerUtils = {
   .tw-map{position:relative;width:100%;}
   .tw-zone{position:absolute;left:0;right:0;overflow:hidden;}
   .tw-col{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,560px);}
-  .tw-zfade{position:absolute;top:0;left:0;right:0;height:240px;pointer-events:none;z-index:1;}
 
   /* === NODES === */
   .tw-node{position:absolute;width:clamp(40px,12vw,50px);height:clamp(40px,12vw,50px);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:clamp(14px,4vw,17px);color:#fff;text-shadow:0 1px 2px #000a;transform:translate(-50%,0);border:3px solid #333;background:#1a1a2e;z-index:2;}
@@ -370,16 +369,24 @@ function generateSceneHTML(c, W, C) {
     }
   }
 
-  if (W.scene === "vault") {
+   if (W.scene === "vault") {
     html += `<div class="tw-marble"></div>`;
-    html += `<div class="tw-pillar" style="left:4%;"></div><div class="tw-pillar" style="right:4%;"></div>`;
-    html += `<div class="tw-spot" style="left:18%;"></div><div class="tw-spot" style="left:62%;animation-delay:1.5s;"></div>`;
+    // 🏆 HAUT : intérieur du coffre (or + logo 3D)
+    html += `<div class="tw-vaultinside"></div>`;
+    html += `<div class="tw-goldlogo">CHIFFRE BLITZ</div>`;
+    for (let i = 0; i < 10; i++) html += `<span class="tw-ingot" style="left:${6+i*9}%;top:${16+(i%3)*6}%;"></span>`;
+    // 🏦 MILIEU : coffre géant en premier plan
     let bolts = ""; for (let i = 0; i < 12; i++) { const a = i*Math.PI/6; bolts += `<span class="tw-vbolt" style="left:${50+44*Math.cos(a)}%;top:${50+44*Math.sin(a)}%;"></span>`; }
     let knobs = ""; for (let i = 0; i < 6; i++) { const a = i*Math.PI/3; knobs += `<span class="tw-knob" style="left:${50+38*Math.cos(a)}%;top:${50+38*Math.sin(a)}%;"></span>`; }
-    html += `<div class="tw-vaultglow"></div><div class="tw-vaultframe"><span class="tw-fbolt" style="left:5%;top:7%;"></span><span class="tw-fbolt" style="right:5%;top:7%;"></span><span class="tw-fbolt" style="left:5%;bottom:7%;"></span><span class="tw-fbolt" style="right:5%;bottom:7%;"></span><span class="tw-hinge h1"></span><span class="tw-hinge h2"></span><div class="tw-vaultdoor"><div class="tw-vaultwheel">${knobs}</div><span class="tw-dial"></span><span class="tw-handle"></span>${bolts}</div></div>`;
-    html += `<div class="tw-laser" style="top:28%;animation-duration:5s;"></div><div class="tw-laser d" style="top:46%;animation-duration:7s;animation-delay:1s;"></div><div class="tw-laser" style="top:64%;animation-duration:6s;animation-delay:2s;"></div>`;
-    for (let i = 0; i < 8; i++) html += `<span class="tw-ingot" style="left:${8+i*11}%;bottom:${10+(i%3)*10}px;"></span>`;
-    html += `<div class="tw-sweep"></div><div class="tw-gloss"></div><div class="tw-goldspill"></div>`;
+    html += `<div class="tw-vaultglow" style="top:46%;"></div><div class="tw-vaultframe"><span class="tw-fbolt" style="left:5%;top:7%;"></span><span class="tw-fbolt" style="right:5%;top:7%;"></span><span class="tw-fbolt" style="left:5%;bottom:7%;"></span><span class="tw-fbolt" style="right:5%;bottom:7%;"></span><span class="tw-hinge h1"></span><span class="tw-hinge h2"></span><div class="tw-vaultdoor"><div class="tw-vaultwheel">${knobs}</div><span class="tw-dial"></span><span class="tw-handle"></span>${bolts}</div></div>`;
+    // 🚨 BAS : systèmes de sécurité (approche)
+    html += `<div class="tw-laser" style="top:66%;animation-duration:5s;"></div><div class="tw-laser d" style="top:74%;animation-duration:7s;animation-delay:1s;"></div><div class="tw-laser" style="top:82%;animation-duration:6s;animation-delay:2s;"></div>`;
+    html += `<div class="tw-cam" style="left:12%;top:62%;"><span class="beam"></span></div><div class="tw-cam" style="right:12%;top:70%;"><span class="beam"></span></div>`;
+    html += `<div class="tw-grille" style="bottom:200px;"></div>`;
+    for (let i = 0; i < 6; i++) html += `<span class="tw-sensor" style="left:${10+i*15}%;bottom:190px;"></span>`;
+    // Colonnes + sol
+    html += `<div class="tw-pillar" style="left:4%;"></div><div class="tw-pillar" style="right:4%;"></div>`;
+    html += `<div class="tw-gloss"></div><div class="tw-goldspill"></div>`;
   }
 
   let parts = "";
@@ -389,7 +396,26 @@ function generateSceneHTML(c, W, C) {
   SCENE_CACHE[c] = result;
   return result;
 }
-
+/* ----- CSS coffre v2 ----- */
+(function(){
+  const s=document.createElement("style");
+  s.textContent=`
+  .tw-vaultframe{width:min(90%,700px);}
+  .tw-vaultglow{width:min(95%,780px);}
+  .tw-vaultinside{position:absolute;top:0;left:0;right:0;height:28%;background:radial-gradient(ellipse at 50% 40%,#ffe9a866,#f8b50033 45%,#160d00 85%);box-shadow:inset 0 -20px 40px #000a;}
+  .tw-goldlogo{position:absolute;top:9%;left:50%;transform:translateX(-50%);font-size:clamp(28px,6vw,58px);font-weight:900;letter-spacing:8px;white-space:nowrap;
+    background:linear-gradient(180deg,#fff8dc,#ffd700 30%,#b8860b 55%,#ffd700 78%,#fff8dc);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+    filter:drop-shadow(0 2px 0 #8a6a1a) drop-shadow(0 4px 0 #5a4410) drop-shadow(0 7px 10px #000);animation:twGlowC 3s infinite;}
+  .tw-cam{position:absolute;width:34px;height:24px;background:linear-gradient(180deg,#3a3a48,#14141c);border-radius:6px 6px 4px 4px;box-shadow:0 2px 6px #000;}
+  .tw-cam::after{content:"";position:absolute;left:50%;top:60%;width:10px;height:10px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(#ff6060,#801010);box-shadow:0 0 10px #ff2020;animation:twFlickP 1.5s steps(2) infinite;}
+  .tw-cam .beam{position:absolute;left:50%;top:100%;width:60px;height:90px;transform-origin:top center;background:linear-gradient(180deg,#ff202033,transparent);clip-path:polygon(45% 0,55% 0,100% 100%,0 100%);animation:twCamSweep 4s ease-in-out infinite alternate;}
+  @keyframes twCamSweep{from{transform:translateX(-50%) rotate(-25deg)}to{transform:translateX(-50%) rotate(25deg)}}
+  .tw-grille{position:absolute;left:0;right:0;height:120px;background:repeating-linear-gradient(90deg,#5a4410 0 8px,transparent 8px 40px);opacity:.6;box-shadow:0 0 12px #000;}
+  .tw-sensor{position:absolute;width:14px;height:6px;border-radius:3px;background:#1a0505;box-shadow:0 0 8px #ff2020,inset 0 1px 2px #ff7070;animation:twFlickP 1.2s steps(2) infinite;}
+  `;
+  document.head.appendChild(s);
+})();
 /* ----- 6. RENDU CARTE ----- */
 function drawRoom() {
   const wrap = document.getElementById("tw-mapwrap");
@@ -409,10 +435,8 @@ function drawRoom() {
     const starLock = !TowerUtils.worldUnlockedByStars(c);
     if (chap.season > season || starLock) {
       const prevEdgeL = (TOWER_WORLDS[c-1] && TOWER_WORLDS[c-1].edge) ? TOWER_WORLDS[c-1].edge : "transparent";
-      zones += `<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:linear-gradient(180deg,#0a0a14,#050508);"><div class="tw-zfade" style="background:linear-gradient(180deg,${prevEdgeL},transparent);"></div></div>`;
-      if (chap.season > season) {
-        gates += `<div class="tw-gate lock" style="top:${zTop + 10}px;right:12px;left:auto;transform:none;">🔒 ${currentLang === "fr" ? "Bientôt" : "Soon"}</div>`;
-      } else {
+      zones += `<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:linear-gradient(180deg,#0a0a14,#050508);"></div>`;
+       else {
         const stars = TowerUtils.starsInWorld(c - 1);
         const pct = Math.min(100, Math.round(stars / WORLD_QUOTA * 100));
         gates += `<div class="tw-quota" style="top:${zTop + 10}px;right:12px;left:auto;transform:none;">
@@ -424,8 +448,7 @@ function drawRoom() {
     }
     const W = TOWER_WORLDS[c], C = TOWER_COLORS[c];
     const prevEdge = (TOWER_WORLDS[c-1] && TOWER_WORLDS[c-1].edge) ? TOWER_WORLDS[c-1].edge : "transparent";
-    zones += `<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:${W.bg};">${generateSceneHTML(c, W, C)}<div class="tw-zfade" style="background:linear-gradient(180deg,${prevEdge},transparent);"></div></div>`;
-    gates += `<div class="tw-gate" style="top:${zTop + 10}px;right:12px;left:auto;transform:none;border-color:${C.acc};color:${C.acc};">${chap.icon} ${chap.name}</div>`;
+    zones += `<div class="tw-zone" style="top:${zTop}px;height:${zH}px;background:${W.bg};">${generateSceneHTML(c, W, C)}</div>`;
   }
 
   for (let f = 1; f <= TOTAL_FLOORS; f++) {
