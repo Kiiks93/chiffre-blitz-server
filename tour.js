@@ -104,6 +104,9 @@ const TowerUtils = {
   .tw-panel{background:linear-gradient(180deg,#8a5a2a,#5a3a1a);border:4px solid #c9a227;border-radius:16px;padding:16px 34px;text-align:center;box-shadow:0 8px 0 #3a2a05,0 0 30px #000a;}
   .tw-panel .num{font-size:46px;font-weight:900;color:#fff;text-shadow:0 3px 0 #0008;line-height:1;}
   .tw-panel .typ{font-size:13px;color:#ffe9a8;font-weight:700;margin-top:4px;}
+  .tw-panel-stars{font-size:16px;letter-spacing:4px;margin-top:5px;}
+  .tw-panel-stars span{filter:grayscale(1);opacity:.3;}
+  .tw-panel-stars span.on{filter:none;opacity:1;}
   .tw-panel.boss{border-color:#ff4b2b;background:linear-gradient(180deg,#5a1a1a,#3a0a0a);box-shadow:0 8px 0 #2a0505,0 0 30px #ff4b2b66;}
   .tw-panel.boss .typ{color:#ff8a8a;}
   .tw-playrow{display:flex;align-items:center;gap:16px;}
@@ -380,9 +383,10 @@ function openTower() {
       <div class="tw-qwrap"><span class="lbl" id="tw-q-lbl">⭐ 0/240</span><div class="tw-qbar"><div id="tw-q-fill" style="width:0%"></div></div></div>
       <div class="tw-center">
         <div class="tw-worldtag" id="tw-worldtag"></div>
-        <div class="tw-panel" id="tw-panel">
+          <div class="tw-panel" id="tw-panel">
           <div class="num" id="tw-panel-num">1</div>
           <div class="typ" id="tw-panel-typ"></div>
+          <div class="tw-panel-stars" id="tw-panel-stars"></div>
         </div>
         <div class="tw-playrow">
           <button class="tw-arrow" id="tw-prev" onclick="advPrev()">‹</button>
@@ -426,6 +430,8 @@ function renderAdventure() {
   panel.classList.toggle("boss", isBoss);
   document.getElementById("tw-panel-num").innerText = twViewFloor;
   document.getElementById("tw-panel-typ").innerText = isBoss ? `⚔️ ${chap.boss} GARDIEN` : TowerUtils.typeLabel(def.type);
+  const stGot = towerProgress.stars[String(twViewFloor)] || 0;
+  document.getElementById("tw-panel-stars").innerHTML = [1,2,3].map(i => `<span class="${i <= stGot ? "on" : ""}">⭐</span>`).join("");
 
   const lock = document.getElementById("tw-lockmsg");
   if (!unlocked) {
