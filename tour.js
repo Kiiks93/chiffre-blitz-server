@@ -338,33 +338,33 @@ function generateSceneHTML(c, W, C) {
     else html += car("","16px","9s","0s","#00d2ff")+car("","34px","11s","2.5s","#f8b500")+car("s","24px","7s","5s","#7dff8a")+car("r","96px","10s","1.5s","#ff2bd6")+car("r s","104px","8s","6.5s","#ff8a00");
   }
 
-  if (W.scene === "glacier") {
+   if (W.scene === "glacier") {
     html += `<div class="tw-cavewall"></div>`;
-    // ✨ Lueurs diffuses à peine visibles (colorées, floues)
-    const glowCols = ["#74ebf5","#ff8ac2","#ffd75e","#7dff8a","#c28aff"];
-    const glowN = IS_MOBILE ? 6 : 12;
-    for (let i = 0; i < glowN; i++) {
-      html += `<span class="tw-glowspot" style="left:${5+(i*17)%85}%;top:${8+(i*23)%80}%;color:${glowCols[i%5]};animation-delay:${(i*.7)%4}s;"></span>`;
-    }
     // Parois rocheuses
     html += `<div class="tw-gwall"></div><div class="tw-gwall r"></div>`;
-    // Quelques cristaux ESTOMPÉS (à peine aperçus dans la brume)
-    const shelfN = IS_MOBILE ? 4 : 6;
-    for (let i = 0; i < shelfN; i++) {
-      const top = 22 + i * (56 / shelfN), L = (i % 2 === 0), s = .6 + ((i*13)%3)/10;
-      html += `<div class="tw-shelf ${L?"":"r"}" style="top:${top}%;${L?"left:0;":"right:0;"}opacity:.4;filter:blur(1.5px);"><span class="rock"></span><span class="tw-cryscl ${["","pink","gold","green","violet"][i%5]}" style="bottom:18px;left:22%;transform:scale(${s});"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span></div>`;
+    // Gemmes incrustées (lueurs nettes dans le noir)
+    const gemN = IS_MOBILE ? 6 : 12;
+    for (let i = 0; i < gemN; i++) {
+      const L = (i % 2 === 0);
+      html += `<span class="tw-gem" style="${L?("left:"+(2+(i*7)%8)+"%"):("right:"+(2+(i*7)%8)+"%")};top:${12+(i*11)%76}%;animation-delay:${(i*.4)%2}s;"></span>`;
     }
-    // Plafond + stalactites estompées
+    // Plafond + stalactites
     html += `<div class="tw-gceil"></div>`;
-    [[6,180],[16,130],[26,210],[38,110],[50,180],[62,130],[74,200],[86,120],[94,160]].forEach(p => { html += `<span class="tw-stalac" style="left:${p[0]}%;height:${p[1]}px;opacity:.5;"></span>`; });
-    // Lucioles = lueurs vivantes qui flottent
+    [[6,180],[16,130],[26,210],[38,110],[50,180],[62,130],[74,200],[86,120],[94,160]].forEach(p => { html += `<span class="tw-stalac" style="left:${p[0]}%;height:${p[1]}px;"></span>`; });
+    // Étagères de cristaux NETS (ils brillent dans le noir)
+    const shelfN = IS_MOBILE ? 5 : 8;
+    for (let i = 0; i < shelfN; i++) {
+      const top = 20 + i * (58 / shelfN), L = (i % 2 === 0), s = .7 + ((i*13)%4)/10;
+      html += `<div class="tw-shelf ${L?"":"r"}" style="top:${top}%;${L?"left:0;":"right:0;"}"><span class="rock"></span><span class="tw-cryscl ${["","pink","gold","green","violet"][i%5]} ${["","tall","wide"][i%3]}" style="bottom:18px;left:22%;transform:scale(${s});animation-delay:${i*.5}s;"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span></div>`;
+    }
+    // Lucioles
     const flyN = IS_MOBILE ? 4 : 10;
     for (let i = 0; i < flyN; i++) html += `<span class="tw-firefly" style="left:${10+(i*29)%80}%;top:${12+(i*17)%70}%;animation-duration:${5+(i%4)*2}s;animation-delay:${i*.6}s;"></span>`;
-    // Sol : lac glacé + stalagmites estompés
+    // Sol : lac glacé + stalagmites
     html += `<div class="tw-icelake"></div>`;
-    [[10,130],[26,100],[42,120],[58,90],[74,110],[90,100]].forEach(p => { html += `<span class="tw-stalag" style="left:${p[0]}%;height:${p[1]}px;opacity:.5;"></span>`; });
-    // 🌫️ Voile de brume (brouille le fond, pas le panneau)
-    html += `<div class="tw-cavefog"></div>`;
+    [[10,130],[26,100],[42,120],[58,90],[74,110],[90,100]].forEach(p => { html += `<span class="tw-stalag" style="left:${p[0]}%;height:${p[1]}px;"></span>`; });
+    // 🌑 Voile assombrissant (grotte profonde, sans flou)
+    html += `<div class="tw-cavedark"></div>`;
   }
 
   if (W.scene === "vault") {
@@ -402,7 +402,10 @@ function generateSceneHTML(c, W, C) {
   @keyframes twGlowPulse{50%{opacity:.42}}
   .tw-cavefog{position:absolute;inset:0;background:linear-gradient(180deg,#04141d99,#0a2a3a55 50%,#04141d99);backdrop-filter:blur(2px);z-index:3;pointer-events:none;}
 `;document.head.appendChild(s);})();
-
+/* ----- CSS grotte assombrie v7 ----- */
+(function(){const s=document.createElement("style");s.textContent=`
+  .tw-cavedark{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,#00000055 0%,#000000aa 55%,#000000e6 100%);z-index:3;pointer-events:none;}
+`;document.head.appendChild(s);})();
 /* ----- 6. ÉCRAN AVENTURE (fixe) ----- */
 function openTower() {
   let m = document.getElementById("screen-tower");
