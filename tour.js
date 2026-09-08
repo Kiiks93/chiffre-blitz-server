@@ -330,20 +330,34 @@ function generateSceneHTML(c, W, C) {
     }
   }
 
-  if (W.scene === "glacier") {
-    html += `<div class="tw-cavewall"></div><div class="tw-rocktop"></div>`;
-    [[6,120],[16,90],[26,140],[38,80],[50,120],[62,90],[74,130],[86,85],[94,110]].forEach(p => {
-      html += `<span class="tw-icicle" style="left:${p[0]}%;height:${p[1]}px;"></span>`;
+    if (W.scene === "glacier") {
+    html += `<div class="tw-cavewall"></div>`;
+    // Plafond + stalactites qui pendent
+    html += `<div class="tw-gceil"></div>`;
+    [[6,110],[16,80],[26,130],[38,70],[50,110],[62,80],[74,120],[86,75],[94,100]].forEach(p => {
+      html += `<span class="tw-stalac" style="left:${p[0]}%;height:${p[1]}px;"></span>`;
     });
-    html += `<div class="tw-ray" style="top:4%;"></div><div class="tw-ray" style="top:6%;left:30%;animation-delay:1s;"></div>`;
-    [{top:"28%",s:1,l:12},{top:"42%",s:.85,l:34},{top:"56%",s:1.1,l:56},{top:"68%",s:.9,l:76},{top:"38%",s:.75,l:88}].forEach((cl, ci) => {
-      html += `<span class="tw-cryscl" style="left:${cl.l}%;top:${cl.top};bottom:auto;transform:scale(${cl.s});animation-delay:${ci*.6}s;"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span>`;
-    });
-    html += `<div class="tw-mist" style="top:40%;"></div><div class="tw-mist m2" style="top:60%;"></div>`;
-    html += `<div class="tw-icefloor"></div><div class="tw-rockbot"></div>`;
-    [[10,80],[26,60],[42,75],[58,55],[74,70],[90,60]].forEach(p => {
+    // Sol + stalagmites
+    html += `<div class="tw-gfloor"></div>`;
+    [[10,70],[26,55],[42,65],[58,50],[74,60],[90,55]].forEach(p => {
       html += `<span class="tw-stalag" style="left:${p[0]}%;height:${p[1]}px;"></span>`;
     });
+    // Étagères de cristaux ANCRÉES aux parois (alternées G/D)
+    const shelfN = IS_MOBILE ? 4 : 7;
+    for (let i = 0; i < shelfN; i++) {
+      const top = 14 + i * (66 / shelfN);
+      const leftSide = (i % 2 === 0);
+      const s = .7 + ((i * 13) % 4) / 10;
+      html += `<div class="tw-shelf ${leftSide ? "" : "r"}" style="top:${top}%;${leftSide ? "left:0;" : "right:0;"}">
+        <span class="rock"></span>
+        <span class="tw-cryscl" style="bottom:18px;left:22%;transform:scale(${s});animation-delay:${i*.5}s;"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i></span>
+      </div>`;
+    }
+    // Lucioles lumineuses qui flottent
+    const flyN = IS_MOBILE ? 4 : 9;
+    for (let i = 0; i < flyN; i++) {
+      html += `<span class="tw-firefly" style="left:${10+(i*29)%80}%;top:${12+(i*17)%70}%;animation-duration:${5+(i%4)*2}s;animation-delay:${i*.6}s;"></span>`;
+    }
   }
 
   if (W.scene === "vault") {
@@ -365,7 +379,22 @@ function generateSceneHTML(c, W, C) {
   SCENE_CACHE[c] = result;
   return result;
 }
-
+/* ----- CSS grotte v2 ----- */
+(function(){
+  const s=document.createElement("style");
+  s.textContent=`
+  .tw-gceil{position:absolute;top:0;left:0;right:0;height:200px;background:linear-gradient(0deg,#0a2a3a,#04141d);}
+  .tw-gfloor{position:absolute;bottom:0;left:0;right:0;height:200px;background:linear-gradient(180deg,#0a2a3a,#04141d);box-shadow:inset 0 8px 20px #74ebf533;}
+  .tw-stalac{position:absolute;top:0;width:26px;background:linear-gradient(180deg,#04141d,#74ebf5 60%,#e8fbff);clip-path:polygon(48% 100%,52% 100%,62% 60%,72% 30%,100% 0,0 0,28% 30%,38% 60%);filter:drop-shadow(0 0 6px #74ebf5aa);}
+  .tw-shelf{position:absolute;width:24%;height:130px;}
+  .tw-shelf .rock{position:absolute;bottom:0;left:0;right:0;height:26px;background:linear-gradient(180deg,#123a4a,#04141d);clip-path:polygon(0 0,100% 25%,88% 100%,0 100%);}
+  .tw-shelf.r{transform:scaleX(-1);}
+  .tw-shelf .tw-cryscl{position:absolute;bottom:18px;left:22%;width:80px;height:100px;}
+  .tw-firefly{position:absolute;width:5px;height:5px;border-radius:50%;background:#bffcff;box-shadow:0 0 10px #74ebf5,0 0 20px #74ebf5;animation:twFly ease-in-out infinite;}
+  @keyframes twFly{0%,100%{transform:translate(0,0);opacity:.9}25%{transform:translate(14px,-18px);opacity:.5}50%{transform:translate(-10px,-30px);opacity:.9}75%{transform:translate(8px,-12px);opacity:.6}}
+  `;
+  document.head.appendChild(s);
+})();
 /* ----- 6. RENDU CARTE ----- */
 function drawRoom() {
   const wrap = document.getElementById("tw-mapwrap");
