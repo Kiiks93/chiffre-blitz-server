@@ -383,10 +383,10 @@ function generateSceneHTML(c, W, C) {
     const rows = IS_MOBILE ? 8 : 12;
     for (let i = 0; i < rows; i++) {
       const top = 6 + i * (88 / rows);
-      html += `<span class="tw-safebox" style="left:3%;top:${top}%;color:#f8b500;"></span>`;
-      html += `<span class="tw-safebox" style="left:9%;top:${top+2}%;color:#c9a227;"></span>`;
-      html += `<span class="tw-safebox" style="right:3%;top:${top}%;color:#f8b500;"></span>`;
-      html += `<span class="tw-safebox" style="right:9%;top:${top+2}%;color:#c9a227;"></span>`;
+      html += `<span class="tw-safebox" style="left:3%;top:${top}%;"></span>`;
+      html += `<span class="tw-safebox bz" style="left:9%;top:${top+2}%;"></span>`;
+      html += `<span class="tw-safebox" style="right:3%;top:${top}%;"></span>`;
+      html += `<span class="tw-safebox bz" style="right:9%;top:${top+2}%;"></span>`;
     }
     // Spots dorés
     html += `<div class="tw-spot" style="left:18%;"></div><div class="tw-spot" style="left:50%;animation-delay:1s;"></div><div class="tw-spot" style="left:78%;animation-delay:2s;"></div>`;
@@ -427,7 +427,7 @@ function generateSceneHTML(c, W, C) {
   .tw-laser::before{left:-3px;}.tw-laser::after{right:-3px;}
   .tw-laser.d{animation-name:twLaserD;}
   @keyframes twLaserV{from{transform:translateY(-26px)}to{transform:translateY(26px)}}
-  @keyframes twLaserD{from{transform:rotate(-5deg) translateY(-18px)}to{transform:rotate(5deg) translateY(18px)}}
+  @keyframes twLaserD{from{transform:rotate(-5deg) translateY(-18px)}to{transform:rotate(5deg) translateY(18px)}}  
 `;document.head.appendChild(s);})();
   let parts = "";
   for (let i = 0; i < (IS_MOBILE?0:7); i++) parts += `<span class="tw-part ${W.part}" style="color:${C.acc};left:${(i*13+c*7)%96}%;animation-duration:${4+(i%4)*1.5}s;animation-delay:${i*.7}s;"></span>`;
@@ -435,7 +435,29 @@ function generateSceneHTML(c, W, C) {
   const result = html + parts;
   SCENE_CACHE[c] = result;
   return result;
+  /* ----- CSS coffres muraux réalistes ----- */
+(function(){const s=document.createElement("style");s.textContent=`
+  .tw-safebox{position:absolute;width:46px;height:36px;border-radius:4px;border:1px solid #5a4410;animation:none;
+    background:
+      radial-gradient(circle at 10% 14%,#fff8dc 0 2px,transparent 2px),
+      radial-gradient(circle at 90% 14%,#fff8dc 0 2px,transparent 2px),
+      radial-gradient(circle at 10% 86%,#fff8dc 0 2px,transparent 2px),
+      radial-gradient(circle at 90% 86%,#fff8dc 0 2px,transparent 2px),
+      linear-gradient(135deg,#e8c86a 0%,#b8942a 25%,#8a6a1a 50%,#c9a227 75%,#e8c86a 100%);
+    box-shadow:inset 0 2px 3px #ffffff55,inset 0 -2px 3px #00000088,0 2px 5px #000000bb,0 0 10px #f8b50022;
+  }
+  .tw-safebox.bz{background:
+      radial-gradient(circle at 10% 14%,#e8d8b8 0 2px,transparent 2px),
+      radial-gradient(circle at 90% 14%,#e8d8b8 0 2px,transparent 2px),
+      radial-gradient(circle at 10% 86%,#e8d8b8 0 2px,transparent 2px),
+      radial-gradient(circle at 90% 86%,#e8d8b8 0 2px,transparent 2px),
+      linear-gradient(135deg,#c8a86a 0%,#98742a 25%,#6a4a1a 50%,#a88227 75%,#c8a86a 100%);
+  }
+  .tw-safebox::before{content:"";position:absolute;left:50%;top:50%;width:13px;height:13px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff8dc,#8a6a1a 60%,#3a2a05);box-shadow:0 1px 3px #0009,inset 0 1px 2px #ffffff66;}
+  .tw-safebox::after{content:"";position:absolute;inset:3px;border:1px solid #ffffff22;border-radius:3px;background:linear-gradient(115deg,transparent 42%,#ffffff33 42% 47%,transparent 47%);}
+`;document.head.appendChild(s);})();
 }
+
 /* ----- 6. ÉCRAN AVENTURE (fixe) ----- */
 function openTower() {
   let m = document.getElementById("screen-tower");
