@@ -470,24 +470,6 @@ function drawRoom() {
   renderWindow();
 }
 
-  for (let f = 1; f <= TOTAL_FLOORS; f++) {
-    const chap = TowerUtils.getTowerChapter(f);
-    if (chap.season > season || !TowerUtils.worldUnlockedByStars(chap.id)) continue;
-    const y = H - STEP * f, x = 50 + Math.sin(f * 0.55) * 16;
-    (ptsByChap[chap.id] = ptsByChap[chap.id] || []).push([x, y + 23]);
-  }
-  for (const cid in ptsByChap) {
-    const pts = ptsByChap[cid];
-    if (pts.length > 1) paths += `<path d="M${pts.map(p => p[0] + " " + p[1]).join(" L ")}" fill="none" stroke="${TOWER_COLORS[cid].acc}44" stroke-width="7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
-  }
-
-  wrap.innerHTML = `<div class="tw-map" style="height:${H}px;">${zones}<div class="tw-col"><svg style="position:absolute;inset:0;width:100%;height:100%;z-index:1;" viewBox="0 0 100 ${H}" preserveAspectRatio="none">${paths}</svg><div id="tw-nodes" style="position:absolute;inset:0;z-index:2;"></div>${gates}</div></div>`;
-  wrap.onscroll = scheduleRenderWindow;
-  const yCur = H - STEP * current;
-  wrap.scrollTop = Math.max(0, yCur - wrap.clientHeight / 2);
-  renderWindow();
-}
-
 function scheduleRenderWindow() {
   if (TW_nodesRaf) return;
   TW_nodesRaf = requestAnimationFrame(() => { TW_nodesRaf = null; renderWindow(); });
