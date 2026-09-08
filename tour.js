@@ -427,7 +427,7 @@ function drawRoom() {
   document.getElementById("tower-sub").innerText = "É" + current + " ⭐" + totalStars;
 
   const H = TOTAL_FLOORS * STEP + 110;
-  let zones = "", gates = "", paths = "", ptsByChap = {};
+    let zones = "", gates = "", paths = "", ptsByChap = {}, quotas = "";
 
   for (let c = 1; c <= 9; c++) {
     const chap = TOWER_CHAPTERS[c - 1];
@@ -440,7 +440,7 @@ function drawRoom() {
       } else {
         const stars = TowerUtils.starsInWorld(c - 1);
         const pct = Math.min(100, Math.round(stars / WORLD_QUOTA * 100));
-        gates += `<div class="tw-quota" style="top:${zTop + 10}px;right:12px;left:auto;transform:none;">
+        quotas += `<div class="tw-quota" style="top:${zTop + 10}px;right:12px;">
           <div class="tw-quota-label">🔒 ${chap.icon} ${chap.name} — ⭐ ${stars}/${WORLD_QUOTA}</div>
           <div class="tw-quota-bar"><div style="width:${pct}%"></div></div>
         </div>`;
@@ -463,7 +463,7 @@ function drawRoom() {
     if (pts.length > 1) paths += `<path d="M${pts.map(p => p[0] + " " + p[1]).join(" L ")}" fill="none" stroke="${TOWER_COLORS[cid].acc}44" stroke-width="7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
   }
 
-  wrap.innerHTML = `<div class="tw-map" style="height:${H}px;">${zones}<div class="tw-col"><svg style="position:absolute;inset:0;width:100%;height:100%;z-index:1;" viewBox="0 0 100 ${H}" preserveAspectRatio="none">${paths}</svg><div id="tw-nodes" style="position:absolute;inset:0;z-index:2;"></div>${gates}</div></div>`;
+  wrap.innerHTML = `<div class="tw-map" style="height:${H}px;">${zones}${quotas}<div class="tw-col"><svg style="position:absolute;inset:0;width:100%;height:100%;z-index:1;" viewBox="0 0 100 ${H}" preserveAspectRatio="none">${paths}</svg><div id="tw-nodes" style="position:absolute;inset:0;z-index:2;"></div>${gates}</div></div>`;
   wrap.onscroll = scheduleRenderWindow;
   const yCur = H - STEP * current;
   wrap.scrollTop = Math.max(0, yCur - wrap.clientHeight / 2);
