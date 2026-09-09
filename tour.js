@@ -6,13 +6,13 @@ TOUR.JS — AVENTURE « MATCH FACTORY » (écran fixe par monde)
 const TOWER_CHAPTERS = [
   { id:1, season:1, name:"Quartier Néon", icon:"🌆", boss:"🤖", objects:["💡","","📺","","🎛️","🖥️","","💾","🌃"] },
   { id:2, season:1, name:"Grottes de Cristal", icon:"🧊", boss:"🗿", objects:["🕯️","","","⛏️","🪞","️","🫧","🌀","🧊"] },
-  { id:3, season:1, name:"Banque Dorée", icon:"🏦", boss:"👾", objects:["🪙","💰","💵","💳","","","💎","🏅","📜"] },
-  { id:4, season:2, name:"Tour Hantée", icon:"🎃", boss:"🧛", objects:["🕸️","🎃","🕯️","🦇","","👻","‍","🔮","️"] },
-  { id:5, season:2, name:"Cimetière Brumeux", icon:"🌫️", boss:"💀", objects:["🪦","🌫️","️","️","","️","","🦴","🖤"] },
-  { id:6, season:2, name:"Antre Citrouille", icon:"👑", boss:"🎃", objects:["🎃","🍬","🔮","","🧹","","🕸️","👻",""] },
-  { id:7, season:3, name:"Cime Bonbon", icon:"🍭", boss:"🧝", objects:["🍭","","🎀","🎂","","🥐","🍰","🍩",""] },
+  { id:3, season:1, name:"Banque Dorée", icon:"🏦", boss:"👾", objects:["🪙","💰","💵","💳","","","💎","","📜"] },
+  { id:4, season:2, name:"Tour Hantée", icon:"🎃", boss:"🧛", objects:["🕸️","🎃","🕯️","🦇","","","‍","","️"] },
+  { id:5, season:2, name:"Cimetière Brumeux", icon:"🌫️", boss:"💀", objects:["🪦","🌫️","️","️","","️","","🦴",""] },
+  { id:6, season:2, name:"Antre Citrouille", icon:"👑", boss:"🎃", objects:["🎃","🍬","🔮","","","","🕸️","👻",""] },
+  { id:7, season:3, name:"Cime Bonbon", icon:"🍭", boss:"🧝", objects:["🍭","","🎀","🎂","","🥐","","🍩",""] },
   { id:8, season:3, name:"Forêt de Sapins", icon:"🎄", boss:"⛄", objects:["🎄","","❄️","","️","⭐","🧦","🍪",""] },
-  { id:9, season:3, name:"Atelier du Père Noël", icon:"🎅", boss:"🎅", objects:["🎅","🤶","","🦌","","🎁","","🥛","🍪"] }
+  { id:9, season:3, name:"Atelier du Père Noël", icon:"🎅", boss:"🎅", objects:["🎅","🤶","","","","🎁","","🥛","🍪"] }
 ];
 const FPC = 200;
 const TOTAL_FLOORS = 9 * FPC;
@@ -31,8 +31,6 @@ const TOWER_WORLDS = {
   8:{bg:"radial-gradient(ellipse at 50% 10%,#2ecc7122,transparent 50%),linear-gradient(180deg,#04180b,#0a3318)",scene:"glacier",part:"snow"},
   9:{bg:"radial-gradient(ellipse at 50% 10%,#ff416c22,transparent 50%),linear-gradient(180deg,#180404,#330a0a)",scene:"vault",part:"spark"}
 };
-
-/* 🛒 Boutique AVENTURE : VIES seulement (jokers = packs € uniquement) */
 const SHOP_ITEMS = [
   { id:"vies", icon:"❤️", name:"+3 Vies", price:150 },
   { id:"pack_vies_1", icon:"💖", name:"Pack Vies (10 vies)", price:0, iap:true, eur:"1,00 €" },
@@ -83,7 +81,7 @@ const TowerUtils = {
   },
   typeLabel(t) {
     const fr = currentLang === "fr";
-    return ({classic:fr?"⚡ Croissant":"⚡ Ascending",reverse:fr?"🔽 Décroissant":"🔽 Descending",color:fr?"🎨 Couleurs":"🎨 Colors",pairs:fr?"🧩 Paires":"🧩 Pairs",parity:fr?"🔢 Pair/Impair":"🔢 Even/Odd",forbidden:fr?"🚫 Interdit":"🚫 Forbidden",sprint:fr?"⏱️ Sprint":"⏱️ Sprint",fog:fr?"🌫️ Brouillard":"🌫️ Fog",nofail:fr?"💎 Sans faute":"💎 No mistake",boss:fr?"⚔️ GARDIEN":"⚔️ GUARDIAN"})[t] || t;
+    return ({classic:fr?"⚡ Croissant":" Ascending",reverse:fr?"🔽 Décroissant":"🔽 Descending",color:fr?"🎨 Couleurs":"🎨 Colors",pairs:fr?"🧩 Paires":"🧩 Pairs",parity:fr?"🔢 Pair/Impair":"🔢 Even/Odd",forbidden:fr?"🚫 Interdit":"🚫 Forbidden",sprint:fr?"⏱️ Sprint":"⏱️ Sprint",fog:fr?"🌫️ Brouillard":"🌫️ Fog",nofail:fr?"💎 Sans faute":"💎 No mistake",boss:fr?"⚔️ GARDIEN":"⚔️ GUARDIAN"})[t] || t;
   }
 };
 
@@ -91,7 +89,6 @@ const TowerUtils = {
 (function() {
   const style = document.createElement('style');
   style.textContent = `
-  /* === ÉCRAN AVENTURE FIXE === */
   #screen-tower{position:fixed;inset:0;background:#000;z-index:9990;display:none;flex-direction:column;}
   #tw-bg{position:absolute;inset:0;overflow:hidden;z-index:0;}
   .tw-hud{position:relative;z-index:5;display:flex;align-items:center;gap:8px;padding:10px 12px;}
@@ -123,8 +120,6 @@ const TowerUtils = {
   .tw-worldfade.on{opacity:1;}
   .tw-worldfade .big{font-size:34px;font-weight:900;color:#00d2ff;text-shadow:0 0 20px #00d2ff;}
   .tw-worldfade .sub{font-size:14px;color:#aaa;}
-
-  /* === BOUTIQUE AVENTURE === */
   .tw-shop{position:fixed;inset:0;background:#000c;z-index:9997;display:flex;align-items:center;justify-content:center;}
   .tw-shop-card{background:#0f051d;border:2px solid #f8b500;border-radius:14px;padding:16px;width:min(92%,360px);}
   .tw-shop-card h3{margin:0 0 10px;color:#f8b500;text-align:center;}
@@ -134,18 +129,12 @@ const TowerUtils = {
   .tw-shop-item .buy{background:linear-gradient(180deg,#f8b500,#c9a227);border:none;border-radius:8px;padding:7px 12px;font-weight:900;color:#3a2a05;cursor:pointer;}
   .tw-shop-item .buy.iap{background:linear-gradient(180deg,#3ae05a,#1a9a3a);color:#fff;}
   .tw-shop-item .buy.iap:disabled{filter:grayscale(1);opacity:.6;}
-
-  /* === JOKERS EN BAS (style entraînement/1v1) === */
   .twj-bar{display:flex;justify-content:center;gap:14px;padding:10px 12px 14px;}
   .twj-btn{display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,#1a2142,#0d1226);border:2px solid #00d2ff;color:#fff;border-radius:14px;padding:10px 18px;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #061024,0 0 12px #00d2ff33;}
   .twj-btn b{background:#00d2ff;color:#061024;border-radius:8px;padding:2px 8px;font-size:13px;}
   .twj-btn:disabled{opacity:.55;filter:grayscale(.6);cursor:default;}
-
-  /* === BOUCLIER VISUEL === */
-  .tw-shield-active{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:90vw;height:90vh;border:4px solid #f8b500;border-radius:50%;box-shadow:0 0 40px #f8b50088,inset 0 0 40px #f8b50044;pointer-events:none;z-index:9995;animation:twShieldPulse 2s infinite;}
+  .tw-shield-active{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:90vw;height:90vh;border:4px solid #f8b500;border-radius:50%;box-shadow:0 0 40px #f8b50088,inset 0 0 40px #f8b50044;pointer-events:none;z-index:9997;animation:twShieldPulse 2s infinite;}
   @keyframes twShieldPulse{0%,100%{opacity:.6}50%{opacity:1}}
-
-  /* === CITY === */
   .tw-moon{position:absolute;top:2%;right:10%;width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff8e8,#d8c9a8 60%,#a89878);box-shadow:0 0 30px #fff8e866;}
   .tw-star2{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;animation:twFlickP 3s steps(2) infinite;}
   .tw-cloud{position:absolute;height:10px;border-radius:6px;background:linear-gradient(90deg,transparent,#8888aa22 30%,#8888aa22 70%,transparent);filter:blur(3px);animation:twCloud linear infinite;}
@@ -178,8 +167,6 @@ const TowerUtils = {
   .tw-signalbeam{position:absolute;bottom:26%;width:110px;height:62%;background:linear-gradient(0deg,#ffffff55,#ffffff2b 45%,#ffffff0d 100%);clip-path:polygon(35% 100%,65% 100%,100% 0,0 0);filter:blur(7px);transform-origin:bottom center;z-index:0;animation:twGlowC 4s infinite;}
   .tw-signalbeam.l{left:34%;transform:rotate(14deg);}
   .tw-signalbeam.r{left:66%;transform:rotate(-14deg);}
-
-  /* === GLACIER === */
   .tw-cavewall{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 55%,#74ebf518 0%,#0a2a3a66 35%,#000000ee 78%);}
   .tw-gceil{position:absolute;top:0;left:0;right:0;height:160px;background:linear-gradient(0deg,#0a2a3a,#04141d);}
   .tw-cavedark{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,#00000055 0%,#000000aa 55%,#000000e6 100%);z-index:3;pointer-events:none;}
@@ -205,8 +192,6 @@ const TowerUtils = {
   .tw-cryscl.tall{width:60px;height:150px;}
   .tw-cryscl.wide{width:110px;height:90px;}
   .tw-firefly{position:absolute;width:5px;height:5px;border-radius:50%;background:#bffcff;box-shadow:0 0 10px #74ebf5;animation:twFly ease-in-out infinite;}
-
-  /* === VAULT (coffre doré v9+v10+v11) === */
   .tw-vaultroom{position:absolute;inset:0;background:linear-gradient(180deg,#08080f,#101018 45%,#08080f);}
   .tw-marble{position:absolute;inset:0;background:linear-gradient(115deg,transparent 40%,#ffffff08 40% 42%,transparent 42%),linear-gradient(65deg,transparent 55%,#ffffff06 55% 57%,transparent 57%),linear-gradient(150deg,transparent 70%,#ffffff05 70% 71%,transparent 71%);}
   .tw-vfloor{position:absolute;bottom:0;left:0;right:0;height:22%;background:linear-gradient(180deg,#0a0804 0%,#1a1206 40%,#241a08 100%);box-shadow:inset 0 8px 24px #000c;}
@@ -273,13 +258,10 @@ const TowerUtils = {
   .tw-ncam::after{content:"";position:absolute;left:50%;top:58%;width:10px;height:10px;transform:translateX(-50%);border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor;animation:twFlickP 1.4s steps(2) infinite;}
   .tw-ncam .beam{position:absolute;left:50%;top:100%;width:70px;height:100px;transform-origin:top center;background:linear-gradient(180deg,currentColor,transparent);opacity:.18;clip-path:polygon(45% 0,55% 0,100% 100%,0 100%);animation:twCamSweep 4s ease-in-out infinite alternate;}
   .tw-gloss{position:absolute;bottom:0;left:0;right:0;height:12%;background:linear-gradient(180deg,#0000,#f8b50018 40%,#00000088);}
-
   .tw-part{position:absolute;width:4px;height:4px;border-radius:50%;}
   .tw-part.snow{background:#ffffffcc;animation:twFall linear infinite;}
   .tw-part.spark{background:#f8b500;box-shadow:0 0 6px #f8b500;animation:twRise linear infinite;}
   .tw-part.neon{box-shadow:0 0 8px currentColor;background:currentColor;animation:twFlickP 2.2s steps(2) infinite;}
-
-  /* === BRIEFING + JEU === */
   .tw-brief{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:9995;}
   .tw-brief-card{background:#0f051d;border:2px solid #00d2ff;border-radius:12px;padding:16px;max-width:82%;text-align:center;}
   .tw-stars{font-size:26px;letter-spacing:6px;text-align:center;margin:10px 0;}
@@ -299,8 +281,6 @@ const TowerUtils = {
   .tg-tile.err{border-color:#ff4b2b !important;box-shadow:0 0 14px #ff4b2b;background:linear-gradient(180deg,#3a0a0a,#200505) !important;animation:twShake .3s;}
   @keyframes twShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
   .twg-msg{text-align:center;font-size:11px;color:#aaa;padding:6px 10px 12px;}
-
-  /* === ANIMATIONS === */
   @keyframes twFlickP{50%{opacity:.15}}
   @keyframes twCloud{from{left:-30%}to{left:110%}}
   @keyframes twWin{0%,38%{opacity:1}45%,88%{opacity:.08}95%,100%{opacity:1}}
@@ -319,8 +299,6 @@ const TowerUtils = {
   @keyframes twRise{0%{top:104%}100%{top:-4%}}
   @keyframes twPop{0%{transform:scale(0)}70%{transform:scale(1.4)}100%{transform:scale(1)}}
   @keyframes twFog{50%{opacity:.25}}
-
-  /* === POP-UP SÉLECTION NIVEAU === */
   .tw-lvlpop{position:fixed;inset:0;background:#000c;z-index:9997;display:flex;align-items:center;justify-content:center;}
   .tw-lvlpop-card{background:#0f051d;border:2px solid #00d2ff;border-radius:14px;padding:14px;width:min(94%,420px);max-height:80%;display:flex;flex-direction:column;box-shadow:0 0 20px #00d2ff66;}
   .tw-lvlpop-card h3{color:#00d2ff;text-align:center;margin:0 0 10px;font-size:15px;}
@@ -330,8 +308,6 @@ const TowerUtils = {
   .tw-lvl-cell.cur{border-color:#00d2ff;box-shadow:0 0 12px #00d2ff66;}
   .tw-lvl-cell.lock{opacity:.35;cursor:default;}
   .tw-lvl-cell.boss{border-color:#ff4b2b;}
-
-  /* === MOBILE PERF === */
   @media (max-width:760px), (pointer:coarse){
     .tw-road{height:140px;}
     .tw-horizon{bottom:140px;}
@@ -362,11 +338,9 @@ function goldPileHTML(leftPos) {
   for (let i = 0; i < 5; i++) g += `<span class="c" style="left:${-8+i*30}px;bottom:${-2+(i%2)*4}px;"></span>`;
   return `<div class="tw-goldpile" style="left:${leftPos};">${g}</div>`;
 }
-
 function generateSceneHTML(c, W, C) {
   if (SCENE_CACHE[c]) return SCENE_CACHE[c];
   let html = "";
-
   if (W.scene === "city") {
     html += `<span class="tw-moon"></span>`;
     const starsN = IS_MOBILE ? 45 : 120;
@@ -411,7 +385,6 @@ function generateSceneHTML(c, W, C) {
     if (IS_MOBILE) html += car("","14px","9s","0s","#00d2ff")+car("s","28px","7s","3s","#f8b500")+car("r","78px","10s","1.5s","#ff2bd6");
     else html += car("","16px","9s","0s","#00d2ff")+car("","34px","11s","2.5s","#f8b500")+car("s","24px","7s","5s","#7dff8a")+car("r","96px","10s","1.5s","#ff2bd6")+car("r s","104px","8s","6.5s","#ff8a00");
   }
-
   if (W.scene === "glacier") {
     html += `<div class="tw-cavewall"></div>`;
     html += `<div class="tw-gwall"></div><div class="tw-gwall r"></div>`;
@@ -433,7 +406,6 @@ function generateSceneHTML(c, W, C) {
     [[10,130],[26,100],[42,120],[58,90],[74,110],[90,100]].forEach(p => { html += `<span class="tw-stalag" style="left:${p[0]}%;height:${p[1]}px;"></span>`; });
     html += `<div class="tw-cavedark"></div>`;
   }
-
   if (W.scene === "vault") {
     html += `<div class="tw-marble"></div>`;
     html += `<div class="tw-vfloor"></div><div class="tw-vreflect"></div>`;
@@ -463,16 +435,14 @@ function generateSceneHTML(c, W, C) {
     for (let i = 0; i < gpN; i++) html += `<span class="tw-goldpart" style="left:${8+(i*17)%84}%;top:${30+(i*13)%60}%;animation-duration:${6+(i%4)*2}s;animation-delay:${i*.8}s;"></span>`;
     html += `<div class="tw-vvignette"></div>`;
   }
-
   let parts = "";
   for (let i = 0; i < (IS_MOBILE?0:7); i++) parts += `<span class="tw-part ${W.part}" style="color:${C.acc};left:${(i*13+c*7)%96}%;animation-duration:${4+(i%4)*1.5}s;animation-delay:${i*.7}s;"></span>`;
-
   const result = html + parts;
   SCENE_CACHE[c] = result;
   return result;
 }
 
-/* ----- 6. ÉCRAN AVENTURE (fixe) ----- */
+/* ----- 6. ÉCRAN AVENTURE ----- */
 function openTower() {
   let m = document.getElementById("screen-tower");
   if (!m) {
@@ -511,7 +481,6 @@ function openTower() {
   towerDing();
 }
 function closeTower() { document.getElementById("screen-tower").style.display = "none"; }
-
 function fmtRegen(ms) {
   const s = Math.max(0, Math.ceil(ms / 1000));
   return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
@@ -528,7 +497,6 @@ setInterval(() => {
     updateRegenLabel();
   }
 }, 1000);
-
 function renderAdventure() {
   const scr = document.getElementById("screen-tower");
   if (!scr || scr.style.display === "none") return;
@@ -597,7 +565,6 @@ function openLevelSelect() {
 }
 function closeLevelSelect() { const s = document.getElementById("tw-lvlpop"); if (s) s.remove(); }
 function pickLevel(f) { twViewFloor = f; closeLevelSelect(); renderAdventure(); }
-
 function showWorldTransition(w) {
   const chap = TOWER_CHAPTERS[w - 1];
   let f = document.createElement("div");
@@ -613,7 +580,7 @@ function showWorldTransition(w) {
   }, 1400);
 }
 
-/* ----- 8. BOUTIQUE AVENTURE (noms uniques, n'écrase PAS la boutique du jeu) ----- */
+/* ----- 8. BOUTIQUE AVENTURE ----- */
 function openTowerShop() {
   closeTowerShop();
   const fr = currentLang === "fr";
@@ -659,7 +626,7 @@ function showBriefing(def) {
   const curStars = towerProgress.stars[String(def.floor)] || 0;
   const starTime = Math.floor(def.time * 0.6);
   let starRule = fr ? `💡 ⭐ terminer · ⭐⭐ ≤2 erreurs · ⭐⭐⭐ 0 erreur + < ${starTime}s` : `💡 ⭐ finish · ⭐⭐ ≤2 mistakes · ⭐⭐⭐ 0 mistake + < ${starTime}s`;
-  if (def.type === "pairs" || def.type === "sprint") starRule = fr ? `💡 ⭐ finir · ⭐ rapide · ⭐⭐⭐ très rapide` : `💡 ⭐ finish · ⭐ fast · ⭐⭐⭐ very fast`;
+  if (def.type === "pairs" || def.type === "sprint") starRule = fr ? `💡 ⭐ finir ·  rapide · ⭐⭐⭐ très rapide` : `💡 ⭐ finish · ⭐ fast · ⭐⭐⭐ very fast`;
   const replayLine = def.replay ? `<div style="font-size:10px;color:#f8b500;margin-bottom:6px;">${fr?"Actuel : ":"Current: "}{"⭐".repeat(curStars)}</div>` : "";
   const b = document.createElement("div");
   b.id = "tw-brief"; b.className = "tw-brief";
@@ -680,7 +647,7 @@ function ensureTowerOverlay() {
   if (!ov) {
     ov = document.createElement("div");
     ov.id = "tower-game"; ov.className = "twg-screen";
-    ov.innerHTML = `<div class="twg-header"><button class="tw-back" onclick="quitFloor()">⬅️</button><b id="twg-title"></b><span id="tg-shield" style="color:#f8b500;font-weight:900;font-size:15px;display:none;">🛡️</span><span id="tg-shield" style="color:#f8b500;font-weight:900;font-size:15px;display:none;">🛡️</span><span id="tg-shield" style="color:#f8b500;font-weight:900;font-size:15px;display:none;">🛡️</span><span id="tg-shield" style="color:#f8b500;font-weight:900;font-size:15px;display:none;">🛡️</span><span id="tg-shield" style="color:#f8b500;font-weight:900;font-size:15px;display:none;">🛡️</span><span id="tg-err" style="color:#ff4b2b;font-weight:900;font-size:13px;min-width:40px;text-align:right;">❌ 0</span><span id="twg-timer">⏱️</span></div><div id="tg-bar" class="twg-bar"></div><div id="tg-hud" class="twg-hud"></div><div class="twg-gridwrap"><div id="tg-grid" class="tg-grid"></div></div><div class="twj-bar"><button class="twj-btn" id="twg-jt" onclick="useJoker('time')">⏱️ +10s <b id="twg-jt-n">0</b></button><button class="twj-btn" id="twg-js" onclick="useJoker('shield')">🛡️ Bouclier <b id="twg-js-n">0</b></button></div><div id="tg-msg" class="twg-msg"></div>`;
+    ov.innerHTML = `<div class="twg-header"><button class="tw-back" onclick="quitFloor()">⬅️</button><b id="twg-title"></b><span id="tg-shield" style="color:#f8b500;font-weight:900;font-size:15px;display:none;">🛡️</span><span id="tg-err" style="color:#ff4b2b;font-weight:900;font-size:13px;min-width:40px;text-align:right;">❌ 0</span><span id="twg-timer">⏱️</span></div><div id="tg-bar" class="twg-bar"></div><div id="tg-hud" class="twg-hud"></div><div class="twg-gridwrap"><div id="tg-grid" class="tg-grid"></div></div><div class="twj-bar"><button class="twj-btn" id="twg-jt" onclick="useJoker('time')">⏱️ +10s <b id="twg-jt-n">0</b></button><button class="twj-btn" id="twg-js" onclick="useJoker('shield')">🛡️ Bouclier <b id="twg-js-n">0</b></button></div><div id="tg-msg" class="twg-msg"></div>`;
     document.body.appendChild(ov);
   }
   return ov;
@@ -704,27 +671,20 @@ function updateJokerButtons() {
 socket.on("joker_denied", () => {
   if (typeof showNotificationToast === "function") showNotificationToast(currentLang === "fr" ? "❌ Joker indisponible." : "❌ Joker unavailable.", "announcement");
 });
-socket.on("tower_no_lives", () => {
-  if (typeof showNotificationToast === "function") showNotificationToast(currentLang === "fr" ? "❤️ Plus de vies ! Reviens plus tard ou achète-en." : "❤️ No lives left! Come back later or buy some.", "announcement");
-  quitFloor();
-  renderAdventure();
-});
-socket.on("tower_shield_used", (data) => {
-  if (typeof showNotificationToast === "function") {
-    showNotificationToast(currentLang === "fr" ? "🛡️ Bouclier absorbé !" : "🛡️ Shield absorbed!", "gift");
-  }
-
-  const shield = document.getElementById("tw-shield-active");
-  if (shield) shield.remove();
-
-  const shEl = document.getElementById("tg-shield");
-  if (shEl) shEl.style.display = "none";
-});
 socket.on("tower_jokers_update", (d) => {
   if (d && d.jokers) { twJokers = d.jokers; updateJokerButtons(); }
 });
 socket.on("tower_shield_already", () => {
   if (typeof showNotificationToast === "function") showNotificationToast(currentLang === "fr" ? "🛡️ Bouclier déjà actif !" : "🛡️ Shield already active!", "announcement");
+});
+socket.on("tower_shield_used", () => {
+  if (typeof showNotificationToast === "function") showNotificationToast(currentLang === "fr" ? "🛡️ Bouclier absorbé !" : "🛡️ Shield absorbed!", "gift");
+  const s = document.getElementById("tw-shield-active"); if (s) s.remove();
+});
+socket.on("tower_no_lives", () => {
+  if (typeof showNotificationToast === "function") showNotificationToast(currentLang === "fr" ? "❤️ Plus de vies ! Reviens plus tard ou achète-en." : "❤️ No lives left! Come back later or buy some.", "announcement");
+  quitFloor();
+  renderAdventure();
 });
 function cloneState(s) {
   return { type:s.type, total:s.total, gridSize:s.gridSize, floor:s.floor, target:s.target, targetColor:s.targetColor, targetParity:s.targetParity, forbidden:s.forbidden, timeLeft:s.timeLeft, ai:s.ai, gone:Object.assign({},s.gone||{}), revealed:Object.assign({},s.revealed||{}), display:(s.display||[]).slice(), sel:(s.sel===undefined?null:s.sel), shield:s.shield||0 };
@@ -824,7 +784,6 @@ function renderHUDFromState() {
   const shEl = document.getElementById("tg-shield");
   if (shEl) shEl.style.display = (TW.shield > 0) ? "inline" : "none";
   updateJokerButtons();
-  
   let shield = document.getElementById("tw-shield-active");
   if (TW.shield > 0) {
     if (!shield) {
@@ -913,7 +872,7 @@ socket.on("tower_result", (res) => {
   else renderAdventure();
 });
 
-/* ----- 12. WATCHDOG (anti-partie-zombie) ----- */
+/* ----- 12. WATCHDOG ----- */
 setInterval(() => {
   if (TW && TW_lastState && Date.now() - TW_lastState > 6000) {
     TW = null; TW_dom = null; stopLocalTimer();
@@ -949,12 +908,3 @@ function towerDing() {
 function renderTower() { renderAdventure(); }
 function showElevator() { renderAdventure(); }
 function afterWinTravel() { renderAdventure(); }
-
-// 🧪 HACK TEST - À SUPPRIMER APRÈS TEST
-function testGiveJokers() {
-  twJokers.time = 3;
-  twJokers.shield = 3;
-  renderAdventure();
-  updateJokerButtons();
-  console.log("✅ 3 jokers ⏱️ + 3 jokers 🛡️ donnés !");
-}
