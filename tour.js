@@ -343,6 +343,10 @@ const TowerUtils = {
   }
   `;
   document.head.appendChild(style);
+  (function(){const s=document.createElement("style");s.textContent=`
+  .tg-tile.err{border-color:#ff4b2b !important;box-shadow:0 0 14px #ff4b2b;background:linear-gradient(180deg,#3a0a0a,#200505) !important;animation:twShake .3s;}
+  @keyframes twShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+`;document.head.appendChild(s);})();
 })();
 
 /* ----- 5. GÉNÉRATION DES FONDS ----- */
@@ -672,7 +676,7 @@ function ensureTowerOverlay() {
   if (!ov) {
     ov = document.createElement("div");
     ov.id = "tower-game"; ov.className = "twg-screen";
-    ov.innerHTML = `<div class="twg-header"><button class="tw-back" onclick="quitFloor()">⬅️</button><b id="twg-title"></b><button class="twj-btn" id="twg-jt" onclick="useJoker('time')">⏱️ 0</button><button class="twj-btn" id="twg-js" onclick="useJoker('skip')">🃏 0</button><span id="twg-timer">⏱️</span></div><div id="tg-bar" class="twg-bar"></div><div id="tg-hud" class="twg-hud"></div><div class="twg-gridwrap"><div id="tg-grid" class="tg-grid"></div></div><div id="tg-msg" class="twg-msg"></div>`;
+    ov.innerHTML = `<div class="twg-header"><button class="tw-back" onclick="quitFloor()">⬅️</button><b id="twg-title"></b><button class="twj-btn" id="twg-jt" onclick="useJoker('time')">⏱️ 0</button><button class="twj-btn" id="twg-js" onclick="useJoker('skip')">🃏 0</button><span id="tg-err" style="color:#ff4b2b;font-weight:900;font-size:13px;min-width:40px;text-align:right;">❌ 0</span><span id="twg-timer">⏱️</span></div><div id="tg-bar" class="twg-bar"></div><div id="tg-hud" class="twg-hud"></div><div class="twg-gridwrap"><div id="tg-grid" class="tg-grid"></div></div><div id="tg-msg" class="twg-msg"></div>`;
     document.body.appendChild(ov);
   }
   return ov;
@@ -764,7 +768,9 @@ function handleTowerClick(i, b) {
     if (t === "reverse") TW_dom.target--;
     else if (["classic","sprint","fog","nofail"].includes(t)) TW_dom.target++;
     if (typeof SoundEngine !== "undefined" && SoundEngine.playClick) SoundEngine.playClick();
-  } else if (success === false) {
+    } else if (success === false) {
+    b.classList.add("err");
+    setTimeout(() => { if (b) b.classList.remove("err"); }, 350);
     if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
   }
   socket.emit("tower_click", { index: i });
@@ -790,6 +796,8 @@ function renderHUDFromState() {
   const bar = document.getElementById("tg-bar");
   if (bar) { if (TW.type === "boss") { bar.style.display = "block"; bar.innerHTML = `<div style="width:${Math.min(100,TW.ai/TW.total*100)}%;height:100%;background:linear-gradient(90deg,#ff4b2b,#f8b500);"></div>`; } else bar.style.display = "none"; }
   document.getElementById("twg-title").innerText = "🏰 ÉTAGE " + TW.floor + " — " + TowerUtils.typeLabel(TW.type);
+    const errEl = document.getElementById("tg-err");
+  if (errEl) errEl.innerText = "❌ " + (TW.mistakes || 0);
   updateJokerButtons();
 }
 function showFailUI(reason) {
