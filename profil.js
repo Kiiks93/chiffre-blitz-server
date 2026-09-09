@@ -51,7 +51,6 @@ const socket = io(CONFIG.SERVER_URL, {
   reconnection: true,
   reconnectionAttempts: CONFIG.RECONNECTION_ATTEMPTS,
   reconnectionDelay: CONFIG.RECONNECTION_DELAY_MS
-  const socket = io(SERVER_URL);   // ← remets exactement ta ligne d'origine
 });
 
 socket.on("disconnect", () => { SoundEngine.stopMusic(true); });
@@ -69,7 +68,6 @@ socket.on("connect", () => {
 function attachForceDisconnect() {
   if (typeof socket !== 'undefined' && socket && socket.on) {
     socket.on('force_disconnect', (data) => {
-      // 1. Toast rouge
       const toast = document.createElement('div');
       toast.style.cssText = `
         position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
@@ -82,7 +80,6 @@ function attachForceDisconnect() {
       toast.innerHTML = `⚠️ ${data.reason}<br><small style="opacity:0.8;">Retour à la connexion...</small>`;
       document.body.appendChild(toast);
 
-      // 2. Efface TOUTES les données de session/profil (empêche le re-login auto)
       const name = (document.getElementById('user-name-display')?.innerText || '').trim();
       Object.keys(localStorage).forEach(k => {
         const v = localStorage.getItem(k) || '';
@@ -93,11 +90,7 @@ function attachForceDisconnect() {
         }
       });
       sessionStorage.clear();
-
-      // 3. Drapeau pour rouvrir la connexion après reload
       localStorage.setItem('cb_kicked', '1');
-
-      // 4. Recharge → le jeu se comporte comme pour un nouveau visiteur
       setTimeout(() => location.reload(), 1500);
     });
     console.log('✅ Écouteur anti double-compte activé');
@@ -107,9 +100,8 @@ function attachForceDisconnect() {
 }
 attachForceDisconnect();
 
-// 🔁 Après reload suite à une déconnexion : rouvre directement la fenêtre de connexion
 window.addEventListener('load', () => {
-   window.__kicked = false;   // ⬅️ AJOUTE CETTE LIGNE : réinitialise le flag
+  window.__kicked = false;
   if (localStorage.getItem('cb_kicked')) {
     localStorage.removeItem('cb_kicked');
     setTimeout(() => {
@@ -843,11 +835,11 @@ function closeAccountModal() {
 
 function renderAccountContent() {
   const d = i18n[currentLang];
-  const content = document.getElementById("account-content");   // ✅ bon id cette fois
+  const content = document.getElementById("account-content");
   if (!content) return;
   const closeBtn = document.getElementById("account-close-btn");
   const connected = isProfileValid();
-  if (closeBtn) closeBtn.style.display = connected ? "block" : "none";  // ✅ obligatoire si pas de compte
+  if (closeBtn) closeBtn.style.display = connected ? "block" : "none";
 
   if (connected) {
     content.innerHTML = `
@@ -857,7 +849,7 @@ function renderAccountContent() {
       <button class="btn-main btn-blue" onclick="switchAccount()" style="margin-bottom:6px;">${d.account_change}</button>
       <button class="btn-main btn-gold" onclick="startCreateAccount()" style="margin-bottom:6px;">${d.account_create}</button>
       <button class="btn-main" onclick="askDeleteAccount()" style="background:linear-gradient(45deg,#ff4b6b,#8b0000);">${d.account_delete}</button>`;
-    } else {
+  } else {
     content.innerHTML = `
       <p style="font-size:11px; text-align:center; color:#aaa; margin-bottom:8px;">${d.account_desc}</p>
       <div class="tabs" style="margin-bottom:10px;">
@@ -885,13 +877,11 @@ function renderAccountForm(tab) {
   if (!container) return;
 
   if (tab === 'login') {
-    // 🔑 CONNEXION : simple et rapide
     container.innerHTML = `
       <input id="account-username" placeholder="${d.account_username_ph}" maxlength="16" style="width:100%; margin-bottom:6px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
       <input id="account-secret" type="password" placeholder="${d.account_secret_ph}" maxlength="32" style="width:100%; margin-bottom:10px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
       <button class="btn-main btn-blue" onclick="submitAccountForm('login')" style="width:100%;"> ${d.account_login_btn || "Accéder à mon compte"}</button>`;
   } else {
-    // ✨ CRÉATION : pseudo + dispo en direct + code + région
     container.innerHTML = `
       <input id="account-username" placeholder="${d.account_username_ph}" maxlength="16" oninput="onUsernameTyping()" style="width:100%; margin-bottom:2px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
       <div id="username-availability" style="font-size:10px; font-weight:bold; min-height:14px; margin-bottom:6px; text-align:center;"></div>
@@ -908,9 +898,6 @@ function renderAccountForm(tab) {
   }
 }
 
-/* ============================================================
-VÉRIFICATION DU PSEUDO EN DIRECT (onglet création)
-============================================================ */
 let usernameCheckTimer = null;
 
 function onUsernameTyping() {
@@ -925,7 +912,6 @@ function onUsernameTyping() {
   el.innerText = currentLang === "fr" ? "⏳ Vérification..." : "⏳ Checking...";
   el.style.color = "#aaa";
 
-  // Anti-spam : attend 400 ms après le dernier caractère tapé
   usernameCheckTimer = setTimeout(() => {
     if (typeof socket !== "undefined" && socket.connected) {
       socket.emit('check_username', val);
@@ -944,11 +930,6 @@ socket.on('username_check_result', (res) => {
     el.style.color = "#00ff88";
   }
 });
-
-      // ✅ Remplit le select avec les mêmes régions que la fenêtre profil
-    const srcRegion = document.getElementById("region-input");
-    const dstRegion = document.getElementById("account-region");
-    if (srcRegion && dstRegion) dstRegion.innerHTML = srcRegion.innerHTML;
 
 function showChangeCodeModal() {
   const d = i18n[currentLang];
@@ -1026,7 +1007,6 @@ socket.on('recovery_key_result', (d) => {
   }
   
   if (justCreatedAccount) {
-    // ✅ Affichage APRÈS CRÉATION : dans la modale compte actuelle
     justCreatedAccount = false;
     const content = document.getElementById("account-content");
     const closeBtn = document.getElementById("account-close-btn");
@@ -1047,9 +1027,8 @@ socket.on('recovery_key_result', (d) => {
           <button class="btn-main btn-blue" onclick="finishAccountCreation()" style="width:100%; margin-top:10px;">⚡ Continuer vers le jeu</button>
         </div>`;
     }
-    if (closeBtn) closeBtn.style.display = "none";   // Cache "Fermer" : doit cliquer Continuer
+    if (closeBtn) closeBtn.style.display = "none";
   } else {
-    // ✅ Affichage MANUEL (via bouton du menu) : modale séparée
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.style.display = 'flex';
@@ -1094,7 +1073,6 @@ function submitAccountForm(mode) {
   }
   
   if (mode === 'create') {
-    // Création : code fort obligatoire
     if (code.length < CONFIG.MIN_CODE_LENGTH) {
       alert('Code secret : 8 caractères minimum (avec majuscule, minuscule, chiffre et caractère spécial).');
       return;
@@ -1104,7 +1082,6 @@ function submitAccountForm(mode) {
       return;
     }
   } else {
-    // Connexion : les anciens comptes peuvent avoir un code court
     if (code.length < 4) {
       alert('🔒 Entre ton code secret (4 caractères minimum).');
       return;
@@ -1120,8 +1097,7 @@ function submitAccountForm(mode) {
   if (!myProfile.flag) myProfile.flag = '🇫🇷';
   pendingAccountLogin = true;
   
-  // ⬅️ Éjecté pour double-compte → on ne tente rien, le reload arrive
-if (window.__kicked) return;
+  if (window.__kicked) return;
   if (socket.connected) {
     socket.emit("register_player", {
       username: myProfile.username,
@@ -1130,10 +1106,10 @@ if (window.__kicked) return;
       flag: myProfile.flag,
       inventory: myProfile.inventory || {},
       secretCode: myProfile.secretCode,
-       mode: mode,
+      mode: mode,
       timezone: getPlayerTimezone()
     });
-} else {
+  } else {
     alert('❌ Connexion au serveur perdue. Réessaie dans quelques secondes.');
     pendingAccountLogin = false;
   }
@@ -1199,7 +1175,6 @@ function renderControlCenter() {
 ============================================================ */
 function checkAndShowProfileModal() {
   if (isProfileValid() && localStorage.getItem('cb_secret')) {
-    // ✅ Compte existant : login auto direct vers page explicative
     myProfile.username = localStorage.getItem("cb_username");
     myProfile.region = localStorage.getItem("cb_region");
     myProfile.avatar = parseInt(localStorage.getItem("cb_avatar")) || 1;
@@ -1220,10 +1195,9 @@ function checkAndShowProfileModal() {
     updateEconomyUI();
     const modal = document.getElementById("modal-username");
     if (modal) modal.style.display = "none";
-    registerIfPossible();        // login auto
-    showTitleScreen();           // page explicative
+    registerIfPossible();
+    showTitleScreen();
   } else {
-    // ✅ Pas de compte : modale compte obligatoire
     openAccountModal();
   }
 }
@@ -1306,7 +1280,6 @@ function saveProfileFromModal() {
   if (isNaN(avatarVal) || avatarVal < 1) avatarVal = 1;
   if (avatarVal > CONFIG.MAX_AVATAR_NUM) avatarVal = CONFIG.MAX_AVATAR_NUM;
   
-  // Validation force du code secret (avertissement uniquement)
   if (myProfile.secretCode && !isStrongCode(myProfile.secretCode)) {
     if (confirm('⚠️ Ton code secret est faible !\n\nUn code fort doit contenir :\n• 8+ caractères\n• Des lettres\n• Des chiffres\n• Un caractère spécial (!@#$%&*+-_)\n\nTu pourras le changer plus tard dans "Mon Compte".\n\nContinuer quand même ?') === false) return;
   }
@@ -1353,7 +1326,7 @@ function saveProfileFromModal() {
     socket.emit("equip_cosmetic", "none");
   }
   
-    saveLocalPreferences();
+  saveLocalPreferences();
   updateEconomyUI();
   SoundEngine.init();
 
@@ -1371,11 +1344,10 @@ function saveProfileFromModal() {
       );
     }
 
-       if (typeof socket !== "undefined" && socket && socket.connected) {
+    if (typeof socket !== "undefined" && socket && socket.connected) {
       socket.emit("update_profile_visuals", {
         avatar: myProfile.avatar,
         flag: myProfile.flag
-        // ⚠️ PAS d'inventaire ici ! L'équipement passe par equip_cosmetic
       });
     }
 
@@ -1460,12 +1432,9 @@ socket.on('register_result', (res) => {
     updateEconomyUI();
     
     if (res.created) {
-      // ✅ CRÉATION : on demande la clé et on l'affiche DANS la modale compte
       justCreatedAccount = true;
       socket.emit('get_recovery_key', { secretCode: myProfile.secretCode });
-      // On NE ferme PAS la modale, on y affichera la clé
     } else {
-      // ✅ CONNEXION à un compte existant : page explicative directe
       closeAccountModal();
       showTitleScreen();
     }
@@ -1615,15 +1584,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 1000);
   }
 });
-// ✅ Au chargement : si aucun compte, proposer la fenêtre (fermable → mode invité)
+
 window.addEventListener('load', () => {
   setTimeout(() => {
     if (!isProfileValid()) checkAndShowProfileModal();
   }, 1000);
 });
-/* ============================================================
-FIX ANDROID — Gestion du cycle de vie de l'app
-============================================================ */
 
 function updateLastActiveTime() {
   localStorage.setItem("cb_last_active", Date.now().toString());
@@ -1677,9 +1643,7 @@ if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
     }
   });
 }
-/* ============================================================
-FIX ANDROID v2 — retour arrière fiable à 100%
-============================================================ */
+
 (function () {
   let hiddenAt = 0;
 
@@ -1691,7 +1655,6 @@ FIX ANDROID v2 — retour arrière fiable à 100%
       hiddenAt = 0;
 
       if (away > 800) {
-        // Cas léger : redraw forcé de l'interface
         document.body.style.display = "none";
         void document.body.offsetHeight;
         document.body.style.display = "";
@@ -1699,18 +1662,15 @@ FIX ANDROID v2 — retour arrière fiable à 100%
       }
 
       if (away > 120000) {
-        // Très longue absence : reload propre
         location.reload();
       }
     }
   });
 
-  // ⬅️ LA CLÉ : page gelée par Android = vue morte → reload systématique
   document.addEventListener("resume", () => {
     location.reload();
   });
 
-  // bfcache (restauration depuis mémoire)
   window.addEventListener("pageshow", (e) => {
     if (e.persisted) location.reload();
   });
