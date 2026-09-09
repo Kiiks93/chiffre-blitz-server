@@ -1,75 +1,23 @@
 /* ============================================================
 TOUR.JS — AVENTURE « MATCH FACTORY » (écran fixe par monde)
 ============================================================ */
-/* ----- CSS COFFRE DORÉ V9 (sol réfléchissant, mur de coffres, spots dorés, vie) ----- */
-(function(){const s=document.createElement("style");s.textContent=`
-  /* Sol réfléchissant */
-  .tw-vfloor{position:absolute;bottom:0;left:0;right:0;height:22%;background:linear-gradient(180deg,#0a0804 0%,#1a1206 40%,#241a08 100%);box-shadow:inset 0 8px 24px #000c;}
-  .tw-vfloor::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 120px,#f8b50011 120px 122px);opacity:.6;}
-  .tw-vfloor::after{content:"";position:absolute;left:50%;top:0;transform:translateX(-50%);width:60%;height:100%;background:radial-gradient(ellipse at 50% 0%,#f8b50033,transparent 70%);filter:blur(4px);}
-  .tw-vreflect{position:absolute;bottom:0;left:9%;right:9%;height:20%;background:linear-gradient(180deg,transparent,#ff202011 30%,#ff202022 60%,transparent);filter:blur(3px);opacity:.7;}
-  /* Tas d'or */
-  .tw-goldpile{position:absolute;bottom:6%;width:180px;height:90px;}
-  .tw-goldpile .g{position:absolute;border-radius:3px;background:linear-gradient(180deg,#ffe9a8,#c9a227 50%,#8a6a1a);box-shadow:inset 0 1px 0 #fff8,0 2px 4px #000c;}
-  .tw-goldpile .c{position:absolute;width:16px;height:16px;border-radius:50%;background:radial-gradient(#ffe9a8,#c9a227);box-shadow:0 0 8px #f8b50088;}
-  /* Spots dorés convergents */
-  .tw-spotv{position:absolute;top:0;width:16%;height:52%;background:linear-gradient(180deg,#ffe9a855,#ffe9a822 45%,transparent 85%);clip-path:polygon(44% 0,56% 0,100% 100%,0 100%);filter:blur(4px);transform-origin:top center;animation:twGlowC 4s infinite;}
-  .tw-spotv.l{left:14%;transform:rotate(18deg);}
-  .tw-spotv.r{right:14%;transform:rotate(-18deg);}
-  .tw-spotv.c{left:42%;}
-  /* Particules dorées */
-  .tw-goldpart{position:absolute;width:3px;height:3px;border-radius:50%;background:#ffd75e;box-shadow:0 0 6px #f8b500;opacity:.7;animation:twGoldFloat linear infinite;}
-  @keyframes twGoldFloat{0%{transform:translateY(0);opacity:0}10%{opacity:.8}90%{opacity:.6}100%{transform:translateY(-40vh);opacity:0}}
-  /* Vignette dorée */
-  .tw-vvignette{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 46%,transparent 40%,#000000aa 78%,#000000dd 100%);pointer-events:none;z-index:3;}
-  /* Pulsation du coffre */
-  .tw-vaultglow.pulse{animation:twVaultPulse 2s ease-in-out infinite;}
-  @keyframes twVaultPulse{0%,100%{opacity:.7;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}}
-`;document.head.appendChild(s);})();
 
-/* ----- CSS COFFRE DORÉ V10 (spots dorés, halos d'impact, tas d'or, sol miroir) ----- */
-(function(){const s=document.createElement("style");s.textContent=`
-  /* Spots vraiment dorés + convergence renforcée */
-  .tw-spotv{background:linear-gradient(180deg,#ffd75e88,#ffe9a844 45%,transparent 85%);filter:blur(5px);}
-  .tw-spotv.l{left:12%;transform:rotate(20deg);}
-  .tw-spotv.r{right:12%;transform:rotate(-20deg);}
-  .tw-spotv.c{left:42%;}
-  /* Halo lumineux au point d'impact du projecteur */
-  .tw-spotimpact{position:absolute;width:120px;height:36px;border-radius:50%;background:radial-gradient(ellipse,#ffe9a866,transparent 70%);filter:blur(6px);animation:twGlowC 3s infinite;z-index:1;}
-  .tw-spotimpact.l{left:24%;top:22%;}
-  .tw-spotimpact.c{left:46%;top:20%;}
-  .tw-spotimpact.r{right:24%;top:22%;}
-  /* Tas d'or remontés + agrandis */
-  .tw-goldpile{bottom:10%;transform:scale(1.3);transform-origin:bottom center;}
-  /* Sol miroir renforcé */
-  .tw-vreflect{background:linear-gradient(180deg,transparent,#ff202022 25%,#ff202044 55%,transparent);opacity:.9;}
-  .tw-vfloor::after{background:radial-gradient(ellipse at 50% 0%,#f8b50055,transparent 75%);filter:blur(5px);}
-  .tw-vfloorglow{position:absolute;bottom:4%;left:50%;transform:translateX(-50%);width:46%;height:14%;background:radial-gradient(ellipse at 50% 50%,#f8b50044,transparent 70%);filter:blur(8px);}
-`;document.head.appendChild(s);})();
-
-/* ----- CSS COFFRE DORÉ V11 (halos d'impact dorés, bien placés) ----- */
-(function(){const s=document.createElement("style");s.textContent=`
-  .tw-spotimpact{width:90px;height:26px;background:radial-gradient(ellipse,#f8b50099,#f8b50033 55%,transparent 75%);filter:blur(5px);}
-  .tw-spotimpact.l{left:41%;top:30%;}
-  .tw-spotimpact.c{left:48%;top:27%;}
-  .tw-spotimpact.r{right:41%;top:30%;}
-`;document.head.appendChild(s);})();
 /* ----- 1. CONFIGURATION ----- */
 const TOWER_CHAPTERS = [
-  { id:1, season:1, name:"Quartier Néon", icon:"🌆", boss:"🤖", objects:["💡","","📺","🔌","🎛️","🖥️","📻","💾","🌃"] },
-  { id:2, season:1, name:"Grottes de Cristal", icon:"🧊", boss:"🗿", objects:["🕯️","🔮","","⛏️","🪞","️","🫧","🌀","🧊"] },
-  { id:3, season:1, name:"Banque Dorée", icon:"🏦", boss:"👾", objects:["🪙","💰","💵","💳","","🔐","💎","🏅","📜"] },
+  { id:1, season:1, name:"Quartier Néon", icon:"🌆", boss:"🤖", objects:["💡","","📺","","🎛️","🖥️","","💾","🌃"] },
+  { id:2, season:1, name:"Grottes de Cristal", icon:"🧊", boss:"🗿", objects:["🕯️","","","⛏️","🪞","️","🫧","🌀","🧊"] },
+  { id:3, season:1, name:"Banque Dorée", icon:"🏦", boss:"👾", objects:["🪙","💰","💵","💳","","","💎","🏅","📜"] },
   { id:4, season:2, name:"Tour Hantée", icon:"🎃", boss:"🧛", objects:["🕸️","🎃","🕯️","🦇","","👻","‍","🔮","️"] },
-  { id:5, season:2, name:"Cimetière Brumeux", icon:"🌫️", boss:"💀", objects:["🪦","🌫️","🕯️","️","","🕷️","","🦴","🖤"] },
+  { id:5, season:2, name:"Cimetière Brumeux", icon:"🌫️", boss:"💀", objects:["🪦","🌫️","️","️","","️","","🦴","🖤"] },
   { id:6, season:2, name:"Antre Citrouille", icon:"👑", boss:"🎃", objects:["🎃","🍬","🔮","","🧹","","🕸️","👻",""] },
-  { id:7, season:3, name:"Cime Bonbon", icon:"🍭", boss:"🧝", objects:["🍭","","🎀","🎂","🧁","🥐","🍰","🍩","🍫"] },
-  { id:8, season:3, name:"Forêt de Sapins", icon:"🎄", boss:"⛄", objects:["🎄","🎁","❄️","🔔","🕯️","⭐","🧦","🍪",""] },
+  { id:7, season:3, name:"Cime Bonbon", icon:"🍭", boss:"🧝", objects:["🍭","","🎀","🎂","","🥐","🍰","🍩",""] },
+  { id:8, season:3, name:"Forêt de Sapins", icon:"🎄", boss:"⛄", objects:["🎄","","❄️","","️","⭐","🧦","🍪",""] },
   { id:9, season:3, name:"Atelier du Père Noël", icon:"🎅", boss:"🎅", objects:["🎅","🤶","","🦌","","🎁","","🥛","🍪"] }
 ];
 const FPC = 200;
 const TOTAL_FLOORS = 9 * FPC;
 const WORLD_QUOTA = 240;
-const MAX_LIVES = 5;
+const MAX_LIVES = 10;
 const IS_MOBILE = /Android|iPhone|iPad|iPod|Tablet|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 2 && Math.min(screen.width, screen.height) < 900);
 const TOWER_COLORS = {1:{acc:"#00d2ff"},2:{acc:"#74ebf5"},3:{acc:"#f8b500"},4:{acc:"#ff8a00"},5:{acc:"#8a9bb0"},6:{acc:"#ff4b2b"},7:{acc:"#ff6fa5"},8:{acc:"#2ecc71"},9:{acc:"#ff416c"}};
 const TOWER_WORLDS = {
@@ -83,17 +31,22 @@ const TOWER_WORLDS = {
   8:{bg:"radial-gradient(ellipse at 50% 10%,#2ecc7122,transparent 50%),linear-gradient(180deg,#04180b,#0a3318)",scene:"glacier",part:"snow"},
   9:{bg:"radial-gradient(ellipse at 50% 10%,#ff416c22,transparent 50%),linear-gradient(180deg,#180404,#330a0a)",scene:"vault",part:"spark"}
 };
+/* 🛒 Boutique HYBRIDE : soupape pièces + packs € (Billing au chantier #8) */
 const SHOP_ITEMS = [
   { id:"vies", icon:"❤️", name:"+3 Vies", price:150 },
-  { id:"joker_time", icon:"⏱️", name:"Joker Temps", price:250 },
-  { id:"joker_skip", icon:"🃏", name:"Joker Pass", price:300 },
-  { id:"pack_coins", icon:"🪙", name:"Pack Pièces (IAP)", price:0, iap:true }
+  { id:"joker_time", icon:"⏱️", name:"Joker Temps (+10s)", price:250 },
+  { id:"joker_skip", icon:"🃏", name:"Joker Pass (étage)", price:300 },
+  { id:"pack_vies_1", icon:"💖", name:"Pack Vies (10 vies)", price:0, iap:true, eur:"1,00 €" },
+  { id:"pack_mixte_3", icon:"🎁", name:"Pack Mixte (5 vies + 2 jokers)", price:0, iap:true, eur:"3,00 €" },
+  { id:"pack_blitz_5", icon:"💎", name:"Pack Blitz (10 vies + 5 jokers)", price:0, iap:true, eur:"5,00 €" }
 ];
 
 /* ----- 2. ÉTAT GLOBAL ----- */
 let towerProgress = { floor: 0, stars: {} };
 let twViewFloor = 1;
 let twLives = MAX_LIVES;
+let twJokers = { time: 0, skip: 0 };
+let twNextLife = 0;
 let TW = null, TW_dom = null, TW_buttons = [], TW_lastFloor = 0;
 let TW_hudCache = "", TW_localTimer = null, TW_lastClick = 0, TW_pairsLock = false;
 const SCENE_CACHE = {};
@@ -179,6 +132,12 @@ const TowerUtils = {
   .tw-shop-item .ic{font-size:24px;}
   .tw-shop-item .nm{flex:1;color:#fff;font-weight:700;font-size:13px;}
   .tw-shop-item .buy{background:linear-gradient(180deg,#f8b500,#c9a227);border:none;border-radius:8px;padding:7px 12px;font-weight:900;color:#3a2a05;cursor:pointer;}
+  .tw-shop-item .buy.iap{background:linear-gradient(180deg,#3ae05a,#1a9a3a);color:#fff;}
+  .tw-shop-item .buy.iap:disabled{filter:grayscale(1);opacity:.6;}
+
+  /* === JOKERS EN PARTIE === */
+  .twj-btn{background:#1a1a2e;border:2px solid #00d2ff;color:#00d2ff;border-radius:10px;padding:5px 9px;font-size:13px;font-weight:900;cursor:pointer;}
+  .twj-btn:disabled{opacity:.3;cursor:default;}
 
   /* === CITY === */
   .tw-moon{position:absolute;top:2%;right:10%;width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff8e8,#d8c9a8 60%,#a89878);box-shadow:0 0 30px #fff8e866;}
@@ -241,19 +200,32 @@ const TowerUtils = {
   .tw-cryscl.wide{width:110px;height:90px;}
   .tw-firefly{position:absolute;width:5px;height:5px;border-radius:50%;background:#bffcff;box-shadow:0 0 10px #74ebf5;animation:twFly ease-in-out infinite;}
 
-  /* === VAULT (coffre doré) === */
+  /* === VAULT (coffre doré v9+v10+v11) === */
   .tw-vaultroom{position:absolute;inset:0;background:linear-gradient(180deg,#08080f,#101018 45%,#08080f);}
   .tw-marble{position:absolute;inset:0;background:linear-gradient(115deg,transparent 40%,#ffffff08 40% 42%,transparent 42%),linear-gradient(65deg,transparent 55%,#ffffff06 55% 57%,transparent 57%),linear-gradient(150deg,transparent 70%,#ffffff05 70% 71%,transparent 71%);}
-  .tw-spot{position:absolute;top:0;width:14%;height:40%;background:linear-gradient(180deg,#ffe9a844,transparent 85%);clip-path:polygon(42% 0,58% 0,100% 100%,0 100%);filter:blur(3px);animation:twGlowC 4s infinite;}
+  .tw-vfloor{position:absolute;bottom:0;left:0;right:0;height:22%;background:linear-gradient(180deg,#0a0804 0%,#1a1206 40%,#241a08 100%);box-shadow:inset 0 8px 24px #000c;}
+  .tw-vfloor::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 120px,#f8b50011 120px 122px);opacity:.6;}
+  .tw-vfloor::after{content:"";position:absolute;left:50%;top:0;transform:translateX(-50%);width:60%;height:100%;background:radial-gradient(ellipse at 50% 0%,#f8b50055,transparent 75%);filter:blur(5px);}
+  .tw-vreflect{position:absolute;bottom:0;left:9%;right:9%;height:20%;background:linear-gradient(180deg,transparent,#ff202022 25%,#ff202044 55%,transparent);filter:blur(3px);opacity:.9;}
+  .tw-vfloorglow{position:absolute;bottom:4%;left:50%;transform:translateX(-50%);width:46%;height:14%;background:radial-gradient(ellipse at 50% 50%,#f8b50044,transparent 70%);filter:blur(8px);}
   .tw-pillar{position:absolute;top:0;bottom:0;width:8%;background:linear-gradient(90deg,#1a0f02,#5a4410 50%,#1a0f02);border-left:2px solid #8a6a1a44;border-right:2px solid #8a6a1a44;box-shadow:0 0 12px #000c;}
-  .tw-ncam{position:absolute;width:36px;height:26px;background:linear-gradient(180deg,#2a2a38,#14141c);border-radius:6px 6px 4px 4px;border:2px solid currentColor;box-shadow:0 0 12px currentColor;}
-  .tw-ncam::after{content:"";position:absolute;left:50%;top:58%;width:10px;height:10px;transform:translateX(-50%);border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor;animation:twFlickP 1.4s steps(2) infinite;}
-  .tw-ncam .beam{position:absolute;left:50%;top:100%;width:70px;height:100px;transform-origin:top center;background:linear-gradient(180deg,currentColor,transparent);opacity:.18;clip-path:polygon(45% 0,55% 0,100% 100%,0 100%);animation:twCamSweep 4s ease-in-out infinite alternate;}
-  .tw-gloss{position:absolute;bottom:0;left:0;right:0;height:12%;background:linear-gradient(180deg,#0000,#f8b50018 40%,#00000088);}
-  .tw-goldspill{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:70%;height:18%;background:radial-gradient(ellipse at 50% 100%,#f8b50055,transparent 70%);filter:blur(6px);}
-  
-  /* Gros coffre central */
-  .tw-vaultglow{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(92%,440px);aspect-ratio:1;border-radius:50%;background:radial-gradient(#f8b50044,transparent 70%);animation:twGlowC 3s infinite;}
+  .tw-goldpile{position:absolute;bottom:10%;width:180px;height:90px;transform:scale(1.3);transform-origin:bottom center;}
+  .tw-goldpile .g{position:absolute;border-radius:3px;background:linear-gradient(180deg,#ffe9a8,#c9a227 50%,#8a6a1a);box-shadow:inset 0 1px 0 #fff8,0 2px 4px #000c;}
+  .tw-goldpile .c{position:absolute;width:16px;height:16px;border-radius:50%;background:radial-gradient(#ffe9a8,#c9a227);box-shadow:0 0 8px #f8b50088;}
+  .tw-spotv{position:absolute;top:0;width:16%;height:52%;background:linear-gradient(180deg,#ffd75e88,#ffe9a844 45%,transparent 85%);clip-path:polygon(44% 0,56% 0,100% 100%,0 100%);filter:blur(5px);transform-origin:top center;animation:twGlowC 4s infinite;}
+  .tw-spotv.l{left:12%;transform:rotate(20deg);}
+  .tw-spotv.r{right:12%;transform:rotate(-20deg);}
+  .tw-spotv.c{left:42%;}
+  .tw-spotimpact{position:absolute;width:90px;height:26px;border-radius:50%;background:radial-gradient(ellipse,#f8b50099,#f8b50033 55%,transparent 75%);filter:blur(5px);animation:twGlowC 3s infinite;z-index:1;}
+  .tw-spotimpact.l{left:41%;top:30%;}
+  .tw-spotimpact.c{left:48%;top:27%;}
+  .tw-spotimpact.r{right:41%;top:30%;}
+  .tw-goldpart{position:absolute;width:3px;height:3px;border-radius:50%;background:#ffd75e;box-shadow:0 0 6px #f8b500;opacity:.7;animation:twGoldFloat linear infinite;}
+  @keyframes twGoldFloat{0%{transform:translateY(0);opacity:0}10%{opacity:.8}90%{opacity:.6}100%{transform:translateY(-40vh);opacity:0}}
+  .tw-vvignette{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 46%,transparent 40%,#000000aa 78%,#000000dd 100%);pointer-events:none;z-index:3;}
+  .tw-vaultglow{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(92%,440px);aspect-ratio:1;border-radius:50%;background:radial-gradient(#f8b50044,transparent 70%);}
+  .tw-vaultglow.pulse{animation:twVaultPulse 2s ease-in-out infinite;}
+  @keyframes twVaultPulse{0%,100%{opacity:.7;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}}
   .tw-vaultframe{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(86%,430px);aspect-ratio:1.15;background:linear-gradient(180deg,#5a4410,#2b1a00);border-radius:14px;box-shadow:0 0 40px #f8b50033,inset 0 0 30px #000;z-index:2;}
   .tw-vaultdoor{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:82%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c9a227,#8a6a1a 40%,#3a2a05 75%,#160d00);border:6px solid #f8b50088;box-shadow:0 0 60px #f8b50066,inset 0 0 40px #000000aa;}
   .tw-vaultwheel{position:absolute;left:50%;top:50%;width:44%;height:44%;transform:translate(-50%,-50%);border:6px solid #ffe9a8;border-radius:50%;animation:twSpin 16s linear infinite;box-shadow:0 0 20px #f8b50088,inset 0 0 10px #0006;}
@@ -267,14 +239,12 @@ const TowerUtils = {
   .tw-dial::before{content:"";position:absolute;inset:30%;background:linear-gradient(#160d00,#160d00) 50% 0/3px 100% no-repeat,linear-gradient(#160d00,#160d00) 0 50%/100% 3px no-repeat,linear-gradient(45deg,transparent 40%,#160d00 40% 60%,transparent 60%);}
   .tw-handle{position:absolute;right:8%;top:30%;width:4%;height:40%;border-radius:4px;background:linear-gradient(90deg,#c9a227,#ffe9a8 50%,#c9a227);box-shadow:0 0 6px #0008;}
   .tw-vbolt{position:absolute;width:5%;height:5%;border-radius:50%;background:radial-gradient(#ffe9a8,#8a6a1a);transform:translate(-50%,-50%);box-shadow:0 1px 3px #000;}
-  
-  /* Lasers rouges */
   .tw-laser{position:absolute;left:9%;right:9%;height:2px;background:linear-gradient(90deg,transparent,#ff2020 8%,#ff7070 50%,#ff2020 92%,transparent);box-shadow:0 0 8px #ff2020cc,0 0 20px #ff202066;opacity:.85;animation:twLaserV ease-in-out infinite alternate;z-index:1;}
   .tw-laser::before,.tw-laser::after{content:"";position:absolute;top:-3px;width:9px;height:9px;border-radius:2px;background:#1a0505;box-shadow:0 0 7px #ff2020,inset 0 0 3px #ff7070;animation:twFlickP 1.6s steps(2) infinite;}
   .tw-laser::before{left:-3px;}.tw-laser::after{right:-3px;}
   .tw-laser.d{animation-name:twLaserD;}
-  
-  /* Coffres muraux réalistes */
+  @keyframes twLaserV{from{transform:translateY(-26px)}to{transform:translateY(26px)}}
+  @keyframes twLaserD{from{transform:rotate(-5deg) translateY(-18px)}to{transform:rotate(5deg) translateY(18px)}}
   #tw-bg .tw-safebox{position:absolute;width:46px;height:36px;border-radius:4px;border:1px solid #5a4410;animation:none;
     background:
       radial-gradient(circle at 10% 14%,#fff8dc 0 2px,transparent 2px),
@@ -293,6 +263,10 @@ const TowerUtils = {
   }
   #tw-bg .tw-safebox::before{content:"";position:absolute;left:50%;top:50%;width:13px;height:13px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff8dc,#8a6a1a 60%,#3a2a05);box-shadow:0 1px 3px #0009,inset 0 1px 2px #ffffff66;}
   #tw-bg .tw-safebox::after{content:"";position:absolute;inset:3px;border:1px solid #ffffff22;border-radius:3px;background:linear-gradient(115deg,transparent 42%,#ffffff33 42% 47%,transparent 47%);}
+  .tw-ncam{position:absolute;width:36px;height:26px;background:linear-gradient(180deg,#2a2a38,#14141c);border-radius:6px 6px 4px 4px;border:2px solid currentColor;box-shadow:0 0 12px currentColor;}
+  .tw-ncam::after{content:"";position:absolute;left:50%;top:58%;width:10px;height:10px;transform:translateX(-50%);border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor;animation:twFlickP 1.4s steps(2) infinite;}
+  .tw-ncam .beam{position:absolute;left:50%;top:100%;width:70px;height:100px;transform-origin:top center;background:linear-gradient(180deg,currentColor,transparent);opacity:.18;clip-path:polygon(45% 0,55% 0,100% 100%,0 100%);animation:twCamSweep 4s ease-in-out infinite alternate;}
+  .tw-gloss{position:absolute;bottom:0;left:0;right:0;height:12%;background:linear-gradient(180deg,#0000,#f8b50018 40%,#00000088);}
 
   .tw-part{position:absolute;width:4px;height:4px;border-radius:50%;}
   .tw-part.snow{background:#ffffffcc;animation:twFall linear infinite;}
@@ -337,8 +311,6 @@ const TowerUtils = {
   @keyframes twRise{0%{top:104%}100%{top:-4%}}
   @keyframes twPop{0%{transform:scale(0)}70%{transform:scale(1.4)}100%{transform:scale(1)}}
   @keyframes twFog{50%{opacity:.25}}
-  @keyframes twLaserV{from{transform:translateY(-26px)}to{transform:translateY(26px)}}
-  @keyframes twLaserD{from{transform:rotate(-5deg) translateY(-18px)}to{transform:rotate(5deg) translateY(18px)}}
 
   /* === POP-UP SÉLECTION NIVEAU === */
   .tw-lvlpop{position:fixed;inset:0;background:#000c;z-index:9997;display:flex;align-items:center;justify-content:center;}
@@ -366,6 +338,7 @@ const TowerUtils = {
     .tw-cryscl{filter:none;animation:none;}
     .tw-signalbeam{display:none;}
     .tw-batsignal{font-size:20px;letter-spacing:4px;}
+    .tw-goldpart{display:none;}
     .tw-panel .num{font-size:36px;}
   }
   `;
@@ -455,11 +428,8 @@ function generateSceneHTML(c, W, C) {
 
   if (W.scene === "vault") {
     html += `<div class="tw-marble"></div>`;
-    // 1. Sol réfléchissant + reflets des lasers
     html += `<div class="tw-vfloor"></div><div class="tw-vreflect"></div>`;
-    // Colonnes architecturales (bords)
     html += `<div class="tw-pillar" style="left:4%;"></div><div class="tw-pillar" style="right:4%;"></div>`;
-    // 2. VRAI mur de coffres (3 colonnes par côté, décalées)
     const colsPos = IS_MOBILE ? [16] : [14, 20, 26];
     const rows = IS_MOBILE ? 7 : 10;
     colsPos.forEach((cx, ci) => {
@@ -469,27 +439,20 @@ function generateSceneHTML(c, W, C) {
         html += `<span class="tw-safebox bz" style="right:${cx}%;top:${top + 2}%;"></span>`;
       }
     });
-    // 3. Spots dorés convergents vers le coffre
     html += `<div class="tw-spotv l"></div><div class="tw-spotv c"></div><div class="tw-spotv r"></div>`;
-    // 1. Tas d'or rapprochés du coffre + halos d'impact des spots + halo doré au sol
     html += goldPileHTML("24%") + goldPileHTML("66%");
     html += `<div class="tw-spotimpact l"></div><div class="tw-spotimpact c"></div><div class="tw-spotimpact r"></div>`;
     html += `<div class="tw-vfloorglow"></div>`;
-    // Coffre central + molette (glow pulsant)
     let bolts = ""; for (let i = 0; i < 12; i++) { const a = i*Math.PI/6; bolts += `<span class="tw-vbolt" style="left:${50+44*Math.cos(a)}%;top:${50+44*Math.sin(a)}%;"></span>`; }
     let knobs = ""; for (let i = 0; i < 6; i++) { const a = i*Math.PI/3; knobs += `<span class="tw-knob" style="left:${50+38*Math.cos(a)}%;top:${50+38*Math.sin(a)}%;"></span>`; }
     html += `<div class="tw-vaultglow pulse"></div><div class="tw-vaultframe"><span class="tw-fbolt" style="left:5%;top:7%;"></span><span class="tw-fbolt" style="right:5%;top:7%;"></span><span class="tw-fbolt" style="left:5%;bottom:7%;"></span><span class="tw-fbolt" style="right:5%;bottom:7%;"></span><span class="tw-hinge h1"></span><span class="tw-hinge h2"></span><div class="tw-vaultdoor"><div class="tw-vaultwheel">${knobs}</div><span class="tw-dial"></span><span class="tw-handle"></span>${bolts}</div></div>`;
-    // Lasers rouges
     html += `<div class="tw-laser" style="top:30%;animation-duration:5s;"></div>`;
     html += `<div class="tw-laser d" style="top:48%;animation-duration:7s;animation-delay:1s;"></div>`;
     html += `<div class="tw-laser" style="top:66%;animation-duration:6s;animation-delay:2s;"></div>`;
-    // Caméras
     html += `<div class="tw-ncam" style="left:14%;top:24%;color:#ff2020;"><span class="beam"></span></div>`;
     html += `<div class="tw-ncam" style="right:14%;top:40%;color:#ff2020;"><span class="beam"></span></div>`;
-    // 4. Particules dorées flottantes
     const gpN = IS_MOBILE ? 6 : 12;
     for (let i = 0; i < gpN; i++) html += `<span class="tw-goldpart" style="left:${8+(i*17)%84}%;top:${30+(i*13)%60}%;animation-duration:${6+(i%4)*2}s;animation-delay:${i*.8}s;"></span>`;
-    // 5. Vignette dorée (concentre le regard)
     html += `<div class="tw-vvignette"></div>`;
   }
 
@@ -511,7 +474,7 @@ function openTower() {
       <div id="tw-bg"></div>
       <div class="tw-hud">
         <button class="tw-back" onclick="closeTower()">⬅️</button>
-        <div class="tw-lives">❤️ <span id="tw-lives-n">${twLives}</span></div>
+        <div class="tw-lives">❤️ <span id="tw-lives-n">${twLives}</span><span id="tw-lives-regen" style="font-size:9px;opacity:.75;margin-left:5px;"></span></div>
         <div class="tw-coins">🪙 <span id="tw-coins-n">0</span></div>
         <button class="tw-shopbtn" onclick="openLevelSelect()">🎯</button>
         <button class="tw-shopbtn" style="margin-left:0;" onclick="openShop()">🛒</button>
@@ -541,6 +504,23 @@ function openTower() {
 }
 function closeTower() { document.getElementById("screen-tower").style.display = "none"; }
 
+function fmtRegen(ms) {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+}
+function updateRegenLabel() {
+  const lr = document.getElementById("tw-lives-regen");
+  if (!lr) return;
+  lr.innerText = (twLives < MAX_LIVES && twNextLife > 0) ? `(+1 ${fmtRegen(twNextLife)})` : "";
+}
+setInterval(() => {
+  if (twNextLife > 0) {
+    twNextLife -= 1000;
+    if (twNextLife <= 0) { twNextLife = 0; socket.emit("get_tower"); }
+    updateRegenLabel();
+  }
+}, 1000);
+
 function renderAdventure() {
   const scr = document.getElementById("screen-tower");
   if (!scr || scr.style.display === "none") return;
@@ -556,6 +536,7 @@ function renderAdventure() {
   document.getElementById("tw-worldtag").innerText = `${chap.icon} ${chap.name}`;
   document.getElementById("tw-coins-n").innerText = (myProfile.coins || 0);
   document.getElementById("tw-lives-n").innerText = twLives;
+  updateRegenLabel();
   const def = TowerUtils.getFloorDef(twViewFloor);
   const inChap = ((twViewFloor - 1) % FPC) + 1;
   const isBoss = (inChap === FPC || inChap % 50 === 0);
@@ -624,27 +605,43 @@ function showWorldTransition(w) {
   }, 1400);
 }
 
-/* ----- 7. BOUTIQUE ----- */
+/* ----- 7. BOUTIQUE HYBRIDE ----- */
 function openShop() {
   closeShop();
+  const fr = currentLang === "fr";
   const d = document.createElement("div");
   d.className = "tw-shop"; d.id = "tw-shop";
   let items = "";
   SHOP_ITEMS.forEach(it => {
-    items += `<div class="tw-shop-item"><span class="ic">${it.icon}</span><span class="nm">${it.name}</span><button class="buy" onclick="shopBuy('${it.id}')">${it.iap ? "Bientôt" : it.price + " 🪙"}</button></div>`;
+    const btn = it.iap
+      ? `<button class="buy iap" disabled>${it.eur} 🔒</button>`
+      : `<button class="buy" onclick="shopBuy('${it.id}')">${it.price} 🪙</button>`;
+    items += `<div class="tw-shop-item"><span class="ic">${it.icon}</span><span class="nm">${it.name}${it.iap?`<br><small style="color:#8892a8;font-weight:600;">${fr?"Bientôt (Google Play)":"Soon (Google Play)"}</small>`:""}</span>${btn}</div>`;
   });
-  d.innerHTML = `<div class="tw-shop-card"><h3>🛒 BOUTIQUE</h3>${items}<button class="btn-secondary" style="width:100%;" onclick="closeShop()">❌ Fermer</button></div>`;
+  d.innerHTML = `<div class="tw-shop-card"><h3>🛒 BOUTIQUE</h3>${items}<button class="btn-secondary" style="width:100%;" onclick="closeShop()">❌ ${fr?"Fermer":"Close"}</button></div>`;
   document.body.appendChild(d);
 }
 function closeShop() { const s = document.getElementById("tw-shop"); if (s) s.remove(); }
 function shopBuy(id) {
   const it = SHOP_ITEMS.find(x => x.id === id);
-  if (!it) return;
-  if (it.iap) { alert(currentLang==="fr" ? "Bientôt disponible via Google Play !" : "Coming soon via Google Play!"); return; }
+  if (!it || it.iap) return;
   socket.emit("shop_buy", { id: id, price: it.price });
 }
 socket.on("shop_result", (r) => {
-  if (r && r.ok) { if (r.lives) twLives = Math.min(MAX_LIVES, twLives + r.lives); renderAdventure(); }
+  if (!r) return;
+  if (r.ok) {
+    if (r.lives !== undefined) twLives = r.lives;
+    if (r.jokers) twJokers = r.jokers;
+    if (r.coins !== undefined && myProfile) myProfile.coins = r.coins;
+    renderAdventure();
+    if (typeof showNotificationToast === "function") showNotificationToast(currentLang === "fr" ? "✅ Achat effectué !" : "✅ Purchase complete!", "gift");
+  } else {
+    const fr = currentLang === "fr";
+    const msg = r.reason === "coins" ? (fr ? "❌ Pas assez de pièces !" : "❌ Not enough coins!")
+      : r.reason === "full" ? (fr ? "❤️ Vies déjà au maximum !" : "❤️ Lives already full!")
+      : (fr ? "❌ Achat impossible." : "❌ Purchase failed.");
+    if (typeof showNotificationToast === "function") showNotificationToast(msg, "announcement");
+  }
 });
 
 /* ----- 8. BRIEFING ----- */
@@ -654,7 +651,7 @@ function showBriefing(def) {
   const curStars = towerProgress.stars[String(def.floor)] || 0;
   const starTime = Math.floor(def.time * 0.6);
   let starRule = fr ? `💡 ⭐ terminer · ⭐⭐ ≤2 erreurs · ⭐⭐⭐ 0 erreur + < ${starTime}s` : `💡 ⭐ finish · ⭐⭐ ≤2 mistakes · ⭐⭐⭐ 0 mistake + < ${starTime}s`;
-  if (def.type === "pairs" || def.type === "sprint") starRule = fr ? `💡 ⭐ finir · ⭐⭐ rapide · ⭐⭐⭐ très rapide` : `💡 ⭐ finish · ⭐⭐ fast · ⭐⭐⭐ very fast`;
+  if (def.type === "pairs" || def.type === "sprint") starRule = fr ? `💡 ⭐ finir · ⭐ rapide · ⭐⭐⭐ très rapide` : `💡 ⭐ finish · ⭐ fast · ⭐⭐⭐ very fast`;
   const replayLine = def.replay ? `<div style="font-size:10px;color:#f8b500;margin-bottom:6px;">${fr?"Actuel : ":"Current: "}{"⭐".repeat(curStars)}</div>` : "";
   const b = document.createElement("div");
   b.id = "tw-brief"; b.className = "tw-brief";
@@ -663,7 +660,7 @@ function showBriefing(def) {
     <div style="font-size:9px;color:#aaa;margin-bottom:8px;">${starRule}</div>
     ${replayLine}
     <button class="btn-main btn-blue" style="width:100%;margin-bottom:6px;" onclick="closeBriefing();startTowerFloor(TowerUtils.getFloorDef(${def.floor}))">${def.replay?"🔄 REJOUER":"⚡ LANCER !"}</button>
-    <button class="btn-secondary" style="width:100%;" onclick="closeBriefing()">❌ Annuler</button>
+    <button class="btn-secondary" style="width:100%;" onclick="closeBriefing()">❌ ${fr?"Annuler":"Cancel"}</button>
   </div>`;
   document.body.appendChild(b);
 }
@@ -675,11 +672,33 @@ function ensureTowerOverlay() {
   if (!ov) {
     ov = document.createElement("div");
     ov.id = "tower-game"; ov.className = "twg-screen";
-    ov.innerHTML = `<div class="twg-header"><button class="tw-back" onclick="quitFloor()">⬅️</button><b id="twg-title"></b><span id="twg-timer">⏱️</span></div><div id="tg-bar" class="twg-bar"></div><div id="tg-hud" class="twg-hud"></div><div class="twg-gridwrap"><div id="tg-grid" class="tg-grid"></div></div><div id="tg-msg" class="twg-msg"></div>`;
+    ov.innerHTML = `<div class="twg-header"><button class="tw-back" onclick="quitFloor()">⬅️</button><b id="twg-title"></b><button class="twj-btn" id="twg-jt" onclick="useJoker('time')">⏱️ 0</button><button class="twj-btn" id="twg-js" onclick="useJoker('skip')">🃏 0</button><span id="twg-timer">⏱️</span></div><div id="tg-bar" class="twg-bar"></div><div id="tg-hud" class="twg-hud"></div><div class="twg-gridwrap"><div id="tg-grid" class="tg-grid"></div></div><div id="tg-msg" class="twg-msg"></div>`;
     document.body.appendChild(ov);
   }
   return ov;
 }
+function useJoker(kind) {
+  if (!TW) return;
+  if ((twJokers[kind] || 0) <= 0) {
+    if (typeof showNotificationToast === "function") showNotificationToast(currentLang === "fr" ? "❌ Aucun joker de ce type !" : "❌ No joker of this type!", "announcement");
+    return;
+  }
+  socket.emit("tower_use_joker", { kind: kind });
+}
+function updateJokerButtons() {
+  const jt = document.getElementById("twg-jt"), js = document.getElementById("twg-js");
+  if (jt) { jt.innerText = "⏱️ " + (twJokers.time || 0); jt.disabled = !TW || (twJokers.time || 0) <= 0; }
+  if (js) { js.innerText = "🃏 " + (twJokers.skip || 0); js.disabled = !TW || (twJokers.skip || 0) <= 0; }
+}
+socket.on("joker_denied", () => {
+  if (typeof showNotificationToast === "function") showNotificationToast(currentLang === "fr" ? "❌ Joker indisponible." : "❌ Joker unavailable.", "announcement");
+});
+socket.on("tower_no_lives", () => {
+  if (typeof showNotificationToast === "function") showNotificationToast(currentLang === "fr" ? "❤️ Plus de vies ! Reviens plus tard ou achète-en." : "❤️ No lives left! Come back later or buy some.", "announcement");
+  quitFloor();
+  renderAdventure();
+});
+
 function cloneState(s) {
   return { type:s.type, total:s.total, gridSize:s.gridSize, floor:s.floor, target:s.target, targetColor:s.targetColor, targetParity:s.targetParity, forbidden:s.forbidden, timeLeft:s.timeLeft, ai:s.ai, gone:Object.assign({},s.gone||{}), revealed:Object.assign({},s.revealed||{}), display:(s.display||[]).slice(), sel:(s.sel===undefined?null:s.sel) };
 }
@@ -692,6 +711,7 @@ function startTowerFloor(def) {
   stopLocalTimer();
   document.getElementById("tg-grid").innerHTML = "";
   document.getElementById("twg-title").innerText = "🏰 ÉTAGE " + def.floor;
+  updateJokerButtons();
   socket.emit("tower_floor_start", { floor: def.floor });
 }
 function buildGridFromState(st) {
@@ -770,30 +790,35 @@ function renderHUDFromState() {
   const bar = document.getElementById("tg-bar");
   if (bar) { if (TW.type === "boss") { bar.style.display = "block"; bar.innerHTML = `<div style="width:${Math.min(100,TW.ai/TW.total*100)}%;height:100%;background:linear-gradient(90deg,#ff4b2b,#f8b500);"></div>`; } else bar.style.display = "none"; }
   document.getElementById("twg-title").innerText = "🏰 ÉTAGE " + TW.floor + " — " + TowerUtils.typeLabel(TW.type);
+  updateJokerButtons();
 }
-function showFailUI() {
+function showFailUI(reason) {
   const ov = ensureTowerOverlay();
   ov.style.display = "flex";
   document.getElementById("tg-bar").style.display = "none";
   document.getElementById("tg-hud").innerHTML = "";
   const g = document.getElementById("tg-grid");
   g.style.gridTemplateColumns = "1fr";
-  g.innerHTML = `<div style="text-align:center;"><div style="font-size:30px;">💥</div><div style="color:#ff4b2b;font-weight:900;margin:6px 0;">ÉTAGE RATÉ !</div><button class="btn-main btn-blue" onclick="retryFloor()">🔄 Réessayer</button><button class="btn-secondary" onclick="quitFloor()">Quitter</button></div>`;
+  const fr = currentLang === "fr";
+  const nolives = reason === "nolives";
+  g.innerHTML = `<div style="text-align:center;"><div style="font-size:30px;">${nolives?"❤️":"💥"}</div><div style="color:#ff4b2b;font-weight:900;margin:6px 0;">${nolives?(fr?"PLUS DE VIES !":"NO LIVES LEFT!"):(fr?"ÉTAGE RATÉ !":"FLOOR FAILED!")}</div><button class="btn-main btn-blue" onclick="retryFloor()">🔄 ${fr?"Réessayer":"Retry"}</button><button class="btn-secondary" onclick="quitFloor()">${fr?"Quitter":"Quit"}</button></div>`;
 }
 function retryFloor() { TW = null; TW_dom = null; stopLocalTimer(); startTowerFloor({ floor: TW_lastFloor }); }
 function quitFloor() {
   TW = null; TW_dom = null; stopLocalTimer();
   socket.emit("tower_quit");
   const ov = document.getElementById("tower-game"); if (ov) ov.style.display = "none";
+  updateJokerButtons();
 }
 function showTowerWinPopup(res) {
+  const fr = currentLang === "fr";
   const d = document.createElement("div");
   d.className = "modal-overlay"; d.style.display = "flex";
   d.innerHTML = `<div class="modal-card" style="max-width:300px;text-align:center;">
-    <h3 style="color:#00ff88;margin:0 0 6px 0;">✅ ÉTAGE ${res.floor} VAINCU !</h3>
+    <h3 style="color:#00ff88;margin:0 0 6px 0;">✅ ${fr?"ÉTAGE":"FLOOR"} ${res.floor} ${fr?"VAINCU":"CLEARED"} !${res.skipped?` 🃏`:``}</h3>
     <div class="tw-stars">${[1,2,3].map(i=>`<span style="animation-delay:${i*0.2}s;${i<=res.stars?"":"filter:grayscale(1);opacity:.3;"}">⭐</span>`).join("")}</div>
     <div style="font-size:13px;color:#f8b500;font-weight:bold;margin-bottom:10px;">+${res.coins} 🪙</div>
-    <button class="btn-main btn-blue" onclick="this.closest('.modal-overlay').remove();renderAdventure()">Continuer ⚡</button>
+    <button class="btn-main btn-blue" onclick="this.closest('.modal-overlay').remove();renderAdventure()">${fr?"Continuer":"Continue"} ⚡</button>
   </div>`;
   document.body.appendChild(d);
   towerDing();
@@ -803,6 +828,9 @@ function showTowerWinPopup(res) {
 socket.on("tower_data", (d) => {
   const oldWorld = TowerUtils.getTowerChapter(Math.min(towerProgress.floor + 1, TOTAL_FLOORS)).id;
   towerProgress = { floor: d.floor || 0, stars: d.stars || {} };
+  if (d.lives !== undefined) twLives = d.lives;
+  if (d.nextLifeIn !== undefined) twNextLife = d.nextLifeIn || 0;
+  if (d.jokers) twJokers = d.jokers;
   const newWorld = TowerUtils.getTowerChapter(Math.min(towerProgress.floor + 1, TOTAL_FLOORS)).id;
   if (newWorld !== oldWorld && TowerUtils.worldUnlocked(newWorld)) showWorldTransition(newWorld);
   else renderAdventure();
@@ -816,7 +844,14 @@ socket.on("tower_state", (st) => {
   renderHUDFromState();
   startLocalTimer(st.timeLeft);
 });
-socket.on("tower_fail", () => { TW = null; TW_dom = null; stopLocalTimer(); showFailUI(); });
+socket.on("tower_fail", (r) => {
+  TW = null; TW_dom = null; stopLocalTimer();
+  if (r && r.lives !== undefined) twLives = r.lives;
+  else twLives = Math.max(0, twLives - 1);
+  if (r && r.nextLifeIn !== undefined) twNextLife = r.nextLifeIn || 0;
+  renderAdventure();
+  showFailUI(r && r.reason);
+});
 socket.on("tower_result", (res) => {
   TW = null;
   const ov = document.getElementById("tower-game"); if (ov) ov.style.display = "none";
