@@ -1,6 +1,7 @@
 /* ============================================================
 TOUR.JS — AVENTURE « MATCH FACTORY » (écran fixe par monde)
 ============================================================ */
+
 /* ----- 1. CONFIGURATION ----- */
 const TOWER_CHAPTERS = [
   { id:1, season:1, name:"Quartier Néon", icon:"🌆", boss:"🤖", objects:["💡","","📺","","🎛️","🖥️","","💾","🌃"] },
@@ -30,11 +31,10 @@ const TOWER_WORLDS = {
   8:{bg:"radial-gradient(ellipse at 50% 10%,#2ecc7122,transparent 50%),linear-gradient(180deg,#04180b,#0a3318)",scene:"glacier",part:"snow"},
   9:{bg:"radial-gradient(ellipse at 50% 10%,#ff416c22,transparent 50%),linear-gradient(180deg,#180404,#330a0a)",scene:"vault",part:"spark"}
 };
-/* 🛒 Boutique HYBRIDE : soupape pièces + packs € (Billing au chantier #8) */
+
+/* 🛒 Boutique AVENTURE : VIES seulement (jokers = packs € uniquement) */
 const SHOP_ITEMS = [
   { id:"vies", icon:"❤️", name:"+3 Vies", price:150 },
-  { id:"joker_time", icon:"⏱️", name:"Joker Temps (+10s)", price:250 },
-  { id:"joker_skip", icon:"🃏", name:"Joker Pass (étage)", price:300 },
   { id:"pack_vies_1", icon:"💖", name:"Pack Vies (10 vies)", price:0, iap:true, eur:"1,00 €" },
   { id:"pack_mixte_3", icon:"🎁", name:"Pack Mixte (5 vies + 2 jokers)", price:0, iap:true, eur:"3,00 €" },
   { id:"pack_blitz_5", icon:"💎", name:"Pack Blitz (10 vies + 5 jokers)", price:0, iap:true, eur:"5,00 €" }
@@ -44,10 +44,11 @@ const SHOP_ITEMS = [
 let towerProgress = { floor: 0, stars: {} };
 let twViewFloor = 1;
 let twLives = MAX_LIVES;
-let twJokers = { time: 0, skip: 0 };
+let twJokers = { time: 0, shield: 0 };
 let twNextLife = 0;
 let TW = null, TW_dom = null, TW_buttons = [], TW_lastFloor = 0;
 let TW_hudCache = "", TW_localTimer = null, TW_lastClick = 0, TW_pairsLock = false;
+let TW_lastState = 0;
 const SCENE_CACHE = {};
 
 /* ----- 3. UTILITAIRES ----- */
@@ -86,7 +87,7 @@ const TowerUtils = {
   }
 };
 
-/* ----- 4. CSS CONSOLIDÉ (UN SEUL BLOC) ----- */
+/* ----- 4. CSS CONSOLIDÉ ----- */
 (function() {
   const style = document.createElement('style');
   style.textContent = `
@@ -123,7 +124,7 @@ const TowerUtils = {
   .tw-worldfade .big{font-size:34px;font-weight:900;color:#00d2ff;text-shadow:0 0 20px #00d2ff;}
   .tw-worldfade .sub{font-size:14px;color:#aaa;}
 
-  /* === BOUTIQUE === */
+  /* === BOUTIQUE AVENTURE === */
   .tw-shop{position:fixed;inset:0;background:#000c;z-index:9997;display:flex;align-items:center;justify-content:center;}
   .tw-shop-card{background:#0f051d;border:2px solid #f8b500;border-radius:14px;padding:16px;width:min(92%,360px);}
   .tw-shop-card h3{margin:0 0 10px;color:#f8b500;text-align:center;}
@@ -134,9 +135,15 @@ const TowerUtils = {
   .tw-shop-item .buy.iap{background:linear-gradient(180deg,#3ae05a,#1a9a3a);color:#fff;}
   .tw-shop-item .buy.iap:disabled{filter:grayscale(1);opacity:.6;}
 
-  /* === JOKERS EN PARTIE === */
-  .twj-btn{background:#1a1a2e;border:2px solid #00d2ff;color:#00d2ff;border-radius:10px;padding:5px 9px;font-size:13px;font-weight:900;cursor:pointer;}
-  .twj-btn:disabled{opacity:.3;cursor:default;}
+  /* === JOKERS EN BAS (style entraînement/1v1) === */
+  .twj-bar{display:flex;justify-content:center;gap:14px;padding:10px 12px 14px;}
+  .twj-btn{display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,#1a2142,#0d1226);border:2px solid #00d2ff;color:#fff;border-radius:14px;padding:10px 18px;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #061024,0 0 12px #00d2ff33;}
+  .twj-btn b{background:#00d2ff;color:#061024;border-radius:8px;padding:2px 8px;font-size:13px;}
+  .twj-btn:disabled{opacity:.55;filter:grayscale(.6);cursor:default;}
+
+  /* === BOUCLIER VISUEL === */
+  .tw-shield-active{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:90vw;height:90vh;border:4px solid #f8b500;border-radius:50%;box-shadow:0 0 40px #f8b50088,inset 0 0 40px #f8b50044;pointer-events:none;z-index:9995;animation:twShieldPulse 2s infinite;}
+  @keyframes twShieldPulse{0%,100%{opacity:.6}50%{opacity:1}}
 
   /* === CITY === */
   .tw-moon{position:absolute;top:2%;right:10%;width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff8e8,#d8c9a8 60%,#a89878);box-shadow:0 0 30px #fff8e866;}
@@ -172,7 +179,7 @@ const TowerUtils = {
   .tw-signalbeam.l{left:34%;transform:rotate(14deg);}
   .tw-signalbeam.r{left:66%;transform:rotate(-14deg);}
 
-  /* === GLACIER (grotte assombrie) === */
+  /* === GLACIER === */
   .tw-cavewall{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 55%,#74ebf518 0%,#0a2a3a66 35%,#000000ee 78%);}
   .tw-gceil{position:absolute;top:0;left:0;right:0;height:160px;background:linear-gradient(0deg,#0a2a3a,#04141d);}
   .tw-cavedark{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,#00000055 0%,#000000aa 55%,#000000e6 100%);z-index:3;pointer-events:none;}
@@ -289,6 +296,8 @@ const TowerUtils = {
   .tg-tile.sel{border-color:#f8b500;box-shadow:0 0 10px #f8b500;}
   .tg-tile.gone{opacity:0;pointer-events:none;transform:scale(.4);transition:all .3s;}
   .tg-tile.foggy{animation:twFog 2s infinite;}
+  .tg-tile.err{border-color:#ff4b2b !important;box-shadow:0 0 14px #ff4b2b;background:linear-gradient(180deg,#3a0a0a,#200505) !important;animation:twShake .3s;}
+  @keyframes twShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
   .twg-msg{text-align:center;font-size:11px;color:#aaa;padding:6px 10px 12px;}
 
   /* === ANIMATIONS === */
@@ -342,10 +351,6 @@ const TowerUtils = {
   }
   `;
   document.head.appendChild(style);
-  (function(){const s=document.createElement("style");s.textContent=`
-  .tg-tile.err{border-color:#ff4b2b !important;box-shadow:0 0 14px #ff4b2b;background:linear-gradient(180deg,#3a0a0a,#200505) !important;animation:twShake .3s;}
-  @keyframes twShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
-`;document.head.appendChild(s);})();
 })();
 
 /* ----- 5. GÉNÉRATION DES FONDS ----- */
@@ -480,7 +485,7 @@ function openTower() {
         <div class="tw-lives">❤️ <span id="tw-lives-n">${twLives}</span><span id="tw-lives-regen" style="font-size:9px;opacity:.75;margin-left:5px;"></span></div>
         <div class="tw-coins">🪙 <span id="tw-coins-n">0</span></div>
         <button class="tw-shopbtn" onclick="openLevelSelect()">🎯</button>
-        <button class="tw-shopbtn" style="margin-left:0;" onclick="openShop()">🛒</button>
+        <button class="tw-shopbtn" style="margin-left:0;" onclick="openTowerShop()">🛒</button>
       </div>
       <div class="tw-qwrap"><span class="lbl" id="tw-q-lbl">⭐ 0/240</span><div class="tw-qbar"><div id="tw-q-fill" style="width:0%"></div></div></div>
       <div class="tw-center">
@@ -563,7 +568,7 @@ function advPlay() {
   showBriefing(def);
 }
 
-/* ----- SÉLECTION DE NIVEAU ----- */
+/* ----- 7. SÉLECTION DE NIVEAU ----- */
 function openLevelSelect() {
   closeLevelSelect();
   const world = TowerUtils.getTowerChapter(twViewFloor).id;
@@ -608,9 +613,9 @@ function showWorldTransition(w) {
   }, 1400);
 }
 
-/* ----- 7. BOUTIQUE HYBRIDE ----- */
-function openShop() {
-  closeShop();
+/* ----- 8. BOUTIQUE AVENTURE (noms uniques, n'écrase PAS la boutique du jeu) ----- */
+function openTowerShop() {
+  closeTowerShop();
   const fr = currentLang === "fr";
   const d = document.createElement("div");
   d.className = "tw-shop"; d.id = "tw-shop";
@@ -618,14 +623,14 @@ function openShop() {
   SHOP_ITEMS.forEach(it => {
     const btn = it.iap
       ? `<button class="buy iap" disabled>${it.eur} 🔒</button>`
-      : `<button class="buy" onclick="shopBuy('${it.id}')">${it.price} 🪙</button>`;
+      : `<button class="buy" onclick="towerShopBuy('${it.id}')">${it.price} 🪙</button>`;
     items += `<div class="tw-shop-item"><span class="ic">${it.icon}</span><span class="nm">${it.name}${it.iap?`<br><small style="color:#8892a8;font-weight:600;">${fr?"Bientôt (Google Play)":"Soon (Google Play)"}</small>`:""}</span>${btn}</div>`;
   });
-  d.innerHTML = `<div class="tw-shop-card"><h3>🛒 BOUTIQUE</h3>${items}<button class="btn-secondary" style="width:100%;" onclick="closeShop()">❌ ${fr?"Fermer":"Close"}</button></div>`;
+  d.innerHTML = `<div class="tw-shop-card"><h3>🛒 BOUTIQUE AVENTURE</h3>${items}<button class="btn-secondary" style="width:100%;" onclick="closeTowerShop()">❌ ${fr?"Fermer":"Close"}</button></div>`;
   document.body.appendChild(d);
 }
-function closeShop() { const s = document.getElementById("tw-shop"); if (s) s.remove(); }
-function shopBuy(id) {
+function closeTowerShop() { const s = document.getElementById("tw-shop"); if (s) s.remove(); }
+function towerShopBuy(id) {
   const it = SHOP_ITEMS.find(x => x.id === id);
   if (!it || it.iap) return;
   socket.emit("shop_buy", { id: id, price: it.price });
@@ -647,7 +652,7 @@ socket.on("shop_result", (r) => {
   }
 });
 
-/* ----- 8. BRIEFING ----- */
+/* ----- 9. BRIEFING ----- */
 function showBriefing(def) {
   closeBriefing();
   const fr = currentLang === "fr";
@@ -669,13 +674,13 @@ function showBriefing(def) {
 }
 function closeBriefing() { const b = document.getElementById("tw-brief"); if (b) b.remove(); }
 
-/* ----- 9. MOTEUR DE JEU ----- */
+/* ----- 10. MOTEUR DE JEU ----- */
 function ensureTowerOverlay() {
   let ov = document.getElementById("tower-game");
   if (!ov) {
     ov = document.createElement("div");
     ov.id = "tower-game"; ov.className = "twg-screen";
-    ov.innerHTML = `<div class="twg-header"><button class="tw-back" onclick="quitFloor()">⬅️</button><b id="twg-title"></b><button class="twj-btn" id="twg-jt" onclick="useJoker('time')">⏱️ 0</button><button class="twj-btn" id="twg-js" onclick="useJoker('skip')">🃏 0</button><span id="tg-err" style="color:#ff4b2b;font-weight:900;font-size:13px;min-width:40px;text-align:right;">❌ 0</span><span id="twg-timer">⏱️</span></div><div id="tg-bar" class="twg-bar"></div><div id="tg-hud" class="twg-hud"></div><div class="twg-gridwrap"><div id="tg-grid" class="tg-grid"></div></div><div id="tg-msg" class="twg-msg"></div>`;
+    ov.innerHTML = `<div class="twg-header"><button class="tw-back" onclick="quitFloor()">⬅️</button><b id="twg-title"></b><span id="tg-err" style="color:#ff4b2b;font-weight:900;font-size:13px;min-width:40px;text-align:right;">❌ 0</span><span id="twg-timer">⏱️</span></div><div id="tg-bar" class="twg-bar"></div><div id="tg-hud" class="twg-hud"></div><div class="twg-gridwrap"><div id="tg-grid" class="tg-grid"></div></div><div class="twj-bar"><button class="twj-btn" id="twg-jt" onclick="useJoker('time')">⏱️ +10s <b id="twg-jt-n">0</b></button><button class="twj-btn" id="twg-js" onclick="useJoker('shield')">🛡️ Bouclier <b id="twg-js-n">0</b></button></div><div id="tg-msg" class="twg-msg"></div>`;
     document.body.appendChild(ov);
   }
   return ov;
@@ -689,9 +694,12 @@ function useJoker(kind) {
   socket.emit("tower_use_joker", { kind: kind });
 }
 function updateJokerButtons() {
-  const jt = document.getElementById("twg-jt"), js = document.getElementById("twg-js");
-  if (jt) { jt.innerText = "⏱️ " + (twJokers.time || 0); jt.disabled = !TW || (twJokers.time || 0) <= 0; }
-  if (js) { js.innerText = "🃏 " + (twJokers.skip || 0); js.disabled = !TW || (twJokers.skip || 0) <= 0; }
+  const jt = document.getElementById("twg-jt-n"), js = document.getElementById("twg-js-n");
+  const bt = document.getElementById("twg-jt"), bs = document.getElementById("twg-js");
+  if (jt) jt.innerText = twJokers.time || 0;
+  if (js) js.innerText = twJokers.shield || 0;
+  if (bt) { bt.style.display = (twJokers.time || 0) > 0 ? "flex" : "none"; bt.disabled = !TW; }
+  if (bs) { bs.style.display = (twJokers.shield || 0) > 0 ? "flex" : "none"; bs.disabled = !TW; }
 }
 socket.on("joker_denied", () => {
   if (typeof showNotificationToast === "function") showNotificationToast(currentLang === "fr" ? "❌ Joker indisponible." : "❌ Joker unavailable.", "announcement");
@@ -701,9 +709,14 @@ socket.on("tower_no_lives", () => {
   quitFloor();
   renderAdventure();
 });
+socket.on("tower_shield_used", (data) => {
+  if (typeof showNotificationToast === "function") showNotificationToast(currentLang === "fr" ? "🛡️ Bouclier absorbé !" : "🛡️ Shield absorbed!", "gift");
+  let shield = document.getElementById("tw-shield-active");
+  if (shield) shield.remove();
+});
 
 function cloneState(s) {
-  return { type:s.type, total:s.total, gridSize:s.gridSize, floor:s.floor, target:s.target, targetColor:s.targetColor, targetParity:s.targetParity, forbidden:s.forbidden, timeLeft:s.timeLeft, ai:s.ai, gone:Object.assign({},s.gone||{}), revealed:Object.assign({},s.revealed||{}), display:(s.display||[]).slice(), sel:(s.sel===undefined?null:s.sel) };
+  return { type:s.type, total:s.total, gridSize:s.gridSize, floor:s.floor, target:s.target, targetColor:s.targetColor, targetParity:s.targetParity, forbidden:s.forbidden, timeLeft:s.timeLeft, ai:s.ai, gone:Object.assign({},s.gone||{}), revealed:Object.assign({},s.revealed||{}), display:(s.display||[]).slice(), sel:(s.sel===undefined?null:s.sel), shield:s.shield||0 };
 }
 function startTowerFloor(def) {
   if (TW) return;
@@ -767,7 +780,7 @@ function handleTowerClick(i, b) {
     if (t === "reverse") TW_dom.target--;
     else if (["classic","sprint","fog","nofail"].includes(t)) TW_dom.target++;
     if (typeof SoundEngine !== "undefined" && SoundEngine.playClick) SoundEngine.playClick();
-    } else if (success === false) {
+  } else if (success === false) {
     b.classList.add("err");
     setTimeout(() => { if (b) b.classList.remove("err"); }, 350);
     if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
@@ -795,9 +808,21 @@ function renderHUDFromState() {
   const bar = document.getElementById("tg-bar");
   if (bar) { if (TW.type === "boss") { bar.style.display = "block"; bar.innerHTML = `<div style="width:${Math.min(100,TW.ai/TW.total*100)}%;height:100%;background:linear-gradient(90deg,#ff4b2b,#f8b500);"></div>`; } else bar.style.display = "none"; }
   document.getElementById("twg-title").innerText = "🏰 ÉTAGE " + TW.floor + " — " + TowerUtils.typeLabel(TW.type);
-    const errEl = document.getElementById("tg-err");
+  const errEl = document.getElementById("tg-err");
   if (errEl) errEl.innerText = "❌ " + (TW.mistakes || 0);
   updateJokerButtons();
+  
+  let shield = document.getElementById("tw-shield-active");
+  if (TW.shield > 0) {
+    if (!shield) {
+      shield = document.createElement("div");
+      shield.id = "tw-shield-active";
+      shield.className = "tw-shield-active";
+      document.body.appendChild(shield);
+    }
+  } else {
+    if (shield) shield.remove();
+  }
 }
 function showFailUI(reason) {
   const ov = ensureTowerOverlay();
@@ -815,6 +840,7 @@ function quitFloor() {
   TW = null; TW_dom = null; stopLocalTimer();
   socket.emit("tower_quit");
   const ov = document.getElementById("tower-game"); if (ov) ov.style.display = "none";
+  const shield = document.getElementById("tw-shield-active"); if (shield) shield.remove();
   updateJokerButtons();
 }
 function showTowerWinPopup(res) {
@@ -822,7 +848,7 @@ function showTowerWinPopup(res) {
   const d = document.createElement("div");
   d.className = "modal-overlay"; d.style.display = "flex";
   d.innerHTML = `<div class="modal-card" style="max-width:300px;text-align:center;">
-    <h3 style="color:#00ff88;margin:0 0 6px 0;">✅ ${fr?"ÉTAGE":"FLOOR"} ${res.floor} ${fr?"VAINCU":"CLEARED"} !${res.skipped?` 🃏`:``}</h3>
+    <h3 style="color:#00ff88;margin:0 0 6px 0;">✅ ${fr?"ÉTAGE":"FLOOR"} ${res.floor} ${fr?"VAINCU":"CLEARED"} !</h3>
     <div class="tw-stars">${[1,2,3].map(i=>`<span style="animation-delay:${i*0.2}s;${i<=res.stars?"":"filter:grayscale(1);opacity:.3;"}">⭐</span>`).join("")}</div>
     <div style="font-size:13px;color:#f8b500;font-weight:bold;margin-bottom:10px;">+${res.coins} 🪙</div>
     <button class="btn-main btn-blue" onclick="this.closest('.modal-overlay').remove();renderAdventure()">${fr?"Continuer":"Continue"} ⚡</button>
@@ -831,7 +857,7 @@ function showTowerWinPopup(res) {
   towerDing();
 }
 
-/* ----- 10. SOCKET EVENTS ----- */
+/* ----- 11. SOCKET EVENTS ----- */
 socket.on("tower_data", (d) => {
   const oldWorld = TowerUtils.getTowerChapter(Math.min(towerProgress.floor + 1, TOTAL_FLOORS)).id;
   towerProgress = { floor: d.floor || 0, stars: d.stars || {} };
@@ -844,6 +870,7 @@ socket.on("tower_data", (d) => {
 });
 socket.on("tower_state", (st) => {
   if (!st || !st.display) return;
+  TW_lastState = Date.now();
   const first = TW_buttons.length === 0;
   TW = st; TW_lastFloor = st.floor;
   if (first) { buildGridFromState(st); TW_dom = cloneState(st); }
@@ -862,6 +889,7 @@ socket.on("tower_fail", (r) => {
 socket.on("tower_result", (res) => {
   TW = null;
   const ov = document.getElementById("tower-game"); if (ov) ov.style.display = "none";
+  const shield = document.getElementById("tw-shield-active"); if (shield) shield.remove();
   if (!res.ok) return;
   const oldWorld = TowerUtils.getTowerChapter(Math.min(towerProgress.floor + 1, TOTAL_FLOORS)).id;
   towerProgress.floor = Math.max(towerProgress.floor, res.floor);
@@ -872,7 +900,25 @@ socket.on("tower_result", (res) => {
   else renderAdventure();
 });
 
-/* ----- 11. HELPERS ----- */
+/* ----- 12. WATCHDOG (anti-partie-zombie) ----- */
+setInterval(() => {
+  if (TW && TW_lastState && Date.now() - TW_lastState > 6000) {
+    TW = null; TW_dom = null; stopLocalTimer();
+    const ov = document.getElementById("tower-game"); if (ov) ov.style.display = "none";
+    const shield = document.getElementById("tw-shield-active"); if (shield) shield.remove();
+    if (typeof showNotificationToast === "function") showNotificationToast(currentLang === "fr" ? "🔌 Serveur injoignable — partie annulée." : "🔌 Server unreachable — match cancelled.", "announcement");
+  }
+}, 2000);
+socket.on("disconnect", () => {
+  if (TW) {
+    TW = null; TW_dom = null; stopLocalTimer();
+    const ov = document.getElementById("tower-game"); if (ov) ov.style.display = "none";
+    const shield = document.getElementById("tw-shield-active"); if (shield) shield.remove();
+    if (typeof showNotificationToast === "function") showNotificationToast(currentLang === "fr" ? "🔌 Connexion perdue — partie annulée." : "🔌 Connection lost — match cancelled.", "announcement");
+  }
+});
+
+/* ----- 13. HELPERS ----- */
 function towerDing() {
   try {
     SoundEngine.init();
