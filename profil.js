@@ -51,7 +51,7 @@ const socket = io(CONFIG.SERVER_URL, {
   reconnection: true,
   reconnectionAttempts: CONFIG.RECONNECTION_ATTEMPTS,
   reconnectionDelay: CONFIG.RECONNECTION_DELAY_MS
-  const socket = io(SERVER_URL, { query: { v: VERSION_CLIENT.version, shell: VERSION_CLIENT.shell } });
+  const socket = io(SERVER_URL);   // ← remets exactement ta ligne d'origine
 });
 
 socket.on("disconnect", () => { SoundEngine.stopMusic(true); });
