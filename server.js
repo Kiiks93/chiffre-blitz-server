@@ -79,7 +79,7 @@ function vgCompareServer(a, b) {
 }
 /* ----- ❤️ VIES AVENTURE (régén + plafond) ----- */
 const TOWER_MAX_LIVES = 10;
-const TOWER_REGAIN_MS = 20 * 60 * 1000; // 1 vie / 20 min
+const TOWER_REGAIN_MS = 20000; // 1 vie / 20 min
 const TOWER_SHOP = { vies: { price: 150 }, joker_time: { price: 250 }, joker_skip: { price: 300 } };
 function towerRegenLives(p) {
   const now = Date.now();
