@@ -55,6 +55,21 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 if (!ADMIN_PASSWORD) { console.error("ADMIN_PASSWORD doit etre definie."); process.exit(1); }
 
+/* ----- VERSION GATING ----- */
+const VERSION_GATE = {
+  latest:   "1.3.0",                                   // dernière version disponible
+  minWeb:   "1.3.0",                                   // version web minimum pour jouer
+  minShell: 3,                                         // versionCode Capacitor minimum
+  urlWeb:   "https://chiffre-blitz.fr",                // ← REMPLACE (ton site web)
+  urlAndroid: "market://details?id=com.chiffreblitz.app"   // ← REMPLACE (ton package)
+};
+app.get("/version", (req, res) => res.json(VERSION_GATE));
+
+function vgCompareServer(a, b) {
+  const pa = String(a).split(".").map(Number), pb = String(b).split(".").map(Number);
+  for (let i = 0; i < 3; i++) { const x = pa[i]||0, y = pb[i]||0; if (x < y) return -1; if (x > y) return 1; }
+  return 0;
+}
 /* ============================================================
 OBJETS
 ============================================================ */
@@ -498,6 +513,12 @@ setInterval(async () => {
 SOCKET
 ============================================================ */
 io.on('connection', (socket) => {
+  const cv = socket.handshake.query.v || "0.0.0";
+  if (vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
+  socket.emit("version_blocked");
+  socket.disconnect(true);
+  return;
+  }
   console.log('Connexion : ' + socket.id);
   socket.emit('events_state_update', globalEvents);
   socket.emit('online_count', { online: getOnlineCount() });
