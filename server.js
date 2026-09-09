@@ -34,7 +34,6 @@ function ensureDailyCounters(p) {
   if (!p.daily_roulette || p.daily_roulette.date !== today) p.daily_roulette = { count: 0, date: today };
 }
 
-// ✅ Anti-triche : cooldowns serveur
 function setLastAction(p, key) { p._cooldowns = p._cooldowns || {}; p._cooldowns[key] = Date.now(); }
 function getLastAction(p, key) { return (p._cooldowns && p._cooldowns[key]) || 0; }
 function checkCooldown(p, key, minMs) {
@@ -44,7 +43,6 @@ function checkCooldown(p, key, minMs) {
 }
 
 const app = express();
-// CORS manuel pour les fetch du client (bannière update, /version)
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -64,11 +62,11 @@ if (!ADMIN_PASSWORD) { console.error("ADMIN_PASSWORD doit etre definie."); proce
 
 /* ----- VERSION GATING ----- */
 const VERSION_GATE = {
-  latest:"1.3.0",                                   // dernière version disponible
-  minWeb: "1.3.0",                                   // version web minimum pour jouer
-  minShell: 3,                                         // versionCode Capacitor minimum
-  urlWeb:   "https://chiffre-blitz.fr",                // ← REMPLACE (ton site web)
-  urlAndroid: "market://details?id=com.chiffreblitz.app"   // ← REMPLACE (ton package)
+  latest:   "1.3.0",
+  minWeb:   "1.3.0",
+  minShell: 3,
+  urlWeb:   "https://chiffre-blitz.fr",
+  urlAndroid: "market://details?id=com.chiffreblitz.app"
 };
 app.get("/version", (req, res) => res.json(VERSION_GATE));
 
@@ -77,10 +75,11 @@ function vgCompareServer(a, b) {
   for (let i = 0; i < 3; i++) { const x = pa[i]||0, y = pb[i]||0; if (x < y) return -1; if (x > y) return 1; }
   return 0;
 }
-/* ----- ❤️ VIES AVENTURE (régén + plafond) ----- */
+
+/* ----- ❤️ VIES + 🃏 JOKERS (premium) ----- */
 const TOWER_MAX_LIVES = 10;
-const TOWER_REGAIN_MS = 20000; // 1 vie / 20 min
-const TOWER_SHOP = { vies: { price: 150 }, joker_time: { price: 250 }, joker_skip: { price: 300 } };
+const TOWER_REGAIN_MS = 20 * 60 * 1000;
+const TOWER_SHOP = { vies: { price: 150 } };
 function towerRegenLives(p) {
   const now = Date.now();
   if (p.lives === undefined) p.lives = TOWER_MAX_LIVES;
@@ -96,6 +95,14 @@ function towerNextLifeIn(p) {
   if ((p.lives === undefined ? TOWER_MAX_LIVES : p.lives) >= TOWER_MAX_LIVES) return 0;
   return Math.max(0, TOWER_REGAIN_MS - (Date.now() - (p.lives_ts || Date.now())));
 }
+function normalizeJokers(j) {
+  j = j || {};
+  const time = Number(j.time) || 0;
+  let shield = Number(j.shield) || 0;
+  if (j.skip) shield += Number(j.skip) || 0;
+  return { time, shield };
+}
+
 /* ============================================================
 OBJETS
 ============================================================ */
@@ -178,7 +185,7 @@ const TROPHY_CATALOG = {
   furnace:         { name: "Fournaise",         emoji: "💥", shelf: "skill", rarity: "silver", title: "title_flamme" },
   perfection:      { name: "PERFECTION",        emoji: "💎", shelf: "skill", rarity: "legendary", title: "title_parfait" },
   avalanche_master:{ name: "Maître Avalanche",  emoji: "🎯", shelf: "skill", rarity: "gold", title: "title_maitre_avalanche" },
-  combatant:       { name: "Combattant",        emoji: "🎖️", shelf: "progression", rarity: "bronze", title: "title_combattant" },
+  combatant:       { name: "Combattant",        emoji: "🎖️", shelf: "progression", rarity: "bronze", title: "title_combatant" },
   elite:           { name: "Élite",             emoji: "🏵️", shelf: "progression", rarity: "gold", title: "title_elite" },
   worker:          { name: "Travailleur",       emoji: "⛏️", shelf: "progression", rarity: "silver", title: "title_travailleur" },
   rising_star:     { name: "Étoile Montante",   emoji: "⭐", shelf: "progression", rarity: "silver", title: "title_etoile" },
@@ -295,7 +302,7 @@ let halloweenQueue = [];
 let noelQueue = [];
 const activeMatches = {};
 const lastMatchEarnings = {};
-const towerSessions = {}; // 🗼 sessions Tower server-authoritative
+const towerSessions = {};
 
 let globalEvents = { coinRush: false, rankShield: false, expressoMatch: false, chaosMode: false, jackpotEclair: false, tugOfWarMode: false, halloweenMode: false, noelMode: false };
 let eventSchedules = {
@@ -331,7 +338,7 @@ async function savePlayerToSupabase(socketId) {
     tower_stars: p.towerStars || {},
     tower_lives: (p.lives === undefined ? TOWER_MAX_LIVES : p.lives),
     tower_lives_ts: p.lives_ts || 0,
-    tower_jokers: p.jokers || { time: 0, skip: 0 }
+    tower_jokers: p.jokers || { time: 0, shield: 0 }
   };
   const extra = {
     matches_played: p.matches_played || 0, win_streak: p.win_streak || 0, best_combo: p.best_combo || 0,
@@ -373,7 +380,7 @@ function buildAdminCatalog() {
 }
 
 /* ============================================================
-🗼 TOUR BLITZ — NIVEAU 2 (server-authoritative)
+🗼 TOUR BLITZ (server-authoritative)
 ============================================================ */
 const TOWER_CHAPTER_REWARDS = {
   1: "title_grimpeur_neon", 2: "frame_cristal", 3: "frame_circuit",
@@ -381,8 +388,8 @@ const TOWER_CHAPTER_REWARDS = {
   7: "title_veilleur_cimes", 8: "frame_aurore", 9: "title_maitre_tour"
 };
 const TOWER_FPC = 200;
-const TOWER_TOTAL = 9 * TOWER_FPC; // 1800
-const TOWER_WORLD_QUOTA = 240; // 40% des 600 étoiles d'un monde
+const TOWER_TOTAL = 9 * TOWER_FPC;
+const TOWER_WORLD_QUOTA = 240;
 function towerStarsInWorld(player, w){
   let s=0; const start=(w-1)*TOWER_FPC+1, end=w*TOWER_FPC;
   for(let f=start; f<=end; f++){ s += (player.towerStars && player.towerStars[String(f)]) || 0; }
@@ -400,7 +407,7 @@ const TW_COLOR_POOL = [
   {key:"gold",name:"OR",hex:"#f8b500"}, {key:"green",name:"VERT",hex:"#2ecc71"},
   {key:"red",name:"ROUGE",hex:"#ff4b2b"}, {key:"violet",name:"VIOLET",hex:"#9b5cff"}
 ];
-const TW_PAIR_SYMBOLS = ["🍒","⭐","💎","🔥","⚡","🌙","👑","🎲","🍀","🎯","🚀","🧊","🍭","🎁","🪙","🔮","🦇","🎃","🎄","🎅","🧁","🍩","🔔","🕯️"];
+const TW_PAIR_SYMBOLS = ["🍒","⭐","💎","","","🌙","👑","🎲","🍀","","","🧊","🍭","","🪙","🔮","","🎃","🎄","🎅","🧁","🍩","","🕯️"];
 
 function towerShuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
@@ -410,7 +417,7 @@ function getFloorDefServer(floor) {
   let gridSize = Math.min(36, Math.round(12 + global * 24));
   let time = Math.max(14, Math.round(34 - global * 20));
   if (inChap === TOWER_FPC) return { floor, gridSize, time, type: "boss" };
-  if (inChap % 50 === 0) return { floor, gridSize, time, type: "boss" }; // gardien
+  if (inChap % 50 === 0) return { floor, gridSize, time, type: "boss" };
   const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","fog","nofail"];
   const t = seq[(inChap - 1) % 9];
   if (t === "sprint") return { floor, gridSize, time: Math.max(6, Math.round(time * 0.4)), type: "sprint" };
@@ -428,7 +435,7 @@ function pickColorTarget(s){
 function buildTowerSession(player, floor){
   const def = getFloorDefServer(floor);
   const N = def.gridSize;
-  const s = { floor, def, type: def.type, total: N, mistakes: 0, gone: {}, revealed: {}, sel: null, lock: false, done: false, start: Date.now(), ai: 0, replay: floor <= (player.towerFloor||0) };
+  const s = { floor, def, type: def.type, total: N, mistakes: 0, gone: {}, revealed: {}, sel: null, lock: false, done: false, start: Date.now(), ai: 0, shield: 0, replay: floor <= (player.towerFloor||0) };
   if (def.type === "color") {
     s.nums = towerShuffle([...Array(N)].map((_,i)=>TW_COLOR_POOL[(i+Math.floor(Math.random()*TW_COLOR_POOL.length))%TW_COLOR_POOL.length]));
     s.remaining = new Set([...Array(N)].map((_,i)=>i));
@@ -464,7 +471,7 @@ function towerStatePayload(s){
     timeLeft: Math.max(0, s.def.time - Math.floor((Date.now()-s.start)/1000)),
     mistakes:s.mistakes, gone:s.gone, display:towerDisplay(s),
     target:s.target||null, targetColor:s.targetColor||null, targetParity:s.targetParity||null, forbidden:s.forbidden||null,
-    revealed:s.revealed, sel:s.sel, ai:s.ai, defTime:s.def.time, gridSize:s.def.gridSize, replay:s.replay
+    revealed:s.revealed, sel:s.sel, ai:s.ai, defTime:s.def.time, gridSize:s.def.gridSize, replay:s.replay, shield:s.shield||0
   };
 }
 async function towerWin(player, s){
@@ -507,6 +514,9 @@ async function towerWin(player, s){
         if (!player.unlocked_items.includes(itemId)) { player.unlocked_items.push(itemId); reward = itemId; }
       }
     }
+    player.jokers = normalizeJokers(player.jokers);
+    if (s.floor % 50 === 0 && s.floor % TOWER_FPC !== 0) player.jokers.shield += 1;
+    if (s.floor % TOWER_FPC === 0) { player.jokers.shield += 1; player.jokers.time += 1; }
   } else {
     coins = 5 + stars * 2;
   }
@@ -528,7 +538,6 @@ async function towerFail(player, s, reason){
   return { ok:false, floor:s.floor, reason, lives: player.lives, nextLifeIn: towerNextLifeIn(player) };
 }
 
-// ⏱️ Sweeper Tower : timeouts + IA boss + refresh état (chaque seconde)
 setInterval(async () => {
   for (const sid in towerSessions){
     const s = towerSessions[sid];
@@ -695,7 +704,8 @@ io.on('connection', (socket) => {
       const ap = activePlayers[socket.id];
       ap.lives = (playerData.tower_lives !== undefined && playerData.tower_lives !== null) ? playerData.tower_lives : TOWER_MAX_LIVES;
       ap.lives_ts = playerData.tower_lives_ts || Date.now();
-      ap.jokers = playerData.tower_jokers || { time: 0, skip: 0 };
+      ap.jokers = normalizeJokers(playerData.tower_jokers);
+      if (wasCreated) ap.jokers = { time: 1, shield: 1 };
       towerRegenLives(ap);
       if (wasCreated) await logPlayerAction(activePlayers[socket.id], 'account_created', `Username: ${rawUsername}`, null, null, null);
       socket.emit('register_result', { ok: true, created: wasCreated });
@@ -1110,7 +1120,6 @@ io.on('connection', (socket) => {
     io.to(oppId).emit('catch_opp_score', { score: pData.score });
   });
 
-  // ⏱️ Début de partie solo : le serveur enregistre le timestamp (source de vérité)
   socket.on('solo_start', () => {
     const p = activePlayers[socket.id];
     if (p) p._soloStart = Date.now();
@@ -1154,7 +1163,7 @@ io.on('connection', (socket) => {
   socket.on('claim_solo_reward', async (payload) => {
     const player = activePlayers[socket.id];
     if (!player) return;
-    const cd = checkCooldown(player, 'solo_reward', 3000);  // 3s au lieu de 8s
+    const cd = checkCooldown(player, 'solo_reward', 3000);
     if (!cd.ok) { socket.emit('solo_reward_result', { baseCoins: 0, rushBonus: 0, earnedCoins: 0, triggerWheel: false, globalEvents, perfection: false, error: 'cooldown' }); return; }
     if (!player._soloStart) {
       await logPlayerAction(player, 'solo_no_start', 'Pas de solo_start enregistré', null, null, null);
@@ -1503,12 +1512,13 @@ io.on('connection', (socket) => {
     socket.emit('admin_adjust_result', { ok: true, message: `${targets.length} joueur(s) modifié(s) (${amt > 0 ? '+' : ''}${amt} ${currency})` });
   });
 
-  /* ---------- 🗼 TOUR : handlers niveau 2 ---------- */
+  /* ---------- 🗼 TOUR ---------- */
   socket.on('get_tower', () => {
     const player = activePlayers[socket.id];
     if (!player) return;
     towerRegenLives(player);
-    socket.emit('tower_data', { floor: player.towerFloor || 0, stars: player.towerStars || {}, lives: player.lives, nextLifeIn: towerNextLifeIn(player), jokers: player.jokers || { time: 0, skip: 0 } });
+    player.jokers = normalizeJokers(player.jokers);
+    socket.emit('tower_data', { floor: player.towerFloor || 0, stars: player.towerStars || {}, lives: player.lives, nextLifeIn: towerNextLifeIn(player), jokers: player.jokers });
   });
 
   socket.on('tower_floor_start', async (data) => {
@@ -1518,9 +1528,9 @@ io.on('connection', (socket) => {
     if (floor < 1 || floor > (player.towerFloor || 0) + 1) return;
     const world = Math.ceil(floor / TOWER_FPC);
     if (!towerWorldUnlocked(player, world)) {
-    await logPlayerAction(player, 'tower_locked', `Monde ${world} verrouillé (quota étoiles)`, null, null, null);
-    return;
-  }
+      await logPlayerAction(player, 'tower_locked', `Monde ${world} verrouillé (quota étoiles)`, null, null, null);
+      return;
+    }
     towerRegenLives(player);
     if (player.lives <= 0) { socket.emit('tower_no_lives', { lives: 0, nextLifeIn: towerNextLifeIn(player) }); return; }
     const s = buildTowerSession(player, floor);
@@ -1536,7 +1546,7 @@ io.on('connection', (socket) => {
     if (!Number.isFinite(idx) || idx < 0 || idx >= s.total || s.gone[idx]) return;
     const elapsed = (Date.now() - s.start) / 1000;
     if (elapsed > s.def.time) { const r = await towerFail(player, s, 'timeout'); delete towerSessions[socket.id]; socket.emit('tower_fail', r); return; }
-        const v = s.nums[idx];
+    const v = s.nums[idx];
     let win = false, mistake = false;
 
     if (s.type === "color") {
@@ -1585,9 +1595,15 @@ io.on('connection', (socket) => {
         }
       } else mistake = true;
     }
+
     if (mistake) {
-      s.mistakes++;
-      if (s.type === "nofail") { const r = await towerFail(player, s, 'nofail'); delete towerSessions[socket.id]; socket.emit('tower_fail', r); return; }
+      if (s.shield > 0) {
+        s.shield--;
+        socket.emit('tower_shield_used', { shield: s.shield });
+      } else {
+        s.mistakes++;
+        if (s.type === "nofail") { const r = await towerFail(player, s, 'nofail'); delete towerSessions[socket.id]; socket.emit('tower_fail', r); return; }
+      }
     }
     if (win) {
       const r = await towerWin(player, s);
@@ -1605,7 +1621,7 @@ io.on('connection', (socket) => {
     delete towerSessions[socket.id];
   });
 
-    /* ---------- 🛒 BOUTIQUE AVENTURE (anti-triche serveur) ---------- */
+  /* ---------- 🛒 BOUTIQUE AVENTURE (pièces = vies seulement) ---------- */
   socket.on('shop_buy', async (data) => {
     const player = activePlayers[socket.id];
     if (!player) return;
@@ -1621,12 +1637,6 @@ io.on('connection', (socket) => {
       player.coins -= item.price;
       player.lives = Math.min(TOWER_MAX_LIVES, player.lives + 3);
       if (player.lives >= TOWER_MAX_LIVES) player.lives_ts = Date.now();
-    } else if (id === 'joker_time') {
-      player.coins -= item.price;
-      player.jokers.time = (player.jokers.time || 0) + 1;
-    } else if (id === 'joker_skip') {
-      player.coins -= item.price;
-      player.jokers.skip = (player.jokers.skip || 0) + 1;
     }
     setLastAction(player, 'shop_buy');
     await savePlayerToSupabase(socket.id);
@@ -1635,30 +1645,23 @@ io.on('connection', (socket) => {
     socket.emit('player_registered', player);
   });
 
-  /* ---------- 🃏 UTILISATION DES JOKERS ---------- */
+  /* ---------- 🃏 JOKERS (⏱️ temps + 🛡️ bouclier) ---------- */
   socket.on('tower_use_joker', async (data) => {
     const player = activePlayers[socket.id];
     const s = towerSessions[socket.id];
     if (!player || !s || s.done) return;
+    player.jokers = normalizeJokers(player.jokers);
     const kind = data && data.kind;
     if (kind === 'time') {
       if ((player.jokers.time || 0) <= 0) { socket.emit('joker_denied', { kind }); return; }
       player.jokers.time--;
-      s.start += 10000; // +10 secondes
-    } else if (kind === 'skip') {
-      if ((player.jokers.skip || 0) <= 0) { socket.emit('joker_denied', { kind }); return; }
-      player.jokers.skip--;
-      s.done = true;
-      player.towerFloor = Math.max(player.towerFloor || 0, s.floor);
-      player.towerStars = player.towerStars || {};
-      player.towerStars[String(s.floor)] = Math.max(player.towerStars[String(s.floor)] || 0, 1);
-      delete towerSessions[socket.id];
-      await savePlayerToSupabase(socket.id);
-      await logPlayerAction(player, 'joker_skip', `Étage ${s.floor} passé au joker`, null, null, null);
-      socket.emit('tower_result', { ok: true, floor: s.floor, stars: 1, coins: 0, reward: null, replay: false, skipped: true });
-      socket.emit('player_registered', player);
-      return;
-    }
+      s.start += 10000;
+    } else if (kind === 'shield') {
+      if ((player.jokers.shield || 0) <= 0) { socket.emit('joker_denied', { kind }); return; }
+      if (s.shield > 0) { socket.emit('joker_denied', { kind, reason: 'already' }); return; }
+      player.jokers.shield--;
+      s.shield = 1;
+    } else { socket.emit('joker_denied', { kind }); return; }
     await savePlayerToSupabase(socket.id);
     socket.emit('player_registered', player);
     if (towerSessions[socket.id]) socket.emit('tower_state', towerStatePayload(towerSessions[socket.id]));
@@ -1745,7 +1748,7 @@ function startMatchBetween(id1, id2, isRanked = false, isOnline = true, isTugOfW
 
 function startCatchMatch(id1, id2, theme) {
   const p1 = activePlayers[id1] || { socketId: id1, username: "Joueur 1", avatar: 1, flag: "🇫🇷" };
-  const p2 = activePlayers[id2] || { socketId: id2, username: "Joueur 2", avatar: 2, flag: "🇫🇷" };
+  const p2 = activePlayers[id2] || { socketId: id2, username: "Joueur 2", avatar: 2, flag: "🇫" };
   const match = { id1, id2, timeLeft: 30, isCatch: true, catchTheme: theme, ended: false, rematchVotes: {}, players: { [id1]: { score: 0 }, [id2]: { score: 0 } } };
   activeMatches[id1] = match;
   activeMatches[id2] = match;
@@ -1766,13 +1769,11 @@ function generatePool(target) {
   let pool = [target];
   let candidates = [];
   for (let i = 1; i <= 50; i++) { if (i !== target) candidates.push(i); }
-  // ✅ Fisher-Yates shuffle (vraiment aléatoire)
   for (let i = candidates.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
   }
   pool = pool.concat(candidates.slice(0, 11));
-  // ✅ Fisher-Yates sur le pool final
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
@@ -1963,7 +1964,7 @@ async function endMatch(id1, id2, matchData, isRanked) {
       matchRewards[sId] = { baseCoins, rushBonus, totalCoins: baseCoins + rushBonus };
       if (isWinner && globalEvents.jackpotEclair && Math.random() < 0.10) io.to(sId).emit('trigger_jackpot_wheel');
       const matchType = matchData.isRanked ? 'match_ranked' : (matchData.isTugOfWar ? 'match_tug' : (matchData.isCatch ? `match_catch_${matchData.catchTheme}` : 'match_1v1'));
-      const oppId = (sId === id1) ? id2 : id1;
+      const oppId = (sId === id1) ? id2 : sId === id2 ? id1 : null;
       const oppPlayer = activePlayers[oppId];
       await logPlayerAction(p, matchType, `vs ${oppPlayer ? oppPlayer.username : 'unknown'} (${isWinner ? 'WIN' : 'LOSS'})`, 'coins', baseCoins + rushBonus, p.coins);
     }
