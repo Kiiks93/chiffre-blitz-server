@@ -1,6 +1,31 @@
 /* ============================================================
 TOUR.JS — AVENTURE « MATCH FACTORY » (écran fixe par monde)
 ============================================================ */
+/* ----- CSS COFFRE DORÉ V9 (sol réfléchissant, mur de coffres, spots dorés, vie) ----- */
+(function(){const s=document.createElement("style");s.textContent=`
+  /* Sol réfléchissant */
+  .tw-vfloor{position:absolute;bottom:0;left:0;right:0;height:22%;background:linear-gradient(180deg,#0a0804 0%,#1a1206 40%,#241a08 100%);box-shadow:inset 0 8px 24px #000c;}
+  .tw-vfloor::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 120px,#f8b50011 120px 122px);opacity:.6;}
+  .tw-vfloor::after{content:"";position:absolute;left:50%;top:0;transform:translateX(-50%);width:60%;height:100%;background:radial-gradient(ellipse at 50% 0%,#f8b50033,transparent 70%);filter:blur(4px);}
+  .tw-vreflect{position:absolute;bottom:0;left:9%;right:9%;height:20%;background:linear-gradient(180deg,transparent,#ff202011 30%,#ff202022 60%,transparent);filter:blur(3px);opacity:.7;}
+  /* Tas d'or */
+  .tw-goldpile{position:absolute;bottom:6%;width:180px;height:90px;}
+  .tw-goldpile .g{position:absolute;border-radius:3px;background:linear-gradient(180deg,#ffe9a8,#c9a227 50%,#8a6a1a);box-shadow:inset 0 1px 0 #fff8,0 2px 4px #000c;}
+  .tw-goldpile .c{position:absolute;width:16px;height:16px;border-radius:50%;background:radial-gradient(#ffe9a8,#c9a227);box-shadow:0 0 8px #f8b50088;}
+  /* Spots dorés convergents */
+  .tw-spotv{position:absolute;top:0;width:16%;height:52%;background:linear-gradient(180deg,#ffe9a855,#ffe9a822 45%,transparent 85%);clip-path:polygon(44% 0,56% 0,100% 100%,0 100%);filter:blur(4px);transform-origin:top center;animation:twGlowC 4s infinite;}
+  .tw-spotv.l{left:14%;transform:rotate(18deg);}
+  .tw-spotv.r{right:14%;transform:rotate(-18deg);}
+  .tw-spotv.c{left:42%;}
+  /* Particules dorées */
+  .tw-goldpart{position:absolute;width:3px;height:3px;border-radius:50%;background:#ffd75e;box-shadow:0 0 6px #f8b500;opacity:.7;animation:twGoldFloat linear infinite;}
+  @keyframes twGoldFloat{0%{transform:translateY(0);opacity:0}10%{opacity:.8}90%{opacity:.6}100%{transform:translateY(-40vh);opacity:0}}
+  /* Vignette dorée */
+  .tw-vvignette{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 46%,transparent 40%,#000000aa 78%,#000000dd 100%);pointer-events:none;z-index:3;}
+  /* Pulsation du coffre */
+  .tw-vaultglow.pulse{animation:twVaultPulse 2s ease-in-out infinite;}
+  @keyframes twVaultPulse{0%,100%{opacity:.7;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}}
+`;document.head.appendChild(s);})();
 
 /* ----- 1. CONFIGURATION ----- */
 const TOWER_CHAPTERS = [
@@ -321,6 +346,15 @@ const TowerUtils = {
 })();
 
 /* ----- 5. GÉNÉRATION DES FONDS ----- */
+function goldPileHTML(leftPos) {
+  let g = "";
+  [[0,0],[34,0],[68,0],[102,0],[17,14],[51,14],[85,14],[34,28],[68,28]].forEach(p => {
+    g += `<span class="g" style="left:${p[0]}px;bottom:${p[1]}px;width:30px;height:11px;"></span>`;
+  });
+  for (let i = 0; i < 5; i++) g += `<span class="c" style="left:${-8+i*30}px;bottom:${-2+(i%2)*4}px;"></span>`;
+  return `<div class="tw-goldpile" style="left:${leftPos};">${g}</div>`;
+}
+
 function generateSceneHTML(c, W, C) {
   if (SCENE_CACHE[c]) return SCENE_CACHE[c];
   let html = "";
@@ -394,25 +428,40 @@ function generateSceneHTML(c, W, C) {
 
   if (W.scene === "vault") {
     html += `<div class="tw-marble"></div>`;
-    const rows = IS_MOBILE ? 8 : 12;
-    for (let i = 0; i < rows; i++) {
-      const top = 6 + i * (88 / rows);
-      html += `<span class="tw-safebox" style="left:3%;top:${top}%;"></span>`;
-      html += `<span class="tw-safebox bz" style="left:9%;top:${top+2}%;"></span>`;
-      html += `<span class="tw-safebox" style="right:3%;top:${top}%;"></span>`;
-      html += `<span class="tw-safebox bz" style="right:9%;top:${top+2}%;"></span>`;
-    }
-    html += `<div class="tw-spot" style="left:18%;"></div><div class="tw-spot" style="left:50%;animation-delay:1s;"></div><div class="tw-spot" style="left:78%;animation-delay:2s;"></div>`;
+    // 1. Sol réfléchissant + reflets des lasers
+    html += `<div class="tw-vfloor"></div><div class="tw-vreflect"></div>`;
+    // Colonnes architecturales (bords)
     html += `<div class="tw-pillar" style="left:4%;"></div><div class="tw-pillar" style="right:4%;"></div>`;
+    // 2. VRAI mur de coffres (3 colonnes par côté, décalées)
+    const colsPos = IS_MOBILE ? [16] : [14, 20, 26];
+    const rows = IS_MOBILE ? 7 : 10;
+    colsPos.forEach((cx, ci) => {
+      for (let i = 0; i < rows; i++) {
+        const top = 8 + i * (84 / rows) + (ci % 2) * 2;
+        html += `<span class="tw-safebox" style="left:${cx}%;top:${top}%;"></span>`;
+        html += `<span class="tw-safebox bz" style="right:${cx}%;top:${top + 2}%;"></span>`;
+      }
+    });
+    // 3. Spots dorés convergents vers le coffre
+    html += `<div class="tw-spotv l"></div><div class="tw-spotv c"></div><div class="tw-spotv r"></div>`;
+    // 1. Tas d'or de part et d'autre du coffre
+    html += goldPileHTML("18%") + goldPileHTML("70%");
+    // Coffre central + molette (glow pulsant)
     let bolts = ""; for (let i = 0; i < 12; i++) { const a = i*Math.PI/6; bolts += `<span class="tw-vbolt" style="left:${50+44*Math.cos(a)}%;top:${50+44*Math.sin(a)}%;"></span>`; }
     let knobs = ""; for (let i = 0; i < 6; i++) { const a = i*Math.PI/3; knobs += `<span class="tw-knob" style="left:${50+38*Math.cos(a)}%;top:${50+38*Math.sin(a)}%;"></span>`; }
-    html += `<div class="tw-vaultglow"></div><div class="tw-vaultframe"><span class="tw-fbolt" style="left:5%;top:7%;"></span><span class="tw-fbolt" style="right:5%;top:7%;"></span><span class="tw-fbolt" style="left:5%;bottom:7%;"></span><span class="tw-fbolt" style="right:5%;bottom:7%;"></span><span class="tw-hinge h1"></span><span class="tw-hinge h2"></span><div class="tw-vaultdoor"><div class="tw-vaultwheel">${knobs}</div><span class="tw-dial"></span><span class="tw-handle"></span>${bolts}</div></div>`;
+    html += `<div class="tw-vaultglow pulse"></div><div class="tw-vaultframe"><span class="tw-fbolt" style="left:5%;top:7%;"></span><span class="tw-fbolt" style="right:5%;top:7%;"></span><span class="tw-fbolt" style="left:5%;bottom:7%;"></span><span class="tw-fbolt" style="right:5%;bottom:7%;"></span><span class="tw-hinge h1"></span><span class="tw-hinge h2"></span><div class="tw-vaultdoor"><div class="tw-vaultwheel">${knobs}</div><span class="tw-dial"></span><span class="tw-handle"></span>${bolts}</div></div>`;
+    // Lasers rouges
     html += `<div class="tw-laser" style="top:30%;animation-duration:5s;"></div>`;
     html += `<div class="tw-laser d" style="top:48%;animation-duration:7s;animation-delay:1s;"></div>`;
     html += `<div class="tw-laser" style="top:66%;animation-duration:6s;animation-delay:2s;"></div>`;
+    // Caméras
     html += `<div class="tw-ncam" style="left:14%;top:24%;color:#ff2020;"><span class="beam"></span></div>`;
     html += `<div class="tw-ncam" style="right:14%;top:40%;color:#ff2020;"><span class="beam"></span></div>`;
-    html += `<div class="tw-gloss"></div><div class="tw-goldspill"></div>`;
+    // 4. Particules dorées flottantes
+    const gpN = IS_MOBILE ? 6 : 12;
+    for (let i = 0; i < gpN; i++) html += `<span class="tw-goldpart" style="left:${8+(i*17)%84}%;top:${30+(i*13)%60}%;animation-duration:${6+(i%4)*2}s;animation-delay:${i*.8}s;"></span>`;
+    // 5. Vignette dorée (concentre le regard)
+    html += `<div class="tw-vvignette"></div>`;
   }
 
   let parts = "";
