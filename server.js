@@ -77,6 +77,25 @@ function vgCompareServer(a, b) {
   for (let i = 0; i < 3; i++) { const x = pa[i]||0, y = pb[i]||0; if (x < y) return -1; if (x > y) return 1; }
   return 0;
 }
+/* ----- ❤️ VIES AVENTURE (régén + plafond) ----- */
+const TOWER_MAX_LIVES = 10;
+const TOWER_REGAIN_MS = 20 * 60 * 1000; // 1 vie / 20 min
+const TOWER_SHOP = { vies: { price: 150 }, joker_time: { price: 250 }, joker_skip: { price: 300 } };
+function towerRegenLives(p) {
+  const now = Date.now();
+  if (p.lives === undefined) p.lives = TOWER_MAX_LIVES;
+  if (p.lives >= TOWER_MAX_LIVES) { p.lives_ts = now; return; }
+  if (!p.lives_ts) p.lives_ts = now;
+  const gained = Math.floor((now - p.lives_ts) / TOWER_REGAIN_MS);
+  if (gained > 0) {
+    p.lives = Math.min(TOWER_MAX_LIVES, p.lives + gained);
+    p.lives_ts = p.lives >= TOWER_MAX_LIVES ? now : p.lives_ts + gained * TOWER_REGAIN_MS;
+  }
+}
+function towerNextLifeIn(p) {
+  if ((p.lives === undefined ? TOWER_MAX_LIVES : p.lives) >= TOWER_MAX_LIVES) return 0;
+  return Math.max(0, TOWER_REGAIN_MS - (Date.now() - (p.lives_ts || Date.now())));
+}
 /* ============================================================
 OBJETS
 ============================================================ */
@@ -309,7 +328,10 @@ async function savePlayerToSupabase(socketId) {
     flag: p.flag, unlocked_items: p.unlocked_items, blitz_pass_premium: p.blitzPassPremium,
     claimed_pass_tiers: p.claimedPassTiers,
     tower_floor: p.towerFloor || 0,
-    tower_stars: p.towerStars || {}
+    tower_stars: p.towerStars || {},
+    tower_lives: (p.lives === undefined ? TOWER_MAX_LIVES : p.lives),
+    tower_lives_ts: p.lives_ts || 0,
+    tower_jokers: p.jokers || { time: 0, skip: 0 }
   };
   const extra = {
     matches_played: p.matches_played || 0, win_streak: p.win_streak || 0, best_combo: p.best_combo || 0,
@@ -494,9 +516,13 @@ async function towerWin(player, s){
   return { ok: true, floor: s.floor, stars, coins, reward, replay: s.replay };
 }
 async function towerFail(player, s, reason){
-  s.done=true;
-  await logPlayerAction(player, 'tower_fail', `Étage ${s.floor} : ${reason}`, null, null, null);
-  return { ok:false, floor:s.floor, reason };
+  s.done = true;
+  towerRegenLives(player);
+  player.lives = Math.max(0, (player.lives === undefined ? TOWER_MAX_LIVES : player.lives) - 1);
+  if (!player.lives_ts) player.lives_ts = Date.now();
+  await savePlayerToSupabase(player.socketId);
+  await logPlayerAction(player, 'tower_fail', `Étage ${s.floor} : ${reason} (-1 vie, reste ${player.lives})`, null, null, null);
+  return { ok:false, floor:s.floor, reason, lives: player.lives, nextLifeIn: towerNextLifeIn(player) };
 }
 
 // ⏱️ Sweeper Tower : timeouts + IA boss + refresh état (chaque seconde)
@@ -663,6 +689,11 @@ io.on('connection', (socket) => {
         timezone: playerTz, towerFloor: playerData.tower_floor || 0, towerStars: playerData.tower_stars || {}
       };
       ensureDailyCounters(activePlayers[socket.id]);
+      const ap = activePlayers[socket.id];
+      ap.lives = (playerData.tower_lives !== undefined && playerData.tower_lives !== null) ? playerData.tower_lives : TOWER_MAX_LIVES;
+      ap.lives_ts = playerData.tower_lives_ts || Date.now();
+      ap.jokers = playerData.tower_jokers || { time: 0, skip: 0 };
+      towerRegenLives(ap);
       if (wasCreated) await logPlayerAction(activePlayers[socket.id], 'account_created', `Username: ${rawUsername}`, null, null, null);
       socket.emit('register_result', { ok: true, created: wasCreated });
       socket.emit('player_registered', activePlayers[socket.id]);
@@ -1473,7 +1504,8 @@ io.on('connection', (socket) => {
   socket.on('get_tower', () => {
     const player = activePlayers[socket.id];
     if (!player) return;
-    socket.emit('tower_data', { floor: player.towerFloor || 0, stars: player.towerStars || {} });
+    towerRegenLives(player);
+    socket.emit('tower_data', { floor: player.towerFloor || 0, stars: player.towerStars || {}, lives: player.lives, nextLifeIn: towerNextLifeIn(player), jokers: player.jokers || { time: 0, skip: 0 } });
   });
 
   socket.on('tower_floor_start', async (data) => {
@@ -1486,6 +1518,8 @@ io.on('connection', (socket) => {
     await logPlayerAction(player, 'tower_locked', `Monde ${world} verrouillé (quota étoiles)`, null, null, null);
     return;
   }
+    towerRegenLives(player);
+    if (player.lives <= 0) { socket.emit('tower_no_lives', { lives: 0, nextLifeIn: towerNextLifeIn(player) }); return; }
     const s = buildTowerSession(player, floor);
     towerSessions[socket.id] = s;
     socket.emit('tower_state', towerStatePayload(s));
@@ -1562,6 +1596,65 @@ io.on('connection', (socket) => {
     const s = towerSessions[socket.id];
     if (s && !s.done) { s.done = true; }
     delete towerSessions[socket.id];
+  });
+
+    /* ---------- 🛒 BOUTIQUE AVENTURE (anti-triche serveur) ---------- */
+  socket.on('shop_buy', async (data) => {
+    const player = activePlayers[socket.id];
+    if (!player) return;
+    const id = data && data.id;
+    const item = TOWER_SHOP[id];
+    if (!item) { socket.emit('shop_result', { ok: false }); return; }
+    const cd = checkCooldown(player, 'shop_buy', 1000);
+    if (!cd.ok) { socket.emit('shop_result', { ok: false, reason: 'cooldown' }); return; }
+    towerRegenLives(player);
+    if ((player.coins || 0) < item.price) { socket.emit('shop_result', { ok: false, reason: 'coins' }); return; }
+    if (id === 'vies') {
+      if (player.lives >= TOWER_MAX_LIVES) { socket.emit('shop_result', { ok: false, reason: 'full' }); return; }
+      player.coins -= item.price;
+      player.lives = Math.min(TOWER_MAX_LIVES, player.lives + 3);
+      if (player.lives >= TOWER_MAX_LIVES) player.lives_ts = Date.now();
+    } else if (id === 'joker_time') {
+      player.coins -= item.price;
+      player.jokers.time = (player.jokers.time || 0) + 1;
+    } else if (id === 'joker_skip') {
+      player.coins -= item.price;
+      player.jokers.skip = (player.jokers.skip || 0) + 1;
+    }
+    setLastAction(player, 'shop_buy');
+    await savePlayerToSupabase(socket.id);
+    await logPlayerAction(player, 'shop_buy', `${id} (${item.price}🪙)`, 'coins', -item.price, player.coins);
+    socket.emit('shop_result', { ok: true, lives: player.lives, jokers: player.jokers, coins: player.coins });
+    socket.emit('player_registered', player);
+  });
+
+  /* ---------- 🃏 UTILISATION DES JOKERS ---------- */
+  socket.on('tower_use_joker', async (data) => {
+    const player = activePlayers[socket.id];
+    const s = towerSessions[socket.id];
+    if (!player || !s || s.done) return;
+    const kind = data && data.kind;
+    if (kind === 'time') {
+      if ((player.jokers.time || 0) <= 0) { socket.emit('joker_denied', { kind }); return; }
+      player.jokers.time--;
+      s.start += 10000; // +10 secondes
+    } else if (kind === 'skip') {
+      if ((player.jokers.skip || 0) <= 0) { socket.emit('joker_denied', { kind }); return; }
+      player.jokers.skip--;
+      s.done = true;
+      player.towerFloor = Math.max(player.towerFloor || 0, s.floor);
+      player.towerStars = player.towerStars || {};
+      player.towerStars[String(s.floor)] = Math.max(player.towerStars[String(s.floor)] || 0, 1);
+      delete towerSessions[socket.id];
+      await savePlayerToSupabase(socket.id);
+      await logPlayerAction(player, 'joker_skip', `Étage ${s.floor} passé au joker`, null, null, null);
+      socket.emit('tower_result', { ok: true, floor: s.floor, stars: 1, coins: 0, reward: null, replay: false, skipped: true });
+      socket.emit('player_registered', player);
+      return;
+    }
+    await savePlayerToSupabase(socket.id);
+    socket.emit('player_registered', player);
+    if (towerSessions[socket.id]) socket.emit('tower_state', towerStatePayload(towerSessions[socket.id]));
   });
 
   socket.on('disconnect', async () => {
