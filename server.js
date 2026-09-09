@@ -64,8 +64,8 @@ if (!ADMIN_PASSWORD) { console.error("ADMIN_PASSWORD doit etre definie."); proce
 
 /* ----- VERSION GATING ----- */
 const VERSION_GATE = {
-  latest: "2.0.0",                                   // dernière version disponible
-  minWeb: "1.3.0",                                   // version web minimum pour jouer
+  latest: "1.3.0",                                   // dernière version disponible
+  minWeb: "9.9.9",                                   // version web minimum pour jouer
   minShell: 3,                                         // versionCode Capacitor minimum
   urlWeb:   "https://chiffre-blitz.fr",                // ← REMPLACE (ton site web)
   urlAndroid: "market://details?id=com.chiffreblitz.app"   // ← REMPLACE (ton package)
