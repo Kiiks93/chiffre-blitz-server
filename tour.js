@@ -26,6 +26,25 @@ TOUR.JS — AVENTURE « MATCH FACTORY » (écran fixe par monde)
   .tw-vaultglow.pulse{animation:twVaultPulse 2s ease-in-out infinite;}
   @keyframes twVaultPulse{0%,100%{opacity:.7;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}}
 `;document.head.appendChild(s);})();
+/* ----- CSS COFFRE DORÉ V10 (spots dorés, halos d'impact, tas d'or, sol miroir) ----- */
+(function(){const s=document.createElement("style");s.textContent=`
+  /* Spots vraiment dorés + convergence renforcée */
+  .tw-spotv{background:linear-gradient(180deg,#ffd75e88,#ffe9a844 45%,transparent 85%);filter:blur(5px);}
+  .tw-spotv.l{left:12%;transform:rotate(20deg);}
+  .tw-spotv.r{right:12%;transform:rotate(-20deg);}
+  .tw-spotv.c{left:42%;}
+  /* Halo lumineux au point d'impact du projecteur */
+  .tw-spotimpact{position:absolute;width:120px;height:36px;border-radius:50%;background:radial-gradient(ellipse,#ffe9a866,transparent 70%);filter:blur(6px);animation:twGlowC 3s infinite;z-index:1;}
+  .tw-spotimpact.l{left:24%;top:22%;}
+  .tw-spotimpact.c{left:46%;top:20%;}
+  .tw-spotimpact.r{right:24%;top:22%;}
+  /* Tas d'or remontés + agrandis */
+  .tw-goldpile{bottom:10%;transform:scale(1.3);transform-origin:bottom center;}
+  /* Sol miroir renforcé */
+  .tw-vreflect{background:linear-gradient(180deg,transparent,#ff202022 25%,#ff202044 55%,transparent);opacity:.9;}
+  .tw-vfloor::after{background:radial-gradient(ellipse at 50% 0%,#f8b50055,transparent 75%);filter:blur(5px);}
+  .tw-vfloorglow{position:absolute;bottom:4%;left:50%;transform:translateX(-50%);width:46%;height:14%;background:radial-gradient(ellipse at 50% 50%,#f8b50044,transparent 70%);filter:blur(8px);}
+`;document.head.appendChild(s);})();
 
 /* ----- 1. CONFIGURATION ----- */
 const TOWER_CHAPTERS = [
@@ -444,8 +463,10 @@ function generateSceneHTML(c, W, C) {
     });
     // 3. Spots dorés convergents vers le coffre
     html += `<div class="tw-spotv l"></div><div class="tw-spotv c"></div><div class="tw-spotv r"></div>`;
-    // 1. Tas d'or de part et d'autre du coffre
-    html += goldPileHTML("18%") + goldPileHTML("70%");
+    // 1. Tas d'or rapprochés du coffre + halos d'impact des spots + halo doré au sol
+    html += goldPileHTML("24%") + goldPileHTML("66%");
+    html += `<div class="tw-spotimpact l"></div><div class="tw-spotimpact c"></div><div class="tw-spotimpact r"></div>`;
+    html += `<div class="tw-vfloorglow"></div>`;
     // Coffre central + molette (glow pulsant)
     let bolts = ""; for (let i = 0; i < 12; i++) { const a = i*Math.PI/6; bolts += `<span class="tw-vbolt" style="left:${50+44*Math.cos(a)}%;top:${50+44*Math.sin(a)}%;"></span>`; }
     let knobs = ""; for (let i = 0; i < 6; i++) { const a = i*Math.PI/3; knobs += `<span class="tw-knob" style="left:${50+38*Math.cos(a)}%;top:${50+38*Math.sin(a)}%;"></span>`; }
