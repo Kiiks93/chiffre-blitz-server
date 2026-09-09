@@ -714,7 +714,12 @@ socket.on("tower_shield_used", (data) => {
   let shield = document.getElementById("tw-shield-active");
   if (shield) shield.remove();
 });
-
+socket.on("tower_jokers_update", (d) => {
+  if (d && d.jokers) { twJokers = d.jokers; updateJokerButtons(); }
+});
+socket.on("tower_shield_already", () => {
+  if (typeof showNotificationToast === "function") showNotificationToast(currentLang === "fr" ? "🛡️ Bouclier déjà actif !" : "🛡️ Shield already active!", "announcement");
+});
 function cloneState(s) {
   return { type:s.type, total:s.total, gridSize:s.gridSize, floor:s.floor, target:s.target, targetColor:s.targetColor, targetParity:s.targetParity, forbidden:s.forbidden, timeLeft:s.timeLeft, ai:s.ai, gone:Object.assign({},s.gone||{}), revealed:Object.assign({},s.revealed||{}), display:(s.display||[]).slice(), sel:(s.sel===undefined?null:s.sel), shield:s.shield||0 };
 }
