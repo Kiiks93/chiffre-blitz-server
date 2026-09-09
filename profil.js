@@ -1632,17 +1632,44 @@ window.addEventListener("pageshow", (event) => {
 if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
   navigator.serviceWorker.addEventListener("message", (e) => {
     if (e.data && e.data.action === "RELOAD_PAGE") {
-      console.log("Service Worker demande un reload → reload");
-      location.reload();
+      // 🔄 Reload DIFFÉRÉ : jamais en pleine partie
+      if (cbInGame()) {
+        window.__pendingUpdateReload = true;
+        cbUpdateToast();
+      } else {
+        location.reload();
+      }
     }
   });
-  
+
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden && navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage("CHECK_BACKGROUND_TIME");
     }
   });
 }
+
+// 🎮 Le joueur est-il en pleine partie ?
+function cbInGame() {
+  const vis = (id) => { const el = document.getElementById(id); return el && (el.style.display === "block" || el.style.display === "flex"); };
+  return vis("screen-game") || vis("tower-game") || vis("tw-brief") || vis("screen-catch") || (typeof recapActive !== "undefined" && recapActive);
+}
+
+// 💬 Toast discret « mise à jour en attente »
+function cbUpdateToast() {
+  if (document.getElementById("cb-update-toast")) return;
+  const t = document.createElement("div");
+  t.id = "cb-update-toast";
+  t.style.cssText = "position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#0f051d,#1a1030);border:2px solid #00d2ff;color:#fff;padding:10px 18px;border-radius:12px;font-size:12px;font-weight:800;z-index:99998;box-shadow:0 0 18px #00d2ff66;text-align:center;";
+  t.innerHTML = "🔄 Mise à jour prête !<br><small style='opacity:.8;font-weight:600;'>Elle s'appliquera à la fin de ta partie.</small>";
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 6000);
+}
+
+// ⏱️ Dès que le joueur quitte sa partie → applique le reload en attente (≤3s)
+setInterval(() => {
+  if (window.__pendingUpdateReload && !cbInGame()) location.reload();
+}, 3000);
 
 (function () {
   let hiddenAt = 0;
