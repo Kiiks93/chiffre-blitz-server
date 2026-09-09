@@ -472,23 +472,20 @@ async function towerWin(player, s){
   const used = (Date.now() - s.start) / 1000;
   let stars = 1;
 
-  // 🎯 Règles d'étoiles spécifiques par type
   if (s.type === "pairs") {
     const pr = s.total / 2;
     const t3 = Math.round(pr * 1.5), t2 = Math.round(pr * 2.5);
     if (used <= t3) stars = 3;
     else if (used <= t2) stars = 2;
     else stars = 1;
-    if (s.type === "forbidden") {
-    if (used <= s.def.time * 0.6) stars = 3;
-    else if (used <= s.def.time * 0.85) stars = 2;
-    else stars = 1;
-  }
-  else if (s.type === "sprint") {
   } else if (s.type === "sprint") {
     const n = s.total;
     if (used <= n * 0.45) stars = 3;
     else if (used <= n * 0.75) stars = 2;
+    else stars = 1;
+  } else if (s.type === "forbidden") {
+    if (used <= s.def.time * 0.6) stars = 3;
+    else if (used <= s.def.time * 0.85) stars = 2;
     else stars = 1;
   } else {
     if (s.mistakes === 0 && used <= s.def.time * 0.6) stars = 3;
@@ -501,9 +498,9 @@ async function towerWin(player, s){
   if (!s.replay) {
     player.towerFloor = s.floor;
     coins = 10 + s.floor * 2 + stars * 5;
-    if (s.floor % 20 === 0 && s.floor % TOWER_FPC !== 0) coins += 20 + chap * 5;      // cache
-    if (s.floor % 50 === 0 && s.floor % TOWER_FPC !== 0) coins += 50 + chap * 10;     // gardien
-    if (s.floor % TOWER_FPC === 0) {                                                   // boss final
+    if (s.floor % 20 === 0 && s.floor % TOWER_FPC !== 0) coins += 20 + chap * 5;
+    if (s.floor % 50 === 0 && s.floor % TOWER_FPC !== 0) coins += 50 + chap * 10;
+    if (s.floor % TOWER_FPC === 0) {
       const itemId = TOWER_CHAPTER_REWARDS[s.floor / TOWER_FPC];
       if (itemId) {
         player.unlocked_items = player.unlocked_items || [];
@@ -1539,7 +1536,7 @@ io.on('connection', (socket) => {
     if (!Number.isFinite(idx) || idx < 0 || idx >= s.total || s.gone[idx]) return;
     const elapsed = (Date.now() - s.start) / 1000;
     if (elapsed > s.def.time) { const r = await towerFail(player, s, 'timeout'); delete towerSessions[socket.id]; socket.emit('tower_fail', r); return; }
-    const v = s.nums[idx];
+        const v = s.nums[idx];
     let win = false, mistake = false;
 
     if (s.type === "color") {
@@ -1562,14 +1559,14 @@ io.on('connection', (socket) => {
           if (s.done) return;
           s.revealed[first] = false; s.revealed[idx] = false; s.sel = null; s.lock = false;
           socket.emit('tower_state', towerStatePayload(s));
-          }, 280);  // ⬅️ 520ms → 280ms (beaucoup plus nerveux)
+          }, 280);
         }
       }
     } else if (s.type === "parity") {
       const ok = s.targetParity === "even" ? v % 2 === 0 : v % 2 !== 0;
       if (ok) { s.gone[idx] = true; s.remaining.delete(v); if (s.remaining.size === 0) win = true; }
       else mistake = true;
-        } else if (s.type === "forbidden") {
+    } else if (s.type === "forbidden") {
       if (v === s.forbidden) {
         const r = await towerFail(player, s, 'forbidden');
         delete towerSessions[socket.id];
@@ -1588,7 +1585,6 @@ io.on('connection', (socket) => {
         }
       } else mistake = true;
     }
-
     if (mistake) {
       s.mistakes++;
       if (s.type === "nofail") { const r = await towerFail(player, s, 'nofail'); delete towerSessions[socket.id]; socket.emit('tower_fail', r); return; }
