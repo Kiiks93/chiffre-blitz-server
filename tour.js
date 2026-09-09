@@ -936,3 +936,12 @@ function towerDing() {
 function renderTower() { renderAdventure(); }
 function showElevator() { renderAdventure(); }
 function afterWinTravel() { renderAdventure(); }
+
+// 🧪 HACK TEST - À SUPPRIMER APRÈS TEST
+function testGiveJokers() {
+  twJokers.time = 3;
+  twJokers.shield = 3;
+  renderAdventure();
+  updateJokerButtons();
+  console.log("✅ 3 jokers ⏱️ + 3 jokers 🛡️ donnés !");
+}
