@@ -1,7 +1,6 @@
 /* ============================================================
 TOUR.JS — AVENTURE « MATCH FACTORY » (écran fixe par monde)
 ============================================================ */
-
 /* ----- 1. CONFIGURATION ----- */
 const TOWER_CHAPTERS = [
   { id:1, season:1, name:"Quartier Néon", icon:"🌆", boss:"🤖", objects:["💡","","📺","","🎛️","🖥️","","💾","🌃"] },
