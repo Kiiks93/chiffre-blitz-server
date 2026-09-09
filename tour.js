@@ -47,6 +47,13 @@ TOUR.JS — AVENTURE « MATCH FACTORY » (écran fixe par monde)
   .tw-vfloorglow{position:absolute;bottom:4%;left:50%;transform:translateX(-50%);width:46%;height:14%;background:radial-gradient(ellipse at 50% 50%,#f8b50044,transparent 70%);filter:blur(8px);}
 `;document.head.appendChild(s);})();
 
+/* ----- CSS COFFRE DORÉ V11 (halos d'impact dorés, bien placés) ----- */
+(function(){const s=document.createElement("style");s.textContent=`
+  .tw-spotimpact{width:90px;height:26px;background:radial-gradient(ellipse,#f8b50099,#f8b50033 55%,transparent 75%);filter:blur(5px);}
+  .tw-spotimpact.l{left:41%;top:30%;}
+  .tw-spotimpact.c{left:48%;top:27%;}
+  .tw-spotimpact.r{right:41%;top:30%;}
+`;document.head.appendChild(s);})();
 /* ----- 1. CONFIGURATION ----- */
 const TOWER_CHAPTERS = [
   { id:1, season:1, name:"Quartier Néon", icon:"🌆", boss:"🤖", objects:["💡","","📺","🔌","🎛️","🖥️","📻","💾","🌃"] },
