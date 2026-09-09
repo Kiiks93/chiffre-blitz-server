@@ -50,9 +50,9 @@ const EMOTES = ["\u{1F525}", "\u26A1", "\u{1F916}", "\u{1F480}", "\u{1F602}", "\
 const socket = io(CONFIG.SERVER_URL, {
   reconnection: true,
   reconnectionAttempts: CONFIG.RECONNECTION_ATTEMPTS,
-  reconnectionDelay: CONFIG.RECONNECTION_DELAY_MS
+  reconnectionDelay: CONFIG.RECONNECTION_DELAY_MS,
+  query: { v: typeof VERSION_CLIENT !== 'undefined' ? VERSION_CLIENT.version : "1.3.0" }
 });
-
 socket.on("disconnect", () => { SoundEngine.stopMusic(true); });
 
 socket.on("connect", () => {
