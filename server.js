@@ -1576,14 +1576,16 @@ io.on('connection', (socket) => {
       const ok = s.targetParity === "even" ? v % 2 === 0 : v % 2 !== 0;
       if (ok) { s.gone[idx] = true; s.remaining.delete(v); if (s.remaining.size === 0) win = true; }
       else mistake = true;
-    } else if (s.type === "forbidden") {
+        } else if (s.type === "forbidden") {
       if (v === s.forbidden) {
-        const r = await towerFail(player, s, 'forbidden');
-        delete towerSessions[socket.id];
-        socket.emit('tower_fail', r);
-        return;
+        // Le chiffre interdit compte comme une erreur.
+        // Le bloc "mistake" plus bas décidera si le bouclier absorbe ou si l'étage échoue.
+        mistake = true;
+      } else {
+        s.gone[idx] = true;
+        s.remaining.delete(v);
+        if (s.remaining.size === 1 && s.remaining.has(s.forbidden)) win = true;
       }
-      else { s.gone[idx] = true; s.remaining.delete(v); if (s.remaining.size === 1 && s.remaining.has(s.forbidden)) win = true; }
     } else {
       if (v === s.target) {
         s.gone[idx] = true; s.remaining.delete(v);
