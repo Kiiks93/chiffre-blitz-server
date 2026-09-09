@@ -26,6 +26,7 @@ TOUR.JS — AVENTURE « MATCH FACTORY » (écran fixe par monde)
   .tw-vaultglow.pulse{animation:twVaultPulse 2s ease-in-out infinite;}
   @keyframes twVaultPulse{0%,100%{opacity:.7;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}}
 `;document.head.appendChild(s);})();
+
 /* ----- CSS COFFRE DORÉ V10 (spots dorés, halos d'impact, tas d'or, sol miroir) ----- */
 (function(){const s=document.createElement("style");s.textContent=`
   /* Spots vraiment dorés + convergence renforcée */
