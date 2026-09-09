@@ -680,7 +680,7 @@ function ensureTowerOverlay() {
   if (!ov) {
     ov = document.createElement("div");
     ov.id = "tower-game"; ov.className = "twg-screen";
-    ov.innerHTML = `<div class="twg-header"><button class="tw-back" onclick="quitFloor()">⬅️</button><b id="twg-title"></b><span id="tg-err" style="color:#ff4b2b;font-weight:900;font-size:13px;min-width:40px;text-align:right;">❌ 0</span><span id="twg-timer">⏱️</span></div><div id="tg-bar" class="twg-bar"></div><div id="tg-hud" class="twg-hud"></div><div class="twg-gridwrap"><div id="tg-grid" class="tg-grid"></div></div><div class="twj-bar"><button class="twj-btn" id="twg-jt" onclick="useJoker('time')">⏱️ +10s <b id="twg-jt-n">0</b></button><button class="twj-btn" id="twg-js" onclick="useJoker('shield')">🛡️ Bouclier <b id="twg-js-n">0</b></button></div><div id="tg-msg" class="twg-msg"></div>`;
+    ov.innerHTML = `<div class="twg-header"><button class="tw-back" onclick="quitFloor()">⬅️</button><b id="twg-title"></b><span id="tg-shield" style="color:#f8b500;font-weight:900;font-size:15px;display:none;">🛡️</span><span id="tg-shield" style="color:#f8b500;font-weight:900;font-size:15px;display:none;">🛡️</span><span id="tg-shield" style="color:#f8b500;font-weight:900;font-size:15px;display:none;">🛡️</span><span id="tg-shield" style="color:#f8b500;font-weight:900;font-size:15px;display:none;">🛡️</span><span id="tg-shield" style="color:#f8b500;font-weight:900;font-size:15px;display:none;">🛡️</span><span id="tg-err" style="color:#ff4b2b;font-weight:900;font-size:13px;min-width:40px;text-align:right;">❌ 0</span><span id="twg-timer">⏱️</span></div><div id="tg-bar" class="twg-bar"></div><div id="tg-hud" class="twg-hud"></div><div class="twg-gridwrap"><div id="tg-grid" class="tg-grid"></div></div><div class="twj-bar"><button class="twj-btn" id="twg-jt" onclick="useJoker('time')">⏱️ +10s <b id="twg-jt-n">0</b></button><button class="twj-btn" id="twg-js" onclick="useJoker('shield')">🛡️ Bouclier <b id="twg-js-n">0</b></button></div><div id="tg-msg" class="twg-msg"></div>`;
     document.body.appendChild(ov);
   }
   return ov;
@@ -710,9 +710,15 @@ socket.on("tower_no_lives", () => {
   renderAdventure();
 });
 socket.on("tower_shield_used", (data) => {
-  if (typeof showNotificationToast === "function") showNotificationToast(currentLang === "fr" ? "🛡️ Bouclier absorbé !" : "🛡️ Shield absorbed!", "gift");
-  let shield = document.getElementById("tw-shield-active");
+  if (typeof showNotificationToast === "function") {
+    showNotificationToast(currentLang === "fr" ? "🛡️ Bouclier absorbé !" : "🛡️ Shield absorbed!", "gift");
+  }
+
+  const shield = document.getElementById("tw-shield-active");
   if (shield) shield.remove();
+
+  const shEl = document.getElementById("tg-shield");
+  if (shEl) shEl.style.display = "none";
 });
 socket.on("tower_jokers_update", (d) => {
   if (d && d.jokers) { twJokers = d.jokers; updateJokerButtons(); }
@@ -815,6 +821,8 @@ function renderHUDFromState() {
   document.getElementById("twg-title").innerText = "🏰 ÉTAGE " + TW.floor + " — " + TowerUtils.typeLabel(TW.type);
   const errEl = document.getElementById("tg-err");
   if (errEl) errEl.innerText = "❌ " + (TW.mistakes || 0);
+  const shEl = document.getElementById("tg-shield");
+  if (shEl) shEl.style.display = (TW.shield > 0) ? "inline" : "none";
   updateJokerButtons();
   
   let shield = document.getElementById("tw-shield-active");
