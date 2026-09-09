@@ -479,6 +479,12 @@ async function towerWin(player, s){
     if (used <= t3) stars = 3;
     else if (used <= t2) stars = 2;
     else stars = 1;
+    if (s.type === "forbidden") {
+    if (used <= s.def.time * 0.6) stars = 3;
+    else if (used <= s.def.time * 0.85) stars = 2;
+    else stars = 1;
+  }
+  else if (s.type === "sprint") {
   } else if (s.type === "sprint") {
     const n = s.total;
     if (used <= n * 0.45) stars = 3;
@@ -1563,8 +1569,13 @@ io.on('connection', (socket) => {
       const ok = s.targetParity === "even" ? v % 2 === 0 : v % 2 !== 0;
       if (ok) { s.gone[idx] = true; s.remaining.delete(v); if (s.remaining.size === 0) win = true; }
       else mistake = true;
-    } else if (s.type === "forbidden") {
-      if (v === s.forbidden) mistake = true;
+        } else if (s.type === "forbidden") {
+      if (v === s.forbidden) {
+        const r = await towerFail(player, s, 'forbidden');
+        delete towerSessions[socket.id];
+        socket.emit('tower_fail', r);
+        return;
+      }
       else { s.gone[idx] = true; s.remaining.delete(v); if (s.remaining.size === 1 && s.remaining.has(s.forbidden)) win = true; }
     } else {
       if (v === s.target) {
