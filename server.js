@@ -1658,11 +1658,12 @@ io.on('connection', (socket) => {
       s.start += 10000;
     } else if (kind === 'shield') {
       if ((player.jokers.shield || 0) <= 0) { socket.emit('joker_denied', { kind }); return; }
-      if (s.shield > 0) { socket.emit('joker_denied', { kind, reason: 'already' }); return; }
+      if (s.shield > 0) { socket.emit('tower_shield_already'); return; }
       player.jokers.shield--;
       s.shield = 1;
     } else { socket.emit('joker_denied', { kind }); return; }
     await savePlayerToSupabase(socket.id);
+    socket.emit('tower_jokers_update', { jokers: player.jokers });
     socket.emit('player_registered', player);
     if (towerSessions[socket.id]) socket.emit('tower_state', towerStatePayload(towerSessions[socket.id]));
   });
