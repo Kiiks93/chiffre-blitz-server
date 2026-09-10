@@ -35,12 +35,12 @@ const TOWER_WORLDS = {
   1:{bg:"linear-gradient(180deg,#050514,#0a0a2a 55%,#1a1030)",scene:"city",part:"neon"},
   2:{bg:"linear-gradient(180deg,#062028,#0a2a3a 50%,#123a4a)",scene:"glacier",part:"snow"},
   3:{bg:"linear-gradient(180deg,#160d00,#2b1a00 60%,#3a2a05)",scene:"vault",part:"spark"},
-  4:{bg:"radial-gradient(ellipse at 30% 10%,#ff8a0022,transparent 45%),linear-gradient(180deg,#12041a,#2a0a33)",scene:"glacier",part:"snow"},
-  5:{bg:"linear-gradient(180deg,#0a0d14,#1a2230)",scene:"glacier",part:"snow"},
-  6:{bg:"radial-gradient(ellipse at 50% 10%,#ff4b2b22,transparent 50%),linear-gradient(180deg,#18040a,#330a12)",scene:"vault",part:"spark"},
-  7:{bg:"radial-gradient(ellipse at 50% 10%,#ff6fa522,transparent 50%),linear-gradient(180deg,#180410,#330a20)",scene:"glacier",part:"snow"},
-  8:{bg:"radial-gradient(ellipse at 50% 10%,#2ecc7122,transparent 50%),linear-gradient(180deg,#04180b,#0a3318)",scene:"glacier",part:"snow"},
-  9:{bg:"radial-gradient(ellipse at 50% 10%,#ff416c22,transparent 50%),linear-gradient(180deg,#180404,#330a0a)",scene:"vault",part:"spark"}
+  4:{bg:"radial-gradient(ellipse at 30% 10%,#ff8a0022,transparent 45%),linear-gradient(180deg,#12041a,#2a0a33)",scene:"haunted",part:"fog"},
+  5:{bg:"linear-gradient(180deg,#0a0d14,#1a2230)",scene:"haunted",part:"fog"},
+  6:{bg:"radial-gradient(ellipse at 50% 10%,#ff4b2b22,transparent 50%),linear-gradient(180deg,#18040a,#330a12)",scene:"haunted",part:"fog"},
+  7:{bg:"radial-gradient(ellipse at 50% 10%,#ff6fa522,transparent 50%),linear-gradient(180deg,#180410,#330a20)",scene:"xmas",part:"snow"},
+  8:{bg:"radial-gradient(ellipse at 50% 10%,#2ecc7122,transparent 50%),linear-gradient(180deg,#04180b,#0a3318)",scene:"xmas",part:"snow"},
+  9:{bg:"radial-gradient(ellipse at 50% 10%,#ff416c22,transparent 50%),linear-gradient(180deg,#180404,#330a0a)",scene:"xmas",part:"snow"}
 };
 const SHOP_ITEMS = [
   { id:"vies", icon:"❤️", name:"+3 Vies", price:150 },
@@ -277,6 +277,45 @@ const TowerUtils = {
   .tw-part.snow{background:#ffffffcc;animation:twFall linear infinite;}
   .tw-part.spark{background:#f8b500;box-shadow:0 0 6px #f8b500;animation:twRise linear infinite;}
   .tw-part.neon{box-shadow:0 0 8px currentColor;background:currentColor;animation:twFlickP 2.2s steps(2) infinite;}
+    /* === HAUNTED (Halloween) === */
+  .tw-moon-blood{position:absolute;top:5%;right:15%;width:60px;height:60px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#ff4b2b,#8b0000 70%);box-shadow:0 0 40px #ff4b2b88,0 0 80px #ff4b2b44;animation:twMoonGlow 4s ease-in-out infinite;}
+  @keyframes twMoonGlow{0%,100%{box-shadow:0 0 40px #ff4b2b88,0 0 80px #ff4b2b44}50%{box-shadow:0 0 60px #ff4b2bcc,0 0 120px #ff4b2b66}}
+  .tw-castle{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:300px;height:400px;background:linear-gradient(180deg,#1a0f2e,#0a0515);clip-path:polygon(0 100%,0 40%,10% 35%,10% 20%,20% 15%,20% 25%,30% 20%,30% 10%,40% 5%,40% 15%,50% 10%,50% 0,60% 10%,60% 15%,70% 10%,70% 20%,80% 25%,80% 15%,90% 20%,90% 35%,100% 40%,100% 100%);box-shadow:inset 0 0 60px #00000088;}
+  .tw-castle-window{position:absolute;width:12px;height:18px;background:#ff4b2b;border-radius:50% 50% 0 0;box-shadow:0 0 10px #ff4b2b,0 0 20px #ff4b2b66;animation:twWindowFlick 3s infinite;}
+  @keyframes twWindowFlick{0%,100%{opacity:1}50%{opacity:0.3}}
+  .tw-pumpkin{position:absolute;bottom:20px;width:40px;height:35px;background:radial-gradient(ellipse at center,#ff8a00,#d85a00);border-radius:50% 50% 45% 45% / 60% 60% 40% 40%;box-shadow:inset -5px -5px 10px #8b3a00,0 0 15px #ff8a0088;}
+  .tw-pumpkin::before{content:"";position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:8px;height:10px;background:#2a5a0a;border-radius:4px 4px 0 0;}
+  .tw-pumpkin::after{content:"";position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);width:25px;height:12px;background:#000;clip-path:polygon(20% 0,40% 30%,60% 30%,80% 0,100% 50%,80% 100%,20% 100%,0 50%);box-shadow:0 0 10px #ff4b2b;}
+  .tw-web{position:absolute;width:80px;height:80px;background:radial-gradient(circle at 20% 20%,transparent 0%,transparent 45%,#ffffff22 45%,#ffffff22 46%,transparent 46%),radial-gradient(circle at 80% 20%,transparent 0%,transparent 45%,#ffffff22 45%,#ffffff22 46%,transparent 46%),radial-gradient(circle at 20% 80%,transparent 0%,transparent 45%,#ffffff22 45%,#ffffff22 46%,transparent 46%),radial-gradient(circle at 80% 80%,transparent 0%,transparent 45%,#ffffff22 45%,#ffffff22 46%,transparent 46%),linear-gradient(45deg,transparent 48%,#ffffff22 48%,#ffffff22 52%,transparent 52%),linear-gradient(-45deg,transparent 48%,#ffffff22 48%,#ffffff22 52%,transparent 52%),linear-gradient(90deg,transparent 48%,#ffffff22 48%,#ffffff22 52%,transparent 52%),linear-gradient(0deg,transparent 48%,#ffffff22 48%,#ffffff22 52%,transparent 52%);opacity:0.6;}
+  .tw-bat{position:absolute;width:30px;height:15px;background:#000;clip-path:polygon(50% 0,40% 30%,0 40%,20% 60%,30% 50%,50% 70%,70% 50%,80% 60%,100% 40%,60% 30%);animation:twBatFly 8s linear infinite;}
+  @keyframes twBatFly{0%{transform:translate(0,0) rotate(0deg)}25%{transform:translate(100px,-30px) rotate(-10deg)}50%{transform:translate(200px,0) rotate(0deg)}75%{transform:translate(100px,30px) rotate(10deg)}100%{transform:translate(0,0) rotate(0deg)}}
+  .tw-fog{position:absolute;bottom:0;left:0;right:0;height:100px;background:linear-gradient(0deg,rgba(255,255,255,0.3),transparent);animation:twFogMove 20s linear infinite;}
+  @keyframes twFogMove{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+  .tw-part.fog{background:#ffffffaa;width:6px;height:6px;filter:blur(2px);animation:twFogFloat 6s ease-in-out infinite;}
+  @keyframes twFogFloat{0%,100%{transform:translateY(0) translateX(0);opacity:0.3}50%{transform:translateY(-20px) translateX(10px);opacity:0.6}}
+
+  /* === XMAS (Noël) === */
+  .tw-xmas-tree{position:absolute;bottom:0;width:80px;height:150px;}
+  .tw-tree-trunk{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:15px;height:30px;background:linear-gradient(90deg,#4a2511,#6b3410);border-radius:2px;}
+  .tw-tree-layer{position:absolute;left:50%;transform:translateX(-50%);width:0;height:0;border-left:40px solid transparent;border-right:40px solid transparent;border-bottom:40px solid #1a5a1a;filter:drop-shadow(0 0 10px #1a5a1a88);}
+  .tw-tree-layer.l1{bottom:30px;}
+  .tw-tree-layer.l2{bottom:60px;border-left-width:30px;border-right-width:30px;border-bottom-width:35px;border-bottom-color:#1f6b1f;}
+  .tw-tree-layer.l3{bottom:85px;border-left-width:20px;border-right-width:20px;border-bottom-width:30px;border-bottom-color:#247a24;}
+  .tw-tree-star{position:absolute;top:-15px;left:50%;transform:translateX(-50%);width:20px;height:20px;background:#ffd700;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);box-shadow:0 0 15px #ffd700,0 0 30px #ffd70088;animation:twStarGlow 2s ease-in-out infinite;}
+  @keyframes twStarGlow{0%,100%{box-shadow:0 0 15px #ffd700,0 0 30px #ffd70088}50%{box-shadow:0 0 25px #ffd700,0 0 50px #ffd700cc}}
+  .tw-tree-light{position:absolute;width:6px;height:6px;border-radius:50%;animation:twLightBlink 1.5s infinite;}
+  @keyframes twLightBlink{0%,100%{opacity:1}50%{opacity:0.3}}
+  .tw-snow-pile{position:absolute;bottom:0;width:120px;height:30px;background:radial-gradient(ellipse at center,#ffffff,#e0e0e0 70%,#c0c0c0);border-radius:50% 50% 40% 40% / 60% 60% 40% 40%;box-shadow:inset -5px -5px 10px #00000022;}
+  .tw-gift{position:absolute;bottom:10px;width:35px;height:35px;border-radius:3px;box-shadow:0 2px 8px #00000044;}
+  .tw-gift::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:6px;height:100%;background:inherit;filter:brightness(0.8);}
+  .tw-gift::after{content:"";position:absolute;top:50%;left:0;transform:translateY(-50%);width:100%;height:6px;background:inherit;filter:brightness(0.8);}
+  .tw-fireplace{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:200px;height:180px;background:linear-gradient(180deg,#4a2511,#2a1505);border-radius:8px 8px 0 0;border:4px solid #6b3410;box-shadow:inset 0 0 30px #00000088;}
+  .tw-fire{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);width:60px;height:80px;background:radial-gradient(ellipse at bottom,#ff4500,#ff8c00 50%,#ffd700 80%,transparent);border-radius:50% 50% 20% 20%;animation:twFireFlick 0.8s infinite;box-shadow:0 0 30px #ff4500,0 0 60px #ff8c0088;}
+  @keyframes twFireFlick{0%,100%{transform:translateX(-50%) scaleY(1) scaleX(1)}50%{transform:translateX(-50%) scaleY(1.1) scaleX(0.95)}}
+  .tw-sock{position:absolute;top:10px;width:20px;height:35px;background:#c41e3a;border-radius:0 0 10px 10px;box-shadow:inset -2px -2px 5px #00000044;}
+  .tw-sock::before{content:"";position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:25px;height:8px;background:#ffffff;border-radius:4px;}
+  .tw-snowflake{position:absolute;color:#ffffff;font-size:12px;animation:twSnowFall linear infinite;opacity:0.8;}
+  @keyframes twSnowFall{0%{transform:translateY(-100vh) rotate(0deg)}100%{transform:translateY(100vh) rotate(360deg)}}
   .tw-brief{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:9995;}
   .tw-brief-card{background:#0f051d;border:2px solid #00d2ff;border-radius:12px;padding:16px;max-width:82%;text-align:center;}
   .tw-stars{font-size:26px;letter-spacing:6px;text-align:center;margin:10px 0;}
@@ -450,8 +489,94 @@ function generateSceneHTML(c, W, C) {
     for (let i = 0; i < gpN; i++) html += `<span class="tw-goldpart" style="left:${8+(i*17)%84}%;top:${30+(i*13)%60}%;animation-duration:${6+(i%4)*2}s;animation-delay:${i*.8}s;"></span>`;
     html += `<div class="tw-vvignette"></div>`;
   }
+    if (W.scene === "haunted") {
+    html += `<div class="tw-moon-blood"></div>`;
+    const starsN = IS_MOBILE ? 30 : 80;
+    for (let i = 0; i < starsN; i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%55}%;animation-delay:${(i*.23)%3}s;"></span>`;
+    html += `<div class="tw-castle">`;
+    const windowPositions = [[20,45],[40,35],[60,25],[80,35],[30,65],[70,65],[50,55]];
+    windowPositions.forEach(([x,y]) => {
+      html += `<div class="tw-castle-window" style="left:${x}%;top:${y}%;animation-delay:${Math.random()*2}s;"></div>`;
+    });
+    html += `</div>`;
+    const pumpkinCount = IS_MOBILE ? 3 : 5;
+    for (let i = 0; i < pumpkinCount; i++) {
+      const left = 10 + (i * 20) + (i % 2) * 10;
+      html += `<div class="tw-pumpkin" style="left:${left}%;"></div>`;
+    }
+    const webCount = IS_MOBILE ? 2 : 4;
+    for (let i = 0; i < webCount; i++) {
+      const top = 10 + (i * 25);
+      const left = (i % 2 === 0) ? "5%" : "85%";
+      html += `<div class="tw-web" style="top:${top}%;left:${left};"></div>`;
+    }
+    const batCount = IS_MOBILE ? 2 : 4;
+    for (let i = 0; i < batCount; i++) {
+      const top = 15 + (i * 20);
+      html += `<div class="tw-bat" style="top:${top}%;left:${10+i*15}%;animation-delay:${i*2}s;animation-duration:${6+i}s;"></div>`;
+    }
+    html += `<div class="tw-fog"></div>`;
+    html += `<div class="tw-fog" style="animation-delay:-10s;"></div>`;
+  }
+
+  if (W.scene === "xmas") {
+    html += `<span class="tw-moon" style="top:8%;right:12%;width:50px;height:50px;"></span>`;
+    const starsN = IS_MOBILE ? 40 : 100;
+    for (let i = 0; i < starsN; i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%55}%;animation-delay:${(i*.23)%3}s;"></span>`;
+    const treeCount = IS_MOBILE ? 3 : 5;
+    for (let i = 0; i < treeCount; i++) {
+      const left = 15 + (i * 18);
+      const scale = 0.8 + (i % 2) * 0.2;
+      html += `<div class="tw-xmas-tree" style="left:${left}%;transform:scale(${scale});">`;
+      html += `<div class="tw-tree-trunk"></div>`;
+      html += `<div class="tw-tree-layer l1"></div>`;
+      html += `<div class="tw-tree-layer l2"></div>`;
+      html += `<div class="tw-tree-layer l3"></div>`;
+      html += `<div class="tw-tree-star"></div>`;
+      const lightColors = ["#ff0000","#00ff00","#0000ff","#ffff00","#ff00ff"];
+      const lightCount = 8;
+      for (let j = 0; j < lightCount; j++) {
+        const lx = 20 + (j * 8);
+        const ly = 40 + (j % 3) * 20;
+        const color = lightColors[j % lightColors.length];
+        html += `<div class="tw-tree-light" style="left:${lx}%;top:${ly}%;background:${color};box-shadow:0 0 8px ${color};animation-delay:${j*0.2}s;"></div>`;
+      }
+      html += `</div>`;
+    }
+    const snowPileCount = IS_MOBILE ? 2 : 4;
+    for (let i = 0; i < snowPileCount; i++) {
+      const left = 10 + (i * 25);
+      html += `<div class="tw-snow-pile" style="left:${left}%;"></div>`;
+    }
+    const giftCount = IS_MOBILE ? 4 : 8;
+    const giftColors = ["#c41e3a","#1a73e8","#ffd700","#9c27b0","#ff6b35"];
+    for (let i = 0; i < giftCount; i++) {
+      const left = 8 + (i * 12);
+      const color = giftColors[i % giftColors.length];
+      html += `<div class="tw-gift" style="left:${left}%;background:${color};"></div>`;
+    }
+    html += `<div class="tw-fireplace">`;
+    html += `<div class="tw-fire"></div>`;
+    html += `<div class="tw-sock" style="left:20%;"></div>`;
+    html += `<div class="tw-sock" style="left:70%;"></div>`;
+    html += `</div>`;
+    const snowflakeCount = IS_MOBILE ? 20 : 40;
+    for (let i = 0; i < snowflakeCount; i++) {
+      const left = Math.random() * 100;
+      const duration = 5 + Math.random() * 10;
+      const delay = Math.random() * 5;
+      const size = 8 + Math.random() * 8;
+      html += `<div class="tw-snowflake" style="left:${left}%;font-size:${size}px;animation-duration:${duration}s;animation-delay:${delay}s;">❄</div>`;
+    }
+  }
   let parts = "";
-  for (let i = 0; i < (IS_MOBILE?0:7); i++) parts += `<span class="tw-part ${W.part}" style="color:${C.acc};left:${(i*13+c*7)%96}%;animation-duration:${4+(i%4)*1.5}s;animation-delay:${i*.7}s;"></span>`;
+  const partCount = (W.part === "fog") ? (IS_MOBILE ? 15 : 30) : (IS_MOBILE ? 0 : 7);
+  for (let i = 0; i < partCount; i++) {
+    const partStyle = W.part === "fog" 
+      ? `left:${(i*13+c*7)%96}%;top:${(i*17)%80}%;animation-duration:${4+(i%4)*1.5}s;animation-delay:${i*.7}s;`
+      : `color:${C.acc};left:${(i*13+c*7)%96}%;animation-duration:${4+(i%4)*1.5}s;animation-delay:${i*.7}s;`;
+    parts += `<span class="tw-part ${W.part}" style="${partStyle}"></span>`;
+  }
   const result = html + parts;
   SCENE_CACHE[c] = result;
   return result;
