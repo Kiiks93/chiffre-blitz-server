@@ -75,7 +75,7 @@ const TowerUtils = {
     const t = seq[(inChap - 1) % 9];
     if (t === "sprint") return { floor, gridSize, time: Math.max(6, Math.round(time * 0.4)), type: "sprint" };
     if (t === "nofail") return { floor, gridSize, time: Math.max(14, Math.round(time * 0.7)), type: "nofail" };
-    if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; return { floor, gridSize: g, time: Math.max(20, Math.round(g/2 * 3)), type: "pairs" }; }
+    if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; return { floor, gridSize: g, time: Math.max(25, Math.round(g/2 * 5)), type: "pairs" }; }
     if (t === "parity") return { floor, gridSize: Math.min(60, gridSize + 12), time: time + 3, type: "parity" };
     return { floor, gridSize, time, type: t };
   },
