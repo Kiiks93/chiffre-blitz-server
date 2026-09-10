@@ -1204,9 +1204,9 @@ function checkAndShowProfileModal() {
     updateEconomyUI();
     const modal = document.getElementById("modal-username");
     if (modal) modal.style.display = "none";
-        registerIfPossible();
-    const lastScreen = localStorage.getItem("cb_last_screen");
-    const pendingRoom = localStorage.getItem("cb_pending_room");
+    registerIfPossible();
+    const lastScreen = sessionStorage.getItem("cb_last_screen");
+    const pendingRoom = sessionStorage.getItem("cb_pending_room");
     
     if (lastScreen === "room" && pendingRoom) {
       // Reprise d'un salon privé (même si l'app a été tuée)
@@ -1225,11 +1225,8 @@ function checkAndShowProfileModal() {
       setTimeout(() => { if (typeof openLeaderboard === "function") openLeaderboard(); }, 400);
     } else if (lastScreen === "pass") {
       setTimeout(() => { if (typeof openBlitzPass === "function") openBlitzPass(); }, 400);
-    } else if (localStorage.getItem("cb_title_seen")) {
-      showMainMenu();
-    } else {
-      localStorage.setItem("cb_title_seen", "1");
-      showTitleScreen();
+      } else {
+      showTitleScreen();   // lancement frais (app tuée) → page explications
     }
   } else {
     openAccountModal();
