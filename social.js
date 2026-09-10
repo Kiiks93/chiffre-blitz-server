@@ -401,7 +401,22 @@ function updateRoomPlayers(players) {
   }
 }
 
-socket.on("room_error", (msg) => { showNotificationToast("❌ " + msg, "announcement"); });
+socket.on("room_error", (msg) => {
+  const pending = sessionStorage.getItem("cb_pending_room");
+  if (pending) {
+    sessionStorage.removeItem("cb_pending_room");
+    // Le salon a expiré pendant que l'app était fermée → on le recrée avec le même code
+    socket.emit("create_room", {
+      code: pending,
+      password: "",
+      username: myProfile.username,
+      avatar: myProfile.avatar,
+      flag: myProfile.flag
+    });
+    return;
+  }
+  showNotificationToast("❌ " + msg, "announcement");
+});
 
 /* ============================================================
 10. TOURNOIS
@@ -436,9 +451,3 @@ function openTournamentScreen() {
   else socket.on("player_registered", joinWhenReady);
 })();
 
-socket.on("room_error", () => {
-  if (sessionStorage.getItem("cb_pending_room")) {
-    sessionStorage.removeItem("cb_pending_room");
-    window.history.replaceState({}, "", window.location.pathname);
-  }
-});
