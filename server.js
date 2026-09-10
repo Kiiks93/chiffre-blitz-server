@@ -388,6 +388,17 @@ const TOWER_CHAPTER_REWARDS = {
   7: "title_veilleur_cimes", 8: "frame_aurore", 9: "title_maitre_tour"
 };
 const TOWER_FPC = 200;
+const TOWER_CURVE = [
+  [12,16,30,26],
+  [14,19,28,23],
+  [16,21,26,21],
+  [18,23,24,19],
+  [20,25,22,18],
+  [22,27,20,17],
+  [24,29,19,16],
+  [26,31,18,15],
+  [28,34,17,13]
+];
 const TOWER_TOTAL = 9 * TOWER_FPC;
 const TOWER_WORLD_QUOTA = 240;
 function towerStarsInWorld(player, w){
@@ -413,17 +424,19 @@ function towerShuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.r
 
 function getFloorDefServer(floor) {
   const chap = Math.ceil(floor / TOWER_FPC), inChap = ((floor - 1) % TOWER_FPC) + 1;
-  const global = (floor - 1) / (TOWER_TOTAL - 1);
-  let gridSize = Math.min(36, Math.round(12 + global * 24));
-  let time = Math.max(14, Math.round(34 - global * 20));
-  if (inChap === TOWER_FPC) return { floor, gridSize, time, type: "boss" };
-  if (inChap % 50 === 0) return { floor, gridSize, time, type: "boss" };
-  const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","fog","nofail"];
+  const c = TOWER_CURVE[Math.min(chap,9)-1];
+  const t01 = (inChap - 1) / (TOWER_FPC - 1);
+  let gridSize = Math.round(c[0] + (c[1]-c[0]) * t01);
+  let time = Math.round(c[2] + (c[3]-c[2]) * t01);
+  if (inChap <= 10) { gridSize = Math.max(10, gridSize - 2); time += 2; }
+  if (inChap === TOWER_FPC || inChap % 50 === 0) return { floor, gridSize, time, type: "boss" };
+  const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail"];
   const t = seq[(inChap - 1) % 9];
   if (t === "sprint") return { floor, gridSize, time: Math.max(6, Math.round(time * 0.4)), type: "sprint" };
   if (t === "nofail") return { floor, gridSize, time: Math.max(14, Math.round(time * 0.7)), type: "nofail" };
   if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; const pr = g / 2; return { floor, gridSize: g, time: Math.max(25, Math.round(pr * 5)), type: "pairs" }; }
   if (t === "parity") return { floor, gridSize: Math.min(60, gridSize + 12), time: time + 3, type: "parity" };
+  if (t === "memory") return { floor, gridSize, time: time + 4, type: "memory" };
   return { floor, gridSize, time, type: t };
 }
 function pickColorTarget(s){
@@ -452,6 +465,11 @@ function buildTowerSession(player, floor){
     s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
     s.forbidden = 1+Math.floor(Math.random()*N);
     s.remaining = new Set(s.nums);
+      } else if (def.type === "memory") {
+    s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
+    s.remaining = new Set(s.nums);
+    s.target = 1;
+    s.revealUntil = Date.now() + 2500 + N * 120;
   } else {
     s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
     s.remaining = new Set(s.nums);
@@ -462,6 +480,7 @@ function buildTowerSession(player, floor){
 }
 function towerDisplay(s){
   if (s.type==="pairs") return s.nums.map((v,i)=> s.gone[i] ? "" : (s.revealed[i] ? v : null));
+  if (s.type==="memory") return s.nums.map((v,i)=> s.gone[i] ? "" : ((Date.now() < (s.revealUntil||0) || s.revealed[i]) ? v : null));
   if (s.type==="color") return s.nums.map(c=>({key:c.key,hex:c.hex}));
   return s.nums.slice();
 }
@@ -471,7 +490,9 @@ function towerStatePayload(s){
     timeLeft: Math.max(0, s.def.time - Math.floor((Date.now()-s.start)/1000)),
     mistakes:s.mistakes, gone:s.gone, display:towerDisplay(s),
     target:s.target||null, targetColor:s.targetColor||null, targetParity:s.targetParity||null, forbidden:s.forbidden||null,
-    revealed:s.revealed, sel:s.sel, ai:s.ai, defTime:s.def.time, gridSize:s.def.gridSize, replay:s.replay, shield:s.shield||0
+    revealed:s.revealed, sel:s.sel, ai:s.ai, defTime:s.def.time, gridSize:s.def.gridSize, 
+    replay:s.replay, shield:s.shield||0,
+    revealLeft: s.type==="memory" ? Math.max(0, Math.round(((s.revealUntil||0) - Date.now())/1000)) : 0
   };
 }
 async function towerWin(player, s){
@@ -1613,6 +1634,7 @@ io.on('connection', (socket) => {
         socket.emit('tower_shield_used', { shield: s.shield });
       } else {
         s.mistakes++;
+        if (s.type === "memory") { s.revealed[idx] = true; setTimeout(() => { if (!s.done) { s.revealed[idx] = false; socket.emit('tower_state', towerStatePayload(s)); } }, 450); }
         if (s.type === "nofail") { const r = await towerFail(player, s, 'nofail'); delete towerSessions[socket.id]; socket.emit('tower_fail', r); return; }
       }
     }
