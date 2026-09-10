@@ -1650,13 +1650,6 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 
-window.addEventListener("pageshow", (event) => {
-  if (event.persisted) {
-    console.log("Page restaurée depuis bfcache → reload");
-    location.reload();
-  }
-});
-
 if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
   navigator.serviceWorker.addEventListener("message", (e) => {
     if (e.data && e.data.action === "RELOAD_PAGE") {
@@ -1724,9 +1717,5 @@ setInterval(() => {
     document.body.style.display = "";
     window.dispatchEvent(new Event("resize"));
     updateLastActiveTime();
-  });
-
-  window.addEventListener("pageshow", (e) => {
-    if (e.persisted) location.reload();
   });
 })();
