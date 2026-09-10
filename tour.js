@@ -111,10 +111,18 @@ const TowerUtils = {
 function towerPlaySeasonMusic(seasonNum) {
   try {
     if (typeof SoundEngine === "undefined") return;
-    const key = seasonNum === 2 ? "s2" : seasonNum === 3 ? "s3" : "s1";
-    if (typeof SoundEngine.playSeason === "function") SoundEngine.playSeason(key);
-    else if (typeof SoundEngine.setSeasonMusic === "function") SoundEngine.setSeasonMusic(key);
-    else if (typeof SoundEngine.playMusic === "function") SoundEngine.playMusic(key);
+    
+    // Mode aventure = musique menu (pas game)
+    const key = seasonNum === 2 ? "s2menu" : seasonNum === 3 ? "s3menu" : null;
+    if (!key) return;
+    
+    // Arrêter la musique actuelle
+    if (typeof SoundEngine.stopMusic === "function") SoundEngine.stopMusic(false);
+    
+    // Lancer la musique saisonnière
+    if (typeof SoundEngine.startMusicSeasonal === "function") {
+      SoundEngine.startMusicSeasonal(key);
+    }
   } catch (e) {}
 }
 
