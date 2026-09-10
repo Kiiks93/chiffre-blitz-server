@@ -645,6 +645,7 @@ function showBriefing(def) {
   const starTime = Math.floor(def.time * 0.6);
   let starRule = fr ? `💡 ⭐ terminer · ⭐⭐ ≤2 erreurs · ⭐⭐⭐ 0 erreur + < ${starTime}s` : `💡 ⭐ finish · ⭐⭐ ≤2 mistakes · ⭐⭐⭐ 0 mistake + < ${starTime}s`;
   if (def.type === "pairs" || def.type === "sprint") starRule = fr ? `💡 ⭐ finir ·  rapide · ⭐⭐⭐ très rapide` : `💡 ⭐ finish · ⭐ fast · ⭐⭐⭐ very fast`;
+  if (def.type === "memory") starRule = fr ? `💡  terminer · ⭐⭐ ≤2 erreurs · ⭐⭐⭐ 0 erreur (tout à la mémoire !)` : `💡 ⭐ finish · ⭐ ≤2 mistakes · ⭐⭐⭐ 0 mistakes (pure memory!)`;
   const replayLine = def.replay ? `<div style="font-size:10px;color:#f8b500;margin-bottom:6px;">${fr?"Actuel : ":"Current: "}{"⭐".repeat(curStars)}</div>` : "";
   const b = document.createElement("div");
   b.id = "tw-brief"; b.className = "tw-brief";
