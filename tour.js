@@ -740,7 +740,7 @@ function syncDomToState(st) {
     const b = TW_buttons[i]; if (!b) continue;
     const wasGone = !!TW_dom.gone[i], isGone = !!st.gone[i];
     if (isGone !== wasGone) b.classList.toggle("gone", isGone);
-    if (st.type === "pairs") {
+        if (st.type === "pairs" || st.type === "memory") {
       const dv = st.display[i], ov = TW_dom.display[i];
       if (dv !== ov) b.textContent = isGone ? "" : (dv === null ? "?" : dv);
       const rev = !!(st.revealed && st.revealed[i]) || st.sel === i;
