@@ -643,10 +643,11 @@ function showBriefing(def) {
   const fr = currentLang === "fr";
   const curStars = towerProgress.stars[String(def.floor)] || 0;
   const starTime = Math.floor(def.time * 0.6);
-  let starRule = fr ? `💡 ⭐ terminer · ⭐⭐ ≤2 erreurs · ⭐⭐⭐ 0 erreur + < ${starTime}s` : `💡 ⭐ finish · ⭐⭐ ≤2 mistakes · ⭐⭐⭐ 0 mistake + < ${starTime}s`;
-  if (def.type === "pairs" || def.type === "sprint") starRule = fr ? `💡 ⭐ finir ·  rapide · ⭐⭐⭐ très rapide` : `💡 ⭐ finish · ⭐ fast · ⭐⭐⭐ very fast`;
-  if (def.type === "memory") starRule = fr ? `💡  terminer · ⭐⭐ ≤2 erreurs · ⭐⭐⭐ 0 erreur (tout à la mémoire !)` : `💡 ⭐ finish · ⭐ ≤2 mistakes · ⭐⭐⭐ 0 mistakes (pure memory!)`;
-  const replayLine = def.replay ? `<div style="font-size:10px;color:#f8b500;margin-bottom:6px;">${fr?"Actuel : ":"Current: "}{"⭐".repeat(curStars)}</div>` : "";
+  const ST = "\u{2B50}";
+  let starRule = fr ? `💡 ${ST} terminer · ${ST}${ST} ≤2 erreurs · ${ST}${ST}${ST} 0 erreur + < ${starTime}s` : `💡 ${ST} finish · ${ST}${ST} ≤2 mistakes · ${ST}${ST}${ST} 0 mistake + < ${starTime}s`;
+  if (def.type === "pairs" || def.type === "sprint") starRule = fr ? `💡 ${ST} finir · ${ST} rapide · ${ST}${ST}${ST} très rapide` : `💡 ${ST} finish · ${ST} fast · ${ST}${ST}${ST} very fast`;
+  if (def.type === "memory") starRule = fr ? `💡 ${ST} terminer · ${ST}${ST} ≤2 erreurs · ${ST}${ST}${ST} 0 erreur (tout à la mémoire !)` : `💡 ${ST} finish · ${ST}${ST} ≤2 mistakes · ${ST}${ST}${ST} 0 mistakes (pure memory!)`;
+  const replayLine = def.replay ? `<div style="font-size:10px;color:#f8b500;margin-bottom:6px;">${fr?"Actuel : ":"Current: "}${ST.repeat(curStars)}</div>` : "";
   const b = document.createElement("div");
   b.id = "tw-brief"; b.className = "tw-brief";
   b.innerHTML = `<div class="tw-brief-card">
