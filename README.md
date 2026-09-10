@@ -1,279 +1,199 @@
-# ⚡ CHIFFRE BLITZ
+# 🎮 CHIFFRE BLITZ — ROADMAP (mise à jour)
 
-Jeu de calcul et de réflexes en temps réel. Entraîne-toi en solo, grimpe la **Tour Aventure** (9 mondes × 200 étages), affronte des joueurs en 1v1 online (matchmaking + classé SBMM), et collectionne des cosmétiques via le Passe de Saison.
-
-- 🏰 **Aventure (Tour)** : 9 mondes thématiques, 1800 étages, Gardiens, jokers & vies
-- 🎮 **Solo** : Classique, Aléatoire, Avalanche
-- ⚔️ **1v1 Online** : matchmaking, classé SBMM, salons privés
-- 🎫 **Passe de Saison** : 30 paliers free + premium (DA "Brawl Stars")
-- 🏛️ **Salle des Trophées** : 16 trophées à débloquer
-- 🎃🎄 **Modes exclusifs** : Halloween / Noël (catch solo + 1v1 + DA aventure)
-- 🛍️ **Boutique** : pouvoirs, cosmétiques, packs, boutique aventure
-- 🏆 **Classement** : régional, national, mondial
-- 🪢 **Corde Raide**, 🎰 **Roue Jackpot**, 📢 **Événements globaux**
-- 📱 **App mobile** : packagée via Capacitor (Android)
+> Dernière MAJ : Septembre 2026 — après implémentation complète du Mode Aventure (9 mondes × 200 étages), DA procédurale, système de vies/jokers, reprise de session mobile et verrou musical saisonnier.
 
 ---
 
-## 🏗️ ARCHITECTURE
-
-```
-chiffre-blitz/
-├── index.html          # Page principale du jeu
-├── admin.html          # Panneau admin (fenêtre séparée)
-├── manifest.json       # Manifest PWA / Capacitor
-├── sw.js               # Service Worker (cache network-only)
-├── style.css           # Styles globaux (header, HUD, grilles, modals)
-├── saisons.css         # Styles des modes saisonniers (Halloween, Noël)
-├── i18n.js             # Traductions FR/EN
-├── audio.js            # Moteur son de base (effets SFX)
-├── son-saisons.js      # Bande-son saisonnière + sélecteur de saison
-├── profil.js           # Profil, personnalisation, économie, reprise de session
-├── admin.js            # Fonctions utilitaires admin (modal intégré)
-├── social.js           # Amis, salons privés, partage natif, matchmaking
-├── passe.js            # Passe de Saison (DA Brawl Stars)
-├── saisons.js          # Logique multi-saisons
-├── fx.js               # Effets visuels (combo, fissures, particules)
-├── jeu.js              # Gameplay (grille, timer, clics, solo, 1v1)
-├── modes-catch.js      # Modes exclusifs (Halloween 🎃 / Noël 🎄)
-├── tour.js             # 🏰 MODE AVENTURE (9 mondes, DA procédurale, jokers, vies)
-├── server.js           # Serveur backend (Express + Socket.io + Supabase)
-└── ROADMAP.md          # État du projet
-```
+## ✅ LÉGENDE
+- `[x]` Terminé
+- `[~]` Partiel / en cours
+- `[ ]` À faire
 
 ---
 
-## 📂 FICHIERS FRONTEND (Client)
+# 📦 PHASE 1 — FONDATIONS SAISONNIÈRES & BUGS ✅
 
-### 🧱 Structure
-| Fichier | Rôle |
-|---|---|
-| `index.html` | Page principale. Contient tous les écrans (menu, solo, 1v1, shop, pass, aventure, admin modal). Charge les scripts dans l'ordre + cache-busting automatique. |
-| `admin.html` | **Panneau admin indépendant** (s'ouvre via `window.open`). Contient : annonces, cadeaux, override saison, dates saisons, événements. |
-| `manifest.json` | Manifest PWA / Capacitor (icônes, nom, thème). |
-| `sw.js` | Service Worker **network-only** (plus jamais de fichiers périmés sur mobile). |
-
-### 🎨 Styles
-| Fichier | Rôle |
-|---|---|
-| `style.css` | Styles globaux : header-bar, user-pill, cadres animés, avatars, HUD, grille, modals, boutons, combo, trophies, responsive, passe de saison (DA Brawl Stars). |
-| `saisons.css` | Styles spécifiques aux modes saisonniers : thème citrouille, fantôme, bonbon, sapin, lutin, etc. |
-
-### ⚙️ Logique JS
-| Fichier | Rôle |
-|---|---|
-| `i18n.js` | Traductions FR/EN. Objet `i18n` avec tous les textes traduits + fonction `applyTranslations()`. |
-| `audio.js` | Moteur son principal (`SoundEngine`) : SFX de base (click, victory, error, etc.), mute global. |
-| `son-saisons.js` | Bande-son saisonnière (musiques S1/S2/S3). Contient `getReleasedSeasons()`, `openMusicChooser()`, `setMusicSeason()`, `startMusicSeasonal()`. |
-| `profil.js` | **Profil joueur complet** : connexion Socket.io, myProfile, personnalisation (cadre/thème/titre/avatar), équipement instantané, économie, validation, **reprise de dernière page** (`sessionStorage`), page explications au lancement frais. |
-| `admin.js` | Fonctions utilitaires admin : `openAdminPanel()` → ouvre `admin.html`. Contient aussi le modal admin intégré style Roblox. |
-| `social.js` | Système social : amis (ajout, demandes, invitations, **pastille temps réel**), salons privés (création, rejoindre, **partage natif / modale WhatsApp-SMS-Mail**). |
-| `passe.js` | **Passe de Saison** : DA "Brawl Stars" (horizontal PC / vertical mobile), aperçus visuels réels, étiquettes, animation pop, molette → scroll horizontal. |
-| `saisons.js` | Logique multi-saisons : détection de la saison active, calcul du palier actuel, XP. |
-| `fx.js` | Effets visuels : système combo, fissures, particules, explosion, banner pop, ice-cracks, trophy room. |
-| `jeu.js` | **Gameplay principal** : grille 4×4, timer 30s, clics, solo (classique/aléatoire/avalanche), 1v1 online, matchmaking, ranked, tug-of-war, game over. |
-| `modes-catch.js` | **Modes exclusifs** : Chasse Hantée (Halloween 🎃) et Course aux Cadeaux (Noël 🎄). Objets SVG souriants/énervés, économie solo, difficulté. |
-| `tour.js` | **🏰 MODE AVENTURE** : 9 mondes × 200 étages, courbe de difficulté, 9 modes + Gardiens, vies & jokers, boutique aventure, **DA procédurale des 9 mondes** (city, glacier, vault, haunt, grave, lair, candy, pine, shop), musique de saison verrouillée. |
+- [x] Boule de neige offerte (Palier 15 S3)
+- [x] Nom du pass dynamique (S1/S2/S3)
+- [x] Modes exclusifs Halloween 🎃 + Noël 🎄 (solo + 1v1)
+- [x] Sélecteur de bande son SANS spoiler
+- [x] Dates début/fin des saisons modifiables (admin + Supabase)
+- [x] Cosmétiques S3 (cadres, grilles, avatars, titres)
+- [x] Bouton mute dupliqué corrigé
+- [x] rule4/5 + media query dupliquée corrigés
+- [x] Code dupliqué + orphelins nettoyés
 
 ---
 
-## 🏰 MODE AVENTURE (Tour)
+# 🎫 PHASE 2 — PASSE DE SAISON (DA "BRAWL STARS") ✅
 
-### Structure
-- **9 mondes** de **200 étages** chacun (1800 étages au total).
-- **Quota 240 ⭐** dans un monde pour débloquer le suivant.
-- **Mondes saisonniers** : mondes 4-6 (S2 Halloween) et 7-9 (S3 Noël) débloqués via les flags permanents `season_s2_unlocked` / `season_s3_unlocked` (obtenus au **Tier 1** du Passe de Saison correspondant). Une fois acquis, le monde reste accessible à vie.
-- **Gardiens** (boss) aux étages 50, 100, 150 et 200 de chaque monde.
-
-### Courbe de difficulté
-- Table `TOWER_CURVE` (grille + temps) calibrée **par monde**, progression intra-monde.
-- **« Souffle »** : les 10 premiers étages de chaque monde sont volontairement plus doux.
-
-### Modes de jeu (rotation par étage)
-`classic` · `reverse` · `color` · `pairs` · `sprint` · `parity` · `forbidden` · `memory` · `nofail`
-- **🧠 Mémoire** : chiffres visibles ~3 s puis masqués (« ? »), clic dans l'ordre de mémoire. Erreur = révélation flash. Étoiles basées sur les erreurs uniquement.
-- **🚫 Interdit** : cliquer le chiffre interdit = échec immédiat (sauf si bouclier actif).
-
-### Vies & Jokers
-- **❤️ Vies** : max 10, régénération 1 vie / 20 min, achat via boutique aventure.
-- **⏱️ Joker Temps** : +10 s au chrono.
-- **🛡️ Joker Bouclier** : absorbe une erreur (ou un clic interdit). Halo doré autour de la grille.
-- Jokers obtenus via **drops des Gardiens** et **boutique aventure**.
-
-### Direction artistique (DA procédurale)
-Chaque monde a une scène générée en CSS/HTML (cache par monde) :
-| Monde | Scène | Ambiance |
-|---|---|---|
-| 1 Quartier Néon | `city` | Ville néon, voitures, dirigeables |
-| 2 Grottes de Cristal | `glacier` | Caverne, cristaux, lac gelé |
-| 3 Banque Dorée | `vault` | Coffre-fort, lingots, lasers |
-| 4 Tour Hantée | `haunt` | Tour gothique, éclairs, chauves-souris |
-| 5 Cimetière Brumeux | `grave` | Tombes, arbres morts, feux follets |
-| 6 Antre Citrouille | `lair` | Caverne de jack-o'-lanterns |
-| 7 Cime Bonbon | `candy` | Ciel barbe-à-papa, château de sucre |
-| 8 Forêt de Sapins | `pine` | Sapins volumineux enneigés, guirlandes |
-| 9 Atelier du Père Noël | `shop` | Intérieur animé (Père Noël, lutins, renne) |
-
-### Musique
-- La musique de **saison** du monde affiché est verrouillée pendant l'aventure (override de `SoundEngine.startMusic`).
-- Se **coupe** en arrière-plan et **revient** automatiquement au retour.
+- [x] Horizontal PC / vertical mobile, fenêtre plein écran
+- [x] Cartes PREMIUM bleues à bordure OR + ruban « ⭐ PREMIUM »
+- [x] Cartes GRATUIT/FREE + ruban traduit
+- [x] Aperçus visuels réels (avatars Lottie/vidéo, cadres, swatchs, titres)
+- [x] Clic sur la tuile entière pour récupérer (badge ✔)
+- [x] Molette = scroll horizontal (PC)
+- [x] Position de scroll conservée après récupération
+- [x] Animation pop + burst d'emojis au déblocage
 
 ---
 
-## 📂 FICHIERS BACKEND (Serveur)
+# 🎨 PHASE 3 — PERSONNALISATION & ÉCONOMIE ✅
 
-| Fichier | Rôle |
-|---|---|
-| `server.js` | **Serveur Node.js** : Express + Socket.io + Supabase. Gère : authentification, inventaire, cosmétiques, pouvoirs, passe, matchmaking 1v1, salons, amis, trophées, événements globaux, admin, **tour aventure** (sessions, jokers, vies, boutique), **déblocage saisons**. |
-
-### Points clés du serveur
-- **Supabase** : table `players` (profil + inventaire + `tower_jokers`), table `friendships`, table `settings` (dates saisons).
-- **Sockets** : événements `register_player`, `claim_pass_tier`, `buy_item`, `equip_cosmetic`, `find_1v1_match`, `find_ranked_match`, `player_click_1v1`, `admin_*`, **`get_tower`, `tower_floor_start`, `tower_state`, `tower_click`, `tower_use_joker`, `tower_quit`, `shop_buy`**, etc.
-- **Saisons** : S1 (Félin & Néon), S2 (Halloween), S3 (Noël) — dates modifiables depuis l'admin.
-- **Événements globaux** : Coin Rush, Rank Shield, Expresso Match, Chaos Mode, Jackpot Éclair, Tug-of-War, Halloween, Noël.
-- **Anti-triche** : toute validation (clics, jokers, achats, étoiles) est **autoritaire côté serveur** ; le client n'est qu'un afficheur.
+- [x] Équip instantané cadre/thème/titre à la sélection
+- [x] Sélecteur de packs (grille + cadre) traduit
+- [x] `ownsItemOrPack()` (équiper un objet d'un pack possédé)
 
 ---
 
-## 🚀 DÉMARRAGE
+# ⚡ PHASE 4 — PERFORMANCE & STABILITÉ ✅
 
-### Frontend
-Ouvrir `index.html` dans un navigateur (hébergement statique : GitHub Pages, Netlify, Vercel).
-
-### Backend
-```bash
-npm install express socket.io @supabase/supabase-js
-node server.js
-```
-
-### Variables d'environnement (`.env`)
-```env
-SUPABASE_URL=https://xxxxx.supabase.co
-SUPABASE_KEY=eyJ...
-ADMIN_PASSWORD=ton_mot_de_passe
-PORT=3000
-```
-
-### App mobile (Capacitor)
-```bash
-npm install @capacitor/core @capacitor/android @capacitor/share
-npx cap sync && npx cap open android
-```
-- Cache-busting automatique (`?v=timestamp`) → fichiers toujours à jour.
-- Reprise de dernière page via `sessionStorage` ; page explications au lancement frais.
-
-### Assets requis (à côté de `index.html`)
-- Avatars Lottie : `cat-assistant.json`, `black-rainbow-cat.json`, `squelette-danse.json`, `citrouille-chateau.json`, `bonhomme-de-neige-avatar.json`, `boule-de-neige-avatar.json`, `pere-noel-avatar.json`
-- Vidéos avatars : `tiger-siberien.mp4`, `bat-halloween.mp4`
+- [x] Popup récompense throttlée + auto-fermeture
+- [x] Fuites mémoire / superposition de sons corrigées
+- [x] Barres d'émoticônes reconstruites (emojis manquants)
+- [x] Anti match-contre-soi (file dédupliquée + vérif même pseudo)
+- [x] `server.js` complet ré-équilibré (fix `Unexpected end of input`)
 
 ---
 
-## 🎫 PASSE DE SAISON
+# 🌍 PHASE 5 — TRADUCTION FR/EN COMPLÈTE ✅
 
-DA style **Brawl Stars** :
-- 🟨 **PREMIUM** = grandes cartes bleues à bordure OR + ruban « ⭐ PREMIUM ».
-- 🟦 **GRATUIT** = cartes plus petites + ruban « GRATUIT ».
-- ⚫ Pastilles de palier sur une **piste horizontale** (PC) / **verticale** (mobile).
-- 🖱️ Clic direct sur la carte pour récupérer.
-- Aperçus visuels réels (avatars animés, cadres, swatchs de grilles, titres).
-- **Tier 1** = débloque les mondes aventure de la saison (flag permanent).
+- [x] Auto-détection de la langue de l'appareil
+- [x] Override manuel 🌐 FR ↔ EN
+- [x] 8 fichiers traduits + patches (modale compte, packs, classement, amis, pass, placeholders salons)
+- [x] Compteur en ligne sans texte à traduire (👤 + nombre)
 
 ---
 
-## 🔐 ADMIN
+# 🛠️ PHASE 6 — ADMIN AVANCÉ ✅
 
-- **10 clics** sur le logo → ouvre le panneau admin (modal intégré OU `admin.html`).
-- **Connexion** : mot de passe = `ADMIN_PASSWORD`.
-- **Fonctions** : annonces, cadeaux, override saison, dates saisons, événements programmables.
-
----
-
-## 📋 CONVENTIONS DE CODE
-
-### Nommage
-- **Fichiers** : minuscule avec tirets (`modes-catch.js`, `son-saisons.js`)
-- **Variables** : camelCase (`myProfile`, `currentShopTab`)
-- **Constantes** : UPPER_SNAKE_CASE (`POWER_IDS`, `TOWER_CURVE`)
-- **IDs HTML** : kebab-case (`user-coins-display`, `bp-card-1`)
-- **Classes CSS** : kebab-case (`bp-card-prem`, `user-pill`, `tw-pf2`)
-- **Événements socket** : snake_case (`claim_pass_tier`, `tower_use_joker`)
-
-### Style d'écriture
-- Pas de framework : **vanilla JS** partout
-- Modals construits en JS (`document.createElement`) quand réutilisables
-- Inline styles acceptés pour les petits ajustements rapides
-- Commentaires en français, regroupés par sections `/* ========== SECTION ========== */`
-- Emojis sensibles encodés en Unicode (`\u{2B50}`) dans les templates pour éviter toute perte
-
-### Sauvegarde joueur
-- `localStorage` : préférences locales (pseudo, cadre, mute, flags permanents)
-- `sessionStorage` : état de navigation éphémère (dernière page active)
-- `Supabase` : état serveur (pièces, inventaire, trophées, jokers tour)
-- **Règle** : jamais écrire directement en Supabase depuis le client → toujours via socket.
+- [x] Fenêtre `admin.html` indépendante
+- [x] Annonces globales, cadeaux
+- [x] Override saison + dates saisons (persistées Supabase)
+- [x] Ajuster Pièces/Points/Trophées (donner/retirer, tous/pseudo/X aléatoires)
+- [x] Compteur joueurs réellement en ligne (profils uniques)
+- [x] Attribuer objet/trophée (cadres, grilles, avatars, titres, packs, pouvoirs)
+- [x] Événements planifiés (Coin Rush, Rank Shield, Expresso, Chaos, Jackpot, Tug-of-War, Halloween, Noël)
 
 ---
 
-## ➕ AJOUTER UNE NOUVELLE SAISON (S4, S5...)
+# 🕵️ PHASE 7 — TRACES, SÉCURITÉ & MODÉRATION ✅
 
-Checklist complète pour ajouter une saison :
-
-### 1. Backend (`server.js`)
-- [ ] Ajouter dans `SEASONS[]` (id, name, start, end)
-- [ ] Ajouter les récompenses dans `applyPassRewardS4()` (copier S3 et adapter)
-- [ ] Ajouter les cosmétiques dans `ITEM_CATALOG` (cadres, grilles, avatars, titres)
-- [ ] Ajouter le flag `season_s4_unlocked` au claim Tier 1 (déblocage aventure)
-
-### 2. Frontend — passe (`passe.js`)
-- [ ] Ajouter dans `SEASONS_CLIENT[]` avec tous les 30 paliers
-- [ ] Ajouter les `SPECIAL_REWARDS.s4` pour les aperçus visuels
-- [ ] Ajouter les `THEME_GRAD` pour les nouveaux thèmes
-- [ ] Mettre à jour les émoticônes par défaut dans `pass_tier_claimed`
-- [ ] Ajouter dans `SEASON_PASS_SUBTITLES`
-
-### 3. Frontend — cosmétiques (`profil.js`)
-- [ ] Ajouter les nouveaux cadres dans `FRAME_DISPLAY_NAMES` et `getFrameClass()`
-- [ ] Ajouter les nouveaux thèmes dans `THEME_DISPLAY_NAMES`
-- [ ] Ajouter les nouveaux titres dans `TITLE_DISPLAY_NAMES`
-- [ ] Ajouter les nouveaux avatars dans `AVATAR_DISPLAY_NAMES` et `getAvatarBadgeHTML()` / `getLargeAvatarBadgeHTML()`
-
-### 4. Frontend — aventure (`tour.js`)
-- [ ] Ajouter le monde dans `TOWER_CHAPTERS` (season, name, icon, boss)
-- [ ] Ajouter la scène dans `TOWER_WORLDS` + `generateSceneHTML()` + CSS
-- [ ] Ajouter la ligne de courbe dans `TOWER_CURVE`
-- [ ] Ajouter la musique dans `son-saisons.js` + routage `towerPlaySeasonMusic()`
-
-### 5. Styles (`style.css` ou `saisons.css`)
-- [ ] Classes CSS des nouveaux cadres (`tft-avatar-container.new-frame`, `.user-pill.new-frame`)
-- [ ] Classes CSS des nouveaux thèmes de grille (`.tile.new-theme`)
-
-### 6. Assets
-- [ ] Avatars Lottie (.json) ou vidéos (.mp4)
-- [ ] Grilles (thèmes CSS)
-
-### 7. Traductions (`i18n.js`)
-- [ ] Traduire les nouveaux titres, descriptions de récompenses
-
-### 8. Admin
-- [ ] Ajouter la saison dans le select `#admin-season-select` de `admin.html`
+- [x] Table `player_logs` (Supabase) : chaque mouvement d'économie horodaté
+- [x] Console admin « 📜 Journal des transactions »
+- [x] Compteur en ligne public dans la barre de stats (1 ligne, profils uniques)
+- [x] Anti-triche : rate-limit clics 1v1 + catch, validation serveur
+- [x] RGPD : hachage SHA-256 des codes secrets + migration legacy
+- [x] Récupération de compte : clé de sécurité par pseudo + changement de code
+- [x] Reset code par admin (vérif clé) + déconnexion forcée
 
 ---
 
-## 📊 ROADMAP
+# 🧹 PHASE 8 — AUDIT & CONSOLIDATION ✅
 
-Voir [`ROADMAP.md`](./ROADMAP.md) pour l'état complet du projet.
-
-**Prochaines étapes** : DA Atelier v3 + Cime Bonbon v3, déblocage saisons serveur, icône + splash, AdMob + Billing, traductions complètes, rebuild Capacitor, soumission V4.
+Tous les fichiers front audités, optimisés et documentés :
+- [x] `style.css` (variables, 21 sections, -45%)
+- [x] `admin.html` (structure corrigée)
+- [x] `admin.js` (réduit à l'essentiel)
+- [x] `package.json` (métadonnées, scripts, versions)
+- [x] `index.html` (doublon supprimé, 12 sections)
+- [x] `i18n.js` (15 sections, clés récupération)
+- [x] `audio.js` (20 sections, constantes)
+- [x] `fx.js` (factory canvas, 4 sections)
+- [x] `jeu.js` (20 sections, constantes)
+- [x] `passe.js` (12 sections, createShopCard)
+- [x] `profil.js` (14 sections, avatarMap)
+- [x] `social.js` (10 sections, SOCIAL_STYLES)
+- [x] `saisons.css` (18 sections, bug orpheline corrigé)
+- [x] `saisons.js` (16 sections, cloneLottieData)
+- [x] `son-saisons.js` (10 sections, constantes musicales)
+- [x] `modes-catch.js` (11 sections, CATCH_CONFIG)
 
 ---
 
-## 🛠️ STACK
+# 🏪 PHASE 9 — PRÉPARATION PUBLICATION ✅
 
-- **Frontend** : HTML5, CSS3, JavaScript vanilla, Socket.io Client, Lottie Web
-- **Backend** : Node.js, Express, Socket.io
-- **Base de données** : Supabase (PostgreSQL)
+- [x] Compte Google Play Console créé + 25$ payés
+- [x] Adresse email dédiée créée
+- [x] Serveur Discord créé
+
+---
+
+# 🏰 PHASE 9B — MODE AVENTURE & MOBILE ✅
+
+**Nouveau mode de jeu complet : Tour Aventure**
+
+- [x] **9 mondes** de **200 étages** (1800 étages au total)
+- [x] **Courbe de difficulté** calibrée par monde (`TOWER_CURVE`) + « souffle » aux 10 premiers étages
+- [x] **9 modes de jeu** en rotation : classic, reverse, color, pairs, sprint, parity, forbidden, memory, nofail
+- [x] **Mode Mémoire** : chiffres visibles ~3s puis masqués, clic de mémoire, étoiles basées sur erreurs
+- [x] **Gardiens** (boss) aux étages 50, 100, 150, 200 avec barre de vie
+- [x] **Système de vies** : max 10, régénération 1/20min, achat boutique aventure
+- [x] **Jokers** : ⏱️ +10s temps, 🛡️ bouclier (absorbe erreur/clic interdit)
+- [x] **Boutique aventure** : +3 vies, packs IAP (1/3/5€), jokers
+- [x] **DA procédurale des 9 mondes** (CSS/HTML généré, cache par monde) :
+  - M1 Quartier Néon : ville néon, voitures, dirigeables
+  - M2 Grottes de Cristal : caverne, cristaux, lac gelé
+  - M3 Banque Dorée : coffre-fort, lingots, lasers
+  - M4 Tour Hantée : tour gothique, éclairs, chauves-souris
+  - M5 Cimetière Brumeux : tombes, arbres morts, feux follets
+  - M6 Antre Citrouille : caverne de jack-o'-lanterns
+  - M7 Cime Bonbon : château de sucre, rivière chocolat
+  - M8 Forêt de Sapins : sapins volumineux enneigés, guirlandes
+  - M9 Atelier Père Noël : intérieur animé (Père Noël, lutins, renne)
+- [x] **Musique de saison verrouillée** : override `SoundEngine.startMusic` en aventure, coupe en arrière-plan
+- [x] **Déblocage mondes saisonniers** : flags permanents `season_s2_unlocked` / `season_s3_unlocked` via Tier 1 du pass
+
+**Mobile & session**
+
+- [x] **Cache-busting automatique** : `?v=timestamp` dans `index.html` (fichiers toujours à jour)
+- [x] **Reprise de session** : `sessionStorage` pour dernière page active (salon, aventure, solo…)
+- [x] **Page explications au lancement frais** (app tuée → écran de bienvenue)
+- [x] **Partage natif** : `navigator.share` + fallback modale WhatsApp/SMS/Mail/Copier
+- [x] **Service Worker network-only** : plus jamais de fichiers périmés sur mobile
+
+---
+
+# 📱 PHASE 10 — FINALISATION MOBILE (EN COURS)
+
+- [~] **DA Atelier v3** : intérieur chaleureux style illustration (murs crème, fenêtres arquées, guirlandes, sapin décoré)
+- [~] **DA Cime Bonbon v3** : ciel barbe-à-papa rose (nuages coton, esprit charlotte aux fraises + Noël)
+- [ ] **Déblocage saisons serveur** : handler `claim_pass_tier` ajoute flags `season_s2_unlocked` / `season_s3_unlocked` au Tier 1
+- [ ] **Icône app** : design 512×512 (Android)
+- [ ] **Splash screen** : écran de démarrage animé
+- [ ] **Pub au clic sur JOUER** (page explications) : message « soutenir le créateur »
+- [ ] **Plugin Capacitor Share** : `npm install @capacitor/share` + rebuild APK
+- [ ] **Test APK final** sur téléphone (cache, reprise, partage)
+
+---
+
+# 💶 PHASE 11 — MONÉTISATION (À VENIR)
+
+- [ ] **Pass de saison payant 3€** via Google Play Billing
+- [ ] **Vérification du reçu d'achat** côté serveur (anti-triche)
+- [ ] **Vraies pubs Google (AdMob)** : bannières, interstitiels, récompensées
+- [ ] **PWA iOS** (sans App Store, gratuit)
+- [ ] **Microsoft Store** (PC, ~19€)
+
+---
+
+# 🎮 PHASE 12 — FEATURES À VENIR (QUAND LE JEU SERA CONNU)
+
+- [ ] 📜 Quêtes quotidiennes/hebdo (rétention)
+- [ ] 🎯 Tournois (bouton "bientôt" → réel)
+- [ ] 🗓️ Saison 4 (thème, cosmétiques, pass)
+- [ ] 💬 Bot Discord (annonces, support, codes promo)
+
+---
+
+# 🛠️ STACK
+
+- **Frontend** : HTML5, CSS3, JS vanilla, Socket.io, Lottie
+- **Backend** : Node.js, Express, Socket.io (Render)
+- **BDD** : Supabase (PostgreSQL) — `players`, `friendships`, `settings`, `player_logs`
 - **Mobile** : Capacitor (Android) + plugin Share
-- **Hébergement** : Render (serveur), GitHub Pages / Netlify (client)
+- **À venir** : Google Play Billing, AdMob
 
 ---
 
-*Dernière mise à jour : Septembre 2026 — après ajout du Mode Aventure (9 mondes, jokers, vies, DA procédurale), reprise de session mobile et verrou musical saisonnier.*
+*Prochaine étape : 🎨 Finalisation DA (Atelier v3 + Cime Bonbon v3) + 🔧 Déblocage saisons serveur + 📱 Icône + splash.*
