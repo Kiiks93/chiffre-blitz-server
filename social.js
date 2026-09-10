@@ -167,7 +167,7 @@ socket.on("friend_updated", () => { socket.emit("get_friends_list"); });
 function openRoomsScreen() {
   if (!isProfileValid()) { checkAndShowProfileModal(); return; }
   hideAllScreens();
-  localStorage.removeItem("cb_last_screen");
+  sessionStorage.removeItem("cb_last_screen");
   window.history.replaceState({}, "", window.location.pathname);
   document.getElementById("screen-rooms").style.display = "flex";
   fetchRoomsList();
@@ -206,8 +206,8 @@ function joinRoomFromList(code, hasPassword) { if (hasPassword) openJoinCustomSc
 function joinRoomDirect(code, password) { socket.emit("join_room", { code: code.toUpperCase(), password }); }
 function leaveCustomRoom() {
   socket.emit("leave_room");
-  localStorage.removeItem("cb_last_screen");
-  localStorage.removeItem("cb_pending_room");
+  sessionStorage.removeItem("cb_last_screen");
+  sessionStorage.removeItem("cb_pending_room");
   window.history.replaceState({}, "", window.location.pathname);
   openRoomsScreen();
 }
@@ -259,8 +259,8 @@ socket.on("rooms_list_data", (rooms) => {
 socket.on("rooms_list_changed", () => { if (document.getElementById("screen-rooms").style.display === "flex") fetchRoomsList(); });
 
 socket.on("room_joined_success", (data) => {
-  localStorage.setItem("cb_last_screen", "room");
-  localStorage.setItem("cb_pending_room", data.code);
+  sessionStorage.setItem("cb_last_screen", "room");
+  sessionStorage.setItem("cb_pending_room", data.code);
   hideAllScreens();
   document.getElementById("screen-room-waiting").style.display = "flex";
   document.getElementById("current-room-code").innerText = data.code;
@@ -288,9 +288,9 @@ function updateRoomPlayers(players) {
 
 // ❌ Erreur salon : si on revenait d'un lien, RECRÉE le salon disparu
 socket.on("room_error", (msg) => {
-  const pending = localStorage.getItem("cb_pending_room");
+  const pending = sessionStorage.getItem("cb_pending_room");
   if (pending) {
-    localStorage.removeItem("cb_pending_room");
+    sessionStorage.removeItem("cb_pending_room");
     socket.emit("create_room", { code: pending, password: "", username: myProfile.username, avatar: myProfile.avatar, flag: myProfile.flag });
     return;
   }
@@ -302,14 +302,14 @@ socket.on("room_error", (msg) => {
   const params = new URLSearchParams(window.location.search);
   const roomCode = (params.get("room") || "").trim().toUpperCase();
   if (!roomCode) return;
-  localStorage.removeItem("cb_last_screen");
-  localStorage.setItem("cb_pending_room", roomCode);
+  sessionStorage.removeItem("cb_last_screen");
+  sessionStorage.setItem("cb_pending_room", roomCode);
   const joinWhenReady = () => {
-    const pending = localStorage.getItem("cb_pending_room");
+    const pending = sessionStorage.getItem("cb_pending_room");
     if (!pending) return;
     setTimeout(() => {
-      if (localStorage.getItem("cb_pending_room") === pending) {
-        localStorage.removeItem("cb_pending_room");
+      if (sessionStorage.getItem("cb_pending_room") === pending) {
+        sessionStorage.removeItem("cb_pending_room");
         joinRoomDirect(pending, "");
       }
     }, 800);
