@@ -310,7 +310,12 @@ function getTitleDisplayNames() {
     title_rennes: "🦌 " + (fr ? "Dompteur de rennes" : "Reindeer Tamer"),
     title_assistant_noel: "🎅 " + (fr ? "Assistant du Père Noël" : "Santa's Assistant"),
     title_magie_noel: "✨ " + (fr ? "Magie de Noël" : "Christmas Magic"),
-    title_esprit_noel: "🎄 " + (fr ? "Esprit de Noël" : "Christmas Spirit")
+    title_esprit_noel: "🎄 " + (fr ? "Esprit de Noël" : "Christmas Spirit"),
+    title_grimpeur_neon: "🧗 " + (fr ? "Grimpeur Néon" : "Neon Climber"),
+    title_chasseur_hante: "👻 " + (fr ? "Chasseur Hanté" : "Haunted Hunter"),
+    title_roi_citrouille_tour: "🎃 " + (fr ? "Roi Citrouille" : "Pumpkin King"),
+    title_veilleur_cimes: "🗼 " + (fr ? "Veilleur des Cimes" : "Summit Watcher"),
+    title_maitre_tour: "🏆 " + (fr ? "Maître de la Tour" : "Tower Master")
   };
 }
 
@@ -328,7 +333,11 @@ function getFrameDisplayNames() {
     frame_fantome: "👻 " + (fr ? "Cadre « Fantôme »" : "Frame « Ghost »"),
     frame_bonbon: "🍭 " + (fr ? "Cadre « Bonbon »" : "Frame « Candy »"),
     frame_guirlande: "🎄 " + (fr ? "Cadre « Guirlande »" : "Frame « Garland »"),
-    frame_lutin: "🧝 " + (fr ? "Cadre « Lutin »" : "Frame « Elf »")
+    frame_lutin: "🧝 " + (fr ? "Cadre « Lutin »" : "Frame « Elf »"),
+    frame_cristal: "💎 " + (fr ? "Cadre Cristal" : "Crystal Frame"),
+    frame_circuit: "🔌 " + (fr ? "Cadre Circuit" : "Circuit Frame"),
+    frame_toile: "🕸️ " + (fr ? "Cadre Toile" : "Web Frame"),
+    frame_aurore: "🌅 " + (fr ? "Cadre Aurore" : "Aurora Frame")
   };
 }
 
@@ -1195,8 +1204,9 @@ function checkAndShowProfileModal() {
     updateEconomyUI();
     const modal = document.getElementById("modal-username");
     if (modal) modal.style.display = "none";
-    registerIfPossible();
-    showTitleScreen();
+    registerIfPossible();        // login auto
+    if (localStorage.getItem("cb_title_seen")) showMainMenu();
+    else { localStorage.setItem("cb_title_seen", "1"); showTitleScreen(); }
   } else {
     openAccountModal();
   }
