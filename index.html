@@ -550,8 +550,9 @@ SCRIPTS (ordre de chargement important)
 
 
 <script>
+// Désactive tout ancien Service Worker (nettoie automatiquement les mobiles qui l'ont déjà)
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js"));
+  navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
 }
 </script>
 </body>
