@@ -534,20 +534,15 @@ TROPHÉES (salle + popup)
 <!-- ============================================================
 SCRIPTS (ordre de chargement important)
 ============================================================ -->
-<script src="i18n.js"></script>
-<script src="audio.js"></script>
-<script src="son-saisons.js"></script>
-<script src="version.js"></script>
-<script src="profil.js"></script>
-<script src="admin.js"></script>
-<script src="social.js"></script>
-<script src="passe.js"></script>
-<script src="saisons.js"></script>
-<script src="fx.js"></script>
-<script src="jeu.js"></script>
-<script src="modes-catch.js"></script>
-<script src="tour.js"></script>
-
+<script>
+(function(){
+  var v = "?v=" + Date.now();
+  var files = ["i18n.js","audio.js","son-saisons.js","version.js","profil.js","admin.js","social.js","passe.js","saisons.js","fx.js","jeu.js","modes-catch.js","tour.js"];
+  for (var i = 0; i < files.length; i++) {
+    document.write('<script src="' + files[i] + v + '"><\/script>');
+  }
+})();
+</script>
 
 <script>
 // Désactive tout ancien Service Worker (nettoie automatiquement les mobiles qui l'ont déjà)
