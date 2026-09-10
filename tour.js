@@ -491,14 +491,14 @@ function openTower() {
   }
   m.style.display = "flex";
   twViewFloor = Math.min(towerProgress.floor + 1, TOTAL_FLOORS);
-  localStorage.setItem("cb_last_screen", "tower");
+  sessionStorage.setItem("cb_last_screen", "tower");
   socket.emit("get_tower");
   setTimeout(() => { const s = document.getElementById("screen-tower"); if (s && s.style.display !== "none") socket.emit("get_tower"); }, 600);
   setTimeout(() => { const s = document.getElementById("screen-tower"); if (s && s.style.display !== "none") socket.emit("get_tower"); }, 1600);
   renderAdventure();
   towerDing();
 }
-function closeTower() { localStorage.removeItem("cb_last_screen"); document.getElementById("screen-tower").style.display = "none"; }
+function closeTower() { sessionStorage.removeItem("cb_last_screen"); document.getElementById("screen-tower").style.display = "none"; }
 function fmtRegen(ms) {
   const s = Math.max(0, Math.ceil(ms / 1000));
   return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
@@ -858,7 +858,7 @@ socket.on("player_registered", () => {
   const scr = document.getElementById("screen-tower");
   const open = scr && scr.style.display !== "none";
   if (open) socket.emit("get_tower");
-  else if (localStorage.getItem("cb_last_screen") === "tower") openTower();
+  else if (sessionStorage.getItem("cb_last_screen") === "tower") openTower();
 });
 
 socket.on("tower_state", (st) => {
