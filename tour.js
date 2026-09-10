@@ -18,6 +18,17 @@ const FPC = 200;
 const TOTAL_FLOORS = 9 * FPC;
 const WORLD_QUOTA = 240;
 const MAX_LIVES = 10;
+const TOWER_CURVE = [
+  [12,16,30,26],
+  [14,19,28,23],
+  [16,21,26,21],
+  [18,23,24,19],
+  [20,25,22,18],
+  [22,27,20,17],
+  [24,29,19,16],
+  [26,31,18,15],
+  [28,34,17,13]
+];
 const IS_MOBILE = /Android|iPhone|iPad|iPod|Tablet|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 2 && Math.min(screen.width, screen.height) < 900);
 const TOWER_COLORS = {1:{acc:"#00d2ff"},2:{acc:"#74ebf5"},3:{acc:"#f8b500"},4:{acc:"#ff8a00"},5:{acc:"#8a9bb0"},6:{acc:"#ff4b2b"},7:{acc:"#ff6fa5"},8:{acc:"#2ecc71"},9:{acc:"#ff416c"}};
 const TOWER_WORLDS = {
@@ -65,23 +76,27 @@ const TowerUtils = {
   getTowerChapter(f) { return TOWER_CHAPTERS[Math.ceil(f / FPC) - 1]; },
   currentSeasonNum() { return parseInt((myProfile.currentSeasonId || "s1").replace("s", "")) || 1; },
   worldUnlocked(w) { return TOWER_CHAPTERS[w-1].season <= this.currentSeasonNum() && this.worldUnlockedByStars(w); },
-  getFloorDef(floor) {
+   getFloorDef(floor) {
     const inChap = ((floor - 1) % FPC) + 1;
-    const global = (floor - 1) / (TOTAL_FLOORS - 1);
-    let gridSize = Math.min(48, Math.round(16 + global * 32));
-    let time = Math.max(12, Math.round(28 - global * 16));
+    const chap = Math.ceil(floor / FPC);
+    const c = TOWER_CURVE[Math.min(chap,9)-1];
+    const t01 = (inChap - 1) / (FPC - 1);
+    let gridSize = Math.round(c[0] + (c[1]-c[0]) * t01);
+    let time = Math.round(c[2] + (c[3]-c[2]) * t01);
+    if (inChap <= 10) { gridSize = Math.max(10, gridSize - 2); time += 2; }
     if (inChap === FPC || inChap % 50 === 0) return { floor, gridSize, time, type: "boss" };
-    const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","fog","nofail"];
+    const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail"];
     const t = seq[(inChap - 1) % 9];
     if (t === "sprint") return { floor, gridSize, time: Math.max(6, Math.round(time * 0.4)), type: "sprint" };
     if (t === "nofail") return { floor, gridSize, time: Math.max(14, Math.round(time * 0.7)), type: "nofail" };
     if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; return { floor, gridSize: g, time: Math.max(25, Math.round(g/2 * 5)), type: "pairs" }; }
     if (t === "parity") return { floor, gridSize: Math.min(60, gridSize + 12), time: time + 3, type: "parity" };
+    if (t === "memory") return { floor, gridSize, time: time + 4, type: "memory" };
     return { floor, gridSize, time, type: t };
   },
   typeLabel(t) {
     const fr = currentLang === "fr";
-    return ({classic:fr?"⚡ Croissant":" Ascending",reverse:fr?"🔽 Décroissant":"🔽 Descending",color:fr?"🎨 Couleurs":"🎨 Colors",pairs:fr?"🧩 Paires":"🧩 Pairs",parity:fr?"🔢 Pair/Impair":"🔢 Even/Odd",forbidden:fr?"🚫 Interdit":"🚫 Forbidden",sprint:fr?"⏱️ Sprint":"⏱️ Sprint",fog:fr?"🌫️ Brouillard":"🌫️ Fog",nofail:fr?"💎 Sans faute":"💎 No mistake",boss:fr?"⚔️ GARDIEN":"⚔️ GUARDIAN"})[t] || t;
+    return ({classic:fr?"⚡ Croissant":" Ascending",reverse:fr?"🔽 Décroissant":"🔽 Descending",color:fr?"🎨 Couleurs":"🎨 Colors",pairs:fr?"🧩 Paires":"🧩 Pairs",parity:fr?"🔢 Pair/Impair":"🔢 Even/Odd",forbidden:fr?"🚫 Interdit":"🚫 Forbidden",sprint:fr?"⏱️ Sprint":"⏱️ Sprint",memory:fr?"🧠 Mémoire":"🧠 Memory",nofail:fr?"💎 Sans faute":"💎 No mistake",boss:fr?"⚔️ GARDIEN":"⚔️ GUARDIAN"})[t] || t;
   }
 };
 
@@ -690,7 +705,7 @@ socket.on("tower_no_lives", () => {
   renderAdventure();
 });
 function cloneState(s) {
-  return { type:s.type, total:s.total, gridSize:s.gridSize, floor:s.floor, target:s.target, targetColor:s.targetColor, targetParity:s.targetParity, forbidden:s.forbidden, timeLeft:s.timeLeft, ai:s.ai, gone:Object.assign({},s.gone||{}), revealed:Object.assign({},s.revealed||{}), display:(s.display||[]).slice(), sel:(s.sel===undefined?null:s.sel), shield:s.shield||0 };
+  return { type:s.type, total:s.total, gridSize:s.gridSize, floor:s.floor, target:s.target, targetColor:s.targetColor, targetParity:s.targetParity, forbidden:s.forbidden, timeLeft:s.timeLeft, ai:s.ai, gone:Object.assign({},s.gone||{}), revealed:Object.assign({},s.revealed||{}), display:(s.display||[]).slice(), sel:(s.sel===undefined?null:s.sel), shield:s.shield||0, revealLeft:s.revealLeft||0 };
 }
 function startTowerFloor(def) {
   if (TW) return;
@@ -711,10 +726,10 @@ function buildGridFromState(st) {
   g.innerHTML = ""; TW_buttons = [];
   st.display.forEach((v, i) => {
     const b = document.createElement("button");
-    b.className = "tg-tile" + (st.type === "fog" ? " foggy" : "");
+    b.className = "tg-tile";
     if (st.gone[i]) b.classList.add("gone");
     if (st.type === "color" && v) { b.style.background = `linear-gradient(180deg,${v.hex},#111827 85%)`; b.textContent = ""; }
-    else if (st.type === "pairs") { b.textContent = st.gone[i] ? "" : (v === null ? "?" : v); if ((st.revealed && st.revealed[i]) || st.sel === i) b.classList.add("sel"); }
+    else if (st.type === "pairs" || st.type === "memory") { b.textContent = st.gone[i] ? "" : (v === null ? "?" : v); if ((st.revealed && st.revealed[i]) || st.sel === i) b.classList.add("sel"); }
     else b.textContent = v;
     b.onclick = () => handleTowerClick(i, b);
     g.appendChild(b); TW_buttons[i] = b;
@@ -742,7 +757,7 @@ function handleTowerClick(i, b) {
   b.style.transform = "scale(0.9)";
   setTimeout(() => { if (b) b.style.transform = ""; }, 120);
   const t = TW_dom.type;
-  if (t === "pairs") { socket.emit("tower_click", { index: i }); return; }
+  if (t === "pairs" || t === "memory") { socket.emit("tower_click", { index: i }); return; }
   const v = TW_dom.display[i];
   let success = null;
   if (t === "color" && TW_dom.targetColor) success = (v && v.key === TW_dom.targetColor.key);
@@ -777,6 +792,7 @@ function renderHUDFromState() {
   else if (TW.type === "pairs") main = "🧩 RETROUVE LES PAIRES";
   else if (TW.type === "parity") main = TW.targetParity === "even" ? "CLIQUE : PAIRS" : "CLIQUE : IMPAIRS";
   else if (TW.type === "forbidden") main = `INTERDIT : <span style="color:#ff4b2b;">${TW.forbidden}</span>`;
+  else if (TW.type === "memory") main = (TW.revealLeft > 0) ? `👀 MÉMORISE ! ${TW.revealLeft}s` : "🧠 CLIQUE DANS L'ORDRE (1→N)";
   else if (TW.target !== null && TW.target !== undefined) main = `CIBLE : ${TW.target}`;
   if (main !== TW_hudCache) { h.innerHTML = main; TW_hudCache = main; }
   const bar = document.getElementById("tg-bar");
