@@ -1204,9 +1204,33 @@ function checkAndShowProfileModal() {
     updateEconomyUI();
     const modal = document.getElementById("modal-username");
     if (modal) modal.style.display = "none";
-    registerIfPossible();        // login auto
-    if (localStorage.getItem("cb_title_seen")) showMainMenu();
-    else { localStorage.setItem("cb_title_seen", "1"); showTitleScreen(); }
+        registerIfPossible();
+    const lastScreen = localStorage.getItem("cb_last_screen");
+    const pendingRoom = localStorage.getItem("cb_pending_room");
+    
+    if (lastScreen === "room" && pendingRoom) {
+      // Reprise d'un salon privé (même si l'app a été tuée)
+      setTimeout(() => joinRoomDirect(pendingRoom, ""), 600);
+    } else if (lastScreen === "rooms") {
+      setTimeout(() => { if (typeof openRoomsScreen === "function") openRoomsScreen(); }, 400);
+    } else if (lastScreen === "tower") {
+      setTimeout(() => { if (typeof openTower === "function") openTower(); }, 400);
+    } else if (lastScreen === "solo") {
+      setTimeout(() => { if (typeof openSoloMenu === "function") openSoloMenu(); }, 400);
+    } else if (lastScreen === "1v1") {
+      setTimeout(() => { if (typeof open1v1Hub === "function") open1v1Hub(); }, 400);
+    } else if (lastScreen === "shop") {
+      setTimeout(() => { if (typeof openShop === "function") openShop(); }, 400);
+    } else if (lastScreen === "leaderboard") {
+      setTimeout(() => { if (typeof openLeaderboard === "function") openLeaderboard(); }, 400);
+    } else if (lastScreen === "pass") {
+      setTimeout(() => { if (typeof openBlitzPass === "function") openBlitzPass(); }, 400);
+    } else if (localStorage.getItem("cb_title_seen")) {
+      showMainMenu();
+    } else {
+      localStorage.setItem("cb_title_seen", "1");
+      showTitleScreen();
+    }
   } else {
     openAccountModal();
   }
@@ -1620,14 +1644,8 @@ document.addEventListener("visibilitychange", () => {
       document.body.style.opacity = "0.99";
       requestAnimationFrame(() => {
         document.body.style.opacity = "1";
-      });
-      
-      if (timeAway > 120000) {
-        console.log("App en arrière-plan depuis", Math.round(timeAway / 1000), "secondes → reload");
-        location.reload();
-      }
+      }); 
     }
-    
     updateLastActiveTime();
   }
 });
@@ -1697,15 +1715,15 @@ setInterval(() => {
         document.body.style.display = "";
         window.dispatchEvent(new Event("resize"));
       }
-
-      if (away > 120000) {
-        location.reload();
-      }
     }
   });
 
-  document.addEventListener("resume", () => {
-    location.reload();
+    document.addEventListener("resume", () => {
+    document.body.style.display = "none";
+    void document.body.offsetHeight;
+    document.body.style.display = "";
+    window.dispatchEvent(new Event("resize"));
+    updateLastActiveTime();
   });
 
   window.addEventListener("pageshow", (e) => {
