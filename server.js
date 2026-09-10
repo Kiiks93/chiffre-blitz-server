@@ -988,9 +988,18 @@ io.on('connection', (socket) => {
     if (cleanTarget.toLowerCase() === player.username.toLowerCase()) { socket.emit('friend_error', "Tu ne peux pas t'ajouter toi-meme !"); return; }
     const { data: targetExists } = await supabase.from('players').select('username').ilike('username', cleanTarget).single();
     if (!targetExists) { socket.emit('friend_error', "Ce joueur n'existe pas !"); return; }
-    const { error } = await supabase.from('friendships').insert([{ user_username: player.username, friend_username: targetExists.username, status: 'pending' }]);
+        const { error } = await supabase.from('friendships').insert([{ user_username: player.username, friend_username: targetExists.username, status: 'pending' }]);
     if (error) socket.emit('friend_error', "Demande deja envoyee ou amitie existante.");
-    else socket.emit('friend_success', "Demande d'ami envoyee a " + targetExists.username + " !");
+    else {
+      socket.emit('friend_success', "Demande d'ami envoyee a " + targetExists.username + " !");
+      // 📬 Notifier le joueur cible EN TEMPS RÉEL (pastille + toast)
+      for (let sId in activePlayers) {
+        if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === targetExists.username.toLowerCase()) {
+          io.to(sId).emit('friend_request_received', { from: player.username });
+          break;
+        }
+      }
+    }
   });
 
   socket.on('accept_friend_request', async (friendshipId) => { await supabase.from('friendships').update({ status: 'accepted' }).eq('id', friendshipId); socket.emit('friend_updated'); });
