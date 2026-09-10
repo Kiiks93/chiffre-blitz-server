@@ -35,12 +35,12 @@ const TOWER_WORLDS = {
   1:{bg:"linear-gradient(180deg,#050514,#0a0a2a 55%,#1a1030)",scene:"city",part:"neon"},
   2:{bg:"linear-gradient(180deg,#062028,#0a2a3a 50%,#123a4a)",scene:"glacier",part:"snow"},
   3:{bg:"linear-gradient(180deg,#160d00,#2b1a00 60%,#3a2a05)",scene:"vault",part:"spark"},
-  4:{bg:"radial-gradient(ellipse at 30% 10%,#ff8a0022,transparent 45%),linear-gradient(180deg,#12041a,#2a0a33)",scene:"haunted",part:"fog"},
-  5:{bg:"linear-gradient(180deg,#0a0d14,#1a2230)",scene:"haunted",part:"fog"},
-  6:{bg:"radial-gradient(ellipse at 50% 10%,#ff4b2b22,transparent 50%),linear-gradient(180deg,#18040a,#330a12)",scene:"haunted",part:"fog"},
-  7:{bg:"radial-gradient(ellipse at 50% 10%,#ff6fa522,transparent 50%),linear-gradient(180deg,#180410,#330a20)",scene:"xmas",part:"snow"},
-  8:{bg:"radial-gradient(ellipse at 50% 10%,#2ecc7122,transparent 50%),linear-gradient(180deg,#04180b,#0a3318)",scene:"xmas",part:"snow"},
-  9:{bg:"radial-gradient(ellipse at 50% 10%,#ff416c22,transparent 50%),linear-gradient(180deg,#180404,#330a0a)",scene:"xmas",part:"snow"}
+  4:{bg:"linear-gradient(180deg,#0b0618,#1a0b2e 50%,#120820)",scene:"haunt",part:"fog"},
+  5:{bg:"linear-gradient(180deg,#0a0f0d,#12211c 55%,#0a1410)",scene:"grave",part:"fog"},
+  6:{bg:"radial-gradient(ellipse at 50% 70%,#3a1608,#120502 70%)",scene:"lair",part:"spark"},
+  7:{bg:"linear-gradient(180deg,#1a0b2e,#3a1450 45%,#2a0f3a)",scene:"candy",part:"spark"},
+  8:{bg:"linear-gradient(180deg,#04101e,#0a2036 55%,#061422)",scene:"pine",part:"snow"},
+  9:{bg:"linear-gradient(180deg,#0a0f1e,#142036 60%,#0a1424)",scene:"shop",part:"snow"}
 };
 const SHOP_ITEMS = [
   { id:"vies", icon:"❤️", name:"+3 Vies", price:150 },
@@ -59,6 +59,7 @@ let TW = null, TW_dom = null, TW_buttons = [], TW_lastFloor = 0;
 let TW_hudCache = "", TW_localTimer = null, TW_lastClick = 0, TW_pairsLock = false;
 let TW_lastState = 0;
 const SCENE_CACHE = {};
+let TW_musicSeason = null;
 
 /* ----- 3. UTILITAIRES ----- */
 const TowerUtils = {
@@ -75,8 +76,15 @@ const TowerUtils = {
   },
   getTowerChapter(f) { return TOWER_CHAPTERS[Math.ceil(f / FPC) - 1]; },
   currentSeasonNum() { return parseInt((myProfile.currentSeasonId || "s1").replace("s", "")) || 1; },
-  worldUnlocked(w) { return TOWER_CHAPTERS[w-1].season <= this.currentSeasonNum() && this.worldUnlockedByStars(w); },
-   getFloorDef(floor) {
+  worldUnlocked(w) {
+    const season = TOWER_CHAPTERS[w-1].season;
+    if (season === 1) return this.worldUnlockedByStars(w);
+    const flag = "season_s" + season + "_unlocked";
+    const unlocked = (myProfile.unlocked_items || []).includes(flag);
+    if (!unlocked) return false;
+    return this.worldUnlockedByStars(w);
+  },
+  getFloorDef(floor) {
     const inChap = ((floor - 1) % FPC) + 1;
     const chap = Math.ceil(floor / FPC);
     const c = TOWER_CURVE[Math.min(chap,9)-1];
@@ -99,6 +107,16 @@ const TowerUtils = {
     return ({classic:fr?"⚡ Croissant":" Ascending",reverse:fr?"🔽 Décroissant":"🔽 Descending",color:fr?"🎨 Couleurs":"🎨 Colors",pairs:fr?"🧩 Paires":"🧩 Pairs",parity:fr?"🔢 Pair/Impair":"🔢 Even/Odd",forbidden:fr?"🚫 Interdit":"🚫 Forbidden",sprint:fr?"⏱️ Sprint":"⏱️ Sprint",memory:fr?"🧠 Mémoire":"🧠 Memory",nofail:fr?"💎 Sans faute":"💎 No mistake",boss:fr?"⚔️ GARDIEN":"⚔️ GUARDIAN"})[t] || t;
   }
 };
+
+function towerPlaySeasonMusic(seasonNum) {
+  try {
+    if (typeof SoundEngine === "undefined") return;
+    const key = seasonNum === 2 ? "s2" : seasonNum === 3 ? "s3" : "s1";
+    if (typeof SoundEngine.playSeason === "function") SoundEngine.playSeason(key);
+    else if (typeof SoundEngine.setSeasonMusic === "function") SoundEngine.setSeasonMusic(key);
+    else if (typeof SoundEngine.playMusic === "function") SoundEngine.playMusic(key);
+  } catch (e) {}
+}
 
 /* ----- 4. CSS CONSOLIDÉ ----- */
 (function() {
@@ -277,45 +295,100 @@ const TowerUtils = {
   .tw-part.snow{background:#ffffffcc;animation:twFall linear infinite;}
   .tw-part.spark{background:#f8b500;box-shadow:0 0 6px #f8b500;animation:twRise linear infinite;}
   .tw-part.neon{box-shadow:0 0 8px currentColor;background:currentColor;animation:twFlickP 2.2s steps(2) infinite;}
-    /* === HAUNTED (Halloween) === */
-  .tw-moon-blood{position:absolute;top:5%;right:15%;width:60px;height:60px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#ff4b2b,#8b0000 70%);box-shadow:0 0 40px #ff4b2b88,0 0 80px #ff4b2b44;animation:twMoonGlow 4s ease-in-out infinite;}
-  @keyframes twMoonGlow{0%,100%{box-shadow:0 0 40px #ff4b2b88,0 0 80px #ff4b2b44}50%{box-shadow:0 0 60px #ff4b2bcc,0 0 120px #ff4b2b66}}
-  .tw-castle{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:300px;height:400px;background:linear-gradient(180deg,#1a0f2e,#0a0515);clip-path:polygon(0 100%,0 40%,10% 35%,10% 20%,20% 15%,20% 25%,30% 20%,30% 10%,40% 5%,40% 15%,50% 10%,50% 0,60% 10%,60% 15%,70% 10%,70% 20%,80% 25%,80% 15%,90% 20%,90% 35%,100% 40%,100% 100%);box-shadow:inset 0 0 60px #00000088;}
-  .tw-castle-window{position:absolute;width:12px;height:18px;background:#ff4b2b;border-radius:50% 50% 0 0;box-shadow:0 0 10px #ff4b2b,0 0 20px #ff4b2b66;animation:twWindowFlick 3s infinite;}
-  @keyframes twWindowFlick{0%,100%{opacity:1}50%{opacity:0.3}}
-  .tw-pumpkin{position:absolute;bottom:20px;width:40px;height:35px;background:radial-gradient(ellipse at center,#ff8a00,#d85a00);border-radius:50% 50% 45% 45% / 60% 60% 40% 40%;box-shadow:inset -5px -5px 10px #8b3a00,0 0 15px #ff8a0088;}
-  .tw-pumpkin::before{content:"";position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:8px;height:10px;background:#2a5a0a;border-radius:4px 4px 0 0;}
-  .tw-pumpkin::after{content:"";position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);width:25px;height:12px;background:#000;clip-path:polygon(20% 0,40% 30%,60% 30%,80% 0,100% 50%,80% 100%,20% 100%,0 50%);box-shadow:0 0 10px #ff4b2b;}
-  .tw-web{position:absolute;width:80px;height:80px;background:radial-gradient(circle at 20% 20%,transparent 0%,transparent 45%,#ffffff22 45%,#ffffff22 46%,transparent 46%),radial-gradient(circle at 80% 20%,transparent 0%,transparent 45%,#ffffff22 45%,#ffffff22 46%,transparent 46%),radial-gradient(circle at 20% 80%,transparent 0%,transparent 45%,#ffffff22 45%,#ffffff22 46%,transparent 46%),radial-gradient(circle at 80% 80%,transparent 0%,transparent 45%,#ffffff22 45%,#ffffff22 46%,transparent 46%),linear-gradient(45deg,transparent 48%,#ffffff22 48%,#ffffff22 52%,transparent 52%),linear-gradient(-45deg,transparent 48%,#ffffff22 48%,#ffffff22 52%,transparent 52%),linear-gradient(90deg,transparent 48%,#ffffff22 48%,#ffffff22 52%,transparent 52%),linear-gradient(0deg,transparent 48%,#ffffff22 48%,#ffffff22 52%,transparent 52%);opacity:0.6;}
-  .tw-bat{position:absolute;width:30px;height:15px;background:#000;clip-path:polygon(50% 0,40% 30%,0 40%,20% 60%,30% 50%,50% 70%,70% 50%,80% 60%,100% 40%,60% 30%);animation:twBatFly 8s linear infinite;}
-  @keyframes twBatFly{0%{transform:translate(0,0) rotate(0deg)}25%{transform:translate(100px,-30px) rotate(-10deg)}50%{transform:translate(200px,0) rotate(0deg)}75%{transform:translate(100px,30px) rotate(10deg)}100%{transform:translate(0,0) rotate(0deg)}}
-  .tw-fog{position:absolute;bottom:0;left:0;right:0;height:100px;background:linear-gradient(0deg,rgba(255,255,255,0.3),transparent);animation:twFogMove 20s linear infinite;}
-  @keyframes twFogMove{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
-  .tw-part.fog{background:#ffffffaa;width:6px;height:6px;filter:blur(2px);animation:twFogFloat 6s ease-in-out infinite;}
-  @keyframes twFogFloat{0%,100%{transform:translateY(0) translateX(0);opacity:0.3}50%{transform:translateY(-20px) translateX(10px);opacity:0.6}}
 
-  /* === XMAS (Noël) === */
-  .tw-xmas-tree{position:absolute;bottom:0;width:80px;height:150px;}
-  .tw-tree-trunk{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:15px;height:30px;background:linear-gradient(90deg,#4a2511,#6b3410);border-radius:2px;}
-  .tw-tree-layer{position:absolute;left:50%;transform:translateX(-50%);width:0;height:0;border-left:40px solid transparent;border-right:40px solid transparent;border-bottom:40px solid #1a5a1a;filter:drop-shadow(0 0 10px #1a5a1a88);}
-  .tw-tree-layer.l1{bottom:30px;}
-  .tw-tree-layer.l2{bottom:60px;border-left-width:30px;border-right-width:30px;border-bottom-width:35px;border-bottom-color:#1f6b1f;}
-  .tw-tree-layer.l3{bottom:85px;border-left-width:20px;border-right-width:20px;border-bottom-width:30px;border-bottom-color:#247a24;}
-  .tw-tree-star{position:absolute;top:-15px;left:50%;transform:translateX(-50%);width:20px;height:20px;background:#ffd700;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);box-shadow:0 0 15px #ffd700,0 0 30px #ffd70088;animation:twStarGlow 2s ease-in-out infinite;}
-  @keyframes twStarGlow{0%,100%{box-shadow:0 0 15px #ffd700,0 0 30px #ffd70088}50%{box-shadow:0 0 25px #ffd700,0 0 50px #ffd700cc}}
-  .tw-tree-light{position:absolute;width:6px;height:6px;border-radius:50%;animation:twLightBlink 1.5s infinite;}
-  @keyframes twLightBlink{0%,100%{opacity:1}50%{opacity:0.3}}
-  .tw-snow-pile{position:absolute;bottom:0;width:120px;height:30px;background:radial-gradient(ellipse at center,#ffffff,#e0e0e0 70%,#c0c0c0);border-radius:50% 50% 40% 40% / 60% 60% 40% 40%;box-shadow:inset -5px -5px 10px #00000022;}
-  .tw-gift{position:absolute;bottom:10px;width:35px;height:35px;border-radius:3px;box-shadow:0 2px 8px #00000044;}
-  .tw-gift::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:6px;height:100%;background:inherit;filter:brightness(0.8);}
-  .tw-gift::after{content:"";position:absolute;top:50%;left:0;transform:translateY(-50%);width:100%;height:6px;background:inherit;filter:brightness(0.8);}
-  .tw-fireplace{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:200px;height:180px;background:linear-gradient(180deg,#4a2511,#2a1505);border-radius:8px 8px 0 0;border:4px solid #6b3410;box-shadow:inset 0 0 30px #00000088;}
-  .tw-fire{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);width:60px;height:80px;background:radial-gradient(ellipse at bottom,#ff4500,#ff8c00 50%,#ffd700 80%,transparent);border-radius:50% 50% 20% 20%;animation:twFireFlick 0.8s infinite;box-shadow:0 0 30px #ff4500,0 0 60px #ff8c0088;}
-  @keyframes twFireFlick{0%,100%{transform:translateX(-50%) scaleY(1) scaleX(1)}50%{transform:translateX(-50%) scaleY(1.1) scaleX(0.95)}}
-  .tw-sock{position:absolute;top:10px;width:20px;height:35px;background:#c41e3a;border-radius:0 0 10px 10px;box-shadow:inset -2px -2px 5px #00000044;}
-  .tw-sock::before{content:"";position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:25px;height:8px;background:#ffffff;border-radius:4px;}
-  .tw-snowflake{position:absolute;color:#ffffff;font-size:12px;animation:twSnowFall linear infinite;opacity:0.8;}
-  @keyframes twSnowFall{0%{transform:translateY(-100vh) rotate(0deg)}100%{transform:translateY(100vh) rotate(360deg)}}
+  /* === M4 TOUR HANTÉE === */
+  .tw-ha-lightning{position:absolute;inset:0;background:radial-gradient(ellipse at 70% 8%,#cfa8ff66,transparent 55%);opacity:0;animation:twLightning 7s infinite;}
+  @keyframes twLightning{0%,91%,95%,100%{opacity:0}92%,94%{opacity:1}}
+  .tw-ha-moon{position:absolute;top:6%;left:12%;width:70px;height:70px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fdf6e3,#d8cfae 60%,#b0a888);box-shadow:0 0 40px #fdf6e366,0 0 90px #fdf6e333;}
+  .tw-ha-cloud{position:absolute;height:26px;border-radius:20px;background:linear-gradient(90deg,transparent,#0a0514cc 30%,#0a0514cc 70%,transparent);filter:blur(4px);animation:twCloud linear infinite;}
+  .tw-ha-hill{position:absolute;bottom:0;left:-30%;right:-30%;height:26%;background:linear-gradient(180deg,#150a26,#0a0514);border-radius:50% 50% 0 0;}
+  .tw-ha-fence{position:absolute;bottom:9%;left:0;right:0;height:56px;background:repeating-linear-gradient(90deg,transparent 0 26px,#0a0514 26px 32px);}
+  .tw-ha-fence::before{content:"";position:absolute;left:0;right:0;top:14px;height:6px;background:#0a0514;}
+  .tw-ha-tower{position:absolute;bottom:11%;left:50%;transform:translateX(-50%);width:150px;height:60%;background:linear-gradient(90deg,#0d0718,#1c1030 45%,#0d0718);clip-path:polygon(0 100%,0 18%,8% 18%,8% 12%,18% 12%,18% 6%,30% 6%,30% 0,70% 0,70% 6%,82% 6%,82% 12%,92% 12%,92% 18%,100% 18%,100% 100%);box-shadow:0 0 60px #00000099;}
+  .tw-ha-win{position:absolute;width:14px;height:22px;background:#ff8a00;border-radius:50% 50% 0 0;box-shadow:0 0 14px #ff8a00cc,0 0 30px #ff8a0066;animation:twWindowFlick 3.4s infinite;}
+  @keyframes twWindowFlick{0%,100%{opacity:1}45%{opacity:.25}55%{opacity:.9}}
+  .tw-ha-gate{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:56px;height:66px;background:#05030c;border-radius:28px 28px 0 0;}
+  .tw-bat{position:absolute;width:30px;height:15px;background:#05030c;clip-path:polygon(50% 0,40% 30%,0 40%,20% 60%,30% 50%,50% 70%,70% 50%,80% 60%,100% 40%,60% 30%);animation:twBatFly 8s linear infinite;}
+  @keyframes twBatFly{0%{transform:translate(0,0)}25%{transform:translate(90px,-26px)}50%{transform:translate(180px,0)}75%{transform:translate(90px,26px)}100%{transform:translate(0,0)}}
+  .tw-web{position:absolute;width:80px;height:80px;opacity:.5;background:
+    linear-gradient(45deg,transparent 48%,#ffffff33 48% 52%,transparent 52%),
+    linear-gradient(-45deg,transparent 48%,#ffffff33 48% 52%,transparent 52%),
+    linear-gradient(90deg,transparent 48%,#ffffff33 48% 52%,transparent 52%),
+    linear-gradient(0deg,transparent 48%,#ffffff33 48% 52%,transparent 52%),
+    radial-gradient(circle,transparent 30%,#ffffff22 30% 32%,transparent 32%),
+    radial-gradient(circle,transparent 55%,#ffffff22 55% 57%,transparent 57%);}
+  .tw-gr-fog{position:absolute;left:-50%;width:200%;height:70px;background:linear-gradient(0deg,#cfe8d826,transparent);filter:blur(8px);animation:twFogDrift linear infinite;}
+  @keyframes twFogDrift{0%{transform:translateX(-12%)}100%{transform:translateX(12%)}}
+  .tw-part.fog{background:#ffffffaa;width:6px;height:6px;filter:blur(2px);animation:twFogFloat 6s ease-in-out infinite;}
+  @keyframes twFogFloat{0%,100%{transform:translate(0,0);opacity:.3}50%{transform:translate(10px,-22px);opacity:.6}}
+
+  /* === M5 CIMETIÈRE BRUMEUX === */
+  .tw-gr-moon{position:absolute;top:8%;right:16%;width:60px;height:60px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#e8f2e8,#b8c8b8 65%,#8a9a8a);box-shadow:0 0 30px #e8f2e844;opacity:.7;filter:blur(1px);}
+  .tw-gr-veil{position:absolute;top:5%;right:6%;width:130px;height:42px;border-radius:22px;background:#0a141099;filter:blur(6px);animation:twCloud 44s linear infinite;}
+  .tw-gr-tree{position:absolute;bottom:16%;width:90px;height:150px;background:#070c08;clip-path:polygon(45% 100%,48% 60%,20% 45%,45% 50%,46% 30%,15% 15%,46% 22%,50% 0,54% 22%,85% 12%,54% 30%,55% 50%,80% 42%,52% 60%,55% 100%);}
+  .tw-gr-ground{position:absolute;bottom:0;left:0;right:0;height:14%;background:linear-gradient(180deg,#101a14,#070c09);}
+  .tw-gr-grass{position:absolute;bottom:12%;left:0;right:0;height:24px;background:repeating-linear-gradient(90deg,transparent 0 8px,#0d150f 8px 11px);opacity:.8;}
+  .tw-gr-stone{position:absolute;width:44px;height:56px;background:linear-gradient(180deg,#3a443c,#232b26 70%,#161c18);border-radius:20px 20px 4px 4px;box-shadow:inset 0 2px 6px #ffffff11,0 4px 10px #00000088;}
+  .tw-gr-stone.cross{width:14px;height:64px;border-radius:3px;background:linear-gradient(180deg,#444c44,#2a322c);}
+  .tw-gr-stone.cross::before{content:"";position:absolute;top:14px;left:-16px;width:46px;height:12px;background:inherit;border-radius:3px;}
+  .tw-gr-crow{position:absolute;width:22px;height:16px;background:#050805;clip-path:polygon(0 60%,25% 30%,45% 45%,60% 10%,70% 40%,100% 55%,70% 75%,30% 80%);}
+  .tw-gr-wisp{position:absolute;width:8px;height:8px;border-radius:50%;background:#7dff8a;box-shadow:0 0 12px #7dff8a,0 0 26px #7dff8a66;animation:twWisp 6s ease-in-out infinite;}
+  @keyframes twWisp{0%,100%{transform:translate(0,0);opacity:.3}30%{transform:translate(14px,-22px);opacity:.9}60%{transform:translate(-10px,-36px);opacity:.5}}
+
+  /* === M6 ANTRE CITROUILLE === */
+  .tw-pk-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 78%,#ff8a0033,transparent 60%);animation:twGlowC 3s infinite;}
+  .tw-pk-wall{position:absolute;top:0;left:0;right:0;height:22%;background:linear-gradient(180deg,#0a0402,#1c0c04);clip-path:polygon(0 0,100% 0,100% 40%,88% 70%,74% 45%,60% 80%,46% 50%,32% 85%,18% 55%,6% 75%,0 45%);}
+  .tw-pk-floor{position:absolute;bottom:0;left:0;right:0;height:18%;background:linear-gradient(180deg,#1c0c04,#0a0402);}
+  .tw-pk-jack{position:absolute;border-radius:46% 46% 42% 42% / 55% 55% 45% 45%;background:radial-gradient(ellipse at 35% 30%,#ff9a2a,#d85a00 60%,#8a3400);box-shadow:inset -6px -8px 14px #5a1e0088,0 0 24px #ff8a0055;}
+  .tw-pk-jack::before{content:"";position:absolute;top:-9%;left:50%;transform:translateX(-50%);width:12%;height:16%;background:#3a5a12;border-radius:40% 40% 0 0;}
+  .tw-pk-jack::after{content:"";position:absolute;top:32%;left:50%;transform:translateX(-50%);width:64%;height:40%;background:#ffb347;clip-path:polygon(12% 0,28% 34%,40% 8%,52% 36%,64% 6%,76% 34%,88% 0,100% 52%,86% 100%,14% 100%,0 52%);box-shadow:0 0 14px #ffb347,0 0 30px #ff8a0088;animation:twJackPulse 2.6s ease-in-out infinite;}
+  @keyframes twJackPulse{0%,100%{opacity:1}50%{opacity:.5}}
+  .tw-pk-vine{position:absolute;height:6px;background:repeating-linear-gradient(90deg,#2a4a10 0 14px,transparent 14px 22px);border-radius:3px;opacity:.7;}
+  .tw-pk-eyes{position:absolute;width:26px;height:10px;background:radial-gradient(circle at 25% 50%,#ffd75e 0 3px,transparent 4px),radial-gradient(circle at 75% 50%,#ffd75e 0 3px,transparent 4px);animation:twBlink 5s infinite;}
+  @keyframes twBlink{0%,88%,96%,100%{opacity:1}92%{opacity:0}}
+
+  /* === M7 CIME BONBON === */
+  .tw-cd-mtn{position:absolute;left:-40%;right:-40%;bottom:0;border-radius:50% 50% 0 0;}
+  .tw-cd-mtn.m1{height:40%;background:linear-gradient(180deg,#ffd6e8,#ff9ec4 55%,#d86a9a);opacity:.9;}
+  .tw-cd-mtn.m2{height:30%;background:linear-gradient(180deg,#d6f5e8,#8fe0c0 55%,#5aa88a);}
+  .tw-cd-mtn.m3{height:20%;background:linear-gradient(180deg,#fff3d6,#ffd79e 55%,#d8a86a);}
+  .tw-cd-pop{position:absolute;width:46px;height:46px;border-radius:50%;background:conic-gradient(#ff4b6b 0 25%,#fff 25% 50%,#ff4b6b 50% 75%,#fff 75%);box-shadow:0 0 16px #ff4b6b66,inset 0 0 8px #ffffff88;}
+  .tw-cd-pop::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);width:6px;height:56px;background:#fff;border-radius:3px;opacity:.9;}
+  .tw-cd-cane{position:absolute;width:15px;height:110px;border-radius:8px;background:repeating-linear-gradient(45deg,#ff4b6b 0 10px,#fff 10px 20px);box-shadow:0 0 12px #ff4b6b44;}
+  .tw-cd-gum{position:absolute;width:22px;height:16px;border-radius:6px;background:currentColor;box-shadow:0 0 8px currentColor;opacity:.9;}
+
+  /* === M8 FORÊT DE SAPINS === */
+  .tw-pf-row{position:absolute;left:0;right:0;display:flex;align-items:flex-end;justify-content:space-around;}
+  .tw-pf-row.far{bottom:26%;opacity:.45;filter:blur(1px);}
+  .tw-pf-row.mid{bottom:16%;opacity:.8;}
+  .tw-pf-row.near{bottom:7%;}
+  .tw-pf-tree{width:0;height:0;border-left:26px solid transparent;border-right:26px solid transparent;border-bottom:70px solid #0e3a20;position:relative;}
+  .tw-pf-tree::before{content:"";position:absolute;top:24px;left:-19px;border-left:19px solid transparent;border-right:19px solid transparent;border-bottom:48px solid #ffffff2e;}
+  .tw-pf-snow{position:absolute;bottom:0;left:0;right:0;height:10%;background:linear-gradient(180deg,#e8f4ff,#b8d4e8 60%,#8ab0cc);box-shadow:inset 0 6px 16px #ffffff88;}
+  .tw-pf-garland{position:absolute;height:36px;border-bottom:3px dotted #ffd75e77;border-radius:0 0 50% 50%;}
+  .tw-pf-bulb{position:absolute;width:6px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;animation:twLightBlink 1.6s infinite;}
+  @keyframes twLightBlink{0%,100%{opacity:1}50%{opacity:.3}}
+
+  /* === M9 ATELIER PÈRE NOËL === */
+  .tw-ws-house{position:absolute;bottom:8%;left:50%;transform:translateX(-50%);width:min(72%,540px);height:50%;background:linear-gradient(180deg,#5a2a1a,#3a1a10);border-radius:6px;box-shadow:0 0 40px #00000088,inset 0 0 30px #00000066;}
+  .tw-ws-roof{position:absolute;bottom:56%;left:50%;transform:translateX(-50%);width:min(80%,600px);height:15%;background:linear-gradient(180deg,#e8f4ff,#b8d4e8);clip-path:polygon(0 100%,50% 0,100% 100%);}
+  .tw-ws-chimney{position:absolute;left:66%;bottom:66%;width:7%;height:14%;background:linear-gradient(90deg,#6a3020,#4a2010);border-radius:3px 3px 0 0;}
+  .tw-ws-smoke{position:absolute;left:67%;bottom:78%;width:16px;height:16px;border-radius:50%;background:#cfd8e855;filter:blur(4px);animation:twSmoke 5s linear infinite;}
+  @keyframes twSmoke{0%{transform:translate(0,0) scale(.6);opacity:.6}100%{transform:translate(14px,-90px) scale(1.6);opacity:0}}
+  .tw-ws-win{position:absolute;width:16%;height:26%;background:radial-gradient(circle at 50% 40%,#ffd79e,#ff9a4a 70%,#d86a2a);border:4px solid #2a1208;border-radius:4px;box-shadow:0 0 24px #ffd79e88,0 0 50px #ff9a4a44;animation:twGlowC 4s infinite;}
+  .tw-ws-win::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:3px;transform:translateX(-50%);background:#2a1208;}
+  .tw-ws-win::after{content:"";position:absolute;top:50%;left:0;right:0;height:3px;transform:translateY(-50%);background:#2a1208;}
+  .tw-ws-door{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:14%;height:44%;background:linear-gradient(180deg,#7a3a20,#4a2010);border-radius:8px 8px 0 0;border:4px solid #2a1208;}
+  .tw-ws-door::after{content:"";position:absolute;top:50%;right:12%;width:8px;height:8px;border-radius:50%;background:#ffd75e;box-shadow:0 0 8px #ffd75e;}
+  .tw-ws-wreath{position:absolute;top:-16%;left:50%;transform:translateX(-50%);width:70%;height:24%;border:6px solid #1a5a2a;border-radius:50%;}
+  .tw-ws-wreath::after{content:"";position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);width:16px;height:12px;background:#c41e3a;clip-path:polygon(0 0,100% 0,50% 100%);}
+  .tw-ws-garland{position:absolute;left:4%;right:4%;top:5%;height:22px;background:repeating-linear-gradient(90deg,#1a5a2a 0 18px,transparent 18px 26px);}
+  .tw-ws-sled{position:absolute;bottom:6%;width:70px;height:26px;background:linear-gradient(180deg,#c41e3a,#8a1428);border-radius:6px 20px 4px 4px;}
+  .tw-ws-sled::after{content:"";position:absolute;bottom:-6px;left:6%;right:6%;height:5px;border-radius:3px;background:#d8b46a;}
+  .tw-ws-sack{position:absolute;bottom:6%;width:44px;height:52px;background:radial-gradient(ellipse at 40% 30%,#8a5a2a,#5a3a18 70%);border-radius:45% 45% 40% 40% / 55% 55% 45% 45%;}
+  .tw-ws-sack::before{content:"";position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:18px;height:10px;background:#4a2a10;border-radius:4px;}
+  .tw-ws-ground{position:absolute;bottom:0;left:0;right:0;height:8%;background:linear-gradient(180deg,#e8f4ff,#b8d4e8);}
+
   .tw-brief{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:9995;}
   .tw-brief-card{background:#0f051d;border:2px solid #00d2ff;border-radius:12px;padding:16px;max-width:82%;text-align:center;}
   .tw-stars{font-size:26px;letter-spacing:6px;text-align:center;margin:10px 0;}
@@ -489,85 +562,77 @@ function generateSceneHTML(c, W, C) {
     for (let i = 0; i < gpN; i++) html += `<span class="tw-goldpart" style="left:${8+(i*17)%84}%;top:${30+(i*13)%60}%;animation-duration:${6+(i%4)*2}s;animation-delay:${i*.8}s;"></span>`;
     html += `<div class="tw-vvignette"></div>`;
   }
-    if (W.scene === "haunted") {
-    html += `<div class="tw-moon-blood"></div>`;
-    const starsN = IS_MOBILE ? 30 : 80;
-    for (let i = 0; i < starsN; i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%55}%;animation-delay:${(i*.23)%3}s;"></span>`;
-    html += `<div class="tw-castle">`;
-    const windowPositions = [[20,45],[40,35],[60,25],[80,35],[30,65],[70,65],[50,55]];
-    windowPositions.forEach(([x,y]) => {
-      html += `<div class="tw-castle-window" style="left:${x}%;top:${y}%;animation-delay:${Math.random()*2}s;"></div>`;
-    });
-    html += `</div>`;
-    const pumpkinCount = IS_MOBILE ? 3 : 5;
-    for (let i = 0; i < pumpkinCount; i++) {
-      const left = 10 + (i * 20) + (i % 2) * 10;
-      html += `<div class="tw-pumpkin" style="left:${left}%;"></div>`;
-    }
-    const webCount = IS_MOBILE ? 2 : 4;
-    for (let i = 0; i < webCount; i++) {
-      const top = 10 + (i * 25);
-      const left = (i % 2 === 0) ? "5%" : "85%";
-      html += `<div class="tw-web" style="top:${top}%;left:${left};"></div>`;
-    }
-    const batCount = IS_MOBILE ? 2 : 4;
-    for (let i = 0; i < batCount; i++) {
-      const top = 15 + (i * 20);
-      html += `<div class="tw-bat" style="top:${top}%;left:${10+i*15}%;animation-delay:${i*2}s;animation-duration:${6+i}s;"></div>`;
-    }
-    html += `<div class="tw-fog"></div>`;
-    html += `<div class="tw-fog" style="animation-delay:-10s;"></div>`;
+  if (W.scene === "haunt") {
+    html += `<div class="tw-ha-lightning"></div><div class="tw-ha-moon"></div>`;
+    for (let i=0;i<(IS_MOBILE?2:4);i++) html += `<div class="tw-ha-cloud" style="top:${6+i*9}%;width:${30+(i*11)%25}%;animation-duration:${60+i*20}s;animation-delay:${-i*15}s;"></div>`;
+    const stN = IS_MOBILE?30:80;
+    for (let i=0;i<stN;i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%50}%;animation-delay:${(i*.23)%3}s;"></span>`;
+    html += `<div class="tw-ha-hill"></div><div class="tw-ha-fence"></div>`;
+    html += `<div class="tw-ha-tower">`;
+    [[18,26],[42,20],[66,26],[30,44],[58,44],[44,62],[20,62],[70,62]].forEach((p,i)=>{ html += `<div class="tw-ha-win" style="left:${p[0]}%;top:${p[1]}%;animation-delay:${(i*.47)%3}s;"></div>`; });
+    html += `<div class="tw-ha-gate"></div></div>`;
+    for (let i=0;i<(IS_MOBILE?2:4);i++) html += `<div class="tw-bat" style="top:${12+i*14}%;left:${8+i*18}%;animation-duration:${7+i*2}s;animation-delay:${-i*2}s;"></div>`;
+    html += `<div class="tw-gr-fog" style="bottom:6%;animation-duration:26s;"></div>`;
   }
-
-  if (W.scene === "xmas") {
-    html += `<span class="tw-moon" style="top:8%;right:12%;width:50px;height:50px;"></span>`;
-    const starsN = IS_MOBILE ? 40 : 100;
-    for (let i = 0; i < starsN; i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%55}%;animation-delay:${(i*.23)%3}s;"></span>`;
-    const treeCount = IS_MOBILE ? 3 : 5;
-    for (let i = 0; i < treeCount; i++) {
-      const left = 15 + (i * 18);
-      const scale = 0.8 + (i % 2) * 0.2;
-      html += `<div class="tw-xmas-tree" style="left:${left}%;transform:scale(${scale});">`;
-      html += `<div class="tw-tree-trunk"></div>`;
-      html += `<div class="tw-tree-layer l1"></div>`;
-      html += `<div class="tw-tree-layer l2"></div>`;
-      html += `<div class="tw-tree-layer l3"></div>`;
-      html += `<div class="tw-tree-star"></div>`;
-      const lightColors = ["#ff0000","#00ff00","#0000ff","#ffff00","#ff00ff"];
-      const lightCount = 8;
-      for (let j = 0; j < lightCount; j++) {
-        const lx = 20 + (j * 8);
-        const ly = 40 + (j % 3) * 20;
-        const color = lightColors[j % lightColors.length];
-        html += `<div class="tw-tree-light" style="left:${lx}%;top:${ly}%;background:${color};box-shadow:0 0 8px ${color};animation-delay:${j*0.2}s;"></div>`;
-      }
-      html += `</div>`;
+  if (W.scene === "grave") {
+    html += `<div class="tw-gr-moon"></div><div class="tw-gr-veil"></div>`;
+    const stN = IS_MOBILE?20:50;
+    for (let i=0;i<stN;i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%45}%;animation-delay:${(i*.23)%3}s;opacity:.6;"></span>`;
+    for (let i=0;i<(IS_MOBILE?2:4);i++) html += `<div class="tw-gr-tree" style="left:${6+i*26}%;transform:scale(${0.8+(i%2)*0.3}) scaleX(${i%2?-1:1});"></div>`;
+    html += `<div class="tw-gr-ground"></div><div class="tw-gr-grass"></div>`;
+    for (let i=0;i<(IS_MOBILE?4:7);i++) html += `<div class="tw-gr-stone${i%3===1?" cross":""}" style="left:${8+i*13}%;bottom:${12+(i%2)*4}%;transform:rotate(${i%2?-6:5}deg);"></div>`;
+    html += `<div class="tw-gr-crow" style="left:24%;bottom:27%;"></div>`;
+    for (let i=0;i<(IS_MOBILE?3:6);i++) html += `<div class="tw-gr-wisp" style="left:${12+i*15}%;bottom:${20+(i%3)*10}%;animation-delay:${i*1.1}s;"></div>`;
+    html += `<div class="tw-gr-fog" style="bottom:4%;animation-duration:30s;"></div>`;
+    html += `<div class="tw-gr-fog" style="bottom:14%;animation-duration:22s;animation-delay:-8s;opacity:.7;"></div>`;
+    html += `<div class="tw-gr-fog" style="bottom:24%;animation-duration:38s;animation-delay:-16s;opacity:.5;"></div>`;
+  }
+  if (W.scene === "lair") {
+    html += `<div class="tw-pk-glow"></div>`;
+    html += `<div class="tw-pk-wall"></div><div class="tw-pk-floor"></div>`;
+    html += `<div class="tw-web" style="top:4%;left:3%;"></div><div class="tw-web" style="top:6%;right:3%;transform:scaleX(-1);"></div>`;
+    for (let i=0;i<(IS_MOBILE?5:9);i++){
+      const size = 34 + (i*13)%30;
+      html += `<div class="tw-pk-jack" style="width:${size}px;height:${Math.round(size*0.85)}px;left:${6+(i*11)%84}%;bottom:${6+(i%3)*7}%;"></div>`;
     }
-    const snowPileCount = IS_MOBILE ? 2 : 4;
-    for (let i = 0; i < snowPileCount; i++) {
-      const left = 10 + (i * 25);
-      html += `<div class="tw-snow-pile" style="left:${left}%;"></div>`;
-    }
-    const giftCount = IS_MOBILE ? 4 : 8;
-    const giftColors = ["#c41e3a","#1a73e8","#ffd700","#9c27b0","#ff6b35"];
-    for (let i = 0; i < giftCount; i++) {
-      const left = 8 + (i * 12);
-      const color = giftColors[i % giftColors.length];
-      html += `<div class="tw-gift" style="left:${left}%;background:${color};"></div>`;
-    }
-    html += `<div class="tw-fireplace">`;
-    html += `<div class="tw-fire"></div>`;
-    html += `<div class="tw-sock" style="left:20%;"></div>`;
-    html += `<div class="tw-sock" style="left:70%;"></div>`;
-    html += `</div>`;
-    const snowflakeCount = IS_MOBILE ? 20 : 40;
-    for (let i = 0; i < snowflakeCount; i++) {
-      const left = Math.random() * 100;
-      const duration = 5 + Math.random() * 10;
-      const delay = Math.random() * 5;
-      const size = 8 + Math.random() * 8;
-      html += `<div class="tw-snowflake" style="left:${left}%;font-size:${size}px;animation-duration:${duration}s;animation-delay:${delay}s;">❄</div>`;
-    }
+    html += `<div class="tw-pk-vine" style="bottom:20%;left:10%;width:30%;"></div><div class="tw-pk-vine" style="bottom:16%;right:8%;width:26%;"></div>`;
+    for (let i=0;i<(IS_MOBILE?2:4);i++) html += `<div class="tw-pk-eyes" style="left:${15+i*22}%;top:${30+(i%2)*18}%;animation-delay:${i*1.7}s;"></div>`;
+    html += `<div class="tw-bat" style="top:6%;left:30%;animation:none;transform:rotate(180deg);"></div>`;
+    html += `<div class="tw-bat" style="top:5%;left:62%;animation:none;transform:rotate(180deg) scale(.8);"></div>`;
+  }
+  if (W.scene === "candy") {
+    const stN = IS_MOBILE?30:70;
+    for (let i=0;i<stN;i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%50}%;animation-delay:${(i*.23)%3}s;"></span>`;
+    html += `<div class="tw-cd-mtn m1"></div><div class="tw-cd-mtn m2"></div><div class="tw-cd-mtn m3"></div>`;
+    for (let i=0;i<(IS_MOBILE?3:5);i++) html += `<div class="tw-cd-pop" style="left:${10+i*18}%;bottom:${18+(i%2)*8}%;transform:scale(${0.8+(i%3)*0.2});"></div>`;
+    for (let i=0;i<(IS_MOBILE?2:4);i++) html += `<div class="tw-cd-cane" style="left:${16+i*22}%;bottom:${10+(i%2)*6}%;transform:rotate(${i%2?12:-10}deg);"></div>`;
+    const gcols = ["#ff6fa5","#7dff8a","#ffd75e","#74ebf5","#c28aff"];
+    for (let i=0;i<(IS_MOBILE?6:10);i++) html += `<div class="tw-cd-gum" style="left:${6+i*9}%;bottom:${4+(i%2)*3}%;color:${gcols[i%5]};"></div>`;
+  }
+  if (W.scene === "pine") {
+    html += `<span class="tw-moon" style="top:7%;right:14%;"></span>`;
+    const stN = IS_MOBILE?35:90;
+    for (let i=0;i<stN;i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%50}%;animation-delay:${(i*.23)%3}s;"></span>`;
+    const mkRow = (cls,count,color) => { let r = `<div class="tw-pf-row ${cls}">`; for (let i=0;i<count;i++) r += `<span class="tw-pf-tree" style="border-bottom-color:${color};transform:scale(${0.9+((i*7)%3)*0.12});"></span>`; return r + `</div>`; };
+    html += mkRow("far", IS_MOBILE?6:9, "#0a2a18");
+    html += mkRow("mid", IS_MOBILE?5:7, "#0e3a20");
+    html += mkRow("near", IS_MOBILE?4:5, "#12482a");
+    html += `<div class="tw-pf-snow"></div>`;
+    html += `<div class="tw-pf-garland" style="bottom:30%;left:8%;width:36%;"></div><div class="tw-pf-garland" style="bottom:32%;right:8%;width:36%;"></div>`;
+    const bcols = ["#ff4b6b","#ffd75e","#7dff8a","#74ebf5"];
+    for (let i=0;i<(IS_MOBILE?8:14);i++) html += `<div class="tw-pf-bulb" style="${i%2?"left":"right"}:${10+(i*6)%36}%;bottom:${28+(i%3)*2}%;color:${bcols[i%4]};animation-delay:${i*.2}s;"></div>`;
+  }
+  if (W.scene === "shop") {
+    const stN = IS_MOBILE?30:70;
+    for (let i=0;i<stN;i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%50}%;animation-delay:${(i*.23)%3}s;"></span>`;
+    html += `<span class="tw-moon" style="top:6%;left:12%;"></span>`;
+    html += `<div class="tw-ws-chimney"></div>`;
+    for (let i=0;i<(IS_MOBILE?3:5);i++) html += `<div class="tw-ws-smoke" style="animation-delay:${i*1.2}s;"></div>`;
+    html += `<div class="tw-ws-roof"></div>`;
+    html += `<div class="tw-ws-house"><div class="tw-ws-garland"></div><div class="tw-ws-win" style="left:10%;top:16%;"></div><div class="tw-ws-win" style="right:10%;top:16%;"></div><div class="tw-ws-door"><div class="tw-ws-wreath"></div></div></div>`;
+    html += `<div class="tw-ws-sled" style="left:16%;"></div>`;
+    html += `<div class="tw-ws-sack" style="right:16%;"></div><div class="tw-ws-sack" style="right:25%;transform:scale(.8);"></div>`;
+    html += `<div class="tw-ws-ground"></div>`;
   }
   let parts = "";
   const partCount = (W.part === "fog") ? (IS_MOBILE ? 15 : 30) : (IS_MOBILE ? 0 : 7);
@@ -644,6 +709,8 @@ function renderAdventure() {
   const scr = document.getElementById("screen-tower");
   if (!scr || scr.style.display === "none") return;
   const world = TowerUtils.getTowerChapter(twViewFloor).id;
+  const seasonNow = TOWER_CHAPTERS[world-1].season;
+  if (TW_musicSeason !== seasonNow) { TW_musicSeason = seasonNow; towerPlaySeasonMusic(seasonNow); }
   const chap = TOWER_CHAPTERS[world - 1];
   const W = TOWER_WORLDS[world], C = TOWER_COLORS[world];
   document.getElementById("tw-bg").innerHTML = generateSceneHTML(world, W, C);
@@ -665,7 +732,20 @@ function renderAdventure() {
   const stGot = towerProgress.stars[String(twViewFloor)] || 0;
   document.getElementById("tw-panel-stars").innerHTML = [1,2,3].map(i => `<span class="${i <= stGot ? "on" : ""}">⭐</span>`).join("");
   const lock = document.getElementById("tw-lockmsg");
-  if (!unlocked) { lock.style.display = "block"; lock.innerText = `🔒 Quota ⭐ ${WORLD_QUOTA} requis dans le monde précédent`; }
+  if (!unlocked) {
+    lock.style.display = "block";
+    const season = TOWER_CHAPTERS[world - 1].season;
+    const seasonName = ["", "Saison 1", "Halloween", "Noël"][season] || "Saison " + season;
+    const flag = "season_s" + season + "_unlocked";
+    const hasFlag = (myProfile.unlocked_items || []).includes(flag);
+    if (season === 1) {
+      lock.innerText = `🔒 Quota ⭐ ${WORLD_QUOTA} requis dans le monde précédent`;
+    } else if (!hasFlag) {
+      lock.innerText = `🔒 Atteins le Tier 1 du Pass ${seasonName} pour débloquer`;
+    } else {
+      lock.innerText = `🔒 Quota ⭐ ${WORLD_QUOTA} requis dans le monde précédent`;
+    }
+  }
   else lock.style.display = "none";
   document.getElementById("tw-play").disabled = !unlocked || twLives <= 0;
   document.getElementById("tw-prev").disabled = twViewFloor <= 1;
@@ -867,7 +947,7 @@ function syncDomToState(st) {
     const b = TW_buttons[i]; if (!b) continue;
     const wasGone = !!TW_dom.gone[i], isGone = !!st.gone[i];
     if (isGone !== wasGone) b.classList.toggle("gone", isGone);
-        if (st.type === "pairs" || st.type === "memory") {
+    if (st.type === "pairs" || st.type === "memory") {
       const dv = st.display[i], ov = TW_dom.display[i];
       if (dv !== ov) b.textContent = isGone ? "" : (dv === null ? "?" : dv);
       const rev = !!(st.revealed && st.revealed[i]) || st.sel === i;
