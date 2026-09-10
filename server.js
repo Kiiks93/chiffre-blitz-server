@@ -407,7 +407,7 @@ const TW_COLOR_POOL = [
   {key:"gold",name:"OR",hex:"#f8b500"}, {key:"green",name:"VERT",hex:"#2ecc71"},
   {key:"red",name:"ROUGE",hex:"#ff4b2b"}, {key:"violet",name:"VIOLET",hex:"#9b5cff"}
 ];
-const TW_PAIR_SYMBOLS = ["🍒","⭐","💎","","","🌙","👑","🎲","🍀","","","🧊","🍭","","🪙","🔮","","🎃","🎄","🎅","🧁","🍩","","🕯️"];
+const TW_PAIR_SYMBOLS = ["🍒","⭐","💎","","⚡","🌙","","🎲","🍀","","","🧊","🍭","","🪙","🔮","","🎃","","🎅","🧁","🍩","","🕯️"];
 
 function towerShuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
@@ -422,7 +422,7 @@ function getFloorDefServer(floor) {
   const t = seq[(inChap - 1) % 9];
   if (t === "sprint") return { floor, gridSize, time: Math.max(6, Math.round(time * 0.4)), type: "sprint" };
   if (t === "nofail") return { floor, gridSize, time: Math.max(14, Math.round(time * 0.7)), type: "nofail" };
-  if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; const pr = g / 2; return { floor, gridSize: g, time: Math.max(20, Math.round(pr * 3)), type: "pairs" }; }
+  if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; const pr = g / 2; return { floor, gridSize: g, time: Math.max(25, Math.round(pr * 5)), type: "pairs" }; }
   if (t === "parity") return { floor, gridSize: Math.min(60, gridSize + 12), time: time + 3, type: "parity" };
   return { floor, gridSize, time, type: t };
 }
