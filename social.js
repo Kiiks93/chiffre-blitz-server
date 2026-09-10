@@ -401,3 +401,43 @@ function openTournamentScreen() {
   hideAllScreens();
   document.getElementById("screen-tournament").style.display = "flex";
 }
+/* ============================================================
+11. REPRISE AUTO DU SALON DEPUIS L'URL
+============================================================ */
+(function initRoomFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  const roomCode = params.get("room");
+  if (!roomCode) return;
+  
+  // Mémoriser qu'on était dans un salon
+  sessionStorage.setItem("cb_last_screen", "room");
+  sessionStorage.setItem("cb_pending_room", roomCode.toUpperCase());
+  
+  // Écouter la confirmation du profil pour rejoindre le salon
+  const joinWhenReady = () => {
+    const pending = sessionStorage.getItem("cb_pending_room");
+    if (!pending) return;
+    
+    // Petit délai pour être sûr que le socket est prêt
+    setTimeout(() => {
+      if (sessionStorage.getItem("cb_pending_room") === pending) {
+        joinRoomDirect(pending, "");
+        sessionStorage.removeItem("cb_pending_room");
+      }
+    }, 800);
+  };
+  
+  // Si déjà enregistré, rejoindre tout de suite
+  if (isProfileValid && isProfileValid()) {
+    joinWhenReady();
+  } else {
+    // Sinon attendre que le profil soit confirmé
+    socket.on("player_registered", joinWhenReady);
+  }
+})();
+
+// Quand on quitte le salon, nettoyer l'URL
+socket.on("room_error", () => {
+  sessionStorage.removeItem("cb_pending_room");
+  window.history.replaceState({}, "", window.location.pathname);
+});
