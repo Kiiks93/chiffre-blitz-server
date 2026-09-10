@@ -38,7 +38,7 @@ const TOWER_WORLDS = {
   4:{bg:"linear-gradient(180deg,#0b0618,#1a0b2e 50%,#120820)",scene:"haunt",part:"fog"},
   5:{bg:"linear-gradient(180deg,#0a0f0d,#12211c 55%,#0a1410)",scene:"grave",part:"fog"},
   6:{bg:"radial-gradient(ellipse at 50% 70%,#3a1608,#120502 70%)",scene:"lair",part:"spark"},
-  7:{bg:"linear-gradient(180deg,#1a0b2e,#3a1450 45%,#2a0f3a)",scene:"candy",part:"spark"},
+  7:{bg:"linear-gradient(180deg,#2a1440 0%,#5a2a68 28%,#a04a88 52%,#e87ba8 74%,#ffd6e8 100%)",scene:"candy",part:"spark"},
   8:{bg:"linear-gradient(180deg,#04101e,#0a2036 55%,#061422)",scene:"pine",part:"snow"},
   9:{bg:"linear-gradient(180deg,#0a0f1e,#142036 60%,#0a1424)",scene:"shop",part:"snow"}
 };
@@ -378,6 +378,7 @@ document.addEventListener("visibilitychange", () => {
   .tw-pk-vine{position:absolute;height:6px;background:repeating-linear-gradient(90deg,#2a4a10 0 14px,transparent 14px 22px);border-radius:3px;opacity:.7;}
   .tw-pk-eyes{position:absolute;width:26px;height:10px;background:radial-gradient(circle at 25% 50%,#ffd75e 0 3px,transparent 4px),radial-gradient(circle at 75% 50%,#ffd75e 0 3px,transparent 4px);animation:twBlink 5s infinite;}
   @keyframes twBlink{0%,88%,96%,100%{opacity:1}92%{opacity:0}}
+  
     /* === FÉERIQUE COMMUN === */
   .tw-aurora{position:absolute;top:0;left:0;right:0;height:46%;background:linear-gradient(100deg,transparent 18%,#7dff8a26 34%,#74ebf526 50%,#ff6fa526 66%,transparent 82%);filter:blur(18px);animation:twAurora 12s ease-in-out infinite alternate;}
   @keyframes twAurora{0%{transform:translateX(-6%) skewY(-2deg);opacity:.45}100%{transform:translateX(6%) skewY(2deg);opacity:.9}}
@@ -406,45 +407,81 @@ document.addEventListener("visibilitychange", () => {
   .tw-cd-pop::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);width:6px;height:60px;background:#fff;border-radius:3px;box-shadow:0 0 8px #ffffffaa;}
   .tw-cd-cane{position:absolute;width:16px;height:120px;border-radius:9px;background:repeating-linear-gradient(45deg,#ff4b6b 0 10px,#fff 10px 20px);box-shadow:0 0 16px #ff4b6b66;}
   .tw-cd-gum{position:absolute;width:22px;height:16px;border-radius:8px;background:currentColor;box-shadow:0 0 12px currentColor;opacity:.95;}
+  .tw-cd-cloud{position:absolute;height:38px;border-radius:30px;background:linear-gradient(90deg,transparent,#ffd6e8b8 25%,#fff0f6cc 50%,#ffd6e8b8 75%,transparent);filter:blur(6px);animation:twCloud linear infinite;}
+  .tw-cd-moonrose{position:absolute;top:7%;right:12%;width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff0f6,#ffb8d4 60%,#e888b0);box-shadow:0 0 40px #ff6fa588,0 0 90px #ff6fa544;}
 
-  /* === M8 FORÊT DE SAPINS (féérique) === */
+   /* === M8 FORÊT DE SAPINS (volumineux) === */
   .tw-pf-row{position:absolute;left:0;right:0;display:flex;align-items:flex-end;justify-content:space-around;}
-  .tw-pf-row.far{bottom:30%;opacity:.5;filter:blur(1.5px);}
-  .tw-pf-row.mid{bottom:18%;opacity:.85;}
-  .tw-pf-row.near{bottom:7%;}
-  .tw-pf-tree{position:relative;width:0;height:0;border-left:26px solid transparent;border-right:26px solid transparent;border-bottom:70px solid #14532d;filter:drop-shadow(0 0 14px #2ecc7155);}
-  .tw-pf-tree::before{content:"";position:absolute;top:12px;left:-17px;border-left:17px solid transparent;border-right:17px solid transparent;border-bottom:22px solid #e8f4ffd9;}
-  .tw-pf-tree::after{content:"";position:absolute;top:36px;left:-22px;border-left:22px solid transparent;border-right:22px solid transparent;border-bottom:24px solid #e8f4ffa6;}
-  .tw-pf-star{position:absolute;top:-18px;left:-7px;width:14px;height:14px;background:#ffd75e;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);box-shadow:0 0 14px #ffd75e,0 0 30px #ffd75e99;animation:twStarGlow 2.4s infinite;}
+  .tw-pf-row.far{bottom:26%;opacity:.45;filter:blur(2px);}
+  .tw-pf-row.mid{bottom:14%;opacity:.85;}
+  .tw-pf-row.near{bottom:4%;}
+  .tw-pf2{position:relative;width:150px;height:236px;filter:drop-shadow(0 0 18px #2ecc7144);}
+  .tw-pf2 .trunk{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:24px;height:36px;background:linear-gradient(90deg,#3a2010,#5a3418,#3a2010);border-radius:4px;}
+  .tw-pf2 .lyr{position:absolute;left:50%;transform:translateX(-50%);width:0;height:0;border-left:40px solid transparent;border-right:40px solid transparent;border-bottom:60px solid #12482a;}
+  .tw-pf2 .cap{position:absolute;left:50%;transform:translateX(-50%);height:13px;background:linear-gradient(180deg,#ffffff,#dceefb);border-radius:9px 9px 5px 5px;box-shadow:0 3px 8px #bfe3ff77;}
+  .tw-pf2 .cap.top{border-radius:50%;height:18px;}
+  .tw-pf2 .star{position:absolute;top:-16px;left:50%;transform:translateX(-50%);width:20px;height:20px;background:#ffd75e;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);box-shadow:0 0 16px #ffd75e,0 0 34px #ffd75e99;animation:twStarGlow 2.4s infinite;}
   .tw-pf-snow{position:absolute;bottom:0;left:0;right:0;height:11%;background:linear-gradient(180deg,#f4fbff,#cfe6f5 55%,#9cc4dd);box-shadow:inset 0 8px 22px #ffffffcc,0 -4px 20px #bfe3ff44;}
   .tw-pf-mist{position:absolute;bottom:9%;left:-20%;width:140%;height:64px;background:linear-gradient(0deg,#bfe3ff38,transparent);filter:blur(10px);animation:twFogDrift 26s linear infinite;}
   .tw-pf-garland{position:absolute;height:34px;border-bottom:2px solid #ffffff55;border-radius:0 0 50% 50%;}
   .tw-pf-bulb{position:absolute;width:7px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 10px currentColor,0 0 22px currentColor;animation:twLightBlink 1.5s infinite;}
   @keyframes twLightBlink{0%,100%{opacity:1}50%{opacity:.35}}
 
-  /* === M9 ATELIER PÈRE NOËL (féérique) === */
-  .tw-ws-halo{position:absolute;bottom:4%;left:50%;transform:translateX(-50%);width:min(92%,720px);height:62%;background:radial-gradient(ellipse at 50% 72%,#ffd79e55,transparent 70%);filter:blur(12px);animation:twGlowC 4s infinite;}
-  .tw-ws-house{position:absolute;bottom:8%;left:50%;transform:translateX(-50%);width:min(70%,520px);height:48%;background:linear-gradient(180deg,#6b3423,#4a2013 60%,#3a180c);border-radius:8px;box-shadow:0 0 60px #00000099,inset 0 0 40px #00000077;}
-  .tw-ws-roof{position:absolute;bottom:54%;left:50%;transform:translateX(-50%);width:min(80%,600px);height:16%;background:linear-gradient(180deg,#ffffff,#dceefb 60%,#bcd8ec);clip-path:polygon(0 100%,50% 0,100% 100%);filter:drop-shadow(0 6px 18px #bfe3ff66);}
-  .tw-ws-icicle{position:absolute;width:6px;height:20px;background:linear-gradient(180deg,#e8f4ffdd,#bfe3ff77);clip-path:polygon(0 0,100% 0,50% 100%);}
-  .tw-ws-chimney{position:absolute;left:66%;bottom:64%;width:7%;height:15%;background:linear-gradient(90deg,#7a3a28,#5a2418);border-radius:3px 3px 0 0;}
-  .tw-ws-chimney::before{content:"";position:absolute;top:-8px;left:-6%;right:-6%;height:10px;background:#fff;border-radius:4px;box-shadow:0 2px 8px #bfe3ff88;}
-  .tw-ws-smoke{position:absolute;left:67.5%;bottom:80%;width:18px;height:18px;border-radius:50%;background:#e8f0fa44;filter:blur(5px);animation:twSmoke 6s linear infinite;}
-  @keyframes twSmoke{0%{transform:translate(0,0) scale(.6);opacity:.55}100%{transform:translate(18px,-110px) scale(1.8);opacity:0}}
-  .tw-ws-win{position:absolute;width:17%;height:28%;background:radial-gradient(circle at 50% 42%,#fff6d8,#ffd79e 45%,#ff9a4a 80%);border:5px solid #2a1208;border-radius:6px;box-shadow:0 0 34px #ffd79ecc,0 0 80px #ff9a4a66,inset 0 0 18px #ffffff88;animation:twGlowC 4s infinite;}
-  .tw-ws-win::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:4px;transform:translateX(-50%);background:#2a1208;}
-  .tw-ws-win::after{content:"";position:absolute;top:50%;left:0;right:0;height:4px;transform:translateY(-50%);background:#2a1208;}
-  .tw-ws-door{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:15%;height:46%;background:linear-gradient(180deg,#8a4a2a,#5a2a14);border-radius:10px 10px 0 0;border:5px solid #2a1208;box-shadow:0 0 24px #ffd79e44;}
-  .tw-ws-door::after{content:"";position:absolute;top:50%;right:14%;width:9px;height:9px;border-radius:50%;background:#ffd75e;box-shadow:0 0 10px #ffd75e;}
-  .tw-ws-wreath{position:absolute;top:-18%;left:50%;transform:translateX(-50%);width:74%;height:26%;border:7px solid #1a6b34;border-radius:50%;box-shadow:0 0 16px #2ecc7166,inset 0 0 10px #00000044;}
-  .tw-ws-wreath::after{content:"";position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);width:18px;height:14px;background:#d42a4a;clip-path:polygon(0 0,100% 0,50% 100%);filter:drop-shadow(0 0 6px #d42a4a);}
-  .tw-ws-string{position:absolute;left:2%;right:2%;height:26px;border-bottom:2px solid #ffffff66;border-radius:0 0 50% 50%;}
-  .tw-ws-bulb{position:absolute;width:7px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 10px currentColor,0 0 22px currentColor;animation:twLightBlink 1.4s infinite;}
-  .tw-ws-sled{position:absolute;bottom:6%;width:76px;height:28px;background:linear-gradient(180deg,#d42a4a,#8a1428);border-radius:8px 22px 4px 4px;box-shadow:0 0 20px #d42a4a55,0 4px 10px #00000088;}
-  .tw-ws-sled::after{content:"";position:absolute;bottom:-7px;left:6%;right:6%;height:6px;border-radius:3px;background:#e8c86a;box-shadow:0 0 10px #e8c86a88;}
-  .tw-ws-sack{position:absolute;bottom:6%;width:46px;height:54px;background:radial-gradient(ellipse at 40% 30%,#9a6a34,#6a4420 70%);border-radius:45% 45% 40% 40% / 55% 55% 45% 45%;box-shadow:0 0 18px #ffd79e33,inset -4px -6px 12px #00000066;}
-  .tw-ws-sack::before{content:"";position:absolute;top:-7px;left:50%;transform:translateX(-50%);width:20px;height:11px;background:#5a3418;border-radius:4px;}
-  .tw-ws-ground{position:absolute;bottom:0;left:0;right:0;height:9%;background:linear-gradient(180deg,#f4fbff,#cfe6f5 60%,#9cc4dd);box-shadow:inset 0 8px 22px #ffffffcc;}
+    /* === M9 ATELIER INTÉRIEUR ANIMÉ === */
+  .tw-in-room{position:absolute;inset:0;background:linear-gradient(180deg,#4a2413 0%,#6b3423 45%,#7a4028 75%,#5a2c16 100%);}
+  .tw-in-wallpaper{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 60px,#00000018 60px 64px);}
+  .tw-in-beamtop{position:absolute;top:0;left:0;right:0;height:36px;background:linear-gradient(180deg,#2a1208,#4a2013);box-shadow:0 5px 12px #00000077;}
+  .tw-in-beam{position:absolute;top:0;bottom:0;width:24px;background:linear-gradient(90deg,#2a1208,#4a2013 50%,#2a1208);}
+  .tw-in-floor{position:absolute;bottom:0;left:0;right:0;height:15%;background:linear-gradient(180deg,#8a5a34,#6b4423 55%,#4a2c14);box-shadow:inset 0 8px 18px #00000088;}
+  .tw-in-floor::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 110px,#00000026 110px 115px);}
+  .tw-in-rug{position:absolute;bottom:2%;left:50%;transform:translateX(-50%);width:46%;height:6%;background:radial-gradient(ellipse,#a81430,#7a0e22 70%);border-radius:50%;}
+  .tw-in-window{position:absolute;top:14%;width:130px;height:130px;border-radius:50%;background:radial-gradient(circle at 40% 32%,#e8f4ff,#9cc4dd 55%,#5a88b8);border:10px solid #2a1208;box-shadow:0 0 34px #bfe3ff66,inset 0 0 22px #ffffff55;overflow:hidden;}
+  .tw-in-window::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:6px;transform:translateX(-50%);background:#2a1208;}
+  .tw-in-window::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 16px,#ffffff88 16px 19px);animation:twWinSnow 5s linear infinite;}
+  @keyframes twWinSnow{0%{background-position:0 -140px}100%{background-position:0 140px}}
+  .tw-in-fire{position:absolute;bottom:15%;width:120px;height:110px;background:linear-gradient(180deg,#5a3418,#3a2010);border-radius:10px 10px 0 0;border:6px solid #2a1208;}
+  .tw-in-fire::before{content:"";position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:70px;height:60px;background:radial-gradient(ellipse at bottom,#ffdd55,#ff8c00 55%,#d43a00 85%);border-radius:50% 50% 20% 20%;animation:twFireFlick .7s infinite;box-shadow:0 0 30px #ff8c00aa,0 0 60px #ff8c0055;}
+  @keyframes twFireFlick{0%,100%{transform:translateX(-50%) scaleY(1)}50%{transform:translateX(-50%) scaleY(1.12) scaleX(.94)}}
+  .tw-in-santa{position:absolute;bottom:15%;left:50%;transform:translateX(-50%);width:96px;height:150px;animation:twSantaBob 2.6s ease-in-out infinite;}
+  @keyframes twSantaBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-7px)}}
+  .tw-in-santa .body{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:84px;height:74px;background:linear-gradient(180deg,#d42a4a,#a81430);border-radius:42px 42px 14px 14px;box-shadow:0 0 24px #d42a4a55;}
+  .tw-in-santa .belt{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);width:84px;height:13px;background:#2a1208;}
+  .tw-in-santa .buckle{position:absolute;bottom:27px;left:50%;transform:translateX(-50%);width:16px;height:11px;background:#ffd75e;border-radius:2px;box-shadow:0 0 8px #ffd75e;}
+  .tw-in-santa .beard{position:absolute;bottom:48px;left:50%;transform:translateX(-50%);width:60px;height:46px;background:#fff;border-radius:0 0 30px 30px;box-shadow:0 0 14px #ffffff66;}
+  .tw-in-santa .head{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);width:42px;height:42px;background:#ffd9b8;border-radius:50%;}
+  .tw-in-santa .nose{position:absolute;bottom:96px;left:50%;transform:translateX(-50%);width:10px;height:10px;background:#f0a088;border-radius:50%;}
+  .tw-in-santa .hat{position:absolute;bottom:112px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:24px solid transparent;border-right:24px solid transparent;border-bottom:36px solid #d42a4a;}
+  .tw-in-santa .pom{position:absolute;bottom:144px;left:50%;transform:translateX(-50%);width:16px;height:16px;background:#fff;border-radius:50%;box-shadow:0 0 10px #ffffff88;}
+  .tw-in-santa .arm{position:absolute;bottom:44px;width:34px;height:16px;background:#d42a4a;border-radius:8px;}
+  .tw-in-santa .arm.l{left:-14px;transform:rotate(24deg);}
+  .tw-in-santa .arm.r{right:-14px;transform:rotate(-24deg);}
+  .tw-in-santa .gift{position:absolute;bottom:56px;right:-30px;width:26px;height:26px;background:#2ecc71;border-radius:4px;box-shadow:0 0 12px #2ecc7166;animation:twGiftWave 2.6s ease-in-out infinite;}
+  @keyframes twGiftWave{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(10deg) translateY(-4px)}}
+  .tw-in-elf{position:absolute;bottom:15%;width:46px;height:70px;animation:twElfWalk 11s linear infinite;}
+  @keyframes twElfWalk{0%{left:-10%}48%{left:86%}50%{left:86%}98%{left:-10%}100%{left:-10%}}
+  .tw-in-elf.flip{animation-name:twElfWalkFlip;}
+  @keyframes twElfWalkFlip{0%{left:86%}48%{left:-10%}50%{left:-10%}98%{left:86%}100%{left:86%}}
+  .tw-in-elf .body{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:34px;height:34px;background:linear-gradient(180deg,#2ecc71,#1a9a4a);border-radius:16px 16px 6px 6px;}
+  .tw-in-elf .head{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);width:24px;height:24px;background:#ffd9b8;border-radius:50%;}
+  .tw-in-elf .hat{position:absolute;bottom:50px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:13px solid transparent;border-right:13px solid transparent;border-bottom:22px solid #d42a4a;}
+  .tw-in-elf .hatpom{position:absolute;bottom:70px;left:50%;transform:translateX(-50%);width:9px;height:9px;background:#fff;border-radius:50%;}
+  .tw-in-elf .carry{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);width:20px;height:20px;background:#ffd75e;border-radius:3px;box-shadow:0 0 10px #ffd75e66;}
+  .tw-in-deer{position:absolute;bottom:15%;right:8%;width:120px;height:100px;animation:twDeerBob 3.2s ease-in-out infinite;}
+  @keyframes twDeerBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  .tw-in-deer .body{position:absolute;bottom:20px;left:0;width:80px;height:44px;background:linear-gradient(180deg,#8a5a34,#6b4423);border-radius:22px;}
+  .tw-in-deer .leg{position:absolute;bottom:0;width:8px;height:24px;background:#5a3418;border-radius:3px;}
+  .tw-in-deer .neck{position:absolute;bottom:52px;right:18px;width:18px;height:34px;background:#8a5a34;border-radius:8px;transform:rotate(-16deg);}
+  .tw-in-deer .head{position:absolute;bottom:78px;right:6px;width:34px;height:24px;background:#9a6a40;border-radius:12px 14px 8px 8px;}
+  .tw-in-deer .nose{position:absolute;bottom:82px;right:2px;width:10px;height:10px;background:#d42a4a;border-radius:50%;box-shadow:0 0 12px #d42a4a;animation:twStarGlow 1.6s infinite;}
+  .tw-in-deer .antler{position:absolute;bottom:98px;right:16px;width:26px;height:22px;background:#5a3418;clip-path:polygon(20% 100%,30% 60%,10% 40%,30% 45%,40% 10%,50% 45%,70% 30%,60% 60%,80% 100%);}
+  .tw-in-deer .antler.r{right:30px;transform:scaleX(-1);}
+  .tw-in-pile{position:absolute;bottom:15%;left:8%;width:90px;height:90px;}
+  .tw-in-pile .g{position:absolute;border-radius:4px;box-shadow:0 0 12px #00000055;}
+  .tw-in-belt{position:absolute;bottom:15%;left:24%;width:30%;height:14px;background:#2a1208;border-radius:7px;overflow:hidden;}
+  .tw-in-belt::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,#ffd75e 0 16px,transparent 16px 46px,#2ecc71 46px 62px,transparent 62px 92px);animation:twBeltMove 3s linear infinite;}
+  @keyframes twBeltMove{0%{background-position:0 0}100%{background-position:92px 0}}
+  .tw-in-string{position:absolute;top:36px;left:0;right:0;height:30px;border-bottom:2px solid #ffffff55;border-radius:0 0 50% 50%;}
+  .tw-in-bulb{position:absolute;width:8px;height:10px;border-radius:50%;background:currentColor;box-shadow:0 0 10px currentColor,0 0 22px currentColor;animation:twLightBlink 1.4s infinite;}
   
   .tw-brief{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:9995;}
   .tw-brief-card{background:#0f051d;border:2px solid #00d2ff;border-radius:12px;padding:16px;max-width:82%;text-align:center;}
@@ -659,6 +696,8 @@ function generateSceneHTML(c, W, C) {
   }
    if (W.scene === "candy") {
     html += `<div class="tw-aurora"></div>`;
+    html += `<span class="tw-cd-moonrose"></span>`;
+    for (let i=0;i<(IS_MOBILE?3:5);i++) html += `<span class="tw-cd-cloud" style="top:${6+i*8}%;width:${26+(i*9)%20}%;animation-duration:${60+i*22}s;animation-delay:${-i*18}s;"></span>`;
     const stN = IS_MOBILE?30:70;
     for (let i=0;i<stN;i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%50}%;animation-delay:${(i*.23)%3}s;"></span>`;
     for (let i=0;i<(IS_MOBILE?4:8);i++) html += `<span class="tw-bokeh" style="left:${8+i*12}%;top:${18+(i*9)%40}%;width:${10+(i%3)*8}px;height:${10+(i%3)*8}px;background:${["#ff6fa5","#ffd75e","#74ebf5"][i%3]};animation-delay:${i*1.1}s;"></span>`;
@@ -673,46 +712,52 @@ function generateSceneHTML(c, W, C) {
     for (let i=0;i<(IS_MOBILE?4:9);i++) html += `<span class="tw-sparkle" style="left:${6+i*11}%;top:${12+(i*13)%46}%;animation-delay:${i*.7}s;"></span>`;
   }
 
-  if (W.scene === "pine") {
+   if (W.scene === "pine") {
     html += `<div class="tw-aurora"></div>`;
     html += `<span class="tw-moon" style="top:7%;right:14%;width:54px;height:54px;"></span>`;
     const stN = IS_MOBILE?35:90;
     for (let i=0;i<stN;i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%50}%;animation-delay:${(i*.23)%3}s;"></span>`;
-    const mkRow = (cls,count,withStar) => { let r = `<div class="tw-pf-row ${cls}">`; for (let i=0;i<count;i++){ r += `<span class="tw-pf-tree" style="transform:scale(${0.9+((i*7)%3)*0.12});">${withStar?`<span class="tw-pf-star" style="animation-delay:${(i*.4)%2}s;"></span>`:""}</span>`; } return r + `</div>`; };
-    html += mkRow("far", IS_MOBILE?6:9, false);
-    html += mkRow("mid", IS_MOBILE?5:7, false);
-    html += mkRow("near", IS_MOBILE?4:5, true);
+    const tree = (scale, withStar) => {
+      const L = [ {w:70,h:60,b:60,c:'#0e3a20'}, {w:60,h:56,b:100,c:'#12482a'}, {w:48,h:50,b:138,c:'#165532'}, {w:34,h:44,b:172,c:'#1a623a'} ];
+      let s = `<div class="tw-pf2" style="transform:scale(${scale});"><span class="trunk"></span>`;
+      L.forEach((lay)=>{ s += `<span class="lyr" style="bottom:${lay.b}px;border-left-width:${lay.w}px;border-right-width:${lay.w}px;border-bottom-width:${lay.h}px;border-bottom-color:${lay.c};"></span>`;
+        s += `<span class="cap" style="bottom:${lay.b+lay.h-9}px;width:${lay.w*1.45}px;"></span>`; });
+      s += `<span class="cap top" style="bottom:210px;width:36px;"></span>`;
+      if (withStar) s += `<span class="star"></span>`;
+      return s + `</div>`;
+    };
+    const row = (cls, count, withStar) => { let r = `<div class="tw-pf-row ${cls}">`; for (let i=0;i<count;i++) r += tree(0.9+((i*7)%3)*0.12, withStar); return r + `</div>`; };
+    html += row("far", IS_MOBILE?5:8, false);
+    html += row("mid", IS_MOBILE?4:6, false);
+    html += row("near", IS_MOBILE?3:4, true);
     html += `<div class="tw-pf-snow"></div>`;
     html += `<div class="tw-pf-mist"></div>`;
-    html += `<div class="tw-pf-garland" style="bottom:32%;left:6%;width:38%;"></div><div class="tw-pf-garland" style="bottom:34%;right:6%;width:38%;"></div>`;
+    html += `<div class="tw-pf-garland" style="bottom:34%;left:6%;width:38%;"></div><div class="tw-pf-garland" style="bottom:36%;right:6%;width:38%;"></div>`;
     const bcols = ["#ff4b6b","#ffd75e","#7dff8a","#74ebf5"];
-    for (let i=0;i<(IS_MOBILE?8:14);i++) html += `<div class="tw-pf-bulb" style="${i%2?"left":"right"}:${8+(i*6)%38}%;bottom:${30+(i%3)*2}%;color:${bcols[i%4]};animation-delay:${i*.2}s;"></div>`;
+    for (let i=0;i<(IS_MOBILE?8:14);i++) html += `<div class="tw-pf-bulb" style="${i%2?"left":"right"}:${8+(i*6)%38}%;bottom:${32+(i%3)*2}%;color:${bcols[i%4]};animation-delay:${i*.2}s;"></div>`;
     for (let i=0;i<(IS_MOBILE?12:26);i++) html += `<span class="tw-snowsoft" style="left:${(i*13)%100}%;animation-duration:${7+(i%5)*2}s;animation-delay:${-i*.6}s;"></span>`;
     for (let i=0;i<(IS_MOBILE?3:7);i++) html += `<span class="tw-sparkle" style="left:${8+i*13}%;top:${10+(i*11)%40}%;animation-delay:${i*.6}s;"></span>`;
   }
 
-  if (W.scene === "shop") {
-    html += `<div class="tw-ws-halo"></div>`;
-    const stN = IS_MOBILE?30:70;
-    for (let i=0;i<stN;i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%50}%;animation-delay:${(i*.23)%3}s;"></span>`;
-    html += `<span class="tw-moon" style="top:6%;left:12%;width:50px;height:50px;"></span>`;
-    html += `<div class="tw-ws-chimney"></div>`;
-    for (let i=0;i<(IS_MOBILE?3:5);i++) html += `<div class="tw-ws-smoke" style="animation-delay:${i*1.3}s;"></div>`;
-    html += `<div class="tw-ws-roof"></div>`;
-    html += `<div class="tw-ws-house">`;
-    html += `<div class="tw-ws-string" style="top:4%;"></div>`;
+   if (W.scene === "shop") {
+    html += `<div class="tw-in-room"></div><div class="tw-in-wallpaper"></div>`;
+    html += `<div class="tw-in-beamtop"></div>`;
+    html += `<div class="tw-in-beam" style="left:6%;"></div><div class="tw-in-beam" style="right:6%;"></div>`;
+    html += `<div class="tw-in-string"></div>`;
     const bcols2 = ["#ff4b6b","#ffd75e","#7dff8a","#74ebf5","#ff6fa5"];
-    for (let i=0;i<(IS_MOBILE?8:14);i++) html += `<div class="tw-ws-bulb" style="left:${4+i*7}%;top:${6+(i%2)*3}%;color:${bcols2[i%5]};animation-delay:${i*.18}s;"></div>`;
-    html += `<div class="tw-ws-win" style="left:9%;top:18%;"></div><div class="tw-ws-win" style="right:9%;top:18%;"></div>`;
-    html += `<div class="tw-ws-door"><div class="tw-ws-wreath"></div></div>`;
-    html += `</div>`;
-    for (let i=0;i<(IS_MOBILE?5:9);i++) html += `<span class="tw-ws-icicle" style="left:${20+i*7}%;bottom:53%;"></span>`;
-    html += `<div class="tw-ws-sled" style="left:14%;"></div>`;
-    html += `<div class="tw-ws-sack" style="right:14%;"></div><div class="tw-ws-sack" style="right:23%;transform:scale(.8);"></div>`;
-    html += `<div class="tw-ws-ground"></div>`;
-    for (let i=0;i<(IS_MOBILE?14:30);i++) html += `<span class="tw-snowsoft" style="left:${(i*13)%100}%;animation-duration:${6+(i%5)*2}s;animation-delay:${-i*.7}s;"></span>`;
-    for (let i=0;i<(IS_MOBILE?3:6);i++) html += `<span class="tw-sparkle" style="left:${10+i*15}%;top:${8+(i*9)%36}%;animation-delay:${i*.8}s;"></span>`;
+    for (let i=0;i<(IS_MOBILE?8:14);i++) html += `<div class="tw-in-bulb" style="left:${3+i*7}%;top:${40+(i%2)*4}px;color:${bcols2[i%5]};animation-delay:${i*.18}s;"></div>`;
+    html += `<div class="tw-in-window" style="left:10%;"></div>`;
+    html += `<div class="tw-in-fire" style="right:10%;"></div>`;
+    html += `<div class="tw-in-floor"></div><div class="tw-in-rug"></div>`;
+    html += `<div class="tw-in-santa"><span class="arm l"></span><span class="arm r"></span><span class="body"></span><span class="belt"></span><span class="buckle"></span><span class="beard"></span><span class="head"></span><span class="nose"></span><span class="hat"></span><span class="pom"></span><span class="gift"></span></div>`;
+    html += `<div class="tw-in-elf"><span class="body"></span><span class="head"></span><span class="hat"></span><span class="hatpom"></span><span class="carry"></span></div>`;
+    html += `<div class="tw-in-elf flip" style="animation-delay:-4s;"><span class="body"></span><span class="head"></span><span class="hat"></span><span class="hatpom"></span><span class="carry" style="background:#ff6fa5;"></span></div>`;
+    html += `<div class="tw-in-deer"><span class="leg" style="left:8px;"></span><span class="leg" style="left:26px;"></span><span class="leg" style="left:52px;"></span><span class="leg" style="left:66px;"></span><span class="body"></span><span class="neck"></span><span class="head"></span><span class="nose"></span><span class="antler"></span><span class="antler r"></span></div>`;
+    html += `<div class="tw-in-pile"><span class="g" style="left:0;bottom:0;width:40px;height:34px;background:#d42a4a;"></span><span class="g" style="left:44px;bottom:0;width:34px;height:28px;background:#2ecc71;"></span><span class="g" style="left:12px;bottom:34px;width:32px;height:26px;background:#ffd75e;"></span><span class="g" style="left:20px;bottom:60px;width:24px;height:22px;background:#74ebf5;"></span></div>`;
+    html += `<div class="tw-in-belt"></div>`;
+    for (let i=0;i<(IS_MOBILE?4:8);i++) html += `<span class="tw-sparkle" style="left:${10+i*11}%;top:${12+(i*9)%40}%;animation-delay:${i*.7}s;"></span>`;
   }
+  
   let parts = "";
   const partCount = (W.part === "fog") ? (IS_MOBILE ? 15 : 30) : (IS_MOBILE ? 0 : 7);
   for (let i = 0; i < partCount; i++) {
