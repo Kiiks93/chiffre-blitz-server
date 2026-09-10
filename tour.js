@@ -133,8 +133,8 @@ const TowerUtils = {
   .twj-btn{display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,#1a2142,#0d1226);border:2px solid #00d2ff;color:#fff;border-radius:14px;padding:10px 18px;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #061024,0 0 12px #00d2ff33;}
   .twj-btn b{background:#00d2ff;color:#061024;border-radius:8px;padding:2px 8px;font-size:13px;}
   .twj-btn:disabled{opacity:.55;filter:grayscale(.6);cursor:default;}
-  .tw-shield-active{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:90vw;height:90vh;border:4px solid #f8b500;border-radius:50%;box-shadow:0 0 40px #f8b50088,inset 0 0 40px #f8b50044;pointer-events:none;z-index:9997;animation:twShieldPulse 2s infinite;}
-  @keyframes twShieldPulse{0%,100%{opacity:.6}50%{opacity:1}}
+  .tg-grid.shielded{outline:3px solid #f8b500;outline-offset:8px;border-radius:18px;box-shadow:0 0 30px #f8b50066,inset 0 0 20px #f8b50022;animation:twShieldGrid 1.6s ease-in-out infinite;}
+  @keyframes twShieldGrid{50%{box-shadow:0 0 45px #f8b500aa,inset 0 0 26px #f8b50033;}}
   .tw-moon{position:absolute;top:2%;right:10%;width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff8e8,#d8c9a8 60%,#a89878);box-shadow:0 0 30px #fff8e866;}
   .tw-star2{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;animation:twFlickP 3s steps(2) infinite;}
   .tw-cloud{position:absolute;height:10px;border-radius:6px;background:linear-gradient(90deg,transparent,#8888aa22 30%,#8888aa22 70%,transparent);filter:blur(3px);animation:twCloud linear infinite;}
@@ -476,11 +476,12 @@ function openTower() {
   }
   m.style.display = "flex";
   twViewFloor = Math.min(towerProgress.floor + 1, TOTAL_FLOORS);
+  sessionStorage.setItem("cb_last_screen", "tower");
   socket.emit("get_tower");
   renderAdventure();
   towerDing();
 }
-function closeTower() { document.getElementById("screen-tower").style.display = "none"; }
+function closeTower() { sessionStorage.removeItem("cb_last_screen"); document.getElementById("screen-tower").style.display = "none"; }
 function fmtRegen(ms) {
   const s = Math.max(0, Math.ceil(ms / 1000));
   return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
@@ -784,17 +785,8 @@ function renderHUDFromState() {
   const shEl = document.getElementById("tg-shield");
   if (shEl) shEl.style.display = (TW.shield > 0) ? "inline" : "none";
   updateJokerButtons();
-  let shield = document.getElementById("tw-shield-active");
-  if (TW.shield > 0) {
-    if (!shield) {
-      shield = document.createElement("div");
-      shield.id = "tw-shield-active";
-      shield.className = "tw-shield-active";
-      document.body.appendChild(shield);
-    }
-  } else {
-    if (shield) shield.remove();
-  }
+  const grid = document.getElementById("tg-grid");
+  if (grid) grid.classList.toggle("shielded", (TW.shield > 0));
 }
 function showFailUI(reason) {
   const ov = ensureTowerOverlay();
@@ -840,6 +832,14 @@ socket.on("tower_data", (d) => {
   if (newWorld !== oldWorld && TowerUtils.worldUnlocked(newWorld)) showWorldTransition(newWorld);
   else renderAdventure();
 });
+
+socket.on("player_registered", () => {
+  const scr = document.getElementById("screen-tower");
+  const open = scr && scr.style.display !== "none";
+  if (open) socket.emit("get_tower");
+  else if (sessionStorage.getItem("cb_last_screen") === "tower") openTower();
+});
+
 socket.on("tower_state", (st) => {
   if (!st || !st.display) return;
   TW_lastState = Date.now();
