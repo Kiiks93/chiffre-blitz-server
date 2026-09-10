@@ -407,7 +407,7 @@ const TW_COLOR_POOL = [
   {key:"gold",name:"OR",hex:"#f8b500"}, {key:"green",name:"VERT",hex:"#2ecc71"},
   {key:"red",name:"ROUGE",hex:"#ff4b2b"}, {key:"violet",name:"VIOLET",hex:"#9b5cff"}
 ];
-const TW_PAIR_SYMBOLS = ["🍒","⭐","💎","","⚡","🌙","","🎲","🍀","","","🧊","🍭","","🪙","🔮","","🎃","","🎅","🧁","🍩","","🕯️"];
+const TW_PAIR_SYMBOLS = ["\u{1F352}","\u{2B50}","\u{1F48E}","\u{1F525}","\u{26A1}","\u{1F319}","\u{1F451}","\u{1F3B2}","\u{1F340}","\u{1F680}","\u{1F9CA}","\u{1F36D}","\u{1F381}","\u{1F52E}","\u{1F987}","\u{1F383}","\u{1F384}","\u{1F385}","\u{1F9C1}","\u{1F369}","\u{1F514}","\u{1F36A}","\u{1F31F}","\u{1F344}"];
 
 function towerShuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
