@@ -827,6 +827,7 @@ function showTowerWinPopup(res) {
 socket.on("tower_data", (d) => {
   const oldWorld = TowerUtils.getTowerChapter(Math.min(towerProgress.floor + 1, TOTAL_FLOORS)).id;
   towerProgress = { floor: d.floor || 0, stars: d.stars || {} };
+  twViewFloor = Math.min(towerProgress.floor + 1, TOTAL_FLOORS);
   if (d.lives !== undefined) twLives = d.lives;
   if (d.nextLifeIn !== undefined) twNextLife = d.nextLifeIn || 0;
   if (d.jokers) twJokers = d.jokers;
