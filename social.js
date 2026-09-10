@@ -104,6 +104,19 @@ socket.on("receive_game_invite", (data) => {
   showNotificationToast(inviteHtml, "gift");
 });
 
+// 📬 Demande d'ami reçue en temps réel → pastille immédiate
+socket.on("friend_request_received", (data) => {
+  window.lastRequestsCount = (window.lastRequestsCount || 0) + 1;
+  updateFriendsBadge();
+  showNotificationToast("👥 " + ((data && data.from) || "Quelqu'un") + " t'a envoyé une demande d'ami !", "gift");
+  socket.emit("get_friends_list");
+});
+
+// Au chargement / reconnexion : rafraîchir le badge (demandes reçues hors-ligne)
+socket.on("connect", () => {
+  if (typeof isProfileValid === "function" && isProfileValid()) socket.emit("get_friends_list");
+});
+
 function renderGameInvitesList() {
   const d = i18n[currentLang];
   const container = document.getElementById("friends-list-container");
