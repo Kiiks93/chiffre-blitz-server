@@ -4,15 +4,15 @@ TOUR.JS — AVENTURE « MATCH FACTORY » (écran fixe par monde)
 
 /* ----- 1. CONFIGURATION ----- */
 const TOWER_CHAPTERS = [
-  { id:1, season:1, name:"Quartier Néon", icon:"🌆", boss:"🤖", objects:["💡","","📺","","🎛️","🖥️","","💾","🌃"] },
-  { id:2, season:1, name:"Grottes de Cristal", icon:"🧊", boss:"🗿", objects:["🕯️","","","⛏️","🪞","️","🫧","🌀","🧊"] },
-  { id:3, season:1, name:"Banque Dorée", icon:"🏦", boss:"👾", objects:["🪙","💰","💵","💳","","","💎","","📜"] },
-  { id:4, season:2, name:"Tour Hantée", icon:"🎃", boss:"🧛", objects:["🕸️","🎃","🕯️","🦇","","","‍","","️"] },
-  { id:5, season:2, name:"Cimetière Brumeux", icon:"🌫️", boss:"💀", objects:["🪦","🌫️","️","️","","️","","🦴",""] },
-  { id:6, season:2, name:"Antre Citrouille", icon:"👑", boss:"🎃", objects:["🎃","🍬","🔮","","","","🕸️","👻",""] },
-  { id:7, season:3, name:"Cime Bonbon", icon:"🍭", boss:"🧝", objects:["🍭","","🎀","🎂","","🥐","","🍩",""] },
-  { id:8, season:3, name:"Forêt de Sapins", icon:"🎄", boss:"⛄", objects:["🎄","","❄️","","️","⭐","🧦","🍪",""] },
-  { id:9, season:3, name:"Atelier du Père Noël", icon:"🎅", boss:"🎅", objects:["🎅","🤶","","","","🎁","","🥛","🍪"] }
+  { id:1, season:1, name:"Quartier Néon", icon:"🌆", boss:"🤖", objects:[] },
+  { id:2, season:1, name:"Grottes de Cristal", icon:"🧊", boss:"🗿", objects:[] },
+  { id:3, season:1, name:"Banque Dorée", icon:"🏦", boss:"👾", objects:[] },
+  { id:4, season:2, name:"Tour Hantée", icon:"🎃", boss:"🧛", objects:[] },
+  { id:5, season:2, name:"Cimetière Brumeux", icon:"🌫️", boss:"💀", objects:[] },
+  { id:6, season:2, name:"Antre Citrouille", icon:"👑", boss:"🎃", objects:[] },
+  { id:7, season:3, name:"Cime Bonbon", icon:"🍭", boss:"🧝", objects:[] },
+  { id:8, season:3, name:"Forêt de Sapins", icon:"🎄", boss:"⛄", objects:[] },
+  { id:9, season:3, name:"Atelier du Père Noël", icon:"🎅", boss:"🎅", objects:[] }
 ];
 const FPC = 200;
 const TOTAL_FLOORS = 9 * FPC;
@@ -478,6 +478,8 @@ function openTower() {
   twViewFloor = Math.min(towerProgress.floor + 1, TOTAL_FLOORS);
   sessionStorage.setItem("cb_last_screen", "tower");
   socket.emit("get_tower");
+  setTimeout(() => { const s = document.getElementById("screen-tower"); if (s && s.style.display !== "none") socket.emit("get_tower"); }, 600);
+  setTimeout(() => { const s = document.getElementById("screen-tower"); if (s && s.style.display !== "none") socket.emit("get_tower"); }, 1600);
   renderAdventure();
   towerDing();
 }
