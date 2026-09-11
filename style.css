@@ -709,26 +709,23 @@ h1 { color: var(--c-primary); margin: 0; font-size: 16px; text-shadow: 0 0 15px 
 MENU MOBILE (dock grid + glassmorphism)
 ============================================================ */
 
-/* Mobile : cacher le menu vertical classique */
 @media (max-width: 760px) {
     #screen-menu.menu-container {
         display: none !important;
     }
     #screen-menu-mobile.menu-mobile {
-        display: flex !important;
         flex-direction: column;
         position: fixed;
         inset: 0;
         padding: 0 10px;
         padding-bottom: env(safe-area-inset-bottom);
         z-index: 5;
-        pointer-events: none; /* laisse passer les clics vers le décor */
+        pointer-events: none;
         transition: opacity .3s;
     }
     #screen-menu-mobile.menu-mobile > * {
         pointer-events: auto;
     }
-    /* Mode "Admirer" : cache le menu */
     #screen-menu-mobile.admire-active {
         opacity: 0;
         pointer-events: none !important;
