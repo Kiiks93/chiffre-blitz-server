@@ -1387,13 +1387,6 @@ const kind=ev[1], f=ev[2], dur=ev[3], vol=ev[4];
 const t=ctx.currentTime;
 if(kind==='k'){ const o=ctx.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(120,t); o.frequency.exponentialRampToValueAtTime(45,t+0.12); const g=ctx.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.25); o.connect(g); g.connect(dest); o.start(t); o.stop(t+0.3); return; }
 if(kind==='s'||kind==='h'){ const len=Math.floor(ctx.sampleRate*(kind==='s'?0.18:0.05)); const b=ctx.createBuffer(1,len,ctx.sampleRate); const d=b.getChannelData(0); for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*(1-i/len); const src=ctx.createBufferSource(); src.buffer=b; const fl=ctx.createBiquadFilter(); if(kind==='s'){fl.type='bandpass';fl.frequency.value=1800;} else {fl.type='highpass';fl.frequency.value=7000;} const g=ctx.createGain(); g.gain.value=vol; src.connect(fl); fl.connect(g); g.connect(dest); src.start(t); return; }
-if(kind==='t'){ const o=ctx.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(100,t); o.frequency.exponentialRampToValueAtTime(55,t+0.09); const g=ctx.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.12); o.connect(g); g.connect(dest); o.start(t); o.stop(t+0.15); const src=ctx.createBufferSource(); src.buffer=wmNoise(ctx,0.04); const fl=ctx.createBiquadFilter(); fl.type='lowpass'; fl.frequency.value=400; const g2=ctx.createGain(); g2.gain.value=vol*0.5; src.connect(fl); fl.connect(g2); g2.connect(dest); src.start(t); return; }
-if(kind==='g'){ [1300,1950].forEach((ff,i)=>{ const o=ctx.createOscillator(); o.type='square'; o.frequency.value=ff*(i?1.004:1); const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=ff; bp.Q.value=6; const g=ctx.createGain(); g.gain.setValueAtTime(vol*(i?0.5:1),t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.22); o.connect(bp); bp.connect(g); g.connect(dest); o.start(t); o.stop(t+0.25); }); const src=ctx.createBufferSource(); src.buffer=wmNoise(ctx,0.06); const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=3000; const g3=ctx.createGain(); g3.gain.value=vol*0.4; src.connect(hp); hp.connect(g3); g3.connect(dest); src.start(t); return; }
-if(kind==='z'){ const o=ctx.createOscillator(); o.type='sawtooth'; o.frequency.setValueAtTime(2400,t); o.frequency.exponentialRampToValueAtTime(300,t+0.18); const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1200; bp.Q.value=3; const g=ctx.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.2); o.connect(bp); bp.connect(g); g.connect(dest); o.start(t); o.stop(t+0.22); return; }
-if(kind==='a'){ const o=ctx.createOscillator(); o.type='triangle'; const g=ctx.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(vol,t+0.25); g.gain.linearRampToValueAtTime(0.0001,t+dur); o.frequency.setValueAtTime(620,t); o.frequency.linearRampToValueAtTime(920,t+dur*0.5); o.frequency.linearRampToValueAtTime(620,t+dur); o.connect(g); g.connect(dest); o.start(t); o.stop(t+dur+0.05); return; }
-if(kind==='l'){ const o1=ctx.createOscillator(); o1.type='sine'; o1.frequency.value=f; const o2=ctx.createOscillator(); o2.type='sine'; o2.frequency.value=f*2.76; const g=ctx.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); const g2=ctx.createGain(); g2.gain.setValueAtTime(vol*0.35,t); g2.gain.exponentialRampToValueAtTime(0.0001,t+dur*0.6); o1.connect(g); o2.connect(g2); g.connect(dest); g2.connect(dest); o1.start(t); o2.start(t); o1.stop(t+dur+0.05); o2.stop(t+dur+0.05); return; }
-if(kind==='c'){ const o=ctx.createOscillator(); o.type='sine'; o.frequency.value=f; const g=ctx.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.5); o.connect(g); g.connect(dest); o.start(t); o.stop(t+0.55); return; }
-if(kind==='r'){ const o=ctx.createOscillator(); o.type='triangle'; o.frequency.value=f; const g=ctx.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.35); o.connect(g); g.connect(dest); o.start(t); o.stop(t+0.4); return; } src.connect(fl); fl.connect(g); g.connect(dest); src.start(t); return; }
 const o=ctx.createOscillator(); const g=ctx.createGain(); let node=o;
 if(kind==='m'||kind==='x'){ o.type='sawtooth'; o.frequency.value=f; const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=(kind==='x'?1500:1100); o.connect(lp); node=lp; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); }
 else if(kind==='b'){ o.type='triangle'; o.frequency.value=f; const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=320; o.connect(lp); node=lp; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); }
@@ -1411,7 +1404,7 @@ let step=0;
 const timer=setInterval(()=>{ const l=byStep[step]; if(l) for(let i=0;i<l.length;i++) wmVoice(ctx,master,l[i]); step=(step+1)%total; }, SD*1000);
 WM={nodes:[master],timers:[timer]};
 }
-/* --- M1 : mp3 Pixabay (fallback synthwave) --- */
+/* --- M1 : mp3 Pixabay, volume DOUX (fallback synthwave) --- */
 function wmStartNeon(){
 wmStopAudio();
 try{
@@ -1434,62 +1427,40 @@ timers.push(setInterval(()=>{ const o=ctx.createOscillator(); o.type='square'; o
 WM={nodes,timers};
 }
 /* --- M2 : Grottes de Cristal (mélodie chantante + écho) --- */
-function wmNoise(ctx,dur){ const len=Math.max(1,Math.floor(ctx.sampleRate*dur)); const b=ctx.createBuffer(1,len,ctx.sampleRate); const d=b.getChannelData(0); for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*(1-i/len); return b; }
 function wmStartGlacier(){
-const bpm=72, SD=60/bpm/2, mf=m=>440*Math.pow(2,(m-69)/12);
+const bpm=80, SD=60/bpm/2, mf=m=>440*Math.pow(2,(m-69)/12);
 const E=[];
-const chords=[[62,66,69,73],[67,71,74,78],[59,62,66,69],[69,73,76,78]];
-const melA=[[0,74,3],[4,73,2],[8,71,3],[12,69,2],[16,66,6],[24,69,2],[28,71,4],[32,74,3],[36,76,2],[40,78,4],[48,74,6],[56,71,4]];
-const melA2=[[0,74,3],[4,73,2],[8,71,3],[12,69,2],[16,66,4],[22,67,2],[24,69,6],[32,71,3],[36,74,2],[40,76,4],[48,78,6],[56,74,4]];
-const melB=[[0,78,3],[4,76,2],[8,74,3],[12,73,2],[16,71,6],[24,73,2],[28,74,4],[32,76,3],[36,78,2],[40,81,4],[48,78,6],[56,76,4]];
-const mels=[melA,melA2,melB,melA2];
-for(let ph=0;ph<4;ph++){
-const off=ph*64;
-for(let i=0;i<mels[ph].length;i++) E.push([off+mels[ph][i][0],'f',mf(mels[ph][i][1]),mels[ph][i][2]*SD,0.10]);
-for(let cgi=0;cgi<2;cgi++){ const ch=chords[(ph*2+cgi)%4]; for(let k=0;k<ch.length;k++) E.push([off+cgi*32,'p',mf(ch[k]),32*SD,0.028]); }
-for(let bar=0;bar<8;bar++){ const ch=chords[(ph*2+(bar>>2))%4]; const tones=[ch[0]+12,ch[1]+12,ch[2]+12,ch[3]+12]; for(let q=0;q<4;q++) E.push([off+bar*8+q*2,'r',mf(tones[q%4]),0.35,0.05]); }
-[[0,86],[16,83],[32,86],[48,88]].forEach(b=>E.push([off+b[0],'l',mf(b[1]),1.6,0.05]));
-[[28,93],[60,95]].forEach(c=>E.push([off+c[0],'c',mf(c[1]),0.5,0.04]));
-for(let bar=0;bar<8;bar++){ const root=chords[(ph*2+(bar>>2))%4][0]-24; E.push([off+bar*8,'b',mf(root),3*SD,0.06]); E.push([off+bar*8+4,'b',mf(root),3*SD,0.05]); }
+const A=[[0,74,3],[4,69,3],[8,72,3],[12,74,3],[16,77,6],[24,76,2],[28,74,4],[32,72,3],[36,69,3],[40,67,3],[44,72,4],[52,74,6],[60,69,4]];
+const B=[[0,76,3],[4,74,3],[8,72,3],[12,69,3],[16,67,6],[24,69,2],[28,72,4],[32,74,3],[36,77,3],[40,79,3],[44,76,4],[52,74,6],[60,72,4]];
+const pA=[[0,[62,65,69]],[16,[58,62,65]],[32,[55,58,62]],[48,[57,61,64]]];
+const pB=[[0,[58,62,65]],[16,[53,57,60]],[32,[55,58,62]],[48,[62,65,69]]];
+const rA=[38,38,34,34,31,31,33,33], rB=[34,34,29,29,31,31,38,38];
+function phrase(off,mel,pads,roots){
+for(let i=0;i<mel.length;i++) E.push([off+mel[i][0],'f',mf(mel[i][1]),mel[i][2]*SD,0.10]);
+for(let i=0;i<pads.length;i++) for(let j=0;j<pads[i][1].length;j++) E.push([off+pads[i][0],'p',mf(pads[i][1][j]),16*SD,0.03]);
+for(let bar=0;bar<8;bar++){ const r=roots[bar]; E.push([off+bar*8,'b',mf(r),3*SD,0.08]); E.push([off+bar*8+4,'b',mf(r),3*SD,0.08]); E.push([off+bar*8+6,'b',mf(r+7),2*SD,0.05]); }
+E.push([off+28,'f',mf(89),2*SD,0.04]); E.push([off+60,'f',mf(93),2*SD,0.04]);
 }
-wmRunScore(bpm,256,E);
+phrase(0,A,pA,rA); phrase(64,B,pB,rB);
+wmRunScore(bpm,128,E);
 }
-/* --- M3 : Banque Dorée (score braquage : thème A/B/pont, basse, batterie, cuivres) --- */
+/* --- M3 : Banque Dorée (score braquage long) --- */
 function wmStartVault(){
-const bpm=100, SD=60/bpm/2, mf=m=>440*Math.pow(2,(m-69)/12);
-const E=[];
-const melA=[[0,64,2],[3,64,1],[6,67,2],[10,64,2],[14,62,2],[16,64,2],[19,64,1],[22,69,2],[26,67,2],[30,64,4],[32,62,2],[36,59,2],[40,62,2],[44,64,2],[48,67,3],[52,66,1],[56,64,6]];
-const melA2=[[0,64,2],[3,64,1],[6,67,2],[10,64,2],[14,62,2],[16,64,2],[19,64,1],[22,69,2],[26,67,2],[30,64,4],[32,64,2],[36,67,2],[40,69,2],[44,71,2],[48,74,3],[52,71,1],[56,69,6]];
-const melB=[[0,71,2],[3,71,1],[6,74,2],[10,71,2],[14,69,2],[16,67,2],[20,64,2],[24,62,2],[28,59,4],[32,64,2],[36,67,2],[40,71,2],[44,74,2],[48,76,3],[52,74,1],[56,71,6]];
-const melBr=[[0,59,4],[16,62,4],[32,64,4],[48,67,6]];
-const melO=[[0,64,2],[6,67,2],[12,69,2],[18,71,2],[24,74,4],[40,71,2],[46,69,2],[52,67,8]];
-const secs=[
-{mel:null,roots:[40,40,40,40,40,40,40,40],groove:'minimal',lasers:[8,40],alarms:[],ingots:[],feet:true},
-{mel:melA,roots:[40,40,36,36,43,43,38,38],groove:'full',lasers:[22,54],alarms:[],ingots:[],feet:false},
-{mel:melA2,roots:[40,40,36,36,43,43,38,38],groove:'full',lasers:[54],alarms:[],ingots:[12,28,44,60],feet:false},
-{mel:null,roots:[40,40,40,40,36,36,36,36],groove:'drive',lasers:[8,24,40,56],alarms:[0,32],ingots:[],feet:false},
-{mel:melB,roots:[33,33,36,36,38,38,40,40],groove:'full',lasers:[54],alarms:[],ingots:[8,24,40,56],feet:false},
-{mel:melBr,roots:[40,40,40,40,40,40,40,40],groove:'minimal',lasers:[16,48],alarms:[],ingots:[],feet:true},
-{mel:melA,roots:[40,40,36,36,43,43,38,38],groove:'full',lasers:[22],alarms:[48],ingots:[16,48],feet:false},
-{mel:melO,roots:[40,40,43,43,38,38,40,40],groove:'half',lasers:[56],alarms:[],ingots:[24,40,56],feet:false}
-];
-for(let s=0;s<8;s++){
-const off=s*64, cfg=secs[s];
-if(cfg.mel) for(let i=0;i<cfg.mel.length;i++) E.push([off+cfg.mel[i][0],'m',mf(cfg.mel[i][1]),cfg.mel[i][2]*SD,0.11]);
-for(let bar=0;bar<8;bar++){
-const r=cfg.roots[bar];
-E.push([off+bar*8,'b',mf(r),2*SD,0.12]); E.push([off+bar*8+3,'b',mf(r),1*SD,0.09]); E.push([off+bar*8+6,'b',mf(r+7),2*SD,0.10]);
-if(cfg.groove==='full'){ E.push([off+bar*8,'k',0,0.3,0.5]); E.push([off+bar*8+6,'k',0,0.3,0.4]); E.push([off+bar*8+4,'s',0,0.2,0.22]); for(let h=0;h<8;h+=2) E.push([off+bar*8+h,'h',0,0.05,(h%4===0)?0.13:0.08]); }
-else if(cfg.groove==='drive'){ E.push([off+bar*8,'k',0,0.3,0.45]); for(let h=0;h<8;h++) E.push([off+bar*8+h,'h',0,0.04,(h%2===0)?0.12:0.07]); }
-else if(cfg.groove==='half'){ E.push([off+bar*8,'k',0,0.3,0.45]); E.push([off+bar*8+4,'s',0,0.2,0.18]); }
-else if(cfg.groove==='minimal'){ E.push([off+bar*8+4,'h',0,0.05,0.08]); }
-if(cfg.feet){ E.push([off+bar*8,'t',0,0.12,0.30]); E.push([off+bar*8+4,'t',0,0.12,0.22]); }
+const bpm=96, SD=60/bpm/2, mf=m=>440*Math.pow(2,(m-69)/12);
+const E=[]; const BARS=32;
+for(let bar=0;bar<BARS;bar++){ const o=bar*8;
+E.push([o,'k',0,0.3,0.5]); E.push([o+6,'k',0,0.3,0.4]); E.push([o+4,'s',0,0.2,0.22]);
+for(let h=0;h<8;h+=2) E.push([o+h,'h',0,0.05,(h%4===0)?0.14:0.09]);
+const pat=(bar%8===3)?[40,40,43,45]:(bar%8===7)?[43,45,47,48]:[40,40,40,40];
+E.push([o,'b',mf(pat[0]),2*SD,0.12]); E.push([o+2,'b',mf(pat[1]),2*SD,0.10]); E.push([o+4,'b',mf(pat[2]),2*SD,0.12]); E.push([o+6,'b',mf(pat[3]),2*SD,0.10]);
 }
-for(let i=0;i<cfg.lasers.length;i++) E.push([off+cfg.lasers[i],'z',0,0.2,0.10]);
-for(let i=0;i<cfg.alarms.length;i++) E.push([off+cfg.alarms[i],'a',0,1.0,0.07]);
-for(let i=0;i<cfg.ingots.length;i++) E.push([off+cfg.ingots[i],'g',0,0.22,0.12]);
-}
-wmRunScore(bpm,512,E);
+const mA=[[0,64,2],[3,64,1],[6,67,2],[10,64,2],[14,62,2],[16,64,2],[19,64,1],[22,69,2],[26,67,2],[30,64,4],[32,62,2],[36,59,2],[40,62,2],[44,64,2],[48,67,3],[52,66,1],[56,64,6]];
+const mB=[[0,71,2],[3,71,1],[6,74,2],[10,71,2],[14,69,2],[16,67,2],[20,64,2],[24,62,2],[28,59,4],[32,64,2],[36,67,2],[40,71,2],[44,74,2],[48,76,3],[52,74,1],[56,71,6]];
+const mC=[[0,59,4],[8,62,4],[16,64,4],[24,67,4],[32,66,4],[40,64,4],[48,62,4],[56,59,8]];
+const secs=[mA,mA,mB,mC];
+for(let s=0;s<secs.length;s++){ const off=s*64; for(let i=0;i<secs[s].length;i++) E.push([off+secs[s][i][0],'m',mf(secs[s][i][1]),secs[s][i][2]*SD,0.11]); }
+for(let s=0;s<3;s++){ const off=s*64; const st=[6,14,22,38,46,54]; for(let i=0;i<st.length;i++) for(let j=0;j<3;j++) E.push([off+st[i],'x',mf([52,55,59][j]),1.5*SD,0.05]); }
+wmRunScore(bpm,256,E);
 }
 /* --- Routeur --- */
 function towerPlayWorldMusic(world){
@@ -1498,7 +1469,6 @@ const key='w'+world;
 if(WM_lastKey===key) return;
 WM_lastKey=key;
 wmStop();
-if(typeof SoundEngine!=='undefined' && typeof SoundEngine.stopMusic==='function') SoundEngine.stopMusic(false);
 if(world===1) return wmStartNeon();
 if(world===2) return wmStartGlacier();
 if(world===3) return wmStartVault();
