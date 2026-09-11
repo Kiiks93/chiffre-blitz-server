@@ -892,6 +892,10 @@ setTimeout(() => { const s = document.getElementById("screen-tower"); if (s && s
 setTimeout(() => { const s = document.getElementById("screen-tower"); if (s && s.style.display !== "none") socket.emit("get_tower"); }, 1600);
 renderAdventure();
 towerDing();
+// Force l'arrêt de toute musique saisonnière au démarrage
+if(typeof SoundEngine!=='undefined' && typeof SoundEngine.stopMusic==='function'){
+SoundEngine.stopMusic(false);
+}
 }
 function closeTower() {
 sessionStorage.removeItem("cb_last_screen");
@@ -1469,11 +1473,15 @@ const key='w'+world;
 if(WM_lastKey===key) return;
 WM_lastKey=key;
 wmStop();
+// Coupe TOUTE musique saisonnière avant de lancer la musique du monde
+if(typeof SoundEngine!=='undefined' && typeof SoundEngine.stopMusic==='function'){
+SoundEngine.stopMusic(false);
+}
 if(world===1) return wmStartNeon();
 if(world===2) return wmStartGlacier();
 if(world===3) return wmStartVault();
+// Pour les mondes 4-9, lance la musique saisonnière correspondante
 if(typeof SoundEngine!=='undefined'){
-if(typeof SoundEngine.stopMusic==='function') SoundEngine.stopMusic(false);
 const k=TOWER_CHAPTERS[world-1].season===3?'s3menu':'s2menu';
 setTimeout(()=>{ if(typeof SoundEngine.startMusicSeasonal==='function') SoundEngine.startMusicSeasonal(k); },100);
 }
