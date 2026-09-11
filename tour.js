@@ -1437,7 +1437,7 @@ a.loop=true; a.volume=0; a.preload='auto';
 WM_audio=a;
 a.addEventListener('error', function(){ if(WM_audio===a){ wmStopAudio(); wmNeonFallback(); } }, {once:true});
 const p=a.play();
-const fadeIn=function(){ if(WM_audio!==a) return; const f=setInterval(function(){ if(WM_audio!==a){clearInterval(f);return;} if(a.volume<0.35)a.volume=Math.min(0.35,a.volume+0.02); else clearInterval(f); },90); };
+const fadeIn=function(){ if(WM_audio!==a) return; const f=setInterval(function(){ if(WM_audio!==a){clearInterval(f);return;} if(a.volume<0.20)a.volume=Math.min(0.20,a.volume+0.020); else clearInterval(f); },90); };
 if(p&&typeof p.then==='function'){ p.then(fadeIn).catch(function(){ if(WM_audio===a){ wmStopAudio(); wmNeonFallback(); } }); } else fadeIn();
 }catch(e){ wmNeonFallback(); }
 }
