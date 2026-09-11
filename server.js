@@ -583,12 +583,13 @@ setInterval(async () => {
 SOCKET
 ============================================================ */
 io.on('connection', (socket) => {
-  const cv = socket.handshake.query.v || "0.0.0";
-  if (vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
-    socket.emit("version_blocked");
-    socket.disconnect(true);
-    return;
-  }
+ const cv = socket.handshake.query.v || "0.0.0";
+const isAdminConn = socket.handshake.auth && socket.handshake.auth.isAdmin;
+if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
+  socket.emit("version_blocked");
+  socket.disconnect(true);
+  return;
+}}
   console.log('Connexion : ' + socket.id);
   socket.emit('events_state_update', globalEvents);
   socket.emit('online_count', { online: getOnlineCount() });
