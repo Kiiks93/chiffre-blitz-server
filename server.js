@@ -1573,10 +1573,10 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
 ADMIN — AVENTURE : FLAGS SAISONS & VIES/JOKERS
 ============================================================ */
 socket.on('admin_give_adventure', async (data) => {
-  console.log('🔵 admin_give_adventure reçu:', data);
+  console.log('🔵 admin_give_adventure reçu:', JSON.stringify(data, null, 2));
   
   if (!socket.isAdmin) {
-    console.log('❌ Pas admin');
+    console.log(' Pas admin');
     return;
   }
   
@@ -1585,7 +1585,7 @@ socket.on('admin_give_adventure', async (data) => {
     const clean = (username || '').trim();
     if (!clean) return socket.emit('admin_adv_result', { ok: false, message: 'Pseudo requis.' });
     
-    console.log(' Recherche joueur:', clean);
+    console.log('🔵 Paramètres reçus:', { halloween, noel, lives, jokersTime, jokersShield, starsPerWorld, maxFloor });
     
     // Chercher le joueur en ligne
     let targetId = null;
@@ -1596,36 +1596,38 @@ socket.on('admin_give_adventure', async (data) => {
       }
     }
     
-    console.log('🔵 Joueur en ligne:', targetId ? 'OUI' : 'NON');
+    console.log('🔵 Joueur en ligne:', targetId ? 'OUI (ID: ' + targetId + ')' : 'NON');
     
     if (targetId) {
       const p = activePlayers[targetId];
-      console.log('🔵 Player object:', { 
-        username: p.username, 
-        towerFloor: p.towerFloor, 
-        towerStars: p.towerStars,
-        lives: p.lives,
-        jokers: p.jokers
-      });
+      console.log('🔵 Player unlocked_items:', p.unlocked_items);
       
       let changes = [];
       
       // 1. Flags de saison
       p.unlocked_items = p.unlocked_items || [];
       let flagsAdded = [];
+      
+      console.log('🔵 Vérification Halloween:', halloween, 'Déjà possédé:', p.unlocked_items.includes('season_s2_unlocked'));
       if (halloween && !p.unlocked_items.includes('season_s2_unlocked')) {
         p.unlocked_items.push('season_s2_unlocked');
         flagsAdded.push('Halloween (M4-6)');
+        console.log('✅ Flag Halloween ajouté');
       }
+      
+      console.log('🔵 Vérification Noël:', noel, 'Déjà possédé:', p.unlocked_items.includes('season_s3_unlocked'));
       if (noel && !p.unlocked_items.includes('season_s3_unlocked')) {
         p.unlocked_items.push('season_s3_unlocked');
         flagsAdded.push('Noël (M7-9)');
+        console.log('✅ Flag Noël ajouté');
       }
+      
       if (flagsAdded.length) changes.push(`flags: ${flagsAdded.join(', ')}`);
       
       // 2. Étoiles par monde
       if (starsPerWorld !== null && !isNaN(starsPerWorld)) {
         const stars = Math.max(0, Math.min(240, parseInt(starsPerWorld)));
+        console.log(' Application étoiles:', stars, 'par monde');
         p.towerStars = {};
         for (let w = 1; w <= 9; w++) {
           const start = (w - 1) * 200 + 1;
@@ -1639,43 +1641,55 @@ socket.on('admin_give_adventure', async (data) => {
           }
         }
         changes.push(`${stars}⭐/monde`);
-        console.log('🔵 TowerStars après:', Object.keys(p.towerStars).length, 'étages');
+        console.log('✅ Étoiles appliquées:', Object.keys(p.towerStars).length, 'étages');
       }
       
       // 3. Étage max
       if (maxFloor !== null && !isNaN(maxFloor)) {
         p.towerFloor = Math.max(0, Math.min(1800, parseInt(maxFloor)));
         changes.push(`étage ${p.towerFloor}`);
-        console.log('🔵 TowerFloor:', p.towerFloor);
+        console.log('✅ Étage max:', p.towerFloor);
       }
       
       // 4. Vies
       if (lives !== null && !isNaN(lives)) {
-        p.lives = Math.max(0, Math.min(10, parseInt(lives)));
-        if (p.lives >= 10) p.lives_ts = Date.now();
-        changes.push(`${p.lives} vies`);
-        console.log('🔵 Lives:', p.lives, 'ts:', p.lives_ts);
+        const newLives = Math.max(0, Math.min(10, parseInt(lives)));
+        if (newLives !== p.lives) {
+          p.lives = newLives;
+          if (p.lives >= 10) p.lives_ts = Date.now();
+          changes.push(`${p.lives} vies`);
+          console.log('✅ Vies:', p.lives);
+        }
       }
       
       // 5. Jokers
       p.jokers = normalizeJokers(p.jokers);
       if (jokersTime !== null && !isNaN(jokersTime)) {
-        p.jokers.time = Math.max(0, parseInt(jokersTime));
-        changes.push(`${p.jokers.time} jokers temps`);
+        const newJt = Math.max(0, parseInt(jokersTime));
+        if (newJt !== p.jokers.time) {
+          p.jokers.time = newJt;
+          changes.push(`${p.jokers.time} jokers temps`);
+          console.log('✅ Jokers temps:', p.jokers.time);
+        }
       }
       if (jokersShield !== null && !isNaN(jokersShield)) {
-        p.jokers.shield = Math.max(0, parseInt(jokersShield));
-        changes.push(`${p.jokers.shield} jokers bouclier`);
+        const newJs = Math.max(0, parseInt(jokersShield));
+        if (newJs !== p.jokers.shield) {
+          p.jokers.shield = newJs;
+          changes.push(`${p.jokers.shield} jokers bouclier`);
+          console.log('✅ Jokers bouclier:', p.jokers.shield);
+        }
       }
       
-      console.log('🔵 Changes:', changes);
+      console.log(' Changes finaux:', changes);
       
       if (!changes.length) {
-        return socket.emit('admin_adv_result', { ok: false, message: 'Aucun changement demandé.' });
+        console.log('️ Aucun changement détecté');
+        return socket.emit('admin_adv_result', { ok: false, message: 'Aucun changement (valeurs identiques).' });
       }
       
       // Sauvegarder
-      console.log('🔵 Appel savePlayerToSupabase...');
+      console.log(' Appel savePlayerToSupabase...');
       await savePlayerToSupabase(targetId);
       console.log('✅ Save terminé');
       
@@ -1751,14 +1765,12 @@ socket.on('admin_give_adventure', async (data) => {
       }
       updates.tower_stars = towerStars;
       changes.push(`${stars}⭐/monde`);
-      console.log('🔵 TowerStars à sauvegarder:', Object.keys(towerStars).length, 'étages');
     }
     
     // 3. Étage max
     if (maxFloor !== null && !isNaN(maxFloor)) {
       updates.tower_floor = Math.max(0, Math.min(1800, parseInt(maxFloor)));
       changes.push(`étage ${updates.tower_floor}`);
-      console.log('🔵 TowerFloor à sauvegarder:', updates.tower_floor);
     }
     
     // 4. Vies
@@ -1767,7 +1779,6 @@ socket.on('admin_give_adventure', async (data) => {
       updates.tower_lives = newLives;
       if (newLives >= 10) updates.tower_lives_ts = Date.now();
       changes.push(`${newLives} vies`);
-      console.log('🔵 Lives à sauvegarder:', newLives);
     }
     
     // 5. Jokers
@@ -1798,9 +1809,9 @@ socket.on('admin_give_adventure', async (data) => {
     }
     
     // Update Supabase
-    console.log('🔵 Appel Supabase update...');
+    console.log(' Appel Supabase update...');
     const { error: updErr, data: updData } = await supabase.from('players').update(updates).eq('id', row.id);
-    console.log('🔵 Résultat Supabase:', { error: updErr, data: updData });
+    console.log(' Résultat Supabase:', { error: updErr, data: updData });
     
     if (updErr) {
       console.error('❌ Erreur Supabase:', updErr);
