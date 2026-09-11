@@ -95,31 +95,62 @@ function playWhoosh(){
         src.connect(f);f.connect(g);g.connect(ctx.destination);src.start(t);
     }catch(e){}
 }
-function startNeonHum(){
-    if(NEON_HUM)return;
-    try{ SoundEngine.init(); const ctx=SoundEngine.ctx,t=ctx.currentTime;
-        const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=110;
-        const of_=ctx.createBiquadFilter();of_.type='bandpass';of_.frequency.value=220;of_.Q.value=3;
-        const og=ctx.createGain();og.gain.value=0;
-        o.connect(of_);of_.connect(og);og.connect(ctx.destination);
-        og.gain.linearRampToValueAtTime(0.04,t+0.8); o.start();
-        const len=ctx.sampleRate*2,buf=ctx.createBuffer(1,len,ctx.sampleRate),d=buf.getChannelData(0);
-        for(let i=0;i<len;i++){d[i]=(Math.random()*2-1)*(Math.random()<0.08?1:0.15);}
-        const src=ctx.createBufferSource();src.buffer=buf;src.loop=true;
-        const gf=ctx.createBiquadFilter();gf.type='highpass';gf.frequency.value=3000;
-        const gg=ctx.createGain();gg.gain.value=0;
-        src.connect(gf);gf.connect(gg);gg.connect(ctx.destination);
-        gg.gain.linearRampToValueAtTime(0.07,t+0.8); src.start();
-        NEON_HUM={o,og,src,gg};
-    }catch(e){}
+let NEON_HUM = null;
+let NEON_FLICK_TIMER = null;
+
+/* Vrai buzz néon "zzzz" : secteur 100Hz + harmonique + crépitement */
+function makeBuzz(ctx, dest, startT, dur, vol) {
+    const o  = ctx.createOscillator(); o.type  = 'sawtooth'; o.frequency.value  = 100;
+    const o2 = ctx.createOscillator(); o2.type = 'square';   o2.frequency.value = 200;
+    const f  = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 800; f.Q.value = 1.5;
+    const g  = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, startT);
+    g.gain.exponentialRampToValueAtTime(vol, startT + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, startT + dur);
+    const lfo = ctx.createOscillator(); lfo.type = 'square'; lfo.frequency.value = 45;
+    const lg  = ctx.createGain(); lg.gain.value = vol * 0.6;
+    lfo.connect(lg); lg.connect(g.gain);
+    o.connect(f); o2.connect(f); f.connect(g); g.connect(dest);
+    o.start(startT); o2.start(startT); lfo.start(startT);
+    o.stop(startT + dur + .05); o2.stop(startT + dur + .05); lfo.stop(startT + dur + .05);
 }
-function stopNeonHum(){
-    if(!NEON_HUM)return;
-    try{ const ctx=SoundEngine.ctx,t=ctx.currentTime,n=NEON_HUM;NEON_HUM=null;
-        n.og.gain.linearRampToValueAtTime(0.0001,t+0.4);
-        n.gg.gain.linearRampToValueAtTime(0.0001,t+0.4);
-        setTimeout(()=>{try{n.o.stop();n.src.stop();}catch(e){}},500);
-    }catch(e){NEON_HUM=null;}
+
+function startNeonHum() {
+    if (NEON_HUM) return;
+    try {
+        SoundEngine.init();
+        const ctx = SoundEngine.ctx, t = ctx.currentTime;
+        // hum continu "zzzz"
+        const o  = ctx.createOscillator(); o.type  = 'sawtooth'; o.frequency.value  = 100;
+        const o2 = ctx.createOscillator(); o2.type = 'square';   o2.frequency.value = 200;
+        const f  = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 900; f.Q.value = 2;
+        const g  = ctx.createGain(); g.gain.value = 0;
+        const lfo = ctx.createOscillator(); lfo.type = 'square'; lfo.frequency.value = 50;
+        const lg  = ctx.createGain(); lg.gain.value = 0.02;
+        lfo.connect(lg); lg.connect(g.gain);
+        o.connect(f); o2.connect(f); f.connect(g); g.connect(ctx.destination);
+        g.gain.linearRampToValueAtTime(0.035, t + 0.8);
+        o.start(); o2.start(); lfo.start();
+        NEON_HUM = { o, o2, lfo, g };
+        // sync avec le flicker visuel (neonFlicker = 5s, baisses à ~6%,39%,73%)
+        const offsets = [0.30, 1.95, 3.65];
+        const cycle = () => offsets.forEach(off => setTimeout(() => {
+            if (NEON_HUM) makeBuzz(SoundEngine.ctx, SoundEngine.ctx.destination, SoundEngine.ctx.currentTime, 0.12, 0.10);
+        }, off * 1000));
+        cycle();
+        NEON_FLICK_TIMER = setInterval(cycle, 5000);
+    } catch (e) {}
+}
+
+function stopNeonHum() {
+    if (NEON_FLICK_TIMER) { clearInterval(NEON_FLICK_TIMER); NEON_FLICK_TIMER = null; }
+    if (!NEON_HUM) return;
+    try {
+        const ctx = SoundEngine.ctx, t = ctx.currentTime, n = NEON_HUM;
+        NEON_HUM = null;
+        n.g.gain.linearRampToValueAtTime(0.0001, t + 0.4);
+        setTimeout(() => { try { n.o.stop(); n.o2.stop(); n.lfo.stop(); } catch (e) {} }, 500);
+    } catch (e) { NEON_HUM = null; }
 }
 
 function updateS1Neon(){
