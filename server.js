@@ -1783,6 +1783,54 @@ socket.on('admin_give_adventure', async (data) => {
     socket.emit('admin_adv_result', { ok: false, message: 'Erreur: ' + e.message });
   }
 });
+
+socket.on('admin_force_refresh', async (data) => {
+  if (!socket.isAdmin) return;
+  
+  const { username } = data || {};
+  const clean = (username || '').trim();
+  if (!clean) return socket.emit('admin_force_refresh_result', { ok: false, message: 'Pseudo requis.' });
+  
+  // Chercher le joueur en ligne
+  let targetId = null;
+  for (const sId in activePlayers) {
+    if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === clean.toLowerCase()) {
+      targetId = sId;
+      break;
+    }
+  }
+  
+  if (targetId) {
+    const p = activePlayers[targetId];
+    // Recharger depuis la base de données
+    const { data: row, error } = await supabase.from('players').select('*').eq('id', p.dbId).single();
+    if (error || !row) {
+      return socket.emit('admin_force_refresh_result', { ok: false, message: 'Erreur BDD' });
+    }
+    
+    // Mettre à jour l'objet en mémoire
+    p.towerFloor = row.tower_floor || 0;
+    p.towerStars = row.tower_stars || {};
+    p.lives = row.tower_lives !== undefined ? row.tower_lives : 10;
+    p.lives_ts = row.tower_lives_ts || Date.now();
+    p.jokers = normalizeJokers(row.tower_jokers);
+    p.unlocked_items = row.unlocked_items || [];
+    
+    // Notifier le joueur
+    io.to(targetId).emit('player_registered', p);
+    io.to(targetId).emit('tower_data', { 
+      floor: p.towerFloor, 
+      stars: p.towerStars, 
+      lives: p.lives, 
+      nextLifeIn: towerNextLifeIn(p), 
+      jokers: p.jokers 
+    });
+    
+    return socket.emit('admin_force_refresh_result', { ok: true, username: p.username });
+  }
+  
+  socket.emit('admin_force_refresh_result', { ok: false, message: 'Joueur hors-ligne' });
+});
   /* ---------- 🗼 TOUR ---------- */
   socket.on('get_tower', () => {
     const player = activePlayers[socket.id];
