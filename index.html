@@ -151,31 +151,16 @@ EN DEHORS de #screen-menu pour ne pas être masqué avec lui
     </button>
 
     <!-- Grille des modes de jeu (2x3) -->
-    <div class="mobile-modes-grid">
-        <button class="mobile-mode-tile mode-tower" onclick="openTower()">
-            <span class="tile-icon">🗺️</span>
-            <span class="tile-label">Aventure</span>
-        </button>
-        <button class="mobile-mode-tile mode-solo" onclick="openSoloMenu()">
-            <span class="tile-icon">🏋️</span>
-            <span class="tile-label">Solo</span>
-        </button>
-        <button class="mobile-mode-tile mode-1v1" onclick="open1v1Hub()">
-            <span class="tile-icon">⚔️</span>
-            <span class="tile-label">1v1</span>
-        </button>
-        <button class="mobile-mode-tile mode-halloween" id="mobile-btn-halloween" onclick="startHalloweenQueue()" style="display:none;">
-            <span class="tile-icon">🎃</span>
-            <span class="tile-label">Halloween</span>
-        </button>
-        <button class="mobile-mode-tile mode-noel" id="mobile-btn-noel" onclick="startNoelQueue()" style="display:none;">
-            <span class="tile-icon">🎄</span>
-            <span class="tile-label">Noël</span>
-        </button>
-        <button class="mobile-mode-tile mode-tow" id="mobile-btn-tow" onclick="startTugOfWarQueue()" style="display:none;">
-            <span class="tile-icon">🪢</span>
-            <span class="tile-label">Corde</span>
-        </button>
+    <!-- Roue demi-cercle des modes -->
+    <div id="mode-wheel-wrap">
+        <div id="mode-wheel-center">
+            <div id="mode-wheel-frame">
+                <span id="mode-wheel-icon">🗺️</span>
+                <span id="mode-wheel-name">Aventure</span>
+            </div>
+            <button id="mode-wheel-go" onclick="launchCenterMode()">JOUER ⚡</button>
+        </div>
+        <div id="mode-wheel"></div>
     </div>
 
     <!-- Dock du bas (glassmorphism) -->
