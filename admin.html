@@ -191,7 +191,26 @@ DASHBOARD
 
 <script>
 const SERVER_URL = "https://chiffre-blitz-server.onrender.com";
-const socket = io(SERVER_URL, { reconnection: true });
+const socket = io(SERVER_URL, { 
+  reconnection: true, 
+  query: { v: "1.3.0" },  // ← On déclare la version admin
+  auth: { isAdmin: true }
+});
+  socket.on("connect", () => {
+  const el = document.getElementById("server-status");
+  if (el) { el.innerText = "✅ Connecté au serveur"; el.className = "status ok"; }
+});
+
+// AJOUTE CES 2 ÉCOUTEURS CI-DESSOUS
+socket.on("version_blocked", () => {
+  const el = document.getElementById("server-status");
+  if (el) { el.innerText = "❌ Version incompatible — mets à jour l'app"; el.className = "status ko"; }
+});
+
+socket.on("disconnect", (reason) => {
+  const el = document.getElementById("server-status");
+  if (el) { el.innerText = "❌ Déconnecté : " + reason; el.className = "status ko"; }
+});
 
 /* ============================================================
 STATUT SERVEUR
