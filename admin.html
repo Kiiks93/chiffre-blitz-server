@@ -119,50 +119,71 @@ DASHBOARD
   </div>
 
   <!-- ===== AVENTURE : FLAGS & VIES/JOKERS ===== -->
-  <div class="card" style="border-color: rgba(255, 107, 169, 0.55);">
-    <h2 style="color:#ff6ba9;">🏰 Aventure — Flags & Vies</h2>
-    <div class="card-desc">
-      Donne les flags de déblocage des mondes saisonniers + ajuste les vies et jokers.
-      <br>Les <b>flags sont permanents</b> (le joueur garde les mondes à vie).
-    </div>
-    <input type="text" id="admin-adv-username" placeholder="Pseudo exact...">
-    
-    <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px; margin-bottom:8px;">
-      <div style="font-size:10px; color:#f8b500; font-weight:bold; margin-bottom:6px;"> Flags de saison (déblocage permanent)</div>
-      <label style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-        <input type="checkbox" id="admin-adv-halloween" style="width:auto; margin:0;">
-        🎃 Débloquer Halloween (Mondes 4-6)
-      </label>
-      <label style="display:flex; align-items:center; gap:8px;">
-        <input type="checkbox" id="admin-adv-noel" style="width:auto; margin:0;">
-        🎄 Débloquer Noël (Mondes 7-9)
-      </label>
-    </div>
-    
-    <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px; margin-bottom:8px;">
-      <div style="font-size:10px; color:#ff4b2b; font-weight:bold; margin-bottom:6px;">❤️ Vies & 🎴 Jokers</div>
-      <div class="row">
-        <div style="flex:1;">
-          <label>❤️ Vies (max 10)</label>
-          <input type="number" id="admin-adv-lives" placeholder="10" min="0" max="10">
-        </div>
-        <div style="flex:1;">
-          <label>⏱️ Jokers temps</label>
-          <input type="number" id="admin-adv-jt" placeholder="5" min="0">
-        </div>
-        <div style="flex:1;">
-          <label>🛡️ Jokers bouclier</label>
-          <input type="number" id="admin-adv-js" placeholder="5" min="0">
-        </div>
-      </div>
-      <div style="font-size:9px; color:#aaa; margin-top:4px;">
-        💡 Laisse vide pour ne pas modifier.
-      </div>
-    </div>
-    
-    <button class="btn-orange" onclick="adminGiveAdventure()">Appliquer ⚡</button>
-    <div id="admin-adv-result" class="small-result"></div>
+<div class="card" style="border-color: rgba(255, 107, 169, 0.55);">
+  <h2 style="color:#ff6ba9;">🏰 Aventure — Flags, Étoiles, Vies & Jokers</h2>
+  <div class="card-desc">
+    Donne les flags de déblocage des mondes saisonniers + ajuste les étoiles, vies et jokers.
+    <br>Les <b>flags sont permanents</b> (le joueur garde les mondes à vie).
+    <br>💡 240 ⭐ par monde = quota pour débloquer le monde suivant.
   </div>
+  <input type="text" id="admin-adv-username" placeholder="Pseudo exact...">
+  
+  <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px; margin-bottom:8px;">
+    <div style="font-size:10px; color:#f8b500; font-weight:bold; margin-bottom:6px;">🌍 Flags de saison (déblocage permanent)</div>
+    <label style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+      <input type="checkbox" id="admin-adv-halloween" style="width:auto; margin:0;">
+      🎃 Débloquer Halloween (Mondes 4-6)
+    </label>
+    <label style="display:flex; align-items:center; gap:8px;">
+      <input type="checkbox" id="admin-adv-noel" style="width:auto; margin:0;">
+       Débloquer Noël (Mondes 7-9)
+    </label>
+  </div>
+  
+  <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px; margin-bottom:8px;">
+    <div style="font-size:10px; color:#ff4b2b; font-weight:bold; margin-bottom:6px;">⭐ Étoiles & 🏰 Étage max</div>
+    <div class="row">
+      <div style="flex:1;">
+        <label>⭐ Étoiles par monde (max 240)</label>
+        <input type="number" id="admin-adv-stars" placeholder="240" min="0" max="240">
+      </div>
+      <div style="flex:1;">
+        <label>🏰 Étage max (1-1800)</label>
+        <input type="number" id="admin-adv-floor" placeholder="1800" min="0" max="1800">
+      </div>
+    </div>
+    <div style="font-size:9px; color:#aaa; margin-top:4px;">
+      💡 Exemple : 240 étoiles × 9 mondes = tous les mondes débloqués.
+    </div>
+  </div>
+  
+  <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px; margin-bottom:8px;">
+    <div style="font-size:10px; color:#ff4b2b; font-weight:bold; margin-bottom:6px;">❤️ Vies & 🎴 Jokers</div>
+    <div class="row">
+      <div style="flex:1;">
+        <label>❤️ Vies (max 10)</label>
+        <input type="number" id="admin-adv-lives" placeholder="10" min="0" max="10">
+      </div>
+      <div style="flex:1;">
+        <label>️ Jokers temps</label>
+        <input type="number" id="admin-adv-jt" placeholder="5" min="0">
+      </div>
+      <div style="flex:1;">
+        <label>🛡️ Jokers bouclier</label>
+        <input type="number" id="admin-adv-js" placeholder="5" min="0">
+      </div>
+    </div>
+    <div style="font-size:9px; color:#aaa; margin-top:4px;">
+      💡 Laisse vide pour ne pas modifier.
+    </div>
+  </div>
+  
+  <div style="display:flex; gap:6px; margin-bottom:8px;">
+    <button class="btn-orange" onclick="adminGiveAdventure()" style="flex:1;">Appliquer </button>
+    <button class="btn-gold" onclick="adminUnlockAllWorlds()" style="flex:1;">🔓 Tout débloquer</button>
+  </div>
+  <div id="admin-adv-result" class="small-result"></div>
+</div>
 
   <!-- ===== JOURNAL DES TRANSACTIONS ===== -->
   <div class="card">
@@ -506,6 +527,25 @@ function adminGiveAdventure() {
   payload.jokersShield = payload.jokersShield === '' ? null : parseInt(payload.jokersShield);
   
   socket.emit('admin_give_adventure', payload);
+}
+
+function adminUnlockAllWorlds() {
+  const username = document.getElementById('admin-adv-username').value.trim();
+  if (!username) { alert('Pseudo requis.'); return; }
+  
+  // Coche automatiquement les 2 flags
+  document.getElementById('admin-adv-halloween').checked = true;
+  document.getElementById('admin-adv-noel').checked = true;
+  
+  // Remplit les valeurs max
+  document.getElementById('admin-adv-stars').value = 240;
+  document.getElementById('admin-adv-floor').value = 1800;
+  document.getElementById('admin-adv-lives').value = 10;
+  document.getElementById('admin-adv-jt').value = 50;
+  document.getElementById('admin-adv-js').value = 50;
+  
+  // Lance l'application
+  adminGiveAdventure();
 }
 
 socket.on('admin_adv_result', (d) => {
