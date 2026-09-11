@@ -118,7 +118,7 @@ DASHBOARD
     <div id="admin-adjust-result" class="small-result"></div>
   </div>
 
-  <!-- ===== AVENTURE : FLAGS & VIES/JOKERS ===== -->
+<!-- ===== AVENTURE : FLAGS & VIES/JOKERS ===== -->
 <div class="card" style="border-color: rgba(255, 107, 169, 0.55);">
   <h2 style="color:#ff6ba9;">🏰 Aventure — Flags, Étoiles, Vies & Jokers</h2>
   <div class="card-desc">
@@ -160,19 +160,19 @@ DASHBOARD
         <input type="number" id="admin-adv-lives" placeholder="10" min="0" max="10">
       </div>
       <div style="flex:1;">
-        <label>️ Jokers temps</label>
-        <input type="number" id="admin-adv-jt" placeholder="5" min="0">
+        <label>⏱️ Jokers temps</label>
+        <input type="number" id="admin-adv-jt" placeholder="50" min="0">
       </div>
       <div style="flex:1;">
         <label>🛡️ Jokers bouclier</label>
-        <input type="number" id="admin-adv-js" placeholder="5" min="0">
+        <input type="number" id="admin-adv-js" placeholder="50" min="0">
       </div>
     </div>
   </div>
   
   <div style="display:flex; gap:6px; margin-top:8px;">
     <button class="btn-orange" onclick="adminGiveAdventure()" style="flex:1;">Appliquer ⚡</button>
-    <button class="btn-gold" onclick="adminUnlockAllWorlds()" style="flex:1;"> Tout débloquer</button>
+    <button class="btn-gold" onclick="adminUnlockAllWorlds()" style="flex:1;">🔓 Tout débloquer</button>
   </div>
   <div id="admin-adv-result" class="small-result"></div>
 </div>
@@ -502,43 +502,64 @@ socket.on('admin_give_result', (d) => {
 AVENTURE — FLAGS SAISONS & VIES/JOKERS
 ============================================================ */
 function adminGiveAdventure() {
+  console.log('🔵 adminGiveAdventure appelée');
+  
   const username = document.getElementById('admin-adv-username').value.trim();
-  if (!username) { alert('Pseudo requis.'); return; }
+  console.log('🔵 Username:', username);
+  
+  if (!username) { 
+    alert('Pseudo requis.'); 
+    return; 
+  }
   
   const payload = {
-    username,
+    username: username,
     halloween: document.getElementById('admin-adv-halloween').checked,
     noel: document.getElementById('admin-adv-noel').checked,
     lives: document.getElementById('admin-adv-lives').value,
     jokersTime: document.getElementById('admin-adv-jt').value,
-    jokersShield: document.getElementById('admin-adv-js').value
+    jokersShield: document.getElementById('admin-adv-js').value,
+    starsPerWorld: document.getElementById('admin-adv-stars').value,
+    maxFloor: document.getElementById('admin-adv-floor').value
   };
   
+  console.log('🔵 Payload brut:', payload);
+  
+  // Convertir les valeurs
   payload.lives = payload.lives === '' ? null : parseInt(payload.lives);
   payload.jokersTime = payload.jokersTime === '' ? null : parseInt(payload.jokersTime);
   payload.jokersShield = payload.jokersShield === '' ? null : parseInt(payload.jokersShield);
+  payload.starsPerWorld = payload.starsPerWorld === '' ? null : parseInt(payload.starsPerWorld);
+  payload.maxFloor = payload.maxFloor === '' ? null : parseInt(payload.maxFloor);
+  
+  console.log('🔵 Payload après conversion:', payload);
   
   socket.emit('admin_give_adventure', payload);
+  console.log('✅ Socket émis');
 }
 
 function adminUnlockAllWorlds() {
-  const username = document.getElementById('admin-adv-username').value.trim();
-  if (!username) { alert('Pseudo requis.'); return; }
+  console.log('🔵 adminUnlockAllWorlds appelée');
   
-  // Coche automatiquement les 2 flags
   document.getElementById('admin-adv-halloween').checked = true;
   document.getElementById('admin-adv-noel').checked = true;
-  
-  // Remplit les valeurs max
   document.getElementById('admin-adv-stars').value = 240;
   document.getElementById('admin-adv-floor').value = 1800;
   document.getElementById('admin-adv-lives').value = 10;
   document.getElementById('admin-adv-jt').value = 50;
   document.getElementById('admin-adv-js').value = 50;
   
-  // Lance l'application
+  console.log(' Valeurs définies, appel adminGiveAdventure...');
   adminGiveAdventure();
 }
+
+socket.on('admin_adv_result', (d) => {
+  console.log('🔵 admin_adv_result reçu:', d);
+  const el = document.getElementById('admin-adv-result');
+  if (!el) return;
+  el.style.color = d.ok ? '#00ff88' : '#ff4b2b';
+  el.innerText = d.message || '';
+});
 
 function adminForceRefresh() {
   const username = document.getElementById('admin-adv-username').value.trim();
