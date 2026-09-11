@@ -325,6 +325,9 @@ setInterval(() => {
 }, 5000);
 
 app.get('/', (req, res) => { res.send('Chiffre Blitz Server is running ⚡'); });
+app.get('/admin.html', (req, res) => { 
+  res.sendFile(__dirname + '/admin.html'); 
+});
 
 async function savePlayerToSupabase(socketId) {
   const p = activePlayers[socketId];
