@@ -13,13 +13,7 @@ let wheelCurrent = 0;
 const WHEEL_R = 150, WHEEL_STEP = 26;
 
 /* ---------- Affichage du menu mobile ---------- */
-function showMobileMenu(show) {
-  const m = document.getElementById('screen-menu-mobile');
-  if (!m) return;
-  m.style.display = show ? 'flex' : 'none';
-  if (show) { syncMobileMenuButtons(); buildModeWheel(); }
-  updateS1Neon();
-}
+
 
 /* ---------- Toggle Admirer ---------- */
 function toggleAdmireMode() {
@@ -221,21 +215,36 @@ function stopNeonHum() {
 }
 
 /* ---------- Néon S1 : création / suppression ---------- */
+function showMobileMenu(show) {
+  const m = document.getElementById('screen-menu-mobile');
+  if (!m) return;
+  m.style.display = show ? 'flex' : 'none';
+  if (show) { syncMobileMenuButtons(); buildModeWheel(); }
+  setTimeout(updateS1Neon, 60);   // laisse le jeu mettre à jour les écrans d'abord
+}
+
+function menuPrincipalVisible() {
+  const pc = document.getElementById('screen-menu');
+  const mob = document.getElementById('screen-menu-mobile');
+  return (pc && getComputedStyle(pc).display !== 'none') ||
+         (mob && getComputedStyle(mob).display !== 'none');
+}
+function ecranPleinVisible() {
+  const ids = ['screen-title','screen-solo-menu','screen-avalanche-menu','screen-1v1-hub','screen-1v1-lobby','screen-rooms','screen-join-custom','screen-room-waiting','screen-tournament','screen-game','screen-tower'];
+  return ids.some(function(id){ const el = document.getElementById(id); return el && getComputedStyle(el).display !== 'none'; });
+}
+
 function updateS1Neon() {
   let sign = document.getElementById('s1-neon-sign');
   const season = (window.myProfile && myProfile.currentSeasonId) || 's1';
-  const pc = document.getElementById('screen-menu');
-  const mob = document.getElementById('screen-menu-mobile');
-  const visible = (pc && pc.style.display !== 'none') || (mob && mob.style.display !== 'none');
+  const visible = menuPrincipalVisible() && !ecranPleinVisible();
   if (season === 's1' && visible) {
     if (!sign) {
       sign = document.createElement('div');
-      sign.id = 's1-neon-sign';
-      sign.className = 's1-neon-sign';
+      sign.id = 's1-neon-sign'; sign.className = 's1-neon-sign';
       sign.innerHTML = '<div class="s1-neon-logo">⚡</div><div class="s1-neon-text">CHIFFRE BLITZ</div>';
       document.body.appendChild(sign);
-      playWhoosh();
-      startNeonHum();
+      playWhoosh(); startNeonHum();
     }
   } else {
     if (sign) sign.remove();
