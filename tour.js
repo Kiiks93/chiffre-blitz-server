@@ -53,6 +53,7 @@ let TW_hudCache = "", TW_localTimer = null, TW_lastClick = 0, TW_pairsLock = fal
 let TW_lastState = 0;
 const SCENE_CACHE = {};
 let TW_musicSeason = null;
+let TW_firstSync = true;
 
 /* ----- 3. UTILITAIRES ----- */
 const TowerUtils = {
@@ -1310,8 +1311,9 @@ socket.on("tower_data", (d) => {
   if (d.nextLifeIn !== undefined) twNextLife = d.nextLifeIn || 0;
   if (d.jokers) twJokers = d.jokers;
   const newWorld = TowerUtils.getTowerChapter(Math.min(towerProgress.floor + 1, TOTAL_FLOORS)).id;
-  if (newWorld !== oldWorld && TowerUtils.worldUnlocked(newWorld)) showWorldTransition(newWorld);
+    if (!TW_firstSync && newWorld !== oldWorld && TowerUtils.worldUnlocked(newWorld)) showWorldTransition(newWorld);
   else renderAdventure();
+  TW_firstSync = false;
 });
 
 socket.on("player_registered", () => {
