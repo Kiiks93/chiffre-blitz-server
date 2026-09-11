@@ -1401,6 +1401,10 @@ socket.on("tower_data", (d) => {
   else renderAdventure();
 });
 
+socket.on("tower_data", (d) => {
+  // ... code existant ...
+});
+
 socket.on("player_registered", () => {
   const scr = document.getElementById("screen-tower");
   const open = scr && scr.style.display !== "none";
