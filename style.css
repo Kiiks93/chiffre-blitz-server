@@ -838,25 +838,22 @@ MENU MOBILE (dock grid + glassmorphism)
     border-color: rgba(255,0,127,0.4);
 }
 
-/* Dock = arc intérieur du halo (plus de barre rectangulaire) */
-.mobile-dock{position:fixed;left:50%;bottom:70px;width:0;height:0;z-index:6;background:none;border:none;box-shadow:none;padding:0;}
-.dock-item{position:absolute;left:0;top:0;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(15,5,29,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1.5px solid rgba(0,210,255,.25);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.4);}
-.dock-item:active{transform:scale(.9);}
-.dock-icon{font-size:19px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6));}
+.dock-item{position:absolute;left:0;top:0;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(15,5,29,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1.5px solid rgba(0,210,255,.25);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.4);}
+.dock-icon{font-size:18px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6));}
 .dock-label{font-size:7px;font-weight:700;color:#cfcfe8;text-transform:uppercase;letter-spacing:.3px;line-height:1;}
-/* Positions en arc intérieur (6 raccourcis) */
-.dock-item:nth-child(1){transform:translate(-89px,-32px);}
-.dock-item:nth-child(2){transform:translate(-64px,-71px);}
-.dock-item:nth-child(3){transform:translate(-23px,-92px);}
-.dock-item:nth-child(4){transform:translate(23px,-92px);}
-.dock-item:nth-child(5){transform:translate(64px,-71px);}
-.dock-item:nth-child(6){transform:translate(89px,-32px);}
-.dock-item:nth-child(1):active{transform:translate(-89px,-32px) scale(.9);}
-.dock-item:nth-child(2):active{transform:translate(-64px,-71px) scale(.9);}
-.dock-item:nth-child(3):active{transform:translate(-23px,-92px) scale(.9);}
-.dock-item:nth-child(4):active{transform:translate(23px,-92px) scale(.9);}
-.dock-item:nth-child(5):active{transform:translate(64px,-71px) scale(.9);}
-.dock-item:nth-child(6):active{transform:translate(89px,-32px) scale(.9);}
+/* Arc intérieur élargi (rayon + grand, angles resserrés = plus d'air) */
+.dock-item:nth-child(1){transform:translate(-115px,-61px);}
+.dock-item:nth-child(2){transform:translate(-78px,-104px);}
+.dock-item:nth-child(3){transform:translate(-27px,-127px);}
+.dock-item:nth-child(4){transform:translate(27px,-127px);}
+.dock-item:nth-child(5){transform:translate(78px,-104px);}
+.dock-item:nth-child(6){transform:translate(115px,-61px);}
+.dock-item:nth-child(1):active{transform:translate(-115px,-61px) scale(.9);}
+.dock-item:nth-child(2):active{transform:translate(-78px,-104px) scale(.9);}
+.dock-item:nth-child(3):active{transform:translate(-27px,-127px) scale(.9);}
+.dock-item:nth-child(4):active{transform:translate(27px,-127px) scale(.9);}
+.dock-item:nth-child(5):active{transform:translate(78px,-104px) scale(.9);}
+.dock-item:nth-child(6):active{transform:translate(115px,-61px) scale(.9);}
 
 /* Quand le menu mobile est actif, on diminue la barre de stats */
 @media (max-width: 760px) {
