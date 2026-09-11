@@ -1469,11 +1469,22 @@ phrase(0,A,pA,rA); phrase(64,B,pB,rB);
 wmRunScore(bpm,128,E);
 }
 
-/* --- M3 : Banque Dorée — AMBIANCE FEUTRÉE (cinématique, douce, non énervante) --- */
+/* --- M3 : Banque Dorée — mp3 Pixabay (coffre-fort.mp3) + fallback ambiance feutrée --- */
 function wmStartVault(){
+wmStopAudio();
+try{
+const a=new Audio('sound/coffre-fort.mp3');
+a.loop=true; a.volume=0; a.preload='auto';
+WM_audio=a;
+a.addEventListener('error', function(){ if(WM_audio===a){ wmStopAudio(); wmVaultFallback(); } }, {once:true});
+const p=a.play();
+const fadeIn=function(){ if(WM_audio!==a) return; const f=setInterval(function(){ if(WM_audio!==a){clearInterval(f);return;} if(a.volume<0.5)a.volume=Math.min(0.5,a.volume+0.04); else clearInterval(f); },90); };
+if(p&&typeof p.then==='function'){ p.then(fadeIn).catch(function(){ if(WM_audio===a){ wmStopAudio(); wmVaultFallback(); } }); } else fadeIn();
+}catch(e){ wmVaultFallback(); }
+}
+function wmVaultFallback(){
 const ctx=wmCtx(); const master=wmMaster(0.5);
 const nodes=[master], timers=[];
-// Nappe de fond : hum grave + souffle d'air feutré
 const hum=ctx.createOscillator(); hum.type='sine'; hum.frequency.value=48;
 const hum2=ctx.createOscillator(); hum2.type='sine'; hum2.frequency.value=96.5;
 const hg=ctx.createGain(); hg.gain.value=0;
@@ -1485,7 +1496,6 @@ const af=ctx.createBiquadFilter(); af.type='lowpass'; af.frequency.value=220;
 const ag=ctx.createGain(); ag.gain.value=0;
 air.connect(af); af.connect(ag); ag.connect(master); air.start(); nodes.push(air);
 ag.gain.linearRampToValueAtTime(0.014, ctx.currentTime+3);
-// Pulsation sub très lente (respiration du coffre)
 const sub=ctx.createOscillator(); sub.type='sine'; sub.frequency.value=40;
 const sg=ctx.createGain(); sg.gain.value=0;
 sub.connect(sg); sg.connect(master); sub.start(); nodes.push(sub);
@@ -1493,7 +1503,6 @@ const pl=ctx.createOscillator(); pl.type='sine'; pl.frequency.value=0.25;
 const plg=ctx.createGain(); plg.gain.value=0.010;
 pl.connect(plg); plg.connect(sg.gain); pl.start(); nodes.push(pl);
 sg.gain.linearRampToValueAtTime(0.018, ctx.currentTime+2);
-// Balayage laser DOUX (swell lent, pas de zap) toutes ~9s
 timers.push(setInterval(()=>{
 const t=ctx.currentTime;
 const o=ctx.createOscillator(); o.type='sine';
@@ -1503,7 +1512,6 @@ const g=ctx.createGain(); g.gain.setValueAtTime(0.0001,t);
 g.gain.linearRampToValueAtTime(0.014,t+1.2); g.gain.linearRampToValueAtTime(0.0001,t+3);
 o.connect(f); f.connect(g); g.connect(master); o.start(t); o.stop(t+3.1);
 },9000));
-// Pan caméra FEUTRÉ (glissement lent) toutes ~11s
 timers.push(setInterval(()=>{
 const t=ctx.currentTime; const dir=Math.random()<0.5?1:-1;
 const o=ctx.createOscillator(); o.type='triangle';
@@ -1512,7 +1520,6 @@ const g=ctx.createGain(); g.gain.setValueAtTime(0.0001,t);
 g.gain.linearRampToValueAtTime(0.011,t+1.5); g.gain.linearRampToValueAtTime(0.0001,t+4);
 o.connect(g); g.connect(master); o.start(t); o.stop(t+4.1);
 },11000));
-// Grincement du volant DOUX (creak bas, lent) toutes ~14s
 timers.push(setInterval(()=>{
 const t=ctx.currentTime;
 const o=ctx.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(85,t);
@@ -1522,7 +1529,6 @@ const g=ctx.createGain(); g.gain.setValueAtTime(0.0001,t);
 g.gain.linearRampToValueAtTime(0.020,t+0.8); g.gain.linearRampToValueAtTime(0.0001,t+2.5);
 o.connect(f); f.connect(g); g.connect(master); o.start(t); vib.start(t); o.stop(t+2.6); vib.stop(t+2.6);
 },14000));
-// Scintillement d'or MUSICAL (cloche pentatonique douce) toutes ~7s
 const pent=[523.25,587.33,659.25,783.99,880.00];
 timers.push(setInterval(()=>{
 const t=ctx.currentTime; const f=pent[Math.floor(Math.random()*pent.length)];
@@ -1542,14 +1548,12 @@ const key='w'+world;
 if(WM_lastKey===key) return;
 WM_lastKey=key;
 wmStop();
-// Coupe TOUTE musique saisonnière avant de lancer la musique du monde
 if(typeof SoundEngine!=='undefined' && typeof SoundEngine.stopMusic==='function'){
 SoundEngine.stopMusic(false);
 }
 if(world===1) return wmStartNeon();
 if(world===2) return wmStartGlacier();
 if(world===3) return wmStartVault();
-// Pour les mondes 4-9, lance la musique saisonnière correspondante
 if(typeof SoundEngine!=='undefined'){
 const k=TOWER_CHAPTERS[world-1].season===3?'s3menu':'s2menu';
 setTimeout(()=>{ if(typeof SoundEngine.startMusicSeasonal==='function') SoundEngine.startMusicSeasonal(k); },100);
