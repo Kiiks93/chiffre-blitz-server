@@ -152,13 +152,13 @@ EN DEHORS de #screen-menu pour ne pas être masqué avec lui
 
     <!-- Grille des modes de jeu (2x3) -->
     <!-- Roue demi-cercle des modes -->
+        <!-- Roue demi-cercle des modes (le cadre central = bouton lancer) -->
     <div id="mode-wheel-wrap">
-        <div id="mode-wheel-center">
+        <div id="mode-wheel-center" onclick="launchCenterMode()">
             <div id="mode-wheel-frame">
                 <span id="mode-wheel-icon">🗺️</span>
                 <span id="mode-wheel-name">Aventure</span>
             </div>
-            <button id="mode-wheel-go" onclick="launchCenterMode()">JOUER ⚡</button>
         </div>
         <div id="mode-wheel"></div>
     </div>
