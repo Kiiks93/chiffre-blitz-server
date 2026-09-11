@@ -838,53 +838,25 @@ MENU MOBILE (dock grid + glassmorphism)
     border-color: rgba(255,0,127,0.4);
 }
 
-/* Dock du bas (glassmorphism + safe-area) */
-.mobile-dock {
-    position: fixed;
-    bottom: 10px;
-    left: 10px;
-    right: 10px;
-    background: rgba(10, 5, 20, 0.65);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border: 1.5px solid rgba(0, 210, 255, 0.25);
-    border-radius: 18px;
-    padding: 8px 4px;
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 4px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-    z-index: 6;
-    padding-bottom: calc(8px + env(safe-area-inset-bottom));
-}
-
-.dock-item {
-    background: transparent;
-    border: none;
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    padding: 4px 2px;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: background .15s;
-}
-.dock-item:active {
-    background: rgba(0, 210, 255, 0.15);
-}
-.dock-icon {
-    font-size: 22px;
-    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));
-}
-.dock-label {
-    font-size: 8.5px;
-    font-weight: 700;
-    color: #cfcfe8;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-}
+/* Dock = arc intérieur du halo (plus de barre rectangulaire) */
+.mobile-dock{position:fixed;left:50%;bottom:70px;width:0;height:0;z-index:6;background:none;border:none;box-shadow:none;padding:0;}
+.dock-item{position:absolute;left:0;top:0;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(15,5,29,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1.5px solid rgba(0,210,255,.25);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.4);}
+.dock-item:active{transform:scale(.9);}
+.dock-icon{font-size:19px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6));}
+.dock-label{font-size:7px;font-weight:700;color:#cfcfe8;text-transform:uppercase;letter-spacing:.3px;line-height:1;}
+/* Positions en arc intérieur (6 raccourcis) */
+.dock-item:nth-child(1){transform:translate(-89px,-32px);}
+.dock-item:nth-child(2){transform:translate(-64px,-71px);}
+.dock-item:nth-child(3){transform:translate(-23px,-92px);}
+.dock-item:nth-child(4){transform:translate(23px,-92px);}
+.dock-item:nth-child(5){transform:translate(64px,-71px);}
+.dock-item:nth-child(6){transform:translate(89px,-32px);}
+.dock-item:nth-child(1):active{transform:translate(-89px,-32px) scale(.9);}
+.dock-item:nth-child(2):active{transform:translate(-64px,-71px) scale(.9);}
+.dock-item:nth-child(3):active{transform:translate(-23px,-92px) scale(.9);}
+.dock-item:nth-child(4):active{transform:translate(23px,-92px) scale(.9);}
+.dock-item:nth-child(5):active{transform:translate(64px,-71px) scale(.9);}
+.dock-item:nth-child(6):active{transform:translate(89px,-32px) scale(.9);}
 
 /* Quand le menu mobile est actif, on diminue la barre de stats */
 @media (max-width: 760px) {
