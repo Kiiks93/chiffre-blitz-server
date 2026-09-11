@@ -1397,29 +1397,7 @@ io.on('connection', (socket) => {
     if (!clean || !itemId) return;
     const isPower = kind === 'item' && ITEM_CATALOG[itemId] && ITEM_CATALOG[itemId].type === 'power';
 
-    socket.on('admin_reset_password', async (data2) => {
-      if (!socket.isAdmin) return;
-      const targetUsername = (data2 && data2.username || '').trim();
-      const providedKey = (data2 && data2.recoveryKey || '').trim().toUpperCase().replace(/\s/g, '');
-      if (!targetUsername || !providedKey) { socket.emit('admin_reset_result', { ok: false, message: 'Pseudo et clé requis.' }); return; }
-      const expectedKey = generateRecoveryKey(targetUsername).replace(/-/g, '');
-      if (providedKey !== expectedKey) { socket.emit('admin_reset_result', { ok: false, message: '❌ Clé de récupération incorrecte.' }); return; }
-      const newCode = generateSecureCode();
-      try {
-        const { data: matched, error } = await supabase.from('players').select('*').ilike('username', targetUsername).limit(1);
-        if (error || !matched || matched.length === 0) { socket.emit('admin_reset_result', { ok: false, message: 'Pseudo introuvable.' }); return; }
-        const row = matched[0];
-        await supabase.from('players').update({ secret_code: hashSecret(newCode) }).eq('id', row.id);
-        for (const sId in activePlayers) {
-          if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === row.username.toLowerCase()) {
-            io.to(sId).emit('force_logout', { reason: 'password_reset' });
-          }
-        }
-        socket.emit('admin_reset_result', { ok: true, message: `✅ Nouveau code pour ${row.username} : ${newCode}`, newCode, username: row.username });
-        logPlayerAction({ username: row.username, socketId: null }, 'admin_reset_password', 'Réinitialisation par admin (clé vérifiée)');
-      } catch (e) { socket.emit('admin_reset_result', { ok: false, message: 'Erreur serveur : ' + e.message }); }
-    });
-
+  
     let targetId = null;
     for (const sId in activePlayers) {
       if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === clean.toLowerCase()) { targetId = sId; break; }
@@ -1466,6 +1444,29 @@ io.on('connection', (socket) => {
     socket.emit('admin_give_result', { ok: true, message: itemId + ' → ' + row.username + ' (hors-ligne)' });
   });
 
+   socket.on('admin_reset_password', async (data2) => {
+      if (!socket.isAdmin) return;
+      const targetUsername = (data2 && data2.username || '').trim();
+      const providedKey = (data2 && data2.recoveryKey || '').trim().toUpperCase().replace(/\s/g, '');
+      if (!targetUsername || !providedKey) { socket.emit('admin_reset_result', { ok: false, message: 'Pseudo et clé requis.' }); return; }
+      const expectedKey = generateRecoveryKey(targetUsername).replace(/-/g, '');
+      if (providedKey !== expectedKey) { socket.emit('admin_reset_result', { ok: false, message: '❌ Clé de récupération incorrecte.' }); return; }
+      const newCode = generateSecureCode();
+      try {
+        const { data: matched, error } = await supabase.from('players').select('*').ilike('username', targetUsername).limit(1);
+        if (error || !matched || matched.length === 0) { socket.emit('admin_reset_result', { ok: false, message: 'Pseudo introuvable.' }); return; }
+        const row = matched[0];
+        await supabase.from('players').update({ secret_code: hashSecret(newCode) }).eq('id', row.id);
+        for (const sId in activePlayers) {
+          if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === row.username.toLowerCase()) {
+            io.to(sId).emit('force_logout', { reason: 'password_reset' });
+          }
+        }
+        socket.emit('admin_reset_result', { ok: true, message: `✅ Nouveau code pour ${row.username} : ${newCode}`, newCode, username: row.username });
+        logPlayerAction({ username: row.username, socketId: null }, 'admin_reset_password', 'Réinitialisation par admin (clé vérifiée)');
+      } catch (e) { socket.emit('admin_reset_result', { ok: false, message: 'Erreur serveur : ' + e.message }); }
+    });
+  
   socket.on('get_recovery_key', (data) => {
     const player = activePlayers[socket.id];
     if (!player) return;
