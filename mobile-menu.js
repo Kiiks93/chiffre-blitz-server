@@ -163,43 +163,45 @@ function playWhoosh() {
   } catch (e) {}
 }
 
+let NEON_HUM = null;
+let NEON_CRACK_TIMER = null;
+
 function startNeonHum() {
   if (NEON_HUM) return;
   try {
     SoundEngine.init();
     const ctx = SoundEngine.ctx, t = ctx.currentTime;
-    const o  = ctx.createOscillator(); o.type  = 'sawtooth'; o.frequency.value  = 100;
-    const o2 = ctx.createOscillator(); o2.type = 'square';   o2.frequency.value = 200;
-    const f  = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 900; f.Q.value = 2;
-    const g  = ctx.createGain(); g.gain.value = 0;
-    const lfo = ctx.createOscillator(); lfo.type = 'square'; lfo.frequency.value = 50;
-    const lg  = ctx.createGain(); lg.gain.value = 0.02;
-    lfo.connect(lg); lg.connect(g.gain);
-    o.connect(f); o2.connect(f); f.connect(g); g.connect(ctx.destination);
-    g.gain.linearRampToValueAtTime(0.035, t + 0.8);
-    o.start(); o2.start(); lfo.start();
-    NEON_HUM = { o: o, o2: o2, lfo: lfo, g: g };
-    const offsets = [0.30, 1.95, 3.65];
-    const cycle = function(){
-      offsets.forEach(function(off){
-        setTimeout(function(){
-          if (NEON_HUM) makeBuzz(SoundEngine.ctx, SoundEngine.ctx.destination, SoundEngine.ctx.currentTime, 0.12, 0.10);
-        }, off * 1000);
-      });
+    // Souffle / grésillement continu DISCRET (aigu, pas sourd)
+    const len = ctx.sampleRate * 2;
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) { d[i] = (Math.random() * 2 - 1) * (Math.random() < 0.10 ? 1 : 0.25); }
+    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+    const gf = ctx.createBiquadFilter(); gf.type = 'highpass'; gf.frequency.value = 2800;
+    const gg = ctx.createGain(); gg.gain.value = 0;
+    src.connect(gf); gf.connect(gg); gg.connect(ctx.destination);
+    gg.gain.linearRampToValueAtTime(0.028, t + 0.8);
+    src.start();
+    NEON_HUM = { src: src, gg: gg };
+    // Crachotements ALÉATOIRES (imprévisibles, pas répétitifs)
+    const scheduleCrack = function(){
+      NEON_CRACK_TIMER = setTimeout(function(){
+        if (NEON_HUM) makeBuzz(ctx, ctx.destination, ctx.currentTime, 0.06 + Math.random() * 0.10, 0.05 + Math.random() * 0.05);
+        scheduleCrack();
+      }, 1200 + Math.random() * 3200);
     };
-    cycle();
-    NEON_FLICK_TIMER = setInterval(cycle, 5000);
+    scheduleCrack();
   } catch (e) {}
 }
 
 function stopNeonHum() {
-  if (NEON_FLICK_TIMER) { clearInterval(NEON_FLICK_TIMER); NEON_FLICK_TIMER = null; }
+  if (NEON_CRACK_TIMER) { clearTimeout(NEON_CRACK_TIMER); NEON_CRACK_TIMER = null; }
   if (!NEON_HUM) return;
   try {
     const ctx = SoundEngine.ctx, t = ctx.currentTime, n = NEON_HUM;
     NEON_HUM = null;
-    n.g.gain.linearRampToValueAtTime(0.0001, t + 0.4);
-    setTimeout(function(){ try { n.o.stop(); n.o2.stop(); n.lfo.stop(); } catch (e) {} }, 500);
+    n.gg.gain.linearRampToValueAtTime(0.0001, t + 0.4);
+    setTimeout(function(){ try { n.src.stop(); } catch (e) {} }, 500);
   } catch (e) { NEON_HUM = null; }
 }
 
