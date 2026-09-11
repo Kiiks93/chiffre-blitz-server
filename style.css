@@ -702,3 +702,6 @@ h1 { color: var(--c-primary); margin: 0; font-size: 16px; text-shadow: 0 0 15px 
 @keyframes dotBlink { 0%,60%,100%{opacity:.2;} 30%{opacity:1;} }
 @keyframes barLoop { 0%{margin-left:-40%;} 100%{margin-left:100%;} }
 @keyframes lockSwing { 0%,100%{transform:rotate(-10deg);} 50%{transform:rotate(10deg);} }
+@media (max-width:760px), (pointer:coarse){
+  .btn-main{padding:9px 12px !important;font-size:14px !important;margin:0 0 7px 0 !important;min-height:0 !important;}
+}
