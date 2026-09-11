@@ -1576,7 +1576,7 @@ socket.on('admin_give_adventure', async (data) => {
   if (!socket.isAdmin) return;
   
   try {
-    const { username, halloween, noel, lives, jokersTime, jokersShield } = data || {};
+    const { username, halloween, noel, lives, jokersTime, jokersShield, starsPerWorld, maxFloor } = data || {};
     const clean = (username || '').trim();
     if (!clean) return socket.emit('admin_adv_result', { ok: false, message: 'Pseudo requis.' });
     
@@ -1607,14 +1607,39 @@ socket.on('admin_give_adventure', async (data) => {
       }
       if (flagsAdded.length) changes.push(`flags: ${flagsAdded.join(', ')}`);
       
-      // 2. Vies
+      // 2. Étoiles par monde
+      if (starsPerWorld !== null && !isNaN(starsPerWorld)) {
+        const stars = Math.max(0, Math.min(240, parseInt(starsPerWorld)));
+        p.towerStars = {};
+        for (let w = 1; w <= 9; w++) {
+          const start = (w - 1) * 200 + 1;
+          const end = w * 200;
+          // Remplir les 200 étages avec des étoiles (réparties)
+          const perFloor = Math.ceil(stars / 200);
+          let total = 0;
+          for (let f = start; f <= end && total < stars; f++) {
+            const add = Math.min(perFloor, stars - total);
+            p.towerStars[String(f)] = Math.min(3, add);
+            total += Math.min(3, add);
+          }
+        }
+        changes.push(`${stars}⭐/monde`);
+      }
+      
+      // 3. Étage max
+      if (maxFloor !== null && !isNaN(maxFloor)) {
+        p.towerFloor = Math.max(0, Math.min(1800, parseInt(maxFloor)));
+        changes.push(`étage ${p.towerFloor}`);
+      }
+      
+      // 4. Vies
       if (lives !== null && !isNaN(lives)) {
-        p.lives = Math.max(0, Math.min(TOWER_MAX_LIVES, parseInt(lives)));
-        if (p.lives >= TOWER_MAX_LIVES) p.lives_ts = Date.now();
+        p.lives = Math.max(0, Math.min(10, parseInt(lives)));
+        if (p.lives >= 10) p.lives_ts = Date.now();
         changes.push(`${p.lives} vies`);
       }
       
-      // 3. Jokers
+      // 5. Jokers
       p.jokers = normalizeJokers(p.jokers);
       if (jokersTime !== null && !isNaN(jokersTime)) {
         p.jokers.time = Math.max(0, parseInt(jokersTime));
@@ -1682,15 +1707,40 @@ socket.on('admin_give_adventure', async (data) => {
       changes.push(`flags: ${flagsAdded.join(', ')}`);
     }
     
-    // 2. Vies
+    // 2. Étoiles par monde
+    if (starsPerWorld !== null && !isNaN(starsPerWorld)) {
+      const stars = Math.max(0, Math.min(240, parseInt(starsPerWorld)));
+      const towerStars = {};
+      for (let w = 1; w <= 9; w++) {
+        const start = (w - 1) * 200 + 1;
+        const end = w * 200;
+        const perFloor = Math.ceil(stars / 200);
+        let total = 0;
+        for (let f = start; f <= end && total < stars; f++) {
+          const add = Math.min(perFloor, stars - total);
+          towerStars[String(f)] = Math.min(3, add);
+          total += Math.min(3, add);
+        }
+      }
+      updates.tower_stars = towerStars;
+      changes.push(`${stars}⭐/monde`);
+    }
+    
+    // 3. Étage max
+    if (maxFloor !== null && !isNaN(maxFloor)) {
+      updates.tower_floor = Math.max(0, Math.min(1800, parseInt(maxFloor)));
+      changes.push(`étage ${updates.tower_floor}`);
+    }
+    
+    // 4. Vies
     if (lives !== null && !isNaN(lives)) {
-      const newLives = Math.max(0, Math.min(TOWER_MAX_LIVES, parseInt(lives)));
+      const newLives = Math.max(0, Math.min(10, parseInt(lives)));
       updates.tower_lives = newLives;
-      if (newLives >= TOWER_MAX_LIVES) updates.tower_lives_ts = Date.now();
+      if (newLives >= 10) updates.tower_lives_ts = Date.now();
       changes.push(`${newLives} vies`);
     }
     
-    // 3. Jokers
+    // 5. Jokers
     let jokers = row.tower_jokers || { time: 0, shield: 0 };
     if (typeof jokers === 'string') {
       try { jokers = JSON.parse(jokers); } catch(e) { jokers = { time: 0, shield: 0 }; }
