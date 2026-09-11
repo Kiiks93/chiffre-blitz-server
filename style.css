@@ -904,20 +904,23 @@ MENU MOBILE (dock grid + glassmorphism)
 /* ============================================================
 ROUE DEMI-CERCLE (menu mobile)
 ============================================================ */
-#mode-wheel-wrap{position:fixed;left:0;right:0;bottom:92px;height:0;z-index:6;pointer-events:none;}
-#mode-wheel-center{position:absolute;left:50%;bottom:150px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;pointer-events:auto;cursor:pointer;}
-#mode-wheel-frame{width:132px;height:88px;background:rgba(15,5,29,.62);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:2px solid rgba(0,210,255,.55);border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 8px 24px rgba(0,0,0,.5),0 0 20px rgba(0,210,255,.28);}
+/* Projection du mode actif (hologramme en haut) */
+#mode-wheel-center{position:fixed;left:50%;top:34%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;pointer-events:auto;cursor:pointer;z-index:6;}
+#mode-wheel-frame{width:150px;height:118px;background:rgba(0,210,255,.07);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:2px solid rgba(0,210,255,.5);border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 0 26px rgba(0,210,255,.35),inset 0 0 22px rgba(0,210,255,.12);background-image:repeating-linear-gradient(0deg,rgba(0,210,255,.05) 0 2px,transparent 2px 5px);}
 #mode-wheel-frame:active{transform:scale(.95);}
-#mode-wheel-icon{font-size:36px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6));}
-#mode-wheel-name{font-size:14px;font-weight:900;color:#fff;letter-spacing:1px;text-shadow:0 1px 3px rgba(0,0,0,.8);}
-#mode-wheel{position:absolute;left:50%;bottom:70px;width:0;height:0;pointer-events:auto;}
+#mode-wheel-icon{font-size:54px;filter:drop-shadow(0 0 10px rgba(0,210,255,.6));}
+#mode-wheel-name{font-size:19px;font-weight:900;color:#eafcff;letter-spacing:1px;text-shadow:0 0 8px rgba(0,210,255,.7);}
+/* Halo lumineux demi-cercle */
+#mode-wheel-halo{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);width:360px;height:180px;border-radius:360px 360px 0 0;background:radial-gradient(ellipse at 50% 100%,rgba(0,210,255,.30),rgba(0,210,255,.10) 55%,transparent 78%);border-top:3px solid rgba(0,210,255,.55);box-shadow:0 -12px 44px rgba(0,210,255,.35),inset 0 12px 44px rgba(0,210,255,.14);pointer-events:none;z-index:5;}
+/* Roue posée sur le halo */
+#mode-wheel{position:fixed;left:50%;bottom:84px;width:0;height:0;pointer-events:auto;z-index:6;}
 .wheel-item{position:absolute;left:0;top:0;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;background:rgba(15,5,29,.68);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:2px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:30px;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.45);transition:opacity .15s;}
 .wheel-item.center{border-color:#00d2ff;box-shadow:0 0 20px rgba(0,210,255,.55);}
 
 /* ============================================================
 NÉON CHIFFRE BLITZ (Saison 1)
 ============================================================ */
-.s1-neon-sign{position:fixed;top:15%;left:50%;transform:translateX(-50%);text-align:center;z-index:1;pointer-events:none;}
+.s1-neon-sign{position:fixed;top:13%;left:50%;transform:translateX(-50%);text-align:center;z-index:1;pointer-events:none;}
 .s1-neon-logo{font-size:clamp(34px,11vw,72px);filter:drop-shadow(0 0 14px #00d2ff);animation:neonPulse 2.6s ease-in-out infinite;}
 .s1-neon-text{font-size:clamp(22px,7.5vw,52px);font-weight:900;letter-spacing:6px;color:#eafcff;white-space:nowrap;
  text-shadow:0 0 4px #fff,0 0 12px #00d2ff,0 0 28px #00d2ff,0 0 55px #0090ff;
