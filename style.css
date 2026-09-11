@@ -911,7 +911,9 @@ ROUE DEMI-CERCLE (menu mobile)
 #mode-wheel-icon{font-size:54px;filter:drop-shadow(0 0 10px rgba(0,210,255,.6));}
 #mode-wheel-name{font-size:19px;font-weight:900;color:#eafcff;letter-spacing:1px;text-shadow:0 0 8px rgba(0,210,255,.7);}
 /* Halo lumineux demi-cercle */
-#mode-wheel-halo{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);width:360px;height:180px;border-radius:360px 360px 0 0;background:radial-gradient(ellipse at 50% 100%,rgba(0,210,255,.30),rgba(0,210,255,.10) 55%,transparent 78%);border-top:3px solid rgba(0,210,255,.55);box-shadow:0 -12px 44px rgba(0,210,255,.35),inset 0 12px 44px rgba(0,210,255,.14);pointer-events:none;z-index:5;}
+#mode-wheel-halo{position:fixed;left:50%;bottom:60px;transform:translateX(-50%);width:360px;height:200px;border-radius:360px 360px 0 0;background:radial-gradient(ellipse at 50% 100%,rgba(0,210,255,.30),rgba(0,210,255,.10) 55%,transparent 78%);border-top:3px solid rgba(0,210,255,.55);box-shadow:0 -12px 44px rgba(0,210,255,.35),inset 0 12px 44px rgba(0,210,255,.14);pointer-events:none;z-index:4;
+ -webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent 98%);
+ mask-image:linear-gradient(to bottom,#000 55%,transparent 98%);}
 /* Roue posée sur le halo */
 #mode-wheel{position:fixed;left:50%;bottom:84px;width:0;height:0;pointer-events:auto;z-index:6;}
 .wheel-item{position:absolute;left:0;top:0;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;background:rgba(15,5,29,.68);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:2px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:30px;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.45);transition:opacity .15s;}
