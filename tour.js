@@ -642,6 +642,16 @@ document.addEventListener("visibilitychange", () => {
     .tw-panel .num{font-size:36px;}
   }
   `;
+  /* Optimisation mobile : UI compacte pour voir le décor */
+@media (max-width:760px), (pointer:coarse) {
+  .tw-center { padding-top:0 !important; padding-bottom:15px !important; }
+  .tw-panel { padding:10px 20px !important; margin-bottom:6px !important; }
+  .tw-panel .num { font-size:32px !important; }
+  .tw-panel .typ { font-size:10px !important; }
+  .tw-playbtn { padding:8px 40px !important; font-size:18px !important; }
+  .tw-arrow { width:36px !important; height:36px !important; font-size:14px !important; }
+  .tw-worldtag { font-size:13px !important; padding:4px 12px !important; }
+}
   document.head.appendChild(style);
 })();
 
@@ -962,20 +972,20 @@ function openTower() {
         <button class="tw-shopbtn" style="margin-left:0;" onclick="openTowerShop()">🛒</button>
       </div>
       <div class="tw-qwrap"><span class="lbl" id="tw-q-lbl">⭐ 0/240</span><div class="tw-qbar"><div id="tw-q-fill" style="width:0%"></div></div></div>
-      <div class="tw-center">
-        <div class="tw-worldtag" id="tw-worldtag"></div>
-        <div class="tw-panel" id="tw-panel">
-          <div class="num" id="tw-panel-num">1</div>
-          <div class="typ" id="tw-panel-typ"></div>
-          <div class="tw-panel-stars" id="tw-panel-stars"></div>
-        </div>
-        <div class="tw-playrow">
-          <button class="tw-arrow" id="tw-prev" onclick="advPrev()">‹</button>
-          <button class="tw-playbtn" id="tw-play" onclick="advPlay()">PLAY</button>
-          <button class="tw-arrow" id="tw-next" onclick="advNext()">›</button>
-        </div>
-        <div class="tw-lockmsg" id="tw-lockmsg" style="display:none;"></div>
-      </div>`;
+      <div class="tw-center" style="padding-top:0;padding-bottom:20px;">
+  <div class="tw-worldtag" id="tw-worldtag" style="margin-bottom:8px;"></div>
+  <div class="tw-panel" id="tw-panel" style="padding:12px 24px;margin-bottom:8px;">
+    <div class="num" id="tw-panel-num" style="font-size:36px;">1</div>
+    <div class="typ" id="tw-panel-typ" style="font-size:11px;"></div>
+    <div class="tw-panel-stars" id="tw-panel-stars" style="font-size:14px;"></div>
+  </div>
+  <div class="tw-playrow" style="gap:12px;">
+    <button class="tw-arrow" id="tw-prev" onclick="advPrev()" style="width:38px;height:38px;font-size:16px;">‹</button>
+    <button class="tw-playbtn" id="tw-play" onclick="advPlay()" style="padding:10px 48px;font-size:20px;">PLAY</button>
+    <button class="tw-arrow" id="tw-next" onclick="advNext()" style="width:38px;height:38px;font-size:16px;">›</button>
+  </div>
+  <div class="tw-lockmsg" id="tw-lockmsg" style="display:none;"></div>
+</div>
     document.body.appendChild(m);
   }
   m.style.display = "flex";
