@@ -138,8 +138,8 @@ document.addEventListener("visibilitychange", () => {
   } else {
     const scr = document.getElementById("screen-tower");
     if (scr && scr.style.display !== "none") {
-      const season = TOWER_CHAPTERS[TowerUtils.getTowerChapter(twViewFloor).id - 1].season;
-      setTimeout(() => towerPlaySeasonMusic(season), 200);
+      const world = TowerUtils.getTowerChapter(twViewFloor).id;
+      setTimeout(() => towerPlayWorldMusic(world), 200);;
     } else {
       if (typeof SoundEngine.startMusic === "function") SoundEngine.startMusic("menu");
     }
@@ -923,7 +923,12 @@ function openTower() {
   renderAdventure();
   towerDing();
 }
-function closeTower() { sessionStorage.removeItem("cb_last_screen"); document.getElementById("screen-tower").style.display = "none"; }
+function closeTower() {
+  sessionStorage.removeItem("cb_last_screen");
+  document.getElementById("screen-tower").style.display = "none";
+  wmStop();
+  if (typeof SoundEngine !== 'undefined' && typeof SoundEngine.startMusic === 'function') SoundEngine.startMusic('menu');
+}
 function fmtRegen(ms) {
   const s = Math.max(0, Math.ceil(ms / 1000));
   return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
@@ -945,8 +950,7 @@ function renderAdventure() {
   const scr = document.getElementById("screen-tower");
   if (!scr || scr.style.display === "none") return;
   const world = TowerUtils.getTowerChapter(twViewFloor).id;
-  const seasonNow = TOWER_CHAPTERS[world-1].season;
-  if (TW_musicSeason !== seasonNow) { TW_musicSeason = seasonNow; towerPlaySeasonMusic(seasonNow); }
+  if (TW_musicWorld !== world) { TW_musicWorld = world; towerPlayWorldMusic(world); }
   const chap = TOWER_CHAPTERS[world - 1];
   const W = TOWER_WORLDS[world], C = TOWER_COLORS[world];
   document.getElementById("tw-bg").innerHTML = generateSceneHTML(world, W, C);
@@ -1405,3 +1409,81 @@ function towerDing() {
 function renderTower() { renderAdventure(); }
 function showElevator() { renderAdventure(); }
 function afterWinTravel() { renderAdventure(); }
+
+/* ============================================================
+MUSIQUES DES MONDES 1-3 (procédural WebAudio)
+============================================================ */
+let WM = null;
+let TW_musicWorld = 0;
+
+function wmStop(){
+  if(!WM) return;
+  (WM.timers||[]).forEach(t=>clearInterval(t));
+  (WM.nodes||[]).forEach(n=>{ try{ if(n.stop) n.stop(); }catch(e){} try{ n.disconnect(); }catch(e){} });
+  WM=null;
+}
+function wmCtx(){ SoundEngine.init(); return SoundEngine.ctx; }
+function wmMaster(vol){ const ctx=wmCtx(); const g=ctx.createGain(); g.gain.value=0; g.gain.linearRampToValueAtTime(vol, ctx.currentTime+1); g.connect(ctx.destination); return g; }
+function wmNote(ctx,dest,type,freq,t,dur,vol,ff){
+  const o=ctx.createOscillator(); o.type=type; o.frequency.value=freq;
+  const g=ctx.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  let node=o;
+  if(ff){ const f=ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=ff; o.connect(f); node=f; }
+  node.connect(g); g.connect(dest);
+  o.start(t); o.stop(t+dur+0.05);
+}
+
+/* --- M1 QUARTIER NÉON : synthwave cyberpunk --- */
+function wmStartNeon(){
+  const ctx=wmCtx(); const master=wmMaster(0.16);
+  const nodes=[master], timers=[];
+  const pad=ctx.createGain(); pad.gain.value=0.05; pad.connect(master);
+  [110,164.8,220].forEach((f,i)=>{ const o=ctx.createOscillator(); o.type='sawtooth'; o.frequency.value=f; o.detune.value=i*6-6; const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=700; o.connect(lp); lp.connect(pad); o.start(); nodes.push(o,lp); });
+  const bassPat=[55,55,110,55, 49,49,98,49, 43.6,43.6,87.3,43.6, 41.2,41.2,82.4,41.2];
+  let bi=0;
+  timers.push(setInterval(()=>{ wmNote(ctx,master,'square',bassPat[bi%bassPat.length],ctx.currentTime,0.28,0.10,500); bi++; },300));
+  let hi=0;
+  timers.push(setInterval(()=>{ if(hi%2===0){ const t=ctx.currentTime; const len=Math.floor(ctx.sampleRate*0.05); const b=ctx.createBuffer(1,len,ctx.sampleRate); const d=b.getChannelData(0); for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*(1-i/len); const s=ctx.createBufferSource(); s.buffer=b; const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=6000; const g=ctx.createGain(); g.gain.value=0.03; s.connect(hp); hp.connect(g); g.connect(master); s.start(t); } hi++; },150));
+  WM={nodes,timers};
+}
+
+/* --- M2 GROTTES DE CRISTAL : ambient minéral --- */
+function wmStartGlacier(){
+  const ctx=wmCtx(); const master=wmMaster(0.13);
+  const nodes=[master], timers=[];
+  const drone=ctx.createGain(); drone.gain.value=0.05; drone.connect(master);
+  [65.4,98,130.8].forEach(f=>{ const o=ctx.createOscillator(); o.type='sine'; o.frequency.value=f; o.connect(drone); o.start(); nodes.push(o); });
+  const pent=[523.3,587.3,659.3,784,880,1046.5];
+  timers.push(setInterval(()=>{ if(Math.random()<0.7){ const t=ctx.currentTime; const f=pent[Math.floor(Math.random()*pent.length)]; wmNote(ctx,master,'sine',f,t,1.2,0.05); wmNote(ctx,master,'sine',f*2,t+0.02,0.8,0.02); } },1400));
+  timers.push(setInterval(()=>{ if(Math.random()<0.5){ const t=ctx.currentTime; const o=ctx.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(1200,t); o.frequency.exponentialRampToValueAtTime(300,t+0.15); const g=ctx.createGain(); g.gain.setValueAtTime(0.04,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.2); o.connect(g); g.connect(master); o.start(t); o.stop(t+0.25); } },3000));
+  WM={nodes,timers};
+}
+
+/* --- M3 BANQUE DORÉE : tension heist --- */
+function wmStartVault(){
+  const ctx=wmCtx(); const master=wmMaster(0.15);
+  const nodes=[master], timers=[];
+  const nap=ctx.createGain(); nap.gain.value=0.04; nap.connect(master);
+  [73.4,110,146.8].forEach(f=>{ const o=ctx.createOscillator(); o.type='triangle'; o.frequency.value=f; o.connect(nap); o.start(); nodes.push(o); });
+  const pizzPat=[82.4,0,82.4,98, 0,73.4,0,87.3, 65.4,0,65.4,78, 0,61.7,0,73.4];
+  let pi=0;
+  timers.push(setInterval(()=>{ const f=pizzPat[pi%pizzPat.length]; if(f) wmNote(ctx,master,'triangle',f,ctx.currentTime,0.22,0.09,900); pi++; },220));
+  let ti=0;
+  timers.push(setInterval(()=>{ if(ti%4===0) wmNote(ctx,master,'square',2000,ctx.currentTime,0.03,0.015,3000); ti++; },250));
+  WM={nodes,timers};
+}
+
+/* --- Routeur : monde 1-3 = musiques dédiées, 4-9 = musiques saison --- */
+function towerPlayWorldMusic(world){
+  try{
+    wmStop();
+    if(world===1){ wmStartNeon(); return; }
+    if(world===2){ wmStartGlacier(); return; }
+    if(world===3){ wmStartVault(); return; }
+    if(typeof SoundEngine!=='undefined'){
+      if(typeof SoundEngine.stopMusic==='function') SoundEngine.stopMusic(false);
+      const key = TOWER_CHAPTERS[world-1].season===3?'s3menu':'s2menu';
+      setTimeout(()=>{ if(typeof SoundEngine.startMusicSeasonal==='function') SoundEngine.startMusicSeasonal(key); },100);
+    }
+  }catch(e){}
+}
