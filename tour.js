@@ -993,29 +993,92 @@ function advPlay() {
 /* ----- 7. SÉLECTION DE NIVEAU ----- */
 function openLevelSelect() {
   closeLevelSelect();
-  const world = TowerUtils.getTowerChapter(twViewFloor).id;
-  const start = (world - 1) * FPC + 1, end = world * FPC;
+  const currentWorld = TowerUtils.getTowerChapter(twViewFloor).id;
+  
+  // Créer le sélecteur de monde
+  let worldBtns = '';
+  for (let w = 1; w <= 9; w++) {
+    const chap = TOWER_CHAPTERS[w - 1];
+    const unlocked = TowerUtils.worldUnlocked(w);
+    const isCurrent = w === currentWorld;
+    const stars = TowerUtils.starsInWorld(w);
+    const pct = Math.min(100, Math.round(stars / WORLD_QUOTA * 100));
+    
+    worldBtns += `<button class="btn-main ${isCurrent ? 'btn-gold' : 'btn-blue'}" 
+      ${!unlocked ? 'disabled' : ''} 
+      onclick="switchWorldLevels(${w})" 
+      style="margin:4px;padding:8px 12px;font-size:12px;min-width:80px;">
+      ${chap.icon} M${w} ${unlocked ? `<span style="font-size:10px;">⭐${stars}/${WORLD_QUOTA}</span>` : '🔒'}
+    </button>`;
+  }
+  
+  // Créer le modal
+  const d = document.createElement("div");
+  d.className = "tw-lvlpop"; 
+  d.id = "tw-lvlpop";
+  d.innerHTML = `<div class="tw-lvlpop-card" style="max-width:95%;max-height:90%;">
+    <h3 style="margin-bottom:12px;">🎯 ${currentLang==="fr"?"Choisis ton niveau":"Pick your level"}</h3>
+    <div style="margin-bottom:12px;padding:8px;background:#1a1a2e;border-radius:8px;">
+      <div style="font-size:11px;color:#aaa;margin-bottom:6px;">${currentLang==="fr"?"Monde":"World"}</div>
+      <div id="world-selector" style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;">${worldBtns}</div>
+    </div>
+    <div class="tw-lvl-grid" id="tw-lvl-grid"></div>
+    <button class="btn-secondary" style="width:100%;margin-top:10px;" onclick="closeLevelSelect()">❌ ${currentLang==="fr"?"Fermer":"Close"}</button>
+  </div>`;
+  document.body.appendChild(d);
+  
+  // Charger les niveaux du monde actuel
+  switchWorldLevels(currentWorld);
+}
+
+function switchWorldLevels(world) {
+  const start = (world - 1) * FPC + 1;
+  const end = world * FPC;
   const maxPlayable = Math.min(towerProgress.floor + 1, end);
-  let cells = "";
+  const unlocked = TowerUtils.worldUnlocked(world);
+  
+  let cells = '';
   for (let f = start; f <= end; f++) {
     const st = towerProgress.stars[String(f)] || 0;
     const inChap = ((f - 1) % FPC) + 1;
     const isBoss = (inChap === FPC || inChap % 50 === 0);
-    const lock = f > maxPlayable;
+    const lock = !unlocked || f > maxPlayable;
     const cur = f === twViewFloor;
-    cells += `<button class="tw-lvl-cell ${lock?"lock":""} ${cur?"cur":""} ${isBoss?"boss":""}" ${lock?"disabled":""} onclick="pickLevel(${f})">${f}<span class="st">${st?"⭐".repeat(st):""}</span></button>`;
+    
+    cells += `<button class="tw-lvl-cell ${lock?"lock":""} ${cur?"cur":""} ${isBoss?"boss":""}" 
+      ${lock?"disabled":""} 
+      onclick="pickLevel(${f})">
+      ${f}
+      <span class="st">${st?"⭐".repeat(st):""}</span>
+    </button>`;
   }
-  const d = document.createElement("div");
-  d.className = "tw-lvlpop"; d.id = "tw-lvlpop";
-  d.innerHTML = `<div class="tw-lvlpop-card">
-    <h3>🎯 ${currentLang==="fr"?"Choisis ton niveau":"Pick your level"}</h3>
-    <div class="tw-lvl-grid" id="tw-lvl-grid">${cells}</div>
-    <button class="btn-secondary" style="width:100%;margin-top:10px;" onclick="closeLevelSelect()">❌ ${currentLang==="fr"?"Fermer":"Close"}</button>
-  </div>`;
-  document.body.appendChild(d);
-  const grid = document.getElementById("tw-lvl-grid");
-  const target = grid.querySelector(".tw-lvl-cell.cur") || grid.children[Math.max(0, maxPlayable - start)];
-  if (target) grid.scrollTop = Math.max(0, target.offsetTop - grid.clientHeight / 2);
+  
+  const grid = document.getElementById('tw-lvl-grid');
+  if (grid) {
+    grid.innerHTML = cells;
+    grid.scrollTop = 0;
+    
+    // Scroll vers le niveau actuel ou le dernier jouable
+    const target = grid.querySelector('.tw-lvl-cell.cur') || grid.children[Math.max(0, maxPlayable - start)];
+    if (target) {
+      setTimeout(() => {
+        grid.scrollTop = Math.max(0, target.offsetTop - grid.clientHeight / 2);
+      }, 100);
+    }
+  }
+  
+  // Mettre à jour le style des boutons de monde
+  const btns = document.querySelectorAll('#world-selector button');
+  btns.forEach((btn, i) => {
+    const w = i + 1;
+    if (w === world) {
+      btn.classList.remove('btn-blue');
+      btn.classList.add('btn-gold');
+    } else {
+      btn.classList.remove('btn-gold');
+      btn.classList.add('btn-blue');
+    }
+  });
 }
 function closeLevelSelect() { const s = document.getElementById("tw-lvlpop"); if (s) s.remove(); }
 function pickLevel(f) { twViewFloor = f; closeLevelSelect(); renderAdventure(); }
