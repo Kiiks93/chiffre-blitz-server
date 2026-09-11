@@ -100,7 +100,7 @@ DASHBOARD
   <div class="card" style="border-color: rgba(248,181,0,0.55);">
     <h2 style="color:#f8b500;">💰 Ajuster Pièces / Points / Trophées</h2>
     <select id="admin-adjust-mode" onchange="toggleAdjustInputs()">
-      <option value="all">🌍 Tout le monde</option>
+      <option value="all"> Tout le monde</option>
       <option value="pseudo">👤 Par pseudo</option>
       <option value="random">🎲 Aléatoire</option>
     </select>
@@ -116,6 +116,52 @@ DASHBOARD
     </div>
     <button class="btn-gold" onclick="adminAdjustCurrency()">Appliquer ⚡</button>
     <div id="admin-adjust-result" class="small-result"></div>
+  </div>
+
+  <!-- ===== AVENTURE : FLAGS & VIES/JOKERS ===== -->
+  <div class="card" style="border-color: rgba(255, 107, 169, 0.55);">
+    <h2 style="color:#ff6ba9;">🏰 Aventure — Flags & Vies</h2>
+    <div class="card-desc">
+      Donne les flags de déblocage des mondes saisonniers + ajuste les vies et jokers.
+      <br>Les <b>flags sont permanents</b> (le joueur garde les mondes à vie).
+    </div>
+    <input type="text" id="admin-adv-username" placeholder="Pseudo exact...">
+    
+    <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px; margin-bottom:8px;">
+      <div style="font-size:10px; color:#f8b500; font-weight:bold; margin-bottom:6px;"> Flags de saison (déblocage permanent)</div>
+      <label style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+        <input type="checkbox" id="admin-adv-halloween" style="width:auto; margin:0;">
+        🎃 Débloquer Halloween (Mondes 4-6)
+      </label>
+      <label style="display:flex; align-items:center; gap:8px;">
+        <input type="checkbox" id="admin-adv-noel" style="width:auto; margin:0;">
+        🎄 Débloquer Noël (Mondes 7-9)
+      </label>
+    </div>
+    
+    <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px; margin-bottom:8px;">
+      <div style="font-size:10px; color:#ff4b2b; font-weight:bold; margin-bottom:6px;">❤️ Vies & 🎴 Jokers</div>
+      <div class="row">
+        <div style="flex:1;">
+          <label>❤️ Vies (max 10)</label>
+          <input type="number" id="admin-adv-lives" placeholder="10" min="0" max="10">
+        </div>
+        <div style="flex:1;">
+          <label>⏱️ Jokers temps</label>
+          <input type="number" id="admin-adv-jt" placeholder="5" min="0">
+        </div>
+        <div style="flex:1;">
+          <label>🛡️ Jokers bouclier</label>
+          <input type="number" id="admin-adv-js" placeholder="5" min="0">
+        </div>
+      </div>
+      <div style="font-size:9px; color:#aaa; margin-top:4px;">
+        💡 Laisse vide pour ne pas modifier.
+      </div>
+    </div>
+    
+    <button class="btn-orange" onclick="adminGiveAdventure()">Appliquer ⚡</button>
+    <div id="admin-adv-result" class="small-result"></div>
   </div>
 
   <!-- ===== JOURNAL DES TRANSACTIONS ===== -->
@@ -141,7 +187,7 @@ DASHBOARD
   <div class="card" style="border-color: rgba(255,75,43,0.55);">
     <h2 style="color:#ff4b2b;">🔑 Réinitialiser un code secret</h2>
     <div class="card-desc">
-      Le joueur doit te donner son <b>pseudo</b> + sa <b>clé de récupération</b> (qu'il a sauvegardée).
+      Le joueur doit te donner son <b>pseudo</b> + sa <b>clé de récupération</b>.
       <br>Si la clé est correcte → un nouveau code est généré.
     </div>
     <input type="text" id="admin-reset-username" placeholder="Pseudo exact du joueur">
@@ -154,8 +200,6 @@ DASHBOARD
     <h2 style="color:#ff8a00;">🗓️ Contrôle de Saison</h2>
     <div class="notice warning">
       Permet de forcer temporairement la saison active pour tester le Pass.
-      <br>L'override est global pour tous les joueurs connectés.
-      <br>Il revient en mode auto après redémarrage ou redéploiement serveur.
     </div>
     <select id="admin-season-select">
       <option value="auto">⏱️ Auto — date réelle du serveur</option>
@@ -172,8 +216,6 @@ DASHBOARD
     <h2 style="color:#38ef7d;">📅 Dates des Saisons</h2>
     <div class="notice" style="background: rgba(56,239,125,0.08); border-color: rgba(56,239,125,0.35); color: #c9f7d8;">
       Définis les dates de début et fin de chaque saison.
-      <br>Les dates sont <b>persistées en base de données</b> (survivent aux redéploiements Render).
-      <br>Tous les joueurs connectés se mettront à jour en temps réel.
     </div>
     <div id="season-dates-rows"></div>
     <button class="btn-green" onclick="saveSeasonDates()">💾 Enregistrer les dates</button>
@@ -191,25 +233,10 @@ DASHBOARD
 
 <script>
 const SERVER_URL = "https://chiffre-blitz-server.onrender.com";
+// FIX CRITIQUE : On envoie la version 1.3.0 pour passer le version gating du serveur
 const socket = io(SERVER_URL, { 
   reconnection: true, 
-  query: { v: "1.3.0" },  // ← On déclare la version admin
-  auth: { isAdmin: true }
-});
-  socket.on("connect", () => {
-  const el = document.getElementById("server-status");
-  if (el) { el.innerText = "✅ Connecté au serveur"; el.className = "status ok"; }
-});
-
-// AJOUTE CES 2 ÉCOUTEURS CI-DESSOUS
-socket.on("version_blocked", () => {
-  const el = document.getElementById("server-status");
-  if (el) { el.innerText = "❌ Version incompatible — mets à jour l'app"; el.className = "status ko"; }
-});
-
-socket.on("disconnect", (reason) => {
-  const el = document.getElementById("server-status");
-  if (el) { el.innerText = "❌ Déconnecté : " + reason; el.className = "status ko"; }
+  query: { v: "1.3.0" } 
 });
 
 /* ============================================================
@@ -272,7 +299,7 @@ socket.on("admin_season_result", (data) => {
     const label = names[data.season] || data.season || "Auto";
     result.style.color = "#00ff88";
     result.innerText = "✅ Saison active : " + label;
-    alert("🗓️ Saison changée : " + label);
+    alert("️ Saison changée : " + label);
   } else {
     result.style.color = "#ff4b2b";
     result.innerText = "❌ Erreur : saison non modifiée.";
@@ -289,7 +316,7 @@ const EVENT_NAMES = {
   expressoMatch: "⚡ Expresso Match (20s)",
   chaosMode: "🌪️ Chaos Mode (Malus auto)",
   jackpotEclair: "🎁 Jackpot Éclair",
-  tugOfWarMode: "🪢 Mode Corde Raide (Tug-of-War)",
+  tugOfWarMode: " Mode Corde Raide (Tug-of-War)",
   halloweenMode: "🎃 Mode Exclusif Halloween (Chasse Hantée)",
   noelMode: "🎄 Mode Exclusif Noël (Course aux Cadeaux)"
 };
@@ -430,7 +457,7 @@ socket.on('admin_catalog', (cat) => {
   const sel = document.getElementById('admin-give-item');
   if (!sel) return;
   sel.innerHTML = '';
-  const groups = { frame: '🛡️ Cadres', theme: '🎨 Grilles', avatar: '🐱 Avatars', title: '🏅 Titres', pack: '🎁 Packs', power: '⚡ Pouvoirs' };
+  const groups = { frame: '🛡️ Cadres', theme: '🎨 Grilles', avatar: '🐱 Avatars', title: '🏅 Titres', pack: ' Packs', power: '⚡ Pouvoirs' };
   for (const g in groups) {
     const opts = (cat.items || []).filter(i => i.type === g);
     if (!opts.length) continue;
@@ -440,7 +467,7 @@ socket.on('admin_catalog', (cat) => {
     sel.appendChild(og);
   }
   const tg = document.createElement('optgroup');
-  tg.label = '🏆 Trophées';
+  tg.label = ' Trophées';
   (cat.trophies || []).forEach(t => { const o = document.createElement('option'); o.value = 'trophy:' + t.id; o.textContent = t.name; tg.appendChild(o); });
   sel.appendChild(tg);
 });
@@ -458,54 +485,7 @@ socket.on('admin_give_result', (d) => {
   if (el) { el.style.color = d.ok ? '#00ff88' : '#ff4b2b'; el.innerText = d.message || ''; }
 });
 
-<!-- ===== AVENTURE : FLAGS & VIES/JOKERS ===== -->
-<div class="card" style="border-color: rgba(255, 107, 169, 0.55);">
-  <h2 style="color:#ff6ba9;">🏰 Aventure — Flags & Vies</h2>
-  <div class="card-desc">
-    Donne les flags de déblocage des mondes saisonniers + ajuste les vies et jokers du mode Aventure.
-    <br>Les <b>flags sont permanents</b> (le joueur garde les mondes à vie).
-    <br>Marche aussi hors-ligne.
-  </div>
-  <input type="text" id="admin-adv-username" placeholder="Pseudo exact...">
-  
-  <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px; margin-bottom:8px;">
-    <div style="font-size:10px; color:#f8b500; font-weight:bold; margin-bottom:6px;">🌍 Flags de saison (déblocage permanent)</div>
-    <label style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-      <input type="checkbox" id="admin-adv-halloween" style="width:auto; margin:0;">
-      🎃 Débloquer Halloween (Mondes 4-6)
-    </label>
-    <label style="display:flex; align-items:center; gap:8px;">
-      <input type="checkbox" id="admin-adv-noel" style="width:auto; margin:0;">
-      🎄 Débloquer Noël (Mondes 7-9)
-    </label>
-  </div>
-  
-  <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px; margin-bottom:8px;">
-    <div style="font-size:10px; color:#ff4b2b; font-weight:bold; margin-bottom:6px;">❤️ Vies & 🎴 Jokers</div>
-    <div class="row">
-      <div style="flex:1;">
-        <label>❤️ Vies (max 10)</label>
-        <input type="number" id="admin-adv-lives" placeholder="10" min="0" max="10">
-      </div>
-      <div style="flex:1;">
-        <label>⏱️ Jokers temps</label>
-        <input type="number" id="admin-adv-jt" placeholder="5" min="0">
-      </div>
-      <div style="flex:1;">
-        <label>🛡️ Jokers bouclier</label>
-        <input type="number" id="admin-adv-js" placeholder="5" min="0">
-      </div>
-    </div>
-    <div style="font-size:9px; color:#aaa; margin-top:4px;">
-      💡 Laisse vide pour ne pas modifier (garde les valeurs actuelles).
-    </div>
-  </div>
-  
-  <button class="btn-orange" onclick="adminGiveAdventure()">Appliquer ⚡</button>
-  <div id="admin-adv-result" class="small-result"></div>
-</div>
-
- /* ============================================================
+/* ============================================================
 AVENTURE — FLAGS SAISONS & VIES/JOKERS
 ============================================================ */
 function adminGiveAdventure() {
@@ -521,7 +501,6 @@ function adminGiveAdventure() {
     jokersShield: document.getElementById('admin-adv-js').value
   };
   
-  // Convertir en nombre si rempli, sinon null (ne pas modifier)
   payload.lives = payload.lives === '' ? null : parseInt(payload.lives);
   payload.jokersTime = payload.jokersTime === '' ? null : parseInt(payload.jokersTime);
   payload.jokersShield = payload.jokersShield === '' ? null : parseInt(payload.jokersShield);
@@ -535,6 +514,7 @@ socket.on('admin_adv_result', (d) => {
   el.style.color = d.ok ? '#00ff88' : '#ff4b2b';
   el.innerText = d.message || '';
 });
+  
 /* ============================================================
 RÉINITIALISER CODE
 ============================================================ */
@@ -550,7 +530,6 @@ socket.on('admin_reset_result', (d) => {
   el.style.color = d.ok ? '#00ff88' : '#ff4b2b';
   el.innerText = d.message || '';
   if (d.ok && d.newCode) {
-    // Copie automatique dans le presse-papier
     navigator.clipboard.writeText(d.newCode).then(() => {
       alert('✅ Nouveau code généré et copié !\n\n' + d.newCode + '\n\nTransmets-le au joueur via Discord/email.');
     }).catch(() => {
