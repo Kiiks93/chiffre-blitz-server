@@ -1274,13 +1274,25 @@ io.on('connection', (socket) => {
   });
 
   /* ---------- ADMIN ---------- */
-  socket.adminAttempts = 0;
   socket.on('admin_auth', (password) => {
-    if (socket.isAdmin) return;
-    if (socket.adminAttempts >= 5) { socket.emit('admin_auth_fail', "Trop de tentatives."); return; }
-    if (password === ADMIN_PASSWORD) { socket.isAdmin = true; socket.emit('admin_auth_success', { events: globalEvents, schedules: eventSchedules }); }
-    else { socket.adminAttempts++; socket.emit('admin_auth_fail', "Mot de passe administrateur incorrect !"); }
-  });
+  console.log('🔐 ADMIN_AUTH reçu, tentative:', socket.adminAttempts);
+  if (socket.isAdmin) { console.log('✅ Déjà admin'); return; }
+  if (socket.adminAttempts >= 5) { 
+    console.log('❌ Trop de tentatives');
+    socket.emit('admin_auth_fail', "Trop de tentatives."); 
+    return; 
+  }
+  if (password === ADMIN_PASSWORD) { 
+    console.log('✅ Mot de passe correct, envoi admin_auth_success');
+    socket.isAdmin = true; 
+    socket.emit('admin_auth_success', { events: globalEvents, schedules: eventSchedules }); 
+  }
+  else { 
+    console.log('❌ Mot de passe incorrect. Attendu:', ADMIN_PASSWORD?.substring(0,3) + '***');
+    socket.adminAttempts++; 
+    socket.emit('admin_auth_fail', "Mot de passe administrateur incorrect !"); 
+  }
+});
 
   socket.on('admin_update_schedule', (schedulesData) => {
     if (!socket.isAdmin) return;
