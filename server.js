@@ -589,7 +589,7 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
   socket.emit("version_blocked");
   socket.disconnect(true);
   return;
-}}
+}
   console.log('Connexion : ' + socket.id);
   socket.emit('events_state_update', globalEvents);
   socket.emit('online_count', { online: getOnlineCount() });
