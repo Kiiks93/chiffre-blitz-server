@@ -180,6 +180,11 @@ DASHBOARD
   
   <div style="display:flex; gap:6px; margin-bottom:8px;">
     <button class="btn-orange" onclick="adminGiveAdventure()" style="flex:1;">Appliquer </button>
+    <div style="display:flex; gap:6px; margin-bottom:8px;">
+    <button class="btn-orange" onclick="adminGiveAdventure()" style="flex:1;">Appliquer ⚡</button>
+    <button class="btn-gold" onclick="adminUnlockAllWorlds()" style="flex:1;">🔓 Tout débloquer</button>
+    <button class="btn-blue" onclick="adminForceRefresh()" style="flex:1;">🔄 Rafraîchir joueur</button>
+  </div>
     <button class="btn-gold" onclick="adminUnlockAllWorlds()" style="flex:1;">🔓 Tout débloquer</button>
   </div>
   <div id="admin-adv-result" class="small-result"></div>
@@ -547,6 +552,20 @@ function adminUnlockAllWorlds() {
   // Lance l'application
   adminGiveAdventure();
 }
+
+function adminForceRefresh() {
+  const username = document.getElementById('admin-adv-username').value.trim();
+  if (!username) { alert('Pseudo requis.'); return; }
+  
+  socket.emit('admin_force_refresh', { username });
+}
+
+socket.on('admin_force_refresh_result', (d) => {
+  const el = document.getElementById('admin-adv-result');
+  if (!el) return;
+  el.style.color = d.ok ? '#00ff88' : '#ff4b2b';
+  el.innerText = d.ok ? `✅ ${d.username} rafraîchi !` : `❌ ${d.message}`;
+});
 
 socket.on('admin_adv_result', (d) => {
   const el = document.getElementById('admin-adv-result');
