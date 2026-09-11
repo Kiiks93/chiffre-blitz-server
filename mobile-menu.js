@@ -166,11 +166,15 @@ function playWhoosh() {
 let NEON_HUM = null;
 let NEON_CRACK_TIMER = null;
 
+let NEON_HUM = null;
+let NEON_FLICK_TIMER = null;
+
 function startNeonHum() {
   if (NEON_HUM) return;
   try {
     SoundEngine.init();
     const ctx = SoundEngine.ctx, t = ctx.currentTime;
+
     // Souffle / grésillement continu DISCRET (aigu, pas sourd)
     const len = ctx.sampleRate * 2;
     const buf = ctx.createBuffer(1, len, ctx.sampleRate);
@@ -183,19 +187,26 @@ function startNeonHum() {
     gg.gain.linearRampToValueAtTime(0.028, t + 0.8);
     src.start();
     NEON_HUM = { src: src, gg: gg };
-    // Crachotements ALÉATOIRES (imprévisibles, pas répétitifs)
-    const scheduleCrack = function(){
-      NEON_CRACK_TIMER = setTimeout(function(){
-        if (NEON_HUM) makeBuzz(ctx, ctx.destination, ctx.currentTime, 0.06 + Math.random() * 0.10, 0.05 + Math.random() * 0.05);
-        scheduleCrack();
-      }, 1200 + Math.random() * 3200);
+
+    // SYNC avec le flicker visuel (neonFlicker = 5s, baisses à ~6%, 39%, 73%)
+    // mais ESPACÉ : seulement ~55% des clignotements produisent un crachotement
+    const offsets = [0.30, 1.95, 3.65];
+    const cycle = function(){
+      offsets.forEach(function(off){
+        setTimeout(function(){
+          if (NEON_HUM && Math.random() < 0.55) {
+            makeBuzz(ctx, ctx.destination, ctx.currentTime, 0.06 + Math.random() * 0.08, 0.05 + Math.random() * 0.04);
+          }
+        }, off * 1000);
+      });
     };
-    scheduleCrack();
+    cycle();
+    NEON_FLICK_TIMER = setInterval(cycle, 5000);
   } catch (e) {}
 }
 
 function stopNeonHum() {
-  if (NEON_CRACK_TIMER) { clearTimeout(NEON_CRACK_TIMER); NEON_CRACK_TIMER = null; }
+  if (NEON_FLICK_TIMER) { clearInterval(NEON_FLICK_TIMER); NEON_FLICK_TIMER = null; }
   if (!NEON_HUM) return;
   try {
     const ctx = SoundEngine.ctx, t = ctx.currentTime, n = NEON_HUM;
