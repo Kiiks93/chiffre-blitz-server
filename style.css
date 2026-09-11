@@ -842,18 +842,19 @@ MENU MOBILE (dock grid + glassmorphism)
 .dock-icon{font-size:18px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6));}
 .dock-label{font-size:7px;font-weight:700;color:#cfcfe8;text-transform:uppercase;letter-spacing:.3px;line-height:1;}
 /* Arc intérieur élargi (rayon + grand, angles resserrés = plus d'air) */
-.dock-item:nth-child(1){transform:translate(-115px,-61px);}
-.dock-item:nth-child(2){transform:translate(-78px,-104px);}
-.dock-item:nth-child(3){transform:translate(-27px,-127px);}
-.dock-item:nth-child(4){transform:translate(27px,-127px);}
-.dock-item:nth-child(5){transform:translate(78px,-104px);}
-.dock-item:nth-child(6){transform:translate(115px,-61px);}
-.dock-item:nth-child(1):active{transform:translate(-115px,-61px) scale(.9);}
-.dock-item:nth-child(2):active{transform:translate(-78px,-104px) scale(.9);}
-.dock-item:nth-child(3):active{transform:translate(-27px,-127px) scale(.9);}
-.dock-item:nth-child(4):active{transform:translate(27px,-127px) scale(.9);}
-.dock-item:nth-child(5):active{transform:translate(78px,-104px) scale(.9);}
-.dock-item:nth-child(6):active{transform:translate(115px,-61px) scale(.9);}
+/* Arc DOUX du dock, décalé en BAS (sous la roue, dans le bas du halo) */
+.dock-item:nth-child(1){transform:translate(-150px,0);}
+.dock-item:nth-child(2){transform:translate(-90px,-26px);}
+.dock-item:nth-child(3){transform:translate(-30px,-38px);}
+.dock-item:nth-child(4){transform:translate(30px,-38px);}
+.dock-item:nth-child(5){transform:translate(90px,-26px);}
+.dock-item:nth-child(6){transform:translate(150px,0);}
+.dock-item:nth-child(1):active{transform:translate(-150px,0) scale(.9);}
+.dock-item:nth-child(2):active{transform:translate(-90px,-26px) scale(.9);}
+.dock-item:nth-child(3):active{transform:translate(-30px,-38px) scale(.9);}
+.dock-item:nth-child(4):active{transform:translate(30px,-38px) scale(.9);}
+.dock-item:nth-child(5):active{transform:translate(90px,-26px) scale(.9);}
+.dock-item:nth-child(6):active{transform:translate(150px,0) scale(.9);}
 
 /* Quand le menu mobile est actif, on diminue la barre de stats */
 @media (max-width: 760px) {
