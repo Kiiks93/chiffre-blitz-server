@@ -705,3 +705,202 @@ h1 { color: var(--c-primary); margin: 0; font-size: 16px; text-shadow: 0 0 15px 
 @media (max-width:760px), (pointer:coarse){
   .btn-main{padding:9px 12px !important;font-size:14px !important;margin:0 0 7px 0 !important;min-height:0 !important;}
 }
+/* ============================================================
+MENU MOBILE (dock grid + glassmorphism)
+============================================================ */
+
+/* Mobile : cacher le menu vertical classique */
+@media (max-width: 760px) {
+    #screen-menu.menu-container {
+        display: none !important;
+    }
+    #screen-menu-mobile.menu-mobile {
+        display: flex !important;
+        flex-direction: column;
+        position: fixed;
+        inset: 0;
+        padding: 0 10px;
+        padding-bottom: env(safe-area-inset-bottom);
+        z-index: 5;
+        pointer-events: none; /* laisse passer les clics vers le décor */
+        transition: opacity .3s;
+    }
+    #screen-menu-mobile.menu-mobile > * {
+        pointer-events: auto;
+    }
+    /* Mode "Admirer" : cache le menu */
+    #screen-menu-mobile.admire-active {
+        opacity: 0;
+        pointer-events: none !important;
+    }
+}
+
+/* PC : cacher le menu mobile */
+@media (min-width: 761px) {
+    #screen-menu-mobile.menu-mobile {
+        display: none !important;
+    }
+}
+
+/* Bouton "Admirer" */
+.admire-btn {
+    position: fixed;
+    top: 110px;
+    right: 10px;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1.5px solid rgba(255,255,255,0.2);
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+.admire-btn:active {
+    transform: scale(0.95);
+}
+.admire-btn.active {
+    background: rgba(248,181,0,0.3);
+    border-color: #f8b500;
+    color: #f8b500;
+}
+
+/* Grille des modes (2x2 ou plus) */
+.mobile-modes-grid {
+    position: fixed;
+    bottom: 110px;
+    left: 10px;
+    right: 10px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    z-index: 6;
+}
+
+.mobile-mode-tile {
+    aspect-ratio: 1;
+    background: rgba(15, 5, 29, 0.55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1.5px solid rgba(0, 210, 255, 0.3);
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: #fff;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    transition: transform .15s, box-shadow .15s;
+}
+.mobile-mode-tile:active {
+    transform: scale(0.96);
+}
+.mobile-mode-tile .tile-icon {
+    font-size: 28px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+.mobile-mode-tile .tile-label {
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+/* Variantes de couleurs pour les tuiles */
+.mode-tower {
+    background: linear-gradient(135deg, rgba(255,138,0,0.55), rgba(123,47,247,0.55));
+    border-color: rgba(255,138,0,0.5);
+}
+.mode-solo {
+    background: linear-gradient(135deg, rgba(56,239,125,0.45), rgba(17,153,62,0.45));
+    border-color: rgba(56,239,125,0.4);
+}
+.mode-1v1 {
+    background: linear-gradient(135deg, rgba(0,198,255,0.45), rgba(0,114,255,0.45));
+    border-color: rgba(0,198,255,0.4);
+}
+.mode-halloween {
+    background: linear-gradient(135deg, rgba(255,138,0,0.55), rgba(123,47,247,0.55));
+    border-color: rgba(255,138,0,0.5);
+}
+.mode-noel {
+    background: linear-gradient(135deg, rgba(255,75,43,0.5), rgba(56,239,125,0.45));
+    border-color: rgba(255,75,43,0.4);
+}
+.mode-tow {
+    background: linear-gradient(135deg, rgba(255,0,127,0.5), rgba(255,138,0,0.45));
+    border-color: rgba(255,0,127,0.4);
+}
+
+/* Dock du bas (glassmorphism + safe-area) */
+.mobile-dock {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    background: rgba(10, 5, 20, 0.65);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1.5px solid rgba(0, 210, 255, 0.25);
+    border-radius: 18px;
+    padding: 8px 4px;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    z-index: 6;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+}
+
+.dock-item {
+    background: transparent;
+    border: none;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 2px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background .15s;
+}
+.dock-item:active {
+    background: rgba(0, 210, 255, 0.15);
+}
+.dock-icon {
+    font-size: 22px;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));
+}
+.dock-label {
+    font-size: 8.5px;
+    font-weight: 700;
+    color: #cfcfe8;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* Quand le menu mobile est actif, on diminue la barre de stats */
+@media (max-width: 760px) {
+    .user-stats {
+        background: rgba(0,0,0,0.45) !important;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        font-size: 10px !important;
+        padding: 4px 8px !important;
+    }
+    .header-bar {
+        background: rgba(5, 10, 20, 0.6) !important;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+}
