@@ -316,13 +316,13 @@ document.addEventListener("visibilitychange", () => {
   @keyframes twLightning{0%,91%,95%,100%{opacity:0}92%,94%{opacity:1}}
   .tw-ha-moon{position:absolute;top:6%;left:12%;width:70px;height:70px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fdf6e3,#d8cfae 60%,#b0a888);box-shadow:0 0 40px #fdf6e366,0 0 90px #fdf6e333;}
   .tw-ha-cloud{position:absolute;height:26px;border-radius:20px;background:linear-gradient(90deg,transparent,#0a0514cc 30%,#0a0514cc 70%,transparent);filter:blur(4px);animation:twCloud linear infinite;}
-  .tw-ha-hill{position:absolute;bottom:0;left:-30%;right:-30%;height:26%;background:linear-gradient(180deg,#150a26,#0a0514);border-radius:50% 50% 0 0;}
-  .tw-ha-fence{position:absolute;bottom:9%;left:0;right:0;height:56px;background:repeating-linear-gradient(90deg,transparent 0 26px,#0a0514 26px 32px);}
+  .tw-ha-hill{position:absolute;bottom:0;left:-30%;right:-30%;height:22%;background:linear-gradient(180deg,#150a26,#0a0514);border-radius:50% 50% 0 0;}
+  .tw-ha-fence{position:absolute;bottom:5%;left:0;right:0;height:56px;background:repeating-linear-gradient(90deg,transparent 0 26px,#0a0514 26px 32px);}
   .tw-ha-fence::before{content:"";position:absolute;left:0;right:0;top:14px;height:6px;background:#0a0514;}
-  .tw-ha-tower{position:absolute;bottom:11%;left:50%;transform:translateX(-50%);width:150px;height:60%;background:linear-gradient(90deg,#0d0718,#1c1030 45%,#0d0718);clip-path:polygon(0 100%,0 18%,8% 18%,8% 12%,18% 12%,18% 6%,30% 6%,30% 0,70% 0,70% 6%,82% 6%,82% 12%,92% 12%,92% 18%,100% 18%,100% 100%);box-shadow:0 0 60px #00000099;}
-  .tw-ha-win{position:absolute;width:14px;height:22px;background:#ff8a00;border-radius:50% 50% 0 0;box-shadow:0 0 14px #ff8a00cc,0 0 30px #ff8a0066;animation:twWindowFlick 3.4s infinite;}
+.tw-ha-tower{position:absolute;bottom:14%;left:50%;transform:translateX(-50%);width:150px;height:62%;background:linear-gradient(90deg,#0d0718,#1c1030 45%,#0d0718);clip-path:polygon(0 100%,0 18%,8% 18%,8% 12%,18% 12%,18% 6%,30% 6%,30% 0,70% 0,70% 6%,82% 6%,82% 12%,92% 12%,92% 18%,100% 18%,100% 100%);box-shadow:0 0 60px #00000099;}
+.tw-ha-win{position:absolute;width:14px;height:22px;background:#ff8a00;border-radius:50% 50% 0 0;box-shadow:0 0 14px #ff8a00cc,0 0 30px #ff8a0066;animation:twWindowFlick 3.4s infinite;}
   @keyframes twWindowFlick{0%,100%{opacity:1}45%{opacity:.25}55%{opacity:.9}}
-  .tw-ha-gate{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:56px;height:66px;background:#05030c;border-radius:28px 28px 0 0;}
+  .tw-ha-gate{position:absolute;bottom:14%;left:50%;transform:translateX(-50%);width:56px;height:66px;background:#05030c;border-radius:28px 28px 0 0;}
   .tw-bat{position:absolute;width:30px;height:15px;background:#05030c;clip-path:polygon(50% 0,40% 30%,0 40%,20% 60%,30% 50%,50% 70%,70% 50%,80% 60%,100% 40%,60% 30%);animation:twBatFly 8s linear infinite;}
   @keyframes twBatFly{0%{transform:translate(0,0)}25%{transform:translate(90px,-26px)}50%{transform:translate(180px,0)}75%{transform:translate(90px,26px)}100%{transform:translate(0,0)}}
   .tw-web{position:absolute;width:80px;height:80px;opacity:.5;background:linear-gradient(45deg,transparent 48%,#ffffff33 48% 52%,transparent 52%),linear-gradient(-45deg,transparent 48%,#ffffff33 48% 52%,transparent 52%),linear-gradient(90deg,transparent 48%,#ffffff33 48% 52%,transparent 52%),linear-gradient(0deg,transparent 48%,#ffffff33 48% 52%,transparent 52%),radial-gradient(circle,transparent 30%,#ffffff22 30% 32%,transparent 32%),radial-gradient(circle,transparent 55%,#ffffff22 55% 57%,transparent 57%);}
@@ -364,6 +364,14 @@ document.addEventListener("visibilitychange", () => {
   .tw-bat-lair-drip{position:absolute;width:2px;background:linear-gradient(180deg,#1a1a1a,#000);border-radius:0 0 2px 2px;animation:twDrip 4s ease-in infinite;}
   @keyframes twDrip{0%{height:0;opacity:0}20%{height:20px;opacity:1}80%{height:20px;opacity:1}100%{height:0;opacity:0}}
   
+.tw-bat-lair-skull{position:absolute;bottom:6%;width:34px;height:30px;background:linear-gradient(180deg,#d8d8d0,#9a9a92);border-radius:50% 50% 40% 40%;box-shadow:inset -3px -4px 6px #00000055;}
+.tw-bat-lair-skull::before{content:"";position:absolute;top:8px;left:7px;width:6px;height:7px;background:#1a1a1a;border-radius:50%;box-shadow:13px 0 0 #1a1a1a;}
+.tw-bat-lair-skull::after{content:"";position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:16px;height:6px;background:#c8c8c0;border-radius:2px;}
+.tw-bat-lair-shroom{position:absolute;bottom:5%;width:22px;height:20px;}
+.tw-bat-lair-shroom::before{content:"";position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:8px;height:12px;background:#d8c8a8;border-radius:3px;}
+.tw-bat-lair-shroom::after{content:"";position:absolute;top:0;left:0;right:0;height:10px;background:radial-gradient(ellipse at 50% 100%,#7dff8a,#2a8b3a);border-radius:50% 50% 20% 20%;box-shadow:0 0 10px #7dff8a88;}
+.tw-bat-lair-root{position:absolute;top:0;width:3px;background:linear-gradient(180deg,#1a1a1a,transparent);border-radius:2px;}
+.tw-bat-lair-gem{position:absolute;width:10px;height:10px;background:#9b5cff;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);box-shadow:0 0 10px #9b5cff;animation:twGlowC 2s infinite;}
   /* === FÉERIQUE COMMUN === */
   .tw-aurora{position:absolute;top:0;left:0;right:0;height:46%;background:linear-gradient(100deg,transparent 18%,#7dff8a26 34%,#74ebf526 50%,#ff6fa526 66%,transparent 82%);filter:blur(18px);animation:twAurora 12s ease-in-out infinite alternate;}
   @keyframes twAurora{0%{transform:translateX(-6%) skewY(-2deg);opacity:.45}100%{transform:translateX(6%) skewY(2deg);opacity:.9}}
@@ -596,7 +604,6 @@ document.addEventListener("visibilitychange", () => {
     .tw-batsignal{font-size:20px;letter-spacing:4px;}
     .tw-goldpart{display:none;}
     .tw-panel .num{font-size:36px;}
-    .tw-center { padding-top:0 !important; padding-bottom:15px !important; }
     .tw-panel { padding:10px 20px !important; margin-bottom:6px !important; }
     .tw-panel .num { font-size:32px !important; }
     .tw-panel .typ { font-size:10px !important; }
@@ -727,45 +734,50 @@ function generateSceneHTML(c, W, C) {
     html += `<div class="tw-gr-fog" style="bottom:4%;animation-duration:30s;"></div><div class="tw-gr-fog" style="bottom:14%;animation-duration:22s;animation-delay:-8s;opacity:.7;"></div><div class="tw-gr-fog" style="bottom:24%;animation-duration:38s;animation-delay:-16s;opacity:.5;"></div>`;
   }
   if (W.scene === "lair") {
-    html += `<div class="tw-bat-lair-bg"></div><div class="tw-bat-lair-fog"></div><div class="tw-bat-lair-vignette"></div>`;
-    const stalacCount = IS_MOBILE ? 6 : 10;
-    for (let i = 0; i < stalacCount; i++) {
-      const left = 5 + (i * 9) + (i % 2) * 3;
-      const height = 60 + (i * 17) % 60;
-      html += `<div class="tw-bat-lair-stalac" style="left:${left}%;height:${height}px;animation-delay:${i*.3}s;"></div>`;
-    }
-    const stalagCount = IS_MOBILE ? 5 : 8;
-    for (let i = 0; i < stalagCount; i++) {
-      const left = 8 + (i * 11) + (i % 2) * 5;
-      const height = 40 + (i * 13) % 50;
-      html += `<div class="tw-bat-lair-stalag" style="left:${left}%;height:${height}px;"></div>`;
-    }
-    const eyePairs = IS_MOBILE ? 6 : 12;
-    for (let i = 0; i < eyePairs; i++) {
-      const left = 8 + (i * 7) % 84;
-      const top = 20 + (i * 11) % 60;
-      const delay = (i * 0.4) % 3;
-      const isBlink = i % 3 === 0;
-      html += `<div class="tw-bat-lair-eye ${isBlink ? 'blink' : ''}" style="left:${left}%;top:${top}%;animation-delay:${delay}s;"></div>`;
-    }
-    const batCount = IS_MOBILE ? 4 : 8;
-    for (let i = 0; i < batCount; i++) {
-      const size = 20 + (i * 8) % 30;
-      const top = 10 + (i * 13) % 50;
-      const left = (i * 11) % 80;
-      const duration = 6 + (i * 2) % 6;
-      const delay = (i * 1.5) % 5;
-      html += `<div class="tw-bat-lair-bat" style="width:${size}px;height:${size*0.7}px;top:${top}%;left:${left}%;animation-duration:${duration}s;animation-delay:${delay}s;"></div>`;
-    }
-    html += `<div class="tw-bat-lair-mist"></div><div class="tw-bat-lair-mist" style="animation-delay:-10s;opacity:.6;"></div>`;
-    const dripCount = IS_MOBILE ? 3 : 6;
-    for (let i = 0; i < dripCount; i++) {
-      const left = 10 + (i * 13) % 80;
-      const top = 5 + (i * 7) % 15;
-      const delay = (i * 1.2) % 4;
-      html += `<div class="tw-bat-lair-drip" style="left:${left}%;top:${top}%;animation-delay:${delay}s;"></div>`;
-    }
+  html += `<div class="tw-bat-lair-bg"></div><div class="tw-bat-lair-fog"></div><div class="tw-bat-lair-vignette"></div>`;
+  for (let i=0;i<(IS_MOBILE?6:10);i++) html += `<div class="tw-bat-lair-root" style="left:${6+i*10}%;height:${40+(i*13)%60}px;"></div>`;
+  const stalacCount = IS_MOBILE ? 8 : 12;
+  for (let i = 0; i < stalacCount; i++) {
+    const left = 4 + (i * 8) + (i % 2) * 3;
+    const height = 50 + (i * 17) % 70;
+    html += `<div class="tw-bat-lair-stalac" style="left:${left}%;height:${height}px;"></div>`;
   }
+  const stalagCount = IS_MOBILE ? 7 : 10;
+  for (let i = 0; i < stalagCount; i++) {
+    const left = 5 + (i * 10) + (i % 2) * 4;
+    const height = 35 + (i * 13) % 55;
+    html += `<div class="tw-bat-lair-stalag" style="left:${left}%;height:${height}px;"></div>`;
+  }
+  html += `<div class="tw-web" style="top:3%;left:2%;"></div><div class="tw-web" style="top:5%;right:2%;transform:scaleX(-1);"></div>`;
+  const eyePairs = IS_MOBILE ? 10 : 18;
+  for (let i = 0; i < eyePairs; i++) {
+    const left = 6 + (i * 5.5) % 88;
+    const top = 15 + (i * 9) % 65;
+    const delay = (i * 0.35) % 3;
+    const isBlink = i % 3 === 0;
+    html += `<div class="tw-bat-lair-eye ${isBlink ? 'blink' : ''}" style="left:${left}%;top:${top}%;animation-delay:${delay}s;"></div>`;
+  }
+  const batCount = IS_MOBILE ? 6 : 10;
+  for (let i = 0; i < batCount; i++) {
+    const size = 18 + (i * 7) % 32;
+    const top = 8 + (i * 11) % 55;
+    const left = (i * 9) % 82;
+    const duration = 5 + (i * 2) % 7;
+    const delay = (i * 1.3) % 5;
+    html += `<div class="tw-bat-lair-bat" style="width:${size}px;height:${size*0.7}px;top:${top}%;left:${left}%;animation-duration:${duration}s;animation-delay:${delay}s;"></div>`;
+  }
+  for (let i=0;i<(IS_MOBILE?3:5);i++) html += `<div class="tw-bat-lair-skull" style="left:${10+i*20}%;"></div>`;
+  for (let i=0;i<(IS_MOBILE?4:7);i++) html += `<div class="tw-bat-lair-shroom" style="left:${6+i*14}%;transform:scale(${0.8+(i%3)*0.2});"></div>`;
+  for (let i=0;i<(IS_MOBILE?5:9);i++) html += `<div class="tw-bat-lair-gem" style="left:${8+i*10}%;top:${20+(i*13)%55}%;animation-delay:${(i*.4)%2}s;"></div>`;
+  html += `<div class="tw-bat-lair-mist"></div><div class="tw-bat-lair-mist" style="animation-delay:-10s;opacity:.6;"></div>`;
+  const dripCount = IS_MOBILE ? 4 : 7;
+  for (let i = 0; i < dripCount; i++) {
+    const left = 8 + (i * 12) % 84;
+    const top = 4 + (i * 6) % 14;
+    const delay = (i * 1.1) % 4;
+    html += `<div class="tw-bat-lair-drip" style="left:${left}%;top:${top}%;animation-delay:${delay}s;"></div>`;
+  }
+}
   if (W.scene === "candy") {
     html += `<div class="tw-cd-sky"></div><div class="tw-cd-cloud-cotton c1"></div><div class="tw-cd-cloud-cotton c2"></div><div class="tw-cd-cloud-cotton c3"></div><div class="tw-cd-cloud-cotton c4"></div>`;
     const stN = IS_MOBILE?30:70;
@@ -862,7 +874,7 @@ function openTower() {
         <button class="tw-shopbtn" style="margin-left:0;" onclick="openTowerShop()">🛒</button>
       </div>
       <div class="tw-qwrap"><span class="lbl" id="tw-q-lbl">⭐ 0/240</span><div class="tw-qbar"><div id="tw-q-fill" style="width:0%"></div></div></div>
-      <div class="tw-center" style="padding-top:0;padding-bottom:20px;">
+      <div class="tw-center">
         <div class="tw-worldtag" id="tw-worldtag" style="margin-bottom:8px;"></div>
         <div class="tw-panel" id="tw-panel" style="padding:12px 24px;margin-bottom:8px;">
           <div class="num" id="tw-panel-num" style="font-size:36px;">1</div>
