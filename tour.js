@@ -1468,92 +1468,71 @@ E.push([off+28,'f',mf(89),2*SD,0.04]); E.push([off+60,'f',mf(93),2*SD,0.04]);
 phrase(0,A,pA,rA); phrase(64,B,pB,rB);
 wmRunScore(bpm,128,E);
 }
-/* --- M3 : Banque Dorée — AMBIANCE RÉALISTE SYNCHRONISÉE AUX ANIMATIONS --- */
-function vaultMetalClunk(ctx,dest,t,vol,base){
-const ratios=[1,2.76,5.4,8.93];
-for(let i=0;i<ratios.length;i++){
-const o=ctx.createOscillator(); o.type='sine'; o.frequency.value=base*ratios[i];
-const g=ctx.createGain(); const d=0.28/(i*0.6+1);
-g.gain.setValueAtTime(vol/(i+1),t); g.gain.exponentialRampToValueAtTime(0.0001,t+d);
-o.connect(g); g.connect(dest); o.start(t); o.stop(t+d+0.05);
-}
-const src=ctx.createBufferSource(); src.buffer=wmNoise(ctx,0.06);
-const f=ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=900;
-const g2=ctx.createGain(); g2.gain.setValueAtTime(vol*0.7,t); g2.gain.exponentialRampToValueAtTime(0.0001,t+0.08);
-src.connect(f); f.connect(g2); g2.connect(dest); src.start(t);
-}
-function vaultServoPan(ctx,dest,t,dur,dir){
-const o=ctx.createOscillator(); o.type='triangle';
-o.frequency.setValueAtTime(dir>0?210:330,t);
-o.frequency.linearRampToValueAtTime(dir>0?330:210,t+dur);
-const vib=ctx.createOscillator(); vib.type='sine'; vib.frequency.value=28;
-const vg=ctx.createGain(); vg.gain.value=6; vib.connect(vg); vg.connect(o.frequency);
-const g=ctx.createGain();
-g.gain.setValueAtTime(0.0001,t);
-g.gain.linearRampToValueAtTime(0.035,t+dur*0.25);
-g.gain.setValueAtTime(0.035,t+dur*0.75);
-g.gain.linearRampToValueAtTime(0.0001,t+dur);
-o.connect(g); g.connect(dest); o.start(t); o.stop(t+dur+0.05); vib.start(t); vib.stop(t+dur+0.05);
-const src=ctx.createBufferSource(); src.buffer=wmNoise(ctx,dur);
-const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1100; f.Q.value=1.2;
-const g2=ctx.createGain();
-g2.gain.setValueAtTime(0.0001,t);
-g2.gain.linearRampToValueAtTime(0.02,t+dur*0.3);
-g2.gain.linearRampToValueAtTime(0.0001,t+dur);
-src.connect(f); f.connect(g2); g2.connect(dest); src.start(t);
-vaultMetalClunk(ctx,dest,t+dur,0.05,520);
-}
-function vaultLaserHum(ctx,dest,nodes,timers,period,phase){
-const o=ctx.createOscillator(); o.type='sine'; o.frequency.value=1750;
-const o2=ctx.createOscillator(); o2.type='sine'; o2.frequency.value=1754;
-const g=ctx.createGain(); g.gain.value=0;
-o.connect(g); o2.connect(g); g.connect(dest);
-o.start(); o2.start(); nodes.push(o,o2);
-g.gain.linearRampToValueAtTime(0.012, ctx.currentTime+1+phase);
-const lfo=ctx.createOscillator(); lfo.type='sine'; lfo.frequency.value=1/period;
-const lg=ctx.createGain(); lg.gain.value=0.006;
-lfo.connect(lg); lg.connect(g.gain); lfo.start(); nodes.push(lfo);
-timers.push(setInterval(()=>{
-const t=ctx.currentTime;
-const zo=ctx.createOscillator(); zo.type='sawtooth';
-zo.frequency.setValueAtTime(2600,t); zo.frequency.exponentialRampToValueAtTime(500,t+0.25);
-const zf=ctx.createBiquadFilter(); zf.type='bandpass'; zf.frequency.value=1500; zf.Q.value=4;
-const zg=ctx.createGain(); zg.gain.setValueAtTime(0.03,t); zg.gain.exponentialRampToValueAtTime(0.0001,t+0.3);
-zo.connect(zf); zf.connect(zg); zg.connect(dest); zo.start(t); zo.stop(t+0.32);
-}, period*500));
-}
-function vaultWheelGrind(ctx,dest,nodes,timers){
-const src=ctx.createBufferSource(); src.buffer=wmNoise(ctx,2); src.loop=true;
-const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=420; f.Q.value=3;
-const g=ctx.createGain(); g.gain.value=0;
-src.connect(f); f.connect(g); g.connect(dest); src.start(); nodes.push(src);
-g.gain.linearRampToValueAtTime(0.02, ctx.currentTime+2);
-const am=ctx.createOscillator(); am.type='sine'; am.frequency.value=1/16;
-const amg=ctx.createGain(); amg.gain.value=0.008; am.connect(amg); amg.connect(g.gain); am.start(); nodes.push(am);
-timers.push(setInterval(()=>{ vaultMetalClunk(ctx,dest,ctx.currentTime,0.045,300); },2000));
-timers.push(setInterval(()=>{ vaultMetalClunk(ctx,dest,ctx.currentTime,0.12,120); },16000));
-}
+
+/* --- M3 : Banque Dorée — AMBIANCE FEUTRÉE (cinématique, douce, non énervante) --- */
 function wmStartVault(){
-const ctx=wmCtx(); const master=wmMaster(0.75);
+const ctx=wmCtx(); const master=wmMaster(0.5);
 const nodes=[master], timers=[];
-const hvac=ctx.createBufferSource(); hvac.buffer=wmNoise(ctx,2); hvac.loop=true;
-const lf=ctx.createBiquadFilter(); lf.type='lowpass'; lf.frequency.value=150;
-const rg=ctx.createGain(); rg.gain.value=0; hvac.connect(lf); lf.connect(rg); rg.connect(master); hvac.start(); nodes.push(hvac);
-rg.gain.linearRampToValueAtTime(0.05, ctx.currentTime+2);
-const sub=ctx.createOscillator(); sub.type='sine'; sub.frequency.value=48;
+// Nappe de fond : hum grave + souffle d'air feutré
+const hum=ctx.createOscillator(); hum.type='sine'; hum.frequency.value=48;
+const hum2=ctx.createOscillator(); hum2.type='sine'; hum2.frequency.value=96.5;
+const hg=ctx.createGain(); hg.gain.value=0;
+hum.connect(hg); hum2.connect(hg); hg.connect(master);
+hum.start(); hum2.start(); nodes.push(hum,hum2);
+hg.gain.linearRampToValueAtTime(0.030, ctx.currentTime+3);
+const air=ctx.createBufferSource(); air.buffer=wmNoise(ctx,2); air.loop=true;
+const af=ctx.createBiquadFilter(); af.type='lowpass'; af.frequency.value=220;
+const ag=ctx.createGain(); ag.gain.value=0;
+air.connect(af); af.connect(ag); ag.connect(master); air.start(); nodes.push(air);
+ag.gain.linearRampToValueAtTime(0.014, ctx.currentTime+3);
+// Pulsation sub très lente (respiration du coffre)
+const sub=ctx.createOscillator(); sub.type='sine'; sub.frequency.value=40;
 const sg=ctx.createGain(); sg.gain.value=0;
 sub.connect(sg); sg.connect(master); sub.start(); nodes.push(sub);
-const pl=ctx.createOscillator(); pl.type='sine'; pl.frequency.value=0.5;
-const plg=ctx.createGain(); plg.gain.value=0.02; pl.connect(plg); plg.connect(sg.gain); pl.start(); nodes.push(pl);
-sg.gain.linearRampToValueAtTime(0.03, ctx.currentTime+1.5);
-vaultLaserHum(ctx,master,nodes,timers,5,0);
-vaultLaserHum(ctx,master,nodes,timers,7,1);
-vaultLaserHum(ctx,master,nodes,timers,6,2);
-let dirA=1, dirB=-1;
-timers.push(setInterval(()=>{ vaultServoPan(ctx,master,ctx.currentTime,4,dirA); dirA*=-1; },4000));
-timers.push(setInterval(()=>{ vaultServoPan(ctx,master,ctx.currentTime+2,4,dirB); dirB*=-1; },4000));
-vaultWheelGrind(ctx,master,nodes,timers);
-timers.push(setInterval(()=>{ if(Math.random()<0.6){ const t=ctx.currentTime; [2100,3150].forEach((ff,i)=>{ const o=ctx.createOscillator(); o.type='sine'; o.frequency.value=ff*(1+Math.random()*0.01); const g=ctx.createGain(); g.gain.setValueAtTime(0.02/(i+1),t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.5); o.connect(g); g.connect(master); o.start(t); o.stop(t+0.55); }); } },3000));
+const pl=ctx.createOscillator(); pl.type='sine'; pl.frequency.value=0.25;
+const plg=ctx.createGain(); plg.gain.value=0.010;
+pl.connect(plg); plg.connect(sg.gain); pl.start(); nodes.push(pl);
+sg.gain.linearRampToValueAtTime(0.018, ctx.currentTime+2);
+// Balayage laser DOUX (swell lent, pas de zap) toutes ~9s
+timers.push(setInterval(()=>{
+const t=ctx.currentTime;
+const o=ctx.createOscillator(); o.type='sine';
+o.frequency.setValueAtTime(900,t); o.frequency.linearRampToValueAtTime(1400,t+1.5); o.frequency.linearRampToValueAtTime(900,t+3);
+const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1200; f.Q.value=2;
+const g=ctx.createGain(); g.gain.setValueAtTime(0.0001,t);
+g.gain.linearRampToValueAtTime(0.014,t+1.2); g.gain.linearRampToValueAtTime(0.0001,t+3);
+o.connect(f); f.connect(g); g.connect(master); o.start(t); o.stop(t+3.1);
+},9000));
+// Pan caméra FEUTRÉ (glissement lent) toutes ~11s
+timers.push(setInterval(()=>{
+const t=ctx.currentTime; const dir=Math.random()<0.5?1:-1;
+const o=ctx.createOscillator(); o.type='triangle';
+o.frequency.setValueAtTime(dir>0?200:260,t); o.frequency.linearRampToValueAtTime(dir>0?260:200,t+4);
+const g=ctx.createGain(); g.gain.setValueAtTime(0.0001,t);
+g.gain.linearRampToValueAtTime(0.011,t+1.5); g.gain.linearRampToValueAtTime(0.0001,t+4);
+o.connect(g); g.connect(master); o.start(t); o.stop(t+4.1);
+},11000));
+// Grincement du volant DOUX (creak bas, lent) toutes ~14s
+timers.push(setInterval(()=>{
+const t=ctx.currentTime;
+const o=ctx.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(85,t);
+const vib=ctx.createOscillator(); vib.type='sine'; vib.frequency.value=3; const vg=ctx.createGain(); vg.gain.value=4; vib.connect(vg); vg.connect(o.frequency);
+const f=ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=300;
+const g=ctx.createGain(); g.gain.setValueAtTime(0.0001,t);
+g.gain.linearRampToValueAtTime(0.020,t+0.8); g.gain.linearRampToValueAtTime(0.0001,t+2.5);
+o.connect(f); f.connect(g); g.connect(master); o.start(t); vib.start(t); o.stop(t+2.6); vib.stop(t+2.6);
+},14000));
+// Scintillement d'or MUSICAL (cloche pentatonique douce) toutes ~7s
+const pent=[523.25,587.33,659.25,783.99,880.00];
+timers.push(setInterval(()=>{
+const t=ctx.currentTime; const f=pent[Math.floor(Math.random()*pent.length)];
+const o=ctx.createOscillator(); o.type='sine'; o.frequency.value=f;
+const o2=ctx.createOscillator(); o2.type='sine'; o2.frequency.value=f*2;
+const g=ctx.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.016,t+0.05); g.gain.linearRampToValueAtTime(0.0001,t+1.6);
+const g2=ctx.createGain(); g2.gain.setValueAtTime(0.0001,t); g2.gain.linearRampToValueAtTime(0.006,t+0.05); g2.gain.linearRampToValueAtTime(0.0001,t+1.0);
+o.connect(g); o2.connect(g2); g.connect(master); g2.connect(master);
+o.start(t); o2.start(t); o.stop(t+1.7); o2.stop(t+1.1);
+},7000));
 WM={nodes,timers};
 }
 /* --- Routeur --- */
