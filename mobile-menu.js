@@ -12,6 +12,7 @@ const WHEEL_MODES = [
 let wheelCurrent = 0;
 const WHEEL_R = 150, WHEEL_STEP = 26;
 
+/* ---------- Affichage du menu mobile ---------- */
 function showMobileMenu(show) {
   const m = document.getElementById('screen-menu-mobile');
   if (!m) return;
@@ -20,6 +21,7 @@ function showMobileMenu(show) {
   updateS1Neon();
 }
 
+/* ---------- Toggle Admirer ---------- */
 function toggleAdmireMode() {
   const m = document.getElementById('screen-menu-mobile');
   const btn = document.getElementById('admire-btn');
@@ -36,12 +38,14 @@ function toggleAdmireMode() {
   }
 }
 
+/* ---------- Roue : modes visibles ---------- */
 function visibleWheelModes() {
   return WHEEL_MODES.filter(function(m){
     return !m.cond || (document.getElementById(m.cond) && document.getElementById(m.cond).style.display !== 'none');
   });
 }
 
+/* ---------- Roue : construction ---------- */
 function buildModeWheel() {
   const wrap = document.getElementById('mode-wheel');
   if (!wrap) return;
@@ -61,6 +65,7 @@ function buildModeWheel() {
   renderWheel();
 }
 
+/* ---------- Roue : rendu demi-cercle ---------- */
 function renderWheel() {
   const modes = visibleWheelModes();
   if (!modes.length) return;
@@ -88,6 +93,7 @@ function renderWheel() {
 function launchMode(m) { if (m && typeof window[m.fn] === 'function') window[m.fn](); }
 function launchCenterMode() { launchMode(visibleWheelModes()[Math.round(wheelCurrent)]); }
 
+/* ---------- Roue : swipe ---------- */
 (function(){
   let sx = 0, sc = 0, drag = false;
   document.addEventListener('touchstart', function(e){
@@ -112,6 +118,7 @@ function launchCenterMode() { launchMode(visibleWheelModes()[Math.round(wheelCur
   });
 })();
 
+/* ---------- Synchro boutons conditionnels ---------- */
 function syncMobileMenuButtons() {
   [['btn-halloween-menu','mobile-btn-halloween'],
    ['btn-noel-menu','mobile-btn-noel'],
@@ -122,10 +129,13 @@ function syncMobileMenuButtons() {
   renderWheel();
 }
 
-/* ---------- SON néon ---------- */
+/* ============================================================
+SON NÉON — souffle continu + crachotements sync flicker (espacés)
+============================================================ */
 let NEON_HUM = null;
 let NEON_FLICK_TIMER = null;
 
+/* Vrai buzz néon "zzzz" (court) */
 function makeBuzz(ctx, dest, startT, dur, vol) {
   const o  = ctx.createOscillator(); o.type  = 'sawtooth'; o.frequency.value  = 100;
   const o2 = ctx.createOscillator(); o2.type = 'square';   o2.frequency.value = 200;
@@ -142,6 +152,7 @@ function makeBuzz(ctx, dest, startT, dur, vol) {
   o.stop(startT + dur + .05); o2.stop(startT + dur + .05); lfo.stop(startT + dur + .05);
 }
 
+/* Whoosh d'ouverture */
 function playWhoosh() {
   try {
     SoundEngine.init();
@@ -163,12 +174,6 @@ function playWhoosh() {
   } catch (e) {}
 }
 
-let NEON_HUM = null;
-let NEON_CRACK_TIMER = null;
-
-let NEON_HUM = null;
-let NEON_FLICK_TIMER = null;
-
 function startNeonHum() {
   if (NEON_HUM) return;
   try {
@@ -188,8 +193,7 @@ function startNeonHum() {
     src.start();
     NEON_HUM = { src: src, gg: gg };
 
-    // SYNC avec le flicker visuel (neonFlicker = 5s, baisses à ~6%, 39%, 73%)
-    // mais ESPACÉ : seulement ~55% des clignotements produisent un crachotement
+    // SYNC flicker visuel (neonFlicker 5s : baisses ~6%,39%,73%) mais ESPACÉ (~55%)
     const offsets = [0.30, 1.95, 3.65];
     const cycle = function(){
       offsets.forEach(function(off){
@@ -216,6 +220,7 @@ function stopNeonHum() {
   } catch (e) { NEON_HUM = null; }
 }
 
+/* ---------- Néon S1 : création / suppression ---------- */
 function updateS1Neon() {
   let sign = document.getElementById('s1-neon-sign');
   const season = (window.myProfile && myProfile.currentSeasonId) || 's1';
@@ -238,7 +243,9 @@ function updateS1Neon() {
   }
 }
 
-/* ---------- Hooks affichage ---------- */
+/* ============================================================
+HOOKS — cacher sur écrans pleins, réafficher via showMainMenu/closeTower
+============================================================ */
 (function(){
   const HIDE = ['openTower','openSoloMenu','open1v1Hub','openRoomsScreen','openTournamentScreen','showTitleScreen','openAvalancheDifficulties','startHalloweenQueue','startNoelQueue','startTugOfWarQueue','startRandom1v1','startSoloTraining'];
   const SHOW = ['showMainMenu','closeTower'];
