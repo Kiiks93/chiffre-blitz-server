@@ -144,51 +144,31 @@ Affiché uniquement sur mobile (<760px) via CSS
 EN DEHORS de #screen-menu pour ne pas être masqué avec lui
 ============================================================ -->
 <div id="screen-menu-mobile" class="menu-mobile" style="display:none;">
-    <!-- Bouton "Admirer" pour masquer temporairement le menu -->
     <button id="admire-btn" class="admire-btn" onclick="toggleAdmireMode()">
         <span id="admire-icon">👁️</span>
         <span id="admire-text">Admirer</span>
     </button>
 
-    <!-- Grille des modes de jeu (2x3) -->
-    <!-- Roue demi-cercle des modes -->
-        <!-- Roue demi-cercle des modes (le cadre central = bouton lancer) -->
-    <div id="mode-wheel-wrap">
-        <div id="mode-wheel-center" onclick="launchCenterMode()">
-            <div id="mode-wheel-frame">
-                <span id="mode-wheel-icon">🗺️</span>
-                <span id="mode-wheel-name">Aventure</span>
-            </div>
+    <!-- Mode actif projeté en haut (hologramme) -->
+    <div id="mode-wheel-center" onclick="launchCenterMode()">
+        <div id="mode-wheel-frame">
+            <span id="mode-wheel-icon">🗺️</span>
+            <span id="mode-wheel-name">Aventure</span>
         </div>
-        <div id="mode-wheel"></div>
     </div>
 
-    <!-- Dock du bas (glassmorphism) -->
+    <!-- Halo demi-cercle + roue des modes -->
+    <div id="mode-wheel-halo"></div>
+    <div id="mode-wheel"></div>
+
+    <!-- Dock du bas -->
     <div class="mobile-dock">
-        <button class="dock-item" onclick="enterTrophyRoom()">
-            <span class="dock-icon">🏛️</span>
-            <span class="dock-label">Trophées</span>
-        </button>
-        <button class="dock-item" onclick="openBlitzPass()">
-            <span class="dock-icon">🎫</span>
-            <span class="dock-label">Passe</span>
-        </button>
-        <button class="dock-item" onclick="openShop()">
-            <span class="dock-icon">🛍️</span>
-            <span class="dock-label">Boutique</span>
-        </button>
-        <button class="dock-item" onclick="openLeaderboard()">
-            <span class="dock-icon">👑</span>
-            <span class="dock-label">Classement</span>
-        </button>
-        <button class="dock-item" onclick="openRoomsScreen()">
-            <span class="dock-icon">👥</span>
-            <span class="dock-label">Amis</span>
-        </button>
-        <button class="dock-item" onclick="openTournamentScreen()">
-            <span class="dock-icon">🎯</span>
-            <span class="dock-label">Tournois</span>
-        </button>
+        <button class="dock-item" onclick="enterTrophyRoom()"><span class="dock-icon">🏛️</span><span class="dock-label">Trophées</span></button>
+        <button class="dock-item" onclick="openBlitzPass()"><span class="dock-icon">🎫</span><span class="dock-label">Passe</span></button>
+        <button class="dock-item" onclick="openShop()"><span class="dock-icon">🛍️</span><span class="dock-label">Boutique</span></button>
+        <button class="dock-item" onclick="openLeaderboard()"><span class="dock-icon">👑</span><span class="dock-label">Classement</span></button>
+        <button class="dock-item" onclick="openRoomsScreen()"><span class="dock-icon">👥</span><span class="dock-label">Amis</span></button>
+        <button class="dock-item" onclick="openTournamentScreen()"><span class="dock-icon">🎯</span><span class="dock-label">Tournois</span></button>
     </div>
 </div>
 
