@@ -9,7 +9,7 @@ const TOWER_CHAPTERS = [
   { id:3, season:1, name:"Banque Dorée", icon:"🏦", boss:"👾", objects:[] },
   { id:4, season:2, name:"Tour Hantée", icon:"🎃", boss:"🧛", objects:[] },
   { id:5, season:2, name:"Cimetière Brumeux", icon:"🌫️", boss:"💀", objects:[] },
-  { id:6, season:2, name:"Antre Citrouille", icon:"👑", boss:"🎃", objects:[] },
+  { id:6, season:2, name:"Antre Chauves-Souris", icon:"🦇", boss:"🧛", objects:[] },
   { id:7, season:3, name:"Cime Bonbon", icon:"🍭", boss:"🧝", objects:[] },
   { id:8, season:3, name:"Forêt de Sapins", icon:"🎄", boss:"⛄", objects:[] },
   { id:9, season:3, name:"Atelier du Père Noël", icon:"🎅", boss:"🎅", objects:[] }
@@ -367,17 +367,31 @@ document.addEventListener("visibilitychange", () => {
   .tw-gr-wisp{position:absolute;width:8px;height:8px;border-radius:50%;background:#7dff8a;box-shadow:0 0 12px #7dff8a,0 0 26px #7dff8a66;animation:twWisp 6s ease-in-out infinite;}
   @keyframes twWisp{0%,100%{transform:translate(0,0);opacity:.3}30%{transform:translate(14px,-22px);opacity:.9}60%{transform:translate(-10px,-36px);opacity:.5}}
 
-  /* === M6 ANTRE CITROUILLE === */
-  .tw-pk-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 78%,#ff8a0033,transparent 60%);animation:twGlowC 3s infinite;}
-  .tw-pk-wall{position:absolute;top:0;left:0;right:0;height:22%;background:linear-gradient(180deg,#0a0402,#1c0c04);clip-path:polygon(0 0,100% 0,100% 40%,88% 70%,74% 45%,60% 80%,46% 50%,32% 85%,18% 55%,6% 75%,0 45%);}
-  .tw-pk-floor{position:absolute;bottom:0;left:0;right:0;height:18%;background:linear-gradient(180deg,#1c0c04,#0a0402);}
-  .tw-pk-jack{position:absolute;border-radius:46% 46% 42% 42% / 55% 55% 45% 45%;background:radial-gradient(ellipse at 35% 30%,#ff9a2a,#d85a00 60%,#8a3400);box-shadow:inset -6px -8px 14px #5a1e0088,0 0 24px #ff8a0055;}
-  .tw-pk-jack::before{content:"";position:absolute;top:-9%;left:50%;transform:translateX(-50%);width:12%;height:16%;background:#3a5a12;border-radius:40% 40% 0 0;}
-  .tw-pk-jack::after{content:"";position:absolute;top:32%;left:50%;transform:translateX(-50%);width:64%;height:40%;background:#ffb347;clip-path:polygon(12% 0,28% 34%,40% 8%,52% 36%,64% 6%,76% 34%,88% 0,100% 52%,86% 100%,14% 100%,0 52%);box-shadow:0 0 14px #ffb347,0 0 30px #ff8a0088;animation:twJackPulse 2.6s ease-in-out infinite;}
-  @keyframes twJackPulse{0%,100%{opacity:1}50%{opacity:.5}}
-  .tw-pk-vine{position:absolute;height:6px;background:repeating-linear-gradient(90deg,#2a4a10 0 14px,transparent 14px 22px);border-radius:3px;opacity:.7;}
-  .tw-pk-eyes{position:absolute;width:26px;height:10px;background:radial-gradient(circle at 25% 50%,#ffd75e 0 3px,transparent 4px),radial-gradient(circle at 75% 50%,#ffd75e 0 3px,transparent 4px);animation:twBlink 5s infinite;}
-  @keyframes twBlink{0%,88%,96%,100%{opacity:1}92%{opacity:0}}
+  /* === M6 ANTRE CHAUVES-SOURIS === */
+.tw-bat-lair-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,#0a0a0a 0%,#000000 70%);}
+.tw-bat-lair-fog{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 80%,#1a0a0022 0%,transparent 50%);}
+.tw-bat-lair-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,transparent 30%,#000000cc 80%,#000000ee 100%);pointer-events:none;}
+.tw-bat-lair-stalac{position:absolute;top:0;width:40px;height:80px;background:linear-gradient(180deg,#1a1a1a,#000);clip-path:polygon(40% 0,60% 0,100% 100%,0 100%);opacity:.8;}
+.tw-bat-lair-stalag{position:absolute;bottom:0;width:50px;height:60px;background:linear-gradient(0deg,#1a1a1a,#000);clip-path:polygon(0 0,100% 0,60% 100%,40% 100%);opacity:.7;}
+.tw-bat-lair-eye{position:absolute;width:14px;height:8px;background:radial-gradient(ellipse,#ffd700 0%,#ff8c00 40%,#ff4500 70%,transparent 100%);border-radius:50%;box-shadow:0 0 12px #ffd700,0 0 24px #ff8c0088,0 0 36px #ff450044;animation:twBatEyeGlow 3s ease-in-out infinite;}
+@keyframes twBatEyeGlow{0%,100%{opacity:.7;transform:scale(1)}50%{opacity:1;transform:scale(1.15)}}
+.tw-bat-lair-eye::before{content:"";position:absolute;top:2px;left:3px;width:4px;height:4px;background:#000;border-radius:50%;box-shadow:6px 0 0 #000;}
+.tw-bat-lair-eye.blink{animation:twBatEyeBlink 5s ease-in-out infinite;}
+@keyframes twBatEyeBlink{0%,92%,100%{opacity:.7;transform:scaleY(1)}95%{opacity:0;transform:scaleY(0.1)}}
+.tw-bat-lair-bat{position:absolute;background:#0a0a0a;clip-path:polygon(50% 40%,40% 20%,20% 10%,0 30%,15% 50%,5% 70%,25% 60%,40% 80%,50% 100%,60% 80%,75% 60%,95% 70%,85% 50%,100% 30%,80% 10%,60% 20%);animation:twBatLairFly linear infinite;}
+@keyframes twBatLairFly{
+  0%{transform:translate(0,0) rotate(0deg) scale(1)}
+  25%{transform:translate(80px,-40px) rotate(-15deg) scale(1.1)}
+  50%{transform:translate(160px,0) rotate(0deg) scale(1)}
+  75%{transform:translate(80px,40px) rotate(15deg) scale(0.9)}
+  100%{transform:translate(0,0) rotate(0deg) scale(1)}
+}
+.tw-bat-lair-bat.wing{animation:twBatWingFlap .3s ease-in-out infinite alternate;}
+@keyframes twBatWingFlap{0%{transform:scaleY(1)}100%{transform:scaleY(0.7)}}
+.tw-bat-lair-mist{position:absolute;bottom:0;left:-20%;width:140%;height:40%;background:linear-gradient(0deg,#00000066 0%,transparent 100%);filter:blur(12px);animation:twMistDrift 20s linear infinite;}
+@keyframes twMistDrift{0%{transform:translateX(-10%)}100%{transform:translateX(10%)}}
+.tw-bat-lair-drip{position:absolute;width:2px;background:linear-gradient(180deg,#1a1a1a,#000);border-radius:0 0 2px 2px;animation:twDrip 4s ease-in infinite;}
+@keyframes twDrip{0%{height:0;opacity:0}20%{height:20px;opacity:1}80%{height:20px;opacity:1}100%{height:0;opacity:0}}
   
     /* === FÉERIQUE COMMUN === */
   .tw-aurora{position:absolute;top:0;left:0;right:0;height:46%;background:linear-gradient(100deg,transparent 18%,#7dff8a26 34%,#74ebf526 50%,#ff6fa526 66%,transparent 82%);filter:blur(18px);animation:twAurora 12s ease-in-out infinite alternate;}
@@ -763,18 +777,60 @@ function generateSceneHTML(c, W, C) {
     html += `<div class="tw-gr-fog" style="bottom:24%;animation-duration:38s;animation-delay:-16s;opacity:.5;"></div>`;
   }
   if (W.scene === "lair") {
-    html += `<div class="tw-pk-glow"></div>`;
-    html += `<div class="tw-pk-wall"></div><div class="tw-pk-floor"></div>`;
-    html += `<div class="tw-web" style="top:4%;left:3%;"></div><div class="tw-web" style="top:6%;right:3%;transform:scaleX(-1);"></div>`;
-    for (let i=0;i<(IS_MOBILE?5:9);i++){
-      const size = 34 + (i*13)%30;
-      html += `<div class="tw-pk-jack" style="width:${size}px;height:${Math.round(size*0.85)}px;left:${6+(i*11)%84}%;bottom:${6+(i%3)*7}%;"></div>`;
-    }
-    html += `<div class="tw-pk-vine" style="bottom:20%;left:10%;width:30%;"></div><div class="tw-pk-vine" style="bottom:16%;right:8%;width:26%;"></div>`;
-    for (let i=0;i<(IS_MOBILE?2:4);i++) html += `<div class="tw-pk-eyes" style="left:${15+i*22}%;top:${30+(i%2)*18}%;animation-delay:${i*1.7}s;"></div>`;
-    html += `<div class="tw-bat" style="top:6%;left:30%;animation:none;transform:rotate(180deg);"></div>`;
-    html += `<div class="tw-bat" style="top:5%;left:62%;animation:none;transform:rotate(180deg) scale(.8);"></div>`;
+  html += `<div class="tw-bat-lair-bg"></div>`;
+  html += `<div class="tw-bat-lair-fog"></div>`;
+  html += `<div class="tw-bat-lair-vignette"></div>`;
+  
+  // Stalactites en haut
+  const stalacCount = IS_MOBILE ? 6 : 10;
+  for (let i = 0; i < stalacCount; i++) {
+    const left = 5 + (i * 9) + (i % 2) * 3;
+    const height = 60 + (i * 17) % 60;
+    html += `<div class="tw-bat-lair-stalac" style="left:${left}%;height:${height}px;animation-delay:${i*.3}s;"></div>`;
   }
+  
+  // Stalagmites en bas
+  const stalagCount = IS_MOBILE ? 5 : 8;
+  for (let i = 0; i < stalagCount; i++) {
+    const left = 8 + (i * 11) + (i % 2) * 5;
+    const height = 40 + (i * 13) % 50;
+    html += `<div class="tw-bat-lair-stalag" style="left:${left}%;height:${height}px;"></div>`;
+  }
+  
+  // Yeux jaunes brillants dans l'obscurité (plusieurs paires)
+  const eyePairs = IS_MOBILE ? 6 : 12;
+  for (let i = 0; i < eyePairs; i++) {
+    const left = 8 + (i * 7) % 84;
+    const top = 20 + (i * 11) % 60;
+    const delay = (i * 0.4) % 3;
+    const isBlink = i % 3 === 0;
+    html += `<div class="tw-bat-lair-eye ${isBlink ? 'blink' : ''}" style="left:${left}%;top:${top}%;animation-delay:${delay}s;"></div>`;
+  }
+  
+  // Chauves-souris qui volent (différentes tailles et trajectoires)
+  const batCount = IS_MOBILE ? 4 : 8;
+  for (let i = 0; i < batCount; i++) {
+    const size = 20 + (i * 8) % 30;
+    const top = 10 + (i * 13) % 50;
+    const left = (i * 11) % 80;
+    const duration = 6 + (i * 2) % 6;
+    const delay = (i * 1.5) % 5;
+    html += `<div class="tw-bat-lair-bat" style="width:${size}px;height:${size*0.7}px;top:${top}%;left:${left}%;animation-duration:${duration}s;animation-delay:${delay}s;"></div>`;
+  }
+  
+  // Brume au sol
+  html += `<div class="tw-bat-lair-mist"></div>`;
+  html += `<div class="tw-bat-lair-mist" style="animation-delay:-10s;opacity:.6;"></div>`;
+  
+  // Gouttes qui tombent des stalactites
+  const dripCount = IS_MOBILE ? 3 : 6;
+  for (let i = 0; i < dripCount; i++) {
+    const left = 10 + (i * 13) % 80;
+    const top = 5 + (i * 7) % 15;
+    const delay = (i * 1.2) % 4;
+    html += `<div class="tw-bat-lair-drip" style="left:${left}%;top:${top}%;animation-delay:${delay}s;"></div>`;
+  }
+}
  if (W.scene === "candy") {
   html += `<div class="tw-cd-sky"></div>`;
   html += `<div class="tw-cd-cloud-cotton c1"></div>`;
