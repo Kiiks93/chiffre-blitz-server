@@ -842,7 +842,6 @@ MENU MOBILE (dock grid + glassmorphism)
 .dock-icon{font-size:18px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6));}
 .dock-label{font-size:7px;font-weight:700;color:#cfcfe8;text-transform:uppercase;letter-spacing:.3px;line-height:1;}
 /* Arc intérieur élargi (rayon + grand, angles resserrés = plus d'air) */
-.mobile-dock{position:fixed;left:50%;bottom:70px;width:0;height:0;z-index:6;background:none;border:none;box-shadow:none;padding:0;}
 .dock-item:nth-child(1){transform:translate(-115px,-61px);}
 .dock-item:nth-child(2){transform:translate(-78px,-104px);}
 .dock-item:nth-child(3){transform:translate(-27px,-127px);}
