@@ -1,7 +1,6 @@
 /* ============================================================
-MENU MOBILE — Roue demi-cercle + Admirer + Néon S1
+MENU MOBILE — Halo demi-cercle + projection haut + Néon S1
 ============================================================ */
-
 const WHEEL_MODES = [
   { id:'tower',     icon:'🗺️', name:'Aventure',  fn:'openTower' },
   { id:'solo',      icon:'🏋️', name:'Solo',      fn:'openSoloMenu' },
@@ -11,231 +10,138 @@ const WHEEL_MODES = [
   { id:'tow',       icon:'🪢', name:'Corde',     fn:'startTugOfWarQueue',  cond:'btn-tow-menu' },
 ];
 let wheelCurrent = 0;
-const WHEEL_R = 210, WHEEL_STEP = 24;
+const WHEEL_R = 150, WHEEL_STEP = 26;
 
-/* ---------- Affichage du menu mobile ---------- */
 function showMobileMenu(show) {
-    const mobileMenu = document.getElementById('screen-menu-mobile');
-    if (!mobileMenu) return;
-    mobileMenu.style.display = show ? 'flex' : 'none';
+    const m = document.getElementById('screen-menu-mobile');
+    if (!m) return;
+    m.style.display = show ? 'flex' : 'none';
     if (show) { syncMobileMenuButtons(); buildModeWheel(); }
     updateS1Neon();
 }
 
-/* ---------- Toggle Admirer ---------- */
 function toggleAdmireMode() {
-    const mobileMenu = document.getElementById('screen-menu-mobile');
+    const m = document.getElementById('screen-menu-mobile');
     const btn = document.getElementById('admire-btn');
     const icon = document.getElementById('admire-icon');
     const text = document.getElementById('admire-text');
-    if (!mobileMenu) return;
-    const isActive = mobileMenu.classList.toggle('admire-active');
-    btn.classList.toggle('active', isActive);
-    if (isActive) {
-        icon.textContent = '🎮'; text.textContent = 'Jouer';
-        setTimeout(() => { if (mobileMenu.classList.contains('admire-active')) toggleAdmireMode(); }, 8000);
-    } else {
-        icon.textContent = '👁️'; text.textContent = 'Admirer';
-    }
+    if (!m) return;
+    const active = m.classList.toggle('admire-active');
+    btn.classList.toggle('active', active);
+    if (active) { icon.textContent='🎮'; text.textContent='Jouer';
+        setTimeout(()=>{ if(m.classList.contains('admire-active')) toggleAdmireMode(); },8000);
+    } else { icon.textContent='👁️'; text.textContent='Admirer'; }
 }
 
-/* ---------- Roue : modes visibles ---------- */
-function visibleWheelModes() {
-    return WHEEL_MODES.filter(m => !m.cond || (document.getElementById(m.cond) && document.getElementById(m.cond).style.display !== 'none'));
-}
+function visibleWheelModes(){ return WHEEL_MODES.filter(m=>!m.cond||(document.getElementById(m.cond)&&document.getElementById(m.cond).style.display!=='none')); }
 
-/* ---------- Roue : construction ---------- */
-function buildModeWheel() {
-    const wrap = document.getElementById('mode-wheel');
-    if (!wrap) return;
-    wrap.innerHTML = '';
-    visibleWheelModes().forEach((m) => {
-        const b = document.createElement('button');
-        b.className = 'wheel-item';
-        b.id = 'wheel-item-' + m.id;
-        b.textContent = m.icon;
-        b.onclick = () => {
-            const idx = visibleWheelModes().indexOf(m);
-            if (idx === Math.round(wheelCurrent)) launchMode(m);
-            else { wheelCurrent = idx; renderWheel(); }
-        };
+function buildModeWheel(){
+    const wrap=document.getElementById('mode-wheel'); if(!wrap)return;
+    wrap.innerHTML='';
+    visibleWheelModes().forEach(m=>{
+        const b=document.createElement('button');
+        b.className='wheel-item'; b.id='wheel-item-'+m.id; b.textContent=m.icon;
+        b.onclick=()=>{ const i=visibleWheelModes().indexOf(m);
+            if(i===Math.round(wheelCurrent)) launchMode(m); else { wheelCurrent=i; renderWheel(); } };
         wrap.appendChild(b);
     });
     renderWheel();
 }
 
-/* ---------- Roue : rendu (position demi-cercle) ---------- */
-function renderWheel() {
-    const modes = visibleWheelModes();
-    const c = Math.max(0, Math.min(modes.length - 1, Math.round(wheelCurrent)));
-    modes.forEach((m, i) => {
-        const el = document.getElementById('wheel-item-' + m.id);
-        if (!el) return;
-        const theta = ((i - wheelCurrent) * WHEEL_STEP) * Math.PI / 180;
-        const x = WHEEL_R * Math.sin(theta);
-        const y = WHEEL_R - WHEEL_R * Math.cos(theta);
-        const d = Math.abs(i - wheelCurrent);
-        const sc = Math.max(.55, 1 - .22 * d);
-        const op = Math.max(.25, 1 - .3 * d);
-        el.style.transform = `translate(${x}px, ${y}px) scale(${sc})`;
-        el.style.opacity = op;
-        el.classList.toggle('center', i === c);
+function renderWheel(){
+    const modes=visibleWheelModes();
+    const c=Math.max(0,Math.min(modes.length-1,Math.round(wheelCurrent)));
+    modes.forEach((m,i)=>{
+        const el=document.getElementById('wheel-item-'+m.id); if(!el)return;
+        const th=((i-wheelCurrent)*WHEEL_STEP)*Math.PI/180;
+        const x=WHEEL_R*Math.sin(th);
+        const y=-WHEEL_R*Math.cos(th);
+        const d=Math.abs(i-wheelCurrent);
+        el.style.transform=`translate(${x}px,${y}px) scale(${Math.max(.6,1-.2*d)})`;
+        el.style.opacity=Math.max(.3,1-.3*d);
+        el.classList.toggle('center',i===c);
     });
-    const m = modes[c];
-    if (m) {
-        const ic = document.getElementById('mode-wheel-icon');
-        const nm = document.getElementById('mode-wheel-name');
-        if (ic) ic.textContent = m.icon;
-        if (nm) nm.textContent = m.name;
-    }
+    const m=modes[c];
+    if(m){ const ic=document.getElementById('mode-wheel-icon'),nm=document.getElementById('mode-wheel-name');
+        if(ic)ic.textContent=m.icon; if(nm)nm.textContent=m.name; }
 }
+function launchMode(m){ if(m&&typeof window[m.fn]==='function') window[m.fn](); }
+function launchCenterMode(){ launchMode(visibleWheelModes()[Math.round(wheelCurrent)]); }
 
-function launchMode(m) { if (m && typeof window[m.fn] === 'function') window[m.fn](); }
-function launchCenterMode() { const modes = visibleWheelModes(); launchMode(modes[Math.round(wheelCurrent)]); }
-
-/* ---------- Roue : swipe ---------- */
 (function(){
-    let startX = 0, startCur = 0, dragging = false;
-    document.addEventListener('touchstart', (e) => {
-        const z = e.target.closest && e.target.closest('#mode-wheel');
-        if (!z) return;
-        dragging = true; startX = e.touches[0].clientX; startCur = wheelCurrent;
-    }, { passive: true });
-    document.addEventListener('touchmove', (e) => {
-        if (!dragging) return;
-        const dx = e.touches[0].clientX - startX;
-        wheelCurrent = startCur - dx / 70;
-        const n = visibleWheelModes().length - 1;
-        wheelCurrent = Math.max(0, Math.min(n, wheelCurrent));
-        renderWheel();
-    }, { passive: true });
-    document.addEventListener('touchend', () => {
-        if (!dragging) return;
-        dragging = false;
-        wheelCurrent = Math.round(wheelCurrent);
-        renderWheel();
-        try { if (window.SoundEngine && SoundEngine.playClick) SoundEngine.playClick(); } catch(e){}
-    });
+    let sx=0,sc=0,drag=false;
+    document.addEventListener('touchstart',e=>{ const z=e.target.closest&&e.target.closest('#mode-wheel'); if(!z)return; drag=true; sx=e.touches[0].clientX; sc=wheelCurrent; },{passive:true});
+    document.addEventListener('touchmove',e=>{ if(!drag)return; const dx=e.touches[0].clientX-sx; wheelCurrent=sc-dx/70; const n=visibleWheelModes().length-1; wheelCurrent=Math.max(0,Math.min(n,wheelCurrent)); renderWheel(); },{passive:true});
+    document.addEventListener('touchend',()=>{ if(!drag)return; drag=false; wheelCurrent=Math.round(wheelCurrent); renderWheel(); try{if(window.SoundEngine&&SoundEngine.playClick)SoundEngine.playClick();}catch(e){} });
 })();
 
-/* ---------- Synchro boutons conditionnels ---------- */
-function syncMobileMenuButtons() {
-    const map = [ ['btn-halloween-menu','mobile-btn-halloween'], ['btn-noel-menu','mobile-btn-noel'], ['btn-tow-menu','mobile-btn-tow'] ];
-    map.forEach(([pc, mob]) => {
-        const a = document.getElementById(pc), b = document.getElementById(mob);
-        if (a && b) b.style.display = a.style.display;
+function syncMobileMenuButtons(){
+    [['btn-halloween-menu','mobile-btn-halloween'],['btn-noel-menu','mobile-btn-noel'],['btn-tow-menu','mobile-btn-tow']].forEach(([a,b])=>{
+        const x=document.getElementById(a),y=document.getElementById(b); if(x&&y)y.style.display=x.style.display;
     });
     renderWheel();
 }
 
-/* ---------- Néon Saison 1 + son ---------- */
-function playNeonJingle() {
-    try {
-        SoundEngine.init();
-        const ctx = SoundEngine.ctx, t = ctx.currentTime;
-
-        // 1) WHOOSH (fondu montant)
-        const len = Math.floor(ctx.sampleRate * 0.5);
-        const buf = ctx.createBuffer(1, len, ctx.sampleRate);
-        const d = buf.getChannelData(0);
-        for (let i = 0; i < len; i++) { const p = i / len; d[i] = (Math.random() * 2 - 1) * p * p; }
-        const src = ctx.createBufferSource(); src.buffer = buf;
-        const bf = ctx.createBiquadFilter(); bf.type = 'bandpass'; bf.Q.value = 1.2;
-        bf.frequency.setValueAtTime(200, t);
-        bf.frequency.exponentialRampToValueAtTime(3000, t + 0.5);
-        const wg = ctx.createGain();
-        wg.gain.setValueAtTime(0.0001, t);
-        wg.gain.exponentialRampToValueAtTime(0.12, t + 0.45);
-        wg.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
-        src.connect(bf); bf.connect(wg); wg.connect(ctx.destination);
-        src.start(t);
-
-        // 2) TA-DAM néon (2 notes + brillance)
-        const note = (freq, start, dur, vol, type) => {
-            const o = ctx.createOscillator(); o.type = type || 'sawtooth'; o.frequency.value = freq;
-            const g = ctx.createGain();
-            g.gain.setValueAtTime(0.0001, t + start);
-            g.gain.exponentialRampToValueAtTime(vol, t + start + 0.03);
-            g.gain.exponentialRampToValueAtTime(0.0001, t + start + dur);
-            const f2 = ctx.createBiquadFilter(); f2.type = 'lowpass'; f2.frequency.value = 2500;
-            o.connect(f2); f2.connect(g); g.connect(ctx.destination);
-            o.start(t + start); o.stop(t + start + dur + 0.05);
-        };
-        note(220, 0.45, 0.25, 0.10);            // ta (grave)
-        note(440, 0.68, 0.50, 0.10);            // DAM (octave)
-        note(660, 0.68, 0.50, 0.06, 'triangle');// brillance
-        note(880, 0.70, 0.45, 0.04, 'sine');    // air
-
-        // 3) GRÉSILLEMENT néon AUDIBLE
-        const gl = Math.floor(ctx.sampleRate * 0.7);
-        const gb = ctx.createBuffer(1, gl, ctx.sampleRate);
-        const gd = gb.getChannelData(0);
-        for (let i = 0; i < gl; i++) gd[i] = (Math.random() * 2 - 1) * (Math.random() < 0.15 ? 1 : 0.2);
-        const gs = ctx.createBufferSource(); gs.buffer = gb;
-        const gf = ctx.createBiquadFilter(); gf.type = 'highpass'; gf.frequency.value = 2000;
-        const gg = ctx.createGain();
-        gg.gain.setValueAtTime(0.09, t + 0.6);
-        gg.gain.exponentialRampToValueAtTime(0.0001, t + 1.3);
-        gs.connect(gf); gf.connect(gg); gg.connect(ctx.destination);
-        gs.start(t + 0.6);
-    } catch (e) {}
+/* ---------- SON : whoosh + hum néon continu + grésillement ---------- */
+let NEON_HUM=null;
+function playWhoosh(){
+    try{ SoundEngine.init(); const ctx=SoundEngine.ctx,t=ctx.currentTime;
+        const len=Math.floor(ctx.sampleRate*0.4),buf=ctx.createBuffer(1,len,ctx.sampleRate),d=buf.getChannelData(0);
+        for(let i=0;i<len;i++){const p=i/len;d[i]=(Math.random()*2-1)*Math.sin(p*Math.PI);}
+        const src=ctx.createBufferSource();src.buffer=buf;
+        const f=ctx.createBiquadFilter();f.type='bandpass';f.Q.value=1;
+        f.frequency.setValueAtTime(300,t);f.frequency.exponentialRampToValueAtTime(2500,t+0.4);
+        const g=ctx.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.1,t+0.2);g.gain.exponentialRampToValueAtTime(0.0001,t+0.45);
+        src.connect(f);f.connect(g);g.connect(ctx.destination);src.start(t);
+    }catch(e){}
+}
+function startNeonHum(){
+    if(NEON_HUM)return;
+    try{ SoundEngine.init(); const ctx=SoundEngine.ctx,t=ctx.currentTime;
+        const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=110;
+        const of_=ctx.createBiquadFilter();of_.type='bandpass';of_.frequency.value=220;of_.Q.value=3;
+        const og=ctx.createGain();og.gain.value=0;
+        o.connect(of_);of_.connect(og);og.connect(ctx.destination);
+        og.gain.linearRampToValueAtTime(0.04,t+0.8); o.start();
+        const len=ctx.sampleRate*2,buf=ctx.createBuffer(1,len,ctx.sampleRate),d=buf.getChannelData(0);
+        for(let i=0;i<len;i++){d[i]=(Math.random()*2-1)*(Math.random()<0.08?1:0.15);}
+        const src=ctx.createBufferSource();src.buffer=buf;src.loop=true;
+        const gf=ctx.createBiquadFilter();gf.type='highpass';gf.frequency.value=3000;
+        const gg=ctx.createGain();gg.gain.value=0;
+        src.connect(gf);gf.connect(gg);gg.connect(ctx.destination);
+        gg.gain.linearRampToValueAtTime(0.07,t+0.8); src.start();
+        NEON_HUM={o,og,src,gg};
+    }catch(e){}
+}
+function stopNeonHum(){
+    if(!NEON_HUM)return;
+    try{ const ctx=SoundEngine.ctx,t=ctx.currentTime,n=NEON_HUM;NEON_HUM=null;
+        n.og.gain.linearRampToValueAtTime(0.0001,t+0.4);
+        n.gg.gain.linearRampToValueAtTime(0.0001,t+0.4);
+        setTimeout(()=>{try{n.o.stop();n.src.stop();}catch(e){}},500);
+    }catch(e){NEON_HUM=null;}
 }
 
-function updateS1Neon() {
-    let sign = document.getElementById('s1-neon-sign');
-    const season = (window.myProfile && myProfile.currentSeasonId) || 's1';
-    const menuPc = document.getElementById('screen-menu');
-    const menuMob = document.getElementById('screen-menu-mobile');
-    const visible = (menuPc && menuPc.style.display !== 'none') || (menuMob && menuMob.style.display !== 'none');
-    if (season === 's1' && visible) {
-        if (!sign) {
-            sign = document.createElement('div');
-            sign.id = 's1-neon-sign'; sign.className = 's1-neon-sign';
-            sign.innerHTML = '<div class="s1-neon-logo">⚡</div><div class="s1-neon-text">CHIFFRE BLITZ</div>';
-            document.body.appendChild(sign);
-            playNeonJingle();
-        }
-    } else if (sign) {
-        sign.remove();
-    }
+function updateS1Neon(){
+    let sign=document.getElementById('s1-neon-sign');
+    const season=(window.myProfile&&myProfile.currentSeasonId)||'s1';
+    const pc=document.getElementById('screen-menu'),mob=document.getElementById('screen-menu-mobile');
+    const visible=(pc&&pc.style.display!=='none')||(mob&&mob.style.display!=='none');
+    if(season==='s1'&&visible){
+        if(!sign){ sign=document.createElement('div');sign.id='s1-neon-sign';sign.className='s1-neon-sign';
+            sign.innerHTML='<div class="s1-neon-logo">⚡</div><div class="s1-neon-text">CHIFFRE BLITZ</div>';
+            document.body.appendChild(sign); playWhoosh(); startNeonHum(); }
+    } else { if(sign)sign.remove(); stopNeonHum(); }
 }
 
-/* ---------- Hooks : afficher/cacher au bon moment ---------- */
+/* ---------- Hooks : cacher ONLY écrans pleins, réafficher via showMainMenu/closeTower ---------- */
 (function(){
-    const wait = setInterval(() => {
-        if (typeof window.showMainMenu === 'function' && !window.showMainMenu.__hooked) {
-            const original = window.showMainMenu;
-            window.showMainMenu = function() {
-                const r = original.apply(this, arguments);
-                showMobileMenu(true);   // apparaît APRÈS titre + pub
-                return r;
-            };
-            window.showMainMenu.__hooked = true;
-            clearInterval(wait);
-        }
-    }, 100);
-
-    ['openTower','openSoloMenu','open1v1Hub','openShop','openLeaderboard','openRoomsScreen',
-     'openTournamentScreen','openBlitzPass','enterTrophyRoom','showTitleScreen',
-     'startHalloweenQueue','startNoelQueue','startTugOfWarQueue','startRandom1v1'
-    ].forEach(fn => {
-        const w = setInterval(() => {
-            if (typeof window[fn] === 'function' && !window[fn].__hooked) {
-                const original = window[fn];
-                window[fn] = function() {
-                    showMobileMenu(false);
-                    return original.apply(this, arguments);
-                };
-                window[fn].__hooked = true;
-                clearInterval(w);
-            }
-        }, 100);
-    });
+    const HIDE=['openTower','openSoloMenu','open1v1Hub','openRoomsScreen','openTournamentScreen','showTitleScreen','openAvalancheDifficulties','startHalloweenQueue','startNoelQueue','startTugOfWarQueue','startRandom1v1','startSoloTraining'];
+    const SHOW=['showMainMenu','closeTower'];
+    HIDE.forEach(fn=>{ const w=setInterval(()=>{ if(typeof window[fn]==='function'&&!window[fn].__h){ const o=window[fn]; window[fn]=function(){ showMobileMenu(false); return o.apply(this,arguments); }; window[fn].__h=true; clearInterval(w);} },100); });
+    SHOW.forEach(fn=>{ const w=setInterval(()=>{ if(typeof window[fn]==='function'&&!window[fn].__s){ const o=window[fn]; window[fn]=function(){ const r=o.apply(this,arguments); showMobileMenu(true); return r; }; window[fn].__s=true; clearInterval(w);} },100); });
 })();
 
-document.addEventListener('DOMContentLoaded', () => {
-    ['btn-halloween-menu','btn-noel-menu','btn-tow-menu'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) new MutationObserver(syncMobileMenuButtons).observe(el, { attributes: true, attributeFilter: ['style'] });
-    });
+document.addEventListener('DOMContentLoaded',()=>{
+    ['btn-halloween-menu','btn-noel-menu','btn-tow-menu'].forEach(id=>{ const el=document.getElementById(id); if(el)new MutationObserver(syncMobileMenuButtons).observe(el,{attributes:true,attributeFilter:['style']}); });
 });
