@@ -1468,44 +1468,90 @@ E.push([off+28,'f',mf(89),2*SD,0.04]); E.push([off+60,'f',mf(93),2*SD,0.04]);
 phrase(0,A,pA,rA); phrase(64,B,pB,rB);
 wmRunScore(bpm,128,E);
 }
-/* --- M3 : Banque Dorée (score braquage long) --- */
+/* --- M3 : Banque Dorée — AMBIANCE BRAQUAGE (SFX only, pas de musique) --- */
+function vaultClunkAt(ctx,dest,t,vol){
+const o=ctx.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(90,t); o.frequency.exponentialRampToValueAtTime(35,t+0.25);
+const g=ctx.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.35);
+o.connect(g); g.connect(dest); o.start(t); o.stop(t+0.4);
+const src=ctx.createBufferSource(); src.buffer=wmNoise(ctx,0.08);
+const f=ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=500;
+const g2=ctx.createGain(); g2.gain.setValueAtTime(vol*0.6,t); g2.gain.exponentialRampToValueAtTime(0.0001,t+0.1);
+src.connect(f); f.connect(g2); g2.connect(dest); src.start(t);
+}
+function vaultLaserSweep(ctx,dest){
+const t=ctx.currentTime;
+const o=ctx.createOscillator(); o.type='sawtooth';
+o.frequency.setValueAtTime(3000,t); o.frequency.exponentialRampToValueAtTime(400,t+0.5);
+const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1800; f.Q.value=6;
+const g=ctx.createGain(); g.gain.setValueAtTime(0.0001,t);
+g.gain.linearRampToValueAtTime(0.05,t+0.08); g.gain.exponentialRampToValueAtTime(0.0001,t+0.55);
+o.connect(f); f.connect(g); g.connect(dest); o.start(t); o.stop(t+0.6);
+}
+function vaultCamPan(ctx,dest){
+const t=ctx.currentTime; const dir=Math.random()<0.5?1:-1;
+const dur=0.9+Math.random()*0.8;
+const o=ctx.createOscillator(); o.type='triangle';
+o.frequency.setValueAtTime(300,t); o.frequency.linearRampToValueAtTime(300+dir*180,t+dur);
+const g=ctx.createGain(); g.gain.setValueAtTime(0.0001,t);
+g.gain.linearRampToValueAtTime(0.03,t+0.1); g.gain.linearRampToValueAtTime(0.0001,t+dur);
+o.connect(g); g.connect(dest); o.start(t); o.stop(t+dur+0.05);
+const src=ctx.createBufferSource(); src.buffer=wmNoise(ctx,dur);
+const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=900; f.Q.value=2;
+const g2=ctx.createGain(); g2.gain.setValueAtTime(0.0001,t); g2.gain.linearRampToValueAtTime(0.02,t+0.1); g2.gain.linearRampToValueAtTime(0.0001,t+dur);
+src.connect(f); f.connect(g2); g2.connect(dest); src.start(t);
+const ct=t+dur;
+const c=ctx.createOscillator(); c.type='square'; c.frequency.value=800;
+const cg=ctx.createGain(); cg.gain.setValueAtTime(0.04,ct); cg.gain.exponentialRampToValueAtTime(0.0001,ct+0.06);
+c.connect(cg); cg.connect(dest); c.start(ct); c.stop(ct+0.08);
+}
+function vaultWheelTurn(ctx,dest){
+const t=ctx.currentTime;
+vaultClunkAt(ctx,dest,t,0.18);
+const n=8+Math.floor(Math.random()*7); let ct=t+0.2;
+for(let i=0;i<n;i++){
+const click=ctx.createBufferSource(); click.buffer=wmNoise(ctx,0.03);
+const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1400+Math.random()*800; f.Q.value=9;
+const g=ctx.createGain(); g.gain.setValueAtTime(0.06,ct); g.gain.exponentialRampToValueAtTime(0.0001,ct+0.04);
+click.connect(f); f.connect(g); g.connect(dest); click.start(ct);
+ct+=0.09+Math.random()*0.06;
+}
+const o=ctx.createOscillator(); o.type='square'; o.frequency.value=220;
+const f2=ctx.createBiquadFilter(); f2.type='bandpass'; f2.frequency.value=600; f2.Q.value=4;
+const g2=ctx.createGain(); g2.gain.setValueAtTime(0.0001,t); g2.gain.linearRampToValueAtTime(0.02,t+0.2); g2.gain.linearRampToValueAtTime(0.0001,ct);
+o.connect(f2); f2.connect(g2); g2.connect(dest); o.start(t); o.stop(ct+0.05);
+vaultClunkAt(ctx,dest,ct+0.05,0.25);
+}
 function wmStartVault(){
-const bpm=100, SD=60/bpm/2, mf=m=>440*Math.pow(2,(m-69)/12);
-const E=[];
-const melA=[[0,64,2],[3,64,1],[6,67,2],[10,64,2],[14,62,2],[16,64,2],[19,64,1],[22,69,2],[26,67,2],[30,64,4],[32,62,2],[36,59,2],[40,62,2],[44,64,2],[48,67,3],[52,66,1],[56,64,6]];
-const melA2=[[0,64,2],[3,64,1],[6,67,2],[10,64,2],[14,62,2],[16,64,2],[19,64,1],[22,69,2],[26,67,2],[30,64,4],[32,64,2],[36,67,2],[40,69,2],[44,71,2],[48,74,3],[52,71,1],[56,69,6]];
-const melB=[[0,71,2],[3,71,1],[6,74,2],[10,71,2],[14,69,2],[16,67,2],[20,64,2],[24,62,2],[28,59,4],[32,64,2],[36,67,2],[40,71,2],[44,74,2],[48,76,3],[52,74,1],[56,71,6]];
-const melBr=[[0,59,4],[16,62,4],[32,64,4],[48,67,6]];
-const melO=[[0,64,2],[6,67,2],[12,69,2],[18,71,2],[24,74,4],[40,71,2],[46,69,2],[52,67,8]];
-const secs=[
-{mel:null,roots:[40,40,40,40,40,40,40,40],groove:'minimal',lasers:[8,40],alarms:[],ingots:[],coffres:[],coins:[],feet:true},
-{mel:melA,roots:[40,40,36,36,43,43,38,38],groove:'full',lasers:[22,54],alarms:[],ingots:[],coffres:[0],coins:[],feet:false},
-{mel:melA2,roots:[40,40,36,36,43,43,38,38],groove:'full',lasers:[54],alarms:[],ingots:[12,28,44,60],coffres:[],coins:[20,36,52],feet:false},
-{mel:null,roots:[40,40,40,40,36,36,36,36],groove:'drive',lasers:[8,24,40,56],alarms:[0,32],ingots:[],coffres:[],coins:[],feet:false},
-{mel:melB,roots:[33,33,36,36,38,38,40,40],groove:'full',lasers:[54],alarms:[],ingots:[8,24,40,56],coffres:[32],coins:[16],feet:false},
-{mel:melBr,roots:[40,40,40,40,40,40,40,40],groove:'minimal',lasers:[16,48],alarms:[],ingots:[],coffres:[],coins:[],feet:true},
-{mel:melA,roots:[40,40,36,36,43,43,38,38],groove:'full',lasers:[22],alarms:[48],ingots:[16,48],coffres:[],coins:[40],feet:false},
-{mel:melO,roots:[40,40,43,43,38,38,40,40],groove:'half',lasers:[56],alarms:[],ingots:[24,40,56],coffres:[0,48],coins:[32],feet:false}
-];
-for(let s=0;s<8;s++){
-const off=s*64, cfg=secs[s];
-if(cfg.mel) cfg.mel.forEach(n=>E.push([off+n[0],'m',mf(n[1]),n[2]*SD,0.11]));
-for(let bar=0;bar<8;bar++){
-const r=cfg.roots[bar];
-E.push([off+bar*8,'b',mf(r),2*SD,0.12]); E.push([off+bar*8+3,'b',mf(r),1*SD,0.09]); E.push([off+bar*8+6,'b',mf(r+7),2*SD,0.10]);
-if(cfg.groove==='full'){ E.push([off+bar*8,'k',0,0.3,0.5]); E.push([off+bar*8+6,'k',0,0.3,0.4]); E.push([off+bar*8+4,'s',0,0.2,0.22]); for(let h=0;h<8;h+=2) E.push([off+bar*8+h,'h',0,0.05,(h%4===0)?0.13:0.08]); }
-else if(cfg.groove==='drive'){ E.push([off+bar*8,'k',0,0.3,0.45]); for(let h=0;h<8;h++) E.push([off+bar*8+h,'h',0,0.04,(h%2===0)?0.12:0.07]); }
-else if(cfg.groove==='half'){ E.push([off+bar*8,'k',0,0.3,0.45]); E.push([off+bar*8+4,'s',0,0.2,0.18]); }
-else if(cfg.groove==='minimal'){ E.push([off+bar*8+4,'h',0,0.05,0.08]); }
-if(cfg.feet){ E.push([off+bar*8,'t',0,0.12,0.30]); E.push([off+bar*8+4,'t',0,0.12,0.22]); }
-}
-cfg.lasers.forEach(st=>E.push([off+st,'z',0,0.2,0.10]));
-cfg.alarms.forEach(st=>E.push([off+st,'a',0,1.0,0.07]));
-cfg.ingots.forEach(st=>E.push([off+st,'g',0,0.22,0.12]));
-cfg.coffres.forEach(st=>E.push([off+st,'c',0,0.95,0.14]));
-cfg.coins.forEach(st=>E.push([off+st,'r',0,0.22,0.10]));
-}
-wmRunScore(bpm,512,E);
+const ctx=wmCtx(); const master=wmMaster(0.6);
+const nodes=[master], timers=[];
+// Nappe de fond : hum électrique 55Hz + ventilation sourde
+const hum=ctx.createOscillator(); hum.type='sine'; hum.frequency.value=55;
+const hum2=ctx.createOscillator(); hum2.type='sine'; hum2.frequency.value=110.3;
+const hg=ctx.createGain(); hg.gain.value=0;
+hum.connect(hg); hum2.connect(hg); hg.connect(master);
+hg.gain.linearRampToValueAtTime(0.045, ctx.currentTime+2);
+hum.start(); hum2.start(); nodes.push(hum,hum2);
+const air=ctx.createBufferSource(); air.buffer=wmNoise(ctx,2); air.loop=true;
+const af=ctx.createBiquadFilter(); af.type='lowpass'; af.frequency.value=300;
+const ag=ctx.createGain(); ag.gain.value=0.018;
+air.connect(af); af.connect(ag); ag.connect(master); air.start(); nodes.push(air);
+// Grille laser : vrombissement pulsé + balayages aléatoires
+const laser=ctx.createOscillator(); laser.type='sawtooth'; laser.frequency.value=1200;
+const lf=ctx.createBiquadFilter(); lf.type='bandpass'; lf.frequency.value=2400; lf.Q.value=8;
+const lg=ctx.createGain(); lg.gain.value=0;
+laser.connect(lf); lf.connect(lg); lg.connect(master); laser.start(); nodes.push(laser);
+const llfo=ctx.createOscillator(); llfo.type='sine'; llfo.frequency.value=0.7;
+const llg=ctx.createGain(); llg.gain.value=0.010;
+llfo.connect(llg); llg.connect(lg.gain); llfo.start(); nodes.push(llfo);
+lg.gain.linearRampToValueAtTime(0.014, ctx.currentTime+1.5);
+timers.push(setInterval(()=>{ if(Math.random()<0.5) vaultLaserSweep(ctx,master); }, 4200));
+// Caméras : pan servo (whirr montant/descendant) + clic de butée
+timers.push(setInterval(()=>{ vaultCamPan(ctx,master); }, 5200));
+// Cadenas rotatif / volant du coffre : clunk → cliquets → clunk final
+timers.push(setInterval(()=>{ if(Math.random()<0.75) vaultWheelTurn(ctx,master); }, 7000));
+// Clunk profond rare (structure du coffre)
+timers.push(setInterval(()=>{ if(Math.random()<0.3) vaultClunkAt(ctx,master,ctx.currentTime,0.3); }, 11000));
+WM={nodes,timers};
 }
 /* --- Routeur --- */
 function towerPlayWorldMusic(world){
