@@ -1573,12 +1573,19 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
 ADMIN — AVENTURE : FLAGS SAISONS & VIES/JOKERS
 ============================================================ */
 socket.on('admin_give_adventure', async (data) => {
-  if (!socket.isAdmin) return;
+  console.log('🔵 admin_give_adventure reçu:', data);
+  
+  if (!socket.isAdmin) {
+    console.log('❌ Pas admin');
+    return;
+  }
   
   try {
     const { username, halloween, noel, lives, jokersTime, jokersShield, starsPerWorld, maxFloor } = data || {};
     const clean = (username || '').trim();
     if (!clean) return socket.emit('admin_adv_result', { ok: false, message: 'Pseudo requis.' });
+    
+    console.log(' Recherche joueur:', clean);
     
     // Chercher le joueur en ligne
     let targetId = null;
@@ -1589,9 +1596,18 @@ socket.on('admin_give_adventure', async (data) => {
       }
     }
     
-    // ===== CAS 1 : JOUEUR EN LIGNE =====
+    console.log('🔵 Joueur en ligne:', targetId ? 'OUI' : 'NON');
+    
     if (targetId) {
       const p = activePlayers[targetId];
+      console.log('🔵 Player object:', { 
+        username: p.username, 
+        towerFloor: p.towerFloor, 
+        towerStars: p.towerStars,
+        lives: p.lives,
+        jokers: p.jokers
+      });
+      
       let changes = [];
       
       // 1. Flags de saison
@@ -1614,7 +1630,6 @@ socket.on('admin_give_adventure', async (data) => {
         for (let w = 1; w <= 9; w++) {
           const start = (w - 1) * 200 + 1;
           const end = w * 200;
-          // Remplir les 200 étages avec des étoiles (réparties)
           const perFloor = Math.ceil(stars / 200);
           let total = 0;
           for (let f = start; f <= end && total < stars; f++) {
@@ -1624,12 +1639,14 @@ socket.on('admin_give_adventure', async (data) => {
           }
         }
         changes.push(`${stars}⭐/monde`);
+        console.log('🔵 TowerStars après:', Object.keys(p.towerStars).length, 'étages');
       }
       
       // 3. Étage max
       if (maxFloor !== null && !isNaN(maxFloor)) {
         p.towerFloor = Math.max(0, Math.min(1800, parseInt(maxFloor)));
         changes.push(`étage ${p.towerFloor}`);
+        console.log('🔵 TowerFloor:', p.towerFloor);
       }
       
       // 4. Vies
@@ -1637,6 +1654,7 @@ socket.on('admin_give_adventure', async (data) => {
         p.lives = Math.max(0, Math.min(10, parseInt(lives)));
         if (p.lives >= 10) p.lives_ts = Date.now();
         changes.push(`${p.lives} vies`);
+        console.log('🔵 Lives:', p.lives, 'ts:', p.lives_ts);
       }
       
       // 5. Jokers
@@ -1650,12 +1668,17 @@ socket.on('admin_give_adventure', async (data) => {
         changes.push(`${p.jokers.shield} jokers bouclier`);
       }
       
+      console.log('🔵 Changes:', changes);
+      
       if (!changes.length) {
         return socket.emit('admin_adv_result', { ok: false, message: 'Aucun changement demandé.' });
       }
       
       // Sauvegarder
+      console.log('🔵 Appel savePlayerToSupabase...');
       await savePlayerToSupabase(targetId);
+      console.log('✅ Save terminé');
+      
       const detail = changes.join(' | ');
       await logPlayerAction(p, 'admin_adventure', detail, null, null, null);
       
@@ -1677,12 +1700,16 @@ socket.on('admin_give_adventure', async (data) => {
     }
     
     // ===== CAS 2 : JOUEUR HORS-LIGNE =====
+    console.log(' Joueur hors-ligne, requête Supabase...');
     const { data: matched, error } = await supabase.from('players').select('*').ilike('username', clean).limit(1);
     if (error || !matched || matched.length === 0) {
+      console.log('❌ Joueur introuvable:', error);
       return socket.emit('admin_adv_result', { ok: false, message: 'Pseudo introuvable.' });
     }
     
     const row = matched[0];
+    console.log('🔵 Row trouvé:', row.username);
+    
     let updates = {};
     let changes = [];
     
@@ -1724,12 +1751,14 @@ socket.on('admin_give_adventure', async (data) => {
       }
       updates.tower_stars = towerStars;
       changes.push(`${stars}⭐/monde`);
+      console.log('🔵 TowerStars à sauvegarder:', Object.keys(towerStars).length, 'étages');
     }
     
     // 3. Étage max
     if (maxFloor !== null && !isNaN(maxFloor)) {
       updates.tower_floor = Math.max(0, Math.min(1800, parseInt(maxFloor)));
       changes.push(`étage ${updates.tower_floor}`);
+      console.log('🔵 TowerFloor à sauvegarder:', updates.tower_floor);
     }
     
     // 4. Vies
@@ -1738,6 +1767,7 @@ socket.on('admin_give_adventure', async (data) => {
       updates.tower_lives = newLives;
       if (newLives >= 10) updates.tower_lives_ts = Date.now();
       changes.push(`${newLives} vies`);
+      console.log('🔵 Lives à sauvegarder:', newLives);
     }
     
     // 5. Jokers
@@ -1760,13 +1790,20 @@ socket.on('admin_give_adventure', async (data) => {
     }
     if (jokersChanged) updates.tower_jokers = jokers;
     
+    console.log('🔵 Updates à envoyer:', updates);
+    console.log('🔵 Changes:', changes);
+    
     if (!changes.length) {
       return socket.emit('admin_adv_result', { ok: false, message: 'Aucun changement demandé.' });
     }
     
     // Update Supabase
-    const { error: updErr } = await supabase.from('players').update(updates).eq('id', row.id);
+    console.log('🔵 Appel Supabase update...');
+    const { error: updErr, data: updData } = await supabase.from('players').update(updates).eq('id', row.id);
+    console.log('🔵 Résultat Supabase:', { error: updErr, data: updData });
+    
     if (updErr) {
+      console.error('❌ Erreur Supabase:', updErr);
       return socket.emit('admin_adv_result', { ok: false, message: 'Erreur BDD: ' + updErr.message });
     }
     
@@ -1779,7 +1816,7 @@ socket.on('admin_give_adventure', async (data) => {
     });
     
   } catch (e) {
-    console.error('admin_give_adventure error:', e);
+    console.error('❌ admin_give_adventure error:', e);
     socket.emit('admin_adv_result', { ok: false, message: 'Erreur: ' + e.message });
   }
 });
