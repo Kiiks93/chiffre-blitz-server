@@ -30,7 +30,7 @@ const TOWER_WORLDS = {
   3:{bg:"linear-gradient(180deg,#160d00,#2b1a00 60%,#3a2a05)",scene:"vault",part:"spark"},
   4:{bg:"linear-gradient(180deg,#0b0618,#1a0b2e 50%,#120820)",scene:"haunt",part:"fog"},
   5:{bg:"linear-gradient(180deg,#0a0f0d,#12211c 55%,#0a1410)",scene:"grave",part:"fog"},
-  6:{bg:"radial-gradient(ellipse at 50% 70%,#3a1608,#120502 70%)",scene:"lair",part:"spark"},
+  6:{bg:"radial-gradient(ellipse at 50% 60%,#241c16,#120d0a 60%,#080605 100%)",scene:"lair",part:"spark"},
   7:{bg:"linear-gradient(180deg,#2a1440 0%,#5a2a68 28%,#a04a88 52%,#e87ba8 74%,#ffd6e8 100%)",scene:"candy",part:"spark"},
   8:{bg:"linear-gradient(180deg,#04101e,#0a2036 55%,#061422)",scene:"pine",part:"snow"},
   9:{bg:"linear-gradient(180deg,#0a0f1e,#142036 60%,#0a1424)",scene:"shop",part:"snow"}
@@ -344,25 +344,55 @@ document.addEventListener("visibilitychange", () => {
   .tw-gr-wisp{position:absolute;width:8px;height:8px;border-radius:50%;background:#7dff8a;box-shadow:0 0 12px #7dff8a,0 0 26px #7dff8a66;animation:twWisp 6s ease-in-out infinite;}
   @keyframes twWisp{0%,100%{transform:translate(0,0);opacity:.3}30%{transform:translate(14px,-22px);opacity:.9}60%{transform:translate(-10px,-36px);opacity:.5}}
 
-  /* === M6 ANTRE CHAUVES-SOURIS === */
-  .tw-bat-lair-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,#0a0a0a 0%,#000000 70%);}
-  .tw-bat-lair-fog{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 80%,#1a0a0022 0%,transparent 50%);}
-  .tw-bat-lair-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,transparent 30%,#000000cc 80%,#000000ee 100%);pointer-events:none;}
-  .tw-bat-lair-stalac{position:absolute;top:0;width:40px;height:80px;background:linear-gradient(180deg,#1a1a1a,#000);clip-path:polygon(40% 0,60% 0,100% 100%,0 100%);opacity:.8;}
-  .tw-bat-lair-stalag{position:absolute;bottom:0;width:50px;height:60px;background:linear-gradient(0deg,#1a1a1a,#000);clip-path:polygon(0 0,100% 0,60% 100%,40% 100%);opacity:.7;}
-  .tw-bat-lair-eye{position:absolute;width:14px;height:8px;background:radial-gradient(ellipse,#ffd700 0%,#ff8c00 40%,#ff4500 70%,transparent 100%);border-radius:50%;box-shadow:0 0 12px #ffd700,0 0 24px #ff8c0088,0 0 36px #ff450044;animation:twBatEyeGlow 3s ease-in-out infinite;}
-  @keyframes twBatEyeGlow{0%,100%{opacity:.7;transform:scale(1)}50%{opacity:1;transform:scale(1.15)}}
-  .tw-bat-lair-eye::before{content:"";position:absolute;top:2px;left:3px;width:4px;height:4px;background:#000;border-radius:50%;box-shadow:6px 0 0 #000;}
-  .tw-bat-lair-eye.blink{animation:twBatEyeBlink 5s ease-in-out infinite;}
-  @keyframes twBatEyeBlink{0%,92%,100%{opacity:.7;transform:scaleY(1)}95%{opacity:0;transform:scaleY(0.1)}}
-  .tw-bat-lair-bat{position:absolute;background:#0a0a0a;clip-path:polygon(50% 40%,40% 20%,20% 10%,0 30%,15% 50%,5% 70%,25% 60%,40% 80%,50% 100%,60% 80%,75% 60%,95% 70%,85% 50%,100% 30%,80% 10%,60% 20%);animation:twBatLairFly linear infinite;}
-  @keyframes twBatLairFly{0%{transform:translate(0,0) rotate(0deg) scale(1)}25%{transform:translate(80px,-40px) rotate(-15deg) scale(1.1)}50%{transform:translate(160px,0) rotate(0deg) scale(1)}75%{transform:translate(80px,40px) rotate(15deg) scale(0.9)}100%{transform:translate(0,0) rotate(0deg) scale(1)}}
-  .tw-bat-lair-bat.wing{animation:twBatWingFlap .3s ease-in-out infinite alternate;}
-  @keyframes twBatWingFlap{0%{transform:scaleY(1)}100%{transform:scaleY(0.7)}}
-  .tw-bat-lair-mist{position:absolute;bottom:0;left:-20%;width:140%;height:40%;background:linear-gradient(0deg,#00000066 0%,transparent 100%);filter:blur(12px);animation:twMistDrift 20s linear infinite;}
-  @keyframes twMistDrift{0%{transform:translateX(-10%)}100%{transform:translateX(10%)}}
-  .tw-bat-lair-drip{position:absolute;width:2px;background:linear-gradient(180deg,#1a1a1a,#000);border-radius:0 0 2px 2px;animation:twDrip 4s ease-in infinite;}
-  @keyframes twDrip{0%{height:0;opacity:0}20%{height:20px;opacity:1}80%{height:20px;opacity:1}100%{height:0;opacity:0}}
+  /* === M6 GROTTE ROCAILLEUSE HORRIFIQUE === */
+.tw-cv-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,#2a211c 0%,#1a1411 45%,#0d0a08 80%,#050403 100%);}
+.tw-cv-rocktex{position:absolute;inset:0;opacity:.55;background:
+ radial-gradient(ellipse at 15% 25%,#3a2f28 0 60px,transparent 61px),
+ radial-gradient(ellipse at 75% 15%,#332a24 0 80px,transparent 81px),
+ radial-gradient(ellipse at 40% 60%,#2e2620 0 70px,transparent 71px),
+ radial-gradient(ellipse at 85% 70%,#362c25 0 65px,transparent 66px),
+ radial-gradient(ellipse at 25% 85%,#302822 0 75px,transparent 76px),
+ radial-gradient(ellipse at 60% 35%,#2a221c 0 55px,transparent 56px);}
+.tw-cv-wall{position:absolute;top:0;bottom:0;width:20%;background:linear-gradient(90deg,#4a3d34,#332a24 45%,#1d1713);clip-path:polygon(0 0,100% 0,78% 6%,95% 12%,70% 20%,92% 28%,65% 36%,88% 45%,62% 54%,85% 63%,60% 72%,82% 81%,58% 90%,75% 100%,0 100%);box-shadow:inset -8px 0 20px #000;}
+.tw-cv-wall.r{left:auto;right:0;background:linear-gradient(270deg,#4a3d34,#332a24 45%,#1d1713);clip-path:polygon(100% 0,0 0,22% 6%,5% 12%,30% 20%,8% 28%,35% 36%,12% 45%,38% 54%,15% 63%,40% 72%,18% 81%,42% 90%,25% 100%,100% 100%);box-shadow:inset 8px 0 20px #000;}
+.tw-cv-ceil{position:absolute;top:0;left:0;right:0;height:16%;background:linear-gradient(180deg,#4a3d34,#2a221c 60%,#171210);clip-path:polygon(0 0,100% 0,100% 55%,94% 72%,88% 45%,82% 78%,76% 50%,70% 82%,64% 48%,58% 74%,52% 45%,46% 80%,40% 50%,34% 72%,28% 45%,22% 78%,16% 50%,10% 70%,4% 45%,0 62%);}
+.tw-cv-stalac{position:absolute;top:0;width:40px;background:linear-gradient(90deg,#5a4c42,#3a2f28 45%,#241d18);clip-path:polygon(30% 0,70% 0,88% 18%,62% 30%,80% 45%,55% 60%,68% 75%,50% 100%,42% 72%,52% 55%,35% 40%,48% 25%,25% 12%);filter:drop-shadow(0 4px 6px #000c);}
+.tw-cv-stalag{position:absolute;bottom:0;width:44px;background:linear-gradient(90deg,#5a4c42,#3a2f28 45%,#241d18);clip-path:polygon(50% 0,62% 25%,48% 40%,68% 55%,42% 68%,72% 82%,100% 100%,0 100%,28% 80%,55% 65%,35% 50%,58% 35%,40% 20%);filter:drop-shadow(0 -4px 6px #000c);}
+.tw-cv-floor{position:absolute;bottom:0;left:0;right:0;height:15%;background:linear-gradient(180deg,#3a2f28,#241d18 50%,#120e0b);clip-path:polygon(0 30%,6% 18%,12% 32%,20% 15%,28% 30%,36% 12%,44% 28%,52% 16%,60% 30%,68% 14%,76% 28%,84% 16%,92% 30%,100% 18%,100% 100%,0 100%);}
+.tw-cv-rock{position:absolute;bottom:2%;background:radial-gradient(ellipse at 35% 30%,#5a4c42,#332a24 60%,#1d1713);border-radius:45% 55% 40% 60%/55% 45% 60% 40%;box-shadow:inset -4px -6px 10px #000a,0 4px 8px #000;}
+.tw-cv-hangbat{position:absolute;top:0;width:26px;height:52px;transform-origin:top center;animation:twHangSway 4.5s ease-in-out infinite;}
+.tw-cv-hangbat .feet{position:absolute;top:0;left:50%;transform:translateX(-50%);width:2px;background:#0b0806;}
+.tw-cv-hangbat .bd{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:18px;height:30px;background:linear-gradient(90deg,#191310,#0b0806 55%,#15100c);border-radius:45% 45% 50% 50%;box-shadow:inset 2px 2px 3px #241a14;}
+.tw-cv-hangbat .ear{position:absolute;top:9px;width:6px;height:8px;background:#0b0806;clip-path:polygon(50% 0,100% 100%,0 100%);}
+.tw-cv-hangbat .ear.l{left:5px;}.tw-cv-hangbat .ear.r{right:5px;}
+.tw-cv-hangbat .eye{position:absolute;top:19px;width:3px;height:3px;border-radius:50%;background:#ff5030;box-shadow:0 0 6px #ff3010;animation:twEyeBlink2 5s infinite;}
+.tw-cv-hangbat .eye.l{left:9px;}.tw-cv-hangbat .eye.r{right:9px;}
+@keyframes twHangSway{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+.tw-cv-bat{position:absolute;width:46px;height:20px;animation:twCvFly linear infinite;}
+.tw-cv-bat .body{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:10px;height:14px;background:#0b0806;border-radius:50%;}
+.tw-cv-bat .w{position:absolute;top:3px;width:20px;height:14px;background:#0b0806;clip-path:polygon(100% 40%,60% 0,20% 15%,0 50%,25% 55%,10% 85%,45% 70%,70% 95%,100% 60%);}
+.tw-cv-bat .w.l{left:1px;transform-origin:right center;animation:twFlapL .32s ease-in-out infinite alternate;}
+.tw-cv-bat .w.r{right:1px;transform-origin:left center;animation:twFlapR .32s ease-in-out infinite alternate;}
+@keyframes twFlapL{from{transform:rotate(24deg)}to{transform:rotate(-26deg)}}
+@keyframes twFlapR{from{transform:rotate(-24deg)}to{transform:rotate(26deg)}}
+@keyframes twCvFly{0%{transform:translate(0,0)}25%{transform:translate(70px,-32px)}50%{transform:translate(140px,0)}75%{transform:translate(70px,32px)}100%{transform:translate(0,0)}}
+.tw-cv-eyes{position:absolute;width:26px;height:10px;}
+.tw-cv-eyes i{position:absolute;top:0;width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffd75e,#ff8c00 55%,#c33 90%);box-shadow:0 0 10px #ff8c00,0 0 22px #ff450088;animation:twEyeBlink2 4s infinite;}
+.tw-cv-eyes i:last-child{left:14px;}
+.tw-cv-eyes.red i{background:radial-gradient(circle at 40% 35%,#ff8080,#e00 55%,#600 90%);box-shadow:0 0 10px #f00,0 0 22px #f0088;}
+@keyframes twEyeBlink2{0%,90%,100%{transform:scaleY(1)}94%{transform:scaleY(.1)}}
+.tw-cv-skull{position:absolute;bottom:4%;width:30px;height:26px;background:linear-gradient(180deg,#cfc8b8,#8a8478 70%,#5a554c);border-radius:50% 50% 42% 42%;box-shadow:inset -3px -4px 6px #00000066;}
+.tw-cv-skull::before{content:"";position:absolute;top:8px;left:6px;width:6px;height:7px;background:#0d0a08;border-radius:50%;box-shadow:12px 0 0 #0d0a08;}
+.tw-cv-skull::after{content:"";position:absolute;bottom:-3px;left:50%;transform:translateX(-50%);width:14px;height:5px;background:#b8b2a4;border-radius:2px;}
+.tw-cv-bone{position:absolute;bottom:3%;width:34px;height:6px;background:#b8b2a4;border-radius:3px;box-shadow:0 2px 3px #000;}
+.tw-cv-bone::before,.tw-cv-bone::after{content:"";position:absolute;top:-3px;width:8px;height:12px;background:#b8b2a4;border-radius:50%;}
+.tw-cv-bone::before{left:-4px;}.tw-cv-bone::after{right:-4px;}
+.tw-cv-shaft{position:absolute;top:0;width:60px;height:70%;background:linear-gradient(180deg,#8a7a5a22,transparent 80%);clip-path:polygon(40% 0,60% 0,100% 100%,0 100%);filter:blur(6px);animation:twGlowC 5s infinite;}
+.tw-cv-mist{position:absolute;bottom:0;left:-20%;width:140%;height:34%;background:linear-gradient(0deg,#1a1410cc,transparent);filter:blur(10px);animation:twMistDrift 18s linear infinite;}
+@keyframes twMistDrift{0%{transform:translateX(-10%)}100%{transform:translateX(10%)}}
+.tw-cv-drip{position:absolute;width:2px;background:linear-gradient(180deg,transparent,#7ab4dd);border-radius:0 0 2px 2px;animation:twDrip 5s ease-in infinite;opacity:.7;}
+@keyframes twDrip{0%{height:0;opacity:0}20%{height:20px;opacity:1}80%{height:20px;opacity:1}100%{height:0;opacity:0}}
+.tw-cv-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,transparent 25%,#000000aa 65%,#000 100%);pointer-events:none;}
   
 .tw-bat-lair-skull{position:absolute;bottom:6%;width:34px;height:30px;background:linear-gradient(180deg,#d8d8d0,#9a9a92);border-radius:50% 50% 40% 40%;box-shadow:inset -3px -4px 6px #00000055;}
 .tw-bat-lair-skull::before{content:"";position:absolute;top:8px;left:7px;width:6px;height:7px;background:#1a1a1a;border-radius:50%;box-shadow:13px 0 0 #1a1a1a;}
@@ -733,50 +763,29 @@ function generateSceneHTML(c, W, C) {
     for (let i=0;i<(IS_MOBILE?3:6);i++) html += `<div class="tw-gr-wisp" style="left:${12+i*15}%;bottom:${20+(i%3)*10}%;animation-delay:${i*1.1}s;"></div>`;
     html += `<div class="tw-gr-fog" style="bottom:4%;animation-duration:30s;"></div><div class="tw-gr-fog" style="bottom:14%;animation-duration:22s;animation-delay:-8s;opacity:.7;"></div><div class="tw-gr-fog" style="bottom:24%;animation-duration:38s;animation-delay:-16s;opacity:.5;"></div>`;
   }
-  if (W.scene === "lair") {
-  html += `<div class="tw-bat-lair-bg"></div><div class="tw-bat-lair-fog"></div><div class="tw-bat-lair-vignette"></div>`;
-  for (let i=0;i<(IS_MOBILE?6:10);i++) html += `<div class="tw-bat-lair-root" style="left:${6+i*10}%;height:${40+(i*13)%60}px;"></div>`;
-  const stalacCount = IS_MOBILE ? 8 : 12;
-  for (let i = 0; i < stalacCount; i++) {
-    const left = 4 + (i * 8) + (i % 2) * 3;
-    const height = 50 + (i * 17) % 70;
-    html += `<div class="tw-bat-lair-stalac" style="left:${left}%;height:${height}px;"></div>`;
-  }
-  const stalagCount = IS_MOBILE ? 7 : 10;
-  for (let i = 0; i < stalagCount; i++) {
-    const left = 5 + (i * 10) + (i % 2) * 4;
-    const height = 35 + (i * 13) % 55;
-    html += `<div class="tw-bat-lair-stalag" style="left:${left}%;height:${height}px;"></div>`;
-  }
-  html += `<div class="tw-web" style="top:3%;left:2%;"></div><div class="tw-web" style="top:5%;right:2%;transform:scaleX(-1);"></div>`;
-  const eyePairs = IS_MOBILE ? 10 : 18;
-  for (let i = 0; i < eyePairs; i++) {
-    const left = 6 + (i * 5.5) % 88;
-    const top = 15 + (i * 9) % 65;
-    const delay = (i * 0.35) % 3;
-    const isBlink = i % 3 === 0;
-    html += `<div class="tw-bat-lair-eye ${isBlink ? 'blink' : ''}" style="left:${left}%;top:${top}%;animation-delay:${delay}s;"></div>`;
-  }
-  const batCount = IS_MOBILE ? 6 : 10;
-  for (let i = 0; i < batCount; i++) {
-    const size = 18 + (i * 7) % 32;
-    const top = 8 + (i * 11) % 55;
-    const left = (i * 9) % 82;
-    const duration = 5 + (i * 2) % 7;
-    const delay = (i * 1.3) % 5;
-    html += `<div class="tw-bat-lair-bat" style="width:${size}px;height:${size*0.7}px;top:${top}%;left:${left}%;animation-duration:${duration}s;animation-delay:${delay}s;"></div>`;
-  }
-  for (let i=0;i<(IS_MOBILE?3:5);i++) html += `<div class="tw-bat-lair-skull" style="left:${10+i*20}%;"></div>`;
-  for (let i=0;i<(IS_MOBILE?4:7);i++) html += `<div class="tw-bat-lair-shroom" style="left:${6+i*14}%;transform:scale(${0.8+(i%3)*0.2});"></div>`;
-  for (let i=0;i<(IS_MOBILE?5:9);i++) html += `<div class="tw-bat-lair-gem" style="left:${8+i*10}%;top:${20+(i*13)%55}%;animation-delay:${(i*.4)%2}s;"></div>`;
-  html += `<div class="tw-bat-lair-mist"></div><div class="tw-bat-lair-mist" style="animation-delay:-10s;opacity:.6;"></div>`;
-  const dripCount = IS_MOBILE ? 4 : 7;
-  for (let i = 0; i < dripCount; i++) {
-    const left = 8 + (i * 12) % 84;
-    const top = 4 + (i * 6) % 14;
-    const delay = (i * 1.1) % 4;
-    html += `<div class="tw-bat-lair-drip" style="left:${left}%;top:${top}%;animation-delay:${delay}s;"></div>`;
-  }
+if (W.scene === "lair") {
+  html += `<div class="tw-cv-bg"></div><div class="tw-cv-rocktex"></div>`;
+  html += `<div class="tw-cv-shaft" style="left:22%;transform:rotate(8deg);"></div><div class="tw-cv-shaft" style="left:64%;transform:rotate(-7deg);animation-delay:-2s;"></div>`;
+  html += `<div class="tw-cv-wall"></div><div class="tw-cv-wall r"></div>`;
+  html += `<div class="tw-cv-ceil"></div>`;
+  const stN = IS_MOBILE?7:11;
+  for(let i=0;i<stN;i++){ const left=6+i*8.5+(i%2)*2; const h=60+(i*29)%90; html += `<div class="tw-cv-stalac" style="left:${left}%;height:${h}px;"></div>`; }
+  const hbN = IS_MOBILE?4:7;
+  for(let i=0;i<hbN;i++){ const left=10+i*12+(i%2)*4; const len=22+(i*13)%26; html += `<div class="tw-cv-hangbat" style="left:${left}%;animation-delay:${-i*.7}s;"><i class="feet" style="height:${len}px;"></i><i class="bd"></i><i class="ear l"></i><i class="ear r"></i><i class="eye l"></i><i class="eye r"></i></div>`; }
+  const fbN = IS_MOBILE?5:8;
+  for(let i=0;i<fbN;i++){ const top=12+(i*13)%50; const left=(i*17)%70; const dur=6+(i*3)%6; const sc=.7+(i%3)*.25; html += `<div class="tw-cv-bat" style="top:${top}%;left:${left}%;animation-duration:${dur}s;animation-delay:${-i*1.4}s;"><i class="w l"></i><i class="w r"></i><i class="body"></i></div>`; }
+  const eyeN = IS_MOBILE?7:12;
+  for(let i=0;i<eyeN;i++){ const left=6+(i*8)%86; const top=25+(i*11)%55; const red=i%4===3; html += `<div class="tw-cv-eyes${red?" red":""}" style="left:${left}%;top:${top}%;"><i style="animation-delay:${(i*.6)%4}s;"></i><i style="animation-delay:${(i*.6)%4}s;"></i></div>`; }
+  html += `<div class="tw-cv-floor"></div>`;
+  const sgN = IS_MOBILE?6:9;
+  for(let i=0;i<sgN;i++){ const left=4+i*10+(i%2)*3; const h=40+(i*23)%70; html += `<div class="tw-cv-stalag" style="left:${left}%;height:${h}px;"></div>`; }
+  for(let i=0;i<(IS_MOBILE?4:6);i++) html += `<div class="tw-cv-rock" style="left:${8+i*16}%;width:${30+(i*11)%30}px;height:${18+(i*7)%14}px;"></div>`;
+  for(let i=0;i<(IS_MOBILE?2:4);i++) html += `<div class="tw-cv-skull" style="left:${14+i*22}%;transform:rotate(${i%2?-8:6}deg);"></div>`;
+  for(let i=0;i<(IS_MOBILE?2:3);i++) html += `<div class="tw-cv-bone" style="left:${22+i*26}%;transform:rotate(${i%2?14:-10}deg);"></div>`;
+  html += `<div class="tw-web" style="top:2%;left:1%;"></div><div class="tw-web" style="top:3%;right:1%;transform:scaleX(-1);"></div>`;
+  for(let i=0;i<(IS_MOBILE?3:5);i++){ const left=10+(i*17)%80; html += `<div class="tw-cv-drip" style="left:${left}%;top:${6+(i*5)%10}%;animation-delay:${i*1.3}s;"></div>`; }
+  html += `<div class="tw-cv-mist"></div><div class="tw-cv-mist" style="animation-delay:-9s;opacity:.7;"></div>`;
+  html += `<div class="tw-cv-vignette"></div>`;
 }
   if (W.scene === "candy") {
     html += `<div class="tw-cd-sky"></div><div class="tw-cd-cloud-cotton c1"></div><div class="tw-cd-cloud-cotton c2"></div><div class="tw-cd-cloud-cotton c3"></div><div class="tw-cd-cloud-cotton c4"></div>`;
