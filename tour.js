@@ -361,13 +361,18 @@ document.addEventListener("visibilitychange", () => {
 .tw-cv-stalag{position:absolute;bottom:0;width:44px;background:linear-gradient(90deg,#5a4c42,#3a2f28 45%,#241d18);clip-path:polygon(50% 0,62% 25%,48% 40%,68% 55%,42% 68%,72% 82%,100% 100%,0 100%,28% 80%,55% 65%,35% 50%,58% 35%,40% 20%);filter:drop-shadow(0 -4px 6px #000c);}
 .tw-cv-floor{position:absolute;bottom:0;left:0;right:0;height:15%;background:linear-gradient(180deg,#3a2f28,#241d18 50%,#120e0b);clip-path:polygon(0 30%,6% 18%,12% 32%,20% 15%,28% 30%,36% 12%,44% 28%,52% 16%,60% 30%,68% 14%,76% 28%,84% 16%,92% 30%,100% 18%,100% 100%,0 100%);}
 .tw-cv-rock{position:absolute;bottom:2%;background:radial-gradient(ellipse at 35% 30%,#5a4c42,#332a24 60%,#1d1713);border-radius:45% 55% 40% 60%/55% 45% 60% 40%;box-shadow:inset -4px -6px 10px #000a,0 4px 8px #000;}
-.tw-cv-hangbat{position:absolute;top:0;width:26px;height:52px;transform-origin:top center;animation:twHangSway 4.5s ease-in-out infinite;}
+/* Chauves-souris ACCROCHÉES tête en bas (silhouette lisible, SANS yeux lumineux) */
+.tw-cv-hangbat{position:absolute;top:0;width:30px;height:56px;transform-origin:top center;animation:twHangSway 4.5s ease-in-out infinite;}
 .tw-cv-hangbat .feet{position:absolute;top:0;left:50%;transform:translateX(-50%);width:2px;background:#0b0806;}
-.tw-cv-hangbat .bd{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:18px;height:30px;background:linear-gradient(90deg,#191310,#0b0806 55%,#15100c);border-radius:45% 45% 50% 50%;box-shadow:inset 2px 2px 3px #241a14;}
-.tw-cv-hangbat .ear{position:absolute;top:9px;width:6px;height:8px;background:#0b0806;clip-path:polygon(50% 0,100% 100%,0 100%);}
-.tw-cv-hangbat .ear.l{left:5px;}.tw-cv-hangbat .ear.r{right:5px;}
-.tw-cv-hangbat .eye{position:absolute;top:19px;width:3px;height:3px;border-radius:50%;background:#ff5030;box-shadow:0 0 6px #ff3010;animation:twEyeBlink2 5s infinite;}
-.tw-cv-hangbat .eye.l{left:9px;}.tw-cv-hangbat .eye.r{right:9px;}
+.tw-cv-hangbat .wing{position:absolute;top:16px;width:9px;height:26px;background:#191009;border-radius:50% 50% 40% 40%;box-shadow:inset 1px 1px 2px #2e2118;}
+.tw-cv-hangbat .wing.l{left:1px;transform:rotate(9deg);}
+.tw-cv-hangbat .wing.r{right:1px;transform:rotate(-9deg);}
+.tw-cv-hangbat .bd{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:20px;height:34px;background:linear-gradient(90deg,#241a14,#150e0a 55%,#1d1410);border-radius:45% 45% 50% 50%;box-shadow:inset 2px 2px 3px #3a2a20,0 0 6px #000;}
+.tw-cv-hangbat .ear{position:absolute;top:44px;width:7px;height:9px;background:#1d1410;clip-path:polygon(50% 100%,100% 0,0 0);}
+.tw-cv-hangbat .ear.l{left:7px;}
+.tw-cv-hangbat .ear.r{right:7px;}
+.tw-cv-hangbat .eye{display:none;}
+@keyframes twHangSway{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
 @keyframes twHangSway{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
 .tw-cv-bat{position:absolute;width:46px;height:20px;animation:twCvFly linear infinite;}
 .tw-cv-bat .body{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:10px;height:14px;background:#0b0806;border-radius:50%;}
@@ -780,12 +785,12 @@ if (W.scene === "lair") {
   html += `<div class="tw-cv-ceil"></div>`;
   const stN = IS_MOBILE?7:11;
   for(let i=0;i<stN;i++){ const left=6+i*8.5+(i%2)*2; const h=60+(i*29)%90; html += `<div class="tw-cv-stalac" style="left:${left}%;height:${h}px;"></div>`; }
-  const hbN = IS_MOBILE?4:7;
-  for(let i=0;i<hbN;i++){ const left=10+i*12+(i%2)*4; const len=22+(i*13)%26; html += `<div class="tw-cv-hangbat" style="left:${left}%;animation-delay:${-i*.7}s;"><i class="feet" style="height:${len}px;"></i><i class="bd"></i><i class="ear l"></i><i class="ear r"></i><i class="eye l"></i><i class="eye r"></i></div>`; }
-  const fbN = IS_MOBILE?5:8;
-  for(let i=0;i<fbN;i++){ const top=12+(i*13)%50; const left=(i*17)%70; const dur=6+(i*3)%6; const sc=.7+(i%3)*.25; html += `<div class="tw-cv-bat" style="top:${top}%;left:${left}%;animation-duration:${dur}s;animation-delay:${-i*1.4}s;"><i class="w l"></i><i class="w r"></i><i class="body"></i></div>`; }
-  const eyeN = IS_MOBILE?7:12;
-  for(let i=0;i<eyeN;i++){ const left=6+(i*8)%86; const top=25+(i*11)%55; const red=i%4===3; html += `<div class="tw-cv-eyes${red?" red":""}" style="left:${left}%;top:${top}%;"><i style="animation-delay:${(i*.6)%4}s;"></i><i style="animation-delay:${(i*.6)%4}s;"></i></div>`; }
+  // Chauves-souris ACCROCHÉES tête en bas (nombreuses, sous le plafond)
+  const hbN = IS_MOBILE?7:12;
+  for(let i=0;i<hbN;i++){ const left=6+i*8+(i%3)*2; const len=18+(i*11)%26; html += `<div class="tw-cv-hangbat" style="left:${left}%;animation-delay:${-i*.6}s;"><i class="feet" style="height:${len}px;"></i><i class="wing l"></i><i class="wing r"></i><i class="bd"></i><i class="ear l"></i><i class="ear r"></i></div>`; }
+  // Chauves-souris VOLANTES (nombreuses)
+  const fbN = IS_MOBILE?8:14;
+  for(let i=0;i<fbN;i++){ const top=14+(i*11)%55; const left=(i*13)%80; const dur=5+(i*3)%7; html += `<div class="tw-cv-bat" style="top:${top}%;left:${left}%;animation-duration:${dur}s;animation-delay:${-i*1.1}s;"><i class="w l"></i><i class="w r"></i><i class="body"></i></div>`; }
   html += `<div class="tw-cv-floor"></div>`;
   const sgN = IS_MOBILE?6:9;
   for(let i=0;i<sgN;i++){ const left=4+i*10+(i%2)*3; const h=40+(i*23)%70; html += `<div class="tw-cv-stalag" style="left:${left}%;height:${h}px;"></div>`; }
