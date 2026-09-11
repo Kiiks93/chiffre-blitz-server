@@ -389,26 +389,34 @@ document.addEventListener("visibilitychange", () => {
   .tw-snowsoft{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff;filter:blur(1px);opacity:.85;animation:twFall linear infinite;}
   @keyframes twStarGlow{0%,100%{opacity:1}50%{opacity:.55}}
 
-  /* === M7 CIME BONBON (féérique) === */
-  .tw-cd-mtn{position:absolute;left:-40%;right:-40%;bottom:0;border-radius:50% 50% 0 0;}
-  .tw-cd-mtn.m1{height:38%;background:linear-gradient(180deg,#ffe3ef,#ff9ec4 55%,#d86a9a);opacity:.92;box-shadow:0 0 40px #ff6fa544;}
-  .tw-cd-mtn.m2{height:28%;background:linear-gradient(180deg,#e3fbf0,#8fe0c0 55%,#5aa88a);}
-  .tw-cd-mtn.m3{height:18%;background:linear-gradient(180deg,#fff8e3,#ffd79e 55%,#d8a86a);}
-  .tw-cd-castle{position:absolute;bottom:26%;left:50%;transform:translateX(-50%);width:170px;height:190px;background:linear-gradient(180deg,#ffe3ef,#ff9ec4 60%,#e87ba8);border-radius:14px 14px 0 0;box-shadow:0 0 70px #ff6fa577,inset 0 0 30px #ffffff66;}
-  .tw-cd-castle::before{content:"";position:absolute;top:-42px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:52px solid transparent;border-right:52px solid transparent;border-bottom:46px solid #fff0f6;filter:drop-shadow(0 0 16px #ff6fa5bb);}
-  .tw-cd-icing{position:absolute;top:-4px;left:-4px;right:-4px;height:20px;background:#fff;border-radius:10px 10px 0 0;box-shadow:0 6px 16px #ffffffaa;}
-  .tw-cd-icing::after{content:"";position:absolute;top:100%;left:0;right:0;height:14px;background:radial-gradient(circle at 8% 0,#fff 0 7px,transparent 8px),radial-gradient(circle at 26% 0,#fff 0 9px,transparent 10px),radial-gradient(circle at 46% 0,#fff 0 8px,transparent 9px),radial-gradient(circle at 66% 0,#fff 0 10px,transparent 11px),radial-gradient(circle at 86% 0,#fff 0 7px,transparent 8px);}
-  .tw-cd-tower{position:absolute;bottom:26%;width:54px;height:140px;background:linear-gradient(180deg,#ffe3ef,#ff9ec4);border-radius:27px 27px 0 0;box-shadow:0 0 44px #ff6fa566;}
-  .tw-cd-tower::before{content:"";position:absolute;top:-26px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:29px solid transparent;border-right:29px solid transparent;border-bottom:30px solid #fff0f6;filter:drop-shadow(0 0 10px #ff6fa5aa);}
-  .tw-cd-tower::after{content:"";position:absolute;top:-40px;left:50%;width:2px;height:16px;background:#fff;transform:translateX(-50%);box-shadow:0 0 8px #fff;}
-  .tw-cd-river{position:absolute;bottom:0;left:0;right:0;height:11%;background:linear-gradient(180deg,#7a3f22,#4a2410);box-shadow:inset 0 8px 20px #00000077;}
-  .tw-cd-river::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 46px,#ffd79e33 46px 52px);animation:twSlide 9s linear infinite;}
-  .tw-cd-pop{position:absolute;width:52px;height:52px;border-radius:50%;background:conic-gradient(#ff4b6b 0 25%,#fff 25% 50%,#ff4b6b 50% 75%,#fff 75%);box-shadow:0 0 22px #ff4b6b88,inset 0 0 10px #ffffffaa;animation:twGlowC 3s infinite;}
-  .tw-cd-pop::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);width:6px;height:60px;background:#fff;border-radius:3px;box-shadow:0 0 8px #ffffffaa;}
-  .tw-cd-cane{position:absolute;width:16px;height:120px;border-radius:9px;background:repeating-linear-gradient(45deg,#ff4b6b 0 10px,#fff 10px 20px);box-shadow:0 0 16px #ff4b6b66;}
-  .tw-cd-gum{position:absolute;width:22px;height:16px;border-radius:8px;background:currentColor;box-shadow:0 0 12px currentColor;opacity:.95;}
-  .tw-cd-cloud{position:absolute;height:38px;border-radius:30px;background:linear-gradient(90deg,transparent,#ffd6e8b8 25%,#fff0f6cc 50%,#ffd6e8b8 75%,transparent);filter:blur(6px);animation:twCloud linear infinite;}
-  .tw-cd-moonrose{position:absolute;top:7%;right:12%;width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff0f6,#ffb8d4 60%,#e888b0);box-shadow:0 0 40px #ff6fa588,0 0 90px #ff6fa544;}
+  /* === M7 CIME BONBON V3 — BARBE À PAPA === */
+.tw-cd-sky{position:absolute;inset:0;background:linear-gradient(180deg,#ffb6d9 0%,#ffcce0 35%,#ffe6f0 65%,#fff0f6 100%);}
+.tw-cd-cloud-cotton{position:absolute;border-radius:50%;background:linear-gradient(180deg,#fff 0%,#ffe6f0 50%,#ffd6e8 100%);filter:blur(2px);box-shadow:0 0 20px #fff0f6aa,0 0 40px #ffd6e866;}
+.tw-cd-cloud-cotton.c1{width:180px;height:60px;top:12%;left:8%;}
+.tw-cd-cloud-cotton.c2{width:240px;height:80px;top:22%;right:12%;}
+.tw-cd-cloud-cotton.c3{width:160px;height:50px;top:35%;left:25%;}
+.tw-cd-cloud-cotton.c4{width:200px;height:70px;top:8%;right:35%;}
+.tw-cd-candy-mtn{position:absolute;left:-40%;right:-40%;bottom:0;border-radius:50% 50% 0 0;}
+.tw-cd-candy-mtn.m1{height:38%;background:linear-gradient(180deg,#ffe3ef,#ff9ec4 55%,#d86a9a);opacity:.92;box-shadow:0 0 40px #ff6fa544;}
+.tw-cd-candy-mtn.m2{height:28%;background:linear-gradient(180deg,#e3fbf0,#8fe0c0 55%,#5aa88a);}
+.tw-cd-candy-mtn.m3{height:18%;background:linear-gradient(180deg,#fff8e3,#ffd79e 55%,#d8a86a);}
+.tw-cd-candy-castle{position:absolute;bottom:26%;left:50%;transform:translateX(-50%);width:170px;height:190px;background:linear-gradient(180deg,#ffe3ef,#ff9ec4 60%,#e87ba8);border-radius:14px 14px 0 0;box-shadow:0 0 70px #ff6fa577,inset 0 0 30px #ffffff66;}
+.tw-cd-candy-castle::before{content:"";position:absolute;top:-42px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:52px solid transparent;border-right:52px solid transparent;border-bottom:46px solid #fff0f6;filter:drop-shadow(0 0 16px #ff6fa5bb);}
+.tw-cd-candy-icing{position:absolute;top:-4px;left:-4px;right:-4px;height:20px;background:#fff;border-radius:10px 10px 0 0;box-shadow:0 6px 16px #ffffffaa;}
+.tw-cd-candy-icing::after{content:"";position:absolute;top:100%;left:0;right:0;height:14px;background:radial-gradient(circle at 8% 0,#fff 0 7px,transparent 8px),radial-gradient(circle at 26% 0,#fff 0 9px,transparent 10px),radial-gradient(circle at 46% 0,#fff 0 8px,transparent 9px),radial-gradient(circle at 66% 0,#fff 0 10px,transparent 11px),radial-gradient(circle at 86% 0,#fff 0 7px,transparent 8px);}
+.tw-cd-candy-tower{position:absolute;bottom:26%;width:54px;height:140px;background:linear-gradient(180deg,#ffe3ef,#ff9ec4);border-radius:27px 27px 0 0;box-shadow:0 0 44px #ff6fa566;}
+.tw-cd-candy-tower::before{content:"";position:absolute;top:-26px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:29px solid transparent;border-right:29px solid transparent;border-bottom:30px solid #fff0f6;filter:drop-shadow(0 0 10px #ff6fa5aa);}
+.tw-cd-candy-tower::after{content:"";position:absolute;top:-40px;left:50%;width:2px;height:16px;background:#fff;transform:translateX(-50%);box-shadow:0 0 8px #fff;}
+.tw-cd-candy-river{position:absolute;bottom:0;left:0;right:0;height:11%;background:linear-gradient(180deg,#7a3f22,#4a2410);box-shadow:inset 0 8px 20px #00000077;}
+.tw-cd-candy-river::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 46px,#ffd79e33 46px 52px);animation:twSlide 9s linear infinite;}
+.tw-cd-candy-pop{position:absolute;width:52px;height:52px;border-radius:50%;background:conic-gradient(#ff4b6b 0 25%,#fff 25% 50%,#ff4b6b 50% 75%,#fff 75%);box-shadow:0 0 22px #ff4b6b88,inset 0 0 10px #ffffffaa;animation:twGlowC 3s infinite;}
+.tw-cd-candy-pop::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);width:6px;height:60px;background:#fff;border-radius:3px;box-shadow:0 0 8px #ffffffaa;}
+.tw-cd-candy-cane{position:absolute;width:16px;height:120px;border-radius:9px;background:repeating-linear-gradient(45deg,#ff4b6b 0 10px,#fff 10px 20px);box-shadow:0 0 16px #ff4b6b66;}
+.tw-cd-candy-gum{position:absolute;width:22px;height:16px;border-radius:8px;background:currentColor;box-shadow:0 0 12px currentColor;opacity:.95;}
+.tw-cd-fairy-light{position:absolute;width:8px;height:8px;border-radius:50%;background:#ffd75e;box-shadow:0 0 12px #ffd75e,0 0 24px #ffd75e88;animation:twFairyBlink 2s ease-in-out infinite;}
+@keyframes twFairyBlink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(0.8)}}
+.tw-cd-snowflake{position:absolute;width:6px;height:6px;background:#fff;border-radius:50%;opacity:.8;animation:twGentleFall linear infinite;}
+@keyframes twGentleFall{0%{transform:translateY(-10px) rotate(0deg)}100%{transform:translateY(calc(100vh + 10px)) rotate(360deg)}}
 
    /* === M8 FORÊT DE SAPINS (volumineux) === */
   .tw-pf-row{position:absolute;left:0;right:0;display:flex;align-items:flex-end;justify-content:space-around;}
@@ -427,134 +435,134 @@ document.addEventListener("visibilitychange", () => {
   .tw-pf-bulb{position:absolute;width:7px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 10px currentColor,0 0 22px currentColor;animation:twLightBlink 1.5s infinite;}
   @keyframes twLightBlink{0%,100%{opacity:1}50%{opacity:.35}}
 
-  /* === M9 ATELIER PÈRE NOËL V3 — CHALEUREUX === */
-  .tw-sh-room{position:absolute;inset:0;background:linear-gradient(180deg,#f5e6d3 0%,#f9eedd 55%,#f2d8bf 100%);}
-  .tw-sh-wallpaper{position:absolute;inset:0;background:
-    radial-gradient(circle at 10% 20%,#ffe8cc44 0 18px,transparent 19px),
-    radial-gradient(circle at 30% 45%,#ffd9b844 0 14px,transparent 15px),
-    radial-gradient(circle at 70% 25%,#ffe8cc44 0 18px,transparent 19px),
-    radial-gradient(circle at 90% 60%,#ffd9b844 0 14px,transparent 15px),
-    repeating-linear-gradient(90deg,transparent 0 120px,#d4a87822 120px 122px);}
-  .tw-sh-halo{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,#fff5d899 0%,#ffebc066 25%,transparent 60%);animation:twGlowC 4s infinite;}
-  .tw-sh-beam{position:absolute;top:0;left:0;right:0;height:40px;background:linear-gradient(180deg,#c49366,#a67850);box-shadow:0 4px 10px #00000044,inset 0 -4px 8px #00000022;}
-  .tw-sh-beam::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 46px,#8a5a3433 46px 48px);}
-  .tw-sh-garland{position:absolute;top:44px;left:2%;right:2%;height:32px;border-bottom:2px solid #8a5a34;border-radius:0 0 50% 50%;}
-  .tw-sh-bulb{position:absolute;width:9px;height:11px;border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor,0 0 24px currentColor;animation:twLightBlink 1.4s infinite;}
-  @keyframes twLightBlink{0%,100%{opacity:1}50%{opacity:.4}}
-  .tw-sh-wreath{position:absolute;width:56px;height:56px;border-radius:50%;border:8px solid #2d6b3e;box-shadow:0 0 16px #2ecc7166,inset 0 0 8px #00000022;background:radial-gradient(circle,#2d6b3e 0 6px,#1a4a26 6px 14px,transparent 14px);}
-  .tw-sh-wreath::before{content:"";position:absolute;top:12%;left:12%;width:6px;height:6px;border-radius:50%;background:#d42a4a;box-shadow:28px 0 0 #d42a4a,14px 28px 0 #d42a4a,0 14px 0 #d42a4a;}
-  .tw-sh-wreath::after{content:"";position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);width:18px;height:14px;background:#d42a4a;clip-path:polygon(0 0,100% 0,50% 100%);filter:drop-shadow(0 0 6px #d42a4a);}
-  .tw-sh-ribbon{position:absolute;top:40px;width:2px;height:36px;background:#8a5a34;}
-  .tw-sh-floor{position:absolute;bottom:0;left:0;right:0;height:17%;background:linear-gradient(180deg,#f4c2c2 0%,#e8a9a9 60%,#d48a8a 100%);box-shadow:inset 0 6px 18px #00000044;}
-  .tw-sh-floor::before{content:"";position:absolute;inset:0;background:
-    repeating-linear-gradient(90deg,transparent 0 78px,#c77f7f22 78px 80px),
-    repeating-linear-gradient(0deg,transparent 0 40px,#c77f7f18 40px 42px);}
-  .tw-sh-rug{position:absolute;bottom:2%;left:50%;transform:translateX(-50%);width:54%;height:6%;background:radial-gradient(ellipse,#d42a4a 0%,#a81430 70%,#7a0e22 100%);border-radius:50%;box-shadow:0 0 24px #d42a4a55,inset 0 0 18px #00000044;}
-  .tw-sh-rug::before{content:"";position:absolute;inset:8%;border:2px solid #ffd75e66;border-radius:50%;}
-  .tw-sh-rug::after{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40%;height:50%;border:2px solid #ffd75e66;border-radius:50%;}
-  .tw-sh-win{position:absolute;width:140px;height:180px;background:radial-gradient(ellipse at 50% 30%,#cfe9ff 0%,#a8d5f0 40%,#7ab4dd 80%);border:10px solid #a67850;border-radius:70px 70px 8px 8px;box-shadow:0 0 30px #ffffffaa,inset 0 0 24px #ffffff66;overflow:hidden;}
-  .tw-sh-win::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:5px;transform:translateX(-50%);background:#a67850;}
-  .tw-sh-win::after{content:"";position:absolute;left:0;right:0;top:50%;height:5px;background:#a67850;}
-  .tw-sh-win-snow{position:absolute;left:-10%;right:-10%;top:0;height:100%;background:
-    radial-gradient(circle at 10% 10%,#fff 0 3px,transparent 4px),
-    radial-gradient(circle at 30% 25%,#fff 0 2px,transparent 3px),
-    radial-gradient(circle at 50% 15%,#fff 0 3px,transparent 4px),
-    radial-gradient(circle at 70% 30%,#fff 0 2px,transparent 3px),
-    radial-gradient(circle at 90% 20%,#fff 0 3px,transparent 4px),
-    radial-gradient(circle at 20% 50%,#fff 0 2px,transparent 3px),
-    radial-gradient(circle at 60% 60%,#fff 0 3px,transparent 4px),
-    radial-gradient(circle at 85% 70%,#fff 0 2px,transparent 3px);
-    animation:twShWinSnow 8s linear infinite;opacity:.9;}
-  @keyframes twShWinSnow{0%{transform:translateY(-40px)}100%{transform:translateY(40px)}}
-  .tw-sh-win-sill{position:absolute;top:178px;left:-12px;right:-12px;height:14px;background:linear-gradient(180deg,#ffffff,#e8f4ff);border-radius:4px;box-shadow:0 4px 8px #00000044;}
-  .tw-sh-fire{position:absolute;bottom:17%;width:140px;height:140px;background:linear-gradient(180deg,#e8d4b8,#c9b090 60%,#a67850);border-radius:8px;box-shadow:0 0 20px #00000044;}
-  .tw-sh-fire::before{content:"";position:absolute;top:12px;left:12px;right:12px;height:78px;background:#1a0f08;border-radius:4px;box-shadow:inset 0 0 20px #000;}
-  .tw-sh-flame{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);width:60px;height:60px;background:radial-gradient(ellipse at bottom,#ffdd55,#ff8c00 55%,#d43a00 85%);border-radius:50% 50% 20% 20%;animation:twFireFlick .7s infinite;box-shadow:0 0 40px #ff8c00aa,0 0 80px #ff8c0055;}
-  @keyframes twFireFlick{0%,100%{transform:translateX(-50%) scaleY(1)}50%{transform:translateX(-50%) scaleY(1.14) scaleX(.92)}}
-  .tw-sh-mantel{position:absolute;bottom:144px;left:-10px;right:-10px;height:14px;background:linear-gradient(180deg,#c49366,#8a5a34);border-radius:4px;box-shadow:0 4px 8px #00000066;}
-  .tw-sh-sock{position:absolute;top:14px;width:22px;height:40px;background:#d42a4a;border-radius:0 0 12px 12px;box-shadow:inset -2px -2px 6px #00000044;}
-  .tw-sh-sock::before{content:"";position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:26px;height:10px;background:#fff;border-radius:4px;}
-  .tw-sh-sock::after{content:"";position:absolute;top:18px;left:6px;right:6px;height:3px;background:#2ecc71;}
-  .tw-sh-tree{position:absolute;bottom:17%;width:150px;height:220px;filter:drop-shadow(0 0 20px #2ecc7155);}
-  .tw-sh-tree .trunk{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:22px;height:28px;background:linear-gradient(90deg,#5a3418,#7a4a28,#5a3418);border-radius:3px;}
-  .tw-sh-tree .pot{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:50px;height:26px;background:linear-gradient(180deg,#d42a4a,#a81430);border-radius:4px 4px 6px 6px;box-shadow:0 4px 8px #00000066;}
-  .tw-sh-tree .pot::before{content:"";position:absolute;top:-4px;left:-4px;right:-4px;height:6px;background:#a81430;border-radius:3px;}
-  .tw-sh-tree .lyr{position:absolute;left:50%;transform:translateX(-50%);width:0;height:0;border-left:44px solid transparent;border-right:44px solid transparent;border-bottom:54px solid #2d6b3e;}
-  .tw-sh-tree .lyr.l1{bottom:26px;border-left-width:54px;border-right-width:54px;border-bottom-width:62px;border-bottom-color:#2d6b3e;}
-  .tw-sh-tree .lyr.l2{bottom:70px;border-left-width:44px;border-right-width:44px;border-bottom-width:54px;border-bottom-color:#358048;}
-  .tw-sh-tree .lyr.l3{bottom:110px;border-left-width:34px;border-right-width:34px;border-bottom-width:48px;border-bottom-color:#3e9656;}
-  .tw-sh-tree .lyr.l4{bottom:146px;border-left-width:22px;border-right-width:22px;border-bottom-width:38px;border-bottom-color:#4aad62;}
-  .tw-sh-tree .star{position:absolute;top:-14px;left:50%;transform:translateX(-50%);width:24px;height:24px;background:#ffd75e;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);box-shadow:0 0 18px #ffd75e,0 0 36px #ffd75ecc;animation:twStarGlow 2s infinite;}
-  @keyframes twStarGlow{0%,100%{opacity:1}50%{opacity:.6}}
-  .tw-sh-ornament{position:absolute;width:12px;height:12px;border-radius:50%;background:currentColor;box-shadow:0 0 10px currentColor,inset -2px -2px 3px #00000044;}
-  .tw-sh-shelf{position:absolute;width:110px;height:14px;background:linear-gradient(180deg,#c49366,#a67850);border-radius:3px;box-shadow:0 4px 6px #00000044,inset 0 -2px 3px #00000033;}
-  .tw-sh-shelf::before{content:"";position:absolute;top:-4px;left:4px;right:4px;height:4px;background:#8a5a34;}
-  .tw-sh-bracket{position:absolute;top:14px;width:10px;height:18px;background:#8a5a34;clip-path:polygon(0 0,100% 0,50% 100%);}
-  .tw-sh-bear{position:absolute;width:30px;height:34px;background:radial-gradient(ellipse at 50% 60%,#c9a078,#8a6840);border-radius:50% 50% 45% 45%;box-shadow:inset -3px -4px 6px #00000044;}
-  .tw-sh-bear::before{content:"";position:absolute;top:2px;left:3px;width:8px;height:8px;border-radius:50%;background:#c9a078;box-shadow:16px 0 0 #c9a078;}
-  .tw-sh-bear::after{content:"";position:absolute;top:14px;left:50%;transform:translateX(-50%);width:10px;height:6px;background:#4a2a10;border-radius:50%;}
-  .tw-sh-ball{position:absolute;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 30% 30%,currentColor,#00000044);box-shadow:0 0 10px currentColor;}
-  .tw-sh-block{position:absolute;width:22px;height:22px;background:currentColor;border-radius:3px;box-shadow:inset -2px -2px 4px #00000044,0 2px 4px #00000044;}
-  .tw-sh-block::after{content:"";position:absolute;inset:4px;border:2px solid #ffffff88;border-radius:2px;}
-  .tw-sh-doll{position:absolute;width:22px;height:32px;background:linear-gradient(180deg,#ff9ec4,#d42a7a);border-radius:11px 11px 4px 4px;box-shadow:inset -2px -2px 5px #00000033;}
-  .tw-sh-doll::before{content:"";position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:14px;height:14px;background:#ffd9b8;border-radius:50%;}
-  .tw-sh-doll::after{content:"";position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:16px;height:8px;background:#ffd75e;border-radius:8px 8px 0 0;}
-  .tw-sh-train{position:absolute;width:40px;height:22px;background:linear-gradient(180deg,#d42a4a,#a81430);border-radius:4px 10px 2px 2px;box-shadow:0 2px 4px #00000066;}
-  .tw-sh-train::before{content:"";position:absolute;top:4px;left:4px;width:10px;height:10px;border-radius:50%;background:#ffd75e;box-shadow:0 0 6px #ffd75e;}
-  .tw-sh-train::after{content:"";position:absolute;top:-8px;right:4px;width:6px;height:10px;background:#2a1208;border-radius:2px 2px 0 0;}
-  .tw-sh-santa{position:absolute;bottom:17%;left:50%;transform:translateX(-50%);width:110px;height:170px;animation:twSantaBob 2.8s ease-in-out infinite;}
-  @keyframes twSantaBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
-  .tw-sh-santa .body{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:96px;height:88px;background:linear-gradient(180deg,#d42a4a,#a81430);border-radius:48px 48px 16px 16px;box-shadow:0 0 28px #d42a4a66,inset -6px -8px 14px #00000033;}
-  .tw-sh-santa .body::before{content:"";position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:96px;height:18px;background:#fff;border-radius:0 0 16px 16px;}
-  .tw-sh-santa .belt{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);width:96px;height:14px;background:#2a1208;}
-  .tw-sh-santa .buckle{position:absolute;bottom:31px;left:50%;transform:translateX(-50%);width:18px;height:12px;background:#ffd75e;border-radius:3px;box-shadow:0 0 10px #ffd75e,inset 0 -2px 2px #8a6a1a;}
-  .tw-sh-santa .beard{position:absolute;bottom:62px;left:50%;transform:translateX(-50%);width:70px;height:54px;background:#fff;border-radius:0 0 35px 35px;box-shadow:0 0 16px #ffffff88,inset -4px -6px 8px #00000018;}
-  .tw-sh-santa .head{position:absolute;bottom:100px;left:50%;transform:translateX(-50%);width:48px;height:48px;background:#ffd9b8;border-radius:50%;box-shadow:inset -3px -3px 6px #00000018;}
-  .tw-sh-santa .eye{position:absolute;bottom:120px;width:4px;height:4px;border-radius:50%;background:#2a1208;}
-  .tw-sh-santa .eye.l{left:38px;}.tw-sh-santa .eye.r{left:68px;}
-  .tw-sh-santa .nose{position:absolute;bottom:110px;left:50%;transform:translateX(-50%);width:10px;height:10px;background:#f0a088;border-radius:50%;}
-  .tw-sh-santa .mouth{position:absolute;bottom:90px;left:50%;transform:translateX(-50%);width:18px;height:8px;background:#d42a4a;border-radius:0 0 10px 10px;}
-  .tw-sh-santa .hat{position:absolute;bottom:136px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:26px solid transparent;border-right:26px solid transparent;border-bottom:42px solid #d42a4a;}
-  .tw-sh-santa .hat::before{content:"";position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:60px;height:10px;background:#fff;border-radius:5px;}
-  .tw-sh-santa .pom{position:absolute;bottom:172px;left:50%;transform:translateX(-50%);width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:0 0 14px #ffffffaa;}
-  .tw-sh-santa .arm{position:absolute;bottom:48px;width:38px;height:18px;background:#d42a4a;border-radius:9px;box-shadow:inset -2px -2px 4px #00000033;}
-  .tw-sh-santa .arm::before{content:"";position:absolute;right:-2px;top:2px;width:14px;height:14px;background:#fff;border-radius:50%;}
-  .tw-sh-santa .arm.l{left:-16px;transform:rotate(20deg);}
-  .tw-sh-santa .arm.r{right:-16px;transform:rotate(-40deg);}
-  .tw-sh-santa .gift{position:absolute;bottom:70px;right:-42px;width:32px;height:32px;background:#2ecc71;border-radius:4px;box-shadow:0 0 16px #2ecc7166,0 4px 8px #00000044;animation:twGiftWave 2.8s ease-in-out infinite;}
-  .tw-sh-santa .gift::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:6px;height:100%;background:#ffd75e;}
-  .tw-sh-santa .gift::after{content:"";position:absolute;top:50%;left:0;transform:translateY(-50%);width:100%;height:6px;background:#ffd75e;}
-  @keyframes twGiftWave{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(14deg) translateY(-5px)}}
-  .tw-sh-elf{position:absolute;bottom:17%;width:48px;height:78px;animation:twElfWalk 13s linear infinite;}
-  @keyframes twElfWalk{0%{left:-12%}46%{left:84%}50%{left:84%}96%{left:-12%}100%{left:-12%}}
-  .tw-sh-elf.flip{animation-name:twElfWalkFlip;}
-  @keyframes twElfWalkFlip{0%{left:84%}46%{left:-12%}50%{left:-12%}96%{left:84%}100%{left:84%}}
-  .tw-sh-elf .body{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:38px;height:40px;background:linear-gradient(180deg,#2ecc71,#1a9a4a);border-radius:18px 18px 6px 6px;box-shadow:inset -3px -4px 6px #00000033;}
-  .tw-sh-elf .body::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:38px;height:10px;background:#d42a4a;border-radius:18px 18px 0 0;}
-  .tw-sh-elf .head{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);width:26px;height:26px;background:#ffd9b8;border-radius:50%;}
-  .tw-sh-elf .hat{position:absolute;bottom:58px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:26px solid #d42a4a;}
-  .tw-sh-elf .pom{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);width:10px;height:10px;background:#fff;border-radius:50%;box-shadow:0 0 8px #ffffff88;}
-  .tw-sh-elf .carry{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);width:22px;height:22px;background:currentColor;border-radius:3px;box-shadow:0 0 12px currentColor,0 2px 4px #00000044;}
-  .tw-sh-elf .carry::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:4px;height:100%;background:#ffffff88;}
-  .tw-sh-table{position:absolute;bottom:17%;left:50%;transform:translateX(-50%);width:240px;height:50px;}
-  .tw-sh-table .top{position:absolute;top:0;left:0;right:0;height:10px;background:linear-gradient(180deg,#d42a4a,#a81430);border-radius:4px 4px 0 0;}
-  .tw-sh-table .cloth{position:absolute;top:10px;left:-10px;right:-10px;height:30px;background:radial-gradient(ellipse,#d42a4a,#a81430);border-radius:0 0 40% 40% / 0 0 60% 60%;box-shadow:0 6px 12px #00000044;}
-  .tw-sh-table .cloth::before{content:"";position:absolute;inset:4px 8px;border:2px dotted #ffd75e88;border-radius:0 0 40% 40% / 0 0 60% 60%;}
-  .tw-sh-gift-pile{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);width:200px;height:50px;}
-  .tw-sh-gift-pile .g{position:absolute;border-radius:4px;box-shadow:0 0 14px #00000044;}
-  .tw-sh-gift-pile .g::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:4px;height:100%;background:#ffffffaa;}
-  .tw-sh-gift-pile .g::after{content:"";position:absolute;top:50%;left:0;transform:translateY(-50%);width:100%;height:4px;background:#ffffffaa;}
-  .tw-sh-pet{position:absolute;bottom:17%;right:12%;width:60px;height:46px;background:radial-gradient(ellipse at 50% 60%,#c9a078,#8a6840);border-radius:50% 50% 40% 40%;box-shadow:inset -4px -6px 10px #00000044;animation:twPetSleep 4s ease-in-out infinite;}
-  @keyframes twPetSleep{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
-  .tw-sh-pet::before{content:"";position:absolute;top:2px;left:8px;width:12px;height:14px;background:#c9a078;border-radius:50% 50% 40% 40%;box-shadow:30px 0 0 #c9a078;}
-  .tw-sh-pet::after{content:"";position:absolute;top:18px;left:50%;transform:translateX(-50%);width:12px;height:8px;background:#4a2a10;border-radius:50%;}
-  .tw-sh-plate{position:absolute;bottom:17%;left:14%;width:54px;height:14px;background:radial-gradient(ellipse,#fff,#e8d8c8);border-radius:50%;box-shadow:0 2px 6px #00000044,inset 0 -2px 4px #00000022;}
-  .tw-sh-cookie{position:absolute;bottom:21%;left:16%;width:20px;height:20px;background:radial-gradient(circle at 40% 40%,#c9a078,#7a5a30);border-radius:50%;box-shadow:inset -2px -2px 4px #00000044;}
-  .tw-sh-cookie::before{content:"";position:absolute;top:4px;left:6px;width:3px;height:3px;border-radius:50%;background:#4a2a10;box-shadow:6px 4px 0 #4a2a10,2px 8px 0 #4a2a10;}
-  .tw-sh-glass{position:absolute;bottom:21%;left:24%;width:16px;height:24px;background:linear-gradient(180deg,#fff9e8 0%,#fff9e8 40%,#f8e8c8 40%,#d4a878 100%);border-radius:3px 3px 0 0;border:2px solid #ffffffaa;box-shadow:0 2px 6px #00000044;}
-  .tw-sh-sparkle{position:absolute;width:14px;height:14px;background:linear-gradient(0deg,transparent 42%,#ffd75e 42% 58%,transparent 58%),linear-gradient(90deg,transparent 42%,#ffd75e 42% 58%,transparent 58%);animation:twSparkle 3.4s ease-in-out infinite;filter:drop-shadow(0 0 6px #ffd75e);}
-  @keyframes twSparkle{0%,100%{opacity:0;transform:scale(.4) rotate(0deg)}50%{opacity:1;transform:scale(1.2) rotate(45deg)}}
-  .tw-sh-snow-out{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff;opacity:.9;animation:twFall linear infinite;}
+/* === M9 ATELIER PÈRE NOL V3 — CHALEUREUX === */
+.tw-sh-room{position:absolute;inset:0;background:linear-gradient(180deg,#f5e6d3 0%,#f9eedd 55%,#f2d8bf 100%);}
+.tw-sh-wallpaper{position:absolute;inset:0;background:
+  radial-gradient(circle at 10% 20%,#ffe8cc44 0 18px,transparent 19px),
+  radial-gradient(circle at 30% 45%,#ffd9b844 0 14px,transparent 15px),
+  radial-gradient(circle at 70% 25%,#ffe8cc44 0 18px,transparent 19px),
+  radial-gradient(circle at 90% 60%,#ffd9b844 0 14px,transparent 15px),
+  repeating-linear-gradient(90deg,transparent 0 120px,#d4a87822 120px 122px);}
+.tw-sh-halo{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,#fff5d899 0%,#ffebc066 25%,transparent 60%);animation:twGlowC 4s infinite;}
+.tw-sh-beam{position:absolute;top:0;left:0;right:0;height:40px;background:linear-gradient(180deg,#c49366,#a67850);box-shadow:0 4px 10px #00000044,inset 0 -4px 8px #00000022;}
+.tw-sh-beam::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 46px,#8a5a3433 46px 48px);}
+.tw-sh-garland{position:absolute;top:44px;left:2%;right:2%;height:32px;border-bottom:2px solid #8a5a34;border-radius:0 0 50% 50%;}
+.tw-sh-bulb{position:absolute;width:9px;height:11px;border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor,0 0 24px currentColor;animation:twLightBlink 1.4s infinite;}
+@keyframes twLightBlink{0%,100%{opacity:1}50%{opacity:.4}}
+.tw-sh-wreath{position:absolute;width:56px;height:56px;border-radius:50%;border:8px solid #2d6b3e;box-shadow:0 0 16px #2ecc7166,inset 0 0 8px #00000022;background:radial-gradient(circle,#2d6b3e 0 6px,#1a4a26 6px 14px,transparent 14px);}
+.tw-sh-wreath::before{content:"";position:absolute;top:12%;left:12%;width:6px;height:6px;border-radius:50%;background:#d42a4a;box-shadow:28px 0 0 #d42a4a,14px 28px 0 #d42a4a,0 14px 0 #d42a4a;}
+.tw-sh-wreath::after{content:"";position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);width:18px;height:14px;background:#d42a4a;clip-path:polygon(0 0,100% 0,50% 100%);filter:drop-shadow(0 0 6px #d42a4a);}
+.tw-sh-ribbon{position:absolute;top:40px;width:2px;height:36px;background:#8a5a34;}
+.tw-sh-floor{position:absolute;bottom:0;left:0;right:0;height:17%;background:linear-gradient(180deg,#f4c2c2 0%,#e8a9a9 60%,#d48a8a 100%);box-shadow:inset 0 6px 18px #00000044;}
+.tw-sh-floor::before{content:"";position:absolute;inset:0;background:
+  repeating-linear-gradient(90deg,transparent 0 78px,#c77f7f22 78px 80px),
+  repeating-linear-gradient(0deg,transparent 0 40px,#c77f7f18 40px 42px);}
+.tw-sh-rug{position:absolute;bottom:2%;left:50%;transform:translateX(-50%);width:54%;height:6%;background:radial-gradient(ellipse,#d42a4a 0%,#a81430 70%,#7a0e22 100%);border-radius:50%;box-shadow:0 0 24px #d42a4a55,inset 0 0 18px #00000044;}
+.tw-sh-rug::before{content:"";position:absolute;inset:8%;border:2px solid #ffd75e66;border-radius:50%;}
+.tw-sh-rug::after{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40%;height:50%;border:2px solid #ffd75e66;border-radius:50%;}
+.tw-sh-win{position:absolute;width:140px;height:180px;background:radial-gradient(ellipse at 50% 30%,#cfe9ff 0%,#a8d5f0 40%,#7ab4dd 80%);border:10px solid #a67850;border-radius:70px 70px 8px 8px;box-shadow:0 0 30px #ffffffaa,inset 0 0 24px #ffffff66;overflow:hidden;}
+.tw-sh-win::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:5px;transform:translateX(-50%);background:#a67850;}
+.tw-sh-win::after{content:"";position:absolute;left:0;right:0;top:50%;height:5px;background:#a67850;}
+.tw-sh-win-snow{position:absolute;left:-10%;right:-10%;top:0;height:100%;background:
+  radial-gradient(circle at 10% 10%,#fff 0 3px,transparent 4px),
+  radial-gradient(circle at 30% 25%,#fff 0 2px,transparent 3px),
+  radial-gradient(circle at 50% 15%,#fff 0 3px,transparent 4px),
+  radial-gradient(circle at 70% 30%,#fff 0 2px,transparent 3px),
+  radial-gradient(circle at 90% 20%,#fff 0 3px,transparent 4px),
+  radial-gradient(circle at 20% 50%,#fff 0 2px,transparent 3px),
+  radial-gradient(circle at 60% 60%,#fff 0 3px,transparent 4px),
+  radial-gradient(circle at 85% 70%,#fff 0 2px,transparent 3px);
+  animation:twShWinSnow 8s linear infinite;opacity:.9;}
+@keyframes twShWinSnow{0%{transform:translateY(-40px)}100%{transform:translateY(40px)}}
+.tw-sh-win-sill{position:absolute;top:178px;left:-12px;right:-12px;height:14px;background:linear-gradient(180deg,#ffffff,#e8f4ff);border-radius:4px;box-shadow:0 4px 8px #00000044;}
+.tw-sh-fire{position:absolute;bottom:17%;width:140px;height:140px;background:linear-gradient(180deg,#e8d4b8,#c9b090 60%,#a67850);border-radius:8px;box-shadow:0 0 20px #00000044;}
+.tw-sh-fire::before{content:"";position:absolute;top:12px;left:12px;right:12px;height:78px;background:#1a0f08;border-radius:4px;box-shadow:inset 0 0 20px #000;}
+.tw-sh-flame{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);width:60px;height:60px;background:radial-gradient(ellipse at bottom,#ffdd55,#ff8c00 55%,#d43a00 85%);border-radius:50% 50% 20% 20%;animation:twFireFlick .7s infinite;box-shadow:0 0 40px #ff8c00aa,0 0 80px #ff8c0055;}
+@keyframes twFireFlick{0%,100%{transform:translateX(-50%) scaleY(1)}50%{transform:translateX(-50%) scaleY(1.14) scaleX(.92)}}
+.tw-sh-mantel{position:absolute;bottom:144px;left:-10px;right:-10px;height:14px;background:linear-gradient(180deg,#c49366,#8a5a34);border-radius:4px;box-shadow:0 4px 8px #00000066;}
+.tw-sh-sock{position:absolute;top:14px;width:22px;height:40px;background:#d42a4a;border-radius:0 0 12px 12px;box-shadow:inset -2px -2px 6px #00000044;}
+.tw-sh-sock::before{content:"";position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:26px;height:10px;background:#fff;border-radius:4px;}
+.tw-sh-sock::after{content:"";position:absolute;top:18px;left:6px;right:6px;height:3px;background:#2ecc71;}
+.tw-sh-tree{position:absolute;bottom:17%;width:150px;height:220px;filter:drop-shadow(0 0 20px #2ecc7155);}
+.tw-sh-tree .trunk{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:22px;height:28px;background:linear-gradient(90deg,#5a3418,#7a4a28,#5a3418);border-radius:3px;}
+.tw-sh-tree .pot{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:50px;height:26px;background:linear-gradient(180deg,#d42a4a,#a81430);border-radius:4px 4px 6px 6px;box-shadow:0 4px 8px #00000066;}
+.tw-sh-tree .pot::before{content:"";position:absolute;top:-4px;left:-4px;right:-4px;height:6px;background:#a81430;border-radius:3px;}
+.tw-sh-tree .lyr{position:absolute;left:50%;transform:translateX(-50%);width:0;height:0;border-left:44px solid transparent;border-right:44px solid transparent;border-bottom:54px solid #2d6b3e;}
+.tw-sh-tree .lyr.l1{bottom:26px;border-left-width:54px;border-right-width:54px;border-bottom-width:62px;border-bottom-color:#2d6b3e;}
+.tw-sh-tree .lyr.l2{bottom:70px;border-left-width:44px;border-right-width:44px;border-bottom-width:54px;border-bottom-color:#358048;}
+.tw-sh-tree .lyr.l3{bottom:110px;border-left-width:34px;border-right-width:34px;border-bottom-width:48px;border-bottom-color:#3e9656;}
+.tw-sh-tree .lyr.l4{bottom:146px;border-left-width:22px;border-right-width:22px;border-bottom-width:38px;border-bottom-color:#4aad62;}
+.tw-sh-tree .star{position:absolute;top:-14px;left:50%;transform:translateX(-50%);width:24px;height:24px;background:#ffd75e;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);box-shadow:0 0 18px #ffd75e,0 0 36px #ffd75ecc;animation:twStarGlow 2s infinite;}
+@keyframes twStarGlow{0%,100%{opacity:1}50%{opacity:.6}}
+.tw-sh-ornament{position:absolute;width:12px;height:12px;border-radius:50%;background:currentColor;box-shadow:0 0 10px currentColor,inset -2px -2px 3px #00000044;}
+.tw-sh-shelf{position:absolute;width:110px;height:14px;background:linear-gradient(180deg,#c49366,#a67850);border-radius:3px;box-shadow:0 4px 6px #00000044,inset 0 -2px 3px #00000033;}
+.tw-sh-shelf::before{content:"";position:absolute;top:-4px;left:4px;right:4px;height:4px;background:#8a5a34;}
+.tw-sh-bracket{position:absolute;top:14px;width:10px;height:18px;background:#8a5a34;clip-path:polygon(0 0,100% 0,50% 100%);}
+.tw-sh-bear{position:absolute;width:30px;height:34px;background:radial-gradient(ellipse at 50% 60%,#c9a078,#8a6840);border-radius:50% 50% 45% 45%;box-shadow:inset -3px -4px 6px #00000044;}
+.tw-sh-bear::before{content:"";position:absolute;top:2px;left:3px;width:8px;height:8px;border-radius:50%;background:#c9a078;box-shadow:16px 0 0 #c9a078;}
+.tw-sh-bear::after{content:"";position:absolute;top:14px;left:50%;transform:translateX(-50%);width:10px;height:6px;background:#4a2a10;border-radius:50%;}
+.tw-sh-ball{position:absolute;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 30% 30%,currentColor,#00000044);box-shadow:0 0 10px currentColor;}
+.tw-sh-block{position:absolute;width:22px;height:22px;background:currentColor;border-radius:3px;box-shadow:inset -2px -2px 4px #00000044,0 2px 4px #00000044;}
+.tw-sh-block::after{content:"";position:absolute;inset:4px;border:2px solid #ffffff88;border-radius:2px;}
+.tw-sh-doll{position:absolute;width:22px;height:32px;background:linear-gradient(180deg,#ff9ec4,#d42a7a);border-radius:11px 11px 4px 4px;box-shadow:inset -2px -2px 5px #00000033;}
+.tw-sh-doll::before{content:"";position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:14px;height:14px;background:#ffd9b8;border-radius:50%;}
+.tw-sh-doll::after{content:"";position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:16px;height:8px;background:#ffd75e;border-radius:8px 8px 0 0;}
+.tw-sh-train{position:absolute;width:40px;height:22px;background:linear-gradient(180deg,#d42a4a,#a81430);border-radius:4px 10px 2px 2px;box-shadow:0 2px 4px #00000066;}
+.tw-sh-train::before{content:"";position:absolute;top:4px;left:4px;width:10px;height:10px;border-radius:50%;background:#ffd75e;box-shadow:0 0 6px #ffd75e;}
+.tw-sh-train::after{content:"";position:absolute;top:-8px;right:4px;width:6px;height:10px;background:#2a1208;border-radius:2px 2px 0 0;}
+.tw-sh-santa{position:absolute;bottom:17%;left:50%;transform:translateX(-50%);width:110px;height:170px;animation:twSantaBob 2.8s ease-in-out infinite;}
+@keyframes twSantaBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
+.tw-sh-santa .body{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:96px;height:88px;background:linear-gradient(180deg,#d42a4a,#a81430);border-radius:48px 48px 16px 16px;box-shadow:0 0 28px #d42a4a66,inset -6px -8px 14px #00000033;}
+.tw-sh-santa .body::before{content:"";position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:96px;height:18px;background:#fff;border-radius:0 0 16px 16px;}
+.tw-sh-santa .belt{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);width:96px;height:14px;background:#2a1208;}
+.tw-sh-santa .buckle{position:absolute;bottom:31px;left:50%;transform:translateX(-50%);width:18px;height:12px;background:#ffd75e;border-radius:3px;box-shadow:0 0 10px #ffd75e,inset 0 -2px 2px #8a6a1a;}
+.tw-sh-santa .beard{position:absolute;bottom:62px;left:50%;transform:translateX(-50%);width:70px;height:54px;background:#fff;border-radius:0 0 35px 35px;box-shadow:0 0 16px #ffffff88,inset -4px -6px 8px #00000018;}
+.tw-sh-santa .head{position:absolute;bottom:100px;left:50%;transform:translateX(-50%);width:48px;height:48px;background:#ffd9b8;border-radius:50%;box-shadow:inset -3px -3px 6px #00000018;}
+.tw-sh-santa .eye{position:absolute;bottom:120px;width:4px;height:4px;border-radius:50%;background:#2a1208;}
+.tw-sh-santa .eye.l{left:38px;}.tw-sh-santa .eye.r{left:68px;}
+.tw-sh-santa .nose{position:absolute;bottom:110px;left:50%;transform:translateX(-50%);width:10px;height:10px;background:#f0a088;border-radius:50%;}
+.tw-sh-santa .mouth{position:absolute;bottom:90px;left:50%;transform:translateX(-50%);width:18px;height:8px;background:#d42a4a;border-radius:0 0 10px 10px;}
+.tw-sh-santa .hat{position:absolute;bottom:136px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:26px solid transparent;border-right:26px solid transparent;border-bottom:42px solid #d42a4a;}
+.tw-sh-santa .hat::before{content:"";position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:60px;height:10px;background:#fff;border-radius:5px;}
+.tw-sh-santa .pom{position:absolute;bottom:172px;left:50%;transform:translateX(-50%);width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:0 0 14px #ffffffaa;}
+.tw-sh-santa .arm{position:absolute;bottom:48px;width:38px;height:18px;background:#d42a4a;border-radius:9px;box-shadow:inset -2px -2px 4px #00000033;}
+.tw-sh-santa .arm::before{content:"";position:absolute;right:-2px;top:2px;width:14px;height:14px;background:#fff;border-radius:50%;}
+.tw-sh-santa .arm.l{left:-16px;transform:rotate(20deg);}
+.tw-sh-santa .arm.r{right:-16px;transform:rotate(-40deg);}
+.tw-sh-santa .gift{position:absolute;bottom:70px;right:-42px;width:32px;height:32px;background:#2ecc71;border-radius:4px;box-shadow:0 0 16px #2ecc7166,0 4px 8px #00000044;animation:twGiftWave 2.8s ease-in-out infinite;}
+.tw-sh-santa .gift::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:6px;height:100%;background:#ffd75e;}
+.tw-sh-santa .gift::after{content:"";position:absolute;top:50%;left:0;transform:translateY(-50%);width:100%;height:6px;background:#ffd75e;}
+@keyframes twGiftWave{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(14deg) translateY(-5px)}}
+.tw-sh-elf{position:absolute;bottom:17%;width:48px;height:78px;animation:twElfWalk 13s linear infinite;}
+@keyframes twElfWalk{0%{left:-12%}46%{left:84%}50%{left:84%}96%{left:-12%}100%{left:-12%}}
+.tw-sh-elf.flip{animation-name:twElfWalkFlip;}
+@keyframes twElfWalkFlip{0%{left:84%}46%{left:-12%}50%{left:-12%}96%{left:84%}100%{left:84%}}
+.tw-sh-elf .body{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:38px;height:40px;background:linear-gradient(180deg,#2ecc71,#1a9a4a);border-radius:18px 18px 6px 6px;box-shadow:inset -3px -4px 6px #00000033;}
+.tw-sh-elf .body::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:38px;height:10px;background:#d42a4a;border-radius:18px 18px 0 0;}
+.tw-sh-elf .head{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);width:26px;height:26px;background:#ffd9b8;border-radius:50%;}
+.tw-sh-elf .hat{position:absolute;bottom:58px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:26px solid #d42a4a;}
+.tw-sh-elf .pom{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);width:10px;height:10px;background:#fff;border-radius:50%;box-shadow:0 0 8px #ffffff88;}
+.tw-sh-elf .carry{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);width:22px;height:22px;background:currentColor;border-radius:3px;box-shadow:0 0 12px currentColor,0 2px 4px #00000044;}
+.tw-sh-elf .carry::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:4px;height:100%;background:#ffffff88;}
+.tw-sh-table{position:absolute;bottom:17%;left:50%;transform:translateX(-50%);width:240px;height:50px;}
+.tw-sh-table .top{position:absolute;top:0;left:0;right:0;height:10px;background:linear-gradient(180deg,#d42a4a,#a81430);border-radius:4px 4px 0 0;}
+.tw-sh-table .cloth{position:absolute;top:10px;left:-10px;right:-10px;height:30px;background:radial-gradient(ellipse,#d42a4a,#a81430);border-radius:0 0 40% 40% / 0 0 60% 60%;box-shadow:0 6px 12px #00000044;}
+.tw-sh-table .cloth::before{content:"";position:absolute;inset:4px 8px;border:2px dotted #ffd75e88;border-radius:0 0 40% 40% / 0 0 60% 60%;}
+.tw-sh-gift-pile{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);width:200px;height:50px;}
+.tw-sh-gift-pile .g{position:absolute;border-radius:4px;box-shadow:0 0 14px #00000044;}
+.tw-sh-gift-pile .g::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:4px;height:100%;background:#ffffffaa;}
+.tw-sh-gift-pile .g::after{content:"";position:absolute;top:50%;left:0;transform:translateY(-50%);width:100%;height:4px;background:#ffffffaa;}
+.tw-sh-pet{position:absolute;bottom:17%;right:12%;width:60px;height:46px;background:radial-gradient(ellipse at 50% 60%,#c9a078,#8a6840);border-radius:50% 50% 40% 40%;box-shadow:inset -4px -6px 10px #00000044;animation:twPetSleep 4s ease-in-out infinite;}
+@keyframes twPetSleep{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+.tw-sh-pet::before{content:"";position:absolute;top:2px;left:8px;width:12px;height:14px;background:#c9a078;border-radius:50% 50% 40% 40%;box-shadow:30px 0 0 #c9a078;}
+.tw-sh-pet::after{content:"";position:absolute;top:18px;left:50%;transform:translateX(-50%);width:12px;height:8px;background:#4a2a10;border-radius:50%;}
+.tw-sh-plate{position:absolute;bottom:17%;left:14%;width:54px;height:14px;background:radial-gradient(ellipse,#fff,#e8d8c8);border-radius:50%;box-shadow:0 2px 6px #00000044,inset 0 -2px 4px #00000022;}
+.tw-sh-cookie{position:absolute;bottom:21%;left:16%;width:20px;height:20px;background:radial-gradient(circle at 40% 40%,#c9a078,#7a5a30);border-radius:50%;box-shadow:inset -2px -2px 4px #00000044;}
+.tw-sh-cookie::before{content:"";position:absolute;top:4px;left:6px;width:3px;height:3px;border-radius:50%;background:#4a2a10;box-shadow:6px 4px 0 #4a2a10,2px 8px 0 #4a2a10;}
+.tw-sh-glass{position:absolute;bottom:21%;left:24%;width:16px;height:24px;background:linear-gradient(180deg,#fff9e8 0%,#fff9e8 40%,#f8e8c8 40%,#d4a878 100%);border-radius:3px 3px 0 0;border:2px solid #ffffffaa;box-shadow:0 2px 6px #00000044;}
+.tw-sh-sparkle{position:absolute;width:14px;height:14px;background:linear-gradient(0deg,transparent 42%,#ffd75e 42% 58%,transparent 58%),linear-gradient(90deg,transparent 42%,#ffd75e 42% 58%,transparent 58%);animation:twSparkle 3.4s ease-in-out infinite;filter:drop-shadow(0 0 6px #ffd75e);}
+@keyframes twSparkle{0%,100%{opacity:0;transform:scale(.4) rotate(0deg)}50%{opacity:1;transform:scale(1.2) rotate(45deg)}}
+.tw-sh-snow-out{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff;opacity:.9;animation:twFall linear infinite;}
   
   .tw-brief{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:9995;}
   .tw-brief-card{background:#0f051d;border:2px solid #00d2ff;border-radius:12px;padding:16px;max-width:82%;text-align:center;}
@@ -767,23 +775,27 @@ function generateSceneHTML(c, W, C) {
     html += `<div class="tw-bat" style="top:6%;left:30%;animation:none;transform:rotate(180deg);"></div>`;
     html += `<div class="tw-bat" style="top:5%;left:62%;animation:none;transform:rotate(180deg) scale(.8);"></div>`;
   }
-   if (W.scene === "candy") {
-    html += `<div class="tw-aurora"></div>`;
-    html += `<span class="tw-cd-moonrose"></span>`;
-    for (let i=0;i<(IS_MOBILE?3:5);i++) html += `<span class="tw-cd-cloud" style="top:${6+i*8}%;width:${26+(i*9)%20}%;animation-duration:${60+i*22}s;animation-delay:${-i*18}s;"></span>`;
-    const stN = IS_MOBILE?30:70;
-    for (let i=0;i<stN;i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%50}%;animation-delay:${(i*.23)%3}s;"></span>`;
-    for (let i=0;i<(IS_MOBILE?4:8);i++) html += `<span class="tw-bokeh" style="left:${8+i*12}%;top:${18+(i*9)%40}%;width:${10+(i%3)*8}px;height:${10+(i%3)*8}px;background:${["#ff6fa5","#ffd75e","#74ebf5"][i%3]};animation-delay:${i*1.1}s;"></span>`;
-    html += `<div class="tw-cd-mtn m1"></div><div class="tw-cd-mtn m2"></div><div class="tw-cd-mtn m3"></div>`;
-    html += `<div class="tw-cd-tower" style="left:16%;"></div><div class="tw-cd-tower" style="right:16%;height:120px;"></div>`;
-    html += `<div class="tw-cd-castle"><div class="tw-cd-icing"></div></div>`;
-    for (let i=0;i<(IS_MOBILE?3:5);i++) html += `<div class="tw-cd-pop" style="left:${8+i*19}%;bottom:${20+(i%2)*8}%;transform:scale(${0.8+(i%3)*0.18});animation-delay:${i*.5}s;"></div>`;
-    for (let i=0;i<(IS_MOBILE?2:4);i++) html += `<div class="tw-cd-cane" style="left:${14+i*23}%;bottom:${12+(i%2)*6}%;transform:rotate(${i%2?12:-10}deg);"></div>`;
-    html += `<div class="tw-cd-river"></div>`;
-    const gcols = ["#ff6fa5","#7dff8a","#ffd75e","#74ebf5","#c28aff"];
-    for (let i=0;i<(IS_MOBILE?6:10);i++) html += `<div class="tw-cd-gum" style="left:${5+i*9}%;bottom:${2+(i%2)*3}%;color:${gcols[i%5]};"></div>`;
-    for (let i=0;i<(IS_MOBILE?4:9);i++) html += `<span class="tw-sparkle" style="left:${6+i*11}%;top:${12+(i*13)%46}%;animation-delay:${i*.7}s;"></span>`;
-  }
+ if (W.scene === "candy") {
+  html += `<div class="tw-cd-sky"></div>`;
+  html += `<div class="tw-cd-cloud-cotton c1"></div>`;
+  html += `<div class="tw-cd-cloud-cotton c2"></div>`;
+  html += `<div class="tw-cd-cloud-cotton c3"></div>`;
+  html += `<div class="tw-cd-cloud-cotton c4"></div>`;
+  const stN = IS_MOBILE?30:70;
+  for (let i=0;i<stN;i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%50}%;animation-delay:${(i*.23)%3}s;"></span>`;
+  for (let i=0;i<(IS_MOBILE?4:8);i++) html += `<span class="tw-bokeh" style="left:${8+i*12}%;top:${18+(i*9)%40}%;width:${10+(i%3)*8}px;height:${10+(i%3)*8}px;background:${["#ff6fa5","#ffd75e","#74ebf5"][i%3]};animation-delay:${i*1.1}s;"></span>`;
+  html += `<div class="tw-cd-candy-mtn m1"></div><div class="tw-cd-candy-mtn m2"></div><div class="tw-cd-candy-mtn m3"></div>`;
+  html += `<div class="tw-cd-candy-tower" style="left:16%;"></div><div class="tw-cd-candy-tower" style="right:16%;height:120px;"></div>`;
+  html += `<div class="tw-cd-candy-castle"><div class="tw-cd-candy-icing"></div></div>`;
+  for (let i=0;i<(IS_MOBILE?3:5);i++) html += `<div class="tw-cd-candy-pop" style="left:${8+i*19}%;bottom:${20+(i%2)*8}%;transform:scale(${0.8+(i%3)*0.18});animation-delay:${i*.5}s;"></div>`;
+  for (let i=0;i<(IS_MOBILE?2:4);i++) html += `<div class="tw-cd-candy-cane" style="left:${14+i*23}%;bottom:${12+(i%2)*6}%;transform:rotate(${i%2?12:-10}deg);"></div>`;
+  html += `<div class="tw-cd-candy-river"></div>`;
+  const gcols = ["#ff6fa5","#7dff8a","#ffd75e","#74ebf5","#c28aff"];
+  for (let i=0;i<(IS_MOBILE?6:10);i++) html += `<div class="tw-cd-candy-gum" style="left:${5+i*9}%;bottom:${2+(i%2)*3}%;color:${gcols[i%5]};"></div>`;
+  for (let i=0;i<(IS_MOBILE?4:9);i++) html += `<span class="tw-sparkle" style="left:${6+i*11}%;top:${12+(i*13)%46}%;animation-delay:${i*.7}s;"></span>`;
+  for (let i=0;i<(IS_MOBILE?6:12);i++) html += `<div class="tw-cd-fairy-light" style="left:${5+i*8}%;top:${15+(i*7)%30}%;animation-delay:${i*.3}s;"></div>`;
+  for (let i=0;i<(IS_MOBILE?8:15);i++) html += `<span class="tw-cd-snowflake" style="left:${(i*13)%100}%;animation-duration:${8+(i%4)*3}s;animation-delay:${-i*2}s;"></span>`;
+}
 
    if (W.scene === "pine") {
     html += `<div class="tw-aurora"></div>`;
@@ -812,58 +824,58 @@ function generateSceneHTML(c, W, C) {
     for (let i=0;i<(IS_MOBILE?3:7);i++) html += `<span class="tw-sparkle" style="left:${8+i*13}%;top:${10+(i*11)%40}%;animation-delay:${i*.6}s;"></span>`;
   }
 
-     if (W.scene === "shop") {
-    html += `<div class="tw-sh-room"></div><div class="tw-sh-wallpaper"></div><div class="tw-sh-halo"></div>`;
-    html += `<div class="tw-sh-beam"></div>`;
-    html += `<div class="tw-sh-garland"></div>`;
-    const bcols = ["#ff4b6b","#ffd75e","#2ecc71","#74ebf5","#ff6fa5"];
-    for (let i=0;i<(IS_MOBILE?10:18);i++) html += `<div class="tw-sh-bulb" style="left:${2+i*5.4}%;top:42px;color:${bcols[i%5]};animation-delay:${i*.15}s;"></div>`;
-    html += `<div class="tw-sh-ribbon" style="left:22%;"></div><div class="tw-sh-ribbon" style="left:78%;"></div>`;
-    html += `<div class="tw-sh-wreath" style="top:80px;left:18%;"></div><div class="tw-sh-wreath" style="top:80px;right:18%;"></div>`;
-    html += `<div class="tw-sh-win" style="left:8%;top:14%;"><div class="tw-sh-win-snow"></div><div class="tw-sh-win-sill"></div></div>`;
-    html += `<div class="tw-sh-win" style="right:8%;top:14%;"><div class="tw-sh-win-snow" style="animation-delay:-2s;"></div><div class="tw-sh-win-sill"></div></div>`;
-    for (let i=0;i<(IS_MOBILE?6:14);i++) html += `<span class="tw-sh-snow-out" style="left:${10+i*6}%;top:${14+(i%4)*4}%;animation-duration:${4+(i%3)*2}s;animation-delay:${-i*.5}s;"></span>`;
-    html += `<div class="tw-sh-fire"><div class="tw-sh-flame"></div></div><div class="tw-sh-mantel"></div>`;
-    html += `<div class="tw-sh-sock" style="left:8%;top:14px;"></div><div class="tw-sh-sock" style="left:50%;transform:translateX(-50%);top:14px;background:#2ecc71;"></div><div class="tw-sh-sock" style="right:8%;top:14px;"></div>`;
-    html += `<div class="tw-sh-shelf" style="top:28%;left:2%;"></div><div class="tw-sh-bracket" style="top:calc(28% + 14px);left:6%;"></div><div class="tw-sh-bracket" style="top:calc(28% + 14px);left:16%;"></div>`;
-    html += `<div class="tw-sh-shelf" style="top:50%;left:2%;"></div><div class="tw-sh-bracket" style="top:calc(50% + 14px);left:6%;"></div><div class="tw-sh-bracket" style="top:calc(50% + 14px);left:16%;"></div>`;
-    html += `<div class="tw-sh-bear" style="top:calc(28% - 32px);left:4%;"></div>`;
-    html += `<div class="tw-sh-ball" style="top:calc(28% - 20px);left:14%;color:#ff4b6b;"></div>`;
-    html += `<div class="tw-sh-block" style="top:calc(28% - 20px);left:22%;color:#ffd75e;"></div>`;
-    html += `<div class="tw-sh-doll" style="top:calc(50% - 30px);left:3%;"></div>`;
-    html += `<div class="tw-sh-ball" style="top:calc(50% - 20px);left:15%;color:#2ecc71;"></div>`;
-    html += `<div class="tw-sh-block" style="top:calc(50% - 20px);left:22%;color:#74ebf5;"></div>`;
-    html += `<div class="tw-sh-shelf" style="top:28%;right:2%;"></div><div class="tw-sh-bracket" style="top:calc(28% + 14px);right:6%;"></div><div class="tw-sh-bracket" style="top:calc(28% + 14px);right:16%;"></div>`;
-    html += `<div class="tw-sh-shelf" style="top:50%;right:2%;"></div><div class="tw-sh-bracket" style="top:calc(50% + 14px);right:6%;"></div><div class="tw-sh-bracket" style="top:calc(50% + 14px);right:16%;"></div>`;
-    html += `<div class="tw-sh-train" style="top:calc(28% - 20px);right:3%;"></div>`;
-    html += `<div class="tw-sh-ball" style="top:calc(28% - 20px);right:18%;color:#ff6fa5;"></div>`;
-    html += `<div class="tw-sh-bear" style="top:calc(50% - 32px);right:4%;background:radial-gradient(ellipse at 50% 60%,#ff9ec4,#d42a7a);"></div>`;
-    html += `<div class="tw-sh-block" style="top:calc(50% - 20px);right:15%;color:#d42a4a;"></div>`;
-    html += `<div class="tw-sh-tree"><div class="pot"></div><div class="trunk"></div><div class="lyr l1"></div><div class="lyr l2"></div><div class="lyr l3"></div><div class="lyr l4"></div><div class="star"></div></div>`;
-    const ornColors = ["#d42a4a","#ffd75e","#74ebf5","#ff6fa5","#2ecc71","#c28aff"];
-    const ornPositions = [[25,22],[70,30],[45,50],[20,65],[65,70],[50,85],[35,100],[60,110],[45,125],[30,140],[65,145],[50,160]];
-    ornPositions.forEach((p,i) => html += `<div class="tw-sh-ornament" style="left:${p[0]}px;top:${p[1]}px;color:${ornColors[i%6]};"></div>`);
-    html += `<div class="tw-sh-tree" style="right:6%;"><div class="pot"></div><div class="trunk"></div><div class="lyr l1"></div><div class="lyr l2"></div><div class="lyr l3"></div><div class="lyr l4"></div><div class="star"></div></div>`;
-    ornPositions.forEach((p,i) => html += `<div class="tw-sh-ornament" style="right:${p[0]+76}px;top:${p[1]}px;color:${ornColors[(i+2)%6]};"></div>`);
-    html += `<div class="tw-sh-table"><div class="cloth"></div><div class="top"></div></div>`;
-    html += `<div class="tw-sh-gift-pile">`;
-    html += `<span class="g" style="left:0;bottom:0;width:44px;height:36px;background:#d42a4a;"></span>`;
-    html += `<span class="g" style="left:48px;bottom:0;width:38px;height:32px;background:#2ecc71;"></span>`;
-    html += `<span class="g" style="left:90px;bottom:0;width:42px;height:38px;background:#ffd75e;"></span>`;
-    html += `<span class="g" style="left:136px;bottom:0;width:40px;height:34px;background:#74ebf5;"></span>`;
-    html += `<span class="g" style="left:20px;bottom:34px;width:34px;height:28px;background:#ff6fa5;"></span>`;
-    html += `<span class="g" style="left:60px;bottom:32px;width:40px;height:30px;background:#c28aff;"></span>`;
-    html += `<span class="g" style="left:106px;bottom:36px;width:38px;height:28px;background:#d42a4a;"></span>`;
-    html += `</div>`;
-    html += `<div class="tw-sh-plate"></div><div class="tw-sh-cookie"></div><div class="tw-sh-glass"></div>`;
-    html += `<div class="tw-sh-santa"><span class="arm l"></span><span class="arm r"></span><span class="body"></span><span class="belt"></span><span class="buckle"></span><span class="beard"></span><span class="head"></span><span class="eye l"></span><span class="eye r"></span><span class="nose"></span><span class="mouth"></span><span class="hat"></span><span class="pom"></span><span class="gift"></span></div>`;
-    html += `<div class="tw-sh-elf"><span class="body"></span><span class="head"></span><span class="hat"></span><span class="pom"></span><span class="carry" style="color:#ffd75e;"></span></div>`;
-    html += `<div class="tw-sh-elf flip" style="animation-delay:-5s;"><span class="body"></span><span class="head"></span><span class="hat"></span><span class="pom"></span><span class="carry" style="color:#ff6fa5;"></span></div>`;
-    html += `<div class="tw-sh-pet"></div>`;
-    html += `<div class="tw-sh-rug"></div>`;
-    html += `<div class="tw-sh-floor"></div>`;
-    for (let i=0;i<(IS_MOBILE?5:10);i++) html += `<span class="tw-sh-sparkle" style="left:${8+i*9}%;top:${12+(i*11)%40}%;animation-delay:${i*.7}s;"></span>`;
-  }
+    if (W.scene === "shop") {
+  html += `<div class="tw-sh-room"></div><div class="tw-sh-wallpaper"></div><div class="tw-sh-halo"></div>`;
+  html += `<div class="tw-sh-beam"></div>`;
+  html += `<div class="tw-sh-garland"></div>`;
+  const bcols = ["#ff4b6b","#ffd75e","#2ecc71","#74ebf5","#ff6fa5"];
+  for (let i=0;i<(IS_MOBILE?10:18);i++) html += `<div class="tw-sh-bulb" style="left:${2+i*5.4}%;top:42px;color:${bcols[i%5]};animation-delay:${i*.15}s;"></div>`;
+  html += `<div class="tw-sh-ribbon" style="left:22%;"></div><div class="tw-sh-ribbon" style="left:78%;"></div>`;
+  html += `<div class="tw-sh-wreath" style="top:80px;left:18%;"></div><div class="tw-sh-wreath" style="top:80px;right:18%;"></div>`;
+  html += `<div class="tw-sh-win" style="left:8%;top:14%;"><div class="tw-sh-win-snow"></div><div class="tw-sh-win-sill"></div></div>`;
+  html += `<div class="tw-sh-win" style="right:8%;top:14%;"><div class="tw-sh-win-snow" style="animation-delay:-2s;"></div><div class="tw-sh-win-sill"></div></div>`;
+  for (let i=0;i<(IS_MOBILE?6:14);i++) html += `<span class="tw-sh-snow-out" style="left:${10+i*6}%;top:${14+(i%4)*4}%;animation-duration:${4+(i%3)*2}s;animation-delay:${-i*.5}s;"></span>`;
+  html += `<div class="tw-sh-fire"><div class="tw-sh-flame"></div></div><div class="tw-sh-mantel"></div>`;
+  html += `<div class="tw-sh-sock" style="left:8%;top:14px;"></div><div class="tw-sh-sock" style="left:50%;transform:translateX(-50%);top:14px;background:#2ecc71;"></div><div class="tw-sh-sock" style="right:8%;top:14px;"></div>`;
+  html += `<div class="tw-sh-shelf" style="top:28%;left:2%;"></div><div class="tw-sh-bracket" style="top:calc(28% + 14px);left:6%;"></div><div class="tw-sh-bracket" style="top:calc(28% + 14px);left:16%;"></div>`;
+  html += `<div class="tw-sh-shelf" style="top:50%;left:2%;"></div><div class="tw-sh-bracket" style="top:calc(50% + 14px);left:6%;"></div><div class="tw-sh-bracket" style="top:calc(50% + 14px);left:16%;"></div>`;
+  html += `<div class="tw-sh-bear" style="top:calc(28% - 32px);left:4%;"></div>`;
+  html += `<div class="tw-sh-ball" style="top:calc(28% - 20px);left:14%;color:#ff4b6b;"></div>`;
+  html += `<div class="tw-sh-block" style="top:calc(28% - 20px);left:22%;color:#ffd75e;"></div>`;
+  html += `<div class="tw-sh-doll" style="top:calc(50% - 30px);left:3%;"></div>`;
+  html += `<div class="tw-sh-ball" style="top:calc(50% - 20px);left:15%;color:#2ecc71;"></div>`;
+  html += `<div class="tw-sh-block" style="top:calc(50% - 20px);left:22%;color:#74ebf5;"></div>`;
+  html += `<div class="tw-sh-shelf" style="top:28%;right:2%;"></div><div class="tw-sh-bracket" style="top:calc(28% + 14px);right:6%;"></div><div class="tw-sh-bracket" style="top:calc(28% + 14px);right:16%;"></div>`;
+  html += `<div class="tw-sh-shelf" style="top:50%;right:2%;"></div><div class="tw-sh-bracket" style="top:calc(50% + 14px);right:6%;"></div><div class="tw-sh-bracket" style="top:calc(50% + 14px);right:16%;"></div>`;
+  html += `<div class="tw-sh-train" style="top:calc(28% - 20px);right:3%;"></div>`;
+  html += `<div class="tw-sh-ball" style="top:calc(28% - 20px);right:18%;color:#ff6fa5;"></div>`;
+  html += `<div class="tw-sh-bear" style="top:calc(50% - 32px);right:4%;background:radial-gradient(ellipse at 50% 60%,#ff9ec4,#d42a7a);"></div>`;
+  html += `<div class="tw-sh-block" style="top:calc(50% - 20px);right:15%;color:#d42a4a;"></div>`;
+  html += `<div class="tw-sh-tree"><div class="pot"></div><div class="trunk"></div><div class="lyr l1"></div><div class="lyr l2"></div><div class="lyr l3"></div><div class="lyr l4"></div><div class="star"></div></div>`;
+  const ornColors = ["#d42a4a","#ffd75e","#74ebf5","#ff6fa5","#2ecc71","#c28aff"];
+  const ornPositions = [[25,22],[70,30],[45,50],[20,65],[65,70],[50,85],[35,100],[60,110],[45,125],[30,140],[65,145],[50,160]];
+  ornPositions.forEach((p,i) => html += `<div class="tw-sh-ornament" style="left:${p[0]}px;top:${p[1]}px;color:${ornColors[i%6]};"></div>`);
+  html += `<div class="tw-sh-tree" style="right:6%;"><div class="pot"></div><div class="trunk"></div><div class="lyr l1"></div><div class="lyr l2"></div><div class="lyr l3"></div><div class="lyr l4"></div><div class="star"></div></div>`;
+  ornPositions.forEach((p,i) => html += `<div class="tw-sh-ornament" style="right:${p[0]+76}px;top:${p[1]}px;color:${ornColors[(i+2)%6]};"></div>`);
+  html += `<div class="tw-sh-table"><div class="cloth"></div><div class="top"></div></div>`;
+  html += `<div class="tw-sh-gift-pile">`;
+  html += `<span class="g" style="left:0;bottom:0;width:44px;height:36px;background:#d42a4a;"></span>`;
+  html += `<span class="g" style="left:48px;bottom:0;width:38px;height:32px;background:#2ecc71;"></span>`;
+  html += `<span class="g" style="left:90px;bottom:0;width:42px;height:38px;background:#ffd75e;"></span>`;
+  html += `<span class="g" style="left:136px;bottom:0;width:40px;height:34px;background:#74ebf5;"></span>`;
+  html += `<span class="g" style="left:20px;bottom:34px;width:34px;height:28px;background:#ff6fa5;"></span>`;
+  html += `<span class="g" style="left:60px;bottom:32px;width:40px;height:30px;background:#c28aff;"></span>`;
+  html += `<span class="g" style="left:106px;bottom:36px;width:38px;height:28px;background:#d42a4a;"></span>`;
+  html += `</div>`;
+  html += `<div class="tw-sh-plate"></div><div class="tw-sh-cookie"></div><div class="tw-sh-glass"></div>`;
+  html += `<div class="tw-sh-santa"><span class="arm l"></span><span class="arm r"></span><span class="body"></span><span class="belt"></span><span class="buckle"></span><span class="beard"></span><span class="head"></span><span class="eye l"></span><span class="eye r"></span><span class="nose"></span><span class="mouth"></span><span class="hat"></span><span class="pom"></span><span class="gift"></span></div>`;
+  html += `<div class="tw-sh-elf"><span class="body"></span><span class="head"></span><span class="hat"></span><span class="pom"></span><span class="carry" style="color:#ffd75e;"></span></div>`;
+  html += `<div class="tw-sh-elf flip" style="animation-delay:-5s;"><span class="body"></span><span class="head"></span><span class="hat"></span><span class="pom"></span><span class="carry" style="color:#ff6fa5;"></span></div>`;
+  html += `<div class="tw-sh-pet"></div>`;
+  html += `<div class="tw-sh-rug"></div>`;
+  html += `<div class="tw-sh-floor"></div>`;
+  for (let i=0;i<(IS_MOBILE?5:10);i++) html += `<span class="tw-sh-sparkle" style="left:${8+i*9}%;top:${12+(i*11)%40}%;animation-delay:${i*.7}s;"></span>`;
+}
   
   let parts = "";
   const partCount = (W.part === "fog") ? (IS_MOBILE ? 15 : 30) : (IS_MOBILE ? 0 : 7);
