@@ -129,27 +129,55 @@ function syncMobileMenuButtons() {
 }
 
 /* ---------- Néon Saison 1 + son ---------- */
-function playNeonBuzz() {
+function playNeonJingle() {
     try {
         SoundEngine.init();
         const ctx = SoundEngine.ctx, t = ctx.currentTime;
-        const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = 120;
-        const g = ctx.createGain();
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(0.03, t + 0.05);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
-        const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 900; f.Q.value = 2;
-        o.connect(f); f.connect(g); g.connect(ctx.destination);
-        o.start(t); o.stop(t + 1);
-        const len = Math.floor(ctx.sampleRate * 0.25);
+
+        // 1) WHOOSH (fondu montant)
+        const len = Math.floor(ctx.sampleRate * 0.5);
         const buf = ctx.createBuffer(1, len, ctx.sampleRate);
         const d = buf.getChannelData(0);
-        for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2);
+        for (let i = 0; i < len; i++) { const p = i / len; d[i] = (Math.random() * 2 - 1) * p * p; }
         const src = ctx.createBufferSource(); src.buffer = buf;
-        const ng = ctx.createGain(); ng.gain.value = 0.06;
-        const nf = ctx.createBiquadFilter(); nf.type = 'highpass'; nf.frequency.value = 1500;
-        src.connect(nf); nf.connect(ng); ng.connect(ctx.destination);
+        const bf = ctx.createBiquadFilter(); bf.type = 'bandpass'; bf.Q.value = 1.2;
+        bf.frequency.setValueAtTime(200, t);
+        bf.frequency.exponentialRampToValueAtTime(3000, t + 0.5);
+        const wg = ctx.createGain();
+        wg.gain.setValueAtTime(0.0001, t);
+        wg.gain.exponentialRampToValueAtTime(0.12, t + 0.45);
+        wg.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+        src.connect(bf); bf.connect(wg); wg.connect(ctx.destination);
         src.start(t);
+
+        // 2) TA-DAM néon (2 notes + brillance)
+        const note = (freq, start, dur, vol, type) => {
+            const o = ctx.createOscillator(); o.type = type || 'sawtooth'; o.frequency.value = freq;
+            const g = ctx.createGain();
+            g.gain.setValueAtTime(0.0001, t + start);
+            g.gain.exponentialRampToValueAtTime(vol, t + start + 0.03);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + start + dur);
+            const f2 = ctx.createBiquadFilter(); f2.type = 'lowpass'; f2.frequency.value = 2500;
+            o.connect(f2); f2.connect(g); g.connect(ctx.destination);
+            o.start(t + start); o.stop(t + start + dur + 0.05);
+        };
+        note(220, 0.45, 0.25, 0.10);            // ta (grave)
+        note(440, 0.68, 0.50, 0.10);            // DAM (octave)
+        note(660, 0.68, 0.50, 0.06, 'triangle');// brillance
+        note(880, 0.70, 0.45, 0.04, 'sine');    // air
+
+        // 3) GRÉSILLEMENT néon AUDIBLE
+        const gl = Math.floor(ctx.sampleRate * 0.7);
+        const gb = ctx.createBuffer(1, gl, ctx.sampleRate);
+        const gd = gb.getChannelData(0);
+        for (let i = 0; i < gl; i++) gd[i] = (Math.random() * 2 - 1) * (Math.random() < 0.15 ? 1 : 0.2);
+        const gs = ctx.createBufferSource(); gs.buffer = gb;
+        const gf = ctx.createBiquadFilter(); gf.type = 'highpass'; gf.frequency.value = 2000;
+        const gg = ctx.createGain();
+        gg.gain.setValueAtTime(0.09, t + 0.6);
+        gg.gain.exponentialRampToValueAtTime(0.0001, t + 1.3);
+        gs.connect(gf); gf.connect(gg); gg.connect(ctx.destination);
+        gs.start(t + 0.6);
     } catch (e) {}
 }
 
@@ -165,7 +193,7 @@ function updateS1Neon() {
             sign.id = 's1-neon-sign'; sign.className = 's1-neon-sign';
             sign.innerHTML = '<div class="s1-neon-logo">⚡</div><div class="s1-neon-text">CHIFFRE BLITZ</div>';
             document.body.appendChild(sign);
-            playNeonBuzz();
+            playNeonJingle();
         }
     } else if (sign) {
         sign.remove();
