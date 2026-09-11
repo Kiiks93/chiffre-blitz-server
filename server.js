@@ -1545,7 +1545,170 @@ io.on('connection', (socket) => {
     }
     socket.emit('admin_adjust_result', { ok: true, message: `${targets.length} joueur(s) modifié(s) (${amt > 0 ? '+' : ''}${amt} ${currency})` });
   });
-
+/* ============================================================
+ADMIN — AVENTURE : FLAGS SAISONS & VIES/JOKERS
+============================================================ */
+socket.on('admin_give_adventure', async (data) => {
+  if (!socket.isAdmin) return;
+  
+  try {
+    const { username, halloween, noel, lives, jokersTime, jokersShield } = data || {};
+    const clean = (username || '').trim();
+    if (!clean) return socket.emit('admin_adv_result', { ok: false, message: 'Pseudo requis.' });
+    
+    // Chercher le joueur en ligne
+    let targetId = null;
+    for (const sId in activePlayers) {
+      if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === clean.toLowerCase()) {
+        targetId = sId;
+        break;
+      }
+    }
+    
+    // ===== CAS 1 : JOUEUR EN LIGNE =====
+    if (targetId) {
+      const p = activePlayers[targetId];
+      let changes = [];
+      
+      // 1. Flags de saison
+      p.unlocked_items = p.unlocked_items || [];
+      let flagsAdded = [];
+      if (halloween && !p.unlocked_items.includes('season_s2_unlocked')) {
+        p.unlocked_items.push('season_s2_unlocked');
+        flagsAdded.push('Halloween (M4-6)');
+      }
+      if (noel && !p.unlocked_items.includes('season_s3_unlocked')) {
+        p.unlocked_items.push('season_s3_unlocked');
+        flagsAdded.push('Noël (M7-9)');
+      }
+      if (flagsAdded.length) changes.push(`flags: ${flagsAdded.join(', ')}`);
+      
+      // 2. Vies
+      if (lives !== null && !isNaN(lives)) {
+        p.lives = Math.max(0, Math.min(TOWER_MAX_LIVES, parseInt(lives)));
+        if (p.lives >= TOWER_MAX_LIVES) p.lives_ts = Date.now();
+        changes.push(`${p.lives} vies`);
+      }
+      
+      // 3. Jokers
+      p.jokers = normalizeJokers(p.jokers);
+      if (jokersTime !== null && !isNaN(jokersTime)) {
+        p.jokers.time = Math.max(0, parseInt(jokersTime));
+        changes.push(`${p.jokers.time} jokers temps`);
+      }
+      if (jokersShield !== null && !isNaN(jokersShield)) {
+        p.jokers.shield = Math.max(0, parseInt(jokersShield));
+        changes.push(`${p.jokers.shield} jokers bouclier`);
+      }
+      
+      if (!changes.length) {
+        return socket.emit('admin_adv_result', { ok: false, message: 'Aucun changement demandé.' });
+      }
+      
+      // Sauvegarder
+      await savePlayerToSupabase(targetId);
+      const detail = changes.join(' | ');
+      await logPlayerAction(p, 'admin_adventure', detail, null, null, null);
+      
+      // Notifier le joueur
+      io.to(targetId).emit('player_registered', p);
+      io.to(targetId).emit('tower_data', { 
+        floor: p.towerFloor || 0, 
+        stars: p.towerStars || {}, 
+        lives: p.lives, 
+        nextLifeIn: towerNextLifeIn(p), 
+        jokers: p.jokers 
+      });
+      
+      socket.emit('admin_adv_result', { 
+        ok: true, 
+        message: `✅ ${p.username} : ${detail}` 
+      });
+      return;
+    }
+    
+    // ===== CAS 2 : JOUEUR HORS-LIGNE =====
+    const { data: matched, error } = await supabase.from('players').select('*').ilike('username', clean).limit(1);
+    if (error || !matched || matched.length === 0) {
+      return socket.emit('admin_adv_result', { ok: false, message: 'Pseudo introuvable.' });
+    }
+    
+    const row = matched[0];
+    let updates = {};
+    let changes = [];
+    
+    // 1. Flags de saison
+    let unlocked = row.unlocked_items || [];
+    if (typeof unlocked === 'string') {
+      try { unlocked = JSON.parse(unlocked); } catch(e) { unlocked = []; }
+    }
+    if (!Array.isArray(unlocked)) unlocked = [];
+    
+    let flagsAdded = [];
+    if (halloween && !unlocked.includes('season_s2_unlocked')) {
+      unlocked.push('season_s2_unlocked');
+      flagsAdded.push('Halloween (M4-6)');
+    }
+    if (noel && !unlocked.includes('season_s3_unlocked')) {
+      unlocked.push('season_s3_unlocked');
+      flagsAdded.push('Noël (M7-9)');
+    }
+    if (flagsAdded.length) {
+      updates.unlocked_items = unlocked;
+      changes.push(`flags: ${flagsAdded.join(', ')}`);
+    }
+    
+    // 2. Vies
+    if (lives !== null && !isNaN(lives)) {
+      const newLives = Math.max(0, Math.min(TOWER_MAX_LIVES, parseInt(lives)));
+      updates.tower_lives = newLives;
+      if (newLives >= TOWER_MAX_LIVES) updates.tower_lives_ts = Date.now();
+      changes.push(`${newLives} vies`);
+    }
+    
+    // 3. Jokers
+    let jokers = row.tower_jokers || { time: 0, shield: 0 };
+    if (typeof jokers === 'string') {
+      try { jokers = JSON.parse(jokers); } catch(e) { jokers = { time: 0, shield: 0 }; }
+    }
+    jokers = normalizeJokers(jokers);
+    
+    let jokersChanged = false;
+    if (jokersTime !== null && !isNaN(jokersTime)) {
+      jokers.time = Math.max(0, parseInt(jokersTime));
+      jokersChanged = true;
+      changes.push(`${jokers.time} jokers temps`);
+    }
+    if (jokersShield !== null && !isNaN(jokersShield)) {
+      jokers.shield = Math.max(0, parseInt(jokersShield));
+      jokersChanged = true;
+      changes.push(`${jokers.shield} jokers bouclier`);
+    }
+    if (jokersChanged) updates.tower_jokers = jokers;
+    
+    if (!changes.length) {
+      return socket.emit('admin_adv_result', { ok: false, message: 'Aucun changement demandé.' });
+    }
+    
+    // Update Supabase
+    const { error: updErr } = await supabase.from('players').update(updates).eq('id', row.id);
+    if (updErr) {
+      return socket.emit('admin_adv_result', { ok: false, message: 'Erreur BDD: ' + updErr.message });
+    }
+    
+    const detail = changes.join(' | ');
+    await logPlayerAction({ username: row.username, socketId: null }, 'admin_adventure', `${detail} (hors-ligne)`, null, null, null);
+    
+    socket.emit('admin_adv_result', { 
+      ok: true, 
+      message: `✅ ${row.username} (hors-ligne) : ${detail}` 
+    });
+    
+  } catch (e) {
+    console.error('admin_give_adventure error:', e);
+    socket.emit('admin_adv_result', { ok: false, message: 'Erreur: ' + e.message });
+  }
+});
   /* ---------- 🗼 TOUR ---------- */
   socket.on('get_tower', () => {
     const player = activePlayers[socket.id];
