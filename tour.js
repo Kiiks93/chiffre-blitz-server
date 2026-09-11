@@ -1386,11 +1386,19 @@ WM=null;
 }
 function wmCtx(){ SoundEngine.init(); return SoundEngine.ctx; }
 function wmMaster(vol){ const ctx=wmCtx(); const g=ctx.createGain(); g.gain.value=0; g.gain.linearRampToValueAtTime(vol, ctx.currentTime+1); g.connect(ctx.destination); return g; }
+function wmNoise(ctx,dur){ const len=Math.max(1,Math.floor(ctx.sampleRate*dur)); const b=ctx.createBuffer(1,len,ctx.sampleRate); const d=b.getChannelData(0); for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*(1-i/len); return b; }
 function wmVoice(ctx,dest,ev){
 const kind=ev[1], f=ev[2], dur=ev[3], vol=ev[4];
 const t=ctx.currentTime;
 if(kind==='k'){ const o=ctx.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(120,t); o.frequency.exponentialRampToValueAtTime(45,t+0.12); const g=ctx.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.25); o.connect(g); g.connect(dest); o.start(t); o.stop(t+0.3); return; }
 if(kind==='s'||kind==='h'){ const len=Math.floor(ctx.sampleRate*(kind==='s'?0.18:0.05)); const b=ctx.createBuffer(1,len,ctx.sampleRate); const d=b.getChannelData(0); for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*(1-i/len); const src=ctx.createBufferSource(); src.buffer=b; const fl=ctx.createBiquadFilter(); if(kind==='s'){fl.type='bandpass';fl.frequency.value=1800;} else {fl.type='highpass';fl.frequency.value=7000;} const g=ctx.createGain(); g.gain.value=vol; src.connect(fl); fl.connect(g); g.connect(dest); src.start(t); return; }
+if(kind==='t'){ const o=ctx.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(100,t); o.frequency.exponentialRampToValueAtTime(55,t+0.09); const g=ctx.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.12); o.connect(g); g.connect(dest); o.start(t); o.stop(t+0.15); const src=ctx.createBufferSource(); src.buffer=wm_noise(ctx,0.04); const fl=ctx.createBiquadFilter(); fl.type='lowpass'; fl.frequency.value=400; const g2=ctx.createGain(); g2.gain.value=vol*0.5; src.connect(fl); fl.connect(g2); g2.connect(dest); src.start(t); return; }
+if(kind==='g'){ [1300,1950].forEach((ff,i)=>{ const o=ctx.createOscillator(); o.type='square'; o.frequency.value=ff*(i?1.004:1); const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=ff; bp.Q.value=6; const g=ctx.createGain(); g.gain.setValueAtTime(vol*(i?0.5:1),t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.22); o.connect(bp); bp.connect(g); g.connect(dest); o.start(t); o.stop(t+0.25); }); const src=ctx.createBufferSource(); src.buffer=wm_noise(ctx,0.06); const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=3000; const g3=ctx.createGain(); g3.gain.value=vol*0.4; src.connect(hp); hp.connect(g3); g3.connect(dest); src.start(t); return; }
+if(kind==='z'){ const o=ctx.createOscillator(); o.type='sawtooth'; o.frequency.setValueAtTime(2400,t); o.frequency.exponentialRampToValueAtTime(300,t+0.18); const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1200; bp.Q.value=3; const g=ctx.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.2); o.connect(bp); bp.connect(g); g.connect(dest); o.start(t); o.stop(t+0.22); return; }
+if(kind==='a'){ const o=ctx.createOscillator(); o.type='triangle'; const g=ctx.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(vol,t+0.25); g.gain.linearRampToValueAtTime(0.0001,t+dur); o.frequency.setValueAtTime(620,t); o.frequency.linearRampToValueAtTime(920,t+dur*0.5); o.frequency.linearRampToValueAtTime(620,t+dur); o.connect(g); g.connect(dest); o.start(t); o.stop(t+dur+0.05); return; }
+if(kind==='l'){ const o1=ctx.createOscillator(); o1.type='sine'; o1.frequency.value=f; const o2=ctx.createOscillator(); o2.type='sine'; o2.frequency.value=f*2.76; const g=ctx.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); const g2=ctx.createGain(); g2.gain.setValueAtTime(vol*0.35,t); g2.gain.exponentialRampToValueAtTime(0.0001,t+dur*0.6); o1.connect(g); o2.connect(g2); g.connect(dest); g2.connect(dest); o1.start(t); o2.start(t); o1.stop(t+dur+0.05); o2.stop(t+dur+0.05); return; }
+if(kind==='c'){ const o=ctx.createOscillator(); o.type='sine'; o.frequency.value=f; const g=ctx.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.5); o.connect(g); g.connect(dest); o.start(t); o.stop(t+0.55); return; }
+if(kind==='r'){ const o=ctx.createOscillator(); o.type='triangle'; o.frequency.value=f; const g=ctx.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.35); o.connect(g); g.connect(dest); o.start(t); o.stop(t+0.4); return; }
 const o=ctx.createOscillator(); const g=ctx.createGain(); let node=o;
 if(kind==='m'||kind==='x'){ o.type='sawtooth'; o.frequency.value=f; const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=(kind==='x'?1500:1100); o.connect(lp); node=lp; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); }
 else if(kind==='b'){ o.type='triangle'; o.frequency.value=f; const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=320; o.connect(lp); node=lp; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); }
@@ -1450,21 +1458,40 @@ wmRunScore(bpm,128,E);
 }
 /* --- M3 : Banque Dorée (score braquage long) --- */
 function wmStartVault(){
-const bpm=96, SD=60/bpm/2, mf=m=>440*Math.pow(2,(m-69)/12);
-const E=[]; const BARS=32;
-for(let bar=0;bar<BARS;bar++){ const o=bar*8;
-E.push([o,'k',0,0.3,0.5]); E.push([o+6,'k',0,0.3,0.4]); E.push([o+4,'s',0,0.2,0.22]);
-for(let h=0;h<8;h+=2) E.push([o+h,'h',0,0.05,(h%4===0)?0.14:0.09]);
-const pat=(bar%8===3)?[40,40,43,45]:(bar%8===7)?[43,45,47,48]:[40,40,40,40];
-E.push([o,'b',mf(pat[0]),2*SD,0.12]); E.push([o+2,'b',mf(pat[1]),2*SD,0.10]); E.push([o+4,'b',mf(pat[2]),2*SD,0.12]); E.push([o+6,'b',mf(pat[3]),2*SD,0.10]);
+const bpm=100, SD=60/bpm/2, mf=m=>440*Math.pow(2,(m-69)/12);
+const E=[];
+const melA=[[0,64,2],[3,64,1],[6,67,2],[10,64,2],[14,62,2],[16,64,2],[19,64,1],[22,69,2],[26,67,2],[30,64,4],[32,62,2],[36,59,2],[40,62,2],[44,64,2],[48,67,3],[52,66,1],[56,64,6]];
+const melA2=[[0,64,2],[3,64,1],[6,67,2],[10,64,2],[14,62,2],[16,64,2],[19,64,1],[22,69,2],[26,67,2],[30,64,4],[32,64,2],[36,67,2],[40,69,2],[44,71,2],[48,74,3],[52,71,1],[56,69,6]];
+const melB=[[0,71,2],[3,71,1],[6,74,2],[10,71,2],[14,69,2],[16,67,2],[20,64,2],[24,62,2],[28,59,4],[32,64,2],[36,67,2],[40,71,2],[44,74,2],[48,76,3],[52,74,1],[56,71,6]];
+const melBr=[[0,59,4],[16,62,4],[32,64,4],[48,67,6]];
+const melO=[[0,64,2],[6,67,2],[12,69,2],[18,71,2],[24,74,4],[40,71,2],[46,69,2],[52,67,8]];
+const secs=[
+{mel:null,roots:[40,40,40,40,40,40,40,40],groove:'minimal',lasers:[8,40],alarms:[],ingots:[],feet:true},
+{mel:melA,roots:[40,40,36,36,43,43,38,38],groove:'full',lasers:[22,54],alarms:[],ingots:[],feet:false},
+{mel:melA2,roots:[40,40,36,36,43,43,38,38],groove:'full',lasers:[54],alarms:[],ingots:[12,28,44,60],feet:false},
+{mel:null,roots:[40,40,40,40,36,36,36,36],groove:'drive',lasers:[8,24,40,56],alarms:[0,32],ingots:[],feet:false},
+{mel:melB,roots:[33,33,36,36,38,38,40,40],groove:'full',lasers:[54],alarms:[],ingots:[8,24,40,56],feet:false},
+{mel:melBr,roots:[40,40,40,40,40,40,40,40],groove:'minimal',lasers:[16,48],alarms:[],ingots:[],feet:true},
+{mel:melA,roots:[40,40,36,36,43,43,38,38],groove:'full',lasers:[22],alarms:[48],ingots:[16,48],feet:false},
+{mel:melO,roots:[40,40,43,43,38,38,40,40],groove:'half',lasers:[56],alarms:[],ingots:[24,40,56],feet:false}
+];
+for(let s=0;s<8;s++){
+const off=s*64, cfg=secs[s];
+if(cfg.mel) cfg.mel.forEach(n=>E.push([off+n[0],'m',mf(n[1]),n[2]*SD,0.11]));
+for(let bar=0;bar<8;bar++){
+const r=cfg.roots[bar];
+E.push([off+bar*8,'b',mf(r),2*SD,0.12]); E.push([off+bar*8+3,'b',mf(r),1*SD,0.09]); E.push([off+bar*8+6,'b',mf(r+7),2*SD,0.10]);
+if(cfg.groove==='full'){ E.push([off+bar*8,'k',0,0.3,0.5]); E.push([off+bar*8+6,'k',0,0.3,0.4]); E.push([off+bar*8+4,'s',0,0.2,0.22]); for(let h=0;h<8;h+=2) E.push([off+bar*8+h,'h',0,0.05,(h%4===0)?0.13:0.08]); }
+else if(cfg.groove==='drive'){ E.push([off+bar*8,'k',0,0.3,0.45]); for(let h=0;h<8;h++) E.push([off+bar*8+h,'h',0,0.04,(h%2===0)?0.12:0.07]); }
+else if(cfg.groove==='half'){ E.push([off+bar*8,'k',0,0.3,0.45]); E.push([off+bar*8+4,'s',0,0.2,0.18]); }
+else if(cfg.groove==='minimal'){ E.push([off+bar*8+4,'h',0,0.05,0.08]); }
+if(cfg.feet){ E.push([off+bar*8,'t',0,0.12,0.30]); E.push([off+bar*8+4,'t',0,0.12,0.22]); }
 }
-const mA=[[0,64,2],[3,64,1],[6,67,2],[10,64,2],[14,62,2],[16,64,2],[19,64,1],[22,69,2],[26,67,2],[30,64,4],[32,62,2],[36,59,2],[40,62,2],[44,64,2],[48,67,3],[52,66,1],[56,64,6]];
-const mB=[[0,71,2],[3,71,1],[6,74,2],[10,71,2],[14,69,2],[16,67,2],[20,64,2],[24,62,2],[28,59,4],[32,64,2],[36,67,2],[40,71,2],[44,74,2],[48,76,3],[52,74,1],[56,71,6]];
-const mC=[[0,59,4],[8,62,4],[16,64,4],[24,67,4],[32,66,4],[40,64,4],[48,62,4],[56,59,8]];
-const secs=[mA,mA,mB,mC];
-for(let s=0;s<secs.length;s++){ const off=s*64; for(let i=0;i<secs[s].length;i++) E.push([off+secs[s][i][0],'m',mf(secs[s][i][1]),secs[s][i][2]*SD,0.11]); }
-for(let s=0;s<3;s++){ const off=s*64; const st=[6,14,22,38,46,54]; for(let i=0;i<st.length;i++) for(let j=0;j<3;j++) E.push([off+st[i],'x',mf([52,55,59][j]),1.5*SD,0.05]); }
-wmRunScore(bpm,256,E);
+cfg.lasers.forEach(st=>E.push([off+st,'z',0,0.2,0.10]));
+cfg.alarms.forEach(st=>E.push([off+st,'a',0,1.0,0.07]));
+cfg.ingots.forEach(st=>E.push([off+st,'g',0,0.22,0.12]));
+}
+wmRunScore(bpm,512,E);
 }
 /* --- Routeur --- */
 function towerPlayWorldMusic(world){
