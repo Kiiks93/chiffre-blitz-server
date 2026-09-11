@@ -19,15 +19,8 @@ const TOTAL_FLOORS = 9 * FPC;
 const WORLD_QUOTA = 240;
 const MAX_LIVES = 10;
 const TOWER_CURVE = [
-  [12,16,30,26],
-  [14,19,28,23],
-  [16,21,26,21],
-  [18,23,24,19],
-  [20,25,22,18],
-  [22,27,20,17],
-  [24,29,19,16],
-  [26,31,18,15],
-  [28,34,17,13]
+  [12,16,30,26], [14,19,28,23], [16,21,26,21], [18,23,24,19],
+  [20,25,22,18], [22,27,20,17], [24,29,19,16], [26,31,18,15], [28,34,17,13]
 ];
 const IS_MOBILE = /Android|iPhone|iPad|iPod|Tablet|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 2 && Math.min(screen.width, screen.height) < 900);
 const TOWER_COLORS = {1:{acc:"#00d2ff"},2:{acc:"#74ebf5"},3:{acc:"#f8b500"},4:{acc:"#ff8a00"},5:{acc:"#8a9bb0"},6:{acc:"#ff4b2b"},7:{acc:"#ff6fa5"},8:{acc:"#2ecc71"},9:{acc:"#ff416c"}};
@@ -112,15 +105,17 @@ function towerPlaySeasonMusic(seasonNum) {
   try {
     if (typeof SoundEngine === "undefined") return;
     const key = seasonNum === 2 ? "s2menu" : seasonNum === 3 ? "s3menu" : null;
-    if (!key) return;
+    if (!key) {
+      if (typeof SoundEngine.startMusic === "function") SoundEngine.startMusic("menu");
+      return;
+    }
     if (typeof SoundEngine.stopMusic === "function") SoundEngine.stopMusic(false);
-    if (typeof SoundEngine.startMusicSeasonal === "function") SoundEngine.startMusicSeasonal(key);
+    setTimeout(() => {
+      if (typeof SoundEngine.startMusicSeasonal === "function") SoundEngine.startMusicSeasonal(key);
+    }, 100);
   } catch (e) {}
 }
 
-// 🎵 VERROU : tant que l'écran Aventure est ouvert, TOUTE relance musicale
-//    (changement d'onglet, focus, retour arrière-plan…) est routée vers la
-//    musique de saison du monde affiché. Empêche le retour au thème par défaut.
 (function(){
   if (typeof SoundEngine === "undefined" || !SoundEngine.startMusic) return;
   const prev = SoundEngine.startMusic.bind(SoundEngine);
@@ -135,8 +130,6 @@ function towerPlaySeasonMusic(seasonNum) {
   };
 })();
 
-// 🔇 Coupe la musique quand l'onglet/app passe en arrière-plan,
-//    et la reprend (bonne saison) au retour.
 document.addEventListener("visibilitychange", () => {
   if (typeof SoundEngine === "undefined") return;
   if (document.hidden) {
@@ -145,7 +138,9 @@ document.addEventListener("visibilitychange", () => {
     const scr = document.getElementById("screen-tower");
     if (scr && scr.style.display !== "none") {
       const season = TOWER_CHAPTERS[TowerUtils.getTowerChapter(twViewFloor).id - 1].season;
-      setTimeout(() => towerPlaySeasonMusic(season), 80);
+      setTimeout(() => towerPlaySeasonMusic(season), 200);
+    } else {
+      if (typeof SoundEngine.startMusic === "function") SoundEngine.startMusic("menu");
     }
   }
 });
@@ -302,21 +297,9 @@ document.addEventListener("visibilitychange", () => {
   @keyframes twLaserV{from{transform:translateY(-26px)}to{transform:translateY(26px)}}
   @keyframes twLaserD{from{transform:rotate(-5deg) translateY(-18px)}to{transform:rotate(5deg) translateY(18px)}}
   #tw-bg .tw-safebox{position:absolute;width:46px;height:36px;border-radius:4px;border:1px solid #5a4410;animation:none;
-    background:
-      radial-gradient(circle at 10% 14%,#fff8dc 0 2px,transparent 2px),
-      radial-gradient(circle at 90% 14%,#fff8dc 0 2px,transparent 2px),
-      radial-gradient(circle at 10% 86%,#fff8dc 0 2px,transparent 2px),
-      radial-gradient(circle at 90% 86%,#fff8dc 0 2px,transparent 2px),
-      linear-gradient(135deg,#e8c86a 0%,#b8942a 25%,#8a6a1a 50%,#c9a227 75%,#e8c86a 100%);
-    box-shadow:inset 0 2px 3px #ffffff55,inset 0 -2px 3px #00000088,0 2px 5px #000000bb,0 0 10px #f8b50022;
-  }
-  #tw-bg .tw-safebox.bz{background:
-      radial-gradient(circle at 10% 14%,#e8d8b8 0 2px,transparent 2px),
-      radial-gradient(circle at 90% 14%,#e8d8b8 0 2px,transparent 2px),
-      radial-gradient(circle at 10% 86%,#e8d8b8 0 2px,transparent 2px),
-      radial-gradient(circle at 90% 86%,#e8d8b8 0 2px,transparent 2px),
-      linear-gradient(135deg,#c8a86a 0%,#98742a 25%,#6a4a1a 50%,#a88227 75%,#c8a86a 100%);
-  }
+    background:radial-gradient(circle at 10% 14%,#fff8dc 0 2px,transparent 2px),radial-gradient(circle at 90% 14%,#fff8dc 0 2px,transparent 2px),radial-gradient(circle at 10% 86%,#fff8dc 0 2px,transparent 2px),radial-gradient(circle at 90% 86%,#fff8dc 0 2px,transparent 2px),linear-gradient(135deg,#e8c86a 0%,#b8942a 25%,#8a6a1a 50%,#c9a227 75%,#e8c86a 100%);
+    box-shadow:inset 0 2px 3px #ffffff55,inset 0 -2px 3px #00000088,0 2px 5px #000000bb,0 0 10px #f8b50022;}
+  #tw-bg .tw-safebox.bz{background:radial-gradient(circle at 10% 14%,#e8d8b8 0 2px,transparent 2px),radial-gradient(circle at 90% 14%,#e8d8b8 0 2px,transparent 2px),radial-gradient(circle at 10% 86%,#e8d8b8 0 2px,transparent 2px),radial-gradient(circle at 90% 86%,#e8d8b8 0 2px,transparent 2px),linear-gradient(135deg,#c8a86a 0%,#98742a 25%,#6a4a1a 50%,#a88227 75%,#c8a86a 100%);}
   #tw-bg .tw-safebox::before{content:"";position:absolute;left:50%;top:50%;width:13px;height:13px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff8dc,#8a6a1a 60%,#3a2a05);box-shadow:0 1px 3px #0009,inset 0 1px 2px #ffffff66;}
   #tw-bg .tw-safebox::after{content:"";position:absolute;inset:3px;border:1px solid #ffffff22;border-radius:3px;background:linear-gradient(115deg,transparent 42%,#ffffff33 42% 47%,transparent 47%);}
   .tw-ncam{position:absolute;width:36px;height:26px;background:linear-gradient(180deg,#2a2a38,#14141c);border-radius:6px 6px 4px 4px;border:2px solid currentColor;box-shadow:0 0 12px currentColor;}
@@ -342,13 +325,7 @@ document.addEventListener("visibilitychange", () => {
   .tw-ha-gate{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:56px;height:66px;background:#05030c;border-radius:28px 28px 0 0;}
   .tw-bat{position:absolute;width:30px;height:15px;background:#05030c;clip-path:polygon(50% 0,40% 30%,0 40%,20% 60%,30% 50%,50% 70%,70% 50%,80% 60%,100% 40%,60% 30%);animation:twBatFly 8s linear infinite;}
   @keyframes twBatFly{0%{transform:translate(0,0)}25%{transform:translate(90px,-26px)}50%{transform:translate(180px,0)}75%{transform:translate(90px,26px)}100%{transform:translate(0,0)}}
-  .tw-web{position:absolute;width:80px;height:80px;opacity:.5;background:
-    linear-gradient(45deg,transparent 48%,#ffffff33 48% 52%,transparent 52%),
-    linear-gradient(-45deg,transparent 48%,#ffffff33 48% 52%,transparent 52%),
-    linear-gradient(90deg,transparent 48%,#ffffff33 48% 52%,transparent 52%),
-    linear-gradient(0deg,transparent 48%,#ffffff33 48% 52%,transparent 52%),
-    radial-gradient(circle,transparent 30%,#ffffff22 30% 32%,transparent 32%),
-    radial-gradient(circle,transparent 55%,#ffffff22 55% 57%,transparent 57%);}
+  .tw-web{position:absolute;width:80px;height:80px;opacity:.5;background:linear-gradient(45deg,transparent 48%,#ffffff33 48% 52%,transparent 52%),linear-gradient(-45deg,transparent 48%,#ffffff33 48% 52%,transparent 52%),linear-gradient(90deg,transparent 48%,#ffffff33 48% 52%,transparent 52%),linear-gradient(0deg,transparent 48%,#ffffff33 48% 52%,transparent 52%),radial-gradient(circle,transparent 30%,#ffffff22 30% 32%,transparent 32%),radial-gradient(circle,transparent 55%,#ffffff22 55% 57%,transparent 57%);}
   .tw-gr-fog{position:absolute;left:-50%;width:200%;height:70px;background:linear-gradient(0deg,#cfe8d826,transparent);filter:blur(8px);animation:twFogDrift linear infinite;}
   @keyframes twFogDrift{0%{transform:translateX(-12%)}100%{transform:translateX(12%)}}
   .tw-part.fog{background:#ffffffaa;width:6px;height:6px;filter:blur(2px);animation:twFogFloat 6s ease-in-out infinite;}
@@ -368,32 +345,26 @@ document.addEventListener("visibilitychange", () => {
   @keyframes twWisp{0%,100%{transform:translate(0,0);opacity:.3}30%{transform:translate(14px,-22px);opacity:.9}60%{transform:translate(-10px,-36px);opacity:.5}}
 
   /* === M6 ANTRE CHAUVES-SOURIS === */
-.tw-bat-lair-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,#0a0a0a 0%,#000000 70%);}
-.tw-bat-lair-fog{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 80%,#1a0a0022 0%,transparent 50%);}
-.tw-bat-lair-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,transparent 30%,#000000cc 80%,#000000ee 100%);pointer-events:none;}
-.tw-bat-lair-stalac{position:absolute;top:0;width:40px;height:80px;background:linear-gradient(180deg,#1a1a1a,#000);clip-path:polygon(40% 0,60% 0,100% 100%,0 100%);opacity:.8;}
-.tw-bat-lair-stalag{position:absolute;bottom:0;width:50px;height:60px;background:linear-gradient(0deg,#1a1a1a,#000);clip-path:polygon(0 0,100% 0,60% 100%,40% 100%);opacity:.7;}
-.tw-bat-lair-eye{position:absolute;width:14px;height:8px;background:radial-gradient(ellipse,#ffd700 0%,#ff8c00 40%,#ff4500 70%,transparent 100%);border-radius:50%;box-shadow:0 0 12px #ffd700,0 0 24px #ff8c0088,0 0 36px #ff450044;animation:twBatEyeGlow 3s ease-in-out infinite;}
-@keyframes twBatEyeGlow{0%,100%{opacity:.7;transform:scale(1)}50%{opacity:1;transform:scale(1.15)}}
-.tw-bat-lair-eye::before{content:"";position:absolute;top:2px;left:3px;width:4px;height:4px;background:#000;border-radius:50%;box-shadow:6px 0 0 #000;}
-.tw-bat-lair-eye.blink{animation:twBatEyeBlink 5s ease-in-out infinite;}
-@keyframes twBatEyeBlink{0%,92%,100%{opacity:.7;transform:scaleY(1)}95%{opacity:0;transform:scaleY(0.1)}}
-.tw-bat-lair-bat{position:absolute;background:#0a0a0a;clip-path:polygon(50% 40%,40% 20%,20% 10%,0 30%,15% 50%,5% 70%,25% 60%,40% 80%,50% 100%,60% 80%,75% 60%,95% 70%,85% 50%,100% 30%,80% 10%,60% 20%);animation:twBatLairFly linear infinite;}
-@keyframes twBatLairFly{
-  0%{transform:translate(0,0) rotate(0deg) scale(1)}
-  25%{transform:translate(80px,-40px) rotate(-15deg) scale(1.1)}
-  50%{transform:translate(160px,0) rotate(0deg) scale(1)}
-  75%{transform:translate(80px,40px) rotate(15deg) scale(0.9)}
-  100%{transform:translate(0,0) rotate(0deg) scale(1)}
-}
-.tw-bat-lair-bat.wing{animation:twBatWingFlap .3s ease-in-out infinite alternate;}
-@keyframes twBatWingFlap{0%{transform:scaleY(1)}100%{transform:scaleY(0.7)}}
-.tw-bat-lair-mist{position:absolute;bottom:0;left:-20%;width:140%;height:40%;background:linear-gradient(0deg,#00000066 0%,transparent 100%);filter:blur(12px);animation:twMistDrift 20s linear infinite;}
-@keyframes twMistDrift{0%{transform:translateX(-10%)}100%{transform:translateX(10%)}}
-.tw-bat-lair-drip{position:absolute;width:2px;background:linear-gradient(180deg,#1a1a1a,#000);border-radius:0 0 2px 2px;animation:twDrip 4s ease-in infinite;}
-@keyframes twDrip{0%{height:0;opacity:0}20%{height:20px;opacity:1}80%{height:20px;opacity:1}100%{height:0;opacity:0}}
+  .tw-bat-lair-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,#0a0a0a 0%,#000000 70%);}
+  .tw-bat-lair-fog{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 80%,#1a0a0022 0%,transparent 50%);}
+  .tw-bat-lair-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,transparent 30%,#000000cc 80%,#000000ee 100%);pointer-events:none;}
+  .tw-bat-lair-stalac{position:absolute;top:0;width:40px;height:80px;background:linear-gradient(180deg,#1a1a1a,#000);clip-path:polygon(40% 0,60% 0,100% 100%,0 100%);opacity:.8;}
+  .tw-bat-lair-stalag{position:absolute;bottom:0;width:50px;height:60px;background:linear-gradient(0deg,#1a1a1a,#000);clip-path:polygon(0 0,100% 0,60% 100%,40% 100%);opacity:.7;}
+  .tw-bat-lair-eye{position:absolute;width:14px;height:8px;background:radial-gradient(ellipse,#ffd700 0%,#ff8c00 40%,#ff4500 70%,transparent 100%);border-radius:50%;box-shadow:0 0 12px #ffd700,0 0 24px #ff8c0088,0 0 36px #ff450044;animation:twBatEyeGlow 3s ease-in-out infinite;}
+  @keyframes twBatEyeGlow{0%,100%{opacity:.7;transform:scale(1)}50%{opacity:1;transform:scale(1.15)}}
+  .tw-bat-lair-eye::before{content:"";position:absolute;top:2px;left:3px;width:4px;height:4px;background:#000;border-radius:50%;box-shadow:6px 0 0 #000;}
+  .tw-bat-lair-eye.blink{animation:twBatEyeBlink 5s ease-in-out infinite;}
+  @keyframes twBatEyeBlink{0%,92%,100%{opacity:.7;transform:scaleY(1)}95%{opacity:0;transform:scaleY(0.1)}}
+  .tw-bat-lair-bat{position:absolute;background:#0a0a0a;clip-path:polygon(50% 40%,40% 20%,20% 10%,0 30%,15% 50%,5% 70%,25% 60%,40% 80%,50% 100%,60% 80%,75% 60%,95% 70%,85% 50%,100% 30%,80% 10%,60% 20%);animation:twBatLairFly linear infinite;}
+  @keyframes twBatLairFly{0%{transform:translate(0,0) rotate(0deg) scale(1)}25%{transform:translate(80px,-40px) rotate(-15deg) scale(1.1)}50%{transform:translate(160px,0) rotate(0deg) scale(1)}75%{transform:translate(80px,40px) rotate(15deg) scale(0.9)}100%{transform:translate(0,0) rotate(0deg) scale(1)}}
+  .tw-bat-lair-bat.wing{animation:twBatWingFlap .3s ease-in-out infinite alternate;}
+  @keyframes twBatWingFlap{0%{transform:scaleY(1)}100%{transform:scaleY(0.7)}}
+  .tw-bat-lair-mist{position:absolute;bottom:0;left:-20%;width:140%;height:40%;background:linear-gradient(0deg,#00000066 0%,transparent 100%);filter:blur(12px);animation:twMistDrift 20s linear infinite;}
+  @keyframes twMistDrift{0%{transform:translateX(-10%)}100%{transform:translateX(10%)}}
+  .tw-bat-lair-drip{position:absolute;width:2px;background:linear-gradient(180deg,#1a1a1a,#000);border-radius:0 0 2px 2px;animation:twDrip 4s ease-in infinite;}
+  @keyframes twDrip{0%{height:0;opacity:0}20%{height:20px;opacity:1}80%{height:20px;opacity:1}100%{height:0;opacity:0}}
   
-    /* === FÉERIQUE COMMUN === */
+  /* === FÉERIQUE COMMUN === */
   .tw-aurora{position:absolute;top:0;left:0;right:0;height:46%;background:linear-gradient(100deg,transparent 18%,#7dff8a26 34%,#74ebf526 50%,#ff6fa526 66%,transparent 82%);filter:blur(18px);animation:twAurora 12s ease-in-out infinite alternate;}
   @keyframes twAurora{0%{transform:translateX(-6%) skewY(-2deg);opacity:.45}100%{transform:translateX(6%) skewY(2deg);opacity:.9}}
   .tw-bokeh{position:absolute;border-radius:50%;filter:blur(6px);animation:twBokeh 9s ease-in-out infinite;}
@@ -404,35 +375,35 @@ document.addEventListener("visibilitychange", () => {
   @keyframes twStarGlow{0%,100%{opacity:1}50%{opacity:.55}}
 
   /* === M7 CIME BONBON V3 — BARBE À PAPA === */
-.tw-cd-sky{position:absolute;inset:0;background:linear-gradient(180deg,#ffb6d9 0%,#ffcce0 35%,#ffe6f0 65%,#fff0f6 100%);}
-.tw-cd-cloud-cotton{position:absolute;border-radius:50%;background:linear-gradient(180deg,#fff 0%,#ffe6f0 50%,#ffd6e8 100%);filter:blur(2px);box-shadow:0 0 20px #fff0f6aa,0 0 40px #ffd6e866;}
-.tw-cd-cloud-cotton.c1{width:180px;height:60px;top:12%;left:8%;}
-.tw-cd-cloud-cotton.c2{width:240px;height:80px;top:22%;right:12%;}
-.tw-cd-cloud-cotton.c3{width:160px;height:50px;top:35%;left:25%;}
-.tw-cd-cloud-cotton.c4{width:200px;height:70px;top:8%;right:35%;}
-.tw-cd-candy-mtn{position:absolute;left:-40%;right:-40%;bottom:0;border-radius:50% 50% 0 0;}
-.tw-cd-candy-mtn.m1{height:38%;background:linear-gradient(180deg,#ffe3ef,#ff9ec4 55%,#d86a9a);opacity:.92;box-shadow:0 0 40px #ff6fa544;}
-.tw-cd-candy-mtn.m2{height:28%;background:linear-gradient(180deg,#e3fbf0,#8fe0c0 55%,#5aa88a);}
-.tw-cd-candy-mtn.m3{height:18%;background:linear-gradient(180deg,#fff8e3,#ffd79e 55%,#d8a86a);}
-.tw-cd-candy-castle{position:absolute;bottom:26%;left:50%;transform:translateX(-50%);width:170px;height:190px;background:linear-gradient(180deg,#ffe3ef,#ff9ec4 60%,#e87ba8);border-radius:14px 14px 0 0;box-shadow:0 0 70px #ff6fa577,inset 0 0 30px #ffffff66;}
-.tw-cd-candy-castle::before{content:"";position:absolute;top:-42px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:52px solid transparent;border-right:52px solid transparent;border-bottom:46px solid #fff0f6;filter:drop-shadow(0 0 16px #ff6fa5bb);}
-.tw-cd-candy-icing{position:absolute;top:-4px;left:-4px;right:-4px;height:20px;background:#fff;border-radius:10px 10px 0 0;box-shadow:0 6px 16px #ffffffaa;}
-.tw-cd-candy-icing::after{content:"";position:absolute;top:100%;left:0;right:0;height:14px;background:radial-gradient(circle at 8% 0,#fff 0 7px,transparent 8px),radial-gradient(circle at 26% 0,#fff 0 9px,transparent 10px),radial-gradient(circle at 46% 0,#fff 0 8px,transparent 9px),radial-gradient(circle at 66% 0,#fff 0 10px,transparent 11px),radial-gradient(circle at 86% 0,#fff 0 7px,transparent 8px);}
-.tw-cd-candy-tower{position:absolute;bottom:26%;width:54px;height:140px;background:linear-gradient(180deg,#ffe3ef,#ff9ec4);border-radius:27px 27px 0 0;box-shadow:0 0 44px #ff6fa566;}
-.tw-cd-candy-tower::before{content:"";position:absolute;top:-26px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:29px solid transparent;border-right:29px solid transparent;border-bottom:30px solid #fff0f6;filter:drop-shadow(0 0 10px #ff6fa5aa);}
-.tw-cd-candy-tower::after{content:"";position:absolute;top:-40px;left:50%;width:2px;height:16px;background:#fff;transform:translateX(-50%);box-shadow:0 0 8px #fff;}
-.tw-cd-candy-river{position:absolute;bottom:0;left:0;right:0;height:11%;background:linear-gradient(180deg,#7a3f22,#4a2410);box-shadow:inset 0 8px 20px #00000077;}
-.tw-cd-candy-river::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 46px,#ffd79e33 46px 52px);animation:twSlide 9s linear infinite;}
-.tw-cd-candy-pop{position:absolute;width:52px;height:52px;border-radius:50%;background:conic-gradient(#ff4b6b 0 25%,#fff 25% 50%,#ff4b6b 50% 75%,#fff 75%);box-shadow:0 0 22px #ff4b6b88,inset 0 0 10px #ffffffaa;animation:twGlowC 3s infinite;}
-.tw-cd-candy-pop::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);width:6px;height:60px;background:#fff;border-radius:3px;box-shadow:0 0 8px #ffffffaa;}
-.tw-cd-candy-cane{position:absolute;width:16px;height:120px;border-radius:9px;background:repeating-linear-gradient(45deg,#ff4b6b 0 10px,#fff 10px 20px);box-shadow:0 0 16px #ff4b6b66;}
-.tw-cd-candy-gum{position:absolute;width:22px;height:16px;border-radius:8px;background:currentColor;box-shadow:0 0 12px currentColor;opacity:.95;}
-.tw-cd-fairy-light{position:absolute;width:8px;height:8px;border-radius:50%;background:#ffd75e;box-shadow:0 0 12px #ffd75e,0 0 24px #ffd75e88;animation:twFairyBlink 2s ease-in-out infinite;}
-@keyframes twFairyBlink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(0.8)}}
-.tw-cd-snowflake{position:absolute;width:6px;height:6px;background:#fff;border-radius:50%;opacity:.8;animation:twGentleFall linear infinite;}
-@keyframes twGentleFall{0%{transform:translateY(-10px) rotate(0deg)}100%{transform:translateY(calc(100vh + 10px)) rotate(360deg)}}
+  .tw-cd-sky{position:absolute;inset:0;background:linear-gradient(180deg,#ffb6d9 0%,#ffcce0 35%,#ffe6f0 65%,#fff0f6 100%);}
+  .tw-cd-cloud-cotton{position:absolute;border-radius:50%;background:linear-gradient(180deg,#fff 0%,#ffe6f0 50%,#ffd6e8 100%);filter:blur(2px);box-shadow:0 0 20px #fff0f6aa,0 0 40px #ffd6e866;}
+  .tw-cd-cloud-cotton.c1{width:180px;height:60px;top:12%;left:8%;}
+  .tw-cd-cloud-cotton.c2{width:240px;height:80px;top:22%;right:12%;}
+  .tw-cd-cloud-cotton.c3{width:160px;height:50px;top:35%;left:25%;}
+  .tw-cd-cloud-cotton.c4{width:200px;height:70px;top:8%;right:35%;}
+  .tw-cd-candy-mtn{position:absolute;left:-40%;right:-40%;bottom:0;border-radius:50% 50% 0 0;}
+  .tw-cd-candy-mtn.m1{height:38%;background:linear-gradient(180deg,#ffe3ef,#ff9ec4 55%,#d86a9a);opacity:.92;box-shadow:0 0 40px #ff6fa544;}
+  .tw-cd-candy-mtn.m2{height:28%;background:linear-gradient(180deg,#e3fbf0,#8fe0c0 55%,#5aa88a);}
+  .tw-cd-candy-mtn.m3{height:18%;background:linear-gradient(180deg,#fff8e3,#ffd79e 55%,#d8a86a);}
+  .tw-cd-candy-castle{position:absolute;bottom:26%;left:50%;transform:translateX(-50%);width:170px;height:190px;background:linear-gradient(180deg,#ffe3ef,#ff9ec4 60%,#e87ba8);border-radius:14px 14px 0 0;box-shadow:0 0 70px #ff6fa577,inset 0 0 30px #ffffff66;}
+  .tw-cd-candy-castle::before{content:"";position:absolute;top:-42px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:52px solid transparent;border-right:52px solid transparent;border-bottom:46px solid #fff0f6;filter:drop-shadow(0 0 16px #ff6fa5bb);}
+  .tw-cd-candy-icing{position:absolute;top:-4px;left:-4px;right:-4px;height:20px;background:#fff;border-radius:10px 10px 0 0;box-shadow:0 6px 16px #ffffffaa;}
+  .tw-cd-candy-icing::after{content:"";position:absolute;top:100%;left:0;right:0;height:14px;background:radial-gradient(circle at 8% 0,#fff 0 7px,transparent 8px),radial-gradient(circle at 26% 0,#fff 0 9px,transparent 10px),radial-gradient(circle at 46% 0,#fff 0 8px,transparent 9px),radial-gradient(circle at 66% 0,#fff 0 10px,transparent 11px),radial-gradient(circle at 86% 0,#fff 0 7px,transparent 8px);}
+  .tw-cd-candy-tower{position:absolute;bottom:26%;width:54px;height:140px;background:linear-gradient(180deg,#ffe3ef,#ff9ec4);border-radius:27px 27px 0 0;box-shadow:0 0 44px #ff6fa566;}
+  .tw-cd-candy-tower::before{content:"";position:absolute;top:-26px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:29px solid transparent;border-right:29px solid transparent;border-bottom:30px solid #fff0f6;filter:drop-shadow(0 0 10px #ff6fa5aa);}
+  .tw-cd-candy-tower::after{content:"";position:absolute;top:-40px;left:50%;width:2px;height:16px;background:#fff;transform:translateX(-50%);box-shadow:0 0 8px #fff;}
+  .tw-cd-candy-river{position:absolute;bottom:0;left:0;right:0;height:11%;background:linear-gradient(180deg,#7a3f22,#4a2410);box-shadow:inset 0 8px 20px #00000077;}
+  .tw-cd-candy-river::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 46px,#ffd79e33 46px 52px);animation:twSlide 9s linear infinite;}
+  .tw-cd-candy-pop{position:absolute;width:52px;height:52px;border-radius:50%;background:conic-gradient(#ff4b6b 0 25%,#fff 25% 50%,#ff4b6b 50% 75%,#fff 75%);box-shadow:0 0 22px #ff4b6b88,inset 0 0 10px #ffffffaa;animation:twGlowC 3s infinite;}
+  .tw-cd-candy-pop::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);width:6px;height:60px;background:#fff;border-radius:3px;box-shadow:0 0 8px #ffffffaa;}
+  .tw-cd-candy-cane{position:absolute;width:16px;height:120px;border-radius:9px;background:repeating-linear-gradient(45deg,#ff4b6b 0 10px,#fff 10px 20px);box-shadow:0 0 16px #ff4b6b66;}
+  .tw-cd-candy-gum{position:absolute;width:22px;height:16px;border-radius:8px;background:currentColor;box-shadow:0 0 12px currentColor;opacity:.95;}
+  .tw-cd-fairy-light{position:absolute;width:8px;height:8px;border-radius:50%;background:#ffd75e;box-shadow:0 0 12px #ffd75e,0 0 24px #ffd75e88;animation:twFairyBlink 2s ease-in-out infinite;}
+  @keyframes twFairyBlink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(0.8)}}
+  .tw-cd-snowflake{position:absolute;width:6px;height:6px;background:#fff;border-radius:50%;opacity:.8;animation:twGentleFall linear infinite;}
+  @keyframes twGentleFall{0%{transform:translateY(-10px) rotate(0deg)}100%{transform:translateY(calc(100vh + 10px)) rotate(360deg)}}
 
-   /* === M8 FORÊT DE SAPINS (volumineux) === */
+  /* === M8 FORÊT DE SAPINS (volumineux) === */
   .tw-pf-row{position:absolute;left:0;right:0;display:flex;align-items:flex-end;justify-content:space-around;}
   .tw-pf-row.far{bottom:26%;opacity:.45;filter:blur(2px);}
   .tw-pf-row.mid{bottom:14%;opacity:.85;}
@@ -449,134 +420,118 @@ document.addEventListener("visibilitychange", () => {
   .tw-pf-bulb{position:absolute;width:7px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 10px currentColor,0 0 22px currentColor;animation:twLightBlink 1.5s infinite;}
   @keyframes twLightBlink{0%,100%{opacity:1}50%{opacity:.35}}
 
-/* === M9 ATELIER PÈRE NOL V3 — CHALEUREUX === */
-.tw-sh-room{position:absolute;inset:0;background:linear-gradient(180deg,#f5e6d3 0%,#f9eedd 55%,#f2d8bf 100%);}
-.tw-sh-wallpaper{position:absolute;inset:0;background:
-  radial-gradient(circle at 10% 20%,#ffe8cc44 0 18px,transparent 19px),
-  radial-gradient(circle at 30% 45%,#ffd9b844 0 14px,transparent 15px),
-  radial-gradient(circle at 70% 25%,#ffe8cc44 0 18px,transparent 19px),
-  radial-gradient(circle at 90% 60%,#ffd9b844 0 14px,transparent 15px),
-  repeating-linear-gradient(90deg,transparent 0 120px,#d4a87822 120px 122px);}
-.tw-sh-halo{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,#fff5d899 0%,#ffebc066 25%,transparent 60%);animation:twGlowC 4s infinite;}
-.tw-sh-beam{position:absolute;top:0;left:0;right:0;height:40px;background:linear-gradient(180deg,#c49366,#a67850);box-shadow:0 4px 10px #00000044,inset 0 -4px 8px #00000022;}
-.tw-sh-beam::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 46px,#8a5a3433 46px 48px);}
-.tw-sh-garland{position:absolute;top:44px;left:2%;right:2%;height:32px;border-bottom:2px solid #8a5a34;border-radius:0 0 50% 50%;}
-.tw-sh-bulb{position:absolute;width:9px;height:11px;border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor,0 0 24px currentColor;animation:twLightBlink 1.4s infinite;}
-@keyframes twLightBlink{0%,100%{opacity:1}50%{opacity:.4}}
-.tw-sh-wreath{position:absolute;width:56px;height:56px;border-radius:50%;border:8px solid #2d6b3e;box-shadow:0 0 16px #2ecc7166,inset 0 0 8px #00000022;background:radial-gradient(circle,#2d6b3e 0 6px,#1a4a26 6px 14px,transparent 14px);}
-.tw-sh-wreath::before{content:"";position:absolute;top:12%;left:12%;width:6px;height:6px;border-radius:50%;background:#d42a4a;box-shadow:28px 0 0 #d42a4a,14px 28px 0 #d42a4a,0 14px 0 #d42a4a;}
-.tw-sh-wreath::after{content:"";position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);width:18px;height:14px;background:#d42a4a;clip-path:polygon(0 0,100% 0,50% 100%);filter:drop-shadow(0 0 6px #d42a4a);}
-.tw-sh-ribbon{position:absolute;top:40px;width:2px;height:36px;background:#8a5a34;}
-.tw-sh-floor{position:absolute;bottom:0;left:0;right:0;height:17%;background:linear-gradient(180deg,#f4c2c2 0%,#e8a9a9 60%,#d48a8a 100%);box-shadow:inset 0 6px 18px #00000044;}
-.tw-sh-floor::before{content:"";position:absolute;inset:0;background:
-  repeating-linear-gradient(90deg,transparent 0 78px,#c77f7f22 78px 80px),
-  repeating-linear-gradient(0deg,transparent 0 40px,#c77f7f18 40px 42px);}
-.tw-sh-rug{position:absolute;bottom:2%;left:50%;transform:translateX(-50%);width:54%;height:6%;background:radial-gradient(ellipse,#d42a4a 0%,#a81430 70%,#7a0e22 100%);border-radius:50%;box-shadow:0 0 24px #d42a4a55,inset 0 0 18px #00000044;}
-.tw-sh-rug::before{content:"";position:absolute;inset:8%;border:2px solid #ffd75e66;border-radius:50%;}
-.tw-sh-rug::after{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40%;height:50%;border:2px solid #ffd75e66;border-radius:50%;}
-.tw-sh-win{position:absolute;width:140px;height:180px;background:radial-gradient(ellipse at 50% 30%,#cfe9ff 0%,#a8d5f0 40%,#7ab4dd 80%);border:10px solid #a67850;border-radius:70px 70px 8px 8px;box-shadow:0 0 30px #ffffffaa,inset 0 0 24px #ffffff66;overflow:hidden;}
-.tw-sh-win::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:5px;transform:translateX(-50%);background:#a67850;}
-.tw-sh-win::after{content:"";position:absolute;left:0;right:0;top:50%;height:5px;background:#a67850;}
-.tw-sh-win-snow{position:absolute;left:-10%;right:-10%;top:0;height:100%;background:
-  radial-gradient(circle at 10% 10%,#fff 0 3px,transparent 4px),
-  radial-gradient(circle at 30% 25%,#fff 0 2px,transparent 3px),
-  radial-gradient(circle at 50% 15%,#fff 0 3px,transparent 4px),
-  radial-gradient(circle at 70% 30%,#fff 0 2px,transparent 3px),
-  radial-gradient(circle at 90% 20%,#fff 0 3px,transparent 4px),
-  radial-gradient(circle at 20% 50%,#fff 0 2px,transparent 3px),
-  radial-gradient(circle at 60% 60%,#fff 0 3px,transparent 4px),
-  radial-gradient(circle at 85% 70%,#fff 0 2px,transparent 3px);
-  animation:twShWinSnow 8s linear infinite;opacity:.9;}
-@keyframes twShWinSnow{0%{transform:translateY(-40px)}100%{transform:translateY(40px)}}
-.tw-sh-win-sill{position:absolute;top:178px;left:-12px;right:-12px;height:14px;background:linear-gradient(180deg,#ffffff,#e8f4ff);border-radius:4px;box-shadow:0 4px 8px #00000044;}
-.tw-sh-fire{position:absolute;bottom:17%;width:140px;height:140px;background:linear-gradient(180deg,#e8d4b8,#c9b090 60%,#a67850);border-radius:8px;box-shadow:0 0 20px #00000044;}
-.tw-sh-fire::before{content:"";position:absolute;top:12px;left:12px;right:12px;height:78px;background:#1a0f08;border-radius:4px;box-shadow:inset 0 0 20px #000;}
-.tw-sh-flame{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);width:60px;height:60px;background:radial-gradient(ellipse at bottom,#ffdd55,#ff8c00 55%,#d43a00 85%);border-radius:50% 50% 20% 20%;animation:twFireFlick .7s infinite;box-shadow:0 0 40px #ff8c00aa,0 0 80px #ff8c0055;}
-@keyframes twFireFlick{0%,100%{transform:translateX(-50%) scaleY(1)}50%{transform:translateX(-50%) scaleY(1.14) scaleX(.92)}}
-.tw-sh-mantel{position:absolute;bottom:144px;left:-10px;right:-10px;height:14px;background:linear-gradient(180deg,#c49366,#8a5a34);border-radius:4px;box-shadow:0 4px 8px #00000066;}
-.tw-sh-sock{position:absolute;top:14px;width:22px;height:40px;background:#d42a4a;border-radius:0 0 12px 12px;box-shadow:inset -2px -2px 6px #00000044;}
-.tw-sh-sock::before{content:"";position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:26px;height:10px;background:#fff;border-radius:4px;}
-.tw-sh-sock::after{content:"";position:absolute;top:18px;left:6px;right:6px;height:3px;background:#2ecc71;}
-.tw-sh-tree{position:absolute;bottom:17%;width:150px;height:220px;filter:drop-shadow(0 0 20px #2ecc7155);}
-.tw-sh-tree .trunk{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:22px;height:28px;background:linear-gradient(90deg,#5a3418,#7a4a28,#5a3418);border-radius:3px;}
-.tw-sh-tree .pot{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:50px;height:26px;background:linear-gradient(180deg,#d42a4a,#a81430);border-radius:4px 4px 6px 6px;box-shadow:0 4px 8px #00000066;}
-.tw-sh-tree .pot::before{content:"";position:absolute;top:-4px;left:-4px;right:-4px;height:6px;background:#a81430;border-radius:3px;}
-.tw-sh-tree .lyr{position:absolute;left:50%;transform:translateX(-50%);width:0;height:0;border-left:44px solid transparent;border-right:44px solid transparent;border-bottom:54px solid #2d6b3e;}
-.tw-sh-tree .lyr.l1{bottom:26px;border-left-width:54px;border-right-width:54px;border-bottom-width:62px;border-bottom-color:#2d6b3e;}
-.tw-sh-tree .lyr.l2{bottom:70px;border-left-width:44px;border-right-width:44px;border-bottom-width:54px;border-bottom-color:#358048;}
-.tw-sh-tree .lyr.l3{bottom:110px;border-left-width:34px;border-right-width:34px;border-bottom-width:48px;border-bottom-color:#3e9656;}
-.tw-sh-tree .lyr.l4{bottom:146px;border-left-width:22px;border-right-width:22px;border-bottom-width:38px;border-bottom-color:#4aad62;}
-.tw-sh-tree .star{position:absolute;top:-14px;left:50%;transform:translateX(-50%);width:24px;height:24px;background:#ffd75e;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);box-shadow:0 0 18px #ffd75e,0 0 36px #ffd75ecc;animation:twStarGlow 2s infinite;}
-@keyframes twStarGlow{0%,100%{opacity:1}50%{opacity:.6}}
-.tw-sh-ornament{position:absolute;width:12px;height:12px;border-radius:50%;background:currentColor;box-shadow:0 0 10px currentColor,inset -2px -2px 3px #00000044;}
-.tw-sh-shelf{position:absolute;width:110px;height:14px;background:linear-gradient(180deg,#c49366,#a67850);border-radius:3px;box-shadow:0 4px 6px #00000044,inset 0 -2px 3px #00000033;}
-.tw-sh-shelf::before{content:"";position:absolute;top:-4px;left:4px;right:4px;height:4px;background:#8a5a34;}
-.tw-sh-bracket{position:absolute;top:14px;width:10px;height:18px;background:#8a5a34;clip-path:polygon(0 0,100% 0,50% 100%);}
-.tw-sh-bear{position:absolute;width:30px;height:34px;background:radial-gradient(ellipse at 50% 60%,#c9a078,#8a6840);border-radius:50% 50% 45% 45%;box-shadow:inset -3px -4px 6px #00000044;}
-.tw-sh-bear::before{content:"";position:absolute;top:2px;left:3px;width:8px;height:8px;border-radius:50%;background:#c9a078;box-shadow:16px 0 0 #c9a078;}
-.tw-sh-bear::after{content:"";position:absolute;top:14px;left:50%;transform:translateX(-50%);width:10px;height:6px;background:#4a2a10;border-radius:50%;}
-.tw-sh-ball{position:absolute;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 30% 30%,currentColor,#00000044);box-shadow:0 0 10px currentColor;}
-.tw-sh-block{position:absolute;width:22px;height:22px;background:currentColor;border-radius:3px;box-shadow:inset -2px -2px 4px #00000044,0 2px 4px #00000044;}
-.tw-sh-block::after{content:"";position:absolute;inset:4px;border:2px solid #ffffff88;border-radius:2px;}
-.tw-sh-doll{position:absolute;width:22px;height:32px;background:linear-gradient(180deg,#ff9ec4,#d42a7a);border-radius:11px 11px 4px 4px;box-shadow:inset -2px -2px 5px #00000033;}
-.tw-sh-doll::before{content:"";position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:14px;height:14px;background:#ffd9b8;border-radius:50%;}
-.tw-sh-doll::after{content:"";position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:16px;height:8px;background:#ffd75e;border-radius:8px 8px 0 0;}
-.tw-sh-train{position:absolute;width:40px;height:22px;background:linear-gradient(180deg,#d42a4a,#a81430);border-radius:4px 10px 2px 2px;box-shadow:0 2px 4px #00000066;}
-.tw-sh-train::before{content:"";position:absolute;top:4px;left:4px;width:10px;height:10px;border-radius:50%;background:#ffd75e;box-shadow:0 0 6px #ffd75e;}
-.tw-sh-train::after{content:"";position:absolute;top:-8px;right:4px;width:6px;height:10px;background:#2a1208;border-radius:2px 2px 0 0;}
-.tw-sh-santa{position:absolute;bottom:17%;left:50%;transform:translateX(-50%);width:110px;height:170px;animation:twSantaBob 2.8s ease-in-out infinite;}
-@keyframes twSantaBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
-.tw-sh-santa .body{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:96px;height:88px;background:linear-gradient(180deg,#d42a4a,#a81430);border-radius:48px 48px 16px 16px;box-shadow:0 0 28px #d42a4a66,inset -6px -8px 14px #00000033;}
-.tw-sh-santa .body::before{content:"";position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:96px;height:18px;background:#fff;border-radius:0 0 16px 16px;}
-.tw-sh-santa .belt{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);width:96px;height:14px;background:#2a1208;}
-.tw-sh-santa .buckle{position:absolute;bottom:31px;left:50%;transform:translateX(-50%);width:18px;height:12px;background:#ffd75e;border-radius:3px;box-shadow:0 0 10px #ffd75e,inset 0 -2px 2px #8a6a1a;}
-.tw-sh-santa .beard{position:absolute;bottom:62px;left:50%;transform:translateX(-50%);width:70px;height:54px;background:#fff;border-radius:0 0 35px 35px;box-shadow:0 0 16px #ffffff88,inset -4px -6px 8px #00000018;}
-.tw-sh-santa .head{position:absolute;bottom:100px;left:50%;transform:translateX(-50%);width:48px;height:48px;background:#ffd9b8;border-radius:50%;box-shadow:inset -3px -3px 6px #00000018;}
-.tw-sh-santa .eye{position:absolute;bottom:120px;width:4px;height:4px;border-radius:50%;background:#2a1208;}
-.tw-sh-santa .eye.l{left:38px;}.tw-sh-santa .eye.r{left:68px;}
-.tw-sh-santa .nose{position:absolute;bottom:110px;left:50%;transform:translateX(-50%);width:10px;height:10px;background:#f0a088;border-radius:50%;}
-.tw-sh-santa .mouth{position:absolute;bottom:90px;left:50%;transform:translateX(-50%);width:18px;height:8px;background:#d42a4a;border-radius:0 0 10px 10px;}
-.tw-sh-santa .hat{position:absolute;bottom:136px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:26px solid transparent;border-right:26px solid transparent;border-bottom:42px solid #d42a4a;}
-.tw-sh-santa .hat::before{content:"";position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:60px;height:10px;background:#fff;border-radius:5px;}
-.tw-sh-santa .pom{position:absolute;bottom:172px;left:50%;transform:translateX(-50%);width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:0 0 14px #ffffffaa;}
-.tw-sh-santa .arm{position:absolute;bottom:48px;width:38px;height:18px;background:#d42a4a;border-radius:9px;box-shadow:inset -2px -2px 4px #00000033;}
-.tw-sh-santa .arm::before{content:"";position:absolute;right:-2px;top:2px;width:14px;height:14px;background:#fff;border-radius:50%;}
-.tw-sh-santa .arm.l{left:-16px;transform:rotate(20deg);}
-.tw-sh-santa .arm.r{right:-16px;transform:rotate(-40deg);}
-.tw-sh-santa .gift{position:absolute;bottom:70px;right:-42px;width:32px;height:32px;background:#2ecc71;border-radius:4px;box-shadow:0 0 16px #2ecc7166,0 4px 8px #00000044;animation:twGiftWave 2.8s ease-in-out infinite;}
-.tw-sh-santa .gift::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:6px;height:100%;background:#ffd75e;}
-.tw-sh-santa .gift::after{content:"";position:absolute;top:50%;left:0;transform:translateY(-50%);width:100%;height:6px;background:#ffd75e;}
-@keyframes twGiftWave{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(14deg) translateY(-5px)}}
-.tw-sh-elf{position:absolute;bottom:17%;width:48px;height:78px;animation:twElfWalk 13s linear infinite;}
-@keyframes twElfWalk{0%{left:-12%}46%{left:84%}50%{left:84%}96%{left:-12%}100%{left:-12%}}
-.tw-sh-elf.flip{animation-name:twElfWalkFlip;}
-@keyframes twElfWalkFlip{0%{left:84%}46%{left:-12%}50%{left:-12%}96%{left:84%}100%{left:84%}}
-.tw-sh-elf .body{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:38px;height:40px;background:linear-gradient(180deg,#2ecc71,#1a9a4a);border-radius:18px 18px 6px 6px;box-shadow:inset -3px -4px 6px #00000033;}
-.tw-sh-elf .body::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:38px;height:10px;background:#d42a4a;border-radius:18px 18px 0 0;}
-.tw-sh-elf .head{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);width:26px;height:26px;background:#ffd9b8;border-radius:50%;}
-.tw-sh-elf .hat{position:absolute;bottom:58px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:26px solid #d42a4a;}
-.tw-sh-elf .pom{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);width:10px;height:10px;background:#fff;border-radius:50%;box-shadow:0 0 8px #ffffff88;}
-.tw-sh-elf .carry{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);width:22px;height:22px;background:currentColor;border-radius:3px;box-shadow:0 0 12px currentColor,0 2px 4px #00000044;}
-.tw-sh-elf .carry::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:4px;height:100%;background:#ffffff88;}
-.tw-sh-table{position:absolute;bottom:17%;left:50%;transform:translateX(-50%);width:240px;height:50px;}
-.tw-sh-table .top{position:absolute;top:0;left:0;right:0;height:10px;background:linear-gradient(180deg,#d42a4a,#a81430);border-radius:4px 4px 0 0;}
-.tw-sh-table .cloth{position:absolute;top:10px;left:-10px;right:-10px;height:30px;background:radial-gradient(ellipse,#d42a4a,#a81430);border-radius:0 0 40% 40% / 0 0 60% 60%;box-shadow:0 6px 12px #00000044;}
-.tw-sh-table .cloth::before{content:"";position:absolute;inset:4px 8px;border:2px dotted #ffd75e88;border-radius:0 0 40% 40% / 0 0 60% 60%;}
-.tw-sh-gift-pile{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);width:200px;height:50px;}
-.tw-sh-gift-pile .g{position:absolute;border-radius:4px;box-shadow:0 0 14px #00000044;}
-.tw-sh-gift-pile .g::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:4px;height:100%;background:#ffffffaa;}
-.tw-sh-gift-pile .g::after{content:"";position:absolute;top:50%;left:0;transform:translateY(-50%);width:100%;height:4px;background:#ffffffaa;}
-.tw-sh-pet{position:absolute;bottom:17%;right:12%;width:60px;height:46px;background:radial-gradient(ellipse at 50% 60%,#c9a078,#8a6840);border-radius:50% 50% 40% 40%;box-shadow:inset -4px -6px 10px #00000044;animation:twPetSleep 4s ease-in-out infinite;}
-@keyframes twPetSleep{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
-.tw-sh-pet::before{content:"";position:absolute;top:2px;left:8px;width:12px;height:14px;background:#c9a078;border-radius:50% 50% 40% 40%;box-shadow:30px 0 0 #c9a078;}
-.tw-sh-pet::after{content:"";position:absolute;top:18px;left:50%;transform:translateX(-50%);width:12px;height:8px;background:#4a2a10;border-radius:50%;}
-.tw-sh-plate{position:absolute;bottom:17%;left:14%;width:54px;height:14px;background:radial-gradient(ellipse,#fff,#e8d8c8);border-radius:50%;box-shadow:0 2px 6px #00000044,inset 0 -2px 4px #00000022;}
-.tw-sh-cookie{position:absolute;bottom:21%;left:16%;width:20px;height:20px;background:radial-gradient(circle at 40% 40%,#c9a078,#7a5a30);border-radius:50%;box-shadow:inset -2px -2px 4px #00000044;}
-.tw-sh-cookie::before{content:"";position:absolute;top:4px;left:6px;width:3px;height:3px;border-radius:50%;background:#4a2a10;box-shadow:6px 4px 0 #4a2a10,2px 8px 0 #4a2a10;}
-.tw-sh-glass{position:absolute;bottom:21%;left:24%;width:16px;height:24px;background:linear-gradient(180deg,#fff9e8 0%,#fff9e8 40%,#f8e8c8 40%,#d4a878 100%);border-radius:3px 3px 0 0;border:2px solid #ffffffaa;box-shadow:0 2px 6px #00000044;}
-.tw-sh-sparkle{position:absolute;width:14px;height:14px;background:linear-gradient(0deg,transparent 42%,#ffd75e 42% 58%,transparent 58%),linear-gradient(90deg,transparent 42%,#ffd75e 42% 58%,transparent 58%);animation:twSparkle 3.4s ease-in-out infinite;filter:drop-shadow(0 0 6px #ffd75e);}
-@keyframes twSparkle{0%,100%{opacity:0;transform:scale(.4) rotate(0deg)}50%{opacity:1;transform:scale(1.2) rotate(45deg)}}
-.tw-sh-snow-out{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff;opacity:.9;animation:twFall linear infinite;}
+  /* === M9 ATELIER PÈRE NOËL V3 — CHALEUREUX === */
+  .tw-sh-room{position:absolute;inset:0;background:linear-gradient(180deg,#f5e6d3 0%,#f9eedd 55%,#f2d8bf 100%);}
+  .tw-sh-wallpaper{position:absolute;inset:0;background:radial-gradient(circle at 10% 20%,#ffe8cc44 0 18px,transparent 19px),radial-gradient(circle at 30% 45%,#ffd9b844 0 14px,transparent 15px),radial-gradient(circle at 70% 25%,#ffe8cc44 0 18px,transparent 19px),radial-gradient(circle at 90% 60%,#ffd9b844 0 14px,transparent 15px),repeating-linear-gradient(90deg,transparent 0 120px,#d4a87822 120px 122px);}
+  .tw-sh-halo{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,#fff5d899 0%,#ffebc066 25%,transparent 60%);animation:twGlowC 4s infinite;}
+  .tw-sh-beam{position:absolute;top:0;left:0;right:0;height:40px;background:linear-gradient(180deg,#c49366,#a67850);box-shadow:0 4px 10px #00000044,inset 0 -4px 8px #00000022;}
+  .tw-sh-beam::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 46px,#8a5a3433 46px 48px);}
+  .tw-sh-garland{position:absolute;top:44px;left:2%;right:2%;height:32px;border-bottom:2px solid #8a5a34;border-radius:0 0 50% 50%;}
+  .tw-sh-bulb{position:absolute;width:9px;height:11px;border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor,0 0 24px currentColor;animation:twLightBlink 1.4s infinite;}
+  @keyframes twLightBlink{0%,100%{opacity:1}50%{opacity:.4}}
+  .tw-sh-wreath{position:absolute;width:56px;height:56px;border-radius:50%;border:8px solid #2d6b3e;box-shadow:0 0 16px #2ecc7166,inset 0 0 8px #00000022;background:radial-gradient(circle,#2d6b3e 0 6px,#1a4a26 6px 14px,transparent 14px);}
+  .tw-sh-wreath::before{content:"";position:absolute;top:12%;left:12%;width:6px;height:6px;border-radius:50%;background:#d42a4a;box-shadow:28px 0 0 #d42a4a,14px 28px 0 #d42a4a,0 14px 0 #d42a4a;}
+  .tw-sh-wreath::after{content:"";position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);width:18px;height:14px;background:#d42a4a;clip-path:polygon(0 0,100% 0,50% 100%);filter:drop-shadow(0 0 6px #d42a4a);}
+  .tw-sh-ribbon{position:absolute;top:40px;width:2px;height:36px;background:#8a5a34;}
+  .tw-sh-floor{position:absolute;bottom:0;left:0;right:0;height:17%;background:linear-gradient(180deg,#f4c2c2 0%,#e8a9a9 60%,#d48a8a 100%);box-shadow:inset 0 6px 18px #00000044;}
+  .tw-sh-floor::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 78px,#c77f7f22 78px 80px),repeating-linear-gradient(0deg,transparent 0 40px,#c77f7f18 40px 42px);}
+  .tw-sh-rug{position:absolute;bottom:2%;left:50%;transform:translateX(-50%);width:54%;height:6%;background:radial-gradient(ellipse,#d42a4a 0%,#a81430 70%,#7a0e22 100%);border-radius:50%;box-shadow:0 0 24px #d42a4a55,inset 0 0 18px #00000044;}
+  .tw-sh-rug::before{content:"";position:absolute;inset:8%;border:2px solid #ffd75e66;border-radius:50%;}
+  .tw-sh-rug::after{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40%;height:50%;border:2px solid #ffd75e66;border-radius:50%;}
+  .tw-sh-win{position:absolute;width:140px;height:180px;background:radial-gradient(ellipse at 50% 30%,#cfe9ff 0%,#a8d5f0 40%,#7ab4dd 80%);border:10px solid #a67850;border-radius:70px 70px 8px 8px;box-shadow:0 0 30px #ffffffaa,inset 0 0 24px #ffffff66;overflow:hidden;}
+  .tw-sh-win::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:5px;transform:translateX(-50%);background:#a67850;}
+  .tw-sh-win::after{content:"";position:absolute;left:0;right:0;top:50%;height:5px;background:#a67850;}
+  .tw-sh-win-snow{position:absolute;left:-10%;right:-10%;top:0;height:100%;background:radial-gradient(circle at 10% 10%,#fff 0 3px,transparent 4px),radial-gradient(circle at 30% 25%,#fff 0 2px,transparent 3px),radial-gradient(circle at 50% 15%,#fff 0 3px,transparent 4px),radial-gradient(circle at 70% 30%,#fff 0 2px,transparent 3px),radial-gradient(circle at 90% 20%,#fff 0 3px,transparent 4px),radial-gradient(circle at 20% 50%,#fff 0 2px,transparent 3px),radial-gradient(circle at 60% 60%,#fff 0 3px,transparent 4px),radial-gradient(circle at 85% 70%,#fff 0 2px,transparent 3px);animation:twShWinSnow 8s linear infinite;opacity:.9;}
+  @keyframes twShWinSnow{0%{transform:translateY(-40px)}100%{transform:translateY(40px)}}
+  .tw-sh-win-sill{position:absolute;top:178px;left:-12px;right:-12px;height:14px;background:linear-gradient(180deg,#ffffff,#e8f4ff);border-radius:4px;box-shadow:0 4px 8px #00000044;}
+  .tw-sh-fire{position:absolute;bottom:17%;width:140px;height:140px;background:linear-gradient(180deg,#e8d4b8,#c9b090 60%,#a67850);border-radius:8px;box-shadow:0 0 20px #00000044;}
+  .tw-sh-fire::before{content:"";position:absolute;top:12px;left:12px;right:12px;height:78px;background:#1a0f08;border-radius:4px;box-shadow:inset 0 0 20px #000;}
+  .tw-sh-flame{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);width:60px;height:60px;background:radial-gradient(ellipse at bottom,#ffdd55,#ff8c00 55%,#d43a00 85%);border-radius:50% 50% 20% 20%;animation:twFireFlick .7s infinite;box-shadow:0 0 40px #ff8c00aa,0 0 80px #ff8c0055;}
+  @keyframes twFireFlick{0%,100%{transform:translateX(-50%) scaleY(1)}50%{transform:translateX(-50%) scaleY(1.14) scaleX(.92)}}
+  .tw-sh-mantel{position:absolute;bottom:144px;left:-10px;right:-10px;height:14px;background:linear-gradient(180deg,#c49366,#8a5a34);border-radius:4px;box-shadow:0 4px 8px #00000066;}
+  .tw-sh-sock{position:absolute;top:14px;width:22px;height:40px;background:#d42a4a;border-radius:0 0 12px 12px;box-shadow:inset -2px -2px 6px #00000044;}
+  .tw-sh-sock::before{content:"";position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:26px;height:10px;background:#fff;border-radius:4px;}
+  .tw-sh-sock::after{content:"";position:absolute;top:18px;left:6px;right:6px;height:3px;background:#2ecc71;}
+  .tw-sh-tree{position:absolute;bottom:17%;width:150px;height:220px;filter:drop-shadow(0 0 20px #2ecc7155);}
+  .tw-sh-tree .trunk{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:22px;height:28px;background:linear-gradient(90deg,#5a3418,#7a4a28,#5a3418);border-radius:3px;}
+  .tw-sh-tree .pot{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:50px;height:26px;background:linear-gradient(180deg,#d42a4a,#a81430);border-radius:4px 4px 6px 6px;box-shadow:0 4px 8px #00000066;}
+  .tw-sh-tree .pot::before{content:"";position:absolute;top:-4px;left:-4px;right:-4px;height:6px;background:#a81430;border-radius:3px;}
+  .tw-sh-tree .lyr{position:absolute;left:50%;transform:translateX(-50%);width:0;height:0;border-left:44px solid transparent;border-right:44px solid transparent;border-bottom:54px solid #2d6b3e;}
+  .tw-sh-tree .lyr.l1{bottom:26px;border-left-width:54px;border-right-width:54px;border-bottom-width:62px;border-bottom-color:#2d6b3e;}
+  .tw-sh-tree .lyr.l2{bottom:70px;border-left-width:44px;border-right-width:44px;border-bottom-width:54px;border-bottom-color:#358048;}
+  .tw-sh-tree .lyr.l3{bottom:110px;border-left-width:34px;border-right-width:34px;border-bottom-width:48px;border-bottom-color:#3e9656;}
+  .tw-sh-tree .lyr.l4{bottom:146px;border-left-width:22px;border-right-width:22px;border-bottom-width:38px;border-bottom-color:#4aad62;}
+  .tw-sh-tree .star{position:absolute;top:-14px;left:50%;transform:translateX(-50%);width:24px;height:24px;background:#ffd75e;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);box-shadow:0 0 18px #ffd75e,0 0 36px #ffd75ecc;animation:twStarGlow 2s infinite;}
+  @keyframes twStarGlow{0%,100%{opacity:1}50%{opacity:.6}}
+  .tw-sh-ornament{position:absolute;width:12px;height:12px;border-radius:50%;background:currentColor;box-shadow:0 0 10px currentColor,inset -2px -2px 3px #00000044;}
+  .tw-sh-shelf{position:absolute;width:110px;height:14px;background:linear-gradient(180deg,#c49366,#a67850);border-radius:3px;box-shadow:0 4px 6px #00000044,inset 0 -2px 3px #00000033;}
+  .tw-sh-shelf::before{content:"";position:absolute;top:-4px;left:4px;right:4px;height:4px;background:#8a5a34;}
+  .tw-sh-bracket{position:absolute;top:14px;width:10px;height:18px;background:#8a5a34;clip-path:polygon(0 0,100% 0,50% 100%);}
+  .tw-sh-bear{position:absolute;width:30px;height:34px;background:radial-gradient(ellipse at 50% 60%,#c9a078,#8a6840);border-radius:50% 50% 45% 45%;box-shadow:inset -3px -4px 6px #00000044;}
+  .tw-sh-bear::before{content:"";position:absolute;top:2px;left:3px;width:8px;height:8px;border-radius:50%;background:#c9a078;box-shadow:16px 0 0 #c9a078;}
+  .tw-sh-bear::after{content:"";position:absolute;top:14px;left:50%;transform:translateX(-50%);width:10px;height:6px;background:#4a2a10;border-radius:50%;}
+  .tw-sh-ball{position:absolute;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 30% 30%,currentColor,#00000044);box-shadow:0 0 10px currentColor;}
+  .tw-sh-block{position:absolute;width:22px;height:22px;background:currentColor;border-radius:3px;box-shadow:inset -2px -2px 4px #00000044,0 2px 4px #00000044;}
+  .tw-sh-block::after{content:"";position:absolute;inset:4px;border:2px solid #ffffff88;border-radius:2px;}
+  .tw-sh-doll{position:absolute;width:22px;height:32px;background:linear-gradient(180deg,#ff9ec4,#d42a7a);border-radius:11px 11px 4px 4px;box-shadow:inset -2px -2px 5px #00000033;}
+  .tw-sh-doll::before{content:"";position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:14px;height:14px;background:#ffd9b8;border-radius:50%;}
+  .tw-sh-doll::after{content:"";position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:16px;height:8px;background:#ffd75e;border-radius:8px 8px 0 0;}
+  .tw-sh-train{position:absolute;width:40px;height:22px;background:linear-gradient(180deg,#d42a4a,#a81430);border-radius:4px 10px 2px 2px;box-shadow:0 2px 4px #00000066;}
+  .tw-sh-train::before{content:"";position:absolute;top:4px;left:4px;width:10px;height:10px;border-radius:50%;background:#ffd75e;box-shadow:0 0 6px #ffd75e;}
+  .tw-sh-train::after{content:"";position:absolute;top:-8px;right:4px;width:6px;height:10px;background:#2a1208;border-radius:2px 2px 0 0;}
+  .tw-sh-santa{position:absolute;bottom:17%;left:50%;transform:translateX(-50%);width:110px;height:170px;animation:twSantaBob 2.8s ease-in-out infinite;}
+  @keyframes twSantaBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
+  .tw-sh-santa .body{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:96px;height:88px;background:linear-gradient(180deg,#d42a4a,#a81430);border-radius:48px 48px 16px 16px;box-shadow:0 0 28px #d42a4a66,inset -6px -8px 14px #00000033;}
+  .tw-sh-santa .body::before{content:"";position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:96px;height:18px;background:#fff;border-radius:0 0 16px 16px;}
+  .tw-sh-santa .belt{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);width:96px;height:14px;background:#2a1208;}
+  .tw-sh-santa .buckle{position:absolute;bottom:31px;left:50%;transform:translateX(-50%);width:18px;height:12px;background:#ffd75e;border-radius:3px;box-shadow:0 0 10px #ffd75e,inset 0 -2px 2px #8a6a1a;}
+  .tw-sh-santa .beard{position:absolute;bottom:62px;left:50%;transform:translateX(-50%);width:70px;height:54px;background:#fff;border-radius:0 0 35px 35px;box-shadow:0 0 16px #ffffff88,inset -4px -6px 8px #00000018;}
+  .tw-sh-santa .head{position:absolute;bottom:100px;left:50%;transform:translateX(-50%);width:48px;height:48px;background:#ffd9b8;border-radius:50%;box-shadow:inset -3px -3px 6px #00000018;}
+  .tw-sh-santa .eye{position:absolute;bottom:120px;width:4px;height:4px;border-radius:50%;background:#2a1208;}
+  .tw-sh-santa .eye.l{left:38px;}.tw-sh-santa .eye.r{left:68px;}
+  .tw-sh-santa .nose{position:absolute;bottom:110px;left:50%;transform:translateX(-50%);width:10px;height:10px;background:#f0a088;border-radius:50%;}
+  .tw-sh-santa .mouth{position:absolute;bottom:90px;left:50%;transform:translateX(-50%);width:18px;height:8px;background:#d42a4a;border-radius:0 0 10px 10px;}
+  .tw-sh-santa .hat{position:absolute;bottom:136px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:26px solid transparent;border-right:26px solid transparent;border-bottom:42px solid #d42a4a;}
+  .tw-sh-santa .hat::before{content:"";position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:60px;height:10px;background:#fff;border-radius:5px;}
+  .tw-sh-santa .pom{position:absolute;bottom:172px;left:50%;transform:translateX(-50%);width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:0 0 14px #ffffffaa;}
+  .tw-sh-santa .arm{position:absolute;bottom:48px;width:38px;height:18px;background:#d42a4a;border-radius:9px;box-shadow:inset -2px -2px 4px #00000033;}
+  .tw-sh-santa .arm::before{content:"";position:absolute;right:-2px;top:2px;width:14px;height:14px;background:#fff;border-radius:50%;}
+  .tw-sh-santa .arm.l{left:-16px;transform:rotate(20deg);}
+  .tw-sh-santa .arm.r{right:-16px;transform:rotate(-40deg);}
+  .tw-sh-santa .gift{position:absolute;bottom:70px;right:-42px;width:32px;height:32px;background:#2ecc71;border-radius:4px;box-shadow:0 0 16px #2ecc7166,0 4px 8px #00000044;animation:twGiftWave 2.8s ease-in-out infinite;}
+  .tw-sh-santa .gift::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:6px;height:100%;background:#ffd75e;}
+  .tw-sh-santa .gift::after{content:"";position:absolute;top:50%;left:0;transform:translateY(-50%);width:100%;height:6px;background:#ffd75e;}
+  @keyframes twGiftWave{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(14deg) translateY(-5px)}}
+  .tw-sh-elf{position:absolute;bottom:17%;width:48px;height:78px;animation:twElfWalk 13s linear infinite;}
+  @keyframes twElfWalk{0%{left:-12%}46%{left:84%}50%{left:84%}96%{left:-12%}100%{left:-12%}}
+  .tw-sh-elf.flip{animation-name:twElfWalkFlip;}
+  @keyframes twElfWalkFlip{0%{left:84%}46%{left:-12%}50%{left:-12%}96%{left:84%}100%{left:84%}}
+  .tw-sh-elf .body{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:38px;height:40px;background:linear-gradient(180deg,#2ecc71,#1a9a4a);border-radius:18px 18px 6px 6px;box-shadow:inset -3px -4px 6px #00000033;}
+  .tw-sh-elf .body::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:38px;height:10px;background:#d42a4a;border-radius:18px 18px 0 0;}
+  .tw-sh-elf .head{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);width:26px;height:26px;background:#ffd9b8;border-radius:50%;}
+  .tw-sh-elf .hat{position:absolute;bottom:58px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:26px solid #d42a4a;}
+  .tw-sh-elf .pom{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);width:10px;height:10px;background:#fff;border-radius:50%;box-shadow:0 0 8px #ffffff88;}
+  .tw-sh-elf .carry{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);width:22px;height:22px;background:currentColor;border-radius:3px;box-shadow:0 0 12px currentColor,0 2px 4px #00000044;}
+  .tw-sh-elf .carry::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:4px;height:100%;background:#ffffff88;}
+  .tw-sh-table{position:absolute;bottom:17%;left:50%;transform:translateX(-50%);width:240px;height:50px;}
+  .tw-sh-table .top{position:absolute;top:0;left:0;right:0;height:10px;background:linear-gradient(180deg,#d42a4a,#a81430);border-radius:4px 4px 0 0;}
+  .tw-sh-table .cloth{position:absolute;top:10px;left:-10px;right:-10px;height:30px;background:radial-gradient(ellipse,#d42a4a,#a81430);border-radius:0 0 40% 40% / 0 0 60% 60%;box-shadow:0 6px 12px #00000044;}
+  .tw-sh-table .cloth::before{content:"";position:absolute;inset:4px 8px;border:2px dotted #ffd75e88;border-radius:0 0 40% 40% / 0 0 60% 60%;}
+  .tw-sh-gift-pile{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);width:200px;height:50px;}
+  .tw-sh-gift-pile .g{position:absolute;border-radius:4px;box-shadow:0 0 14px #00000044;}
+  .tw-sh-gift-pile .g::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:4px;height:100%;background:#ffffffaa;}
+  .tw-sh-gift-pile .g::after{content:"";position:absolute;top:50%;left:0;transform:translateY(-50%);width:100%;height:4px;background:#ffffffaa;}
+  .tw-sh-pet{position:absolute;bottom:17%;right:12%;width:60px;height:46px;background:radial-gradient(ellipse at 50% 60%,#c9a078,#8a6840);border-radius:50% 50% 40% 40%;box-shadow:inset -4px -6px 10px #00000044;animation:twPetSleep 4s ease-in-out infinite;}
+  @keyframes twPetSleep{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+  .tw-sh-pet::before{content:"";position:absolute;top:2px;left:8px;width:12px;height:14px;background:#c9a078;border-radius:50% 50% 40% 40%;box-shadow:30px 0 0 #c9a078;}
+  .tw-sh-pet::after{content:"";position:absolute;top:18px;left:50%;transform:translateX(-50%);width:12px;height:8px;background:#4a2a10;border-radius:50%;}
+  .tw-sh-plate{position:absolute;bottom:17%;left:14%;width:54px;height:14px;background:radial-gradient(ellipse,#fff,#e8d8c8);border-radius:50%;box-shadow:0 2px 6px #00000044,inset 0 -2px 4px #00000022;}
+  .tw-sh-cookie{position:absolute;bottom:21%;left:16%;width:20px;height:20px;background:radial-gradient(circle at 40% 40%,#c9a078,#7a5a30);border-radius:50%;box-shadow:inset -2px -2px 4px #00000044;}
+  .tw-sh-cookie::before{content:"";position:absolute;top:4px;left:6px;width:3px;height:3px;border-radius:50%;background:#4a2a10;box-shadow:6px 4px 0 #4a2a10,2px 8px 0 #4a2a10;}
+  .tw-sh-glass{position:absolute;bottom:21%;left:24%;width:16px;height:24px;background:linear-gradient(180deg,#fff9e8 0%,#fff9e8 40%,#f8e8c8 40%,#d4a878 100%);border-radius:3px 3px 0 0;border:2px solid #ffffffaa;box-shadow:0 2px 6px #00000044;}
+  .tw-sh-sparkle{position:absolute;width:14px;height:14px;background:linear-gradient(0deg,transparent 42%,#ffd75e 42% 58%,transparent 58%),linear-gradient(90deg,transparent 42%,#ffd75e 42% 58%,transparent 58%);animation:twSparkle 3.4s ease-in-out infinite;filter:drop-shadow(0 0 6px #ffd75e);}
+  @keyframes twSparkle{0%,100%{opacity:0;transform:scale(.4) rotate(0deg)}50%{opacity:1;transform:scale(1.2) rotate(45deg)}}
+  .tw-sh-snow-out{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff;opacity:.9;animation:twFall linear infinite;}
   
   .tw-brief{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:9995;}
   .tw-brief-card{background:#0f051d;border:2px solid #00d2ff;border-radius:12px;padding:16px;max-width:82%;text-align:center;}
@@ -624,6 +579,7 @@ document.addEventListener("visibilitychange", () => {
   .tw-lvl-cell.cur{border-color:#00d2ff;box-shadow:0 0 12px #00d2ff66;}
   .tw-lvl-cell.lock{opacity:.35;cursor:default;}
   .tw-lvl-cell.boss{border-color:#ff4b2b;}
+  
   @media (max-width:760px), (pointer:coarse){
     .tw-road{height:140px;}
     .tw-horizon{bottom:140px;}
@@ -640,18 +596,15 @@ document.addEventListener("visibilitychange", () => {
     .tw-batsignal{font-size:20px;letter-spacing:4px;}
     .tw-goldpart{display:none;}
     .tw-panel .num{font-size:36px;}
+    .tw-center { padding-top:0 !important; padding-bottom:15px !important; }
+    .tw-panel { padding:10px 20px !important; margin-bottom:6px !important; }
+    .tw-panel .num { font-size:32px !important; }
+    .tw-panel .typ { font-size:10px !important; }
+    .tw-playbtn { padding:8px 40px !important; font-size:18px !important; }
+    .tw-arrow { width:36px !important; height:36px !important; font-size:14px !important; }
+    .tw-worldtag { font-size:13px !important; padding:4px 12px !important; }
   }
   `;
-  /* Optimisation mobile : UI compacte pour voir le décor */
-@media (max-width:760px), (pointer:coarse) {
-  .tw-center { padding-top:0 !important; padding-bottom:15px !important; }
-  .tw-panel { padding:10px 20px !important; margin-bottom:6px !important; }
-  .tw-panel .num { font-size:32px !important; }
-  .tw-panel .typ { font-size:10px !important; }
-  .tw-playbtn { padding:8px 40px !important; font-size:18px !important; }
-  .tw-arrow { width:36px !important; height:36px !important; font-size:14px !important; }
-  .tw-worldtag { font-size:13px !important; padding:4px 12px !important; }
-}
   document.head.appendChild(style);
 })();
 
@@ -664,6 +617,7 @@ function goldPileHTML(leftPos) {
   for (let i = 0; i < 5; i++) g += `<span class="c" style="left:${-8+i*30}px;bottom:${-2+(i%2)*4}px;"></span>`;
   return `<div class="tw-goldpile" style="left:${leftPos};">${g}</div>`;
 }
+
 function generateSceneHTML(c, W, C) {
   if (SCENE_CACHE[c]) return SCENE_CACHE[c];
   let html = "";
@@ -673,9 +627,7 @@ function generateSceneHTML(c, W, C) {
     for (let i = 0; i < starsN; i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%55}%;animation-delay:${(i*.23)%3}s;"></span>`;
     const cloudsN = IS_MOBILE ? 2 : 4;
     for (let i = 0; i < cloudsN; i++) html += `<span class="tw-cloud" style="top:${3+i*7}%;width:${22+(i*9)%16}%;animation-duration:${70+i*25}s;animation-delay:${i*11}s;"></span>`;
-    html += `<div class="tw-horizon"></div>`;
-    html += `<div class="tw-signalbeam l"></div><div class="tw-signalbeam r"></div>`;
-    html += `<div class="tw-batsignal">⚡ CHIFFRE BLITZ</div>`;
+    html += `<div class="tw-horizon"></div><div class="tw-signalbeam l"></div><div class="tw-signalbeam r"></div><div class="tw-batsignal">⚡ CHIFFRE BLITZ</div>`;
     const cols = ["#00ffff","#ff00ff","#f8b500","#7dff8a"];
     let back = "";
     const hb = [72,92,80,96,86,90,78];
@@ -704,16 +656,14 @@ function generateSceneHTML(c, W, C) {
       html += `<div class="tw-blimp" style="top:48%;animation-duration:70s;animation-delay:-45s;color:#ff2bd6;"><span class="neo"></span></div>`;
       html += `<div class="tw-plane" style="top:18%;animation-duration:16s;animation-delay:-6s;"></div>`;
     }
-    html += `<span class="tw-shoot" style="left:70%;top:14%;animation-delay:2s;"></span>`;
-    html += `<div class="tw-road"><span class="tw-lane"></span></div>`;
+    html += `<span class="tw-shoot" style="left:70%;top:14%;animation-delay:2s;"></span><div class="tw-road"><span class="tw-lane"></span></div>`;
     if (!IS_MOBILE) html += `<div class="tw-reflect"></div>`;
     const car = (cls, bottom, dur, delay, col) => `<span class="tw-car ${cls}" style="bottom:${bottom};animation-duration:${dur};animation-delay:${delay};color:${col};"><i class="cb"></i><i class="cc"></i><i class="ug"></i><i class="hl"></i><i class="tl"></i></span>`;
     if (IS_MOBILE) html += car("","14px","9s","0s","#00d2ff")+car("s","28px","7s","3s","#f8b500")+car("r","78px","10s","1.5s","#ff2bd6");
     else html += car("","16px","9s","0s","#00d2ff")+car("","34px","11s","2.5s","#f8b500")+car("s","24px","7s","5s","#7dff8a")+car("r","96px","10s","1.5s","#ff2bd6")+car("r s","104px","8s","6.5s","#ff8a00");
   }
   if (W.scene === "glacier") {
-    html += `<div class="tw-cavewall"></div>`;
-    html += `<div class="tw-gwall"></div><div class="tw-gwall r"></div>`;
+    html += `<div class="tw-cavewall"></div><div class="tw-gwall"></div><div class="tw-gwall r"></div>`;
     const gemN = IS_MOBILE ? 6 : 12;
     for (let i = 0; i < gemN; i++) {
       const L = (i % 2 === 0);
@@ -733,30 +683,23 @@ function generateSceneHTML(c, W, C) {
     html += `<div class="tw-cavedark"></div>`;
   }
   if (W.scene === "vault") {
-    html += `<div class="tw-marble"></div>`;
-    html += `<div class="tw-vfloor"></div><div class="tw-vreflect"></div>`;
-    html += `<div class="tw-pillar" style="left:4%;"></div><div class="tw-pillar" style="right:4%;"></div>`;
+    html += `<div class="tw-marble"></div><div class="tw-vfloor"></div><div class="tw-vreflect"></div><div class="tw-pillar" style="left:4%;"></div><div class="tw-pillar" style="right:4%;"></div>`;
     const colsPos = IS_MOBILE ? [16] : [14, 20, 26];
     const rows = IS_MOBILE ? 7 : 10;
     colsPos.forEach((cx, ci) => {
       for (let i = 0; i < rows; i++) {
         const top = 8 + i * (84 / rows) + (ci % 2) * 2;
-        html += `<span class="tw-safebox" style="left:${cx}%;top:${top}%;"></span>`;
-        html += `<span class="tw-safebox bz" style="right:${cx}%;top:${top + 2}%;"></span>`;
+        html += `<span class="tw-safebox" style="left:${cx}%;top:${top}%;"></span><span class="tw-safebox bz" style="right:${cx}%;top:${top + 2}%;"></span>`;
       }
     });
     html += `<div class="tw-spotv l"></div><div class="tw-spotv c"></div><div class="tw-spotv r"></div>`;
     html += goldPileHTML("24%") + goldPileHTML("66%");
-    html += `<div class="tw-spotimpact l"></div><div class="tw-spotimpact c"></div><div class="tw-spotimpact r"></div>`;
-    html += `<div class="tw-vfloorglow"></div>`;
+    html += `<div class="tw-spotimpact l"></div><div class="tw-spotimpact c"></div><div class="tw-spotimpact r"></div><div class="tw-vfloorglow"></div>`;
     let bolts = ""; for (let i = 0; i < 12; i++) { const a = i*Math.PI/6; bolts += `<span class="tw-vbolt" style="left:${50+44*Math.cos(a)}%;top:${50+44*Math.sin(a)}%;"></span>`; }
     let knobs = ""; for (let i = 0; i < 6; i++) { const a = i*Math.PI/3; knobs += `<span class="tw-knob" style="left:${50+38*Math.cos(a)}%;top:${50+38*Math.sin(a)}%;"></span>`; }
     html += `<div class="tw-vaultglow pulse"></div><div class="tw-vaultframe"><span class="tw-fbolt" style="left:5%;top:7%;"></span><span class="tw-fbolt" style="right:5%;top:7%;"></span><span class="tw-fbolt" style="left:5%;bottom:7%;"></span><span class="tw-fbolt" style="right:5%;bottom:7%;"></span><span class="tw-hinge h1"></span><span class="tw-hinge h2"></span><div class="tw-vaultdoor"><div class="tw-vaultwheel">${knobs}</div><span class="tw-dial"></span><span class="tw-handle"></span>${bolts}</div></div>`;
-    html += `<div class="tw-laser" style="top:30%;animation-duration:5s;"></div>`;
-    html += `<div class="tw-laser d" style="top:48%;animation-duration:7s;animation-delay:1s;"></div>`;
-    html += `<div class="tw-laser" style="top:66%;animation-duration:6s;animation-delay:2s;"></div>`;
-    html += `<div class="tw-ncam" style="left:14%;top:24%;color:#ff2020;"><span class="beam"></span></div>`;
-    html += `<div class="tw-ncam" style="right:14%;top:40%;color:#ff2020;"><span class="beam"></span></div>`;
+    html += `<div class="tw-laser" style="top:30%;animation-duration:5s;"></div><div class="tw-laser d" style="top:48%;animation-duration:7s;animation-delay:1s;"></div><div class="tw-laser" style="top:66%;animation-duration:6s;animation-delay:2s;"></div>`;
+    html += `<div class="tw-ncam" style="left:14%;top:24%;color:#ff2020;"><span class="beam"></span></div><div class="tw-ncam" style="right:14%;top:40%;color:#ff2020;"><span class="beam"></span></div>`;
     const gpN = IS_MOBILE ? 6 : 12;
     for (let i = 0; i < gpN; i++) html += `<span class="tw-goldpart" style="left:${8+(i*17)%84}%;top:${30+(i*13)%60}%;animation-duration:${6+(i%4)*2}s;animation-delay:${i*.8}s;"></span>`;
     html += `<div class="tw-vvignette"></div>`;
@@ -766,10 +709,9 @@ function generateSceneHTML(c, W, C) {
     for (let i=0;i<(IS_MOBILE?2:4);i++) html += `<div class="tw-ha-cloud" style="top:${6+i*9}%;width:${30+(i*11)%25}%;animation-duration:${60+i*20}s;animation-delay:${-i*15}s;"></div>`;
     const stN = IS_MOBILE?30:80;
     for (let i=0;i<stN;i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%50}%;animation-delay:${(i*.23)%3}s;"></span>`;
-    html += `<div class="tw-ha-hill"></div><div class="tw-ha-fence"></div>`;
-    html += `<div class="tw-ha-tower">`;
+    html += `<div class="tw-ha-hill"></div><div class="tw-ha-fence"></div><div class="tw-ha-tower">`;
     [[18,26],[42,20],[66,26],[30,44],[58,44],[44,62],[20,62],[70,62]].forEach((p,i)=>{ html += `<div class="tw-ha-win" style="left:${p[0]}%;top:${p[1]}%;animation-delay:${(i*.47)%3}s;"></div>`; });
-    html += `<div class="tw-ha-gate"></div></div>`;
+    html += `</div><div class="tw-ha-gate"></div>`;
     for (let i=0;i<(IS_MOBILE?2:4);i++) html += `<div class="tw-bat" style="top:${12+i*14}%;left:${8+i*18}%;animation-duration:${7+i*2}s;animation-delay:${-i*2}s;"></div>`;
     html += `<div class="tw-gr-fog" style="bottom:6%;animation-duration:26s;"></div>`;
   }
@@ -782,166 +724,114 @@ function generateSceneHTML(c, W, C) {
     for (let i=0;i<(IS_MOBILE?4:7);i++) html += `<div class="tw-gr-stone${i%3===1?" cross":""}" style="left:${8+i*13}%;bottom:${12+(i%2)*4}%;transform:rotate(${i%2?-6:5}deg);"></div>`;
     html += `<div class="tw-gr-crow" style="left:24%;bottom:27%;"></div>`;
     for (let i=0;i<(IS_MOBILE?3:6);i++) html += `<div class="tw-gr-wisp" style="left:${12+i*15}%;bottom:${20+(i%3)*10}%;animation-delay:${i*1.1}s;"></div>`;
-    html += `<div class="tw-gr-fog" style="bottom:4%;animation-duration:30s;"></div>`;
-    html += `<div class="tw-gr-fog" style="bottom:14%;animation-duration:22s;animation-delay:-8s;opacity:.7;"></div>`;
-    html += `<div class="tw-gr-fog" style="bottom:24%;animation-duration:38s;animation-delay:-16s;opacity:.5;"></div>`;
+    html += `<div class="tw-gr-fog" style="bottom:4%;animation-duration:30s;"></div><div class="tw-gr-fog" style="bottom:14%;animation-duration:22s;animation-delay:-8s;opacity:.7;"></div><div class="tw-gr-fog" style="bottom:24%;animation-duration:38s;animation-delay:-16s;opacity:.5;"></div>`;
   }
   if (W.scene === "lair") {
-  html += `<div class="tw-bat-lair-bg"></div>`;
-  html += `<div class="tw-bat-lair-fog"></div>`;
-  html += `<div class="tw-bat-lair-vignette"></div>`;
-  
-  // Stalactites en haut
-  const stalacCount = IS_MOBILE ? 6 : 10;
-  for (let i = 0; i < stalacCount; i++) {
-    const left = 5 + (i * 9) + (i % 2) * 3;
-    const height = 60 + (i * 17) % 60;
-    html += `<div class="tw-bat-lair-stalac" style="left:${left}%;height:${height}px;animation-delay:${i*.3}s;"></div>`;
+    html += `<div class="tw-bat-lair-bg"></div><div class="tw-bat-lair-fog"></div><div class="tw-bat-lair-vignette"></div>`;
+    const stalacCount = IS_MOBILE ? 6 : 10;
+    for (let i = 0; i < stalacCount; i++) {
+      const left = 5 + (i * 9) + (i % 2) * 3;
+      const height = 60 + (i * 17) % 60;
+      html += `<div class="tw-bat-lair-stalac" style="left:${left}%;height:${height}px;animation-delay:${i*.3}s;"></div>`;
+    }
+    const stalagCount = IS_MOBILE ? 5 : 8;
+    for (let i = 0; i < stalagCount; i++) {
+      const left = 8 + (i * 11) + (i % 2) * 5;
+      const height = 40 + (i * 13) % 50;
+      html += `<div class="tw-bat-lair-stalag" style="left:${left}%;height:${height}px;"></div>`;
+    }
+    const eyePairs = IS_MOBILE ? 6 : 12;
+    for (let i = 0; i < eyePairs; i++) {
+      const left = 8 + (i * 7) % 84;
+      const top = 20 + (i * 11) % 60;
+      const delay = (i * 0.4) % 3;
+      const isBlink = i % 3 === 0;
+      html += `<div class="tw-bat-lair-eye ${isBlink ? 'blink' : ''}" style="left:${left}%;top:${top}%;animation-delay:${delay}s;"></div>`;
+    }
+    const batCount = IS_MOBILE ? 4 : 8;
+    for (let i = 0; i < batCount; i++) {
+      const size = 20 + (i * 8) % 30;
+      const top = 10 + (i * 13) % 50;
+      const left = (i * 11) % 80;
+      const duration = 6 + (i * 2) % 6;
+      const delay = (i * 1.5) % 5;
+      html += `<div class="tw-bat-lair-bat" style="width:${size}px;height:${size*0.7}px;top:${top}%;left:${left}%;animation-duration:${duration}s;animation-delay:${delay}s;"></div>`;
+    }
+    html += `<div class="tw-bat-lair-mist"></div><div class="tw-bat-lair-mist" style="animation-delay:-10s;opacity:.6;"></div>`;
+    const dripCount = IS_MOBILE ? 3 : 6;
+    for (let i = 0; i < dripCount; i++) {
+      const left = 10 + (i * 13) % 80;
+      const top = 5 + (i * 7) % 15;
+      const delay = (i * 1.2) % 4;
+      html += `<div class="tw-bat-lair-drip" style="left:${left}%;top:${top}%;animation-delay:${delay}s;"></div>`;
+    }
   }
-  
-  // Stalagmites en bas
-  const stalagCount = IS_MOBILE ? 5 : 8;
-  for (let i = 0; i < stalagCount; i++) {
-    const left = 8 + (i * 11) + (i % 2) * 5;
-    const height = 40 + (i * 13) % 50;
-    html += `<div class="tw-bat-lair-stalag" style="left:${left}%;height:${height}px;"></div>`;
+  if (W.scene === "candy") {
+    html += `<div class="tw-cd-sky"></div><div class="tw-cd-cloud-cotton c1"></div><div class="tw-cd-cloud-cotton c2"></div><div class="tw-cd-cloud-cotton c3"></div><div class="tw-cd-cloud-cotton c4"></div>`;
+    const stN = IS_MOBILE?30:70;
+    for (let i=0;i<stN;i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%50}%;animation-delay:${(i*.23)%3}s;"></span>`;
+    for (let i=0;i<(IS_MOBILE?4:8);i++) html += `<span class="tw-bokeh" style="left:${8+i*12}%;top:${18+(i*9)%40}%;width:${10+(i%3)*8}px;height:${10+(i%3)*8}px;background:${["#ff6fa5","#ffd75e","#74ebf5"][i%3]};animation-delay:${i*1.1}s;"></span>`;
+    html += `<div class="tw-cd-candy-mtn m1"></div><div class="tw-cd-candy-mtn m2"></div><div class="tw-cd-candy-mtn m3"></div><div class="tw-cd-candy-tower" style="left:16%;"></div><div class="tw-cd-candy-tower" style="right:16%;height:120px;"></div>`;
+    html += `<div class="tw-cd-candy-castle"><div class="tw-cd-candy-icing"></div></div>`;
+    for (let i=0;i<(IS_MOBILE?3:5);i++) html += `<div class="tw-cd-candy-pop" style="left:${8+i*19}%;bottom:${20+(i%2)*8}%;transform:scale(${0.8+(i%3)*0.18});animation-delay:${i*.5}s;"></div>`;
+    for (let i=0;i<(IS_MOBILE?2:4);i++) html += `<div class="tw-cd-candy-cane" style="left:${14+i*23}%;bottom:${12+(i%2)*6}%;transform:rotate(${i%2?12:-10}deg);"></div>`;
+    html += `<div class="tw-cd-candy-river"></div>`;
+    const gcols = ["#ff6fa5","#7dff8a","#ffd75e","#74ebf5","#c28aff"];
+    for (let i=0;i<(IS_MOBILE?6:10);i++) html += `<div class="tw-cd-candy-gum" style="left:${5+i*9}%;bottom:${2+(i%2)*3}%;color:${gcols[i%5]};"></div>`;
+    for (let i=0;i<(IS_MOBILE?4:9);i++) html += `<span class="tw-sparkle" style="left:${6+i*11}%;top:${12+(i*13)%46}%;animation-delay:${i*.7}s;"></span>`;
+    for (let i=0;i<(IS_MOBILE?6:12);i++) html += `<div class="tw-cd-fairy-light" style="left:${5+i*8}%;top:${15+(i*7)%30}%;animation-delay:${i*.3}s;"></div>`;
+    for (let i=0;i<(IS_MOBILE?8:15);i++) html += `<span class="tw-cd-snowflake" style="left:${(i*13)%100}%;animation-duration:${8+(i%4)*3}s;animation-delay:${-i*2}s;"></span>`;
   }
-  
-  // Yeux jaunes brillants dans l'obscurité (plusieurs paires)
-  const eyePairs = IS_MOBILE ? 6 : 12;
-  for (let i = 0; i < eyePairs; i++) {
-    const left = 8 + (i * 7) % 84;
-    const top = 20 + (i * 11) % 60;
-    const delay = (i * 0.4) % 3;
-    const isBlink = i % 3 === 0;
-    html += `<div class="tw-bat-lair-eye ${isBlink ? 'blink' : ''}" style="left:${left}%;top:${top}%;animation-delay:${delay}s;"></div>`;
-  }
-  
-  // Chauves-souris qui volent (différentes tailles et trajectoires)
-  const batCount = IS_MOBILE ? 4 : 8;
-  for (let i = 0; i < batCount; i++) {
-    const size = 20 + (i * 8) % 30;
-    const top = 10 + (i * 13) % 50;
-    const left = (i * 11) % 80;
-    const duration = 6 + (i * 2) % 6;
-    const delay = (i * 1.5) % 5;
-    html += `<div class="tw-bat-lair-bat" style="width:${size}px;height:${size*0.7}px;top:${top}%;left:${left}%;animation-duration:${duration}s;animation-delay:${delay}s;"></div>`;
-  }
-  
-  // Brume au sol
-  html += `<div class="tw-bat-lair-mist"></div>`;
-  html += `<div class="tw-bat-lair-mist" style="animation-delay:-10s;opacity:.6;"></div>`;
-  
-  // Gouttes qui tombent des stalactites
-  const dripCount = IS_MOBILE ? 3 : 6;
-  for (let i = 0; i < dripCount; i++) {
-    const left = 10 + (i * 13) % 80;
-    const top = 5 + (i * 7) % 15;
-    const delay = (i * 1.2) % 4;
-    html += `<div class="tw-bat-lair-drip" style="left:${left}%;top:${top}%;animation-delay:${delay}s;"></div>`;
-  }
-}
- if (W.scene === "candy") {
-  html += `<div class="tw-cd-sky"></div>`;
-  html += `<div class="tw-cd-cloud-cotton c1"></div>`;
-  html += `<div class="tw-cd-cloud-cotton c2"></div>`;
-  html += `<div class="tw-cd-cloud-cotton c3"></div>`;
-  html += `<div class="tw-cd-cloud-cotton c4"></div>`;
-  const stN = IS_MOBILE?30:70;
-  for (let i=0;i<stN;i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%50}%;animation-delay:${(i*.23)%3}s;"></span>`;
-  for (let i=0;i<(IS_MOBILE?4:8);i++) html += `<span class="tw-bokeh" style="left:${8+i*12}%;top:${18+(i*9)%40}%;width:${10+(i%3)*8}px;height:${10+(i%3)*8}px;background:${["#ff6fa5","#ffd75e","#74ebf5"][i%3]};animation-delay:${i*1.1}s;"></span>`;
-  html += `<div class="tw-cd-candy-mtn m1"></div><div class="tw-cd-candy-mtn m2"></div><div class="tw-cd-candy-mtn m3"></div>`;
-  html += `<div class="tw-cd-candy-tower" style="left:16%;"></div><div class="tw-cd-candy-tower" style="right:16%;height:120px;"></div>`;
-  html += `<div class="tw-cd-candy-castle"><div class="tw-cd-candy-icing"></div></div>`;
-  for (let i=0;i<(IS_MOBILE?3:5);i++) html += `<div class="tw-cd-candy-pop" style="left:${8+i*19}%;bottom:${20+(i%2)*8}%;transform:scale(${0.8+(i%3)*0.18});animation-delay:${i*.5}s;"></div>`;
-  for (let i=0;i<(IS_MOBILE?2:4);i++) html += `<div class="tw-cd-candy-cane" style="left:${14+i*23}%;bottom:${12+(i%2)*6}%;transform:rotate(${i%2?12:-10}deg);"></div>`;
-  html += `<div class="tw-cd-candy-river"></div>`;
-  const gcols = ["#ff6fa5","#7dff8a","#ffd75e","#74ebf5","#c28aff"];
-  for (let i=0;i<(IS_MOBILE?6:10);i++) html += `<div class="tw-cd-candy-gum" style="left:${5+i*9}%;bottom:${2+(i%2)*3}%;color:${gcols[i%5]};"></div>`;
-  for (let i=0;i<(IS_MOBILE?4:9);i++) html += `<span class="tw-sparkle" style="left:${6+i*11}%;top:${12+(i*13)%46}%;animation-delay:${i*.7}s;"></span>`;
-  for (let i=0;i<(IS_MOBILE?6:12);i++) html += `<div class="tw-cd-fairy-light" style="left:${5+i*8}%;top:${15+(i*7)%30}%;animation-delay:${i*.3}s;"></div>`;
-  for (let i=0;i<(IS_MOBILE?8:15);i++) html += `<span class="tw-cd-snowflake" style="left:${(i*13)%100}%;animation-duration:${8+(i%4)*3}s;animation-delay:${-i*2}s;"></span>`;
-}
-
-   if (W.scene === "pine") {
-    html += `<div class="tw-aurora"></div>`;
-    html += `<span class="tw-moon" style="top:7%;right:14%;width:54px;height:54px;"></span>`;
+  if (W.scene === "pine") {
+    html += `<div class="tw-aurora"></div><span class="tw-moon" style="top:7%;right:14%;width:54px;height:54px;"></span>`;
     const stN = IS_MOBILE?35:90;
     for (let i=0;i<stN;i++) html += `<span class="tw-star2" style="left:${(i*37)%98}%;top:${(i*13)%50}%;animation-delay:${(i*.23)%3}s;"></span>`;
     const tree = (scale, withStar) => {
       const L = [ {w:70,h:60,b:60,c:'#0e3a20'}, {w:60,h:56,b:100,c:'#12482a'}, {w:48,h:50,b:138,c:'#165532'}, {w:34,h:44,b:172,c:'#1a623a'} ];
       let s = `<div class="tw-pf2" style="transform:scale(${scale});"><span class="trunk"></span>`;
-      L.forEach((lay)=>{ s += `<span class="lyr" style="bottom:${lay.b}px;border-left-width:${lay.w}px;border-right-width:${lay.w}px;border-bottom-width:${lay.h}px;border-bottom-color:${lay.c};"></span>`;
-        s += `<span class="cap" style="bottom:${lay.b+lay.h-9}px;width:${lay.w*1.45}px;"></span>`; });
+      L.forEach((lay)=>{ s += `<span class="lyr" style="bottom:${lay.b}px;border-left-width:${lay.w}px;border-right-width:${lay.w}px;border-bottom-width:${lay.h}px;border-bottom-color:${lay.c};"></span><span class="cap" style="bottom:${lay.b+lay.h-9}px;width:${lay.w*1.45}px;"></span>`; });
       s += `<span class="cap top" style="bottom:210px;width:36px;"></span>`;
       if (withStar) s += `<span class="star"></span>`;
       return s + `</div>`;
     };
     const row = (cls, count, withStar) => { let r = `<div class="tw-pf-row ${cls}">`; for (let i=0;i<count;i++) r += tree(0.9+((i*7)%3)*0.12, withStar); return r + `</div>`; };
-    html += row("far", IS_MOBILE?5:8, false);
-    html += row("mid", IS_MOBILE?4:6, false);
-    html += row("near", IS_MOBILE?3:4, true);
-    html += `<div class="tw-pf-snow"></div>`;
-    html += `<div class="tw-pf-mist"></div>`;
-    html += `<div class="tw-pf-garland" style="bottom:34%;left:6%;width:38%;"></div><div class="tw-pf-garland" style="bottom:36%;right:6%;width:38%;"></div>`;
+    html += row("far", IS_MOBILE?5:8, false) + row("mid", IS_MOBILE?4:6, false) + row("near", IS_MOBILE?3:4, true);
+    html += `<div class="tw-pf-snow"></div><div class="tw-pf-mist"></div><div class="tw-pf-garland" style="bottom:34%;left:6%;width:38%;"></div><div class="tw-pf-garland" style="bottom:36%;right:6%;width:38%;"></div>`;
     const bcols = ["#ff4b6b","#ffd75e","#7dff8a","#74ebf5"];
     for (let i=0;i<(IS_MOBILE?8:14);i++) html += `<div class="tw-pf-bulb" style="${i%2?"left":"right"}:${8+(i*6)%38}%;bottom:${32+(i%3)*2}%;color:${bcols[i%4]};animation-delay:${i*.2}s;"></div>`;
     for (let i=0;i<(IS_MOBILE?12:26);i++) html += `<span class="tw-snowsoft" style="left:${(i*13)%100}%;animation-duration:${7+(i%5)*2}s;animation-delay:${-i*.6}s;"></span>`;
     for (let i=0;i<(IS_MOBILE?3:7);i++) html += `<span class="tw-sparkle" style="left:${8+i*13}%;top:${10+(i*11)%40}%;animation-delay:${i*.6}s;"></span>`;
   }
-
-    if (W.scene === "shop") {
-  html += `<div class="tw-sh-room"></div><div class="tw-sh-wallpaper"></div><div class="tw-sh-halo"></div>`;
-  html += `<div class="tw-sh-beam"></div>`;
-  html += `<div class="tw-sh-garland"></div>`;
-  const bcols = ["#ff4b6b","#ffd75e","#2ecc71","#74ebf5","#ff6fa5"];
-  for (let i=0;i<(IS_MOBILE?10:18);i++) html += `<div class="tw-sh-bulb" style="left:${2+i*5.4}%;top:42px;color:${bcols[i%5]};animation-delay:${i*.15}s;"></div>`;
-  html += `<div class="tw-sh-ribbon" style="left:22%;"></div><div class="tw-sh-ribbon" style="left:78%;"></div>`;
-  html += `<div class="tw-sh-wreath" style="top:80px;left:18%;"></div><div class="tw-sh-wreath" style="top:80px;right:18%;"></div>`;
-  html += `<div class="tw-sh-win" style="left:8%;top:14%;"><div class="tw-sh-win-snow"></div><div class="tw-sh-win-sill"></div></div>`;
-  html += `<div class="tw-sh-win" style="right:8%;top:14%;"><div class="tw-sh-win-snow" style="animation-delay:-2s;"></div><div class="tw-sh-win-sill"></div></div>`;
-  for (let i=0;i<(IS_MOBILE?6:14);i++) html += `<span class="tw-sh-snow-out" style="left:${10+i*6}%;top:${14+(i%4)*4}%;animation-duration:${4+(i%3)*2}s;animation-delay:${-i*.5}s;"></span>`;
-  html += `<div class="tw-sh-fire"><div class="tw-sh-flame"></div></div><div class="tw-sh-mantel"></div>`;
-  html += `<div class="tw-sh-sock" style="left:8%;top:14px;"></div><div class="tw-sh-sock" style="left:50%;transform:translateX(-50%);top:14px;background:#2ecc71;"></div><div class="tw-sh-sock" style="right:8%;top:14px;"></div>`;
-  html += `<div class="tw-sh-shelf" style="top:28%;left:2%;"></div><div class="tw-sh-bracket" style="top:calc(28% + 14px);left:6%;"></div><div class="tw-sh-bracket" style="top:calc(28% + 14px);left:16%;"></div>`;
-  html += `<div class="tw-sh-shelf" style="top:50%;left:2%;"></div><div class="tw-sh-bracket" style="top:calc(50% + 14px);left:6%;"></div><div class="tw-sh-bracket" style="top:calc(50% + 14px);left:16%;"></div>`;
-  html += `<div class="tw-sh-bear" style="top:calc(28% - 32px);left:4%;"></div>`;
-  html += `<div class="tw-sh-ball" style="top:calc(28% - 20px);left:14%;color:#ff4b6b;"></div>`;
-  html += `<div class="tw-sh-block" style="top:calc(28% - 20px);left:22%;color:#ffd75e;"></div>`;
-  html += `<div class="tw-sh-doll" style="top:calc(50% - 30px);left:3%;"></div>`;
-  html += `<div class="tw-sh-ball" style="top:calc(50% - 20px);left:15%;color:#2ecc71;"></div>`;
-  html += `<div class="tw-sh-block" style="top:calc(50% - 20px);left:22%;color:#74ebf5;"></div>`;
-  html += `<div class="tw-sh-shelf" style="top:28%;right:2%;"></div><div class="tw-sh-bracket" style="top:calc(28% + 14px);right:6%;"></div><div class="tw-sh-bracket" style="top:calc(28% + 14px);right:16%;"></div>`;
-  html += `<div class="tw-sh-shelf" style="top:50%;right:2%;"></div><div class="tw-sh-bracket" style="top:calc(50% + 14px);right:6%;"></div><div class="tw-sh-bracket" style="top:calc(50% + 14px);right:16%;"></div>`;
-  html += `<div class="tw-sh-train" style="top:calc(28% - 20px);right:3%;"></div>`;
-  html += `<div class="tw-sh-ball" style="top:calc(28% - 20px);right:18%;color:#ff6fa5;"></div>`;
-  html += `<div class="tw-sh-bear" style="top:calc(50% - 32px);right:4%;background:radial-gradient(ellipse at 50% 60%,#ff9ec4,#d42a7a);"></div>`;
-  html += `<div class="tw-sh-block" style="top:calc(50% - 20px);right:15%;color:#d42a4a;"></div>`;
-  html += `<div class="tw-sh-tree"><div class="pot"></div><div class="trunk"></div><div class="lyr l1"></div><div class="lyr l2"></div><div class="lyr l3"></div><div class="lyr l4"></div><div class="star"></div></div>`;
-  const ornColors = ["#d42a4a","#ffd75e","#74ebf5","#ff6fa5","#2ecc71","#c28aff"];
-  const ornPositions = [[25,22],[70,30],[45,50],[20,65],[65,70],[50,85],[35,100],[60,110],[45,125],[30,140],[65,145],[50,160]];
-  ornPositions.forEach((p,i) => html += `<div class="tw-sh-ornament" style="left:${p[0]}px;top:${p[1]}px;color:${ornColors[i%6]};"></div>`);
-  html += `<div class="tw-sh-tree" style="right:6%;"><div class="pot"></div><div class="trunk"></div><div class="lyr l1"></div><div class="lyr l2"></div><div class="lyr l3"></div><div class="lyr l4"></div><div class="star"></div></div>`;
-  ornPositions.forEach((p,i) => html += `<div class="tw-sh-ornament" style="right:${p[0]+76}px;top:${p[1]}px;color:${ornColors[(i+2)%6]};"></div>`);
-  html += `<div class="tw-sh-table"><div class="cloth"></div><div class="top"></div></div>`;
-  html += `<div class="tw-sh-gift-pile">`;
-  html += `<span class="g" style="left:0;bottom:0;width:44px;height:36px;background:#d42a4a;"></span>`;
-  html += `<span class="g" style="left:48px;bottom:0;width:38px;height:32px;background:#2ecc71;"></span>`;
-  html += `<span class="g" style="left:90px;bottom:0;width:42px;height:38px;background:#ffd75e;"></span>`;
-  html += `<span class="g" style="left:136px;bottom:0;width:40px;height:34px;background:#74ebf5;"></span>`;
-  html += `<span class="g" style="left:20px;bottom:34px;width:34px;height:28px;background:#ff6fa5;"></span>`;
-  html += `<span class="g" style="left:60px;bottom:32px;width:40px;height:30px;background:#c28aff;"></span>`;
-  html += `<span class="g" style="left:106px;bottom:36px;width:38px;height:28px;background:#d42a4a;"></span>`;
-  html += `</div>`;
-  html += `<div class="tw-sh-plate"></div><div class="tw-sh-cookie"></div><div class="tw-sh-glass"></div>`;
-  html += `<div class="tw-sh-santa"><span class="arm l"></span><span class="arm r"></span><span class="body"></span><span class="belt"></span><span class="buckle"></span><span class="beard"></span><span class="head"></span><span class="eye l"></span><span class="eye r"></span><span class="nose"></span><span class="mouth"></span><span class="hat"></span><span class="pom"></span><span class="gift"></span></div>`;
-  html += `<div class="tw-sh-elf"><span class="body"></span><span class="head"></span><span class="hat"></span><span class="pom"></span><span class="carry" style="color:#ffd75e;"></span></div>`;
-  html += `<div class="tw-sh-elf flip" style="animation-delay:-5s;"><span class="body"></span><span class="head"></span><span class="hat"></span><span class="pom"></span><span class="carry" style="color:#ff6fa5;"></span></div>`;
-  html += `<div class="tw-sh-pet"></div>`;
-  html += `<div class="tw-sh-rug"></div>`;
-  html += `<div class="tw-sh-floor"></div>`;
-  for (let i=0;i<(IS_MOBILE?5:10);i++) html += `<span class="tw-sh-sparkle" style="left:${8+i*9}%;top:${12+(i*11)%40}%;animation-delay:${i*.7}s;"></span>`;
-}
+  if (W.scene === "shop") {
+    html += `<div class="tw-sh-room"></div><div class="tw-sh-wallpaper"></div><div class="tw-sh-halo"></div><div class="tw-sh-beam"></div><div class="tw-sh-garland"></div>`;
+    const bcols = ["#ff4b6b","#ffd75e","#2ecc71","#74ebf5","#ff6fa5"];
+    for (let i=0;i<(IS_MOBILE?10:18);i++) html += `<div class="tw-sh-bulb" style="left:${2+i*5.4}%;top:42px;color:${bcols[i%5]};animation-delay:${i*.15}s;"></div>`;
+    html += `<div class="tw-sh-ribbon" style="left:22%;"></div><div class="tw-sh-ribbon" style="left:78%;"></div><div class="tw-sh-wreath" style="top:80px;left:18%;"></div><div class="tw-sh-wreath" style="top:80px;right:18%;"></div>`;
+    html += `<div class="tw-sh-win" style="left:8%;top:14%;"><div class="tw-sh-win-snow"></div><div class="tw-sh-win-sill"></div></div><div class="tw-sh-win" style="right:8%;top:14%;"><div class="tw-sh-win-snow" style="animation-delay:-2s;"></div><div class="tw-sh-win-sill"></div></div>`;
+    for (let i=0;i<(IS_MOBILE?6:14);i++) html += `<span class="tw-sh-snow-out" style="left:${10+i*6}%;top:${14+(i%4)*4}%;animation-duration:${4+(i%3)*2}s;animation-delay:${-i*.5}s;"></span>`;
+    html += `<div class="tw-sh-fire"><div class="tw-sh-flame"></div></div><div class="tw-sh-mantel"></div><div class="tw-sh-sock" style="left:8%;top:14px;"></div><div class="tw-sh-sock" style="left:50%;transform:translateX(-50%);top:14px;background:#2ecc71;"></div><div class="tw-sh-sock" style="right:8%;top:14px;"></div>`;
+    html += `<div class="tw-sh-shelf" style="top:28%;left:2%;"></div><div class="tw-sh-bracket" style="top:calc(28% + 14px);left:6%;"></div><div class="tw-sh-bracket" style="top:calc(28% + 14px);left:16%;"></div>`;
+    html += `<div class="tw-sh-shelf" style="top:50%;left:2%;"></div><div class="tw-sh-bracket" style="top:calc(50% + 14px);left:6%;"></div><div class="tw-sh-bracket" style="top:calc(50% + 14px);left:16%;"></div>`;
+    html += `<div class="tw-sh-bear" style="top:calc(28% - 32px);left:4%;"></div><div class="tw-sh-ball" style="top:calc(28% - 20px);left:14%;color:#ff4b6b;"></div><div class="tw-sh-block" style="top:calc(28% - 20px);left:22%;color:#ffd75e;"></div>`;
+    html += `<div class="tw-sh-doll" style="top:calc(50% - 30px);left:3%;"></div><div class="tw-sh-ball" style="top:calc(50% - 20px);left:15%;color:#2ecc71;"></div><div class="tw-sh-block" style="top:calc(50% - 20px);left:22%;color:#74ebf5;"></div>`;
+    html += `<div class="tw-sh-shelf" style="top:28%;right:2%;"></div><div class="tw-sh-bracket" style="top:calc(28% + 14px);right:6%;"></div><div class="tw-sh-bracket" style="top:calc(28% + 14px);right:16%;"></div>`;
+    html += `<div class="tw-sh-shelf" style="top:50%;right:2%;"></div><div class="tw-sh-bracket" style="top:calc(50% + 14px);right:6%;"></div><div class="tw-sh-bracket" style="top:calc(50% + 14px);right:16%;"></div>`;
+    html += `<div class="tw-sh-train" style="top:calc(28% - 20px);right:3%;"></div><div class="tw-sh-ball" style="top:calc(28% - 20px);right:18%;color:#ff6fa5;"></div><div class="tw-sh-bear" style="top:calc(50% - 32px);right:4%;background:radial-gradient(ellipse at 50% 60%,#ff9ec4,#d42a7a);"></div><div class="tw-sh-block" style="top:calc(50% - 20px);right:15%;color:#d42a4a;"></div>`;
+    html += `<div class="tw-sh-tree"><div class="pot"></div><div class="trunk"></div><div class="lyr l1"></div><div class="lyr l2"></div><div class="lyr l3"></div><div class="lyr l4"></div><div class="star"></div></div>`;
+    const ornColors = ["#d42a4a","#ffd75e","#74ebf5","#ff6fa5","#2ecc71","#c28aff"];
+    const ornPositions = [[25,22],[70,30],[45,50],[20,65],[65,70],[50,85],[35,100],[60,110],[45,125],[30,140],[65,145],[50,160]];
+    ornPositions.forEach((p,i) => html += `<div class="tw-sh-ornament" style="left:${p[0]}px;top:${p[1]}px;color:${ornColors[i%6]};"></div>`);
+    html += `<div class="tw-sh-tree" style="right:6%;"><div class="pot"></div><div class="trunk"></div><div class="lyr l1"></div><div class="lyr l2"></div><div class="lyr l3"></div><div class="lyr l4"></div><div class="star"></div></div>`;
+    ornPositions.forEach((p,i) => html += `<div class="tw-sh-ornament" style="right:${p[0]+76}px;top:${p[1]}px;color:${ornColors[(i+2)%6]};"></div>`);
+    html += `<div class="tw-sh-table"><div class="cloth"></div><div class="top"></div></div><div class="tw-sh-gift-pile">`;
+    html += `<span class="g" style="left:0;bottom:0;width:44px;height:36px;background:#d42a4a;"></span><span class="g" style="left:48px;bottom:0;width:38px;height:32px;background:#2ecc71;"></span><span class="g" style="left:90px;bottom:0;width:42px;height:38px;background:#ffd75e;"></span><span class="g" style="left:136px;bottom:0;width:40px;height:34px;background:#74ebf5;"></span>`;
+    html += `<span class="g" style="left:20px;bottom:34px;width:34px;height:28px;background:#ff6fa5;"></span><span class="g" style="left:60px;bottom:32px;width:40px;height:30px;background:#c28aff;"></span><span class="g" style="left:106px;bottom:36px;width:38px;height:28px;background:#d42a4a;"></span></div>`;
+    html += `<div class="tw-sh-plate"></div><div class="tw-sh-cookie"></div><div class="tw-sh-glass"></div>`;
+    html += `<div class="tw-sh-santa"><span class="arm l"></span><span class="arm r"></span><span class="body"></span><span class="belt"></span><span class="buckle"></span><span class="beard"></span><span class="head"></span><span class="eye l"></span><span class="eye r"></span><span class="nose"></span><span class="mouth"></span><span class="hat"></span><span class="pom"></span><span class="gift"></span></div>`;
+    html += `<div class="tw-sh-elf"><span class="body"></span><span class="head"></span><span class="hat"></span><span class="pom"></span><span class="carry" style="color:#ffd75e;"></span></div>`;
+    html += `<div class="tw-sh-elf flip" style="animation-delay:-5s;"><span class="body"></span><span class="head"></span><span class="hat"></span><span class="pom"></span><span class="carry" style="color:#ff6fa5;"></span></div><div class="tw-sh-pet"></div><div class="tw-sh-rug"></div><div class="tw-sh-floor"></div>`;
+    for (let i=0;i<(IS_MOBILE?5:10);i++) html += `<span class="tw-sh-sparkle" style="left:${8+i*9}%;top:${12+(i*11)%40}%;animation-delay:${i*.7}s;"></span>`;
+  }
   
   let parts = "";
   const partCount = (W.part === "fog") ? (IS_MOBILE ? 15 : 30) : (IS_MOBILE ? 0 : 7);
@@ -973,19 +863,19 @@ function openTower() {
       </div>
       <div class="tw-qwrap"><span class="lbl" id="tw-q-lbl">⭐ 0/240</span><div class="tw-qbar"><div id="tw-q-fill" style="width:0%"></div></div></div>
       <div class="tw-center" style="padding-top:0;padding-bottom:20px;">
-  <div class="tw-worldtag" id="tw-worldtag" style="margin-bottom:8px;"></div>
-  <div class="tw-panel" id="tw-panel" style="padding:12px 24px;margin-bottom:8px;">
-    <div class="num" id="tw-panel-num" style="font-size:36px;">1</div>
-    <div class="typ" id="tw-panel-typ" style="font-size:11px;"></div>
-    <div class="tw-panel-stars" id="tw-panel-stars" style="font-size:14px;"></div>
-  </div>
-  <div class="tw-playrow" style="gap:12px;">
-    <button class="tw-arrow" id="tw-prev" onclick="advPrev()" style="width:38px;height:38px;font-size:16px;">‹</button>
-    <button class="tw-playbtn" id="tw-play" onclick="advPlay()" style="padding:10px 48px;font-size:20px;">PLAY</button>
-    <button class="tw-arrow" id="tw-next" onclick="advNext()" style="width:38px;height:38px;font-size:16px;">›</button>
-  </div>
-  <div class="tw-lockmsg" id="tw-lockmsg" style="display:none;"></div>
-</div>
+        <div class="tw-worldtag" id="tw-worldtag" style="margin-bottom:8px;"></div>
+        <div class="tw-panel" id="tw-panel" style="padding:12px 24px;margin-bottom:8px;">
+          <div class="num" id="tw-panel-num" style="font-size:36px;">1</div>
+          <div class="typ" id="tw-panel-typ" style="font-size:11px;"></div>
+          <div class="tw-panel-stars" id="tw-panel-stars" style="font-size:14px;"></div>
+        </div>
+        <div class="tw-playrow" style="gap:12px;">
+          <button class="tw-arrow" id="tw-prev" onclick="advPrev()" style="width:38px;height:38px;font-size:16px;">‹</button>
+          <button class="tw-playbtn" id="tw-play" onclick="advPlay()" style="padding:10px 48px;font-size:20px;">PLAY</button>
+          <button class="tw-arrow" id="tw-next" onclick="advNext()" style="width:38px;height:38px;font-size:16px;">›</button>
+        </div>
+        <div class="tw-lockmsg" id="tw-lockmsg" style="display:none;"></div>
+      </div>`;
     document.body.appendChild(m);
   }
   m.style.display = "flex";
@@ -1014,6 +904,7 @@ setInterval(() => {
     updateRegenLabel();
   }
 }, 1000);
+
 function renderAdventure() {
   const scr = document.getElementById("screen-tower");
   if (!scr || scr.style.display === "none") return;
@@ -1054,12 +945,14 @@ function renderAdventure() {
     } else {
       lock.innerText = `🔒 Quota ⭐ ${WORLD_QUOTA} requis dans le monde précédent`;
     }
+  } else {
+    lock.style.display = "none";
   }
-  else lock.style.display = "none";
   document.getElementById("tw-play").disabled = !unlocked || twLives <= 0;
   document.getElementById("tw-prev").disabled = twViewFloor <= 1;
   document.getElementById("tw-next").disabled = twViewFloor >= Math.min(towerProgress.floor + 1, TOTAL_FLOORS);
 }
+
 function advPrev() { if (twViewFloor > 1) { twViewFloor--; renderAdventure(); } }
 function advNext() { if (twViewFloor < Math.min(towerProgress.floor + 1, TOTAL_FLOORS)) { twViewFloor++; renderAdventure(); } }
 function advPlay() {
@@ -1072,8 +965,6 @@ function advPlay() {
 function openLevelSelect() {
   closeLevelSelect();
   const currentWorld = TowerUtils.getTowerChapter(twViewFloor).id;
-  
-  // Créer le sélecteur de monde (dropdown natif mobile-friendly)
   let worldOptions = '';
   for (let w = 1; w <= 9; w++) {
     const chap = TOWER_CHAPTERS[w - 1];
@@ -1081,43 +972,26 @@ function openLevelSelect() {
     const stars = TowerUtils.starsInWorld(w);
     const selected = w === currentWorld ? 'selected' : '';
     const locked = !unlocked ? 'disabled' : '';
-    
-    worldOptions += `<option value="${w}" ${selected} ${locked}>
-      ${unlocked ? chap.icon : '🔒'} ${chap.name} ${unlocked ? `⭐${stars}` : ''}
-    </option>`;
+    worldOptions += `<option value="${w}" ${selected} ${locked}>${unlocked ? chap.icon : '🔒'} ${chap.name} ${unlocked ? `⭐${stars}` : ''}</option>`;
   }
-  
-  // Créer le modal
   const d = document.createElement("div");
-  d.className = "tw-lvlpop"; 
-  d.id = "tw-lvlpop";
+  d.className = "tw-lvlpop"; d.id = "tw-lvlpop";
   d.innerHTML = `
     <div class="tw-lvlpop-card" style="max-width:95%;max-height:90%;display:flex;flex-direction:column;">
-      <h3 style="margin-bottom:12px;text-align:center;"> ${currentLang==="fr"?"Choisis ton niveau":"Pick your level"}</h3>
-      
-      <!-- Sélecteur de monde (dropdown) -->
+      <h3 style="margin-bottom:12px;text-align:center;">${currentLang==="fr"?"Choisis ton niveau":"Pick your level"}</h3>
       <div style="margin-bottom:12px;">
         <label style="display:block;font-size:11px;color:#aaa;margin-bottom:6px;">${currentLang==="fr"?"Monde":"World"}</label>
         <select id="world-selector" style="width:100%;padding:10px;border-radius:8px;border:2px solid #00d2ff;background:#0f051d;color:#fff;font-size:14px;font-weight:bold;">
           ${worldOptions}
         </select>
       </div>
-      
-      <!-- Grille de niveaux -->
       <div class="tw-lvl-grid" id="tw-lvl-grid" style="flex:1;overflow-y:auto;"></div>
-      
-      <button class="btn-secondary" style="width:100%;margin-top:10px;padding:12px;" onclick="closeLevelSelect()">
-        ❌ ${currentLang==="fr"?"Fermer":"Close"}
-      </button>
+      <button class="btn-secondary" style="width:100%;margin-top:10px;padding:12px;" onclick="closeLevelSelect()">❌ ${currentLang==="fr"?"Fermer":"Close"}</button>
     </div>`;
   document.body.appendChild(d);
-  
-  // Gestionnaire de changement de monde
   document.getElementById('world-selector').addEventListener('change', (e) => {
     switchWorldLevels(parseInt(e.target.value));
   });
-  
-  // Charger les niveaux du monde actuel
   switchWorldLevels(currentWorld);
 }
 
@@ -1126,7 +1000,6 @@ function switchWorldLevels(world) {
   const end = world * FPC;
   const maxPlayable = Math.min(towerProgress.floor + 1, end);
   const unlocked = TowerUtils.worldUnlocked(world);
-  
   let cells = '';
   for (let f = start; f <= end; f++) {
     const st = towerProgress.stars[String(f)] || 0;
@@ -1134,134 +1007,21 @@ function switchWorldLevels(world) {
     const isBoss = (inChap === FPC || inChap % 50 === 0);
     const lock = !unlocked || f > maxPlayable;
     const cur = f === twViewFloor;
-    
-    cells += `
-      <button class="tw-lvl-cell ${lock?"lock":""} ${cur?"cur":""} ${isBoss?"boss":""}" 
-        ${lock?"disabled":""} 
-        onclick="pickLevel(${f})"
-        style="aspect-ratio:1;border-radius:10px;background:#1a1a2e;border:2px solid #333;color:#fff;font-weight:900;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;cursor:pointer;min-width:44px;min-height:44px;">
-        ${f}
-        <span class="st" style="font-size:8px;color:#f8b500;line-height:1;">${st?"⭐".repeat(st):""}</span>
-      </button>`;
+    cells += `<button class="tw-lvl-cell ${lock?"lock":""} ${cur?"cur":""} ${isBoss?"boss":""}" ${lock?"disabled":""} onclick="pickLevel(${f})" style="aspect-ratio:1;border-radius:10px;background:#1a1a2e;border:2px solid #333;color:#fff;font-weight:900;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;cursor:pointer;min-width:44px;min-height:44px;">${f}<span class="st" style="font-size:8px;color:#f8b500;line-height:1;">${st?"⭐".repeat(st):""}</span></button>`;
   }
-  
   const grid = document.getElementById('tw-lvl-grid');
   if (grid) {
     grid.innerHTML = cells;
     grid.scrollTop = 0;
-    
-    // Scroll vers le niveau actuel ou le dernier jouable
     const target = grid.querySelector('.tw-lvl-cell.cur') || grid.children[Math.max(0, maxPlayable - start)];
     if (target) {
-      setTimeout(() => {
-        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 100);
+      setTimeout(() => { target.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
     }
   }
-  
-  // Mettre à jour le style du select
   const select = document.getElementById('world-selector');
   if (select) select.value = world;
 }
 
-function switchWorldLevels(world) {
-  const start = (world - 1) * FPC + 1;
-  const end = world * FPC;
-  const maxPlayable = Math.min(towerProgress.floor + 1, end);
-  const unlocked = TowerUtils.worldUnlocked(world);
-  
-  let cells = '';
-  for (let f = start; f <= end; f++) {
-    const st = towerProgress.stars[String(f)] || 0;
-    const inChap = ((f - 1) % FPC) + 1;
-    const isBoss = (inChap === FPC || inChap % 50 === 0);
-    const lock = !unlocked || f > maxPlayable;
-    const cur = f === twViewFloor;
-    
-    cells += `<button class="tw-lvl-cell ${lock?"lock":""} ${cur?"cur":""} ${isBoss?"boss":""}" 
-      ${lock?"disabled":""} 
-      onclick="pickLevel(${f})">
-      ${f}
-      <span class="st">${st?"⭐".repeat(st):""}</span>
-    </button>`;
-  }
-  
-  const grid = document.getElementById('tw-lvl-grid');
-  if (grid) {
-    grid.innerHTML = cells;
-    grid.scrollTop = 0;
-    
-    // Scroll vers le niveau actuel ou le dernier jouable
-    const target = grid.querySelector('.tw-lvl-cell.cur') || grid.children[Math.max(0, maxPlayable - start)];
-    if (target) {
-      setTimeout(() => {
-        grid.scrollTop = Math.max(0, target.offsetTop - grid.clientHeight / 2);
-      }, 100);
-    }
-  }
-  
-  // Mettre à jour le style des boutons de monde
-  const btns = document.querySelectorAll('#world-selector button');
-  btns.forEach((btn, i) => {
-    const w = i + 1;
-    if (w === world) {
-      btn.classList.remove('btn-blue');
-      btn.classList.add('btn-gold');
-    } else {
-      btn.classList.remove('btn-gold');
-      btn.classList.add('btn-blue');
-    }
-  });
-}
-function switchWorldLevels(world) {
-  const start = (world - 1) * FPC + 1;
-  const end = world * FPC;
-  const maxPlayable = Math.min(towerProgress.floor + 1, end);
-  const unlocked = TowerUtils.worldUnlocked(world);
-  
-  let cells = '';
-  for (let f = start; f <= end; f++) {
-    const st = towerProgress.stars[String(f)] || 0;
-    const inChap = ((f - 1) % FPC) + 1;
-    const isBoss = (inChap === FPC || inChap % 50 === 0);
-    const lock = !unlocked || f > maxPlayable;
-    const cur = f === twViewFloor;
-    
-    cells += `<button class="tw-lvl-cell ${lock?"lock":""} ${cur?"cur":""} ${isBoss?"boss":""}" 
-      ${lock?"disabled":""} 
-      onclick="pickLevel(${f})">
-      ${f}
-      <span class="st">${st?"⭐".repeat(st):""}</span>
-    </button>`;
-  }
-  
-  const grid = document.getElementById('tw-lvl-grid');
-  if (grid) {
-    grid.innerHTML = cells;
-    grid.scrollTop = 0;
-    
-    // Scroll vers le niveau actuel ou le dernier jouable
-    const target = grid.querySelector('.tw-lvl-cell.cur') || grid.children[Math.max(0, maxPlayable - start)];
-    if (target) {
-      setTimeout(() => {
-        grid.scrollTop = Math.max(0, target.offsetTop - grid.clientHeight / 2);
-      }, 100);
-    }
-  }
-  
-  // Mettre à jour le style des boutons de monde
-  const btns = document.querySelectorAll('#world-selector button');
-  btns.forEach((btn, i) => {
-    const w = i + 1;
-    if (w === world) {
-      btn.classList.remove('btn-blue');
-      btn.classList.add('btn-gold');
-    } else {
-      btn.classList.remove('btn-gold');
-      btn.classList.add('btn-blue');
-    }
-  });
-}
 function closeLevelSelect() { const s = document.getElementById("tw-lvlpop"); if (s) s.remove(); }
 function pickLevel(f) { twViewFloor = f; closeLevelSelect(); renderAdventure(); }
 function showWorldTransition(w) {
@@ -1287,9 +1047,7 @@ function openTowerShop() {
   d.className = "tw-shop"; d.id = "tw-shop";
   let items = "";
   SHOP_ITEMS.forEach(it => {
-    const btn = it.iap
-      ? `<button class="buy iap" disabled>${it.eur} 🔒</button>`
-      : `<button class="buy" onclick="towerShopBuy('${it.id}')">${it.price} 🪙</button>`;
+    const btn = it.iap ? `<button class="buy iap" disabled>${it.eur} 🔒</button>` : `<button class="buy" onclick="towerShopBuy('${it.id}')">${it.price} 🪙</button>`;
     items += `<div class="tw-shop-item"><span class="ic">${it.icon}</span><span class="nm">${it.name}${it.iap?`<br><small style="color:#8892a8;font-weight:600;">${fr?"Bientôt (Google Play)":"Soon (Google Play)"}</small>`:""}</span>${btn}</div>`;
   });
   d.innerHTML = `<div class="tw-shop-card"><h3>🛒 BOUTIQUE AVENTURE</h3>${items}<button class="btn-secondary" style="width:100%;" onclick="closeTowerShop()">❌ ${fr?"Fermer":"Close"}</button></div>`;
@@ -1533,10 +1291,6 @@ socket.on("tower_data", (d) => {
   const newWorld = TowerUtils.getTowerChapter(Math.min(towerProgress.floor + 1, TOTAL_FLOORS)).id;
   if (newWorld !== oldWorld && TowerUtils.worldUnlocked(newWorld)) showWorldTransition(newWorld);
   else renderAdventure();
-});
-
-socket.on("tower_data", (d) => {
-  // ... code existant ...
 });
 
 socket.on("player_registered", () => {
