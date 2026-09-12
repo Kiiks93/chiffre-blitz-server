@@ -150,7 +150,7 @@ function ecranPleinVisible(){
 }
 function updateS1Neon(){
   let sign=document.getElementById('s1-neon-sign');
-  const season=(window.myProfile&&myProfile.currentSeasonId)||'s1';
+  const season = (window.myProfile && (myProfile.currentSeasonId || myProfile.current_season)) || window.CURRENT_SEASON || 's1';
   const visible=isMobileDevice()&&menuPrincipalVisible()&&!ecranPleinVisible();
   if(season==='s1'&&visible){
     if(!sign){ sign=document.createElement('div');sign.id='s1-neon-sign';sign.className='s1-neon-sign';
@@ -158,7 +158,7 @@ function updateS1Neon(){
       document.body.appendChild(sign); playWhoosh(); startNeonHum(); }
   } else { if(sign)sign.remove(); stopNeonHum(); }
 }
-
+if (typeof socket !== 'undefined') socket.on('player_registered', () => setTimeout(updateS1Neon, 100));
 /* ---------- Hooks ---------- */
 (function(){
   const HIDE=['openTower','openSoloMenu','open1v1Hub','openRoomsScreen','openTournamentScreen','showTitleScreen','openAvalancheDifficulties','startHalloweenQueue','startNoelQueue','startTugOfWarQueue','startRandom1v1','startSoloTraining'];
