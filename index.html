@@ -581,16 +581,10 @@ MODALE SOUTIEN CRÉATEUR
         <button class="btn-secondary" onclick="closeSupportModal(); openLaunchAdModal();" style="width:100%;" data-i18n="support_skip">Passer et jouer ⚡</button>
     </div>
 </div>
-(function(){
-  var v = "?v=" + Date.now();
-  var files = ["i18n.js","audio.js","son-saisons.js","version.js","profil.js","admin.js","social.js","passe.js","saisons.js","fx.js","jeu.js","modes-catch.js","tour.js","mobile-menu.js"];
-  for (var i = 0; i < files.length; i++) {
-    document.write('<script src="' + files[i] + v + '"><\/script>');
-  }
-})();
-</script>
-
 <script>
+function openSupportModal(){ var m=document.getElementById('modal-support'); if(m) m.style.display='flex'; }
+function closeSupportModal(){ var m=document.getElementById('modal-support'); if(m) m.style.display='none'; }
+
 // Désactive tout ancien Service Worker (nettoie automatiquement les mobiles qui l'ont déjà)
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
