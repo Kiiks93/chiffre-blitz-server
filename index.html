@@ -562,11 +562,6 @@ TROPHÉES (salle + popup)
     <div id="trophy-unlock-name" style="font-size:20px; font-weight:900; color:#fff;">Nom du trophée</div>
     <div id="trophy-unlock-title" style="font-size:13px; color:#00d2ff; margin-top:6px;">Titre débloqué</div>
 </div>
-
-<!-- ============================================================
-SCRIPTS (ordre de chargement important)
-============================================================ -->
-<script>
 <!-- ============================================================
 MODALE SOUTIEN CRÉATEUR
 ============================================================ -->
@@ -581,11 +576,14 @@ MODALE SOUTIEN CRÉATEUR
         <button class="btn-secondary" onclick="closeSupportModal(); openLaunchAdModal();" style="width:100%;" data-i18n="support_skip">Passer et jouer ⚡</button>
     </div>
 </div>
-</script>
 <script>
 function openSupportModal(){ var m=document.getElementById('modal-support'); if(m) m.style.display='flex'; }
 function closeSupportModal(){ var m=document.getElementById('modal-support'); if(m) m.style.display='none'; }
-
+</script>
+<!-- ============================================================
+SCRIPTS (ordre de chargement important)
+============================================================ -->
+<script>
 // Désactive tout ancien Service Worker (nettoie automatiquement les mobiles qui l'ont déjà)
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
