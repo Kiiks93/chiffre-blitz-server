@@ -294,17 +294,17 @@ SoundEngine.tickHalloweenGame = function(step) {
   const inBar = step % 16;
   const chord = HALLOWEEN_PROGRESSIONS.game[bar % 4];
 
-  // Battement de cœur rapide
-  if (inBar % 4 === 0) this._heart(t, 0.2);
+  // Battement de cœur rapide (BOOSTÉ)
+  if (inBar % 4 === 0) this._heart(t, 0.32);
 
-  // Pulsation basse
+  // Pulsation basse (BOOSTÉE)
   if (inBar % 2 === 0) {
     const o = this.ctx.createOscillator(), g = this.ctx.createGain(), f = this.ctx.createBiquadFilter();
     o.type = "sawtooth";
     o.frequency.setValueAtTime(chord.root * 2, t);
     f.type = "lowpass";
     f.frequency.setValueAtTime(700, t);
-    g.gain.setValueAtTime(0.09, t);
+    g.gain.setValueAtTime(0.16, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
     o.connect(f);
     f.connect(g);
@@ -313,13 +313,13 @@ SoundEngine.tickHalloweenGame = function(step) {
     o.stop(t + 0.12);
   }
 
-  // Tension dissonante
+  // Tension dissonante (BOOSTÉE)
   if (inBar % 4 === 2) {
-    this._eerie(t, 440.00, 0.04);
-    this._eerie(t, 466.16, 0.03);
+    this._eerie(t, 440.00, 0.07);
+    this._eerie(t, 466.16, 0.05);
   }
 
-  // Pad d'accords
+  // Pad d'accords (BOOSTÉ)
   if (inBar === 0 && bar % 2 === 0) {
     chord.pad.forEach((fq, i) => {
       const o = this.ctx.createOscillator(), g = this.ctx.createGain();
@@ -327,7 +327,7 @@ SoundEngine.tickHalloweenGame = function(step) {
       o.frequency.setValueAtTime(fq, t);
       o.detune.setValueAtTime(i % 2 === 0 ? -5 : 5, t);
       g.gain.setValueAtTime(0.0001, t);
-      g.gain.linearRampToValueAtTime(0.02, t + 0.4);
+      g.gain.linearRampToValueAtTime(0.035, t + 0.4);
       g.gain.linearRampToValueAtTime(0.0001, t + 2.5);
       o.connect(g);
       g.connect(this.ctx.destination);
@@ -336,14 +336,14 @@ SoundEngine.tickHalloweenGame = function(step) {
     });
   }
 
-  // Cri strident
+  // Cri strident (BOOSTÉ)
   if (inBar === 8 && Math.random() < 0.3) {
     const o = this.ctx.createOscillator(), g = this.ctx.createGain(), f = this.ctx.createBiquadFilter();
     o.type = "sawtooth";
     o.frequency.setValueAtTime(chord.root * 1.414 * 4, t);
     f.type = "bandpass";
     f.frequency.setValueAtTime(900, t);
-    g.gain.setValueAtTime(0.05, t);
+    g.gain.setValueAtTime(0.08, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
     o.connect(f);
     f.connect(g);
