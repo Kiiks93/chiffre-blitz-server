@@ -1833,3 +1833,10 @@ function renderGrid(pool, handler) {
     grid.appendChild(tile);
   });
 }
+
+function openSupportModal() {
+  document.getElementById('modal-support').style.display = 'flex';
+}
+function closeSupportModal() {
+  document.getElementById('modal-support').style.display = 'none';
+}
