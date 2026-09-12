@@ -1,5 +1,9 @@
-// 🔒 Passe de Saison pas encore live → progression gelée (aucun palier ne tombe)
-const SEASON_PASS_ENABLED = false;
+// 🔒 Passe de Saison : activation AUTOMATIQUE à la date de début de la saison en cours
+// (S1 = 01/10/2026 → paliers, claims et achat s'activent tout seuls ce jour-là)
+function isSeasonPassLive(){
+  const s = getCurrentSeason();
+  return Date.now() >= new Date(s.start + "T00:00:00Z").getTime();
+}
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -709,7 +713,7 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
       catch (e) { today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Paris' }); }
 
       const progress = playerData.season_progress[seasonNow.id] || { unlocked_tier: 0, last_login_date: null };
-      if (SEASON_PASS_ENABLED) {
+        if (isSeasonPassLive()) {
         if (progress.last_login_date !== today || playerData.timezone !== playerTz) {
           if (progress.last_login_date !== today) {
             progress.unlocked_tier = Math.min(30, (progress.unlocked_tier || 0) + 1);
@@ -858,6 +862,7 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
     const seasonId = getCurrentSeason().id;
     player.claimedPassTiers = normalizeClaimedTiers(player.claimedPassTiers);
     player.claimedPassTiers[seasonId] = player.claimedPassTiers[seasonId] || {};
+    if (!isSeasonPassLive()) { socket.emit('pass_claim_denied', { tier, track, reason: "pass_not_live" }); return; }
     const seasonData = player.claimedPassTiers[seasonId];
     const key = tier + "_" + track;
     const unlockedTier = (player.seasonProgress && player.seasonProgress[seasonId] && player.seasonProgress[seasonId].unlocked_tier) || 0;
