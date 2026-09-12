@@ -244,6 +244,7 @@ const i18n = {
     support_kofi: "☕ Ko-fi (don)",
     support_discord: "💬 Rejoindre Discord",
     support_skip: "Passer et jouer ⚡",
+    support_watch: "📺 Regarder la pub (soutenir) ❤️",
 
     /* ----- Pouvoirs ----- */
     powers: {
@@ -499,6 +500,7 @@ const i18n = {
     support_kofi: "☕ Ko-fi (donate)",
     support_discord: "💬 Join Discord",
     support_skip: "Skip and play ⚡",
+    support_watch: "📺 Watch the ad (support) ❤️",
 
     /* ----- Powers ----- */
     powers: {
