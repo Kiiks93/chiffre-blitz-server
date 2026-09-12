@@ -98,6 +98,26 @@ const fr = currentLang === "fr";
 return ({classic:fr?"⚡ Croissant":" Ascending",reverse:fr?"🔽 Décroissant":"🔽 Descending",color:fr?"🎨 Couleurs":"🎨 Colors",pairs:fr?"🧩 Paires":"🧩 Pairs",parity:fr?"🔢 Pair/Impair":"🔢 Even/Odd",forbidden:fr?"🚫 Interdit":"🚫 Forbidden",sprint:fr?"⏱️ Sprint":"⏱️ Sprint",memory:fr?"🧠 Mémoire":"🧠 Memory",nofail:fr?"💎 Sans faute":"💎 No mistake",boss:fr?"⚔️ GARDIEN":"⚔️ GUARDIAN"})[t] || t;
 }
 };
+/* ----- 3a. ANTI-SPOIL : visibilité des mondes ----- */
+function seasonReleased(num){
+if(num===1) return true;
+try{
+const list=(typeof getSeasonsClient==='function')?getSeasonsClient():((typeof SEASONS_CLIENT!=='undefined')?SEASONS_CLIENT:[]);
+const s=list.find(x=>x.id==='s'+num);
+if(!s||!s.start) return false;
+const p=s.start.split('/').map(Number);
+return new Date()>=new Date(p[2],p[1]-1,p[0]);
+}catch(e){ return false; }
+}
+function worldVisible(w){
+const ch=TOWER_CHAPTERS[w-1];
+if(!ch) return false;
+if(!seasonReleased(ch.season)) return false;
+return TowerUtils.worldUnlocked(w);
+}
+function maxVisibleWorld(){
+let m=1; for(let w=1;w<=9;w++){ if(worldVisible(w)) m=w; } return m;
+}
 /* ----- 3bis. MUSIQUE PAR MONDE (override + retour onglet) ----- */
 (function(){
 if (typeof SoundEngine === "undefined" || !SoundEngine.startMusic) return;
@@ -883,7 +903,7 @@ document.body.appendChild(m);
 m.style.display = "flex";
 twViewFloor = Math.min(towerProgress.floor + 1, TOTAL_FLOORS);
 const savedW = parseInt(localStorage.getItem('cb_tw_world') || '0', 10);
-if (savedW >= 1 && savedW <= 9 && TowerUtils.worldUnlocked(savedW)) {
+if (savedW >= 1 && savedW <= 9 && worldVisible(savedW)) {
 twViewFloor = Math.min((savedW - 1) * FPC + 1, Math.min(towerProgress.floor + 1, TOTAL_FLOORS));
 }
 sessionStorage.setItem("cb_last_screen", "tower");
@@ -963,10 +983,10 @@ lock.style.display = "none";
 }
 document.getElementById("tw-play").disabled = !unlocked || twLives <= 0;
 document.getElementById("tw-prev").disabled = twViewFloor <= 1;
-document.getElementById("tw-next").disabled = twViewFloor >= Math.min(towerProgress.floor + 1, TOTAL_FLOORS);
+document.getElementById("tw-next").disabled = twViewFloor >= Math.min(towerProgress.floor + 1, maxVisibleWorld() * FPC);
 }
 function advPrev() { if (twViewFloor > 1) { twViewFloor--; localStorage.setItem('cb_tw_world', String(TowerUtils.getTowerChapter(twViewFloor).id)); renderAdventure(); } }
-function advNext() { if (twViewFloor < Math.min(towerProgress.floor + 1, TOTAL_FLOORS)) { twViewFloor++; localStorage.setItem('cb_tw_world', String(TowerUtils.getTowerChapter(twViewFloor).id)); renderAdventure(); } }
+function advNext() { const cap=Math.min(towerProgress.floor + 1, maxVisibleWorld() * FPC); if (twViewFloor < cap) { twViewFloor++; localStorage.setItem('cb_tw_world', String(TowerUtils.getTowerChapter(twViewFloor).id)); renderAdventure(); } }
 function advPlay() {
 const def = TowerUtils.getFloorDef(twViewFloor);
 def.replay = twViewFloor <= towerProgress.floor;
@@ -977,13 +997,14 @@ function openLevelSelect() {
 closeLevelSelect();
 const currentWorld = TowerUtils.getTowerChapter(twViewFloor).id;
 let worldOptions = '';
+let selWorld = currentWorld;
+if (!worldVisible(selWorld)) selWorld = maxVisibleWorld();
 for (let w = 1; w <= 9; w++) {
+if (!worldVisible(w)) continue;
 const chap = TOWER_CHAPTERS[w - 1];
-const unlocked = TowerUtils.worldUnlocked(w);
 const stars = TowerUtils.starsInWorld(w);
-const selected = w === currentWorld ? 'selected' : '';
-const locked = !unlocked ? 'disabled' : '';
-worldOptions += `<option value="${w}" ${selected} ${locked}>${unlocked ? chap.icon : '🔒'} ${chap.name} ${unlocked ? `⭐${stars}` : ''}</option>`;
+const selected = w === selWorld ? 'selected' : '';
+worldOptions += `<option value="${w}" ${selected}>${chap.icon} ${chap.name} ⭐${stars}</option>`;
 }
 const d = document.createElement("div");
 d.className = "tw-lvlpop"; d.id = "tw-lvlpop";
@@ -1003,9 +1024,10 @@ document.body.appendChild(d);
 document.getElementById('world-selector').addEventListener('change', (e) => {
 switchWorldLevels(parseInt(e.target.value));
 });
-switchWorldLevels(currentWorld);
+switchWorldLevels(selWorld);
 }
 function switchWorldLevels(world) {
+if (!worldVisible(world)) world = maxVisibleWorld();
 const start = (world - 1) * FPC + 1;
 const end = world * FPC;
 const maxPlayable = Math.min(towerProgress.floor + 1, end);
