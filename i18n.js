@@ -239,6 +239,11 @@ const i18n = {
     ad_title: "Soutenir le Créateur",
     ad_desc: "Chiffre Blitz est 100% gratuit. Une publicité de soutien va se lancer. Merci ! ❤️",
     ad_btn: "Lancer la partie ⚡", ad_sponsored: "VIDÉO SPONSORISÉE...",
+    support_title: "❤️ Soutenir le Créateur",
+    support_desc: "Chiffre Blitz est un projet indépendant 100% gratuit. Si tu aimes le jeu, tu peux me soutenir :",
+    support_kofi: "☕ Ko-fi (don)",
+    support_discord: "💬 Rejoindre Discord",
+    support_skip: "Passer et jouer ⚡",
 
     /* ----- Pouvoirs ----- */
     powers: {
@@ -489,6 +494,11 @@ const i18n = {
     ad_title: "Support the Creator",
     ad_desc: "Chiffre Blitz is 100% free. A support advertisement will play. Thank you! ❤️",
     ad_btn: "Start Game ⚡", ad_sponsored: "SPONSORED VIDEO...",
+    support_title: "❤️ Support the Creator",
+    support_desc: "Chiffre Blitz is a 100% free indie project. If you enjoy the game, you can support me:",
+    support_kofi: "☕ Ko-fi (donate)",
+    support_discord: "💬 Join Discord",
+    support_skip: "Skip and play ⚡",
 
     /* ----- Powers ----- */
     powers: {
