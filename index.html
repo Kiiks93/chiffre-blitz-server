@@ -10,6 +10,28 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="saisons.css">
+    <style>
+/* Écran titre : tout visible sans scroll interne */
+#screen-title h2{ font-size:22px; }
+#screen-title .btn-main{ padding:12px; font-size:15px; margin-top:10px; }
+#title-rules{ padding:8px; gap:5px; font-size:10.5px; }
+#title-rules p{ margin:1px 0 0 0; font-size:10px; }
+@media (max-height:780px){
+  #title-rules{ padding:6px; gap:4px; font-size:9.5px; }
+  #title-rules p{ font-size:9px; }
+  #screen-title h2{ font-size:19px; }
+}
+@media (max-height:640px){
+  #title-rules{ padding:5px; gap:3px; font-size:9px; }
+  #title-rules p{ font-size:8.5px; }
+  #screen-title h2{ font-size:17px; }
+  #screen-title .btn-main{ padding:9px; font-size:13px; margin-top:6px; }
+}
+/* Perf mobile : modales fluides (supprime le flou d'arrière-plan coûteux) */
+@media (max-width:760px){
+  .modal-overlay{ backdrop-filter:none !important; -webkit-backdrop-filter:none !important; }
+}
+</style>
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/png" href="/icons/icon-192.png">
     <link rel="apple-touch-icon" href="/icons/icon-192.png">
@@ -73,11 +95,11 @@ PUB DE LANCEMENT (fake, soutien créateur)
 ============================================================ -->
 <div id="screen-title" class="menu-container" style="max-width:380px; text-align: left;">
     <div style="text-align: center; margin-bottom: 10px;">
-        <h2 style="font-size: 22px; color: #00d2ff; margin: 0; text-shadow: 0 0 15px rgba(0,210,255,0.5);">CHIFFRE BLITZ ⚡</h2>
+        <h2 style="color: #00d2ff; margin: 0; text-shadow: 0 0 15px rgba(0,210,255,0.5);">CHIFFRE BLITZ ⚡</h2>
         <p style="color: #aaa; font-size: 11px; margin: 4px 0 0 0;" data-i18n="subtitle">Repère. Clique. Triomphe.</p>
     </div>
 
-    <div style="background: rgba(30,16,53,0.7); border: 2px solid rgba(0,210,255,0.25); padding: 10px; border-radius: 14px; font-size: 11px; color: #ccc; max-height: 38vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+    <div id="title-rules" style="background: rgba(30,16,53,0.7); border: 2px solid rgba(0,210,255,0.25); border-radius: 14px; color: #ccc; display: flex; flex-direction: column;">
     <div style="display:flex; gap:6px; align-items:start;">
     <span style="font-size:14px;">⚡</span>
     <div><strong style="color:#00d2ff;" data-i18n="rule1_title">⚡ Principe du jeu</strong><p style="margin:2px 0 0 0;" data-i18n="rule1_desc">Clique le plus vite possible sur les tuiles de la grille dans l'ordre croissant exact.</p></div>
@@ -105,7 +127,7 @@ PUB DE LANCEMENT (fake, soutien créateur)
         </div>
     </div>
 
-    <button class="btn-main btn-blue" onclick="openSupportModal()" style="margin-top: 10px; width: 100%; font-size: 15px; padding: 12px;" data-i18n="btn_play">JOUER ⚡</button>
+    <button class="btn-main btn-blue" onclick="openSupportModal()" style="width: 100%;" data-i18n="btn_play">JOUER ⚡</button>
 </div>
 
 <!-- ============================================================
