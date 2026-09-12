@@ -463,10 +463,11 @@ function buildTowerSession(player, floor){
     s.nums = towerShuffle([...Array(N)].map((_,i)=>TW_COLOR_POOL[(i+Math.floor(Math.random()*TW_COLOR_POOL.length))%TW_COLOR_POOL.length]));
     s.remaining = new Set([...Array(N)].map((_,i)=>i));
     s.targetColor = pickColorTarget(s);
-  } else if (def.type === "pairs") {
+    } else if (def.type === "pairs") {
     const half = N/2;
     s.nums = towerShuffle([...TW_PAIR_SYMBOLS.slice(0,half), ...TW_PAIR_SYMBOLS.slice(0,half)]);
     s.remaining = new Set([...Array(N)].map((_,i)=>i));
+    s.revealUntil = Date.now() + 3000;
   } else if (def.type === "parity") {
     s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
     s.targetParity = Math.random()<.5?"even":"odd";
@@ -489,7 +490,7 @@ function buildTowerSession(player, floor){
   return s;
 }
 function towerDisplay(s){
-  if (s.type==="pairs") return s.nums.map((v,i)=> s.gone[i] ? "" : (s.revealed[i] ? v : null));
+  if (s.type==="pairs") return s.nums.map((v,i)=> s.gone[i] ? "" : ((Date.now() < (s.revealUntil||0) || s.revealed[i]) ? v : null));
   if (s.type==="memory") return s.nums.map((v,i)=> s.gone[i] ? "" : ((Date.now() < (s.revealUntil||0) || s.revealed[i]) ? v : null));
   if (s.type==="color") return s.nums.map(c=>({key:c.key,hex:c.hex}));
   return s.nums.slice();
@@ -502,7 +503,7 @@ function towerStatePayload(s){
     target:s.target||null, targetColor:s.targetColor||null, targetParity:s.targetParity||null, forbidden:s.forbidden||null,
     revealed:s.revealed, sel:s.sel, ai:s.ai, defTime:s.def.time, gridSize:s.def.gridSize, 
     replay:s.replay, shield:s.shield||0,
-    revealLeft: s.type==="memory" ? Math.max(0, Math.round(((s.revealUntil||0) - Date.now())/1000)) : 0
+    revealLeft: (s.type==="memory" || s.type==="pairs") ? Math.max(0, Math.round(((s.revealUntil||0) - Date.now())/1000)) : 0
   };
 }
 async function towerWin(player, s){
