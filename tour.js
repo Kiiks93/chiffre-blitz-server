@@ -1258,7 +1258,7 @@ function renderHUDFromState() {
 const h = document.getElementById("tg-hud"); if (!h || !TW) return;
 let main = "";
 if (TW.type === "color" && TW.targetColor) main = `COULEUR : <span style="color:${TW.targetColor.hex};">${TW.targetColor.name}</span>`;
-else if (TW.type === "pairs") main = "🧩 RETROUVE LES PAIRES";
+else if (TW.type === "pairs") main = (TW.revealLeft > 0) ? `👀 MÉMORISE ! ${TW.revealLeft}s` : "🧩 RETROUVE LES PAIRES";
 else if (TW.type === "parity") main = TW.targetParity === "even" ? "CLIQUE : PAIRS" : "CLIQUE : IMPAIRS";
 else if (TW.type === "forbidden") main = `INTERDIT : <span style="color:#ff4b2b;">${TW.forbidden}</span>`;
 else if (TW.type === "memory") main = (TW.revealLeft > 0) ? `👀 MÉMORISE ! ${TW.revealLeft}s` : "🧠 CLIQUE DANS L'ORDRE (1→N)";
