@@ -24,6 +24,8 @@ const i18n = {
     rule4_desc: "Grimpe en classé pour gagner des couronnes 👑 et débloque les 16 trophées 🏆 de ta Salle des Trophées !",
     rule5_title: "🎯 Mode Tournoi",
     tourney_teaser_desc: "En cours de réflexion et de développement... Les tournois récompenseront en couronnes 👑 !",
+    rule_tower_title: "🏰 Mode Aventure",
+    rule_tower_desc: "Grimpe la Tour de 1800 étages à travers 9 mondes thématiques, affronte les Gardiens tous les 50 étages, et débloque des récompenses exclusives !",
 
     /* ----- Menu principal ----- */
     menu_solo: "🏋️ ENTRAÎNEMENT SOLO", menu_1v1: "⚔️ DUEL 1v1 ONLINE", menu_tow: "🪢 Mode Corde Raide (Tug-of-War)",
@@ -269,8 +271,11 @@ const i18n = {
     rule3_desc: "Face a player in real time (unranked, ranked SBMM or private room). Best score in 30s wins!",
     rule4_title: "👑 Ranks & Crowns",
     rule4_desc: "Climb ranked to earn crowns 👑 and unlock the 16 trophies 🏆 of your Trophy Room!",
-    rule5_desc: "Coming soon! Earn unique crowns 👑.",
+    rule5_tile: "Coming soon! Earn unique crowns 👑.",
     tourney_teaser_desc: "In design and development... Tournaments will reward crowns 👑!",
+    rule_tower_title: "🏰 Adventure Mode",
+    rule_tower_desc: "Climb the 1800-floor Tower across 9 themed worlds, face Guardians every 50 floors, and unlock exclusive rewards!",
+    
 
     /* ----- Main Menu ----- */
     menu_solo: "🏋️ TRAINING", menu_1v1: "⚔️ 1v1 DUEL", menu_tow: "🪢 Tug-of-War Mode",
