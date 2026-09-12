@@ -71,8 +71,9 @@ worldUnlocked(w) {
 const season = TOWER_CHAPTERS[w-1].season;
 if (season === 1) return this.worldUnlockedByStars(w);
 const flag = "season_s" + season + "_unlocked";
-const unlocked = (myProfile.unlocked_items || []).includes(flag);
-if (!unlocked) return false;
+const hasFlag = (myProfile.unlocked_items || []).includes(flag);
+const seasonLive = this.currentSeasonNum() >= season;
+if (!hasFlag && !seasonLive) return false;
 return this.worldUnlockedByStars(w);
 },
 getFloorDef(floor) {
@@ -112,7 +113,6 @@ return new Date()>=new Date(p[2],p[1]-1,p[0]);
 function worldVisible(w){
 const ch=TOWER_CHAPTERS[w-1];
 if(!ch) return false;
-if(!seasonReleased(ch.season)) return false;
 return TowerUtils.worldUnlocked(w);
 }
 function maxVisibleWorld(){
@@ -903,9 +903,10 @@ document.body.appendChild(m);
 m.style.display = "flex";
 twViewFloor = Math.min(towerProgress.floor + 1, TOTAL_FLOORS);
 const savedW = parseInt(localStorage.getItem('cb_tw_world') || '0', 10);
-if (savedW >= 1 && savedW <= 9 && worldVisible(savedW)) {
+if (savedW >= 1 && savedW <= 9 && TowerUtils.worldUnlocked(savedW)) {
 twViewFloor = Math.min((savedW - 1) * FPC + 1, Math.min(towerProgress.floor + 1, TOTAL_FLOORS));
 }
+twViewFloor = Math.min(twViewFloor, maxVisibleWorld() * FPC);
 sessionStorage.setItem("cb_last_screen", "tower");
 socket.emit("get_tower");
 setTimeout(() => { const s = document.getElementById("screen-tower"); if (s && s.style.display !== "none") socket.emit("get_tower"); }, 600);
@@ -1312,6 +1313,7 @@ socket.on("tower_data", (d) => {
 const oldWorld = TowerUtils.getTowerChapter(Math.min(towerProgress.floor + 1, TOTAL_FLOORS)).id;
 towerProgress = { floor: d.floor || 0, stars: d.stars || {} };
 twViewFloor = Math.min(towerProgress.floor + 1, TOTAL_FLOORS);
+twViewFloor = Math.min(twViewFloor, maxVisibleWorld() * FPC);;
 if (d.lives !== undefined) twLives = d.lives;
 if (d.nextLifeIn !== undefined) twNextLife = d.nextLifeIn || 0;
 if (d.jokers) twJokers = d.jokers;
