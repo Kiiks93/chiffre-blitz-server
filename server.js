@@ -2395,6 +2395,7 @@ const IAP_PACKS = {
   pack_mixte_3:       { type: 'mixed',  lives: 5, jTime: 1, jShield: 1 },
   pack_blitz_5:       { type: 'mixed',  lives: 10, jTime: 3, jShield: 2 }
 };
+const LIFE_RESERVE_MAX = 30; // réserve max anti-gaspillage pour les achats réels
 
 app.post('/api/iap_grant', async (req, res) => {
   try {
@@ -2438,12 +2439,12 @@ app.post('/api/iap_grant', async (req, res) => {
         else if (row) row.blitz_pass_premium = true;
       } else if (pack.type === 'lives') {
         const cur = isOnline ? (p.lives === undefined ? TOWER_MAX_LIVES : p.lives) : (row.tower_lives !== undefined ? row.tower_lives : TOWER_MAX_LIVES);
-        const newLives = Math.min(TOWER_MAX_LIVES, cur + pack.lives);
+        const newLives = Math.min(LIFE_RESERVE_MAX, cur + pack.lives);
         if (isOnline) { p.lives = newLives; if (newLives >= TOWER_MAX_LIVES) p.lives_ts = Date.now(); }
         else if (row) { row.tower_lives = newLives; if (newLives >= TOWER_MAX_LIVES) row.tower_lives_ts = Date.now(); }
       } else if (pack.type === 'mixed') {
         const cur = isOnline ? (p.lives === undefined ? TOWER_MAX_LIVES : p.lives) : (row.tower_lives !== undefined ? row.tower_lives : TOWER_MAX_LIVES);
-        const newLives = Math.min(TOWER_MAX_LIVES, cur + pack.lives);
+        const newLives = Math.min(LIFE_RESERVE_MAX, cur + pack.lives);
         if (isOnline) {
           p.lives = newLives; if (newLives >= TOWER_MAX_LIVES) p.lives_ts = Date.now();
           p.jokers = normalizeJokers(p.jokers);
