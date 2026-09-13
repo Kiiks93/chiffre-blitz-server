@@ -453,11 +453,11 @@ function renderBlitzPass() {
     <div class="bp-header-banner">
       <div style="font-size:13px; font-weight:900; color:#f8b500; margin-bottom:2px;">${season.emoji} ${fr ? "PASSE DE SAISON :" : "SEASON PASS:"} ${season.name}</div>
       <div style="font-size:9px; color:#aaa; margin-bottom:4px;">📅 ${season.start} → ${season.end}</div>
-      <div style="font-size:10px; color:#ccc; margin-bottom:6px;">${isPremium ? (fr ? "✨ Passe Premium Actif !" : "✨ Premium Pass Active!") : (fr ? "Débloque le Passe Premium pour 1000 🪙" : "Unlock the Premium Pass for 1000 🪙")}</div>
+            <div style="font-size:10px; color:#ccc; margin-bottom:6px;">${isPremium ? (fr ? "✨ Passe Premium Actif !" : "✨ Premium Pass Active!") : (fr ? "Débloque le Passe Premium (3€)" : "Unlock the Premium Pass (€3)")}</div>
       <div style="font-size:10px; color:#00ff88; margin-bottom:6px;">${fr ? "🔓 Paliers débloqués : " : "🔓 Unlocked tiers: "} <b>${unlockedTier}/30</b></div>
       <div style="font-size:9px; color:#aaa; margin-bottom:6px; line-height:1.4;">ℹ️ ${fr ? "1 palier par jour de connexion. Pas besoin de jouer tous les jours consécutifs : ce sont 30 jours de connexion, pas 30 jours calendaires." : "1 tier per login day. You don't need to play every consecutive day: it's 30 login days, not 30 calendar days."}</div>
       ${!isPremium 
-  ? `<button class="btn-main btn-gold" onclick="IAP.buyPassPremium()" style="padding:6px 10px; font-size:11px; margin:0 auto; width:auto;">${fr ? "💳 Acheter le Passe Premium (3€)" : "💳 Buy Premium Pass (€3)"}</button>` ` 
+        ? `<button class="btn-main btn-gold" onclick="IAP.buyPassPremium()" style="padding:6px 10px; font-size:11px; margin:0 auto; width:auto;">${fr ? "💳 Acheter le Passe Premium (3€)" : "💳 Buy Premium Pass (€3)"}</button>` 
         : `<div style="color:#00ff88; font-weight:bold; font-size:10px;">${fr ? "Statut : VIP / Premium" : "Status: VIP / Premium"}</div>`
       }
     </div>`;
@@ -517,12 +517,10 @@ function renderBlitzPass() {
 /* ============================================================
 9. PASSE DE SAISON — ACHAT & RÉCLAMATION
 ============================================================ */
+// Ancien achat en pièces remplacé par achat réel via RevenueCat.
+// Gardé comme alias pour compatibilité (au cas où un ancien code l'appellerait).
 function buyBlitzPassPremium() {
-  if (myProfile.coins < PASS_CONFIG.PREMIUM_PRICE) {
-    showNotificationToast(i18n[currentLang].not_enough_coins, "announcement");
-    return;
-  }
-  socket.emit("buy_blitz_pass");
+  if (window.IAP && typeof IAP.buyPassPremium === "function") IAP.buyPassPremium();
 }
 
 function claimPassReward(tier, track) {
@@ -717,12 +715,16 @@ function updatePassSeasonLabels() {
 }
 
 if (typeof socket !== "undefined") {
-    socket.on("player_registered", () => setTimeout(() => {
+  socket.on("player_registered", () => setTimeout(() => {
     updatePassSeasonLabels();
     applyPassLockToMenu();
     if (document.getElementById("modal-blitz-pass").style.display === "flex") renderBlitzPass();
   }, 60));
-  socket.on("season_updated", () => setTimeout(updatePassSeasonLabels, 60));
+  socket.on("season_updated", () => setTimeout(() => {
+    updatePassSeasonLabels();
+    applyPassLockToMenu();
+    if (document.getElementById("modal-blitz-pass").style.display === "flex") renderBlitzPass();
+  }, 60));
 }
 
 document.addEventListener("DOMContentLoaded", () => setTimeout(() => { updatePassSeasonLabels(); applyPassLockToMenu(); }, 150));
