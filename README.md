@@ -1,199 +1,243 @@
-# 🎮 CHIFFRE BLITZ — ROADMAP (mise à jour)
+# 🎮 CHIFFRE BLITZ
 
-> Dernière MAJ : Septembre 2026 — après implémentation complète du Mode Aventure (9 mondes × 200 étages), DA procédurale, système de vies/jokers, reprise de session mobile et verrou musical saisonnier.
+**Jeu de réflexes multijoueur** — Repère. Clique. Triomphe. ⚡
 
----
+## 🚀 État actuel
 
-## ✅ LÉGENDE
-- `[x]` Terminé
-- `[~]` Partiel / en cours
-- `[ ]` À faire
-
----
-
-# 📦 PHASE 1 — FONDATIONS SAISONNIÈRES & BUGS ✅
-
-- [x] Boule de neige offerte (Palier 15 S3)
-- [x] Nom du pass dynamique (S1/S2/S3)
-- [x] Modes exclusifs Halloween 🎃 + Noël 🎄 (solo + 1v1)
-- [x] Sélecteur de bande son SANS spoiler
-- [x] Dates début/fin des saisons modifiables (admin + Supabase)
-- [x] Cosmétiques S3 (cadres, grilles, avatars, titres)
-- [x] Bouton mute dupliqué corrigé
-- [x] rule4/5 + media query dupliquée corrigés
-- [x] Code dupliqué + orphelins nettoyés
+**Phases 1-9B** : ✅ Terminées
+**Phase 10** : 🟡 En cours (assets + config Capacitor)
+**Phase 11-12** : ⏳ À venir
 
 ---
 
-# 🎫 PHASE 2 — PASSE DE SAISON (DA "BRAWL STARS") ✅
+## ✅ PHASES TERMINÉES
 
-- [x] Horizontal PC / vertical mobile, fenêtre plein écran
-- [x] Cartes PREMIUM bleues à bordure OR + ruban « ⭐ PREMIUM »
-- [x] Cartes GRATUIT/FREE + ruban traduit
-- [x] Aperçus visuels réels (avatars Lottie/vidéo, cadres, swatchs, titres)
-- [x] Clic sur la tuile entière pour récupérer (badge ✔)
-- [x] Molette = scroll horizontal (PC)
-- [x] Position de scroll conservée après récupération
-- [x] Animation pop + burst d'emojis au déblocage
+### Phase 1 — Fondations saisonnières
+- Boule de neige offerte (Palier 15 S3)
+- Nom du pass dynamique (S1/S2/S3)
+- Modes exclusifs Halloween 🎃 + Noël 🎄
+- Sélecteur de bande son SANS spoiler
+- Dates début/fin des saisons modifiables
+- Cosmétiques S3 (cadres, grilles, avatars, titres)
+- Bugs corrigés (mute dupliqué, rule4/5, media query)
 
----
+### Phase 2 — Passe de saison (DA "Brawl Stars")
+- Horizontal PC / vertical mobile, fenêtre plein écran
+- Cartes PREMIUM bleues à bordure OR + ruban « ⭐ PREMIUM »
+- Cartes GRATUIT/FREE + ruban traduit
+- Aperçus visuels réels (avatars Lottie/vidéo, cadres, swatchs, titres)
+- Clic sur la tuile entière pour récupérer (badge ✔)
+- Molette = scroll horizontal (PC)
+- Position de scroll conservée après récupération
+- Animation pop + burst d'emojis au déblocage
 
-# 🎨 PHASE 3 — PERSONNALISATION & ÉCONOMIE ✅
+### Phase 3 — Personnalisation & économie
+- Équip instantané cadre/thème/titre à la sélection
+- Sélecteur de packs (grille + cadre) traduit
+- `ownsItemOrPack()` (équiper un objet d'un pack possédé)
 
-- [x] Équip instantané cadre/thème/titre à la sélection
-- [x] Sélecteur de packs (grille + cadre) traduit
-- [x] `ownsItemOrPack()` (équiper un objet d'un pack possédé)
+### Phase 4 — Performance & stabilité
+- Popup récompense throttlée + auto-fermeture
+- Fuites mémoire / superposition de sons corrigées
+- Barres d'émoticônes reconstruites (emojis manquants)
+- Anti match-contre-soi (file dédupliquée + vérif même pseudo)
+- `server.js` complet ré-équilibré
 
----
+### Phase 5 — Traduction FR/EN complète
+- Auto-détection de la langue de l'appareil
+- Override manuel 🌐 FR ↔ EN
+- 8 fichiers traduits + patches
+- Compteur en ligne sans texte à traduire
 
-# ⚡ PHASE 4 — PERFORMANCE & STABILITÉ ✅
+### Phase 6 — Admin avancé
+- Fenêtre `admin.html` indépendante
+- Annonces globales, cadeaux
+- Override saison + dates saisons (persistées Supabase)
+- Ajuster Pièces/Points/Trophées
+- Compteur joueurs réellement en ligne
+- Attribuer objet/trophée
+- Événements planifiés (Coin Rush, Rank Shield, Expresso, Chaos, Jackpot, Tug-of-War, Halloween, Noël)
 
-- [x] Popup récompense throttlée + auto-fermeture
-- [x] Fuites mémoire / superposition de sons corrigées
-- [x] Barres d'émoticônes reconstruites (emojis manquants)
-- [x] Anti match-contre-soi (file dédupliquée + vérif même pseudo)
-- [x] `server.js` complet ré-équilibré (fix `Unexpected end of input`)
+### Phase 7 — Traces, sécurité & modération
+- Table `player_logs` (Supabase) : chaque mouvement d'économie horodaté
+- Console admin « 📜 Journal des transactions »
+- Compteur en ligne public dans la barre de stats
+- Anti-triche : rate-limit clics 1v1 + catch, validation serveur
+- RGPD : hachage SHA-256 des codes secrets + migration legacy
+- Récupération de compte : clé de sécurité par pseudo + changement de code
+- Reset code par admin (vérif clé) + déconnexion forcée
 
----
-
-# 🌍 PHASE 5 — TRADUCTION FR/EN COMPLÈTE ✅
-
-- [x] Auto-détection de la langue de l'appareil
-- [x] Override manuel 🌐 FR ↔ EN
-- [x] 8 fichiers traduits + patches (modale compte, packs, classement, amis, pass, placeholders salons)
-- [x] Compteur en ligne sans texte à traduire (👤 + nombre)
-
----
-
-# 🛠️ PHASE 6 — ADMIN AVANCÉ ✅
-
-- [x] Fenêtre `admin.html` indépendante
-- [x] Annonces globales, cadeaux
-- [x] Override saison + dates saisons (persistées Supabase)
-- [x] Ajuster Pièces/Points/Trophées (donner/retirer, tous/pseudo/X aléatoires)
-- [x] Compteur joueurs réellement en ligne (profils uniques)
-- [x] Attribuer objet/trophée (cadres, grilles, avatars, titres, packs, pouvoirs)
-- [x] Événements planifiés (Coin Rush, Rank Shield, Expresso, Chaos, Jackpot, Tug-of-War, Halloween, Noël)
-
----
-
-# 🕵️ PHASE 7 — TRACES, SÉCURITÉ & MODÉRATION ✅
-
-- [x] Table `player_logs` (Supabase) : chaque mouvement d'économie horodaté
-- [x] Console admin « 📜 Journal des transactions »
-- [x] Compteur en ligne public dans la barre de stats (1 ligne, profils uniques)
-- [x] Anti-triche : rate-limit clics 1v1 + catch, validation serveur
-- [x] RGPD : hachage SHA-256 des codes secrets + migration legacy
-- [x] Récupération de compte : clé de sécurité par pseudo + changement de code
-- [x] Reset code par admin (vérif clé) + déconnexion forcée
-
----
-
-# 🧹 PHASE 8 — AUDIT & CONSOLIDATION ✅
-
+### Phase 8 — Audit & consolidation
 Tous les fichiers front audités, optimisés et documentés :
-- [x] `style.css` (variables, 21 sections, -45%)
-- [x] `admin.html` (structure corrigée)
-- [x] `admin.js` (réduit à l'essentiel)
-- [x] `package.json` (métadonnées, scripts, versions)
-- [x] `index.html` (doublon supprimé, 12 sections)
-- [x] `i18n.js` (15 sections, clés récupération)
-- [x] `audio.js` (20 sections, constantes)
-- [x] `fx.js` (factory canvas, 4 sections)
-- [x] `jeu.js` (20 sections, constantes)
-- [x] `passe.js` (12 sections, createShopCard)
-- [x] `profil.js` (14 sections, avatarMap)
-- [x] `social.js` (10 sections, SOCIAL_STYLES)
-- [x] `saisons.css` (18 sections, bug orpheline corrigé)
-- [x] `saisons.js` (16 sections, cloneLottieData)
-- [x] `son-saisons.js` (10 sections, constantes musicales)
-- [x] `modes-catch.js` (11 sections, CATCH_CONFIG)
+- `style.css` (variables, 21 sections, -45%)
+- `admin.html` (structure corrigée)
+- `admin.js` (réduit à l'essentiel)
+- `package.json` (métadonnées, scripts, versions)
+- `index.html` (doublon supprimé, 12 sections)
+- `i18n.js` (15 sections, clés récupération)
+- `audio.js` (20 sections, constantes)
+- `fx.js` (factory canvas, 4 sections)
+- `jeu.js` (20 sections, constantes)
+- `passe.js` (12 sections, createShopCard)
+- `profil.js` (14 sections, avatarMap)
+- `social.js` (10 sections, SOCIAL_STYLES)
+- `saisons.css` (18 sections, bug orpheline corrigé)
+- `saisons.js` (16 sections, cloneLottieData)
+- `son-saisons.js` (10 sections, constantes musicales)
+- `modes-catch.js` (11 sections, CATCH_CONFIG)
 
----
+### Phase 9 — Préparation publication
+- Compte Google Play Console créé + 25$ payés
+- Adresse email dédiée créée
+- Serveur Discord créé
 
-# 🏪 PHASE 9 — PRÉPARATION PUBLICATION ✅
-
-- [x] Compte Google Play Console créé + 25$ payés
-- [x] Adresse email dédiée créée
-- [x] Serveur Discord créé
-
----
-
-# 🏰 PHASE 9B — MODE AVENTURE & MOBILE ✅
-
-**Nouveau mode de jeu complet : Tour Aventure**
-
-- [x] **9 mondes** de **200 étages** (1800 étages au total)
-- [x] **Courbe de difficulté** calibrée par monde (`TOWER_CURVE`) + « souffle » aux 10 premiers étages
-- [x] **9 modes de jeu** en rotation : classic, reverse, color, pairs, sprint, parity, forbidden, memory, nofail
-- [x] **Mode Mémoire** : chiffres visibles ~3s puis masqués, clic de mémoire, étoiles basées sur erreurs
-- [x] **Gardiens** (boss) aux étages 50, 100, 150, 200 avec barre de vie
-- [x] **Système de vies** : max 10, régénération 1/20min, achat boutique aventure
-- [x] **Jokers** : ⏱️ +10s temps, 🛡️ bouclier (absorbe erreur/clic interdit)
-- [x] **Boutique aventure** : +3 vies, packs IAP (1/3/5€), jokers
-- [x] **DA procédurale des 9 mondes** (CSS/HTML généré, cache par monde) :
-  - M1 Quartier Néon : ville néon, voitures, dirigeables
-  - M2 Grottes de Cristal : caverne, cristaux, lac gelé
-  - M3 Banque Dorée : coffre-fort, lingots, lasers
-  - M4 Tour Hantée : tour gothique, éclairs, chauves-souris
-  - M5 Cimetière Brumeux : tombes, arbres morts, feux follets
-  - M6 Antre Citrouille : caverne de jack-o'-lanterns
-  - M7 Cime Bonbon : château de sucre, rivière chocolat
-  - M8 Forêt de Sapins : sapins volumineux enneigés, guirlandes
-  - M9 Atelier Père Noël : intérieur animé (Père Noël, lutins, renne)
-- [x] **Musique de saison verrouillée** : override `SoundEngine.startMusic` en aventure, coupe en arrière-plan
-- [x] **Déblocage mondes saisonniers** : flags permanents `season_s2_unlocked` / `season_s3_unlocked` via Tier 1 du pass
+### Phase 9B — Mode Aventure & Mobile
+**Mode de jeu complet : Tour Aventure**
+- 9 mondes de 200 étages (1800 étages au total)
+- Courbe de difficulté calibrée par monde + « souffle » aux 10 premiers étages
+- 9 modes de jeu en rotation : classic, reverse, color, pairs, sprint, parity, forbidden, memory, nofail
+- Mode Mémoire : chiffres visibles ~3s puis masqués, clic de mémoire, étoiles basées sur erreurs
+- Gardiens (boss) aux étages 50, 100, 150, 200 avec barre de vie
+- Système de vies : max 10, régénération 1/20min, achat boutique aventure
+- Jokers : ⏱️ +10s temps, 🛡️ bouclier (absorbe erreur/clic interdit)
+- Boutique aventure : +3 vies, packs IAP (1/3/5€), jokers
+- DA procédurale des 9 mondes (CSS/HTML généré, cache par monde)
+- Musique par monde : M1 = mp3 Néon, M2 = mélodie cristal, M3 = mp3 coffre-fort
+- Musique de saison verrouillée : override en aventure, coupe en arrière-plan
+- Déblocage mondes saisonniers : flags permanents via Tier 1 du pass
 
 **Mobile & session**
+- Cache-busting automatique : `?v=timestamp` dans `index.html`
+- Reprise de session : `sessionStorage` pour dernière page active
+- Page explications au lancement frais (app tuée → écran de bienvenue)
+- Partage natif : `navigator.share` + fallback modale
+- Service Worker network-only : plus jamais de fichiers périmés sur mobile
 
-- [x] **Cache-busting automatique** : `?v=timestamp` dans `index.html` (fichiers toujours à jour)
-- [x] **Reprise de session** : `sessionStorage` pour dernière page active (salon, aventure, solo…)
-- [x] **Page explications au lancement frais** (app tuée → écran de bienvenue)
-- [x] **Partage natif** : `navigator.share` + fallback modale WhatsApp/SMS/Mail/Copier
-- [x] **Service Worker network-only** : plus jamais de fichiers périmés sur mobile
-
----
-
-# 📱 PHASE 10 — FINALISATION MOBILE (EN COURS)
-
-- [~] **DA Atelier v3** : intérieur chaleureux style illustration (murs crème, fenêtres arquées, guirlandes, sapin décoré)
-- [~] **DA Cime Bonbon v3** : ciel barbe-à-papa rose (nuages coton, esprit charlotte aux fraises + Noël)
-- [ ] **Déblocage saisons serveur** : handler `claim_pass_tier` ajoute flags `season_s2_unlocked` / `season_s3_unlocked` au Tier 1
-- [ ] **Icône app** : design 512×512 (Android)
-- [ ] **Splash screen** : écran de démarrage animé
-- [ ] **Pub au clic sur JOUER** (page explications) : message « soutenir le créateur »
-- [ ] **Plugin Capacitor Share** : `npm install @capacitor/share` + rebuild APK
-- [ ] **Test APK final** sur téléphone (cache, reprise, partage)
+**Audio**
+- Volume M1 (Néon) baissé à 0.30
+- Volume Halloween +50% (menu + jeu)
+- Mode Paires avec révélation 3s
+- Musiques par monde (M1, M2, M3) avec fallback si mp3 absent
 
 ---
 
-# 💶 PHASE 11 — MONÉTISATION (À VENIR)
+## 🟡 PHASE 10 — FINALISATION MOBILE (EN COURS)
 
-- [ ] **Pass de saison payant 3€** via Google Play Billing
-- [ ] **Vérification du reçu d'achat** côté serveur (anti-triche)
-- [ ] **Vraies pubs Google (AdMob)** : bannières, interstitiels, récompensées
-- [ ] **PWA iOS** (sans App Store, gratuit)
-- [ ] **Microsoft Store** (PC, ~19€)
+**Assets**
+- ✅ Icône 192×192 (PWA/manifest)
+- ✅ Icône 512×512 (Play Store)
+- ✅ Feature graphic 1024×500 (Play Store)
+- 🟡 Icône 1024×1024 (source Capacitor) — à générer
+- 🟡 Splash 2732×2732 (écran démarrage) — à générer
 
----
+**Configuration**
+- ✅ `capacitor.config.json` avec bloc `plugins.SplashScreen`
+- 🟡 `@capacitor/assets` installé
+- 🟡 `npx @capacitor/assets generate --android` à exécuter
 
-# 🎮 PHASE 12 — FEATURES À VENIR (QUAND LE JEU SERA CONNU)
+**Plugins natifs**
+- 🟡 `@capacitor-community/admob` à installer
+- 🟡 `@capacitor-community/in-app-purchase` à installer
+- 🟡 `@capacitor/share` à installer
 
-- [ ] 📜 Quêtes quotidiennes/hebdo (rétention)
-- [ ] 🎯 Tournois (bouton "bientôt" → réel)
-- [ ] 🗓️ Saison 4 (thème, cosmétiques, pass)
-- [ ] 💬 Bot Discord (annonces, support, codes promo)
-
----
-
-# 🛠️ STACK
-
-- **Frontend** : HTML5, CSS3, JS vanilla, Socket.io, Lottie
-- **Backend** : Node.js, Express, Socket.io (Render)
-- **BDD** : Supabase (PostgreSQL) — `players`, `friendships`, `settings`, `player_logs`
-- **Mobile** : Capacitor (Android) + plugin Share
-- **À venir** : Google Play Billing, AdMob
+**Test & soumission**
+- ⏳ Test fermé Play Console — 12 testeurs : 3/14 jours
+- 🟡 Soumission production (après les 14 jours + build final)
 
 ---
 
-*Prochaine étape : 🎨 Finalisation DA (Atelier v3 + Cime Bonbon v3) + 🔧 Déblocage saisons serveur + 📱 Icône + splash.*
+## ⏳ PHASE 11 — MONÉTISATION (À VENIR)
+
+**Google Play Billing**
+- 🟡 Produits à créer dans Play Console :
+  - `blitz_pass_premium` (3€) — Passe Premium saison en cours
+  - `pack_vies_1` (1€) — Pack 10 vies
+  - `pack_mixte_3` (3€) — Pack Mixte (5 vies + 2 jokers)
+  - `pack_blitz_5` (5€) — Pack Blitz (10 vies + 5 jokers)
+- 🟡 Code client `iap.js` : `buyPassPremium()` / `buyPack(id)`
+- 🟡 Handler serveur `iap_grant` : octroi avec dédup token anti-double-crédit
+- 🟡 Vérification du reçu d'achat côté serveur (anti-triche)
+
+**Activation automatique**
+- ✅ `isSeasonPassLive()` : pass s'active automatiquement le 01/10/2026
+- 🟡 Tests d'achat réel (gratuit) avec un testeur
+
+**Publicités**
+- ✅ `ads.js` : abstraction AdMob (natif = réel, web = simulé)
+- 🟡 IDs AdMob à configurer (interstitial + rewarded)
+- 🟡 Tests pub réelle dans l'APK
+
+**Multi-plateforme**
+- 🟡 PWA iOS (sans App Store, gratuit)
+- 🟡 Microsoft Store (PC, ~19€)
+
+---
+
+## ⏳ PHASE 12 — LIVE OPS (À VENIR)
+
+- 🟡 Quêtes quotidiennes/hebdo (rétention)
+- 🟡 Tournois (bouton "bientôt" → réel)
+- 🟡 Saison 4 (thème, cosmétiques, pass)
+- 🟡 Bot Discord (annonces, support, codes promo)
+- 🟡 Traduction EN 100% (après freeze du texte)
+- 🟡 Audit final (RGPD, sécurité, doublons, performance)
+
+---
+
+## 🛠️ STACK
+
+**Frontend**
+- HTML5, CSS3, JS vanilla
+- Socket.io (temps réel)
+- Lottie (avatars animés)
+
+**Backend**
+- Node.js, Express, Socket.io (Render)
+- Supabase (PostgreSQL) : `players`, `friendships`, `settings`, `player_logs`
+
+**Mobile**
+- Capacitor (Android)
+- Plugins : AdMob, In-App-Purchase, Share
+
+**Assets**
+- Icônes : 192×192, 512×512, 1024×1024
+- Splash : 2732×2732
+- Feature graphic : 1024×500
+
+**Audio**
+- M1 Néon : `sound/neon-city.mp3` (Pixabay)
+- M3 Banque : `sound/coffre-fort.mp3` (Pixabay)
+- M2 Cristal : mélodie procédurale
+- Saisons : Halloween/Noël procédurales
+
+---
+
+## 📝 CHANGELOG RÉCENT
+
+**Session du 13 septembre 2026**
+- ✅ Musiques par monde (M1, M2, M3) avec mp3 + fallback
+- ✅ Volume M1 baissé (0.85 → 0.30)
+- ✅ Volume Halloween +50%
+- ✅ Mode Paires avec révélation 3s
+- ✅ Déblocage saisons serveur (flags via Tier 1 pass)
+- ✅ Activation automatique du pass au 01/10/2026
+- ✅ Carte Mode Aventure dans page explicative
+- ✅ Modale "Soutenir le créateur" avec countdown 5s
+- ✅ Correction "100% gratuit" → "gratuit à jouer (achats optionnels)"
+- ✅ Menu explicatif sans scroll (responsive)
+- ✅ Salle trophées optimisée (blur supprimé, animations simplifiées)
+
+---
+
+## 🎯 PROCHAINES ÉTAPES
+
+1. **Demain** : générer assets + config Capacitor + install plugins
+2. **Cette semaine** : finir test fermé (14 jours)
+3. **Semaine prochaine** : bloc natif final (Billing + AdMob + Share)
+4. **Avant rebuild** : audit final + freeze traduction
+5. **Rebuild unique** : upload Play Console + création produits + test achat
+6. **Production** : soumission + lancement le 01/10/2026
+
+---
+
+**Développé avec ❤️ par un créateur indépendant**
