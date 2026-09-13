@@ -78,7 +78,10 @@ const IAP = {
       return false;
     }
     try {
-      const r = await fetch(IAP_SERVER_URL + '/api/iap_grant', {
+      const base = (typeof socket !== 'undefined' && socket.io && socket.io.uri)
+        ? String(socket.io.uri).replace(/\/+$/, '')
+        : IAP_SERVER_URL;
+      const r = await fetch(base + '/api/iap_grant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pseudo, sku, token })
