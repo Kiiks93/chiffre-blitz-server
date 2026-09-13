@@ -2383,6 +2383,113 @@ async function endMatch(id1, id2, matchData, isRanked) {
 DÉMARRAGE
 ============================================================ */
 const PORT = process.env.PORT || 3000;
+/* ============================================================
+IAP REVENUECAT — octroi pass / vies / jokers après achat
+Anti double-crédit via table iap_receipts (token UNIQUE)
+============================================================ */
+app.use(express.json({ limit: '1mb' }));
+
+const IAP_PACKS = {
+  blitz_pass_premium: { type: 'pass' },
+  pack_vies_1:        { type: 'lives',  lives: 10 },
+  pack_mixte_3:       { type: 'mixed',  lives: 5, jTime: 1, jShield: 1 },
+  pack_blitz_5:       { type: 'mixed',  lives: 10, jTime: 3, jShield: 2 }
+};
+
+app.post('/api/iap_grant', async (req, res) => {
+  try {
+    const { pseudo, sku, token } = req.body || {};
+    if (!pseudo || !sku || !token) return res.json({ ok: false, reason: 'params' });
+    const pack = IAP_PACKS[sku];
+    if (!pack) return res.json({ ok: false, reason: 'unknown_sku' });
+
+    // 1. Dédup : vérifier que ce token n'a jamais été traité
+    const { data: existing } = await supabase
+      .from('iap_receipts').select('id').eq('token', token).maybeSingle();
+    if (existing) return res.json({ ok: true, already: true });
+
+    // 2. Trouver le joueur (en ligne OU en BDD)
+    let targetId = null;
+    for (const sId in activePlayers) {
+      if (activePlayers[sId].username &&
+          activePlayers[sId].username.toLowerCase() === String(pseudo).toLowerCase()) {
+        targetId = sId; break;
+      }
+    }
+
+    let player = targetId ? activePlayers[targetId] : null;
+    let row = null;
+
+    if (!player) {
+      const { data, error } = await supabase.from('players')
+        .select('*').ilike('username', String(pseudo)).limit(1);
+      if (error || !data || !data.length) return res.json({ ok: false, reason: 'not_found' });
+      row = data[0];
+    }
+
+    // 3. Octroi selon le SKU
+    const seasonId = getCurrentSeason().id;
+    const apply = (p, isOnline) => {
+      if (pack.type === 'pass') {
+        p.claimedPassTiers = p.claimedPassTiers || {};
+        p.claimedPassTiers[seasonId] = p.claimedPassTiers[seasonId] || {};
+        p.claimedPassTiers[seasonId].premium = true;
+        if (isOnline) p.blitzPassPremium = true;
+        else if (row) row.blitz_pass_premium = true;
+      } else if (pack.type === 'lives') {
+        const cur = isOnline ? (p.lives === undefined ? TOWER_MAX_LIVES : p.lives) : (row.tower_lives !== undefined ? row.tower_lives : TOWER_MAX_LIVES);
+        const newLives = Math.min(TOWER_MAX_LIVES, cur + pack.lives);
+        if (isOnline) { p.lives = newLives; if (newLives >= TOWER_MAX_LIVES) p.lives_ts = Date.now(); }
+        else if (row) { row.tower_lives = newLives; if (newLives >= TOWER_MAX_LIVES) row.tower_lives_ts = Date.now(); }
+      } else if (pack.type === 'mixed') {
+        const cur = isOnline ? (p.lives === undefined ? TOWER_MAX_LIVES : p.lives) : (row.tower_lives !== undefined ? row.tower_lives : TOWER_MAX_LIVES);
+        const newLives = Math.min(TOWER_MAX_LIVES, cur + pack.lives);
+        if (isOnline) {
+          p.lives = newLives; if (newLives >= TOWER_MAX_LIVES) p.lives_ts = Date.now();
+          p.jokers = normalizeJokers(p.jokers);
+          p.jokers.time   += pack.jTime;
+          p.jokers.shield += pack.jShield;
+        } else if (row) {
+          row.tower_lives = newLives; if (newLives >= TOWER_MAX_LIVES) row.tower_lives_ts = Date.now();
+          let j = row.tower_jokers || { time: 0, shield: 0 };
+          if (typeof j === 'string') try { j = JSON.parse(j); } catch(e) { j = { time: 0, shield: 0 }; }
+          j = normalizeJokers(j);
+          j.time   += pack.jTime;
+          j.shield += pack.jShield;
+          row.tower_jokers = j;
+        }
+      }
+    };
+
+    if (player) apply(player, true);
+    else if (row) apply(row, false);
+
+    // 4. Sauvegarder
+    if (targetId) {
+      await savePlayerToSupabase(targetId);
+      io.to(targetId).emit('player_registered', player);
+      io.to(targetId).emit('pass_reward_received', { message: 'Achat confirmé ! Merci ⚡' });
+    } else if (row) {
+      await supabase.from('players').update({
+        blitz_pass_premium: row.blitz_pass_premium,
+        claimed_pass_tiers: row.claimed_pass_tiers,
+        tower_lives: row.tower_lives, tower_lives_ts: row.tower_lives_ts, tower_jokers: row.tower_jokers
+      }).eq('id', row.id);
+    }
+
+    // 5. Enregistrer le token (dédup finale) + log
+    await supabase.from('iap_receipts').insert([{ username: pseudo, sku, token }]);
+    await logPlayerAction(
+      player || { username: pseudo, socketId: null },
+      'iap_grant', `SKU: ${sku} (token: ${token.substring(0, 16)}...)`, null, null, null
+    );
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[iap_grant] erreur:', e);
+    res.json({ ok: false, reason: 'server_error' });
+  }
+});
 server.listen(PORT, () => {
   console.log('Serveur Chiffre Blitz demarre sur le port ' + PORT);
 });
