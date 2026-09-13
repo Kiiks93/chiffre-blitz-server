@@ -1,9 +1,25 @@
 /* ============================================================
 PASSE.JS — BOUTIQUE & PASSE DE SAISON
 ============================================================ */
-// 🔒 VERROU DU PASSE DE SAISON (Play Billing)
-// Passe à true quand la monétisation 3€ est prête → le pass se débloque partout.
-const SEASON_PASS_ENABLED = false;
+// 🔒 VERROU DU PASSE DE SAISON — 100% AUTOMATIQUE
+// Se déverrouille seul dès que la date de début de saison (admin panel) est atteinte.
+function seasonPassLiveLocal() {
+  try {
+    const now = new Date();
+    const list = getSeasonsClient();
+    for (const s of list) {
+      const [d1, m1, y1] = s.start.split("/").map(Number);
+      const [d2, m2, y2] = s.end.split("/").map(Number);
+      if (now >= new Date(y1, m1 - 1, d1) && now <= new Date(y2, m2 - 1, d2, 23, 59)) return true;
+    }
+    return false;
+  } catch (e) { return false; }
+}
+function isSeasonPassEnabled() {
+  // Priorité au calcul SERVEUR (dates admin panel), fallback local si pas connecté
+  if (typeof myProfile !== "undefined" && myProfile && myProfile.seasonPassLive !== undefined) return !!myProfile.seasonPassLive;
+  return seasonPassLiveLocal();
+}
 
 let _passLockInterval = null;
 
@@ -13,7 +29,7 @@ function applyPassLockToMenu() {
   const banner = titleEl.closest("button") || titleEl.closest("[onclick]") || titleEl.parentElement.parentElement;
   if (!banner) return;
 
-  if (!SEASON_PASS_ENABLED) {
+  if (!isSeasonPassEnabled()) {
     if (!banner.querySelector(".pass-lock-overlay")) {
       banner.classList.add("pass-locked");
       banner.style.minHeight = "60px";
@@ -425,7 +441,7 @@ function renderBlitzPass() {
   const fr = currentLang === "fr";
   const container = document.getElementById("blitz-pass-container");
   
-  if (!SEASON_PASS_ENABLED) { renderPassLockedScreen(container, fr); return; }
+  if (!isSeasonPassEnabled()) { renderPassLockedScreen(container, fr); return; }
   
   const season = getActiveSeason();
   const seasonData = (myProfile.claimedPassTiers || {})[season.id] || {};
@@ -441,7 +457,7 @@ function renderBlitzPass() {
       <div style="font-size:10px; color:#00ff88; margin-bottom:6px;">${fr ? "🔓 Paliers débloqués : " : "🔓 Unlocked tiers: "} <b>${unlockedTier}/30</b></div>
       <div style="font-size:9px; color:#aaa; margin-bottom:6px; line-height:1.4;">ℹ️ ${fr ? "1 palier par jour de connexion. Pas besoin de jouer tous les jours consécutifs : ce sont 30 jours de connexion, pas 30 jours calendaires." : "1 tier per login day. You don't need to play every consecutive day: it's 30 login days, not 30 calendar days."}</div>
       ${!isPremium 
-        ? `<button class="btn-main btn-gold" onclick="buyBlitzPassPremium()" style="padding:6px 10px; font-size:11px; margin:0 auto; width:auto;">${fr ? "Acheter le Passe Premium (1000 🪙)" : "Buy Premium Pass (1000 🪙)"}</button>` 
+  ? `<button class="btn-main btn-gold" onclick="IAP.buyPassPremium()" style="padding:6px 10px; font-size:11px; margin:0 auto; width:auto;">${fr ? "💳 Acheter le Passe Premium (3€)" : "💳 Buy Premium Pass (€3)"}</button>` ` 
         : `<div style="color:#00ff88; font-weight:bold; font-size:10px;">${fr ? "Statut : VIP / Premium" : "Status: VIP / Premium"}</div>`
       }
     </div>`;
@@ -701,7 +717,11 @@ function updatePassSeasonLabels() {
 }
 
 if (typeof socket !== "undefined") {
-  socket.on("player_registered", () => setTimeout(updatePassSeasonLabels, 60));
+    socket.on("player_registered", () => setTimeout(() => {
+    updatePassSeasonLabels();
+    applyPassLockToMenu();
+    if (document.getElementById("modal-blitz-pass").style.display === "flex") renderBlitzPass();
+  }, 60));
   socket.on("season_updated", () => setTimeout(updatePassSeasonLabels, 60));
 }
 
