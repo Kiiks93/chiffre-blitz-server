@@ -246,7 +246,7 @@ const i18n = {
     support_skip: "Passer et jouer ⚡",
     support_watch: "📺 Regarder la pub (soutenir) ❤️",
 
-    /* ----- Pouvoirs ----- */
+       /* ----- Pouvoirs ----- */
     powers: {
       spotlight: { name: "💡 Projecteur", desc: "Révèle la bonne tuile pendant 2s. Zéro hésitation." },
       freeze: { name: "⏳ Blocage du Temps", desc: "Gèle le chrono 3s. Respire, tu as le temps." },
@@ -256,16 +256,17 @@ const i18n = {
       micro: { name: "🐜 Micro-Tuiles", desc: "Rétrécit les tuiles adverses pendant 2s." },
       eclipse: { name: "🌑 Éclipse", desc: "Plonge la grille adverse dans le flou (1,5s)." },
       chaos: { name: "🌪️ Chaos Absolu", desc: "GIGA : séisme + micro + éclipse en chaîne (5s)." }
-    }
-      // === IAP REVENUECAT (achats réels) ===
-  iap_unavailable: "Achats indisponibles sur le navigateur",
-  iap_error: "Achat annulé ou en erreur",
-  iap_success: "Achat confirmé ! Merci ⚡",
-  iap_already: "Achat déjà traité",
-  btn_buy_pass: "💳 Acheter le Passe Premium (3€)",
-  btn_buy_pack_vies: "💳 Pack 10 vies (1€)",
-  btn_buy_pack_mixte: "💳 Pack Mixte 5 vies + 2 jokers (3€)",
-  btn_buy_pack_blitz: "💳 Pack Blitz 10 vies + 5 jokers (5€)",
+    },
+
+    // === IAP REVENUECAT (achats réels) ===
+    iap_unavailable: "Achats indisponibles sur le navigateur",
+    iap_error: "Achat annulé ou en erreur",
+    iap_success: "Achat confirmé ! Merci ⚡",
+    iap_already: "Achat déjà traité",
+    btn_buy_pass: "💳 Acheter le Passe Premium (3€)",
+    btn_buy_pack_vies: "💳 Pack 10 vies (1€)",
+    btn_buy_pack_mixte: "💳 Pack Mixte 5 vies + 2 jokers (3€)",
+    btn_buy_pack_blitz: "💳 Pack Blitz 10 vies + 5 jokers (5€)"
   },
 
   /* ============================================================
@@ -511,7 +512,7 @@ const i18n = {
     support_skip: "Skip and play ⚡",
     support_watch: "📺 Watch the ad (support) ❤️",
 
-    /* ----- Powers ----- */
+        /* ----- Powers ----- */
     powers: {
       spotlight: { name: "💡 Spotlight", desc: "Reveals the correct tile for 2s. Zero hesitation." },
       freeze: { name: "⏳ Time Freeze", desc: "Freezes the timer for 3s. Breathe, you've got time." },
@@ -521,17 +522,18 @@ const i18n = {
       micro: { name: "🐜 Micro-Tiles", desc: "Shrinks the opponent's tiles for 2s." },
       eclipse: { name: "🌑 Eclipse", desc: "Blurs the opponent's grid (1.5s)." },
       chaos: { name: "🌪️ Absolute Chaos", desc: "GIGA: quake + micro + eclipse chained (5s)." }
-    }
+    },
+
+    // === IAP REVENUECAT (real purchases) ===
+    iap_unavailable: "Purchases unavailable in browser",
+    iap_error: "Purchase cancelled or failed",
+    iap_success: "Purchase confirmed! Thank you ⚡",
+    iap_already: "Purchase already processed",
+    btn_buy_pass: "💳 Buy Premium Pass (€3)",
+    btn_buy_pack_vies: "💳 10 lives pack (€1)",
+    btn_buy_pack_mixte: "💳 Mixed pack 5 lives + 2 jokers (€3)",
+    btn_buy_pack_blitz: "💳 Blitz pack 10 lives + 5 jokers (€5)"
   }
-  // === IAP REVENUECAT (real purchases) ===
-  iap_unavailable: "Purchases unavailable in browser",
-  iap_error: "Purchase cancelled or failed",
-  iap_success: "Purchase confirmed! Thank you ⚡",
-  iap_already: "Purchase already processed",
-  btn_buy_pass: "💳 Buy Premium Pass (€3)",
-  btn_buy_pack_vies: "💳 10 lives pack (€1)",
-  btn_buy_pack_mixte: "💳 Mixed pack 5 lives + 2 jokers (€3)",
-  btn_buy_pack_blitz: "💳 Blitz pack 10 lives + 5 jokers (€5)",
 };
 
 /* ============================================================
