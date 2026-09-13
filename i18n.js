@@ -257,6 +257,15 @@ const i18n = {
       eclipse: { name: "🌑 Éclipse", desc: "Plonge la grille adverse dans le flou (1,5s)." },
       chaos: { name: "🌪️ Chaos Absolu", desc: "GIGA : séisme + micro + éclipse en chaîne (5s)." }
     }
+      // === IAP REVENUECAT (achats réels) ===
+  iap_unavailable: "Achats indisponibles sur le navigateur",
+  iap_error: "Achat annulé ou en erreur",
+  iap_success: "Achat confirmé ! Merci ⚡",
+  iap_already: "Achat déjà traité",
+  btn_buy_pass: "💳 Acheter le Passe Premium (3€)",
+  btn_buy_pack_vies: "💳 Pack 10 vies (1€)",
+  btn_buy_pack_mixte: "💳 Pack Mixte 5 vies + 2 jokers (3€)",
+  btn_buy_pack_blitz: "💳 Pack Blitz 10 vies + 5 jokers (5€)",
   },
 
   /* ============================================================
@@ -514,6 +523,15 @@ const i18n = {
       chaos: { name: "🌪️ Absolute Chaos", desc: "GIGA: quake + micro + eclipse chained (5s)." }
     }
   }
+  // === IAP REVENUECAT (real purchases) ===
+  iap_unavailable: "Purchases unavailable in browser",
+  iap_error: "Purchase cancelled or failed",
+  iap_success: "Purchase confirmed! Thank you ⚡",
+  iap_already: "Purchase already processed",
+  btn_buy_pass: "💳 Buy Premium Pass (€3)",
+  btn_buy_pack_vies: "💳 10 lives pack (€1)",
+  btn_buy_pack_mixte: "💳 Mixed pack 5 lives + 2 jokers (€3)",
+  btn_buy_pack_blitz: "💳 Blitz pack 10 lives + 5 jokers (€5)",
 };
 
 /* ============================================================
