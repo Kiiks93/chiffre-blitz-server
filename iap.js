@@ -72,15 +72,31 @@ const IAP = {
   },
 
   async grant(sku, token) {
-    const pseudo = (typeof myProfile !== 'undefined' && myProfile) ? myProfile.username : null;
+    const pseudo = (typeof myProfile !== 'undefined' && myProfile && myProfile.username) 
+      ? myProfile.username 
+      : null;
+    
+    // DEBUG : ce qui est envoyé
+    console.log('🔍 IAP grant:', { pseudo, sku, token });
+    
     if (!pseudo) {
-      this.notify('iap_error', 'Connecte-toi avant d\'acheter', 'Log in before purchasing');
+      this.notify('iap_error', 
+        'Connecte-toi d\'abord avant d\'acheter', 
+        'Log in first before purchasing');
       return false;
     }
+    if (!sku || !token) {
+      this.notify('iap_error', 
+        'Erreur de transaction Google', 
+        'Google transaction error');
+      return false;
+    }
+    
     try {
       const base = (typeof socket !== 'undefined' && socket.io && socket.io.uri)
         ? String(socket.io.uri).replace(/\/+$/, '')
         : IAP_SERVER_URL;
+      
       const r = await fetch(base + '/api/iap_grant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
