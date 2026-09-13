@@ -51,7 +51,7 @@ const IAP = {
       }
     }
     try {
-      const { products } = await rc.getProducts({ productIdentifiers: [sku] });
+      const { products } = await rc.getProducts({ productIdentifiers: [sku], type: 'inapp' });
       if (!products || !products.length) {
         if (typeof showNotificationToast === 'function') showNotificationToast('⚠️ IAP : produit introuvable côté Google (' + sku + ')', 'announcement');
         return false;
