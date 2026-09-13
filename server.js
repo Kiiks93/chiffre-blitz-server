@@ -2380,13 +2380,11 @@ async function endMatch(id1, id2, matchData, isRanked) {
 }
 
 /* ============================================================
-DÉMARRAGE
+DÉMARRAGE + IAP REVENUECAT (octroi pass / vies / jokers)
 ============================================================ */
 const PORT = process.env.PORT || 3000;
-/* ============================================================
-IAP REVENUECAT — octroi pass / vies / jokers après achat réel
-============================================================ */
-app.use(express.json({ limit: '1mb' }));
+
+const LIFE_RESERVE_MAX = 30; // réserve max anti-gaspillage pour achats réels
 
 const IAP_PACKS = {
   blitz_pass_premium: { type: 'pass' },
@@ -2394,16 +2392,16 @@ const IAP_PACKS = {
   pack_mixte_3:       { type: 'mixed',  lives: 5, jTime: 1, jShield: 1 },
   pack_blitz_5:       { type: 'mixed',  lives: 10, jTime: 3, jShield: 2 }
 };
-const LIFE_RESERVE_MAX = 30;
 
 app.post('/api/iap_grant', async (req, res) => {
   try {
     const { pseudo, sku, token } = req.body || {};
     if (!pseudo || !sku || !token) return res.json({ ok: false, reason: 'params' });
+
     const pack = IAP_PACKS[sku];
     if (!pack) return res.json({ ok: false, reason: 'unknown_sku' });
 
-    // Anti double-crédit
+    // Anti double-crédit via table iap_receipts (token UNIQUE)
     const { data: existing } = await supabase
       .from('iap_receipts').select('id').eq('token', token).maybeSingle();
     if (existing) return res.json({ ok: true, already: true });
@@ -2426,6 +2424,7 @@ app.post('/api/iap_grant', async (req, res) => {
     }
 
     const seasonId = getCurrentSeason().id;
+
     const apply = (p, isOnline) => {
       if (pack.type === 'pass') {
         p.claimedPassTiers = p.claimedPassTiers || {};
@@ -2440,6 +2439,7 @@ app.post('/api/iap_grant', async (req, res) => {
         const newLives = Math.min(LIFE_RESERVE_MAX, cur + (pack.lives || 0));
         if (isOnline) { p.lives = newLives; if (newLives >= TOWER_MAX_LIVES) p.lives_ts = Date.now(); }
         else if (row) { row.tower_lives = newLives; if (newLives >= TOWER_MAX_LIVES) row.tower_lives_ts = Date.now(); }
+
         if (pack.type === 'mixed') {
           if (isOnline) {
             p.jokers = normalizeJokers(p.jokers);
@@ -2483,6 +2483,7 @@ app.post('/api/iap_grant', async (req, res) => {
     res.json({ ok: false, reason: 'server_error' });
   }
 });
+
 server.listen(PORT, () => {
   console.log('Serveur Chiffre Blitz demarre sur le port ' + PORT);
 });
