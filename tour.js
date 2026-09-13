@@ -1078,8 +1078,10 @@ const d = document.createElement("div");
 d.className = "tw-shop"; d.id = "tw-shop";
 let items = "";
 SHOP_ITEMS.forEach(it => {
-const btn = it.iap ? `<button class="buy iap" disabled>${it.eur} 🔒</button>` : `<button class="buy" onclick="towerShopBuy('${it.id}')">${it.price} 🪙</button>`;
-items += `<div class="tw-shop-item"><span class="ic">${it.icon}</span><span class="nm">${it.name}${it.iap?`<br><small style="color:#8892a8;font-weight:600;">${fr?"Bientôt (Google Play)":"Soon (Google Play)"}</small>`:""}</span>${btn}</div>`;
+  const btn = it.iap 
+    ? `<button class="buy iap" onclick="IAP.buyPack('${it.id}')">${it.eur} 💳</button>` 
+    : `<button class="buy" onclick="towerShopBuy('${it.id}')">${it.price} 🪙</button>`;
+  items += `<div class="tw-shop-item"><span class="ic">${it.icon}</span><span class="nm">${it.name}</span>${btn}</div>`;
 });
 d.innerHTML = `<div class="tw-shop-card"><h3>🛒 BOUTIQUE AVENTURE</h3>${items}<button class="btn-secondary" style="width:100%;" onclick="closeTowerShop()">❌ ${fr?"Fermer":"Close"}</button></div>`;
 document.body.appendChild(d);
