@@ -3,7 +3,7 @@ ADS.JS — Pubs : AdMob réel si APK Capacitor, simulé sinon
 ============================================================ */
 const ADMOB_IDS = {
   interstitial: "ca-app-pub-XXXXXXXXXXXXXXXX/1111111111", // ⬅️ À remplacer (pub lancement)
-  rewarded: "ca-app-pub-XXXXXXXXXXXXXXXX/2222222222" // ⬅️ À remplacer (pub récompensée x2)
+  rewarded: "ca-app-pub-1819170082992254/1893666559" //⬅️ À remplacer (pub récompensée x2)
 };
 const ADS = {
   native() {
