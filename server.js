@@ -2384,7 +2384,7 @@ DÉMARRAGE + IAP REVENUECAT (octroi pass / vies / jokers)
 ============================================================ */
 const PORT = process.env.PORT || 3000;
 
-const LIFE_RESERVE_MAX = 30; // réserve max anti-gaspillage pour achats réels
+app.use(express.json({ limit: '1mb' }));
 
 const IAP_PACKS = {
   blitz_pass_premium: { type: 'pass' },
@@ -2392,16 +2392,22 @@ const IAP_PACKS = {
   pack_mixte_3:       { type: 'mixed',  lives: 5, jTime: 1, jShield: 1 },
   pack_blitz_5:       { type: 'mixed',  lives: 10, jTime: 3, jShield: 2 }
 };
+const LIFE_RESERVE_MAX = 30;
 
 app.post('/api/iap_grant', async (req, res) => {
   try {
-    const { pseudo, sku, token } = req.body || {};
-    if (!pseudo || !sku || !token) return res.json({ ok: false, reason: 'params' });
+    // 📡 LOG DEBUG : visible dans Render → Logs (ta "console mobile")
+    console.log('[iap_grant] reçu → body:', JSON.stringify(req.body || null), '| query:', JSON.stringify(req.query || null));
 
+    // Lit les params depuis le body JSON OU la query string (fallback robuste)
+    const src = (req.body && (req.body.pseudo || req.body.sku || req.body.token)) ? req.body : (req.query || {});
+    const pseudo = src.pseudo, sku = src.sku, token = src.token;
+
+    if (!pseudo || !sku || !token) return res.json({ ok: false, reason: 'params' });
     const pack = IAP_PACKS[sku];
     if (!pack) return res.json({ ok: false, reason: 'unknown_sku' });
 
-    // Anti double-crédit via table iap_receipts (token UNIQUE)
+    // Anti double-crédit
     const { data: existing } = await supabase
       .from('iap_receipts').select('id').eq('token', token).maybeSingle();
     if (existing) return res.json({ ok: true, already: true });
@@ -2424,7 +2430,6 @@ app.post('/api/iap_grant', async (req, res) => {
     }
 
     const seasonId = getCurrentSeason().id;
-
     const apply = (p, isOnline) => {
       if (pack.type === 'pass') {
         p.claimedPassTiers = p.claimedPassTiers || {};
@@ -2439,7 +2444,6 @@ app.post('/api/iap_grant', async (req, res) => {
         const newLives = Math.min(LIFE_RESERVE_MAX, cur + (pack.lives || 0));
         if (isOnline) { p.lives = newLives; if (newLives >= TOWER_MAX_LIVES) p.lives_ts = Date.now(); }
         else if (row) { row.tower_lives = newLives; if (newLives >= TOWER_MAX_LIVES) row.tower_lives_ts = Date.now(); }
-
         if (pack.type === 'mixed') {
           if (isOnline) {
             p.jokers = normalizeJokers(p.jokers);
@@ -2477,6 +2481,7 @@ app.post('/api/iap_grant', async (req, res) => {
     await logPlayerAction(player || { username: String(pseudo), socketId: null },
       'iap_grant', `SKU: ${sku} (token: ${String(token).substring(0, 16)}...)`, null, null, null);
 
+    console.log('[iap_grant] ✅ OK pour', pseudo, sku);
     res.json({ ok: true });
   } catch (e) {
     console.error('[iap_grant] erreur:', e);
