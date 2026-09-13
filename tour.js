@@ -1078,15 +1078,40 @@ const d = document.createElement("div");
 d.className = "tw-shop"; d.id = "tw-shop";
 let items = "";
 SHOP_ITEMS.forEach(it => {
-  const btn = it.iap 
-    ? `<button class="buy iap" onclick="IAP.buyPack('${it.id}')">${it.eur} 💳</button>` 
-    : `<button class="buy" onclick="towerShopBuy('${it.id}')">${it.price} 🪙</button>`;
+  const btn = it.iap ? `<button class="buy iap" onclick="tryBuyPack('${it.id}')">${it.eur} 💳</button>` : `<button class="buy" onclick="towerShopBuy('${it.id}')">${it.price} 🪙</button>`;
   items += `<div class="tw-shop-item"><span class="ic">${it.icon}</span><span class="nm">${it.name}</span>${btn}</div>`;
 });
 d.innerHTML = `<div class="tw-shop-card"><h3>🛒 BOUTIQUE AVENTURE</h3>${items}<button class="btn-secondary" style="width:100%;" onclick="closeTowerShop()">❌ ${fr?"Fermer":"Close"}</button></div>`;
 document.body.appendChild(d);
 }
 function closeTowerShop() { const s = document.getElementById("tw-shop"); if (s) s.remove(); }
+function tryBuyPack(id) {
+  const givesLives = ['pack_vies_1', 'pack_mixte_3', 'pack_blitz_5'].includes(id);
+  if (givesLives) {
+    const LIFE_RESERVE_MAX = 30;
+    if (twLives >= LIFE_RESERVE_MAX) {
+      const fr = currentLang === "fr";
+      if (typeof showNotificationToast === 'function') {
+        showNotificationToast(
+          fr ? '❤️ Réserve de vies pleine (30 max). Utilise-les avant d\'en acheter !'
+             : '❤️ Life reserve full (max 30). Use some before buying!',
+          'announcement'
+        );
+      }
+      return;
+    }
+    if (twLives >= 10) {
+      const fr = currentLang === "fr";
+      const ok = confirm(fr
+        ? 'Tu as déjà ' + twLives + ' vies (max 10). Les vies achetées seront stockées en RÉSERVE au-dessus de 10. Continuer l\'achat ?'
+        : 'You already have ' + twLives + ' lives (max 10). Purchased lives will be BANKED above 10. Continue purchase?');
+      if (!ok) return;
+    }
+  }
+  if (typeof IAP !== 'undefined' && typeof IAP.buyPack === 'function') {
+    IAP.buyPack(id);
+  }
+}
 function towerShopBuy(id) {
 const it = SHOP_ITEMS.find(x => x.id === id);
 if (!it || it.iap) return;
