@@ -93,15 +93,8 @@ const IAP = {
     }
     
     try {
-      const base = (typeof socket !== 'undefined' && socket.io && socket.io.uri)
-        ? String(socket.io.uri).replace(/\/+$/, '')
-        : IAP_SERVER_URL;
-      
-      const r = await fetch(base + '/api/iap_grant', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pseudo, sku, token })
-      });
+          const base = (typeof socket !== 'undefined' && socket.io && socket.io.uri)
+
       const j = await r.json();
       if (j.ok && !j.already) {
         this.notify('iap_success', 'Achat confirmé ! Merci ⚡', 'Purchase confirmed! Thank you ⚡', 'gift');
