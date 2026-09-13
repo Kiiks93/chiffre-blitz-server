@@ -1,17 +1,13 @@
 /* ============================================================
-   IAP REVENUECAT — Achats in-app (Pass Premium + packs vies/jokers)
-   - Actif UNIQUEMENT dans l'APK (window.Capacitor présent)
-   - Web navigateur : boutons désactivés proprement
-   - Octroi réel côté serveur via /api/iap_grant (anti double-crédit)
+   IAP REVENUECAT — Achats in-app Chiffre Blitz
+   Actif UNIQUEMENT dans l'APK. Web : boutons désactivés.
 ============================================================ */
 const RC_API_KEY = 'goog_XFlNDHkJppdgUrBvKgMQilmCiaR';
+const IAP_SERVER_URL = 'https://chiffre-blitz.fr';
 
 const IAP = {
   ready: false,
-
-  rc() {
-    return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Purchases) || null;
-  },
+  rc() { return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Purchases) || null; },
 
   async init() {
     const rc = this.rc();
@@ -20,55 +16,62 @@ const IAP = {
       await rc.configure({ apiKey: RC_API_KEY });
       this.ready = true;
       console.log('[iap] RevenueCat prêt');
-    } catch (e) {
-      console.warn('[iap] configure échoué :', e);
-      this.ready = false;
-    }
+    } catch (e) { console.warn('[iap] configure échoué :', e); }
   },
 
   async buy(sku) {
     const rc = this.rc();
-    if (!this.ready || !rc) { if (window.toast) toast(t('iap_unavailable')); return false; }
+    if (!this.ready || !rc) {
+      if (window.toast) toast(window.t ? t('iap_unavailable') : 'Achats indisponibles sur le web');
+      return false;
+    }
     try {
       const { products } = await rc.getProducts({ productIdentifiers: [sku] });
-      if (!products || !products.length) { if (window.toast) toast(t('iap_unavailable')); return false; }
-
+      if (!products || !products.length) { if (window.toast) toast('Produit introuvable'); return false; }
       const res = await rc.purchaseStoreProduct({ product: products[0] });
       const tx = res && res.transaction;
       const token = tx && (tx.purchaseToken || tx.transactionIdentifier);
       if (!token) throw new Error('token manquant');
-
       return await this.grant(sku, token);
     } catch (e) {
       const msg = (e && (e.message || '')) + ' ' + (e && e.code ? e.code : '');
-      if (/cancel/i.test(msg)) return false;               // achat annulé par le joueur
-      console.warn('[iap] échec achat :', e);
-      if (window.toast) toast(t('iap_error'));
+      if (/cancel/i.test(msg)) return false;
+      console.warn('[iap] échec :', e);
+      if (window.toast) toast(window.t ? t('iap_error') : 'Achat annulé');
       return false;
     }
   },
 
   async grant(sku, token) {
+    const pseudo = window.MY_PSEUDO || (window.activePlayer && window.activePlayer.username);
+    if (!pseudo) { if (window.toast) toast('Non connecté'); return false; }
     try {
-      const r = await fetch(API_BASE + '/api/iap_grant', {
+      const r = await fetch(IAP_SERVER_URL + '/api/iap_grant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pseudo: window.MY_PSEUDO, sku, token })
+        body: JSON.stringify({ pseudo, sku, token })
       });
       const j = await r.json();
-      if (j.ok)      { if (window.toast) toast(t('iap_success')); if (window.refreshPlayer) await refreshPlayer(); return true; }
-      if (j.already) { if (window.toast) toast(t('iap_already')); return true; }
-      if (window.toast) toast(t('iap_error'));
+      if (j.ok && !j.already) {
+        if (window.toast) toast(window.t ? t('iap_success') : 'Achat confirmé !');
+        if (typeof window.refreshPlayer === 'function') await window.refreshPlayer();
+        return true;
+      }
+      if (j.already) {
+        if (window.toast) toast(window.t ? t('iap_already') : 'Déjà traité');
+        return true;
+      }
+      if (window.toast) toast(window.t ? t('iap_error') : 'Erreur serveur');
       return false;
     } catch (e) {
-      console.warn('[iap] grant serveur échoué :', e);
-      if (window.toast) toast(t('iap_error'));
+      console.warn('[iap] grant échoué :', e);
+      if (window.toast) toast('Erreur réseau');
       return false;
     }
   },
 
   buyPassPremium() { return this.buy('blitz_pass_premium'); },
-  buyPack(id)      { return this.buy(id); }   // 'pack_vies_1' | 'pack_mixte_3' | 'pack_blitz_5'
+  buyPack(id)      { return this.buy(id); }
 };
 
 window.IAP = IAP;
