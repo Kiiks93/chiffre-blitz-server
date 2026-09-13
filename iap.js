@@ -37,7 +37,7 @@ const IAP = {
     }
   },
 
-  async buy(sku) {
+    async buy(sku) {
     const rc = this.rc();
     if (!rc) {
       this.notify('iap_unavailable', 'Achats disponibles uniquement sur l\'application Android', 'Purchases available only on the Android app');
@@ -46,14 +46,14 @@ const IAP = {
     if (!this.ready) {
       await this.init();
       if (!this.ready) {
-        this.notify('iap_error', 'Boutique indisponible pour le moment', 'Store unavailable right now');
+        if (typeof showNotificationToast === 'function') showNotificationToast('⚠️ IAP : configure RevenueCat échoué', 'announcement');
         return false;
       }
     }
     try {
       const { products } = await rc.getProducts({ productIdentifiers: [sku] });
       if (!products || !products.length) {
-        this.notify('iap_error', 'Produit introuvable', 'Product not found');
+        if (typeof showNotificationToast === 'function') showNotificationToast('⚠️ IAP : produit introuvable côté Google (' + sku + ')', 'announcement');
         return false;
       }
       const res = await rc.purchaseStoreProduct({ product: products[0] });
@@ -62,10 +62,11 @@ const IAP = {
       if (!token) throw new Error('token manquant');
       return await this.grant(sku, token);
     } catch (e) {
-      const msg = ((e && e.message) || '') + ' ' + ((e && e.code) || '');
-      if (/cancel/i.test(msg)) return false; // annulé par le joueur
+      const code = (e && (e.code || e.errorCode)) || '';
+      const message = (e && e.message) || String(e);
+      if (/cancel/i.test(code + message)) return false; // annulé par le joueur
       console.warn('[iap] échec achat :', e);
-      this.notify('iap_error', 'Achat annulé ou en erreur', 'Purchase cancelled or failed');
+      if (typeof showNotificationToast === 'function') showNotificationToast('⚠️ IAP : ' + code + ' — ' + message, 'announcement');
       return false;
     }
   },
@@ -92,11 +93,11 @@ const IAP = {
         return true;
       }
       console.warn('[iap] grant refusé :', j);
-      this.notify('iap_error', 'Achat impossible (serveur)', 'Purchase failed (server)');
+      if (typeof showNotificationToast === 'function') showNotificationToast('⚠️ IAP grant : ' + JSON.stringify(j), 'announcement');
       return false;
     } catch (e) {
       console.warn('[iap] grant échoué :', e);
-      this.notify('iap_error', 'Erreur réseau pendant l\'achat', 'Network error during purchase');
+      if (typeof showNotificationToast === 'function') showNotificationToast('⚠️ IAP grant réseau : ' + ((e && e.message) || e), 'announcement');
       return false;
     }
   },
