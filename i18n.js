@@ -25,7 +25,7 @@ const i18n = {
     rule5_title: "🎯 Mode Tournoi",
     tourney_teaser_desc: "En cours de réflexion et de développement... Les tournois récompenseront en couronnes 👑 !",
     rule_tower_title: "🏰 Mode Aventure",
-    rule_tower_desc: "Grimpe la Tour de 1800 étages à travers 9 mondes thématiques, affronte les Gardiens tous les 50 étages, et débloque des récompenses exclusives !",
+    rule_tower_desc: "Progression à travers 9 mondes thématiques : complète 200 niveaux par monde, affronte les Gardiens tous les 50 niveaux, et débloque des récompenses exclusives !",
 
     /* ----- Menu principal ----- */
     menu_solo: "🏋️ ENTRAÎNEMENT SOLO", menu_1v1: "⚔️ DUEL 1v1 ONLINE", menu_tow: "🪢 Mode Corde Raide (Tug-of-War)",
@@ -280,7 +280,7 @@ const i18n = {
     rule5_tile: "Coming soon! Earn unique crowns 👑.",
     tourney_teaser_desc: "In design and development... Tournaments will reward crowns 👑!",
     rule_tower_title: "🏰 Adventure Mode",
-    rule_tower_desc: "Climb the 1800-floor Tower across 9 themed worlds, face Guardians every 50 floors, and unlock exclusive rewards!",
+    rule_tower_desc: "Progress through 9 themed worlds: complete 200 levels per world, face Guardians every 50 levels, and unlock exclusive rewards!",
     
 
     /* ----- Main Menu ----- */
