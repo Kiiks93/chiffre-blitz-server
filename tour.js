@@ -18,8 +18,8 @@ const TOTAL_FLOORS = 9 * FPC;
 const WORLD_QUOTA = 240;
 const MAX_LIVES = 10;
 const TOWER_CURVE = [
-[12,16,30,26], [14,19,28,23], [16,21,26,21], [18,23,24,19],
-[20,25,22,18], [22,27,20,17], [24,29,19,16], [26,31,18,15], [28,34,17,13]
+[12,16,32,28], [13,18,30,26], [14,20,28,24], [16,22,27,23],
+[18,24,26,22], [20,26,25,21], [22,28,24,20], [24,30,23,19], [26,32,22,18]
 ];
 const IS_MOBILE = /Android|iPhone|iPad|iPod|Tablet|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 2 && Math.min(screen.width, screen.height) < 900);
 const TOWER_COLORS = {1:{acc:"#00d2ff"},2:{acc:"#74ebf5"},3:{acc:"#f8b500"},4:{acc:"#ff8a00"},5:{acc:"#8a9bb0"},6:{acc:"#ff4b2b"},7:{acc:"#ff6fa5"},8:{acc:"#2ecc71"},9:{acc:"#ff416c"}};
@@ -85,7 +85,7 @@ const t01 = (inChap - 1) / (FPC - 1);
 let gridSize = Math.round(c[0] + (c[1]-c[0]) * t01);
 let time = Math.round(c[2] + (c[3]-c[2]) * t01);
 if (inChap <= 10) { gridSize = Math.max(10, gridSize - 2); time += 2; }
-if (inChap === FPC || inChap % 50 === 0) return { floor, gridSize, time, type: "boss" };
+if (inChap === FPC || inChap % 50 === 0) return { floor, gridSize, time: time + 10, type: "boss" };
 const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail"];
 const t = seq[(inChap - 1) % 9];
 if (t === "sprint") return { floor, gridSize, time: Math.max(6, Math.round(time * 0.4)), type: "sprint" };
