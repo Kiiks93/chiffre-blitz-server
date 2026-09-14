@@ -413,6 +413,18 @@ const TOWER_CURVE = [
 [24,30,23,19],
 [26,32,22,18]
 ];
+const TOWER_DIFF_PATTERN = [0,1,0,2,1,3,0,1,2,3];
+const TOWER_DIFF_MOD = [
+{ g:-2, t:+3 },
+{ g: 0, t: 0 },
+{ g:+2, t:-2 },
+{ g:+4, t:-4 }
+];
+function towerDiffTier(floor){
+const inChap = ((floor - 1) % TOWER_FPC) + 1;
+if (inChap % 50 === 0) return 1;
+return TOWER_DIFF_PATTERN[(inChap - 1) % 10];
+}
 const TOWER_TOTAL = 9 * TOWER_FPC;
 const TOWER_WORLD_QUOTA = 240;
 function towerStarsInWorld(player, w){
@@ -437,21 +449,25 @@ const TW_PAIR_SYMBOLS = ["\u{1F352}","\u{2B50}","\u{1F48E}","\u{1F525}","\u{26A1
 function towerShuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
 function getFloorDefServer(floor) {
-  const chap = Math.ceil(floor / TOWER_FPC), inChap = ((floor - 1) % TOWER_FPC) + 1;
-  const c = TOWER_CURVE[Math.min(chap,9)-1];
-  const t01 = (inChap - 1) / (TOWER_FPC - 1);
-  let gridSize = Math.round(c[0] + (c[1]-c[0]) * t01);
-  let time = Math.round(c[2] + (c[3]-c[2]) * t01);
-  if (inChap <= 10) { gridSize = Math.max(10, gridSize - 2); time += 2; }
-  if (inChap === TOWER_FPC || inChap % 50 === 0) return { floor, gridSize, time: time + 10, type: "boss" };
-  const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail"];
-  const t = seq[(inChap - 1) % 9];
-  if (t === "sprint") return { floor, gridSize, time: Math.max(8, Math.round(gridSize * 0.42)), type: "sprint" };
-  if (t === "nofail") return { floor, gridSize, time: Math.max(16, Math.round(time * 0.9)), type: "nofail" };
-  if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; const pr = g / 2; return { floor, gridSize: g, time: Math.max(25, Math.round(pr * 4)), type: "pairs" }; }
-  if (t === "parity") return { floor, gridSize: Math.min(48, gridSize + 10), time: time + 4, type: "parity" };
-  if (t === "memory") { const g = Math.min(gridSize, 20); return { floor, gridSize: g, time: Math.max(25, Math.round(g * 1.5)), type: "memory" }; }
-  return { floor, gridSize, time, type: t };
+const chap = Math.ceil(floor / TOWER_FPC), inChap = ((floor - 1) % TOWER_FPC) + 1;
+const c = TOWER_CURVE[Math.min(chap,9)-1];
+const t01 = (inChap - 1) / (TOWER_FPC - 1);
+let gridSize = Math.round(c[0] + (c[1]-c[0]) * t01);
+let time = Math.round(c[2] + (c[3]-c[2]) * t01);
+if (inChap <= 10) { gridSize = Math.max(10, gridSize - 2); time += 2; }
+if (inChap === TOWER_FPC || inChap % 50 === 0) return { floor, gridSize, time, type: "boss", diff: 1 };
+const tier = towerDiffTier(floor);
+const mod = TOWER_DIFF_MOD[tier];
+gridSize = Math.max(8, gridSize + mod.g);
+time = Math.max(10, time + mod.t);
+const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail"];
+const t = seq[(inChap - 1) % 9];
+if (t === "sprint") return { floor, gridSize, time: Math.max(8, Math.round(gridSize * 0.42)), type: "sprint", diff: tier };
+if (t === "nofail") return { floor, gridSize, time: Math.max(16, Math.round(time * 0.9)), type: "nofail", diff: tier };
+if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; const pr = g / 2; return { floor, gridSize: g, time: Math.max(25, Math.round(pr * 4)), type: "pairs", diff: tier }; }
+if (t === "parity") return { floor, gridSize: Math.min(48, gridSize + 10), time: time + 4, type: "parity", diff: tier };
+if (t === "memory") { const g = Math.min(gridSize, 20); return { floor, gridSize: g, time: Math.max(25, Math.round(g * 1.5)), type: "memory", diff: tier }; }
+return { floor, gridSize, time, type: t, diff: tier };
 }
 function pickColorTarget(s){
   const keys=[...new Set([...s.remaining].map(i=>s.nums[i].key))];
@@ -521,7 +537,7 @@ async function towerWin(player, s){
     if (used <= t3) stars = 3;
     else if (used <= t2) stars = 2;
     else stars = 1;
-  } else if (s.type === "sprint") {
+   } else if (s.type === "sprint") {
   if (used <= s.def.time * 0.6) stars = 3;
   else if (used <= s.def.time * 0.85) stars = 2;
   else stars = 1;
@@ -544,7 +560,7 @@ async function towerWin(player, s){
   const chap = Math.ceil(s.floor / TOWER_FPC);
   if (!s.replay) {
     player.towerFloor = s.floor;
-    coins = 10 + s.floor * 2 + stars * 5;
+    coins = 10 + s.floor * 2 + stars * 5 + (s.type === "boss" ? 0 : towerDiffTier(s.floor) * 3);
     if (s.floor % 20 === 0 && s.floor % TOWER_FPC !== 0) coins += 20 + chap * 5;
     if (s.floor % 50 === 0 && s.floor % TOWER_FPC !== 0) coins += 50 + chap * 10;
     if (s.floor % TOWER_FPC === 0) {
@@ -2379,9 +2395,6 @@ async function endMatch(id1, id2, matchData, isRanked) {
   io.to(id2).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents, rewards: matchRewards, isRanked, isCatch: !!matchData.isCatch });
 }
 
-/* ============================================================
-DÉMARRAGE + IAP REVENUECAT (octroi pass / vies / jokers)
-============================================================ */
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json({ limit: '1mb' }));
@@ -2397,87 +2410,71 @@ const LIFE_RESERVE_MAX = 30;
 
 app.post('/api/iap_grant', async (req, res) => {
   try {
-    // 📡 LOG DEBUG : visible dans Render → Logs (ta "console mobile")
     console.log('[iap_grant] reçu → body:', JSON.stringify(req.body || null), '| query:', JSON.stringify(req.query || null));
-
-    // Lit les params depuis le body JSON OU la query string (fallback robuste)
     const src = (req.body && (req.body.pseudo || req.body.sku || req.body.token)) ? req.body : (req.query || {});
     const pseudo = src.pseudo, sku = src.sku, token = src.token;
-
     if (!pseudo || !sku || !token) return res.json({ ok: false, reason: 'params' });
     const pack = IAP_PACKS[sku];
     if (!pack) return res.json({ ok: false, reason: 'unknown_sku' });
-
-    // Anti double-crédit
-    const { data: existing } = await supabase
-      .from('iap_receipts').select('id').eq('token', token).maybeSingle();
+    const { data: existing } = await supabase.from('iap_receipts').select('id').eq('token', token).maybeSingle();
     if (existing) return res.json({ ok: true, already: true });
-
-    // Joueur en ligne ?
     let targetId = null;
     for (const sId in activePlayers) {
-      if (activePlayers[sId].username &&
-          activePlayers[sId].username.toLowerCase() === String(pseudo).toLowerCase()) {
-        targetId = sId; break;
-      }
+      if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === String(pseudo).toLowerCase()) { targetId = sId; break; }
     }
     let player = targetId ? activePlayers[targetId] : null;
     let row = null;
     if (!player) {
-      const { data, error } = await supabase.from('players')
-        .select('*').ilike('username', String(pseudo)).limit(1);
+      const { data, error } = await supabase.from('players').select('*').ilike('username', String(pseudo)).limit(1);
       if (error || !data || !data.length) return res.json({ ok: false, reason: 'not_found' });
       row = data[0];
     }
-
     const seasonId = getCurrentSeason().id;
     const apply = (p, isOnline) => {
-  if (pack.type === 'pass') {
-    p.claimedPassTiers = p.claimedPassTiers || {};
-    p.claimedPassTiers[seasonId] = p.claimedPassTiers[seasonId] || {};
-    p.claimedPassTiers[seasonId].premium = true;
-    if (isOnline) p.blitzPassPremium = true;
-    else if (row) row.blitz_pass_premium = true;
-  } else if (pack.type === 'jokers') {
-    if (isOnline) {
-      p.jokers = normalizeJokers(p.jokers);
-      p.jokers.time += pack.jTime;
-      p.jokers.shield += pack.jShield;
-    } else if (row) {
-      let j = row.tower_jokers || { time: 0, shield: 0 };
-      if (typeof j === 'string') { try { j = JSON.parse(j); } catch (e) { j = { time: 0, shield: 0 }; } }
-      j = normalizeJokers(j);
-      j.time += pack.jTime;
-      j.shield += pack.jShield;
-      row.tower_jokers = j;
-    }
-  } else {
-    const cur = isOnline
-      ? (p.lives === undefined ? TOWER_MAX_LIVES : p.lives)
-      : (row.tower_lives !== undefined && row.tower_lives !== null ? row.tower_lives : TOWER_MAX_LIVES);
-    const newLives = Math.min(LIFE_RESERVE_MAX, cur + (pack.lives || 0));
-    if (isOnline) { p.lives = newLives; if (newLives >= TOWER_MAX_LIVES) p.lives_ts = Date.now(); }
-    else if (row) { row.tower_lives = newLives; if (newLives >= TOWER_MAX_LIVES) row.tower_lives_ts = Date.now(); }
-    if (pack.type === 'mixed') {
-      if (isOnline) {
-        p.jokers = normalizeJokers(p.jokers);
-        p.jokers.time += pack.jTime;
-        p.jokers.shield += pack.jShield;
-      } else if (row) {
-        let j = row.tower_jokers || { time: 0, shield: 0 };
-        if (typeof j === 'string') { try { j = JSON.parse(j); } catch (e) { j = { time: 0, shield: 0 }; } }
-        j = normalizeJokers(j);
-        j.time += pack.jTime;
-        j.shield += pack.jShield;
-        row.tower_jokers = j;
+      if (pack.type === 'pass') {
+        p.claimedPassTiers = p.claimedPassTiers || {};
+        p.claimedPassTiers[seasonId] = p.claimedPassTiers[seasonId] || {};
+        p.claimedPassTiers[seasonId].premium = true;
+        if (isOnline) p.blitzPassPremium = true;
+        else if (row) row.blitz_pass_premium = true;
+      } else if (pack.type === 'jokers') {
+        if (isOnline) {
+          p.jokers = normalizeJokers(p.jokers);
+          p.jokers.time += pack.jTime;
+          p.jokers.shield += pack.jShield;
+        } else if (row) {
+          let j = row.tower_jokers || { time: 0, shield: 0 };
+          if (typeof j === 'string') { try { j = JSON.parse(j); } catch (e) { j = { time: 0, shield: 0 }; } }
+          j = normalizeJokers(j);
+          j.time += pack.jTime;
+          j.shield += pack.jShield;
+          row.tower_jokers = j;
+        }
+      } else {
+        const cur = isOnline
+          ? (p.lives === undefined ? TOWER_MAX_LIVES : p.lives)
+          : (row.tower_lives !== undefined && row.tower_lives !== null ? row.tower_lives : TOWER_MAX_LIVES);
+        const newLives = Math.min(LIFE_RESERVE_MAX, cur + (pack.lives || 0));
+        if (isOnline) { p.lives = newLives; if (newLives >= TOWER_MAX_LIVES) p.lives_ts = Date.now(); }
+        else if (row) { row.tower_lives = newLives; if (newLives >= TOWER_MAX_LIVES) row.tower_lives_ts = Date.now(); }
+        if (pack.type === 'mixed') {
+          if (isOnline) {
+            p.jokers = normalizeJokers(p.jokers);
+            p.jokers.time += pack.jTime;
+            p.jokers.shield += pack.jShield;
+          } else if (row) {
+            let j = row.tower_jokers || { time: 0, shield: 0 };
+            if (typeof j === 'string') { try { j = JSON.parse(j); } catch (e) { j = { time: 0, shield: 0 }; } }
+            j = normalizeJokers(j);
+            j.time += pack.jTime;
+            j.shield += pack.jShield;
+            row.tower_jokers = j;
+          }
+        }
       }
-    }
-  }
-};
-
+    };
     if (player) apply(player, true);
     else if (row) apply(row, false);
-
     if (targetId) {
       await savePlayerToSupabase(targetId);
       io.to(targetId).emit('player_registered', player);
@@ -2490,11 +2487,9 @@ app.post('/api/iap_grant', async (req, res) => {
         tower_jokers: row.tower_jokers
       }).eq('id', row.id);
     }
-
     await supabase.from('iap_receipts').insert([{ username: String(pseudo), sku, token }]);
     await logPlayerAction(player || { username: String(pseudo), socketId: null },
       'iap_grant', `SKU: ${sku} (token: ${String(token).substring(0, 16)}...)`, null, null, null);
-
     console.log('[iap_grant] ✅ OK pour', pseudo, sku);
     res.json({ ok: true });
   } catch (e) {
