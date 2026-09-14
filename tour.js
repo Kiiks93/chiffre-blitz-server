@@ -992,7 +992,7 @@ const inChap = ((twViewFloor - 1) % FPC) + 1;
 const isBoss = (inChap === FPC || inChap % 50 === 0);
 document.getElementById("tw-panel").classList.toggle("boss", isBoss);
 document.getElementById("tw-panel-num").innerText = twViewFloor;
-document.getElementById("tw-panel-typ").innerText = isBoss ? `⚔️ ${chap.boss} GARDIEN` : diffLabel(def.diff || 1) + " · " + TowerUtils.typeLabel(def.type);
+document.getElementById("tw-panel-typ").innerText = isBoss ? `⚔️ ${chap.boss} GARDIEN` : diffLabel(Number.isFinite(def.diff) ? def.diff : 1) + " · " + TowerUtils.typeLabel(def.type);
 const stGot = towerProgress.stars[String(twViewFloor)] || 0;
 document.getElementById("tw-panel-stars").innerHTML = [1,2,3].map(i => `<span class="${i <= stGot ? "on" : ""}">⭐</span>`).join("");
 const lock = document.getElementById("tw-lockmsg");
@@ -1178,7 +1178,7 @@ const b = document.createElement("div");
 b.id = "tw-brief"; b.className = "tw-brief";
 b.innerHTML = `<div class="tw-brief-card">
 <div style="font-size:13px;font-weight:900;color:#f8b500;margin-bottom:6px;">🏰 ${fr?"ÉTAGE":"FLOOR"} ${def.floor} — ${TowerUtils.typeLabel(def.type)}</div>
-<div style="font-size:10px;font-weight:700;color:#aaa;margin-bottom:6px;">${diffLabel(def.diff || 1)}${(def.diff||0) >= 2 ? " · bonus 🪙" : ""}</div>
+<div style="font-size:10px;font-weight:700;color:#aaa;margin-bottom:6px;">${diffLabel(Number.isFinite(def.diff) ? def.diff : 1)}${(def.diff||0) >= 2 ? " · bonus 🪙" : ""}</div>
 <div style="font-size:9px;color:#aaa;margin-bottom:8px;">${starRule}</div>
 ${replayLine}
 <button class="btn-main btn-blue" style="width:100%;margin-bottom:6px;" onclick="closeBriefing();startTowerFloor(TowerUtils.getFloorDef(${def.floor}))">${def.replay?"🔄 REJOUER":"⚡ LANCER !"}</button>
