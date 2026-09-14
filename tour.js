@@ -537,7 +537,7 @@ radial-gradient(ellipse at 60% 35%,#2a221c 0 55px,transparent 56px);}
 .tw-sh-santa .nose{position:absolute;bottom:112px;left:50%;transform:translateX(-50%);width:13px;height:12px;background:linear-gradient(180deg,#f5a88e,#e08a6e);border-radius:50%;z-index:3;}
 .tw-sh-santa .mouth{position:absolute;bottom:98px;left:50%;transform:translateX(-50%);width:16px;height:9px;background:#7a2020;border-radius:4px 4px 9px 9px;z-index:3;}
 .tw-sh-santa .hat{position:absolute;bottom:138px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:27px solid transparent;border-right:27px solid transparent;border-bottom:42px solid #d42a4a;z-index:4;}
-.tw-sh-santa .hat::before{content:"";position:absolute;top:auto;bottom:-7px;left:50%;transform:translateX(-50%);width:64px;height:12px;background:#fff;border-radius:6px;box-shadow:0 2px 4px #00000022;}
+.tw-sh-santa .hat::before{content:"";position:absolute;top:36px;bottom:auto;left:50%;transform:translateX(-50%);width:64px;height:12px;background:#fff;border-radius:6px;box-shadow:0 2px 4px #00000022;}
 .tw-sh-santa .pom{position:absolute;bottom:172px;left:50%;transform:translateX(-50%);width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:0 0 14px #ffffffaa;z-index:4;}
 .tw-sh-santa .arm{position:absolute;bottom:48px;width:38px;height:18px;background:#d42a4a;border-radius:9px;box-shadow:inset -2px -2px 4px #00000033;}
 .tw-sh-santa .arm::before{content:"";position:absolute;right:-2px;top:2px;width:14px;height:14px;background:#fff;border-radius:50%;}
