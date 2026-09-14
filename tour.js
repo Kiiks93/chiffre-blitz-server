@@ -523,15 +523,22 @@ radial-gradient(ellipse at 60% 35%,#2a221c 0 55px,transparent 56px);}
 .tw-sh-santa .body::before{content:"";position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:96px;height:18px;background:#fff;border-radius:0 0 16px 16px;}
 .tw-sh-santa .belt{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);width:96px;height:14px;background:#2a1208;}
 .tw-sh-santa .buckle{position:absolute;bottom:31px;left:50%;transform:translateX(-50%);width:18px;height:12px;background:#ffd75e;border-radius:3px;box-shadow:0 0 10px #ffd75e,inset 0 -2px 2px #8a6a1a;}
-.tw-sh-santa .beard{position:absolute;bottom:62px;left:50%;transform:translateX(-50%);width:70px;height:54px;background:#fff;border-radius:0 0 35px 35px;box-shadow:0 0 16px #ffffff88,inset -4px -6px 8px #00000018;}
-.tw-sh-santa .head{position:absolute;bottom:100px;left:50%;transform:translateX(-50%);width:48px;height:48px;background:#ffd9b8;border-radius:50%;box-shadow:inset -3px -3px 6px #00000018;}
-.tw-sh-santa .eye{position:absolute;bottom:120px;width:4px;height:4px;border-radius:50%;background:#2a1208;}
-.tw-sh-santa .eye.l{left:38px;}.tw-sh-santa .eye.r{left:68px;}
-.tw-sh-santa .nose{position:absolute;bottom:110px;left:50%;transform:translateX(-50%);width:10px;height:10px;background:#f0a088;border-radius:50%;}
-.tw-sh-santa .mouth{position:absolute;bottom:90px;left:50%;transform:translateX(-50%);width:18px;height:8px;background:#d42a4a;border-radius:0 0 10px 10px;}
-.tw-sh-santa .hat{position:absolute;bottom:136px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:26px solid transparent;border-right:26px solid transparent;border-bottom:42px solid #d42a4a;}
-.tw-sh-santa .hat::before{content:"";position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:60px;height:10px;background:#fff;border-radius:5px;}
-.tw-sh-santa .pom{position:absolute;bottom:172px;left:50%;transform:translateX(-50%);width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:0 0 14px #ffffffaa;}
+.tw-sh-santa .head{position:absolute;bottom:96px;left:50%;transform:translateX(-50%);width:54px;height:50px;background:linear-gradient(180deg,#ffe3c4,#ffd9b8 60%,#f5c9a0);border-radius:48% 48% 44% 44% / 56% 56% 46% 46%;box-shadow:inset -3px -3px 6px #00000018;z-index:1;}
+.tw-sh-santa .head::before,.tw-sh-santa .head::after{content:"";position:absolute;bottom:22px;width:10px;height:7px;border-radius:50%;background:#ff9d9d55;}
+.tw-sh-santa .head::before{left:7px;}
+.tw-sh-santa .head::after{right:7px;}
+.tw-sh-santa .beard{position:absolute;bottom:62px;left:50%;transform:translateX(-50%);width:84px;height:56px;background:linear-gradient(180deg,#ffffff,#f2f2f2 70%,#e4e4e4);border-radius:18px 18px 44px 44px;box-shadow:0 0 16px #ffffff88,inset -4px -6px 8px #00000018;z-index:2;}
+.tw-sh-santa .beard::before,.tw-sh-santa .beard::after{content:"";position:absolute;top:-5px;width:24px;height:12px;background:#fff;border-radius:50%;box-shadow:0 2px 3px #00000014;}
+.tw-sh-santa .beard::before{left:8px;transform:rotate(10deg);}
+.tw-sh-santa .beard::after{right:8px;transform:rotate(-10deg);}
+.tw-sh-santa .eye{position:absolute;bottom:122px;width:5px;height:6px;border-radius:50%;background:#2a1208;z-index:3;}
+.tw-sh-santa .eye::before{content:"";position:absolute;top:-4px;left:-2px;width:9px;height:4px;background:#fff;border-radius:3px;}
+.tw-sh-santa .eye.l{left:40px;}.tw-sh-santa .eye.r{left:65px;}
+.tw-sh-santa .nose{position:absolute;bottom:112px;left:50%;transform:translateX(-50%);width:13px;height:12px;background:linear-gradient(180deg,#f5a88e,#e08a6e);border-radius:50%;z-index:3;}
+.tw-sh-santa .mouth{position:absolute;bottom:98px;left:50%;transform:translateX(-50%);width:16px;height:9px;background:#7a2020;border-radius:4px 4px 9px 9px;z-index:3;}
+.tw-sh-santa .hat{position:absolute;bottom:138px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:27px solid transparent;border-right:27px solid transparent;border-bottom:42px solid #d42a4a;z-index:4;}
+.tw-sh-santa .hat::before{content:"";position:absolute;top:auto;bottom:-7px;left:50%;transform:translateX(-50%);width:64px;height:12px;background:#fff;border-radius:6px;box-shadow:0 2px 4px #00000022;}
+.tw-sh-santa .pom{position:absolute;bottom:172px;left:50%;transform:translateX(-50%);width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:0 0 14px #ffffffaa;z-index:4;}
 .tw-sh-santa .arm{position:absolute;bottom:48px;width:38px;height:18px;background:#d42a4a;border-radius:9px;box-shadow:inset -2px -2px 4px #00000033;}
 .tw-sh-santa .arm::before{content:"";position:absolute;right:-2px;top:2px;width:14px;height:14px;background:#fff;border-radius:50%;}
 .tw-sh-santa .arm.l{left:-16px;transform:rotate(20deg);}
