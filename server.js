@@ -470,23 +470,25 @@ function getFloorDefServer(floor) {
 const chap = Math.ceil(floor / TOWER_FPC), inChap = ((floor - 1) % TOWER_FPC) + 1;
 const c = TOWER_CURVE[Math.min(chap,9)-1];
 const t01 = (inChap - 1) / (TOWER_FPC - 1);
-let grid = Math.round(c[0] + (c[1]-c[0]) * t01);
-if (inChap <= 10) grid = Math.max(10, grid - 2);
-const wf = Math.max(0.95, 1.15 - 0.025 * (Math.min(chap,9) - 1));
-if (inChap === TOWER_FPC || inChap % 50 === 0)
-return { floor, gridSize: grid, time: Math.max(20, Math.round(grid * 1.1 * wf)), type: "boss", diff: 1 };
+let gridSize = Math.round(c[0] + (c[1]-c[0]) * t01);
+if (inChap <= 10) gridSize = Math.max(10, gridSize - 2);
+if (inChap === TOWER_FPC || inChap % 50 === 0) return { floor, gridSize, time: Math.max(20, Math.round(gridSize * 0.85)), type: "boss", diff: 1 };
 const tier = TOWER_DIFF_PATTERN[(inChap - 1) % 10];
-grid = Math.max(8, grid + TOWER_TIER_GRID[tier]);
+gridSize = Math.max(8, gridSize + TOWER_TIER_GRID[tier]);
+const PACE = [1.45, 1.30, 1.20, 1.15][tier];
 const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail"];
-const type = seq[(inChap - 1) % 9];
-const pace = TOWER_MODE_PACE[type] * TOWER_TIER_MULT[tier] * wf;
-let g = grid, time;
-if (type === "sprint") { g = Math.min(grid, TOWER_CAPS.sprint); time = Math.max(8, Math.round(g * pace)); }
-else if (type === "pairs") { g = Math.min(grid + 8, TOWER_CAPS.pairs); if (g % 2) g++; time = Math.max(20, Math.round(3 + (g/2) * pace)); }
-else if (type === "memory") { g = Math.min(grid, TOWER_CAPS.memory); time = Math.max(15, Math.round(2.5 + g*0.12 + g * pace)); }
-else if (type === "parity") { g = Math.min(grid + 10, TOWER_CAPS.parity); time = Math.max(12, Math.round(Math.ceil(g/2) * pace)); }
-else { time = Math.max(12, Math.round(grid * pace)); }
-return { floor, gridSize: g, time, type, diff: tier };
+const t = seq[(inChap - 1) % 9];
+let g = gridSize, time;
+if (t === "sprint") { g = Math.min(gridSize, 30); time = Math.max(10, Math.round(g * 0.60)); }
+else if (t === "pairs") { g = Math.min(gridSize + 8, 26); if (g % 2) g++; time = Math.max(20, Math.round((g/2) * PACE * 1.6)); }
+else if (t === "memory") { g = Math.min(gridSize, 16); time = Math.max(18, Math.round(2.5 + g*0.12 + g * PACE * 0.9)); }
+else if (t === "parity") { g = Math.min(gridSize + 10, 40); time = Math.max(12, Math.round(Math.ceil(g/2) * PACE * 1.15)); }
+else if (t === "nofail") { time = Math.max(14, Math.round(gridSize * PACE * 1.2)); }
+else if (t === "reverse") { time = Math.max(12, Math.round(gridSize * PACE * 1.10)); }
+else if (t === "color") { time = Math.max(12, Math.round(gridSize * PACE * 0.85)); }
+else if (t === "forbidden") { time = Math.max(12, Math.round((gridSize - 1) * PACE * 1.05)); }
+else { time = Math.max(12, Math.round(gridSize * PACE)); }
+return { floor, gridSize: g, time, type: t, diff: tier };
 }
 function pickColorTarget(s){
   const keys=[...new Set([...s.remaining].map(i=>s.nums[i].key))];
