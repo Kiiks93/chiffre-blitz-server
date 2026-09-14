@@ -2389,6 +2389,7 @@ app.use(express.json({ limit: '1mb' }));
 const IAP_PACKS = {
   blitz_pass_premium: { type: 'pass' },
   pack_vies_1:        { type: 'lives',  lives: 10 },
+  pack_jokers_2:      { type: 'jokers', jTime: 2, jShield: 2 },
   pack_mixte_3:       { type: 'mixed',  lives: 5,  jTime: 2, jShield: 2 },
   pack_blitz_5:       { type: 'mixed',  lives: 10, jTime: 5, jShield: 5 }
 };
@@ -2437,6 +2438,20 @@ app.post('/api/iap_grant', async (req, res) => {
         p.claimedPassTiers[seasonId].premium = true;
         if (isOnline) p.blitzPassPremium = true;
         else if (row) row.blitz_pass_premium = true;
+        else if (pack.type === 'jokers') {
+        if (isOnline) {
+      p.jokers = normalizeJokers(p.jokers);
+      p.jokers.time += pack.jTime;
+      p.jokers.shield += pack.jShield;
+      } else if (row) {
+      let j = row.tower_jokers || { time: 0, shield: 0 };
+      if (typeof j === 'string') { try { j = JSON.parse(j); } catch (e) { j = { time: 0, shield: 0 }; } }
+      j = normalizeJokers(j);
+      j.time += pack.jTime;
+      j.shield += pack.jShield;
+      row.tower_jokers = j;
+    }
+  }
       } else {
         const cur = isOnline
           ? (p.lives === undefined ? TOWER_MAX_LIVES : p.lives)
