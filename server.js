@@ -403,15 +403,15 @@ const TOWER_CHAPTER_REWARDS = {
 };
 const TOWER_FPC = 200;
 const TOWER_CURVE = [
-  [12,16,30,26],
-  [14,19,28,23],
-  [16,21,26,21],
-  [18,23,24,19],
-  [20,25,22,18],
-  [22,27,20,17],
-  [24,29,19,16],
-  [26,31,18,15],
-  [28,34,17,13]
+[12,16,32,28],
+[13,18,30,26],
+[14,20,28,24],
+[16,22,27,23],
+[18,24,26,22],
+[20,26,25,21],
+[22,28,24,20],
+[24,30,23,19],
+[26,32,22,18]
 ];
 const TOWER_TOTAL = 9 * TOWER_FPC;
 const TOWER_WORLD_QUOTA = 240;
@@ -443,7 +443,7 @@ function getFloorDefServer(floor) {
   let gridSize = Math.round(c[0] + (c[1]-c[0]) * t01);
   let time = Math.round(c[2] + (c[3]-c[2]) * t01);
   if (inChap <= 10) { gridSize = Math.max(10, gridSize - 2); time += 2; }
-  if (inChap === TOWER_FPC || inChap % 50 === 0) return { floor, gridSize, time, type: "boss" };
+  if (inChap === TOWER_FPC || inChap % 50 === 0) return { floor, gridSize, time: time + 10, type: "boss" };
   const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail"];
   const t = seq[(inChap - 1) % 9];
   if (t === "sprint") return { floor, gridSize, time: Math.max(6, Math.round(time * 0.4)), type: "sprint" };
@@ -556,7 +556,7 @@ async function towerWin(player, s){
     }
     player.jokers = normalizeJokers(player.jokers);
     if (s.floor % 50 === 0 && s.floor % TOWER_FPC !== 0) player.jokers.shield += 1;
-    if (s.floor % TOWER_FPC === 0) { player.jokers.shield += 1; player.jokers.time += 1; }
+    if (s.floor % TOWER_FPC === 0) { player.jokers.shield += 2; player.jokers.time += 2; }
   } else {
     coins = 5 + stars * 2;
   }
@@ -587,7 +587,7 @@ setInterval(async () => {
     const elapsed = (Date.now()-s.start)/1000;
     if (elapsed > s.def.time){ const r = await towerFail(player, s, 'timeout'); delete towerSessions[sid]; io.to(sid).emit('tower_fail', r); continue; }
     if (s.type==="boss"){
-      s.ai += 0.8 + Math.ceil(s.floor / TOWER_FPC) * 0.15;
+      s.ai += 0.55 + Math.ceil(s.floor / TOWER_FPC) * 0.08;
       if (s.ai >= s.total){ const r = await towerFail(player, s, 'boss'); delete towerSessions[sid]; io.to(sid).emit('tower_fail', r); continue; }
     }
     io.to(sid).emit('tower_state', towerStatePayload(s));
