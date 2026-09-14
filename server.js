@@ -446,7 +446,7 @@ function getFloorDefServer(floor) {
   if (inChap === TOWER_FPC || inChap % 50 === 0) return { floor, gridSize, time: time + 10, type: "boss" };
   const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail"];
   const t = seq[(inChap - 1) % 9];
-  if (t === "sprint") return { floor, gridSize, time: Math.max(6, Math.round(time * 0.4)), type: "sprint" };
+  if (t === "sprint") return { floor, gridSize, time: Math.max(8, Math.round(gridSize * 0.42)), type: "sprint" };
   if (t === "nofail") return { floor, gridSize, time: Math.max(14, Math.round(time * 0.7)), type: "nofail" };
   if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; const pr = g / 2; return { floor, gridSize: g, time: Math.max(25, Math.round(pr * 5)), type: "pairs" }; }
   if (t === "parity") return { floor, gridSize: Math.min(60, gridSize + 12), time: time + 3, type: "parity" };
@@ -522,11 +522,11 @@ async function towerWin(player, s){
     else if (used <= t2) stars = 2;
     else stars = 1;
   } else if (s.type === "sprint") {
-    const n = s.total;
-    if (used <= n * 0.45) stars = 3;
-    else if (used <= n * 0.75) stars = 2;
-    else stars = 1;
-  } else if (s.type === "forbidden") {
+  if (used <= s.def.time * 0.6) stars = 3;
+  else if (used <= s.def.time * 0.85) stars = 2;
+  else stars = 1;
+  } 
+  else if (s.type === "forbidden") {
     if (used <= s.def.time * 0.6) stars = 3;
     else if (used <= s.def.time * 0.85) stars = 2;
     else stars = 1;
