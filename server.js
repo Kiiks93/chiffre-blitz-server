@@ -453,21 +453,25 @@ const chap = Math.ceil(floor / TOWER_FPC), inChap = ((floor - 1) % TOWER_FPC) + 
 const c = TOWER_CURVE[Math.min(chap,9)-1];
 const t01 = (inChap - 1) / (TOWER_FPC - 1);
 let gridSize = Math.round(c[0] + (c[1]-c[0]) * t01);
-let time = Math.round(c[2] + (c[3]-c[2]) * t01);
-if (inChap <= 10) { gridSize = Math.max(10, gridSize - 2); time += 2; }
-if (inChap === TOWER_FPC || inChap % 50 === 0) return { floor, gridSize, time, type: "boss", diff: 1 };
-const tier = towerDiffTier(floor);
-const mod = TOWER_DIFF_MOD[tier];
-gridSize = Math.max(8, gridSize + mod.g);
-time = Math.max(10, time + mod.t);
+if (inChap <= 10) gridSize = Math.max(10, gridSize - 2);
+const PATTERN = [0,1,0,2,1,3,0,1,2,3];
+const MODS = [{g:-2},{g:0},{g:+2},{g:+4}];
+let diff = 1;
+if (inChap !== TOWER_FPC && inChap % 50 !== 0) { diff = PATTERN[(inChap - 1) % 10]; gridSize = Math.max(8, gridSize + MODS[diff].g); }
+const wf = 1.15 - 0.025 * (Math.min(chap,9) - 1);
+if (inChap === TOWER_FPC || inChap % 50 === 0) return { floor, gridSize, time: Math.max(20, Math.round(gridSize * 0.85)), type: "boss", diff: 1 };
 const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail"];
 const t = seq[(inChap - 1) % 9];
-if (t === "sprint") return { floor, gridSize, time: Math.max(8, Math.round(gridSize * 0.42)), type: "sprint", diff: tier };
-if (t === "nofail") return { floor, gridSize, time: Math.max(16, Math.round(time * 0.9)), type: "nofail", diff: tier };
-if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; const pr = g / 2; return { floor, gridSize: g, time: Math.max(25, Math.round(pr * 4)), type: "pairs", diff: tier }; }
-if (t === "parity") return { floor, gridSize: Math.min(48, gridSize + 10), time: time + 4, type: "parity", diff: tier };
-if (t === "memory") { const g = Math.min(gridSize, 20); return { floor, gridSize: g, time: Math.max(25, Math.round(g * 1.5)), type: "memory", diff: tier }; }
-return { floor, gridSize, time, type: t, diff: tier };
+const T = (pace, clicks, min) => Math.max(min, Math.round(clicks * pace * wf));
+if (t === "sprint") return { floor, gridSize, time: T(0.38, gridSize, 8), type: t, diff };
+if (t === "nofail") return { floor, gridSize, time: T(0.75, gridSize, 12), type: t, diff };
+if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; return { floor, gridSize: g, time: Math.max(25, Math.round((g/2) * 2.2 * wf)), type: t, diff }; }
+if (t === "parity") { const g = Math.min(48, gridSize + 10); return { floor, gridSize: g, time: T(0.9, Math.ceil(g/2), 12), type: t, diff }; }
+if (t === "memory") { const g = Math.min(gridSize, 20); return { floor, gridSize: g, time: Math.max(20, Math.round(2.5 + g*0.12 + g*0.8*wf)), type: t, diff }; }
+if (t === "color") return { floor, gridSize, time: T(0.52, gridSize, 10), type: t, diff };
+if (t === "reverse") return { floor, gridSize, time: T(0.66, gridSize, 10), type: t, diff };
+if (t === "forbidden") return { floor, gridSize, time: T(0.60, gridSize - 1, 10), type: t, diff };
+return { floor, gridSize, time: T(0.62, gridSize, 10), type: t, diff };
 }
 function pickColorTarget(s){
   const keys=[...new Set([...s.remaining].map(i=>s.nums[i].key))];
