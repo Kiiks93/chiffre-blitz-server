@@ -93,7 +93,7 @@ const seasonLive = this.currentSeasonNum() >= season;
 if (!hasFlag && !seasonLive) return false;
 return this.worldUnlockedByStars(w);
 },
-function getFloorDefServer(floor) {
+getFloorDef(floor) {
 const chap = Math.ceil(floor / FPC), inChap = ((floor - 1) % FPC) + 1;
 const c = TOWER_CURVE[Math.min(chap,9)-1];
 const t01 = (inChap - 1) / (FPC - 1);
@@ -116,7 +116,7 @@ if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; return { floor, gridS
 if (t === "parity") { const g = Math.min(48, gridSize + 10); return { floor, gridSize: g, time: Math.max(12, Math.round(Math.ceil(g/2) * PACE[tier] * wf)), type: t, diff: tier }; }
 if (t === "memory") { const g = Math.min(gridSize, 20); return { floor, gridSize: g, time: Math.max(20, Math.round(2.5 + g*0.12 + g * PACE[tier] * 1.1 * wf)), type: t, diff: tier }; }
 return { floor, gridSize, time: T(1.0, 12), type: t, diff: tier };
-}
+},
 typeLabel(t) {
 const fr = currentLang === "fr";
 return ({classic:fr?"⚡ Croissant":" Ascending",reverse:fr?"🔽 Décroissant":"🔽 Descending",color:fr?"🎨 Couleurs":"🎨 Colors",pairs:fr?"🧩 Paires":"🧩 Pairs",parity:fr?"🔢 Pair/Impair":"🔢 Even/Odd",forbidden:fr?"🚫 Interdit":"🚫 Forbidden",sprint:fr?"⏱️ Sprint":"⏱️ Sprint",memory:fr?"🧠 Mémoire":"🧠 Memory",nofail:fr?"💎 Sans faute":"💎 No mistake",boss:fr?"⚔️ GARDIEN":"⚔️ GUARDIAN"})[t] || t;
@@ -1180,7 +1180,6 @@ b.innerHTML = `<div class="tw-brief-card">
 <div style="font-size:13px;font-weight:900;color:#f8b500;margin-bottom:6px;">🏰 ${fr?"ÉTAGE":"FLOOR"} ${def.floor} — ${TowerUtils.typeLabel(def.type)}</div>
 <div style="font-size:10px;font-weight:700;color:#aaa;margin-bottom:6px;">${diffLabel(def.diff || 1)}${(def.diff||0) >= 2 ? " · bonus 🪙" : ""}</div>
 <div style="font-size:9px;color:#aaa;margin-bottom:8px;">${starRule}</div>
-<div style="font-size:10px;font-weight:700;color:#aaa;margin-bottom:6px;">${diffLabel(def.diff || 1)}</div>
 ${replayLine}
 <button class="btn-main btn-blue" style="width:100%;margin-bottom:6px;" onclick="closeBriefing();startTowerFloor(TowerUtils.getFloorDef(${def.floor}))">${def.replay?"🔄 REJOUER":"⚡ LANCER !"}</button>
 <button class="btn-secondary" style="width:100%;" onclick="closeBriefing()">❌ ${fr?"Annuler":"Cancel"}</button>
