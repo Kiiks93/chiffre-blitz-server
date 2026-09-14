@@ -88,7 +88,7 @@ if (inChap <= 10) { gridSize = Math.max(10, gridSize - 2); time += 2; }
 if (inChap === FPC || inChap % 50 === 0) return { floor, gridSize, time: time + 10, type: "boss" };
 const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail"];
 const t = seq[(inChap - 1) % 9];
-if (t === "sprint") return { floor, gridSize, time: Math.max(6, Math.round(time * 0.4)), type: "sprint" };
+if (t === "sprint") return { floor, gridSize, time: Math.max(8, Math.round(gridSize * 0.42)), type: "sprint" };
 if (t === "nofail") return { floor, gridSize, time: Math.max(14, Math.round(time * 0.7)), type: "nofail" };
 if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; return { floor, gridSize: g, time: Math.max(25, Math.round(g/2 * 5)), type: "pairs" }; }
 if (t === "parity") return { floor, gridSize: Math.min(60, gridSize + 12), time: time + 3, type: "parity" };
