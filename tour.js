@@ -37,8 +37,8 @@ const TOWER_WORLDS = {
 const SHOP_ITEMS = [
 { id:"vies", icon:"❤️", name:"+3 Vies", price:150 },
 { id:"pack_vies_1", icon:"💖", name:"Pack Vies (10 vies)", price:0, iap:true, eur:"1,00 €" },
-{ id:"pack_mixte_3", icon:"🎁", name:"Pack Mixte (5 vies + 2 jokers)", price:0, iap:true, eur:"3,00 €" },
-{ id:"pack_blitz_5", icon:"💎", name:"Pack Blitz (10 vies + 5 jokers)", price:0, iap:true, eur:"5,00 €" }
+{ id:"pack_mixte_3", icon:"🎁", name:"Pack Mixte (5 vies + 2⏱️ + 2🛡️)", price:0, iap:true, eur:"3,00 €" },
+{ id:"pack_blitz_5", icon:"💎", name:"Pack Blitz (10 vies + 5⏱️ + 5🛡️)", price:0, iap:true, eur:"5,00 €" }
 ];
 /* ----- 2. ÉTAT GLOBAL ----- */
 let towerProgress = { floor: 0, stars: {} };
