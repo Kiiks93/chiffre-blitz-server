@@ -150,9 +150,11 @@ const IAP = {
       }
       if (twLives >= 10) {
         const fr = (typeof currentLang !== 'undefined' && currentLang === 'fr');
+              const packLives = (id === 'pack_mixte_3') ? 5 : 10;
+        const willGet = Math.max(0, Math.min(packLives, 30 - twLives));
         const ok = confirm(fr
-          ? 'Tu as déjà ' + twLives + ' vies (max 10). Les vies achetées seront stockées en RÉSERVE au-dessus de 10. Continuer l\'achat ?'
-          : 'You already have ' + twLives + ' lives (max 10). Purchased lives will be BANKED above 10. Continue purchase?');
+          ? '⚠️ Tu as ' + twLives + ' vies (réserve max 30). Tu ne recevras que ' + willGet + ' vies sur ' + packLives + '.\nAstuce : le 🃏 Pack Jokers ne contient aucune vie.\nContinuer cet achat ?'
+          : '⚠️ You have ' + twLives + ' lives (reserve max 30). You will only receive ' + willGet + ' of ' + packLives + ' lives.\nTip: the 🃏 Jokers Pack contains no lives.\nContinue purchase?');
         if (!ok) return Promise.resolve(false);
       }
     }
