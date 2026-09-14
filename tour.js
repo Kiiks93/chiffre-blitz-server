@@ -21,13 +21,11 @@ const TOWER_CURVE = [
 [12,16,32,28], [13,18,30,26], [14,20,28,24], [16,22,27,23],
 [18,24,26,22], [20,26,25,21], [22,28,24,20], [24,30,23,19], [26,32,22,18]
 ];
-const TOWER_DIFF_PATTERN = [0,1,0,2,1,3,0,1,2,3];
-const TOWER_DIFF_MOD = [
-{ g:-2, t:+3 },
-{ g: 0, t: 0 },
-{ g:+2, t:-2 },
-{ g:+4, t:-4 }
-];
+const TOWER_DIFF_PATTERN = [0,1,0,2,0,3,1,2,0,3];
+const TOWER_TIER_MULT = [1.30, 1.00, 0.88, 0.78];
+const TOWER_TIER_GRID = [-6, 0, 2, 4];
+const TOWER_MODE_PACE = { classic:1.25, reverse:1.30, forbidden:1.25, color:1.00, sprint:0.75, nofail:1.35, pairs:2.30, parity:1.10, memory:1.15 };
+const TOWER_CAPS = { sprint:30, pairs:26, memory:16, parity:40 };
 function towerDiffTier(floor){
 const inChap = ((floor - 1) % FPC) + 1;
 if (inChap % 50 === 0) return 1;
@@ -97,24 +95,23 @@ getFloorDef(floor) {
 const chap = Math.ceil(floor / FPC), inChap = ((floor - 1) % FPC) + 1;
 const c = TOWER_CURVE[Math.min(chap,9)-1];
 const t01 = (inChap - 1) / (FPC - 1);
-let gridSize = Math.round(c[0] + (c[1]-c[0]) * t01);
-if (inChap <= 10) gridSize = Math.max(10, gridSize - 2);
+let grid = Math.round(c[0] + (c[1]-c[0]) * t01);
+if (inChap <= 10) grid = Math.max(10, grid - 2);
 const wf = Math.max(0.95, 1.15 - 0.025 * (Math.min(chap,9) - 1));
-if (inChap === FPC || inChap % 50 === 0) return { floor, gridSize, time: Math.max(20, Math.round(gridSize * 0.85)), type: "boss", diff: 1 };
-const PATTERN = [0,1,0,2,0,3,1,2,0,3];
-const MODS = [-6,0,2,4];
-const PACE = [1.5,1.15,1.0,0.9];
-const tier = PATTERN[(inChap - 1) % 10];
-gridSize = Math.max(8, gridSize + MODS[tier]);
+if (inChap === FPC || inChap % 50 === 0)
+return { floor, gridSize: grid, time: Math.max(20, Math.round(grid * 1.1 * wf)), type: "boss", diff: 1 };
+const tier = TOWER_DIFF_PATTERN[(inChap - 1) % 10];
+grid = Math.max(8, grid + TOWER_TIER_GRID[tier]);
 const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail"];
-const t = seq[(inChap - 1) % 9];
-if (t === "sprint") return { floor, gridSize, time: Math.max(8, Math.round(gridSize * 0.42)), type: t, diff: tier };
-if (t === "nofail") return { floor, gridSize, time: Math.max(14, Math.round(gridSize * PACE[tier] * 1.2 * wf)), type: t, diff: tier };
-if (t === "color") return { floor, gridSize, time: Math.max(12, Math.round(gridSize * PACE[tier] * 0.85 * wf)), type: t, diff: tier };
-if (t === "pairs") { let g = Math.min(gridSize + 8, 26); if (g % 2) g++; return { floor, gridSize: g, time: Math.max(30, Math.round((g/2) * 3.5 * wf)), type: t, diff: tier }; }
-if (t === "parity") { const g = Math.min(gridSize + 10, 40); const targets = Math.ceil(g/2); return { floor, gridSize: g, time: Math.max(15, Math.round(targets * PACE[tier] * 1.4 * wf)), type: t, diff: tier }; }
-if (t === "memory") { const g = Math.min(gridSize, 14 + tier*2); return { floor, gridSize: g, time: Math.max(20, Math.round((2.5 + g*0.12 + g*1.2*PACE[tier]) * wf)), type: t, diff: tier }; }
-return { floor, gridSize, time: Math.max(12, Math.round(gridSize * PACE[tier] * wf)), type: t, diff: tier };
+const type = seq[(inChap - 1) % 9];
+const pace = TOWER_MODE_PACE[type] * TOWER_TIER_MULT[tier] * wf;
+let g = grid, time;
+if (type === "sprint") { g = Math.min(grid, TOWER_CAPS.sprint); time = Math.max(8, Math.round(g * pace)); }
+else if (type === "pairs") { g = Math.min(grid + 8, TOWER_CAPS.pairs); if (g % 2) g++; time = Math.max(20, Math.round(3 + (g/2) * pace)); }
+else if (type === "memory") { g = Math.min(grid, TOWER_CAPS.memory); time = Math.max(15, Math.round(2.5 + g*0.12 + g * pace)); }
+else if (type === "parity") { g = Math.min(grid + 10, TOWER_CAPS.parity); time = Math.max(12, Math.round(Math.ceil(g/2) * pace)); }
+else { time = Math.max(12, Math.round(grid * pace)); }
+return { floor, gridSize: g, time, type, diff: tier };
 },
 typeLabel(t) {
 const fr = currentLang === "fr";
