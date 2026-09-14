@@ -93,29 +93,30 @@ const seasonLive = this.currentSeasonNum() >= season;
 if (!hasFlag && !seasonLive) return false;
 return this.worldUnlockedByStars(w);
 },
-getFloorDef(floor) {
-const inChap = ((floor - 1) % FPC) + 1;
-const chap = Math.ceil(floor / FPC);
+function getFloorDefServer(floor) {
+const chap = Math.ceil(floor / FPC), inChap = ((floor - 1) % FPC) + 1;
 const c = TOWER_CURVE[Math.min(chap,9)-1];
 const t01 = (inChap - 1) / (FPC - 1);
 let gridSize = Math.round(c[0] + (c[1]-c[0]) * t01);
 if (inChap <= 10) gridSize = Math.max(10, gridSize - 2);
 const wf = Math.max(0.95, 1.15 - 0.025 * (Math.min(chap,9) - 1));
 if (inChap === FPC || inChap % 50 === 0) return { floor, gridSize, time: Math.max(20, Math.round(gridSize * 0.85)), type: "boss", diff: 1 };
-const tier = [0,1,0,2,1,3,0,1,2,3][(inChap - 1) % 10];
-gridSize = Math.max(8, gridSize + [-4,0,2,4][tier]);
-const PACE = [1.35,1.15,1.00,0.90][tier];
+const PATTERN = [0,1,0,2,0,3,1,2,0,3];
+const MODS = [-6,0,2,4];
+const PACE = [1.5,1.15,1.0,0.9];
+const tier = PATTERN[(inChap - 1) % 10];
+gridSize = Math.max(8, gridSize + MODS[tier]);
+const T = (mult, min) => Math.max(min, Math.round(gridSize * PACE[tier] * mult * wf));
 const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail"];
 const t = seq[(inChap - 1) % 9];
-const T = (mult, min) => Math.max(min, Math.round(gridSize * PACE * mult * wf));
-if (t === "sprint")  return { floor, gridSize, time: Math.max(8, Math.round(gridSize * 0.42)), type: t, diff: tier };
-if (t === "nofail")  return { floor, gridSize, time: T(1.2, 14), type: t, diff: tier };
-if (t === "color")   return { floor, gridSize, time: T(0.85, 12), type: t, diff: tier };
-if (t === "pairs")   { let g = gridSize + 8; if (g % 2) g++; return { floor, gridSize: g, time: Math.max(25, Math.round((g/2) * 2.2 * wf)), type: t, diff: tier }; }
-if (t === "parity")  { const g = Math.min(48, gridSize + 10); return { floor, gridSize: g, time: Math.max(12, Math.round(Math.ceil(g/2) * PACE * wf)), type: t, diff: tier }; }
-if (t === "memory")  { const g = Math.min(gridSize, 20); return { floor, gridSize: g, time: Math.max(20, Math.round(2.5 + g*0.12 + g * PACE * 1.1 * wf)), type: t, diff: tier }; }
+if (t === "sprint") return { floor, gridSize, time: Math.max(8, Math.round(gridSize * 0.42)), type: t, diff: tier };
+if (t === "nofail") return { floor, gridSize, time: T(1.2, 14), type: t, diff: tier };
+if (t === "color") return { floor, gridSize, time: T(0.85, 12), type: t, diff: tier };
+if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; return { floor, gridSize: g, time: Math.max(25, Math.round((g/2) * 2.2 * wf)), type: t, diff: tier }; }
+if (t === "parity") { const g = Math.min(48, gridSize + 10); return { floor, gridSize: g, time: Math.max(12, Math.round(Math.ceil(g/2) * PACE[tier] * wf)), type: t, diff: tier }; }
+if (t === "memory") { const g = Math.min(gridSize, 20); return { floor, gridSize: g, time: Math.max(20, Math.round(2.5 + g*0.12 + g * PACE[tier] * 1.1 * wf)), type: t, diff: tier }; }
 return { floor, gridSize, time: T(1.0, 12), type: t, diff: tier };
-},
+}
 typeLabel(t) {
 const fr = currentLang === "fr";
 return ({classic:fr?"⚡ Croissant":" Ascending",reverse:fr?"🔽 Décroissant":"🔽 Descending",color:fr?"🎨 Couleurs":"🎨 Colors",pairs:fr?"🧩 Paires":"🧩 Pairs",parity:fr?"🔢 Pair/Impair":"🔢 Even/Odd",forbidden:fr?"🚫 Interdit":"🚫 Forbidden",sprint:fr?"⏱️ Sprint":"⏱️ Sprint",memory:fr?"🧠 Mémoire":"🧠 Memory",nofail:fr?"💎 Sans faute":"💎 No mistake",boss:fr?"⚔️ GARDIEN":"⚔️ GUARDIAN"})[t] || t;
@@ -1179,6 +1180,7 @@ b.innerHTML = `<div class="tw-brief-card">
 <div style="font-size:13px;font-weight:900;color:#f8b500;margin-bottom:6px;">🏰 ${fr?"ÉTAGE":"FLOOR"} ${def.floor} — ${TowerUtils.typeLabel(def.type)}</div>
 <div style="font-size:10px;font-weight:700;color:#aaa;margin-bottom:6px;">${diffLabel(def.diff || 1)}${(def.diff||0) >= 2 ? " · bonus 🪙" : ""}</div>
 <div style="font-size:9px;color:#aaa;margin-bottom:8px;">${starRule}</div>
+<div style="font-size:10px;font-weight:700;color:#aaa;margin-bottom:6px;">${diffLabel(def.diff || 1)}</div>
 ${replayLine}
 <button class="btn-main btn-blue" style="width:100%;margin-bottom:6px;" onclick="closeBriefing();startTowerFloor(TowerUtils.getFloorDef(${def.floor}))">${def.replay?"🔄 REJOUER":"⚡ LANCER !"}</button>
 <button class="btn-secondary" style="width:100%;" onclick="closeBriefing()">❌ ${fr?"Annuler":"Cancel"}</button>
