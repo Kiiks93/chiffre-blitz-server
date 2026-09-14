@@ -423,6 +423,49 @@ const inChap = ((floor - 1) % TOWER_FPC) + 1;
 if (inChap % 50 === 0) return 1;
 return TOWER_DIFF_PATTERN[(inChap - 1) % 10];
 }
+
+/* ----- AIDE TOUR : mélange + pools + verrou mondes ----- */
+function towerShuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+const TW_COLOR_POOL = [
+  { key: "red",    name: "ROUGE",  hex: "#ff4b2b" },
+  { key: "blue",   name: "BLEU",   hex: "#00d2ff" },
+  { key: "green",  name: "VERT",   hex: "#2ecc71" },
+  { key: "yellow", name: "JAUNE",  hex: "#f8b500" },
+  { key: "pink",   name: "ROSE",   hex: "#ff6fa5" },
+  { key: "purple", name: "VIOLET", hex: "#9b5cff" }
+];
+
+const TW_PAIR_SYMBOLS = ["🍒","🍋","🍇","🍉","🍓","🍑","🥝","","🌟","","🔔","💎","🎲","🎯","","🌙","","❄️"];
+
+const TOWER_WORLD_QUOTA = 240; // même quota que le client (WORLD_QUOTA)
+
+function towerWorldUnlocked(player, world) {
+  if (world <= 1) return true;
+  if (world > 9) return false;
+  // 1) quota d'étoiles du monde précédent
+  const stars = player.towerStars || {};
+  let prev = 0;
+  const start = (world - 2) * TOWER_FPC + 1, end = (world - 1) * TOWER_FPC;
+  for (let f = start; f <= end; f++) prev += stars[String(f)] || 0;
+  if (prev < TOWER_WORLD_QUOTA) return false;
+  // 2) verrou saison (mondes 4-6 = S2, mondes 7-9 = S3)
+  const seasonOfWorld = world <= 3 ? 1 : (world <= 6 ? 2 : 3);
+  if (seasonOfWorld > 1) {
+    const flag = "season_s" + seasonOfWorld + "_unlocked";
+    const hasFlag = (player.unlocked_items || []).includes(flag);
+    const seasonLive = parseInt(getCurrentSeason().id.replace("s", "")) >= seasonOfWorld;
+    if (!hasFlag && !seasonLive) return false;
+  }
+  return true;
+}
+
 function getFloorDefServer(floor) {
 const chap = Math.ceil(floor / TOWER_FPC), inChap = ((floor - 1) % TOWER_FPC) + 1;
 const c = TOWER_CURVE[Math.min(chap,9)-1];
