@@ -2389,8 +2389,8 @@ app.use(express.json({ limit: '1mb' }));
 const IAP_PACKS = {
   blitz_pass_premium: { type: 'pass' },
   pack_vies_1:        { type: 'lives',  lives: 10 },
-  pack_mixte_3:       { type: 'mixed',  lives: 5, jTime: 1, jShield: 1 },
-  pack_blitz_5:       { type: 'mixed',  lives: 10, jTime: 3, jShield: 2 }
+  pack_mixte_3:       { type: 'mixed',  lives: 5,  jTime: 2, jShield: 2 },
+  pack_blitz_5:       { type: 'mixed',  lives: 10, jTime: 5, jShield: 5 }
 };
 const LIFE_RESERVE_MAX = 30;
 
