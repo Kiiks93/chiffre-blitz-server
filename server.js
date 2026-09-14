@@ -2440,7 +2440,7 @@ app.post('/api/iap_grant', async (req, res) => {
         p.claimedPassTiers[seasonId].premium = true;
         if (isOnline) p.blitzPassPremium = true;
         else if (row) row.blitz_pass_premium = true;
-      } else if (pack.type === 'jokers') {
+        } else if (pack.type === 'jokers') {
         if (isOnline) {
           p.jokers = normalizeJokers(p.jokers);
           p.jokers.time += pack.jTime;
