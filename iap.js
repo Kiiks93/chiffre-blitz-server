@@ -1,10 +1,9 @@
 /* ============================================================
    IAP.JS — Achats in-app RevenueCat (Pass Premium + packs)
-   - Actif UNIQUEMENT dans l'APK (window.Capacitor présent)
-   - Web navigateur : message clair (plus de clic silencieux)
+   VERSION FINALE NETTOYÉE — remplacer le fichier entier
 ============================================================ */
 const RC_API_KEY = 'goog_XFlNDHkJppdgUrBvKgMQilmCiaR';
-const IAP_SERVER_URL = 'https://chiffre-blitz.fr';
+const IAP_SERVER_URL = 'https://chiffre-blitz-server.onrender.com';
 
 const IAP = {
   ready: false,
@@ -24,6 +23,15 @@ const IAP = {
     }
   },
 
+  serverBase() {
+    try {
+      if (typeof socket !== 'undefined' && socket && socket.io && socket.io.uri) {
+        return String(socket.io.uri).replace(/\/+$/, '');
+      }
+    } catch (e) {}
+    return IAP_SERVER_URL;
+  },
+
   async init() {
     const rc = this.rc();
     if (!rc) { console.log('[iap] hors APK : achats réels désactivés'); return; }
@@ -37,7 +45,7 @@ const IAP = {
     }
   },
 
-    async buy(sku) {
+  async buy(sku) {
     const rc = this.rc();
     if (!rc) {
       this.notify('iap_unavailable', 'Achats disponibles uniquement sur l\'application Android', 'Purchases available only on the Android app');
@@ -46,79 +54,112 @@ const IAP = {
     if (!this.ready) {
       await this.init();
       if (!this.ready) {
-        if (typeof showNotificationToast === 'function') showNotificationToast('⚠️ IAP : configure RevenueCat échoué', 'announcement');
+        this.notify('iap_error', 'Boutique indisponible pour le moment', 'Store unavailable right now');
         return false;
       }
     }
+
+    let products = null;
     try {
-      const { products } = await rc.getProducts({ productIdentifiers: [sku], type: 'inapp' });
-      if (!products || !products.length) {
-        if (typeof showNotificationToast === 'function') showNotificationToast('⚠️ IAP : produit introuvable côté Google (' + sku + ')', 'announcement');
-        return false;
-      }
-      const res = await rc.purchaseStoreProduct({ product: products[0] });
-      const tx = res && res.transaction;
-      const token = tx && (tx.purchaseToken || tx.transactionIdentifier);
-      if (!token) throw new Error('token manquant');
-      return await this.grant(sku, token);
+      const prod = await rc.getProducts({ productIdentifiers: [sku], type: 'inapp' });
+      products = prod && prod.products;
+    } catch (e) {
+      console.warn('[iap] getProducts échoué :', e);
+    }
+    if (!products || !products.length) {
+      this.notify('iap_error', 'Produit introuvable côté Google (' + sku + ')', 'Product not found (' + sku + ')');
+      return false;
+    }
+
+    let res = null;
+    try {
+      res = await rc.purchaseStoreProduct({ product: products[0] });
     } catch (e) {
       const code = (e && (e.code || e.errorCode)) || '';
       const message = (e && e.message) || String(e);
       if (/cancel/i.test(code + message)) return false; // annulé par le joueur
       console.warn('[iap] échec achat :', e);
-      if (typeof showNotificationToast === 'function') showNotificationToast('⚠️ IAP : ' + code + ' — ' + message, 'announcement');
+      this.notify('iap_error', 'Achat annulé ou en erreur', 'Purchase cancelled or failed');
       return false;
     }
+
+    const tx = res && res.transaction;
+    const token = tx && (tx.purchaseToken || tx.transactionIdentifier);
+    if (!token) {
+      this.notify('iap_error', 'Token Google manquant', 'Missing Google token');
+      return false;
+    }
+    return await this.grant(sku, token);
   },
 
   async grant(sku, token) {
-    const pseudo = (typeof myProfile !== 'undefined' && myProfile && myProfile.username) 
-      ? myProfile.username 
-      : null;
-    
-    // DEBUG : ce qui est envoyé
-    console.log('🔍 IAP grant:', { pseudo, sku, token });
-    
+    const pseudo = (typeof myProfile !== 'undefined' && myProfile && myProfile.username) ? myProfile.username : null;
     if (!pseudo) {
-      this.notify('iap_error', 
-        'Connecte-toi d\'abord avant d\'acheter', 
-        'Log in first before purchasing');
+      this.notify('iap_error', 'Connecte-toi avant d\'acheter', 'Log in before purchasing');
       return false;
     }
-    if (!sku || !token) {
-      this.notify('iap_error', 
-        'Erreur de transaction Google', 
-        'Google transaction error');
-      return false;
-    }
-    
-    try {
-          const base = (typeof socket !== 'undefined' && socket.io && socket.io.uri)
 
-      const j = await r.json();
-      if (j.ok && !j.already) {
-        this.notify('iap_success', 'Achat confirmé ! Merci ⚡', 'Purchase confirmed! Thank you ⚡', 'gift');
-        return true;
-      }
-      if (j.already) {
-        this.notify('iap_already', 'Achat déjà traité', 'Purchase already processed');
-        return true;
-      }
-      console.warn('[iap] grant refusé :', j);
-      if (typeof showNotificationToast === 'function') showNotificationToast('⚠️ IAP grant : ' + JSON.stringify(j), 'announcement');
-      return false;
+    const base = this.serverBase();
+    const url = base + '/api/iap_grant?pseudo=' + encodeURIComponent(pseudo)
+              + '&sku=' + encodeURIComponent(sku)
+              + '&token=' + encodeURIComponent(token);
+
+    let response = null;
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pseudo: pseudo, sku: sku, token: token })
+      });
     } catch (e) {
-      console.warn('[iap] grant échoué :', e);
-      if (typeof showNotificationToast === 'function') showNotificationToast('⚠️ IAP grant réseau : ' + ((e && e.message) || e), 'announcement');
+      console.warn('[iap] fetch échoué :', e);
+      this.notify('iap_error', 'Erreur réseau pendant l\'achat', 'Network error during purchase');
       return false;
     }
+
+    let j = null;
+    try {
+      j = await response.json();
+    } catch (e) {
+      console.warn('[iap] réponse illisible :', e);
+      this.notify('iap_error', 'Réponse serveur illisible', 'Unreadable server response');
+      return false;
+    }
+
+    if (j && j.ok && !j.already) {
+      this.notify('iap_success', 'Achat confirmé ! Merci ⚡', 'Purchase confirmed! Thank you ⚡', 'gift');
+      return true;
+    }
+    if (j && j.already) {
+      this.notify('iap_already', 'Achat déjà traité', 'Purchase already processed');
+      return true;
+    }
+    console.warn('[iap] grant refusé :', j);
+    this.notify('iap_error', 'Achat impossible (serveur)', 'Purchase failed (server)');
+    return false;
   },
 
   buyPassPremium() { return this.buy('blitz_pass_premium'); },
-  buyPack(id)      { return this.buy(id); }
+
+  buyPack(id) {
+    const givesLives = ['pack_vies_1', 'pack_mixte_3', 'pack_blitz_5'].includes(id);
+    if (givesLives && typeof twLives !== 'undefined') {
+      if (twLives >= 30) {
+        this.notify('iap_lives_full', '❤️ Réserve de vies pleine (30 max). Utilise-les avant d\'en acheter !', '❤️ Life reserve full (max 30). Use some before buying!');
+        return Promise.resolve(false);
+      }
+      if (twLives >= 10) {
+        const fr = (typeof currentLang !== 'undefined' && currentLang === 'fr');
+        const ok = confirm(fr
+          ? 'Tu as déjà ' + twLives + ' vies (max 10). Les vies achetées seront stockées en RÉSERVE au-dessus de 10. Continuer l\'achat ?'
+          : 'You already have ' + twLives + ' lives (max 10). Purchased lives will be BANKED above 10. Continue purchase?');
+        if (!ok) return Promise.resolve(false);
+      }
+    }
+    return this.buy(id);
+  }
 };
 
 window.IAP = IAP;
 
-// Auto-init : démarre RevenueCat dès que la page est prête (APK uniquement)
 window.addEventListener('load', () => { setTimeout(() => IAP.init(), 800); });
