@@ -447,10 +447,10 @@ function getFloorDefServer(floor) {
   const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail"];
   const t = seq[(inChap - 1) % 9];
   if (t === "sprint") return { floor, gridSize, time: Math.max(8, Math.round(gridSize * 0.42)), type: "sprint" };
-  if (t === "nofail") return { floor, gridSize, time: Math.max(14, Math.round(time * 0.7)), type: "nofail" };
-  if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; const pr = g / 2; return { floor, gridSize: g, time: Math.max(25, Math.round(pr * 5)), type: "pairs" }; }
-  if (t === "parity") return { floor, gridSize: Math.min(60, gridSize + 12), time: time + 3, type: "parity" };
-  if (t === "memory") return { floor, gridSize, time: time + 4, type: "memory" };
+  if (t === "nofail") return { floor, gridSize, time: Math.max(16, Math.round(time * 0.9)), type: "nofail" };
+  if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; const pr = g / 2; return { floor, gridSize: g, time: Math.max(25, Math.round(pr * 4)), type: "pairs" }; }
+  if (t === "parity") return { floor, gridSize: Math.min(48, gridSize + 10), time: time + 4, type: "parity" };
+  if (t === "memory") { const g = Math.min(gridSize, 20); return { floor, gridSize: g, time: Math.max(25, Math.round(g * 1.5)), type: "memory" }; }
   return { floor, gridSize, time, type: t };
 }
 function pickColorTarget(s){
