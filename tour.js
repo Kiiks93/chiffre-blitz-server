@@ -21,6 +21,22 @@ const TOWER_CURVE = [
 [12,16,32,28], [13,18,30,26], [14,20,28,24], [16,22,27,23],
 [18,24,26,22], [20,26,25,21], [22,28,24,20], [24,30,23,19], [26,32,22,18]
 ];
+const TOWER_DIFF_PATTERN = [0,1,0,2,1,3,0,1,2,3];
+const TOWER_DIFF_MOD = [
+{ g:-2, t:+3 },
+{ g: 0, t: 0 },
+{ g:+2, t:-2 },
+{ g:+4, t:-4 }
+];
+function towerDiffTier(floor){
+const inChap = ((floor - 1) % FPC) + 1;
+if (inChap % 50 === 0) return 1;
+return TOWER_DIFF_PATTERN[(inChap - 1) % 10];
+}
+function diffLabel(tier){
+const fr = (typeof currentLang !== "undefined" && currentLang === "fr");
+return ["🟢 " + (fr?"FACILE":"EASY"), "🟡 " + (fr?"MOYEN":"MEDIUM"), "🟠 " + (fr?"DIFFICILE":"HARD"), "🔴 " + (fr?"TRÈS DIFFICILE":"VERY HARD")][tier] || "";
+}
 const IS_MOBILE = /Android|iPhone|iPad|iPod|Tablet|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 2 && Math.min(screen.width, screen.height) < 900);
 const TOWER_COLORS = {1:{acc:"#00d2ff"},2:{acc:"#74ebf5"},3:{acc:"#f8b500"},4:{acc:"#ff8a00"},5:{acc:"#8a9bb0"},6:{acc:"#ff4b2b"},7:{acc:"#ff6fa5"},8:{acc:"#2ecc71"},9:{acc:"#ff416c"}};
 const TOWER_WORLDS = {
@@ -85,15 +101,19 @@ const t01 = (inChap - 1) / (FPC - 1);
 let gridSize = Math.round(c[0] + (c[1]-c[0]) * t01);
 let time = Math.round(c[2] + (c[3]-c[2]) * t01);
 if (inChap <= 10) { gridSize = Math.max(10, gridSize - 2); time += 2; }
-if (inChap === FPC || inChap % 50 === 0) return { floor, gridSize, time: time + 10, type: "boss" };
+if (inChap === FPC || inChap % 50 === 0) return { floor, gridSize, time, type: "boss", diff: 1 };
+const tier = towerDiffTier(floor);
+const mod = TOWER_DIFF_MOD[tier];
+gridSize = Math.max(8, gridSize + mod.g);
+time = Math.max(10, time + mod.t);
 const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail"];
 const t = seq[(inChap - 1) % 9];
-if (t === "sprint") return { floor, gridSize, time: Math.max(8, Math.round(gridSize * 0.42)), type: "sprint" };
-if (t === "nofail") return { floor, gridSize, time: Math.max(16, Math.round(time * 0.9)), type: "nofail" };
-if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; return { floor, gridSize: g, time: Math.max(25, Math.round(g/2 * 4)), type: "pairs" }; }
-if (t === "parity") return { floor, gridSize: Math.min(48, gridSize + 10), time: time + 4, type: "parity" };
-if (t === "memory") { const g = Math.min(gridSize, 20); return { floor, gridSize: g, time: Math.max(25, Math.round(g * 1.5)), type: "memory" }; }
-return { floor, gridSize, time, type: t };
+if (t === "sprint") return { floor, gridSize, time: Math.max(8, Math.round(gridSize * 0.42)), type: "sprint", diff: tier };
+if (t === "nofail") return { floor, gridSize, time: Math.max(16, Math.round(time * 0.9)), type: "nofail", diff: tier };
+if (t === "pairs") { let g = gridSize + 8; if (g % 2) g++; return { floor, gridSize: g, time: Math.max(25, Math.round(g/2 * 4)), type: "pairs", diff: tier }; }
+if (t === "parity") return { floor, gridSize: Math.min(48, gridSize + 10), time: time + 4, type: "parity", diff: tier };
+if (t === "memory") { const g = Math.min(gridSize, 20); return { floor, gridSize: g, time: Math.max(25, Math.round(g * 1.5)), type: "memory", diff: tier }; }
+return { floor, gridSize, time, type: t, diff: tier };
 },
 typeLabel(t) {
 const fr = currentLang === "fr";
@@ -970,7 +990,7 @@ const inChap = ((twViewFloor - 1) % FPC) + 1;
 const isBoss = (inChap === FPC || inChap % 50 === 0);
 document.getElementById("tw-panel").classList.toggle("boss", isBoss);
 document.getElementById("tw-panel-num").innerText = twViewFloor;
-document.getElementById("tw-panel-typ").innerText = isBoss ? `⚔️ ${chap.boss} GARDIEN` : TowerUtils.typeLabel(def.type);
+document.getElementById("tw-panel-typ").innerText = isBoss ? `⚔️ ${chap.boss} GARDIEN` : diffLabel(def.diff || 1) + " · " + TowerUtils.typeLabel(def.type);
 const stGot = towerProgress.stars[String(twViewFloor)] || 0;
 document.getElementById("tw-panel-stars").innerHTML = [1,2,3].map(i => `<span class="${i <= stGot ? "on" : ""}">⭐</span>`).join("");
 const lock = document.getElementById("tw-lockmsg");
@@ -1156,6 +1176,7 @@ const b = document.createElement("div");
 b.id = "tw-brief"; b.className = "tw-brief";
 b.innerHTML = `<div class="tw-brief-card">
 <div style="font-size:13px;font-weight:900;color:#f8b500;margin-bottom:6px;">🏰 ${fr?"ÉTAGE":"FLOOR"} ${def.floor} — ${TowerUtils.typeLabel(def.type)}</div>
+<div style="font-size:10px;font-weight:700;color:#aaa;margin-bottom:6px;">${diffLabel(def.diff || 1)}${(def.diff||0) >= 2 ? " · bonus 🪙" : ""}</div>
 <div style="font-size:9px;color:#aaa;margin-bottom:8px;">${starRule}</div>
 ${replayLine}
 <button class="btn-main btn-blue" style="width:100%;margin-bottom:6px;" onclick="closeBriefing();startTowerFloor(TowerUtils.getFloorDef(${def.floor}))">${def.replay?"🔄 REJOUER":"⚡ LANCER !"}</button>
