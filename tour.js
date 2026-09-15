@@ -24,7 +24,7 @@ const TOWER_CURVE = [
 const TOWER_DIFF_PATTERN = [0,1,0,2,0,3,1,2,0,3];
 const TOWER_TIER_MULT = [1.30, 1.00, 0.88, 0.78];
 const TOWER_TIER_GRID = [-6, 0, 2, 4];
-const TOWER_MODE_PACE = { classic:1.25, reverse:1.30, forbidden:1.25, color:1.00, sprint:0.75, nofail:1.35, pairs:2.30, parity:1.10, memory:1.15 };
+const TOWER_MODE_PACE = { classic:1.25, reverse:1.30, forbidden:1.25, color:1.00, sprint:1.0, nofail:1.35, pairs:2.30, parity:1.10, memory:1.15 };
 const TOWER_CAPS = { sprint:30, pairs:26, memory:16, parity:40 };
 function towerDiffTier(floor){
 const inChap = ((floor - 1) % FPC) + 1;
@@ -104,10 +104,10 @@ const PACE = [1.45, 1.30, 1.20, 1.15][tier];
 const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail"];
 const t = seq[(inChap - 1) % 9];
 let g = gridSize, time;
-if (t === "sprint") { g = Math.min(gridSize, 30); time = Math.max(10, Math.round(g * 0.60)); }
-else if (t === "pairs") { g = Math.min(gridSize + 8, 26); if (g % 2) g++; time = Math.max(20, Math.round((g/2) * PACE * 1.6)); }
-else if (t === "memory") { g = Math.min(gridSize, 16); time = Math.max(18, Math.round(2.5 + g*0.12 + g * PACE * 0.9)); }
-else if (t === "parity") { g = Math.min(gridSize + 10, 40); time = Math.max(12, Math.round(Math.ceil(g/2) * PACE * 1.15)); }
+if (t === "sprint") { g = Math.min(gridSize, 24); time = Math.max(10, Math.round(g * 1.0)); }
+else if (t === "pairs") { g = (tier <= 1) ? 10 : 12; time = [22,19,17,15][tier]; }
+else if (t === "memory") { g = (tier <= 1) ? 10 : 12; const reveal = (2500 + g * 600) / 1000; time = Math.max(18, Math.round(reveal + g * [1.6,1.4,1.25,1.1][tier])); }
+else if (t === "parity") { g = Math.min(gridSize + 6, 28); time = Math.max(15, Math.round(Math.ceil(g/2) * PACE * 1.15)); }
 else if (t === "nofail") { time = Math.max(14, Math.round(gridSize * PACE * 1.2)); }
 else if (t === "reverse") { time = Math.max(12, Math.round(gridSize * PACE * 1.10)); }
 else if (t === "color") { time = Math.max(12, Math.round(gridSize * PACE * 0.85)); }
@@ -1288,11 +1288,12 @@ const v = TW_dom.display[i];
 let success = null;
 if (t === "color" && TW_dom.targetColor) success = (v && v.key === TW_dom.targetColor.key);
 else if (t === "parity") success = (TW_dom.targetParity === "even" ? (v % 2 === 0) : (v % 2 !== 0));
-else if (t === "forbidden") success = (v !== TW_dom.forbidden);
+else if (t === "forbidden") success = (TW_dom.target !== null && TW_dom.target !== undefined) ? (v === TW_dom.target) : (v !== TW_dom.forbidden);
 else if (TW_dom.target !== null && TW_dom.target !== undefined) success = (v === TW_dom.target);
 if (success === true) {
 TW_dom.gone[i] = true; b.classList.add("gone");
 if (t === "reverse") TW_dom.target--;
+else if (t === "forbidden") { let nx = (TW_dom.target || 0) + 1; if (nx === TW_dom.forbidden) nx++; TW_dom.target = nx; }
 else if (["classic","sprint","fog","nofail"].includes(t)) TW_dom.target++;
 if (typeof SoundEngine !== "undefined" && SoundEngine.playClick) SoundEngine.playClick();
 } else if (success === false) {
@@ -1317,7 +1318,7 @@ let main = "";
 if (TW.type === "color" && TW.targetColor) main = `COULEUR : <span style="color:${TW.targetColor.hex};">${TW.targetColor.name}</span>`;
 else if (TW.type === "pairs") main = (TW.revealLeft > 0) ? `👀 MÉMORISE ! ${TW.revealLeft}s` : "🧩 RETROUVE LES PAIRES";
 else if (TW.type === "parity") main = TW.targetParity === "even" ? "CLIQUE : PAIRS" : "CLIQUE : IMPAIRS";
-else if (TW.type === "forbidden") main = `INTERDIT : <span style="color:#ff4b2b;">${TW.forbidden}</span>`;
+else if (TW.type === "forbidden") main = `INTERDIT : <span style="color:#ff4b2b;">${TW.forbidden}</span> · CIBLE : ${TW.target}`;
 else if (TW.type === "memory") main = (TW.revealLeft > 0) ? `👀 MÉMORISE ! ${TW.revealLeft}s` : "🧠 CLIQUE DANS L'ORDRE (1→N)";
 else if (TW.target !== null && TW.target !== undefined) main = `CIBLE : ${TW.target}`;
 if (main !== TW_hudCache) { h.innerHTML = main; TW_hudCache = main; }

@@ -418,8 +418,8 @@ const TOWER_CURVE = [
 const TOWER_DIFF_PATTERN = [0,1,0,2,0,3,1,2,0,3];
 const TOWER_TIER_MULT = [1.30, 1.00, 0.88, 0.78];
 const TOWER_TIER_GRID = [-6, 0, 2, 4];
-const TOWER_MODE_PACE = { classic:1.25, reverse:1.30, forbidden:1.25, color:1.00, sprint:0.75, nofail:1.35, pairs:2.30, parity:1.10, memory:1.15 };
-const TOWER_CAPS = { sprint:30, pairs:26, memory:16, parity:40 };
+const TOWER_MODE_PACE = { classic:1.25, reverse:1.30, forbidden:1.25, color:1.00, sprint:1.00, nofail:1.35, pairs:2.30, parity:1.10, memory:1.15 };
+const TOWER_CAPS = { sprint:24, pairs:12, memory:12, parity:40 };
 function towerDiffTier(floor){
 const inChap = ((floor - 1) % TOWER_FPC) + 1;
 if (inChap % 50 === 0) return 1;
@@ -478,7 +478,7 @@ const wf = Math.max(0.95, 1.15 - 0.025 * (Math.min(chap,9) - 1));
 if (inChap === TOWER_FPC || inChap % 50 === 0) return { floor, gridSize, time: Math.max(20, Math.round(gridSize * 0.85)), type: "boss", diff: 1 };
 const PATTERN = [0,1,0,2,0,3,1,2,0,3];
 const GRIDMOD = [-6,0,2,4];
-const PACE = [1.45,1.30,1.25,1.15];
+const PACE = [1.45,1.30,1.20,1.15];
 const tier = PATTERN[(inChap - 1) % 10];
 gridSize = Math.max(8, gridSize + GRIDMOD[tier]);
 const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail"];
@@ -487,7 +487,7 @@ let g = gridSize, time;
 if (t === "sprint") { g = Math.min(gridSize, 24); time = Math.max(10, Math.round(g * 1.0)); }
 else if (t === "pairs") { g = (tier <= 1) ? 10 : 12; time = [22,19,17,15][tier]; }
 else if (t === "memory") { g = (tier <= 1) ? 10 : 12; const reveal = (2500 + g * 600) / 1000; time = Math.max(18, Math.round(reveal + g * [1.6,1.4,1.25,1.1][tier] * wf)); }
-else if (t === "parity") { g = Math.min(gridSize + 6, 28); time = Math.max(15, Math.round(Math.ceil(g/2) * PACE[tier] * 1.2 * wf)); }
+else if (t === "parity") { g = Math.min(gridSize + 6, 28); time = Math.max(15, Math.round(Math.ceil(g/2) * PACE[tier] * 1.15 * wf)); }
 else if (t === "nofail") { time = Math.max(14, Math.round(gridSize * PACE[tier] * 1.2 * wf)); }
 else if (t === "reverse") { time = Math.max(12, Math.round(gridSize * PACE[tier] * 1.1 * wf)); }
 else if (t === "color") { time = Math.max(12, Math.round(gridSize * PACE[tier] * 0.85 * wf)); }
@@ -513,16 +513,17 @@ function buildTowerSession(player, floor){
     const half = N/2;
     s.nums = towerShuffle([...TW_PAIR_SYMBOLS.slice(0,half), ...TW_PAIR_SYMBOLS.slice(0,half)]);
     s.remaining = new Set([...Array(N)].map((_,i)=>i));
-    s.revealUntil = Date.now() + [4000,3500,3000,2500][def.diff || 0];
+    s.revealUntil = Date.now() + [3000,3000,2500,2000][def.diff|| 0];
   } else if (def.type === "parity") {
     s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
     s.targetParity = Math.random()<.5?"even":"odd";
     s.remaining = new Set(s.nums.filter(v=>s.targetParity==="even"?v%2===0:v%2!==0));
   } else if (def.type === "forbidden") {
-    s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
-    s.forbidden = 1+Math.floor(Math.random()*N);
-    s.remaining = new Set(s.nums);
-      } else if (def.type === "memory") {
+  s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
+  s.forbidden = 1+Math.floor(Math.random()*N);
+  s.remaining = new Set(s.nums);
+  s.target = (s.forbidden === 1) ? 2 : 1;
+  } else if (def.type === "memory") {
     s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
     s.remaining = new Set(s.nums);
     s.target = 1;
@@ -1994,13 +1995,16 @@ socket.on('admin_force_refresh', async (data) => {
       else mistake = true;
         } else if (s.type === "forbidden") {
       if (v === s.forbidden) {
-        // Le chiffre interdit compte comme une erreur.
-        // Le bloc "mistake" plus bas décidera si le bouclier absorbe ou si l'étage échoue.
-        mistake = true;
+      mistake = true;
       } else {
-        s.gone[idx] = true;
-        s.remaining.delete(v);
-        if (s.remaining.size === 1 && s.remaining.has(s.forbidden)) win = true;
+      if (s.target === undefined || s.target === null) { s.target = 1; if (s.target === s.forbidden) s.target++; }
+      if (v === s.target) {
+      s.gone[idx] = true;
+      s.remaining.delete(v);
+      let nx = v + 1; if (nx === s.forbidden) nx++;
+      s.target = nx;
+      if (s.remaining.size === 1 && s.remaining.has(s.forbidden)) win = true;
+      } else mistake = true;
       }
     } else {
       if (v === s.target) {
