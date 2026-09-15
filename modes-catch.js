@@ -424,7 +424,10 @@ socket.on('catch_solo_result', (data) => {
       : '⚠️ Reward denied by server (unregistered game). Start a new game normally.', 'announcement');
     return;
   }
+  
+  // ✅ CORRECTION : Récupérer le score ET le bonus avant de détruire catchState
   const score = catchState ? catchState.score : 0;
+  const bonus = catchState ? catchState.bonus : 0; 
   
   clearCatchArena();
   catchState = null;
@@ -433,6 +436,8 @@ socket.on('catch_solo_result', (data) => {
   document.getElementById('recap-1v1-rows').style.display = 'none';
   document.getElementById('recap-banner').innerText = d.catch_season_done;
   document.getElementById('recap-banner').style.color = '#00d2ff';
+  
+  // ✅ La variable 'bonus' est maintenant définie
   document.getElementById('recap-reason').innerText = `${d.catch_score_label} ${score} • ${d.catch_bonus_label} ${bonus}`;
   document.getElementById('recap-my-score').innerText = score;
   
@@ -443,7 +448,7 @@ socket.on('catch_solo_result', (data) => {
   
   document.getElementById('winner-cinematic-container').innerHTML = '';
   document.getElementById('recap-modal').style.display = 'flex';
-  SoundEngine.playVictory();
+  if (typeof SoundEngine !== "undefined" && SoundEngine.playVictory) SoundEngine.playVictory();
 });
 
 /* ============================================================
