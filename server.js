@@ -2086,11 +2086,7 @@ socket.on('admin_force_refresh', async (data) => {
   });
 
   socket.on('disconnect', async () => {
-    // Nettoyer l'horodatage Catch Solo
-    if (activePlayers[socket.id] && activePlayers[socket.id].username) {
-    delete catchSoloStarts[activePlayers[socket.id].username];
-    }
-    leaveAllRooms(socket);
+  leaveAllRooms(socket);
     const qIdx = matchmakingQueue.indexOf(socket.id);
     if (qIdx !== -1) matchmakingQueue.splice(qIdx, 1);
     const rIdx = rankedQueue.indexOf(socket.id);
