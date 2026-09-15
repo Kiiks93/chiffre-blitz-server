@@ -472,22 +472,25 @@ const c = TOWER_CURVE[Math.min(chap,9)-1];
 const t01 = (inChap - 1) / (TOWER_FPC - 1);
 let gridSize = Math.round(c[0] + (c[1]-c[0]) * t01);
 if (inChap <= 10) gridSize = Math.max(10, gridSize - 2);
+const wf = Math.max(0.95, 1.15 - 0.025 * (Math.min(chap,9) - 1));
 if (inChap === TOWER_FPC || inChap % 50 === 0) return { floor, gridSize, time: Math.max(20, Math.round(gridSize * 0.85)), type: "boss", diff: 1 };
-const tier = TOWER_DIFF_PATTERN[(inChap - 1) % 10];
-gridSize = Math.max(8, gridSize + TOWER_TIER_GRID[tier]);
-const PACE = [1.45, 1.30, 1.20, 1.15][tier];
+const PATTERN = [0,1,0,2,0,3,1,2,0,3];
+const GRIDMOD = [-6,0,2,4];
+const PACE = [1.45,1.30,1.25,1.15];
+const tier = PATTERN[(inChap - 1) % 10];
+gridSize = Math.max(8, gridSize + GRIDMOD[tier]);
 const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail"];
 const t = seq[(inChap - 1) % 9];
 let g = gridSize, time;
-if (t === "sprint") { g = Math.min(gridSize, 30); time = Math.max(10, Math.round(g * 0.60)); }
-else if (t === "pairs") { g = Math.min(gridSize + 8, 26); if (g % 2) g++; time = Math.max(20, Math.round((g/2) * PACE * 1.6)); }
-else if (t === "memory") { g = Math.min(gridSize, 16); time = Math.max(18, Math.round(2.5 + g*0.12 + g * PACE * 0.9)); }
-else if (t === "parity") { g = Math.min(gridSize + 10, 40); time = Math.max(12, Math.round(Math.ceil(g/2) * PACE * 1.15)); }
-else if (t === "nofail") { time = Math.max(14, Math.round(gridSize * PACE * 1.2)); }
-else if (t === "reverse") { time = Math.max(12, Math.round(gridSize * PACE * 1.10)); }
-else if (t === "color") { time = Math.max(12, Math.round(gridSize * PACE * 0.85)); }
-else if (t === "forbidden") { time = Math.max(12, Math.round((gridSize - 1) * PACE * 1.05)); }
-else { time = Math.max(12, Math.round(gridSize * PACE)); }
+if (t === "sprint") { g = Math.min(gridSize, 24); time = Math.max(10, Math.round(g * 1.0)); }
+else if (t === "pairs") { g = (tier <= 1) ? 10 : 12; time = [22,19,17,15][tier]; }
+else if (t === "memory") { g = (tier <= 1) ? 10 : 12; const reveal = (2500 + g * 600) / 1000; time = Math.max(18, Math.round(reveal + g * [1.6,1.4,1.25,1.1][tier] * wf)); }
+else if (t === "parity") { g = Math.min(gridSize + 6, 28); time = Math.max(15, Math.round(Math.ceil(g/2) * PACE[tier] * 1.2 * wf)); }
+else if (t === "nofail") { time = Math.max(14, Math.round(gridSize * PACE[tier] * 1.2 * wf)); }
+else if (t === "reverse") { time = Math.max(12, Math.round(gridSize * PACE[tier] * 1.1 * wf)); }
+else if (t === "color") { time = Math.max(12, Math.round(gridSize * PACE[tier] * 0.85 * wf)); }
+else if (t === "forbidden") { time = Math.max(12, Math.round((gridSize - 1) * PACE[tier] * 1.05 * wf)); }
+else { time = Math.max(12, Math.round(gridSize * PACE[tier] * wf)); }
 return { floor, gridSize: g, time, type: t, diff: tier };
 }
 function pickColorTarget(s){
@@ -508,7 +511,7 @@ function buildTowerSession(player, floor){
     const half = N/2;
     s.nums = towerShuffle([...TW_PAIR_SYMBOLS.slice(0,half), ...TW_PAIR_SYMBOLS.slice(0,half)]);
     s.remaining = new Set([...Array(N)].map((_,i)=>i));
-    s.revealUntil = Date.now() + 2500 + N * 150;
+    s.revealUntil = Date.now() + [4000,3500,3000,2500][def.diff || 0];
   } else if (def.type === "parity") {
     s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
     s.targetParity = Math.random()<.5?"even":"odd";
@@ -521,7 +524,7 @@ function buildTowerSession(player, floor){
     s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
     s.remaining = new Set(s.nums);
     s.target = 1;
-    s.revealUntil = Date.now() + 2500 + N * 120;
+    s.revealUntil = Date.now() + 2500 + N * 600;
   } else {
     s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
     s.remaining = new Set(s.nums);
@@ -550,15 +553,13 @@ function towerStatePayload(s){
 async function towerWin(player, s){
   s.done = true;
   const used = (Date.now() - s.start) / 1000;
-  let stars = 1;
-
-  if (s.type === "pairs") {
-    const pr = s.total / 2;
-    const t3 = Math.round(pr * 1.5), t2 = Math.round(pr * 2.5);
-    if (used <= t3) stars = 3;
-    else if (used <= t2) stars = 2;
-    else stars = 1;
-   } else if (s.type === "sprint") {
+ let stars = 1;
+if (s.type === "pairs" || s.type === "memory") {
+const e3 = Math.floor(s.total * 0.2), e2 = Math.floor(s.total * 0.45);
+if (s.mistakes <= e3) stars = 3;
+else if (s.mistakes <= e2) stars = 2;
+else stars = 1;
+} else if (s.type === "sprint") {
   if (used <= s.def.time * 0.6) stars = 3;
   else if (used <= s.def.time * 0.85) stars = 2;
   else stars = 1;
@@ -1952,6 +1953,7 @@ socket.on('admin_force_refresh', async (data) => {
     const player = activePlayers[socket.id];
     const s = towerSessions[socket.id];
     if (!player || !s || s.done || s.lock) return;
+    if ((s.type === "pairs" || s.type === "memory") && s.revealUntil && Date.now() < s.revealUntil) return;
     const idx = parseInt(data && data.index);
     if (!Number.isFinite(idx) || idx < 0 || idx >= s.total || s.gone[idx]) return;
     const elapsed = (Date.now() - s.start) / 1000;
