@@ -1604,7 +1604,10 @@ io.emit('maintenance_end', {});
 }
 socket.emit('maintenance_state', { enabled:maintenanceState.enabled, message:maintenanceState.message, hasCode:!!maintenanceState.bypassCode, since:maintenanceState.since, online:getOnlineCount() });
 });
-socket.on('admin_get_stats', () => {
+  socket.on('admin_get_stats', () => {
+  if (!socket.isAdmin) return;
+  socket.emit('admin_stats', { online: getOnlineCount() });
+  });
   socket.on('admin_get_logs', async (data) => {
     if (!socket.isAdmin) return;
     const username = ((data && data.username) || '').trim();
