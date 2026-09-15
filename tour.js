@@ -106,7 +106,7 @@ const t = seq[(inChap - 1) % 9];
 let g = gridSize, time;
 if (t === "sprint") { g = Math.min(gridSize, 24); time = Math.max(10, Math.round(g * 1.0)); }
 else if (t === "pairs") { g = (tier <= 1) ? 10 : 12; time = [22,19,17,15][tier]; }
-else if (t === "memory") { g = (tier <= 1) ? 10 : 12; const reveal = (2500 + g * 600) / 1000; time = Math.max(18, Math
+else if (t === "memory") { g = (tier <= 1) ? 10 : 12; const reveal = (2500 + g * 600) / 1000; time = Math.max(18, Math.round(reveal + g * [1.6,1.4,1.25,1.1][tier])); }
 else if (t === "parity") { g = Math.min(gridSize + 10, 40); time = Math.max(12, Math.round(Math.ceil(g/2) * PACE * 1.15)); }
 else if (t === "nofail") { time = Math.max(14, Math.round(gridSize * PACE * 1.2)); }
 else if (t === "reverse") { time = Math.max(12, Math.round(gridSize * PACE * 1.10)); }
