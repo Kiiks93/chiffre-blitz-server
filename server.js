@@ -519,10 +519,11 @@ function buildTowerSession(player, floor){
     s.targetParity = Math.random()<.5?"even":"odd";
     s.remaining = new Set(s.nums.filter(v=>s.targetParity==="even"?v%2===0:v%2!==0));
   } else if (def.type === "forbidden") {
-    s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
-    s.forbidden = 1+Math.floor(Math.random()*N);
-    s.remaining = new Set(s.nums);
-      } else if (def.type === "memory") {
+  s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
+  s.forbidden = 1+Math.floor(Math.random()*N);
+  s.remaining = new Set(s.nums);
+  s.target = (s.forbidden === 1) ? 2 : 1;
+  } else if (def.type === "memory") {
     s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
     s.remaining = new Set(s.nums);
     s.target = 1;
