@@ -305,6 +305,7 @@ let tugOfWarQueue = [];
 let halloweenQueue = [];
 let noelQueue = [];
 const activeMatches = {};
+const catchSoloStarts = {}; // Horodatage Catch Solo par pseudo (anti-cheat)
 const lastMatchEarnings = {};
 const towerSessions = {};
 
@@ -1214,8 +1215,8 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
     if (p) p._soloStart = Date.now();
   });
   socket.on('catch_solo_start', () => {
-    const p = activePlayers[socket.id];
-    if (p) p._catchStart = Date.now();
+  const p = activePlayers[socket.id];
+  if (p) catchSoloStarts[p.username] = Date.now();
   });
 
   socket.on('claim_catch_solo', async (payload) => {
@@ -1223,13 +1224,14 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
     if (!player) return;
     const cd = checkCooldown(player, 'catch_solo', 8000);
     if (!cd.ok) { socket.emit('catch_solo_result', { baseCoins: 0, bonusCoins: 0, rushBonus: 0, earnedCoins: 0, error: 'cooldown' }); return; }
-    if (!player._catchStart) {
-      await logPlayerAction(player, 'catch_no_start', 'Pas de catch_solo_start enregistré', null, null, null);
-      socket.emit('catch_solo_result', { baseCoins: 0, bonusCoins: 0, rushBonus: 0, earnedCoins: 0, error: 'suspicious' });
-      return;
+    const catchStart = catchSoloStarts[player.username];
+    if (!catchStart) {
+    await logPlayerAction(player, 'catch_no_start', 'Pas de catch_solo_start enregistré pour ' + player.username, null, null, null);
+    socket.emit('catch_solo_result', { baseCoins: 0, bonusCoins: 0, rushBonus: 0, earnedCoins: 0, error: 'suspicious' });
+    return;
     }
-    const serverDuration = (Date.now() - player._catchStart) / 1000;
-    player._catchStart = null;
+    const serverDuration = (Date.now() - catchStart) / 1000;
+    delete catchSoloStarts[player.username];
     const score = Math.max(0, Math.min(20000, Number(payload && payload.score) || 0));
     const bonus = Math.max(0, Math.min(20000, Number(payload && payload.bonus) || 0));
     const maxAllowed = Math.min(20000, Math.max(500, serverDuration * 800));
@@ -2084,6 +2086,10 @@ socket.on('admin_force_refresh', async (data) => {
   });
 
   socket.on('disconnect', async () => {
+    // Nettoyer l'horodatage Catch Solo
+    if (activePlayers[socket.id] && activePlayers[socket.id].username) {
+    delete catchSoloStarts[activePlayers[socket.id].username];
+    }
     leaveAllRooms(socket);
     const qIdx = matchmakingQueue.indexOf(socket.id);
     if (qIdx !== -1) matchmakingQueue.splice(qIdx, 1);
