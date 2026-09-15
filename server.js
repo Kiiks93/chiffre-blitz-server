@@ -306,6 +306,7 @@ let halloweenQueue = [];
 let noelQueue = [];
 const activeMatches = {};
 const catchSoloStarts = {}; // Horodatage Catch Solo par pseudo (anti-cheat)
+const soloStarts = {}; // Horodatage Solo/Avalanche par pseudo (anti-cheat)
 const lastMatchEarnings = {};
 const towerSessions = {};
 
@@ -1210,9 +1211,9 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
     io.to(oppId).emit('catch_opp_score', { score: pData.score });
   });
 
-  socket.on('solo_start', () => {
-    const p = activePlayers[socket.id];
-    if (p) p._soloStart = Date.now();
+   socket.on('solo_start', () => {
+  const p = activePlayers[socket.id];
+  if (p) soloStarts[p.username] = Date.now();
   });
   socket.on('catch_solo_start', () => {
   const p = activePlayers[socket.id];
@@ -1256,13 +1257,14 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
     if (!player) return;
     const cd = checkCooldown(player, 'solo_reward', 3000);
     if (!cd.ok) { socket.emit('solo_reward_result', { baseCoins: 0, rushBonus: 0, earnedCoins: 0, triggerWheel: false, globalEvents, perfection: false, error: 'cooldown' }); return; }
-    if (!player._soloStart) {
-      await logPlayerAction(player, 'solo_no_start', 'Pas de solo_start enregistré', null, null, null);
-      socket.emit('solo_reward_result', { baseCoins: 0, rushBonus: 0, earnedCoins: 0, triggerWheel: false, globalEvents, perfection: false, error: 'suspicious' });
-      return;
+    const soloStart = soloStarts[player.username];
+    if (!soloStart) {
+    await logPlayerAction(player, 'solo_no_start', 'Pas de solo_start enregistré pour ' + player.username, null, null, null);
+    socket.emit('solo_reward_result', { baseCoins: 0, rushBonus: 0, earnedCoins: 0, triggerWheel: false, globalEvents, perfection: false, error: 'suspicious' });
+    return;
     }
-    const serverDuration = (Date.now() - player._soloStart) / 1000;
-    player._soloStart = null;
+    const serverDuration = (Date.now() - soloStart) / 1000;
+    delete soloStarts[player.username];
     const score = (typeof payload === 'object' && payload !== null) ? (payload.score || 0) : payload;
     const perfection = (typeof payload === 'object' && payload !== null) ? !!payload.perfection : false;
     const normalizedScore = Number(score);
