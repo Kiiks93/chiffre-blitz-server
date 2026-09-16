@@ -662,6 +662,12 @@ BOUTON FERMER (MOBILE)
   var isMobile = /Android|iPhone|iPad|iPod|Tablet|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 2 && Math.min(screen.width, screen.height) < 900);
   if (!isMobile) { btn.style.display = 'none'; }
   btn.addEventListener('click', function(){
+    // 📱 Si on est dans un iframe (overlay mobile), on demande au parent de fermer l'overlay
+    if (window.self !== window.top) {
+      window.parent.postMessage({action:'close_admin_panel'}, '*');
+      return;
+    }
+    // PC : fermer la fenêtre popup
     try { if (window.opener) { window.close(); return; } } catch(e){}
     if (window.history.length > 1) { window.history.back(); }
     else { window.location.href = 'index.html'; }
