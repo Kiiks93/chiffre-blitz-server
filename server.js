@@ -335,12 +335,19 @@ app.get('/', (req, res) => { res.send('Chiffre Blitz Server is running ⚡'); })
 // AJOUTE CES LIGNES :
 const path = require('path');
 
-app.get('/admin.html', (req, res) => { 
-  res.sendFile(path.join(__dirname, 'admin.html')); 
+app.get('/admin.html', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.sendFile(path.join(__dirname, 'admin.html'));
 });
-
-// Optionnel : servir aussi d'autres fichiers statiques si besoin
-app.use(express.static(path.join(__dirname, '.')));
+app.use(express.static(path.join(__dirname, '.'), {
+  setHeaders: (res, filePath) => {
+    if (/\.(html|js)$/.test(filePath)) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    }
+  }
+}));
 
 async function savePlayerToSupabase(socketId) {
   const p = activePlayers[socketId];
