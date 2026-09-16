@@ -81,28 +81,63 @@ LOGIN
 DASHBOARD
 ============================================================ -->
 <div id="admin-dashboard-section" style="display:none;">
-  <!-- ===== MODE MAINTENANCE ===== -->
-  <div class="card" style="border-color: rgba(255,75,43,0.55);">
-    <h2 style="color:#ff4b2b;">🛠️ Mode Maintenance</h2>
-    <div id="cbMaintStatus" class="card-desc">État inconnu</div>
-    <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-      <input type="checkbox" id="cbMaintOn" style="width:auto; margin:0;">
-      <span style="font-weight:bold; color:#fff;">Activer la maintenance (Déconnecte les joueurs)</span>
-    </label>
-    <label>Message affiché aux joueurs :</label>
-    <input type="text" id="cbMaintMsg" value="🚧 Les chiffres se font une beauté ! On revient vite (promis) 😉">
-    <div class="row">
-      <div style="flex:1;">
-        <label>Code Bypass (Admin/Test)</label>
-        <input type="text" id="cbMaintCode" placeholder="Code secret...">
-      </div>
-      <button class="btn-blue" style="flex:0 0 auto; width:auto; padding:8px 12px; margin-top:18px;" onclick="document.getElementById('cbMaintCode').value=Math.random().toString(36).slice(2,10)">🎲</button>
-    </div>
-    <div class="row" style="margin-top:8px;">
-      <button class="btn-orange" id="cbMaintSave" style="flex:1;">💾 Enregistrer / Appliquer</button>
-      <button class="btn-blue" id="cbMaintRefresh" style="flex:1;">🔄 Rafraîchir</button>
-    </div>
+  
+<!-- ===== MODE MAINTENANCE ===== -->
+<div class="card" style="border-color: rgba(255,75,43,0.55);">
+  <h2 style="color:#ff4b2b;">🛠️ Mode Maintenance</h2>
+  <div id="maint-status" class="card-desc" style="color:#aaa;">🟢 Désactivée</div>
+  <label style="display:flex; align-items:center; gap:8px;">
+    <input type="checkbox" id="maint-enabled" style="width:auto;">
+    Activer la maintenance (Déconnecte les joueurs)
+  </label>
+  <label>Message affiché aux joueurs :</label>
+  <input type="text" id="maint-message" value="🚧 Les chiffres se font une beauté ! On revient vite (promis) 😉">
+  <label>Code Bypass (Admin/Test) :</label>
+  <div class="row" style="margin-bottom:8px;">
+    <input type="text" id="maint-bypass-code" placeholder="Code d'accès pendant maintenance" style="flex:1;">
+    <button class="btn-blue" onclick="generateMaintCode()" style="width:auto; padding:8px 12px;">🎲</button>
   </div>
+  <div class="row">
+    <button class="btn-orange" onclick="saveMaintenance()">💾 Enregistrer / Appliquer</button>
+    <button class="btn-blue" onclick="loadMaintenance()">🔄 Rafraîchir</button>
+  </div>
+</div>
+
+<script>
+// ===== MODE MAINTENANCE =====
+function generateMaintCode() {
+  document.getElementById('maint-bypass-code').value = Math.random().toString(36).slice(2, 10);
+}
+
+function loadMaintenance() {
+  socket.emit('admin_get_maintenance');
+}
+
+function saveMaintenance() {
+  const enabled = document.getElementById('maint-enabled').checked;
+  if (enabled && !confirm('Activer la maintenance ? Les joueurs seront déconnectés dans 60 secondes.')) return;
+  socket.emit('admin_set_maintenance', {
+    enabled: enabled,
+    message: document.getElementById('maint-message').value,
+    bypassCode: document.getElementById('maint-bypass-code').value
+  });
+}
+
+socket.on('admin_auth_success', () => { loadMaintenance(); });
+
+socket.on('maintenance_state', (data) => {
+  document.getElementById('maint-enabled').checked = !!data.enabled;
+  if (data.message) document.getElementById('maint-message').value = data.message;
+  const statusEl = document.getElementById('maint-status');
+  if (data.enabled) {
+    statusEl.style.color = '#ff4b2b';
+    statusEl.innerText = '🔴 ACTIVE depuis ' + new Date(data.since).toLocaleTimeString() + ' · ' + data.online + ' joueur(s) en ligne';
+  } else {
+    statusEl.style.color = '#00ff88';
+    statusEl.innerText = '🟢 Désactivée · ' + data.online + ' joueur(s) en ligne';
+  }
+});
+</script>
   <!-- ===== COMPTEUR EN LIGNE ===== -->
   <div class="card" style="border-color: rgba(0,210,255,0.55);">
     <h2 style="color:#00d2ff;">🟢 Joueurs en ligne</h2>
