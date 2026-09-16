@@ -398,7 +398,22 @@ function isMaintBypass(socket){ return !!socket.isAdmin || !!socket._maintBypass
 function maintBlocked(socket){ return maintenanceState.enabled && !isMaintBypass(socket); }
 async function loadMaintenance(){ try { const { data } = await supabase.from('settings').select('maintenance').eq('id',1).maybeSingle(); if (data && data.maintenance) maintenanceState = Object.assign({}, maintenanceState, data.maintenance); console.log("Maintenance au demarrage : " + (maintenanceState.enabled ? "ACTIVE" : "inactive")); } catch(e){ console.error("loadMaintenance:", e && e.message); } }
 async function saveMaintenance(){ try { await supabase.from('settings').update({ maintenance: maintenanceState }).eq('id',1); } catch(e){ console.error("saveMaintenance:", e && e.message); } }
-function maintenanceKickAll(){ for (const s of maintSockets()){ if (!isMaintBypass(s)){ s.emit('maintenance_kick', { message: maintenanceState.message }); s.disconnect(true); } } }
+function maintenanceKickAll(){ 
+  for (const s of maintSockets()){ 
+    if (!isMaintBypass(s)){ 
+      // Ne PAS kicker les joueurs en pleine partie (match actif ou session tour active)
+      const inMatch = !!(activeMatches[s.id] && !activeMatches[s.id].ended);
+      const inTower = !!towerSessions[s.id];
+      if (!inMatch && !inTower) {
+        s.emit('maintenance_kick', { message: maintenanceState.message }); 
+        s.disconnect(true); 
+      } else {
+        // Joueur en partie : il finit sa partie, mais ne pourra pas en relancer une
+        s.emit('maintenance_announce', { message: maintenanceState.message, delay: 0 });
+      }
+    } 
+  } 
+}
 io.use((socket, next) => { const a = (socket.handshake && socket.handshake.auth) || {}; const c = String((a && a.maintCode) || ""); if (c && maintenanceState.bypassCode && c === maintenanceState.bypassCode) socket._maintBypass = true; next(); });
 async function logPlayerAction(p, action, detail, currency, amount, balanceAfter) {
   try {
@@ -1115,6 +1130,7 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
   });
 
   socket.on('find_1v1_match', () => {
+    if (maintBlocked(socket)) { socket.emit('maintenance_kick', { message: maintenanceState.message }); return; }
     if (!matchmakingQueue.includes(socket.id)) matchmakingQueue.push(socket.id);
     if (matchmakingQueue.length >= 2) {
       const id1 = matchmakingQueue.shift();
@@ -1130,6 +1146,7 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
   });
 
   socket.on('find_ranked_match', (data) => {
+    if (maintBlocked(socket)) { socket.emit('maintenance_kick', { message: maintenanceState.message }); return; }
     const player = activePlayers[socket.id];
     if (!player) return;
     let items = (data && Array.isArray(data.items)) ? data.items : [];
@@ -1154,6 +1171,7 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
   });
 
   socket.on('find_tug_of_war_match', () => {
+    if (maintBlocked(socket)) { socket.emit('maintenance_kick', { message: maintenanceState.message }); return; }
     if (!globalEvents.tugOfWarMode) return;
     tugOfWarQueue = tugOfWarQueue.filter(sId => sId !== socket.id);
     tugOfWarQueue.push(socket.id);
@@ -1161,6 +1179,7 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
   });
 
   socket.on('find_halloween_match', () => {
+    if (maintBlocked(socket)) { socket.emit('maintenance_kick', { message: maintenanceState.message }); return; }
     if (!isCatchEnabled('halloween')) return;
     halloweenQueue = halloweenQueue.filter(s => s !== socket.id);
     halloweenQueue.push(socket.id);
@@ -1168,6 +1187,7 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
   });
 
   socket.on('find_noel_match', () => {
+    if (maintBlocked(socket)) { socket.emit('maintenance_kick', { message: maintenanceState.message }); return; }
     if (!isCatchEnabled('noel')) return;
     noelQueue = noelQueue.filter(s => s !== socket.id);
     noelQueue.push(socket.id);
@@ -1983,6 +2003,7 @@ socket.on('admin_force_refresh', async (data) => {
   });
 
   socket.on('tower_floor_start', async (data) => {
+    if (maintBlocked(socket)) { socket.emit('maintenance_kick', { message: maintenanceState.message }); return; }
     const player = activePlayers[socket.id];
     if (!player) return;
     const floor = parseInt(data && data.floor) || 0;
