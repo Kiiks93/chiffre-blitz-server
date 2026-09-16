@@ -669,5 +669,32 @@ setTimeout(()=>socket.emit('admin_get_maintenance', {}), 1500);
   init();
 })();
 </script>
+<!-- ===== BOUTON FERMER LE PANEL (MOBILE) ===== -->
+<style>
+#admin-close-btn{
+  position:fixed; top:10px; right:10px; z-index:99999;
+  width:46px; height:46px; border-radius:50%;
+  background:#ff4b2b; color:#fff; font-size:22px; font-weight:900;
+  border:none; box-shadow:0 2px 12px rgba(0,0,0,.45);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; -webkit-tap-highlight-color:transparent;
+}
+</style>
+<button id="admin-close-btn" aria-label="Fermer le panel">✕</button>
+<script>
+(function(){
+  var btn = document.getElementById('admin-close-btn');
+  var isMobile = /Android|iPhone|iPad|iPod|Tablet|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 2 && Math.min(screen.width, screen.height) < 900);
+  // Sur PC, le panel est déjà une fenêtre popup : pas besoin de croix
+  if (!isMobile) { btn.style.display = 'none'; }
+  btn.addEventListener('click', function(){
+    // Cas 1 : vraie fenêtre popup (ouverte par script) → on la ferme
+    try { if (window.opener) { window.close(); return; } } catch(e){}
+    // Cas 2 : mobile, le panel a remplacé le jeu → on revient en arrière
+    if (window.history.length > 1) { window.history.back(); }
+    else { window.location.href = 'index.html'; }
+  });
+})();
+</script>
 </body>
 </html>
