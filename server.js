@@ -1254,10 +1254,12 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
   });
 
    socket.on('solo_start', () => {
+  if (maintBlocked(socket)) { socket.emit('maintenance_kick', { message: maintenanceState.message }); return; }
   const p = activePlayers[socket.id];
   if (p) soloStarts[p.username] = Date.now();
   });
   socket.on('catch_solo_start', () => {
+  if (maintBlocked(socket)) { socket.emit('maintenance_kick', { message: maintenanceState.message }); return; }
   const p = activePlayers[socket.id];
   if (p) catchSoloStarts[p.username] = Date.now();
   });
