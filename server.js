@@ -304,9 +304,6 @@ const rankedQueue = [];
 let tugOfWarQueue = [];
 let halloweenQueue = [];
 let noelQueue = [];
-let maintenanceActive = false;
-let maintenanceMessage = "Le serveur est actuellement en maintenance. Merci de réessayer plus tard !";
-let maintenanceBypassCode = "";
 const activeMatches = {};
 const catchSoloStarts = {}; // Horodatage Catch Solo par pseudo (anti-cheat)
 const soloStarts = {}; // Horodatage Solo/Avalanche par pseudo (anti-cheat)
@@ -668,12 +665,6 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
   socket.emit("version_blocked");
   socket.disconnect(true);
   return;
-}
-const maintCode = socket.handshake.auth && socket.handshake.auth.maintCode;
-if (maintenanceActive && maintCode !== maintenanceBypassCode && !isAdminConn) {
-    socket.emit('maintenance_kick', { message: maintenanceMessage });
-    socket.disconnect(true);
-    return;
 }
   console.log('Connexion : ' + socket.id);
   socket.emit('events_state_update', globalEvents);
@@ -1407,26 +1398,6 @@ if (maintenanceActive && maintCode !== maintenanceBypassCode && !isAdminConn) {
         message: maintenanceMessage, 
         bypass: maintenanceBypassCode 
     });
-});
-
-socket.on('admin_set_maintenance', (data) => {
-    if (!socket.isAdmin) return;
-    maintenanceActive = !!data.active;
-    maintenanceMessage = data.message || "Le serveur est actuellement en maintenance.";
-    maintenanceBypassCode = data.bypass || "";
-    
-    if (maintenanceActive) {
-        // Déconnecter tous les clients actuels (sauf les admins)
-        io.sockets.sockets.forEach((s) => {
-            if (!s.isAdmin) {
-                s.emit('maintenance_kick', { message: maintenanceMessage });
-                setTimeout(() => s.disconnect(true), 500);
-            }
-        });
-    }
-    
-    io.emit('maintenance_state', { active: maintenanceActive, message: maintenanceMessage });
-    socket.emit('admin_maintenance_result', { ok: true, active: maintenanceActive });
 });
 
   socket.on('admin_give_gift', async (data) => {
