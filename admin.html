@@ -81,7 +81,28 @@ LOGIN
 DASHBOARD
 ============================================================ -->
 <div id="admin-dashboard-section" style="display:none;">
-
+  <!-- ===== MODE MAINTENANCE ===== -->
+  <div class="card" style="border-color: rgba(255,75,43,0.55);">
+    <h2 style="color:#ff4b2b;">🛠️ Mode Maintenance</h2>
+    <div id="cbMaintStatus" class="card-desc">État inconnu</div>
+    <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+      <input type="checkbox" id="cbMaintOn" style="width:auto; margin:0;">
+      <span style="font-weight:bold; color:#fff;">Activer la maintenance (Déconnecte les joueurs)</span>
+    </label>
+    <label>Message affiché aux joueurs :</label>
+    <input type="text" id="cbMaintMsg" value="🚧 Les chiffres se font une beauté ! On revient vite (promis) 😉">
+    <div class="row">
+      <div style="flex:1;">
+        <label>Code Bypass (Admin/Test)</label>
+        <input type="text" id="cbMaintCode" placeholder="Code secret...">
+      </div>
+      <button class="btn-blue" style="flex:0 0 auto; width:auto; padding:8px 12px; margin-top:18px;" onclick="document.getElementById('cbMaintCode').value=Math.random().toString(36).slice(2,10)">🎲</button>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <button class="btn-orange" id="cbMaintSave" style="flex:1;">💾 Enregistrer / Appliquer</button>
+      <button class="btn-blue" id="cbMaintRefresh" style="flex:1;">🔄 Rafraîchir</button>
+    </div>
+  </div>
   <!-- ===== COMPTEUR EN LIGNE ===== -->
   <div class="card" style="border-color: rgba(0,210,255,0.55);">
     <h2 style="color:#00d2ff;">🟢 Joueurs en ligne</h2>
@@ -283,6 +304,8 @@ socket.on("admin_auth_success", (data) => {
   renderAdminSchedules(data.schedules || {});
   socket.emit('admin_get_season_dates');
   socket.emit('admin_get_catalog');
+  socket.emit('admin_get_maintenance', {}); // 👈 AJOUTE CETTE LIGNE
+
 });
 
 /* ============================================================
@@ -600,49 +623,36 @@ socket.on('admin_reset_result', (d) => {
     });
   }
 });
-</script>
-<script>
-/* ===== CARTE MODE MAINTENANCE (auto-insérée) ===== */
-(function(){
-  function buildCard(){
-    if (document.getElementById('cbMaintCard')) return;
-    const card = document.createElement('div');
-    card.id = 'cbMaintCard';
-    card.style.cssText = 'margin:16px;padding:16px;border:1px solid #333;border-radius:12px;background:#111;color:#fff;';
-    card.innerHTML = '<h3>🛠️ Maintenance</h3>'
-      + '<div id="cbMaintStatus" style="opacity:.8;margin-bottom:8px;">État inconnu</div>'
-      + '<label><input type="checkbox" id="cbMaintOn"> Mode maintenance ACTIF</label><br><br>'
-      + 'Message :<br><input id="cbMaintMsg" style="width:90%;padding:8px;background:#222;color:#fff;border:1px solid #444;border-radius:8px;" value="🚧 Les chiffres se font une beauté ! On revient vite (promis) 😉"><br><br>'
-      + 'Code bypass : <input id="cbMaintCode" style="width:40%;padding:8px;background:#222;color:#fff;border:1px solid #444;border-radius:8px;"> '
-      + '<button onclick="document.getElementById(\'cbMaintCode\').value=Math.random().toString(36).slice(2,10)">🎲</button><br><br>'
-      + '<button id="cbMaintSave" style="padding:10px 16px;border:none;border-radius:10px;background:#00d2ff;color:#001;font-weight:800;cursor:pointer;">Enregistrer / Appliquer</button> '
-      + '<button id="cbMaintRefresh" style="padding:10px 16px;border:1px solid #444;border-radius:10px;background:transparent;color:#aaa;cursor:pointer;">Rafraîchir</button>';
-    document.body.insertBefore(card, document.body.firstChild);
-    document.getElementById('cbMaintSave').onclick = function(){
-      const v = { enabled: document.getElementById('cbMaintOn').checked,
-                  message: document.getElementById('cbMaintMsg').value,
-                  bypassCode: document.getElementById('cbMaintCode').value };
-      if (v.enabled && !confirm("Activer la maintenance ? Les joueurs non autorisés seront déconnectés dans 60 s.")) return;
-      socket.emit('admin_set_maintenance', v);
-    };
-    document.getElementById('cbMaintRefresh').onclick = function(){ socket.emit('admin_get_maintenance', {}); };
-  }
-  function paint(d){
-    document.getElementById('cbMaintOn').checked = !!d.enabled;
-    if (d.message) document.getElementById('cbMaintMsg').value = d.message;
-    document.getElementById('cbMaintStatus').textContent = d.enabled
-      ? ("🔴 ACTIVE depuis " + new Date(d.since).toLocaleTimeString() + " · " + d.online + " joueur(s) en ligne")
-      : ("🟢 Désactivée · " + d.online + " joueur(s) en ligne");
-  }
-  function init(){
-    if (typeof socket === 'undefined' || !socket || !socket.on) { setTimeout(init, 300); return; }
-    buildCard();
-    socket.on('maintenance_state', paint);
-    socket.on('admin_auth_success', () => socket.emit('admin_get_maintenance', {}));
-    setTimeout(() => socket.emit('admin_get_maintenance', {}), 1500);
-  }
-  init();
-})();
+
+  /* ============================================================
+MODE MAINTENANCE (JS)
+============================================================ */
+document.getElementById('cbMaintSave').addEventListener('click', function(){
+  const v = { 
+    enabled: document.getElementById('cbMaintOn').checked,
+    message: document.getElementById('cbMaintMsg').value,
+    bypassCode: document.getElementById('cbMaintCode').value 
+  };
+  if (v.enabled && !confirm("Activer la maintenance ? Les joueurs non autorisés seront déconnectés dans 60 s.")) return;
+  socket.emit('admin_set_maintenance', v);
+});
+
+document.getElementById('cbMaintRefresh').addEventListener('click', function(){ 
+  socket.emit('admin_get_maintenance', {}); 
+});
+
+socket.on('maintenance_state', (d) => {
+  document.getElementById('cbMaintOn').checked = !!d.enabled;
+  if (d.message) document.getElementById('cbMaintMsg').value = d.message;
+  if (d.bypassCode) document.getElementById('cbMaintCode').value = d.bypassCode;
+  
+  const statusEl = document.getElementById('cbMaintStatus');
+  statusEl.textContent = d.enabled
+    ? ("🔴 ACTIVE depuis " + new Date(d.since).toLocaleTimeString() + " · " + d.online + " joueur(s) en ligne")
+    : ("🟢 Désactivée · " + d.online + " joueur(s) en ligne");
+  statusEl.style.color = d.enabled ? '#ff4b2b' : '#00ff88';
+});
+  
 </script>
 <!-- ===== BOUTON FERMER LE PANEL (MOBILE) ===== -->
 <style>
