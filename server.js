@@ -1391,14 +1391,6 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
   });
 
   socket.on('admin_broadcast_message', (message) => { if (!socket.isAdmin) return; io.emit('global_announcement', message); });
-  socket.on('admin_get_maintenance', () => {
-    if (!socket.isAdmin) return;
-    socket.emit('admin_maintenance_state', { 
-        active: maintenanceActive, 
-        message: maintenanceMessage, 
-        bypass: maintenanceBypassCode 
-    });
-});
 
   socket.on('admin_give_gift', async (data) => {
     if (!socket.isAdmin) return;
