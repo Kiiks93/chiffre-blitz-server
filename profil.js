@@ -555,7 +555,6 @@ function renderProfileAvatarSelector() {
 function equipFromSelect(cat, val) {
   if (!myProfile.inventory) myProfile.inventory = {};
   if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
-  
   if (val) {
     myProfile.inventory.__equipped[cat] = val;
     localStorage.setItem('cb_equipped_' + cat, val);
