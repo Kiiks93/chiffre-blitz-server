@@ -51,7 +51,8 @@ const socket = io(CONFIG.SERVER_URL, {
   reconnection: true,
   reconnectionAttempts: CONFIG.RECONNECTION_ATTEMPTS,
   reconnectionDelay: CONFIG.RECONNECTION_DELAY_MS,
-  query: { v: typeof VERSION_CLIENT !== 'undefined' ? VERSION_CLIENT.version : "1.3.0" }
+  query: { v: typeof VERSION_CLIENT !== 'undefined' ? VERSION_CLIENT.version : "1.3.0" },
+  auth: { maintCode: localStorage.getItem('cb_maint_code') || "" }
 });
 socket.on("disconnect", () => { SoundEngine.stopMusic(true); });
 
@@ -1440,6 +1441,7 @@ let justCreatedAccount = false;
 
 socket.on('register_result', (res) => {
   if (!res.ok) {
+    if (res.reason === 'maintenance') { pendingProfileValidation = false; pendingAccountLogin = false; return; }
     pendingProfileValidation = false;
     localStorage.removeItem('cb_username'); localStorage.removeItem('cb_secret'); localStorage.removeItem('cb_region');
     localStorage.removeItem('cb_avatar'); localStorage.removeItem('cb_flag');
