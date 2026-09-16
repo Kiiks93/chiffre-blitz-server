@@ -335,12 +335,19 @@ app.get('/', (req, res) => { res.send('Chiffre Blitz Server is running ⚡'); })
 // AJOUTE CES LIGNES :
 const path = require('path');
 
-app.get('/admin.html', (req, res) => { 
-  res.sendFile(path.join(__dirname, 'admin.html')); 
+app.get('/admin.html', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.sendFile(path.join(__dirname, 'admin.html'));
 });
-
-// Optionnel : servir aussi d'autres fichiers statiques si besoin
-app.use(express.static(path.join(__dirname, '.')));
+app.use(express.static(path.join(__dirname, '.'), {
+  setHeaders: (res, filePath) => {
+    if (/\.(html|js)$/.test(filePath)) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    }
+  }
+}));
 
 async function savePlayerToSupabase(socketId) {
   const p = activePlayers[socketId];
@@ -380,6 +387,19 @@ function getOnlineCount() {
   return set.size;
 }
 function broadcastOnlineCount() { io.emit('online_count', { online: getOnlineCount() }); }
+
+/* ============================================================
+   MODE MAINTENANCE + BYPASS ADMIN
+   ============================================================ */
+let maintenanceState = { enabled:false, message:"🚧 Les chiffres se font une beauté ! On revient vite (promis) 😉", bypassCode:"", since:null };
+let maintenanceKickTimer = null;
+function maintSockets(){ const m = io.sockets.sockets; return (typeof m.values === "function") ? [...m.values()] : Object.values(m); }
+function isMaintBypass(socket){ return !!socket.isAdmin || !!socket._maintBypass; }
+function maintBlocked(socket){ return maintenanceState.enabled && !isMaintBypass(socket); }
+async function loadMaintenance(){ try { const { data } = await supabase.from('settings').select('maintenance').eq('id',1).maybeSingle(); if (data && data.maintenance) maintenanceState = Object.assign({}, maintenanceState, data.maintenance); console.log("Maintenance au demarrage : " + (maintenanceState.enabled ? "ACTIVE" : "inactive")); } catch(e){ console.error("loadMaintenance:", e && e.message); } }
+async function saveMaintenance(){ try { await supabase.from('settings').update({ maintenance: maintenanceState }).eq('id',1); } catch(e){ console.error("saveMaintenance:", e && e.message); } }
+function maintenanceKickAll(){ for (const s of maintSockets()){ if (!isMaintBypass(s)){ s.emit('maintenance_kick', { message: maintenanceState.message }); s.disconnect(true); } } }
+io.use((socket, next) => { const a = (socket.handshake && socket.handshake.auth) || {}; const c = String((a && a.maintCode) || ""); if (c && maintenanceState.bypassCode && c === maintenanceState.bypassCode) socket._maintBypass = true; next(); });
 async function logPlayerAction(p, action, detail, currency, amount, balanceAfter) {
   try {
     await supabase.from('player_logs').insert([{
@@ -692,6 +712,7 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
   });
 
   socket.on('register_player', async (data) => {
+    if (maintBlocked(socket)) return socket.emit('register_result', { ok:false, reason:'maintenance', message:maintenanceState.message });
     const rawUsername = (data.username || '').trim();
     const secretCode = (data.secretCode || '').trim();
     if (rawUsername.length < 3) { socket.emit('register_result', { ok: false, reason: 'short' }); return; }
@@ -1370,6 +1391,14 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
   });
 
   socket.on('admin_broadcast_message', (message) => { if (!socket.isAdmin) return; io.emit('global_announcement', message); });
+  socket.on('admin_get_maintenance', () => {
+    if (!socket.isAdmin) return;
+    socket.emit('admin_maintenance_state', { 
+        active: maintenanceActive, 
+        message: maintenanceMessage, 
+        bypass: maintenanceBypassCode 
+    });
+});
 
   socket.on('admin_give_gift', async (data) => {
     if (!socket.isAdmin) return;
@@ -1566,9 +1595,33 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
     } catch (e) { socket.emit('change_code_result', { ok: false, message: 'Erreur serveur.' }); }
   });
 
+  socket.on('admin_get_maintenance', () => {
+if (!socket.isAdmin) return;
+socket.emit('maintenance_state', { enabled:maintenanceState.enabled, message:maintenanceState.message, hasCode:!!maintenanceState.bypassCode, since:maintenanceState.since, online:getOnlineCount() });
+});
+socket.on('admin_set_maintenance', async (data) => {
+if (!socket.isAdmin) return;
+const want = !!(data && data.enabled);
+const msg = String((data && data.message) || "").trim() || "🚧 Les chiffres se font une beauté ! On revient vite (promis) 😉";
+const code = String((data && data.bypassCode) || "").trim();
+if (want){
+const first = !maintenanceState.enabled;
+maintenanceState = { enabled:true, message:msg, bypassCode:code, since: first ? Date.now() : maintenanceState.since };
+await saveMaintenance();
+for (const s of maintSockets()){ if (!isMaintBypass(s)) s.emit('maintenance_announce', { message:msg, delay:60 }); }
+if (maintenanceKickTimer) clearTimeout(maintenanceKickTimer);
+maintenanceKickTimer = setTimeout(maintenanceKickAll, 60000);
+} else if (maintenanceState.enabled){
+if (maintenanceKickTimer){ clearTimeout(maintenanceKickTimer); maintenanceKickTimer = null; }
+maintenanceState = { enabled:false, message:msg, bypassCode:"", since:null };
+await saveMaintenance();
+io.emit('maintenance_end', {});
+}
+socket.emit('maintenance_state', { enabled:maintenanceState.enabled, message:maintenanceState.message, hasCode:!!maintenanceState.bypassCode, since:maintenanceState.since, online:getOnlineCount() });
+});
   socket.on('admin_get_stats', () => {
-    if (!socket.isAdmin) return;
-    socket.emit('admin_stats', { online: getOnlineCount() });
+  if (!socket.isAdmin) return;
+  socket.emit('admin_stats', { online: getOnlineCount() });
   });
   socket.on('admin_get_logs', async (data) => {
     if (!socket.isAdmin) return;
@@ -2530,5 +2583,6 @@ app.post('/api/iap_grant', async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log('Serveur Chiffre Blitz demarre sur le port ' + PORT);
+  loadMaintenance();
+console.log('Serveur Chiffre Blitz demarre sur le port ' + PORT);
 });

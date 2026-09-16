@@ -81,7 +81,26 @@ LOGIN
 DASHBOARD
 ============================================================ -->
 <div id="admin-dashboard-section" style="display:none;">
-
+    <!-- ===== MODE MAINTENANCE ===== -->
+  <div class="card" id="maint-card" style="border-color: rgba(255,75,43,0.55);">
+    <h2 style="color:#ff4b2b;">🛠️ Mode Maintenance</h2>
+    <div id="maint-status" class="card-desc" style="font-weight:bold;">🟢 Désactivée</div>
+    <label style="display:flex; align-items:center; gap:8px; margin:6px 0;">
+      <input type="checkbox" id="maint-enabled" style="width:auto;">
+      Activer la maintenance (Déconnecte les joueurs)
+    </label>
+    <label>Message affiché aux joueurs :</label>
+    <input type="text" id="maint-message" value="🚧 Les chiffres se font une beauté ! On revient vite (promis) 😉">
+    <label>Code Bypass (Admin/Test) :</label>
+    <div class="row" style="margin-bottom:8px;">
+      <input type="text" id="maint-bypass-code" placeholder="Code d'accès pendant maintenance" style="flex:1;">
+      <button class="btn-blue" onclick="document.getElementById('maint-bypass-code').value=Math.random().toString(36).slice(2,10)" style="width:auto;">🎲</button>
+    </div>
+    <div class="row">
+      <button class="btn-orange" onclick="saveMaint()" style="flex:1;">💾 Enregistrer / Appliquer</button>
+      <button class="btn-blue" onclick="refreshMaint()" style="flex:1;">🔄 Rafraîchir</button>
+    </div>
+  </div>
   <!-- ===== COMPTEUR EN LIGNE ===== -->
   <div class="card" style="border-color: rgba(0,210,255,0.55);">
     <h2 style="color:#00d2ff;">🟢 Joueurs en ligne</h2>
@@ -124,7 +143,10 @@ DASHBOARD
   <div class="card-desc">
     Donne les flags de déblocage des mondes saisonniers + ajuste les étoiles, vies et jokers.
   </div>
-  <input type="text" id="admin-adv-username" placeholder="Pseudo exact...">
+  <div style="display:flex; gap:6px;">
+  <input type="text" id="admin-adv-username" placeholder="Pseudo exact..." style="flex:1; margin:0;">
+  <button class="btn-blue" onclick="adminForceRefresh()" style="flex:0 0 auto; width:auto; padding:8px 12px;">🔄</button>
+</div>
   
   <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px; margin:8px 0;">
     <div style="font-size:10px; color:#f8b500; font-weight:bold; margin-bottom:6px;">🌍 Flags de saison</div>
@@ -280,6 +302,8 @@ socket.on("admin_auth_success", (data) => {
   renderAdminSchedules(data.schedules || {});
   socket.emit('admin_get_season_dates');
   socket.emit('admin_get_catalog');
+  socket.emit('admin_get_maintenance', {}); // 👈 AJOUTE CETTE LIGNE
+
 });
 
 /* ============================================================
@@ -574,13 +598,6 @@ socket.on('admin_force_refresh_result', (d) => {
   el.style.color = d.ok ? '#00ff88' : '#ff4b2b';
   el.innerText = d.ok ? `✅ ${d.username} rafraîchi !` : `❌ ${d.message}`;
 });
-
-socket.on('admin_adv_result', (d) => {
-  const el = document.getElementById('admin-adv-result');
-  if (!el) return;
-  el.style.color = d.ok ? '#00ff88' : '#ff4b2b';
-  el.innerText = d.message || '';
-});
   
 /* ============================================================
 RÉINITIALISER CODE
@@ -604,17 +621,94 @@ socket.on('admin_reset_result', (d) => {
     });
   }
 });
-function adminUnlockAllWorlds() {
-  document.getElementById('admin-adv-halloween').checked = true;
-  document.getElementById('admin-adv-noel').checked = true;
-  document.getElementById('admin-adv-stars').value = 240;
-  document.getElementById('admin-adv-floor').value = 1800;
-  document.getElementById('admin-adv-lives').value = 10;
-  document.getElementById('admin-adv-jt').value = 50;
-  document.getElementById('admin-adv-js').value = 50;
-  adminGiveAdventure();
-}
-</script>
 
+  /* ============================================================
+MODE MAINTENANCE (JS)
+============================================================ */
+document.getElementById('cbMaintSave').addEventListener('click', function(){
+  const v = { 
+    enabled: document.getElementById('cbMaintOn').checked,
+    message: document.getElementById('cbMaintMsg').value,
+    bypassCode: document.getElementById('cbMaintCode').value 
+  };
+  if (v.enabled && !confirm("Activer la maintenance ? Les joueurs non autorisés seront déconnectés dans 60 s.")) return;
+  socket.emit('admin_set_maintenance', v);
+});
+
+document.getElementById('cbMaintRefresh').addEventListener('click', function(){ 
+  socket.emit('admin_get_maintenance', {}); 
+});
+
+socket.on('maintenance_state', (d) => {
+  document.getElementById('cbMaintOn').checked = !!d.enabled;
+  if (d.message) document.getElementById('cbMaintMsg').value = d.message;
+  if (d.bypassCode) document.getElementById('cbMaintCode').value = d.bypassCode;
+  
+  const statusEl = document.getElementById('cbMaintStatus');
+  statusEl.textContent = d.enabled
+    ? ("🔴 ACTIVE depuis " + new Date(d.since).toLocaleTimeString() + " · " + d.online + " joueur(s) en ligne")
+    : ("🟢 Désactivée · " + d.online + " joueur(s) en ligne");
+  statusEl.style.color = d.enabled ? '#ff4b2b' : '#00ff88';
+});
+  
+</script>
+<!-- ===== BOUTON FERMER LE PANEL (MOBILE) ===== -->
+<style>
+#admin-close-btn{
+  position:fixed; top:10px; right:10px; z-index:99999;
+  width:46px; height:46px; border-radius:50%;
+  background:#ff4b2b; color:#fff; font-size:22px; font-weight:900;
+  border:none; box-shadow:0 2px 12px rgba(0,0,0,.45);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; -webkit-tap-highlight-color:transparent;
+}
+</style>
+<button id="admin-close-btn" aria-label="Fermer le panel">✕</button>
+<script>
+(function(){
+  var btn = document.getElementById('admin-close-btn');
+  var isMobile = /Android|iPhone|iPad|iPod|Tablet|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 2 && Math.min(screen.width, screen.height) < 900);
+  // Sur PC, le panel est déjà une fenêtre popup : pas besoin de croix
+  if (!isMobile) { btn.style.display = 'none'; }
+  btn.addEventListener('click', function(){
+    // Cas 1 : vraie fenêtre popup (ouverte par script) → on la ferme
+    try { if (window.opener) { window.close(); return; } } catch(e){}
+    // Cas 2 : mobile, le panel a remplacé le jeu → on revient en arrière
+    if (window.history.length > 1) { window.history.back(); }
+    else { window.location.href = 'index.html'; }
+  });
+})();
+</script>
+<script>
+/* ===== MODE MAINTENANCE (nouveau système serveur) ===== */
+function saveMaint(){
+  const v = {
+    enabled: document.getElementById('maint-enabled').checked,
+    message: document.getElementById('maint-message').value,
+    bypassCode: document.getElementById('maint-bypass-code').value
+  };
+  if (v.enabled && !confirm("Activer la maintenance ? Les joueurs seront déconnectés dans 60 s.")) return;
+  socket.emit('admin_set_maintenance', v);
+}
+function refreshMaint(){
+  socket.emit('admin_get_maintenance');
+}
+function paintMaint(d){
+  document.getElementById('maint-enabled').checked = !!d.enabled;
+  if (d.message) document.getElementById('maint-message').value = d.message;
+  const st = document.getElementById('maint-status');
+  if (d.enabled) {
+    st.style.color = '#ff4b2b';
+    st.textContent = '🔴 ACTIVE depuis ' + new Date(d.since).toLocaleTimeString() + ' · ' + d.online + ' joueur(s) en ligne';
+  } else {
+    st.style.color = '#00ff88';
+    st.textContent = '🟢 Désactivée · ' + d.online + ' joueur(s) en ligne';
+  }
+}
+socket.on('maintenance_state', paintMaint);
+socket.on('admin_auth_success', () => {
+  socket.emit('admin_get_maintenance');
+});
+</script>
 </body>
 </html>
