@@ -124,7 +124,10 @@ DASHBOARD
   <div class="card-desc">
     Donne les flags de déblocage des mondes saisonniers + ajuste les étoiles, vies et jokers.
   </div>
-  <input type="text" id="admin-adv-username" placeholder="Pseudo exact...">
+  <div style="display:flex; gap:6px;">
+  <input type="text" id="admin-adv-username" placeholder="Pseudo exact..." style="flex:1; margin:0;">
+  <button class="btn-blue" onclick="adminForceRefresh()" style="flex:0 0 auto; width:auto; padding:8px 12px;">🔄</button>
+</div>
   
   <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px; margin:8px 0;">
     <div style="font-size:10px; color:#f8b500; font-weight:bold; margin-bottom:6px;">🌍 Flags de saison</div>
@@ -574,13 +577,6 @@ socket.on('admin_force_refresh_result', (d) => {
   el.style.color = d.ok ? '#00ff88' : '#ff4b2b';
   el.innerText = d.ok ? `✅ ${d.username} rafraîchi !` : `❌ ${d.message}`;
 });
-
-socket.on('admin_adv_result', (d) => {
-  const el = document.getElementById('admin-adv-result');
-  if (!el) return;
-  el.style.color = d.ok ? '#00ff88' : '#ff4b2b';
-  el.innerText = d.message || '';
-});
   
 /* ============================================================
 RÉINITIALISER CODE
@@ -604,27 +600,6 @@ socket.on('admin_reset_result', (d) => {
     });
   }
 });
-function adminUnlockAllWorlds() {
-  document.getElementById('admin-adv-halloween').checked = true;
-  document.getElementById('admin-adv-noel').checked = true;
-  document.getElementById('admin-adv-stars').value = 240;
-  document.getElementById('admin-adv-floor').value = 1800;
-  document.getElementById('admin-adv-lives').value = 10;
-  document.getElementById('admin-adv-jt').value = 50;
-  document.getElementById('admin-adv-js').value = 50;
-  adminGiveAdventure();
-}
-</script>
-<script>
-(function(){
-const card = document.createElement('div'); card.style.cssText='margin:16px;padding:16px;border:1px solid #333;border-radius:12px;background:#111;color:#fff;';
-card.innerHTML = '<h3>🛠️ Maintenance</h3><div id="cbMaintStatus" style="opacity:.8;margin-bottom:8px;">État inconnu</div><label><input type="checkbox" id="cbMaintOn"> Mode maintenance ACTIF</label><br><br>Message :<br><input id="cbMaintMsg" style="width:90%;padding:8px;background:#222;color:#fff;border:1px solid #444;border-radius:8px;" value="🚧 Les chiffres se font une beauté ! On revient vite (promis) 😉"><br><br>Code bypass : <input id="cbMaintCode" style="width:40%;padding:8px;background:#222;color:#fff;border:1px solid #444;border-radius:8px;"> <button onclick="document.getElementById(\'cbMaintCode\').value=Math.random().toString(36).slice(2,10)">🎲</button><br><br><button id="cbMaintSave" style="padding:10px 16px;border:none;border-radius:10px;background:#00d2ff;color:#001;font-weight:800;cursor:pointer;">Enregistrer / Appliquer</button> <button id="cbMaintRefresh" style="padding:10px 16px;border:1px solid #444;border-radius:10px;background:transparent;color:#aaa;cursor:pointer;">Rafraîchir</button>';
-document.body.insertBefore(card, document.body.firstChild);
-document.getElementById('cbMaintSave').onclick = function(){ const v = { enabled: document.getElementById('cbMaintOn').checked, message: document.getElementById('cbMaintMsg').value, bypassCode: document.getElementById('cbMaintCode').value }; if (v.enabled && !confirm("Activer la maintenance ? Les joueurs non autorisés seront déconnectés dans 60 s.")) return; socket.emit('admin_set_maintenance', v); };
-document.getElementById('cbMaintRefresh').onclick = function(){ socket.emit('admin_get_maintenance', {}); };
-socket.on('maintenance_state', d => { document.getElementById('cbMaintOn').checked = !!d.enabled; if (d.message) document.getElementById('cbMaintMsg').value = d.message; document.getElementById('cbMaintStatus').textContent = d.enabled ? ("🔴 ACTIVE depuis " + new Date(d.since).toLocaleTimeString() + " · " + d.online + " joueur(s) en ligne") : ("🟢 Désactivée · " + d.online + " joueur(s) en ligne"); });
-setTimeout(()=>socket.emit('admin_get_maintenance', {}), 1500);
-})();
 </script>
 <script>
 /* ===== CARTE MODE MAINTENANCE (auto-insérée) ===== */
