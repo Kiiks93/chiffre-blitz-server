@@ -58,6 +58,18 @@ DATES DES SAISONS
 .season-date-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
 .season-date-row .season-label { width: 44px; font-weight: bold; color: #f8b500; font-size: 12px; text-align: center; }
 .season-date-row input[type="date"] { flex: 1; margin: 0; }
+
+/* ============================================================
+BOUTON FERMER (MOBILE)
+============================================================ */
+#admin-close-btn{
+  position:fixed; top:10px; right:10px; z-index:99999;
+  width:46px; height:46px; border-radius:50%;
+  background:#ff4b2b; color:#fff; font-size:22px; font-weight:900;
+  border:none; box-shadow:0 2px 12px rgba(0,0,0,.45);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; -webkit-tap-highlight-color:transparent;
+}
 </style>
 </head>
 
@@ -81,7 +93,8 @@ LOGIN
 DASHBOARD
 ============================================================ -->
 <div id="admin-dashboard-section" style="display:none;">
-    <!-- ===== MODE MAINTENANCE ===== -->
+
+  <!-- ===== MODE MAINTENANCE ===== -->
   <div class="card" id="maint-card" style="border-color: rgba(255,75,43,0.55);">
     <h2 style="color:#ff4b2b;">🛠️ Mode Maintenance</h2>
     <div id="maint-status" class="card-desc" style="font-weight:bold;">🟢 Désactivée</div>
@@ -101,6 +114,7 @@ DASHBOARD
       <button class="btn-blue" onclick="refreshMaint()" style="flex:1;">🔄 Rafraîchir</button>
     </div>
   </div>
+
   <!-- ===== COMPTEUR EN LIGNE ===== -->
   <div class="card" style="border-color: rgba(0,210,255,0.55);">
     <h2 style="color:#00d2ff;">🟢 Joueurs en ligne</h2>
@@ -137,67 +151,67 @@ DASHBOARD
     <div id="admin-adjust-result" class="small-result"></div>
   </div>
 
-<!-- ===== AVENTURE : FLAGS & VIES/JOKERS ===== -->
-<div class="card" style="border-color: rgba(255, 107, 169, 0.55);">
-  <h2 style="color:#ff6ba9;">🏰 Aventure — Flags, Étoiles, Vies & Jokers</h2>
-  <div class="card-desc">
-    Donne les flags de déblocage des mondes saisonniers + ajuste les étoiles, vies et jokers.
-  </div>
-  <div style="display:flex; gap:6px;">
-  <input type="text" id="admin-adv-username" placeholder="Pseudo exact..." style="flex:1; margin:0;">
-  <button class="btn-blue" onclick="adminForceRefresh()" style="flex:0 0 auto; width:auto; padding:8px 12px;">🔄</button>
-</div>
-  
-  <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px; margin:8px 0;">
-    <div style="font-size:10px; color:#f8b500; font-weight:bold; margin-bottom:6px;">🌍 Flags de saison</div>
-    <label style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-      <input type="checkbox" id="admin-adv-halloween" style="width:auto; margin:0;">
-      🎃 Débloquer Halloween (Mondes 4-6)
-    </label>
-    <label style="display:flex; align-items:center; gap:8px;">
-      <input type="checkbox" id="admin-adv-noel" style="width:auto; margin:0;">
-      🎄 Débloquer Noël (Mondes 7-9)
-    </label>
-  </div>
-  
-  <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px; margin:8px 0;">
-    <div style="font-size:10px; color:#ff4b2b; font-weight:bold; margin-bottom:6px;">⭐ Étoiles & 🏰 Étage max</div>
-    <div class="row">
-      <div style="flex:1;">
-        <label>⭐ Étoiles par monde (max 240)</label>
-        <input type="number" id="admin-adv-stars" placeholder="240" min="0" max="240">
-      </div>
-      <div style="flex:1;">
-        <label>🏰 Étage max (1-1800)</label>
-        <input type="number" id="admin-adv-floor" placeholder="1800" min="0" max="1800">
+  <!-- ===== AVENTURE : FLAGS & VIES/JOKERS ===== -->
+  <div class="card" style="border-color: rgba(255, 107, 169, 0.55);">
+    <h2 style="color:#ff6ba9;">🏰 Aventure — Flags, Étoiles, Vies & Jokers</h2>
+    <div class="card-desc">
+      Donne les flags de déblocage des mondes saisonniers + ajuste les étoiles, vies et jokers.
+    </div>
+    <div style="display:flex; gap:6px;">
+      <input type="text" id="admin-adv-username" placeholder="Pseudo exact..." style="flex:1; margin:0;">
+      <button class="btn-blue" onclick="adminForceRefresh()" style="flex:0 0 auto; width:auto; padding:8px 12px;">🔄</button>
+    </div>
+
+    <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px; margin:8px 0;">
+      <div style="font-size:10px; color:#f8b500; font-weight:bold; margin-bottom:6px;">🌍 Flags de saison</div>
+      <label style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+        <input type="checkbox" id="admin-adv-halloween" style="width:auto; margin:0;">
+        🎃 Débloquer Halloween (Mondes 4-6)
+      </label>
+      <label style="display:flex; align-items:center; gap:8px;">
+        <input type="checkbox" id="admin-adv-noel" style="width:auto; margin:0;">
+        🎄 Débloquer Noël (Mondes 7-9)
+      </label>
+    </div>
+
+    <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px; margin:8px 0;">
+      <div style="font-size:10px; color:#ff4b2b; font-weight:bold; margin-bottom:6px;">⭐ Étoiles & 🏰 Étage max</div>
+      <div class="row">
+        <div style="flex:1;">
+          <label>⭐ Étoiles par monde (max 240)</label>
+          <input type="number" id="admin-adv-stars" placeholder="240" min="0" max="240">
+        </div>
+        <div style="flex:1;">
+          <label>🏰 Étage max (1-1800)</label>
+          <input type="number" id="admin-adv-floor" placeholder="1800" min="0" max="1800">
+        </div>
       </div>
     </div>
-  </div>
-  
-  <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px; margin:8px 0;">
-    <div style="font-size:10px; color:#ff4b2b; font-weight:bold; margin-bottom:6px;">❤️ Vies & 🎴 Jokers</div>
-    <div class="row">
-      <div style="flex:1;">
-        <label>❤️ Vies (max 10)</label>
-        <input type="number" id="admin-adv-lives" placeholder="10" min="0" max="10">
-      </div>
-      <div style="flex:1;">
-        <label>⏱️ Jokers temps</label>
-        <input type="number" id="admin-adv-jt" placeholder="50" min="0">
-      </div>
-      <div style="flex:1;">
-        <label>🛡️ Jokers bouclier</label>
-        <input type="number" id="admin-adv-js" placeholder="50" min="0">
+
+    <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px; margin:8px 0;">
+      <div style="font-size:10px; color:#ff4b2b; font-weight:bold; margin-bottom:6px;">❤️ Vies & 🎴 Jokers</div>
+      <div class="row">
+        <div style="flex:1;">
+          <label>❤️ Vies (max 10)</label>
+          <input type="number" id="admin-adv-lives" placeholder="10" min="0" max="10">
+        </div>
+        <div style="flex:1;">
+          <label>⏱️ Jokers temps</label>
+          <input type="number" id="admin-adv-jt" placeholder="50" min="0">
+        </div>
+        <div style="flex:1;">
+          <label>🛡️ Jokers bouclier</label>
+          <input type="number" id="admin-adv-js" placeholder="50" min="0">
+        </div>
       </div>
     </div>
+
+    <div style="display:flex; gap:6px; margin-top:8px;">
+      <button class="btn-orange" onclick="adminGiveAdventure()" style="flex:1;">Appliquer ⚡</button>
+      <button class="btn-gold" onclick="adminUnlockAllWorlds()" style="flex:1;">🔓 Tout débloquer</button>
+    </div>
+    <div id="admin-adv-result" class="small-result"></div>
   </div>
-  
-  <div style="display:flex; gap:6px; margin-top:8px;">
-    <button class="btn-orange" onclick="adminGiveAdventure()" style="flex:1;">Appliquer ⚡</button>
-    <button class="btn-gold" onclick="adminUnlockAllWorlds()" style="flex:1;">🔓 Tout débloquer</button>
-  </div>
-  <div id="admin-adv-result" class="small-result"></div>
-</div>
 
   <!-- ===== JOURNAL DES TRANSACTIONS ===== -->
   <div class="card">
@@ -217,7 +231,7 @@ DASHBOARD
     <button class="btn-gold" onclick="adminGiveItem()">Attribuer ⚡</button>
     <div id="admin-give-result" class="small-result"></div>
   </div>
-  
+
   <!-- ===== RÉINITIALISER CODE ===== -->
   <div class="card" style="border-color: rgba(255,75,43,0.55);">
     <h2 style="color:#ff4b2b;">🔑 Réinitialiser un code secret</h2>
@@ -230,6 +244,7 @@ DASHBOARD
     <button class="btn-orange" onclick="adminResetPassword()">Générer un nouveau code ⚡</button>
     <div id="admin-reset-result" class="small-result"></div>
   </div>
+
   <!-- ===== CONTRÔLE DE SAISON ===== -->
   <div class="card" style="border-color: rgba(255,138,0,0.55);">
     <h2 style="color:#ff8a00;">🗓️ Contrôle de Saison</h2>
@@ -266,12 +281,17 @@ DASHBOARD
 
 </div>
 
+<!-- ===== BOUTON FERMER LE PANEL (MOBILE) ===== -->
+<button id="admin-close-btn" aria-label="Fermer le panel">✕</button>
+
 <script>
+/* ============================================================
+CONNEXION SOCKET.IO
+============================================================ */
 const SERVER_URL = "https://chiffre-blitz-server.onrender.com";
-// FIX CRITIQUE : On envoie la version 1.3.0 pour passer le version gating du serveur
-const socket = io(SERVER_URL, { 
-  reconnection: true, 
-  query: { v: "1.3.0" } 
+const socket = io(SERVER_URL, {
+  reconnection: true,
+  query: { v: "1.3.0" }
 });
 
 /* ============================================================
@@ -302,8 +322,39 @@ socket.on("admin_auth_success", (data) => {
   renderAdminSchedules(data.schedules || {});
   socket.emit('admin_get_season_dates');
   socket.emit('admin_get_catalog');
-  socket.emit('admin_get_maintenance', {}); // 👈 AJOUTE CETTE LIGNE
+  socket.emit('admin_get_maintenance');
+});
 
+/* ============================================================
+MODE MAINTENANCE
+============================================================ */
+function saveMaint() {
+  const v = {
+    enabled: document.getElementById('maint-enabled').checked,
+    message: document.getElementById('maint-message').value,
+    bypassCode: document.getElementById('maint-bypass-code').value
+  };
+  if (v.enabled && !confirm("Activer la maintenance ? Les joueurs seront déconnectés dans 60 s.")) return;
+  socket.emit('admin_set_maintenance', v);
+}
+
+function refreshMaint() {
+  socket.emit('admin_get_maintenance');
+}
+
+socket.on('maintenance_state', (d) => {
+  document.getElementById('maint-enabled').checked = !!d.enabled;
+  if (d.message) document.getElementById('maint-message').value = d.message;
+  if (d.bypassCode) document.getElementById('maint-bypass-code').value = d.bypassCode;
+
+  const st = document.getElementById('maint-status');
+  if (d.enabled) {
+    st.style.color = '#ff4b2b';
+    st.textContent = '🔴 ACTIVE depuis ' + new Date(d.since).toLocaleTimeString() + ' · ' + d.online + ' joueur(s) en ligne';
+  } else {
+    st.style.color = '#00ff88';
+    st.textContent = '🟢 Désactivée · ' + d.online + ' joueur(s) en ligne';
+  }
 });
 
 /* ============================================================
@@ -336,16 +387,15 @@ socket.on("admin_season_result", (data) => {
     const label = names[data.season] || data.season || "Auto";
     result.style.color = "#00ff88";
     result.innerText = "✅ Saison active : " + label;
-    alert("️ Saison changée : " + label);
+    alert("✅ Saison changée : " + label);
   } else {
     result.style.color = "#ff4b2b";
     result.innerText = "❌ Erreur : saison non modifiée.";
-    alert("❌ Erreur : saison non modifiée.");
   }
 });
 
 /* ============================================================
-ÉVÉNEMENTS ADMIN
+ÉVÉNEMENTS & ABUSES
 ============================================================ */
 const EVENT_NAMES = {
   coinRush: "🪙 Coin Rush (Pièces x2)",
@@ -353,7 +403,7 @@ const EVENT_NAMES = {
   expressoMatch: "⚡ Expresso Match (20s)",
   chaosMode: "🌪️ Chaos Mode (Malus auto)",
   jackpotEclair: "🎁 Jackpot Éclair",
-  tugOfWarMode: " Mode Corde Raide (Tug-of-War)",
+  tugOfWarMode: "🪢 Mode Corde Raide (Tug-of-War)",
   halloweenMode: "🎃 Mode Exclusif Halloween (Chasse Hantée)",
   noelMode: "🎄 Mode Exclusif Noël (Course aux Cadeaux)"
 };
@@ -494,7 +544,7 @@ socket.on('admin_catalog', (cat) => {
   const sel = document.getElementById('admin-give-item');
   if (!sel) return;
   sel.innerHTML = '';
-  const groups = { frame: '🛡️ Cadres', theme: '🎨 Grilles', avatar: '🐱 Avatars', title: '🏅 Titres', pack: ' Packs', power: '⚡ Pouvoirs' };
+  const groups = { frame: '🛡️ Cadres', theme: '🎨 Grilles', avatar: '🐱 Avatars', title: '🏅 Titres', pack: '🎁 Packs', power: '⚡ Pouvoirs' };
   for (const g in groups) {
     const opts = (cat.items || []).filter(i => i.type === g);
     if (!opts.length) continue;
@@ -504,7 +554,7 @@ socket.on('admin_catalog', (cat) => {
     sel.appendChild(og);
   }
   const tg = document.createElement('optgroup');
-  tg.label = ' Trophées';
+  tg.label = '🏆 Trophées';
   (cat.trophies || []).forEach(t => { const o = document.createElement('option'); o.value = 'trophy:' + t.id; o.textContent = t.name; tg.appendChild(o); });
   sel.appendChild(tg);
 });
@@ -526,16 +576,9 @@ socket.on('admin_give_result', (d) => {
 AVENTURE — FLAGS SAISONS & VIES/JOKERS
 ============================================================ */
 function adminGiveAdventure() {
-  console.log('🔵 adminGiveAdventure appelée');
-  
   const username = document.getElementById('admin-adv-username').value.trim();
-  console.log('🔵 Username:', username);
-  
-  if (!username) { 
-    alert('Pseudo requis.'); 
-    return; 
-  }
-  
+  if (!username) { alert('Pseudo requis.'); return; }
+
   const payload = {
     username: username,
     halloween: document.getElementById('admin-adv-halloween').checked,
@@ -546,25 +589,17 @@ function adminGiveAdventure() {
     starsPerWorld: document.getElementById('admin-adv-stars').value,
     maxFloor: document.getElementById('admin-adv-floor').value
   };
-  
-  console.log('🔵 Payload brut:', payload);
-  
-  // Convertir les valeurs
+
   payload.lives = payload.lives === '' ? null : parseInt(payload.lives);
   payload.jokersTime = payload.jokersTime === '' ? null : parseInt(payload.jokersTime);
   payload.jokersShield = payload.jokersShield === '' ? null : parseInt(payload.jokersShield);
   payload.starsPerWorld = payload.starsPerWorld === '' ? null : parseInt(payload.starsPerWorld);
   payload.maxFloor = payload.maxFloor === '' ? null : parseInt(payload.maxFloor);
-  
-  console.log('🔵 Payload après conversion:', payload);
-  
+
   socket.emit('admin_give_adventure', payload);
-  console.log('✅ Socket émis');
 }
 
 function adminUnlockAllWorlds() {
-  console.log('🔵 adminUnlockAllWorlds appelée');
-  
   document.getElementById('admin-adv-halloween').checked = true;
   document.getElementById('admin-adv-noel').checked = true;
   document.getElementById('admin-adv-stars').value = 240;
@@ -572,13 +607,10 @@ function adminUnlockAllWorlds() {
   document.getElementById('admin-adv-lives').value = 10;
   document.getElementById('admin-adv-jt').value = 50;
   document.getElementById('admin-adv-js').value = 50;
-  
-  console.log(' Valeurs définies, appel adminGiveAdventure...');
   adminGiveAdventure();
 }
 
 socket.on('admin_adv_result', (d) => {
-  console.log('🔵 admin_adv_result reçu:', d);
   const el = document.getElementById('admin-adv-result');
   if (!el) return;
   el.style.color = d.ok ? '#00ff88' : '#ff4b2b';
@@ -588,7 +620,6 @@ socket.on('admin_adv_result', (d) => {
 function adminForceRefresh() {
   const username = document.getElementById('admin-adv-username').value.trim();
   if (!username) { alert('Pseudo requis.'); return; }
-  
   socket.emit('admin_force_refresh', { username });
 }
 
@@ -598,9 +629,9 @@ socket.on('admin_force_refresh_result', (d) => {
   el.style.color = d.ok ? '#00ff88' : '#ff4b2b';
   el.innerText = d.ok ? `✅ ${d.username} rafraîchi !` : `❌ ${d.message}`;
 });
-  
+
 /* ============================================================
-RÉINITIALISER CODE
+RÉINITIALISER CODE SECRET
 ============================================================ */
 function adminResetPassword() {
   const username = document.getElementById('admin-reset-username').value.trim();
@@ -608,6 +639,7 @@ function adminResetPassword() {
   if (!username || !recoveryKey) { alert('Pseudo et clé requis.'); return; }
   socket.emit('admin_reset_password', { username, recoveryKey });
 }
+
 socket.on('admin_reset_result', (d) => {
   const el = document.getElementById('admin-reset-result');
   if (!el) return;
@@ -622,93 +654,20 @@ socket.on('admin_reset_result', (d) => {
   }
 });
 
-  /* ============================================================
-MODE MAINTENANCE (JS)
+/* ============================================================
+BOUTON FERMER (MOBILE)
 ============================================================ */
-document.getElementById('cbMaintSave').addEventListener('click', function(){
-  const v = { 
-    enabled: document.getElementById('cbMaintOn').checked,
-    message: document.getElementById('cbMaintMsg').value,
-    bypassCode: document.getElementById('cbMaintCode').value 
-  };
-  if (v.enabled && !confirm("Activer la maintenance ? Les joueurs non autorisés seront déconnectés dans 60 s.")) return;
-  socket.emit('admin_set_maintenance', v);
-});
-
-document.getElementById('cbMaintRefresh').addEventListener('click', function(){ 
-  socket.emit('admin_get_maintenance', {}); 
-});
-
-socket.on('maintenance_state', (d) => {
-  document.getElementById('cbMaintOn').checked = !!d.enabled;
-  if (d.message) document.getElementById('cbMaintMsg').value = d.message;
-  if (d.bypassCode) document.getElementById('cbMaintCode').value = d.bypassCode;
-  
-  const statusEl = document.getElementById('cbMaintStatus');
-  statusEl.textContent = d.enabled
-    ? ("🔴 ACTIVE depuis " + new Date(d.since).toLocaleTimeString() + " · " + d.online + " joueur(s) en ligne")
-    : ("🟢 Désactivée · " + d.online + " joueur(s) en ligne");
-  statusEl.style.color = d.enabled ? '#ff4b2b' : '#00ff88';
-});
-  
-</script>
-<!-- ===== BOUTON FERMER LE PANEL (MOBILE) ===== -->
-<style>
-#admin-close-btn{
-  position:fixed; top:10px; right:10px; z-index:99999;
-  width:46px; height:46px; border-radius:50%;
-  background:#ff4b2b; color:#fff; font-size:22px; font-weight:900;
-  border:none; box-shadow:0 2px 12px rgba(0,0,0,.45);
-  display:flex; align-items:center; justify-content:center;
-  cursor:pointer; -webkit-tap-highlight-color:transparent;
-}
-</style>
-<button id="admin-close-btn" aria-label="Fermer le panel">✕</button>
-<script>
 (function(){
   var btn = document.getElementById('admin-close-btn');
   var isMobile = /Android|iPhone|iPad|iPod|Tablet|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 2 && Math.min(screen.width, screen.height) < 900);
-  // Sur PC, le panel est déjà une fenêtre popup : pas besoin de croix
   if (!isMobile) { btn.style.display = 'none'; }
   btn.addEventListener('click', function(){
-    // Cas 1 : vraie fenêtre popup (ouverte par script) → on la ferme
     try { if (window.opener) { window.close(); return; } } catch(e){}
-    // Cas 2 : mobile, le panel a remplacé le jeu → on revient en arrière
     if (window.history.length > 1) { window.history.back(); }
     else { window.location.href = 'index.html'; }
   });
 })();
 </script>
-<script>
-/* ===== MODE MAINTENANCE (nouveau système serveur) ===== */
-function saveMaint(){
-  const v = {
-    enabled: document.getElementById('maint-enabled').checked,
-    message: document.getElementById('maint-message').value,
-    bypassCode: document.getElementById('maint-bypass-code').value
-  };
-  if (v.enabled && !confirm("Activer la maintenance ? Les joueurs seront déconnectés dans 60 s.")) return;
-  socket.emit('admin_set_maintenance', v);
-}
-function refreshMaint(){
-  socket.emit('admin_get_maintenance');
-}
-function paintMaint(d){
-  document.getElementById('maint-enabled').checked = !!d.enabled;
-  if (d.message) document.getElementById('maint-message').value = d.message;
-  const st = document.getElementById('maint-status');
-  if (d.enabled) {
-    st.style.color = '#ff4b2b';
-    st.textContent = '🔴 ACTIVE depuis ' + new Date(d.since).toLocaleTimeString() + ' · ' + d.online + ' joueur(s) en ligne';
-  } else {
-    st.style.color = '#00ff88';
-    st.textContent = '🟢 Désactivée · ' + d.online + ' joueur(s) en ligne';
-  }
-}
-socket.on('maintenance_state', paintMaint);
-socket.on('admin_auth_success', () => {
-  socket.emit('admin_get_maintenance');
-});
-</script>
+
 </body>
 </html>
