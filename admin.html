@@ -418,16 +418,6 @@ DASHBOARD
 
 <!-- ===== BOUTON FERMER LE PANEL (MOBILE) ===== -->
 <button id="admin-close-btn" aria-label="Fermer le panel">✕</button>
-// À placer dans le JS de admin.html
-function requestCloseAdmin() {
-  if (window.parent !== window) {
-    // On est dans un iframe/overlay Mobile → on demande au parent de fermer
-    window.parent.postMessage({ cbAction: 'close_admin' }, '*');
-  } else {
-    // On est dans la popup PC → on ferme la fenêtre
-    window.close();
-  }
-}
 
 <!-- ===== TOAST CONTAINER ===== -->
 <div id="toast-container"></div>
@@ -951,6 +941,15 @@ BOUTON FERMER (MOBILE)
     });
 })();
 
+ function requestCloseAdmin() {
+  if (window.parent !== window) {
+    // On est dans un iframe/overlay Mobile → on demande au parent de fermer
+    window.parent.postMessage({ cbAction: 'close_admin' }, '*');
+  } else {
+    // On est dans la popup PC → on ferme la fenêtre
+    window.close();
+  }
+}
 /* ============================================================
 ENTER KEY SUPPORT
 ============================================================ */
