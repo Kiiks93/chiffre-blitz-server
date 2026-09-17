@@ -1616,24 +1616,46 @@ if (!socket.isAdmin) return;
 socket.emit('maintenance_state', { enabled:maintenanceState.enabled, message:maintenanceState.message, hasCode:!!maintenanceState.bypassCode, since:maintenanceState.since, online:getOnlineCount() });
 });
 socket.on('admin_set_maintenance', async (data) => {
-if (!socket.isAdmin) return;
-const want = !!(data && data.enabled);
-const msg = String((data && data.message) || "").trim() || "🚧 Les chiffres se font une beauté ! On revient vite (promis) 😉";
-const code = String((data && data.bypassCode) || "").trim();
-if (want){
-const first = !maintenanceState.enabled;
-maintenanceState = { enabled:true, message:msg, bypassCode:code, since: first ? Date.now() : maintenanceState.since };
-await saveMaintenance();
-for (const s of maintSockets()){ if (!isMaintBypass(s)) s.emit('maintenance_announce', { message:msg, delay:60 }); }
-if (maintenanceKickTimer) clearTimeout(maintenanceKickTimer);
-maintenanceKickTimer = setTimeout(maintenanceKickAll, 60000);
-} else if (maintenanceState.enabled){
-if (maintenanceKickTimer){ clearTimeout(maintenanceKickTimer); maintenanceKickTimer = null; }
-maintenanceState = { enabled:false, message:msg, bypassCode:"", since:null };
-await saveMaintenance();
-io.emit('maintenance_end', {});
-}
-socket.emit('maintenance_state', { enabled:maintenanceState.enabled, message:maintenanceState.message, hasCode:!!maintenanceState.bypassCode, since:maintenanceState.since, online:getOnlineCount() });
+    if (!socket.isAdmin) return;
+    const want = !!(data && data.enabled);
+    const msg = String((data && data.message) || "").trim() || "🚧 Les chiffres se font une beauté ! On revient vite (promis) 😉";
+    const code = String((data && data.bypassCode) || "").trim();
+    
+    if (want) {
+        const first = !maintenanceState.enabled;
+        maintenanceState = { enabled: true, message: msg, bypassCode: code, since: first ? Date.now() : maintenanceState.since };
+        await saveMaintenance();
+        
+        // ⚡ Envoie à TOUS les joueurs (même en partie) avec délai de 120 secondes
+        for (const s of maintSockets()) {
+            if (!isMaintBypass(s)) {
+                s.emit('maintenance_announce', { 
+                    message: msg, 
+                    delay: 120,  // ⬅️ 2 minutes au lieu de 60
+                    willKick: true 
+                });
+            }
+        }
+        
+        if (maintenanceKickTimer) clearTimeout(maintenanceKickTimer);
+        maintenanceKickTimer = setTimeout(maintenanceKickAll, 120000); // ⬅️ 120 secondes
+    } else if (maintenanceState.enabled) {
+        if (maintenanceKickTimer) { 
+            clearTimeout(maintenanceKickTimer); 
+            maintenanceKickTimer = null; 
+        }
+        maintenanceState = { enabled: false, message: msg, bypassCode: "", since: null };
+        await saveMaintenance();
+        io.emit('maintenance_end', {});
+    }
+    
+    socket.emit('maintenance_state', { 
+        enabled: maintenanceState.enabled, 
+        message: maintenanceState.message, 
+        hasCode: !!maintenanceState.bypassCode, 
+        since: maintenanceState.since, 
+        online: getOnlineCount() 
+    });
 });
   socket.on('admin_get_stats', () => {
   if (!socket.isAdmin) return;
