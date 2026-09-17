@@ -931,14 +931,15 @@ BOUTON FERMER (MOBILE)
     var isMobile = /Android|iPhone|iPad|iPod|Tablet|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 2 && Math.min(screen.width, screen.height) < 900);
     if (!isMobile) { btn.style.display = 'none'; }
     btn.addEventListener('click', function(){
-        if (window.self !== window.top) {
-            window.parent.postMessage({ action: 'close_admin_panel' }, '*');
-            return;
-        }
-        try { if (window.opener) { window.close(); return; } } catch(e){}
-        if (window.history.length > 1) { window.history.back(); }
-        else { window.location.href = 'index.html'; }
-    });
+    // Dans l'overlay mobile (iframe) : on ferme l'overlay du parent
+    if (window.self !== window.top) {
+      window.parent.postMessage({ cbAction: 'close_admin' }, '*');
+      return;
+    }
+    try { if (window.opener) { window.close(); return; } } catch(e){}
+    if (window.history.length > 1) { window.history.back(); }
+    else { window.location.href = 'index.html'; }
+  });
 })();
 
  function requestCloseAdmin() {
