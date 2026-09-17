@@ -2,12 +2,10 @@
 PANEL ADMIN — PC : fenêtre popup · Mobile : overlay dans l'app
 ============================================================ */
 
-// 🔧 URL dynamique : pointe vers le backend (ou le frontend selon ton hébergement)
 const ADMIN_PANEL_URL = (typeof CONFIG !== 'undefined' && CONFIG.SERVER_URL) 
   ? CONFIG.SERVER_URL + "/admin.html" 
-  : "https://chiffre-blitz-server.onrender.com/admin.html"; 
-// ⚠️ NOTE : Si admin.html est hébergé sur le MÊME domaine que ton index.html (frontend), 
-// tu peux simplement mettre : const ADMIN_PANEL_URL = "admin.html";
+  : "https://chiffre-blitz.fr/admin.html"; 
+;
 
 function isAdminMobile() {
   return (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())
