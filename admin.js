@@ -67,5 +67,5 @@ function closeAdminPanel() {
 
 // Le ✕ DANS admin.html (iframe) demande au parent de fermer l'overlay
 window.addEventListener('message', (e) => {
-  if (e.data && e.data.cbAction === 'close_admin') closeAdminPanel();
+  if (e.data && (e.data.cbAction === 'close_admin' || e.data.action === 'close_admin_panel')) closeAdminPanel();
 });
