@@ -1717,3 +1717,77 @@ setInterval(() => {
     updateLastActiveTime();
   });
 })();
+/* ============================================================
+🛠️ MODE MAINTENANCE — côté joueur (bannière décompte + page verrouillée)
+============================================================ */
+function cbShowMaintenanceCountdown(message, seconds) {
+  let bar = document.getElementById('cb-maint-bar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'cb-maint-bar';
+    bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99997;background:linear-gradient(90deg,#ff8a00,#ff4b2b);color:#fff;font-family:system-ui,sans-serif;font-weight:800;font-size:13px;padding:8px 12px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 2px 12px rgba(0,0,0,.4);text-align:center;';
+    document.body.appendChild(bar);
+  }
+  let remaining = Math.max(0, parseInt(seconds, 10) || 0);
+  const render = () => {
+    const m = Math.floor(remaining / 60), s = remaining % 60;
+    bar.innerHTML = '🛠️ MAINTENANCE DANS <span style="font-size:16px;">' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0') + '</span> — termine ta partie !';
+  };
+  render();
+  if (bar._cbInterval) clearInterval(bar._cbInterval);
+  bar._cbInterval = setInterval(() => {
+    remaining--;
+    if (remaining <= 0) { clearInterval(bar._cbInterval); bar._cbInterval = null; return; }
+    render();
+  }, 1000);
+}
+
+function cbShowMaintenanceLocked(message) {
+  const bar = document.getElementById('cb-maint-bar');
+  if (bar) bar.remove();
+  let ov = document.getElementById('cb-maint-overlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'cb-maint-overlay';
+    document.body.appendChild(ov);
+  }
+  ov.style.cssText = 'position:fixed;inset:0;z-index:99998;background:#0a0514;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.innerHTML =
+    '<div style="max-width:420px;width:100%;text-align:center;color:#fff;font-family:system-ui,sans-serif;">' +
+      '<div style="font-size:52px;">🛠️</div>' +
+      '<h2 style="color:#00d2ff;margin:12px 0 6px;font-size:22px;letter-spacing:1px;">MAINTENANCE EN COURS</h2>' +
+      '<p id="cb-maint-msg" style="font-size:14px;line-height:1.5;color:#ddd;margin-bottom:18px;"></p>' +
+      '<div style="height:8px;border-radius:4px;background:rgba(255,255,255,0.12);overflow:hidden;">' +
+        '<div style="height:100%;width:40%;border-radius:4px;background:linear-gradient(90deg,#00c6ff,#0072ff);animation:cbMaintSlide 1.6s ease-in-out infinite;"></div>' +
+      '</div>' +
+      '<p style="font-size:12px;color:#888;margin-top:14px;">Cette page se rechargera toute seule à la fin de la maintenance.</p>' +
+      '<style>@keyframes cbMaintSlide{0%{margin-left:-40%}100%{margin-left:100%}}</style>' +
+    '</div>';
+  const msgEl = ov.querySelector('#cb-maint-msg');
+  if (msgEl && message) msgEl.textContent = message;
+  // Sonde le SERVEUR (URL absolue) toutes les 10 s → recharge dès que la maintenance est levée
+  if (!ov._cbProbe) {
+    ov._cbProbe = setInterval(() => {
+      fetch(CONFIG.SERVER_URL + '/version?cb=' + Date.now(), { cache: 'no-store' })
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(() => { location.reload(); })
+        .catch(() => {});
+    }, 10000);
+  }
+}
+
+socket.on('maintenance_announce', (d) => {
+  cbShowMaintenanceCountdown(d && d.message, (d && d.delay) || 60);
+});
+
+socket.on('maintenance_kick', (d) => {
+  cbShowMaintenanceLocked(d && d.message);
+});
+
+socket.on('maintenance_end', () => {
+  location.reload();
+});
+
+socket.on('register_result', (res) => {
+  if (res && !res.ok && res.reason === 'maintenance') cbShowMaintenanceLocked(res.message);
+});
