@@ -6,7 +6,7 @@ PROFIL.JS — GESTION PROFIL, COMPTE & PERSONNALISATION
 1. CONSTANTES
 ============================================================ */
 const CONFIG = {
-  SERVER_URL: "https://chiffre-blitz.fr",
+  SERVER_URL: "https://chiffre-blitz-server.onrender.com",
   MIN_PSEUDO_LENGTH: 3,
   MIN_CODE_LENGTH: 8,
   MAX_AVATAR_NUM: 999,
@@ -47,6 +47,9 @@ const EMOTES = ["\u{1F525}", "\u26A1", "\u{1F916}", "\u{1F480}", "\u{1F602}", "\
 /* ============================================================
 2. CONNEXION SERVEUR
 ============================================================ */
+if (!CONFIG.SERVER_URL || CONFIG.SERVER_URL.indexOf("chiffre-blitz.fr") !== -1) {
+  CONFIG.SERVER_URL = "https://chiffre-blitz-server.onrender.com";
+}
 const socket = io(CONFIG.SERVER_URL, {
   reconnection: true,
   reconnectionAttempts: CONFIG.RECONNECTION_ATTEMPTS,
