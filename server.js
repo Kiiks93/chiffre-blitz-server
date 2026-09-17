@@ -398,21 +398,30 @@ function isMaintBypass(socket){ return !!socket.isAdmin || !!socket._maintBypass
 function maintBlocked(socket){ return maintenanceState.enabled && !isMaintBypass(socket); }
 async function loadMaintenance(){ try { const { data } = await supabase.from('settings').select('maintenance').eq('id',1).maybeSingle(); if (data && data.maintenance) maintenanceState = Object.assign({}, maintenanceState, data.maintenance); console.log("Maintenance au demarrage : " + (maintenanceState.enabled ? "ACTIVE" : "inactive")); } catch(e){ console.error("loadMaintenance:", e && e.message); } }
 async function saveMaintenance(){ try { await supabase.from('settings').update({ maintenance: maintenanceState }).eq('id',1); } catch(e){ console.error("saveMaintenance:", e && e.message); } }
-function maintenanceKickAll(){ 
-  for (const s of maintSockets()){ 
-    if (!isMaintBypass(s)){ 
+function maintenanceKickAll(){
+  for (const s of maintSockets()){
+    if (!isMaintBypass(s)){
       // Ne PAS kicker les joueurs en pleine partie (match actif ou session tour active)
       const inMatch = !!(activeMatches[s.id] && !activeMatches[s.id].ended);
       const inTower = !!towerSessions[s.id];
+      
       if (!inMatch && !inTower) {
-        s.emit('maintenance_kick', { message: maintenanceState.message }); 
-        s.disconnect(true); 
+        // Joueur au menu → kick immédiat
+        s.emit('maintenance_kick', { message: maintenanceState.message });
+        s.disconnect(true);
       } else {
-        // Joueur en partie : il finit sa partie, mais ne pourra pas en relancer une
-        s.emit('maintenance_announce', { message: maintenanceState.message, delay: 0 });
+        // Joueur en partie → il finit sa partie, puis sera kické
+        s.emit('maintenance_announce', { 
+          message: maintenanceState.message, 
+          delay: 0,
+          inMatch: inMatch,
+          inTower: inTower
+        });
+        // Marquer ce socket comme "à kicker après la partie"
+        s._kickAfterMatch = true;
       }
-    } 
-  } 
+    }
+  }
 }
 io.use((socket, next) => { const a = (socket.handshake && socket.handshake.auth) || {}; const c = String((a && a.maintCode) || ""); if (c && maintenanceState.bypassCode && c === maintenanceState.bypassCode) socket._maintBypass = true; next(); });
 async function logPlayerAction(p, action, detail, currency, amount, balanceAfter) {
@@ -2516,6 +2525,19 @@ async function endMatch(id1, id2, matchData, isRanked) {
   await savePlayerToSupabase(id2);
   if (activePlayers[id1]) io.to(id1).emit('player_registered', activePlayers[id1]);
   if (activePlayers[id2]) io.to(id2).emit('player_registered', activePlayers[id2]);
+    // Vérifier si maintenance active → kicker après envoi des résultats
+  for (let sId of [id1, id2]) {
+    const socket = io.sockets.sockets.get(sId);
+    if (socket && socket._kickAfterMatch && maintBlocked(socket)) {
+      setTimeout(() => {
+        socket.emit('maintenance_kick', { 
+          message: maintenanceState.message,
+          afterMatch: true 
+        });
+        socket.disconnect(true);
+      }, 5000); // 5 secondes pour voir les résultats
+    }
+  }
   io.to(id1).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents, rewards: matchRewards, isRanked, isCatch: !!matchData.isCatch });
   io.to(id2).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents, rewards: matchRewards, isRanked, isCatch: !!matchData.isCatch });
 }
