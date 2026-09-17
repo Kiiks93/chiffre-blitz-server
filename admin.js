@@ -1,15 +1,19 @@
 /* ============================================================
 PANEL ADMIN — PC : fenêtre popup · MOBILE : overlay DANS l'app
 ============================================================ */
+
+// ⚠️ URL ABSOLUE OBLIGATOIRE (Le panel est servi par le backend Render)
+const ADMIN_PANEL_URL = "https://chiffre-blitz-server.onrender.com/admin.html";
+
 function isAdminMobile() {
   return /Android|iPhone|iPad|iPod|Tablet|Mobile/i.test(navigator.userAgent) ||
          (navigator.maxTouchPoints > 2 && Math.min(screen.width, screen.height) < 900);
 }
 
 function openAdminPanel() {
-  // 💻 PC : popup séparée (comportement actuel, inchangé)
+  // 💻 PC : popup séparée
   if (!isAdminMobile()) {
-    window.open("admin.html", "cb_admin", "width=430,height=780");
+    window.open(ADMIN_PANEL_URL, "cb_admin", "width=430,height=780");
     return;
   }
 
@@ -33,8 +37,11 @@ function openAdminPanel() {
 
     const iframe = document.createElement('iframe');
     iframe.id = 'admin-iframe';
-    iframe.src = 'admin.html';
+    // ✅ UTILISATION DE L'URL ABSOLUE
+    iframe.src = ADMIN_PANEL_URL; 
     iframe.style.cssText = 'flex:1;width:100%;border:none;background:#0f051d;';
+    // Autorise les permissions nécessaires si le panel utilise des APIs
+    iframe.allow = "clipboard-write"; 
 
     overlay.appendChild(bar);
     overlay.appendChild(iframe);
@@ -42,7 +49,7 @@ function openAdminPanel() {
   } else {
     overlay.style.display = 'flex';
     const iframe = document.getElementById('admin-iframe');
-    if (iframe) iframe.src = 'admin.html'; // rouvre le panel à jour
+    if (iframe) iframe.src = ADMIN_PANEL_URL; // Recharge le panel
   }
 }
 
@@ -50,7 +57,7 @@ function closeAdminPanel() {
   const overlay = document.getElementById('admin-overlay');
   if (overlay) {
     const iframe = document.getElementById('admin-iframe');
-    if (iframe) iframe.src = 'about:blank'; // coupe le socket du panel
+    if (iframe) iframe.src = 'about:blank'; // Coupe le socket du panel
     overlay.style.display = 'none';
     return;
   }
