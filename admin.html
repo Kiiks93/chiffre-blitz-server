@@ -154,17 +154,34 @@ TOAST NOTIFICATIONS
 }
 
 /* ============================================================
-BOUTON FERMER (MOBILE)
-============================================================ */
-#admin-close-btn{
-  position:fixed; bottom:20px; right:20px; z-index:99999;
-  width:56px; height:56px; border-radius:50%;
-  background: linear-gradient(135deg, #ff416c, #ff4b2b); color:#fff; font-size:24px; font-weight:900;
-  border:none; box-shadow:0 6px 20px rgba(255,75,43,0.5);
-  display:flex; align-items:center; justify-content:center;
-  cursor:pointer; -webkit-tap-highlight-color:transparent;
+   BOUTON FERMER (MOBILE)
+   ============================================================ */
+#admin-close-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 99999;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff416c, #ff4b2b);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 900;
+  border: none;
+  box-shadow: 0 6px 20px rgba(255, 75, 43, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
-#admin-close-btn:active { transform: scale(0.9); }
+
+#admin-close-btn:active {
+  transform: scale(0.9);
+}
+
+    
 
 /* ============================================================
 HEADER DASHBOARD
@@ -401,6 +418,16 @@ DASHBOARD
 
 <!-- ===== BOUTON FERMER LE PANEL (MOBILE) ===== -->
 <button id="admin-close-btn" aria-label="Fermer le panel">✕</button>
+// À placer dans le JS de admin.html
+function requestCloseAdmin() {
+  if (window.parent !== window) {
+    // On est dans un iframe/overlay Mobile → on demande au parent de fermer
+    window.parent.postMessage({ cbAction: 'close_admin' }, '*');
+  } else {
+    // On est dans la popup PC → on ferme la fenêtre
+    window.close();
+  }
+}
 
 <!-- ===== TOAST CONTAINER ===== -->
 <div id="toast-container"></div>
