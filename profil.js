@@ -1721,40 +1721,47 @@ setInterval(() => {
   });
 })();
 /* ============================================================
-🛠️ MODE MAINTENANCE — côté joueur (bannière décompte + page verrouillée)
+🛠️ MODE MAINTENANCE — côté joueur (version finale)
 ============================================================ */
-function cbShowMaintenanceCountdown(message, seconds) {
-  let bar = document.getElementById('cb-maint-bar');
-  if (!bar) {
-    bar = document.createElement('div');
-    bar.id = 'cb-maint-bar';
-    bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99997;background:linear-gradient(90deg,#ff8a00,#ff4b2b);color:#fff;font-family:system-ui,sans-serif;font-weight:800;font-size:13px;padding:8px 12px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 2px 12px rgba(0,0,0,.4);text-align:center;';
-    document.body.appendChild(bar);
-  }
+function cbMaintRemoveBanner(){
+  const b = document.getElementById('cb-maint-bar');
+  if (b) b.remove();
+}
+
+// Bannière NON bloquante : le joueur CONTINUE sa partie pendant le décompte
+function cbShowMaintenanceCountdown(message, seconds){
+  cbMaintRemoveBanner();
+  const bar = document.createElement('div');
+  bar.id = 'cb-maint-bar';
+  bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483646;background:linear-gradient(90deg,#ff8a00,#ff4b2b);color:#fff;font-family:system-ui,sans-serif;font-weight:800;font-size:13px;padding:10px 12px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.5);pointer-events:none;';
+  document.body.appendChild(bar);
   let remaining = Math.max(0, parseInt(seconds, 10) || 0);
   const render = () => {
     const m = Math.floor(remaining / 60), s = remaining % 60;
-    bar.innerHTML = '🛠️ MAINTENANCE DANS <span style="font-size:16px;">' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0') + '</span> — termine ta partie !';
+    bar.innerHTML = '🛠️ MAINTENANCE DANS ' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0') + ' — termine ta partie !';
   };
   render();
-  if (bar._cbInterval) clearInterval(bar._cbInterval);
   bar._cbInterval = setInterval(() => {
     remaining--;
-    if (remaining <= 0) { clearInterval(bar._cbInterval); bar._cbInterval = null; return; }
+    if (remaining <= 0){
+      clearInterval(bar._cbInterval);
+      bar.innerHTML = '🛠️ Maintenance imminente — fin de partie = déconnexion';
+      return;
+    }
     render();
   }, 1000);
 }
 
-function cbShowMaintenanceLocked(message) {
-  const bar = document.getElementById('cb-maint-bar');
-  if (bar) bar.remove();
+// Page verrouillée : opaque, AU-DESSUS de tout, recharge UNIQUEMENT quand la maintenance est désactivée
+function cbShowMaintenanceLocked(message){
+  cbMaintRemoveBanner();
   let ov = document.getElementById('cb-maint-overlay');
-  if (!ov) {
+  if (!ov){
     ov = document.createElement('div');
     ov.id = 'cb-maint-overlay';
     document.body.appendChild(ov);
   }
-  ov.style.cssText = 'position:fixed;inset:0;z-index:99998;background:#0a0514;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:#0a0514;display:flex;align-items:center;justify-content:center;padding:20px;';
   ov.innerHTML =
     '<div style="max-width:420px;width:100%;text-align:center;color:#fff;font-family:system-ui,sans-serif;">' +
       '<div style="font-size:52px;">🛠️</div>' +
@@ -1763,34 +1770,36 @@ function cbShowMaintenanceLocked(message) {
       '<div style="height:8px;border-radius:4px;background:rgba(255,255,255,0.12);overflow:hidden;">' +
         '<div style="height:100%;width:40%;border-radius:4px;background:linear-gradient(90deg,#00c6ff,#0072ff);animation:cbMaintSlide 1.6s ease-in-out infinite;"></div>' +
       '</div>' +
-      '<p style="font-size:12px;color:#888;margin-top:14px;">Cette page se rechargera toute seule à la fin de la maintenance.</p>' +
+      '<input id="cb-maint-code" placeholder="Tu as un code ? 🔑" style="margin-top:18px;width:80%;padding:10px;border-radius:10px;border:1px solid #444;background:#111;color:#fff;text-align:center;">' +
+      '<div style="margin-top:10px;"><button id="cb-maint-enter" style="padding:10px 22px;border:none;border-radius:10px;background:#00d2ff;color:#001;font-weight:800;cursor:pointer;">Entrer</button></div>' +
+      '<p style="font-size:12px;color:#888;margin-top:14px;">Retour automatique dès la fin de la maintenance.</p>' +
       '<style>@keyframes cbMaintSlide{0%{margin-left:-40%}100%{margin-left:100%}}</style>' +
     '</div>';
   const msgEl = ov.querySelector('#cb-maint-msg');
   if (msgEl && message) msgEl.textContent = message;
-  // Sonde le SERVEUR (URL absolue) toutes les 10 s → recharge dès que la maintenance est levée
-  if (!ov._cbProbe) {
+  ov.querySelector('#cb-maint-enter').onclick = () => {
+    const c = (ov.querySelector('#cb-maint-code').value || '').trim();
+    if (!c) return;
+    localStorage.setItem('cb_maint_code', c);
+    location.reload();
+  };
+  // Sonde l'ÉTAT de maintenance : ne recharge QUE quand c'est désactivé
+  if (!ov._cbProbe){
     ov._cbProbe = setInterval(() => {
-      fetch(CONFIG.SERVER_URL + '/version?cb=' + Date.now(), { cache: 'no-store' })
+      fetch(CONFIG.SERVER_URL + '/api/maintenance?cb=' + Date.now(), { cache: 'no-store' })
         .then(r => r.ok ? r.json() : Promise.reject())
-        .then(() => { location.reload(); })
+        .then(d => { if (d && d.enabled === false){ localStorage.removeItem('cb_maint_code'); location.reload(); } })
         .catch(() => {});
     }, 10000);
   }
 }
 
 socket.on('maintenance_announce', (d) => {
-  cbShowMaintenanceCountdown(d && d.message, (d && d.delay) || 60);
+  if (d && d.delay > 0) cbShowMaintenanceCountdown(d.message, d.delay);
+  // delay = 0 (annonce de fin de partie) : rien, le kick arrive juste après
 });
-
-socket.on('maintenance_kick', (d) => {
-  cbShowMaintenanceLocked(d && d.message);
-});
-
-socket.on('maintenance_end', () => {
-  location.reload();
-});
-
+socket.on('maintenance_kick', (d) => { cbShowMaintenanceLocked(d && d.message); });
+socket.on('maintenance_end', () => { localStorage.removeItem('cb_maint_code'); location.reload(); });
 socket.on('register_result', (res) => {
   if (res && !res.ok && res.reason === 'maintenance') cbShowMaintenanceLocked(res.message);
 });
