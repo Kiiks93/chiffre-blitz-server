@@ -1,37 +1,113 @@
-const CACHE = "chiffre-blitz-v4"; // ⬅️ incrémente (v4, v5…) à chaque grosse mise à jour
+/* ============================================================
+SW.JS — Service Worker Chiffre Blitz
+Ne met PAS en cache les fichiers admin pour éviter les stale caches
+============================================================ */
 
-self.addEventListener("install", () => self.skipWaiting());
+const CACHE_NAME = 'chiffre-blitz-v3';
+const NO_CACHE = [
+    '/admin.html',
+    '/admin.js',
+    '/sw.js'
+];
 
-self.addEventListener("activate", (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    )
-  );
-  self.clients.claim();
+// Fichiers à mettre en cache pour le jeu principal
+const PRECACHE_URLS = [
+    '/',
+    '/index.html',
+    '/manifest.json'
+];
+
+// ============================================================
+// INSTALL
+// ============================================================
+self.addEventListener('install', (event) => {
+    console.log('[sw] Install');
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then((cache) => cache.addAll(PRECACHE_URLS))
+            .then(() => self.skipWaiting())
+    );
 });
 
-self.addEventListener("fetch", (e) => {
-  if (e.request.method !== "GET") return;
-  const url = new URL(e.request.url);
-  const isCode = url.pathname.endsWith(".js") || url.pathname.endsWith(".html") || url.pathname === "/";
-
-  if (isCode) {
-    // NETWORK-FIRST : toujours la version fraîche du serveur
-    e.respondWith(
-      fetch(e.request)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(e.request, copy));
-          return res;
-        })
-        .catch(() => caches.match(e.request))
+// ============================================================
+// ACTIVATE — nettoie les anciens caches
+// ============================================================
+self.addEventListener('activate', (event) => {
+    console.log('[sw] Activate');
+    event.waitUntil(
+        caches.keys().then((keys) =>
+            Promise.all(
+                keys
+                    .filter((k) => k !== CACHE_NAME)
+                    .map((k) => {
+                        console.log('[sw] Suppression ancien cache :', k);
+                        return caches.delete(k);
+                    })
+            )
+        ).then(() => self.clients.claim())
     );
-    return;
-  }
+});
 
-  // CACHE-FIRST pour le reste (images, sons…)
-  e.respondWith(
-    caches.match(e.request).then((cached) => cached || fetch(e.request))
-  );
+// ============================================================
+// FETCH — Network first pour admin, Cache first pour le reste
+// ============================================================
+self.addEventListener('fetch', (event) => {
+    const url = new URL(event.request.url);
+    const pathname = url.pathname;
+
+    // ❌ JAMAIS mettre en cache les fichiers admin
+    if (NO_CACHE.some((p) => pathname.endsWith(p) || pathname === p)) {
+        event.respondWith(
+            fetch(event.request, { cache: 'no-store' })
+                .catch(() => new Response('Hors ligne — Admin indisponible', {
+                    status: 503,
+                    headers: { 'Content-Type': 'text/plain' }
+                }))
+        );
+        return;
+    }
+
+    // ❌ JAMAIS mettre en cache les fichiers .js (toujours réseau)
+    if (pathname.endsWith('.js')) {
+        event.respondWith(
+            fetch(event.request, { cache: 'no-store' })
+                .then((response) => {
+                    if (response.ok && event.request.method === 'GET') {
+                        const clone = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+                    }
+                    return response;
+                })
+                .catch(() => caches.match(event.request))
+        );
+        return;
+    }
+
+    // ✅ Cache first pour les assets statiques (images, CSS, fonts)
+    event.respondWith(
+        caches.match(event.request).then((cached) => {
+            if (cached) return cached;
+            return fetch(event.request).then((response) => {
+                if (response.ok && event.request.method === 'GET') {
+                    const clone = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+                }
+                return response;
+            });
+        })
+    );
+});
+
+// ============================================================
+// MESSAGE — permet au client de demander un skipWaiting
+// ============================================================
+self.addEventListener('message', (event) => {
+    if (event.data === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+    if (event.data === 'CLEAR_CACHE') {
+        caches.delete(CACHE_NAME).then(() => {
+            console.log('[sw] Cache vidé');
+        });
+    }
 });
