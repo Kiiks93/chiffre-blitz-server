@@ -1,4 +1,4 @@
-const CACHE = "chiffre-blitz-v3"; // ⬅️ incrémente (v4, v5…) à chaque grosse mise à jour
+const CACHE = "chiffre-blitz-v4"; // ⬅️ incrémente (v4, v5…) à chaque grosse mise à jour
 
 self.addEventListener("install", () => self.skipWaiting());
 

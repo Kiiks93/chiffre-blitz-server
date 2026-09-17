@@ -1443,6 +1443,10 @@ function handle1v1TileClick(num, index) {
 function startSoloTraining(mode) {
   const d = i18n[currentLang];
   if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+  if (typeof socket === 'undefined' || !socket.connected) {
+  showNotificationToast(currentLang === 'fr' ? '❌ Connexion serveur perdue. Attends 2-3 s puis réessaie.' : '❌ Server connection lost. Wait 2-3 s and retry.', 'announcement');
+  return;
+}
   activeTrainingMode = mode || "classic";
   hideAllScreens();
   ensureEquippedGrid();
@@ -1558,6 +1562,10 @@ function handleSoloTileClick(num, index) {
 function startAvalancheGame(speed, initialCount) {
   const d = i18n[currentLang];
   if (!isProfileValid()) { checkAndShowProfileModal(); return; }
+  if (typeof socket === 'undefined' || !socket.connected) {
+  showNotificationToast(currentLang === 'fr' ? '❌ Connexion serveur perdue. Attends 2-3 s puis réessaie.' : '❌ Server connection lost. Wait 2-3 s and retry.', 'announcement');
+  return;
+}
   hideAllScreens();
   ensureEquippedGrid();
   setGameModeBadge(d.badge_avalanche, "#7be8ff");

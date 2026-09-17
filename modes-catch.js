@@ -140,6 +140,10 @@ socket.on('game_over_1v1', (data) => {
 6. LANCEMENT DU MODE
 ============================================================ */
 function beginCatch(theme, is1v1, opponent) {
+  if (!is1v1 && (typeof socket === 'undefined' || !socket.connected)) {
+  if (typeof showNotificationToast === 'function') showNotificationToast(currentLang === 'fr' ? '❌ Connexion serveur perdue. Attends 2-3 s puis réessaie.' : '❌ Server connection lost. Wait 2-3 s and retry.', 'announcement');
+  return;
+}
   clearCatchArena();
   // ✅ ANTI-TRICHE : annonce le début de la partie catch SOLO au serveur (timestamp de référence)
   if (!is1v1 && typeof socket !== "undefined" && socket.connected) socket.emit("catch_solo_start");
