@@ -1256,11 +1256,13 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
    socket.on('solo_start', () => {
   if (maintBlocked(socket)) { socket.emit('maintenance_kick', { message: maintenanceState.message }); return; }
   const p = activePlayers[socket.id];
+  soloStarts[socket.id] = Date.now();
   if (p) soloStarts[p.username] = Date.now();
   });
   socket.on('catch_solo_start', () => {
   if (maintBlocked(socket)) { socket.emit('maintenance_kick', { message: maintenanceState.message }); return; }
   const p = activePlayers[socket.id];
+  catchSoloStarts[socket.id] = Date.now();
   if (p) catchSoloStarts[p.username] = Date.now();
   });
 
@@ -1276,7 +1278,7 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
     return;
     }
     const serverDuration = (Date.now() - catchStart) / 1000;
-    delete catchSoloStarts[player.username];
+    delete catchSoloStarts[socket.id]; delete catchSoloStarts[player.username];
     const score = Math.max(0, Math.min(20000, Number(payload && payload.score) || 0));
     const bonus = Math.max(0, Math.min(20000, Number(payload && payload.bonus) || 0));
     const maxAllowed = Math.min(20000, Math.max(500, serverDuration * 800));
@@ -1308,7 +1310,7 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
     return;
     }
     const serverDuration = (Date.now() - soloStart) / 1000;
-    delete soloStarts[player.username];
+    delete soloStarts[socket.id]; delete soloStarts[player.username];
     const score = (typeof payload === 'object' && payload !== null) ? (payload.score || 0) : payload;
     const perfection = (typeof payload === 'object' && payload !== null) ? !!payload.perfection : false;
     const normalizedScore = Number(score);
@@ -2171,6 +2173,8 @@ socket.on('admin_force_refresh', async (data) => {
     delete activeMatches[socket.id];
     delete lastMatchEarnings[socket.id];
     delete towerSessions[socket.id];
+    delete soloStarts[socket.id];
+    delete catchSoloStarts[socket.id];
     await savePlayerToSupabase(socket.id);
     delete activePlayers[socket.id];
     broadcastOnlineCount();
