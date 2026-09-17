@@ -616,17 +616,5 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
 }
 </script>
-<script>
-(function(){
-function cbMaintOverlay(show, msg){ let ov = document.getElementById('cbMaintOverlay'); if (!show){ if (ov) ov.remove(); return; } if (!ov){ ov = document.createElement('div'); ov.id='cbMaintOverlay'; ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(5,5,20,.96);display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;'; ov.innerHTML = '<div style="max-width:420px;padding:24px;"><div style="font-size:56px;">🚧</div><div id="cbMaintMsg" style="font-size:20px;font-weight:800;margin:12px 0;"></div><div id="cbMaintCount" style="opacity:.8;margin-bottom:16px;"></div><input id="cbMaintCode" placeholder="Tu as un code ? 🔑" style="width:70%;padding:10px;border-radius:10px;border:1px solid #444;background:#111;color:#fff;text-align:center;"><br><button onclick="cbMaintSend()" style="margin-top:10px;padding:10px 18px;border-radius:10px;border:none;background:#00d2ff;color:#001;font-weight:800;cursor:pointer;">Entrer</button><br><button onclick="location.reload()" style="margin-top:10px;padding:8px 14px;border-radius:10px;border:1px solid #444;background:transparent;color:#aaa;cursor:pointer;">Réessayer</button></div>'; document.body.appendChild(ov); } document.getElementById('cbMaintMsg').textContent = msg || ""; }
-window.cbMaintSend = function(){ const c = (document.getElementById('cbMaintCode').value||"").trim(); if (!c) return; localStorage.setItem('cb_maint_code', c); location.reload(); };
-if (typeof socket !== "undefined" && socket && socket.on){
-socket.on('maintenance_announce', d => { cbMaintOverlay(true, d && d.message); let n = (d && d.delay)||60; const t = setInterval(()=>{ n--; const el = document.getElementById('cbMaintCount'); if (el) el.textContent = "Fermeture dans " + n + " s…"; if (n<=0) clearInterval(t); },1000); const el0 = document.getElementById('cbMaintCount'); if (el0) el0.textContent = "Fermeture dans " + n + " s…"; });
-socket.on('maintenance_kick', d => { cbMaintOverlay(true, d && d.message); });
-socket.on('maintenance_end', () => { localStorage.removeItem('cb_maint_code'); location.reload(); });
-socket.on('register_result', d => { if (d && d.ok === false && d.reason === 'maintenance') cbMaintOverlay(true, d.message); });
-}
-})();
-</script>
 </body>
 </html>
