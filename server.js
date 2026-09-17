@@ -73,6 +73,10 @@ const VERSION_GATE = {
   urlAndroid: "market://details?id=com.chiffreblitz.app"
 };
 app.get("/version", (req, res) => res.json(VERSION_GATE));
+app.get('/api/maintenance', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.json({ enabled: !!maintenanceState.enabled, message: maintenanceState.message });
+});
 
 function vgCompareServer(a, b) {
   const pa = String(a).split(".").map(Number), pb = String(b).split(".").map(Number);
