@@ -395,7 +395,7 @@ function broadcastOnlineCount() { io.emit('online_count', { online: getOnlineCou
 /* ============================================================
    MODE MAINTENANCE + BYPASS ADMIN
    ============================================================ */
-let maintenanceState = { enabled:false, message:"🚧 Les chiffres se font une beauté ! On revient vite (promis) 😉", bypassCode:"", since:null };
+let maintenanceState = { enabled:false, message:"🔢 Maintenance en cours : on compte jusqu'à… bah non en fait, on répare ! Retour très vite 😉", bypassCode:"", since:null };
 let maintenanceKickTimer = null;
 function maintSockets(){ const m = io.sockets.sockets; return (typeof m.values === "function") ? [...m.values()] : Object.values(m); }
 function isMaintBypass(socket){ return !!socket.isAdmin || !!socket._maintBypass; }
