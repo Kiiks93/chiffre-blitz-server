@@ -75,6 +75,7 @@ const VERSION_GATE = {
 app.get("/version", (req, res) => res.json(VERSION_GATE));
 app.get('/api/maintenance', (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.json({ enabled: !!maintenanceState.enabled, message: maintenanceState.message });
 });
 
@@ -402,9 +403,17 @@ function isMaintBypass(socket){ return !!socket.isAdmin || !!socket._maintBypass
 function maintBlocked(socket){ return maintenanceState.enabled && !isMaintBypass(socket); }
 async function loadMaintenance(){ try { const { data } = await supabase.from('settings').select('maintenance').eq('id',1).maybeSingle(); if (data && data.maintenance) maintenanceState = Object.assign({}, maintenanceState, data.maintenance); console.log("Maintenance au demarrage : " + (maintenanceState.enabled ? "ACTIVE" : "inactive")); } catch(e){ console.error("loadMaintenance:", e && e.message); } }
 async function saveMaintenance(){ try { await supabase.from('settings').update({ maintenance: maintenanceState }).eq('id',1); } catch(e){ console.error("saveMaintenance:", e && e.message); } }
-function maintenanceKickAll(){
-  for (const s of maintSockets()){
-    if (!isMaintBypass(s)){
+function cbMaybeKickAfterMatch(sock){
+  if (sock && sock._kickAfterMatch && maintBlocked(sock)) {
+    setTimeout(() => {
+      sock.emit('maintenance_kick', { message: maintenanceState.message, afterMatch: true });
+      sock.disconnect(true);
+    }, 5000);
+  }
+}
+function maintenanceKickAll(){ 
+  for (const s of maintSockets()){ 
+    if (!isMaintBypass(s)){ 
       // Ne PAS kicker les joueurs en pleine partie (match actif ou session tour active)
       const inMatch = !!(activeMatches[s.id] && !activeMatches[s.id].ended);
       const inTower = !!towerSessions[s.id];
@@ -674,45 +683,11 @@ setInterval(async () => {
     if (!s || s.done){ delete towerSessions[sid]; continue; }
     if (!player){ delete towerSessions[sid]; continue; }
     const elapsed = (Date.now()-s.start)/1000;
-    if (elapsed > s.def.time){ 
-      const r = await towerFail(player, s, 'timeout'); 
-      delete towerSessions[sid]; 
-      io.to(sid).emit('tower_fail', r);
-      
-      // 🛠️ Kick après timeout si maintenance active
-      const socket = io.sockets.sockets.get(sid);
-      if (socket && socket._kickAfterMatch && maintBlocked(socket)) {
-        setTimeout(() => {
-          socket.emit('maintenance_kick', { 
-            message: maintenanceState.message,
-            afterMatch: true 
-          });
-          socket.disconnect(true);
-        }, 5000);
-      }
-      continue; 
-    }
-    if (s.type==="boss"){
-      s.ai += 0.55 + Math.ceil(s.floor / TOWER_FPC) * 0.08;
-      if (s.ai >= s.total){ 
-        const r = await towerFail(player, s, 'boss'); 
-        delete towerSessions[sid]; 
-        io.to(sid).emit('tower_fail', r);
-        
-        // 🛠️ Kick après boss fail si maintenance active
-        const socket = io.sockets.sockets.get(sid);
-        if (socket && socket._kickAfterMatch && maintBlocked(socket)) {
-          setTimeout(() => {
-            socket.emit('maintenance_kick', { 
-              message: maintenanceState.message,
-              afterMatch: true 
-            });
-            socket.disconnect(true);
-          }, 5000);
-        }
-        continue; 
-      }
-    }
+   if (elapsed > s.def.time){ const r = await towerFail(player, s, 'timeout'); delete towerSessions[sid]; io.to(sid).emit('tower_fail', r); cbMaybeKickAfterMatch(io.sockets.sockets.get(sid)); continue; }
+  if (s.type==="boss"){
+  s.ai += 0.55 + Math.ceil(s.floor / TOWER_FPC) * 0.08;
+  if (s.ai >= s.total){ const r = await towerFail(player, s, 'boss'); delete towerSessions[sid]; io.to(sid).emit('tower_fail', r); cbMaybeKickAfterMatch(io.sockets.sockets.get(sid)); continue; }
+  }
     io.to(sid).emit('tower_state', towerStatePayload(s));
   }
 }, 1000);
@@ -1663,46 +1638,24 @@ if (!socket.isAdmin) return;
 socket.emit('maintenance_state', { enabled:maintenanceState.enabled, message:maintenanceState.message, hasCode:!!maintenanceState.bypassCode, since:maintenanceState.since, online:getOnlineCount() });
 });
 socket.on('admin_set_maintenance', async (data) => {
-    if (!socket.isAdmin) return;
-    const want = !!(data && data.enabled);
-    const msg = String((data && data.message) || "").trim() || "🚧 Les chiffres se font une beauté ! On revient vite (promis) 😉";
-    const code = String((data && data.bypassCode) || "").trim();
-    
-    if (want) {
-        const first = !maintenanceState.enabled;
-        maintenanceState = { enabled: true, message: msg, bypassCode: code, since: first ? Date.now() : maintenanceState.since };
-        await saveMaintenance();
-        
-        // ⚡ Envoie à TOUS les joueurs (même en partie) avec délai de 120 secondes
-        for (const s of maintSockets()) {
-            if (!isMaintBypass(s)) {
-                s.emit('maintenance_announce', { 
-                    message: msg, 
-                    delay: 120,  // ⬅️ 2 minutes au lieu de 60
-                    willKick: true 
-                });
-            }
-        }
-        
-        if (maintenanceKickTimer) clearTimeout(maintenanceKickTimer);
-        maintenanceKickTimer = setTimeout(maintenanceKickAll, 120000); // ⬅️ 120 secondes
-    } else if (maintenanceState.enabled) {
-        if (maintenanceKickTimer) { 
-            clearTimeout(maintenanceKickTimer); 
-            maintenanceKickTimer = null; 
-        }
-        maintenanceState = { enabled: false, message: msg, bypassCode: "", since: null };
-        await saveMaintenance();
-        io.emit('maintenance_end', {});
-    }
-    
-    socket.emit('maintenance_state', { 
-        enabled: maintenanceState.enabled, 
-        message: maintenanceState.message, 
-        hasCode: !!maintenanceState.bypassCode, 
-        since: maintenanceState.since, 
-        online: getOnlineCount() 
-    });
+if (!socket.isAdmin) return;
+const want = !!(data && data.enabled);
+const msg = String((data && data.message) || "").trim() || "🔢 Maintenance en cours : on compte jusqu'à… bah non en fait, on répare ! Retour très vite 😉";
+const code = String((data && data.bypassCode) || "").trim();
+if (want){
+const first = !maintenanceState.enabled;
+maintenanceState = { enabled:true, message:msg, bypassCode:code, since: first ? Date.now() : maintenanceState.since };
+await saveMaintenance();
+for (const s of maintSockets()){ if (!isMaintBypass(s)) s.emit('maintenance_announce', { message:msg, delay:60 }); }
+if (maintenanceKickTimer) clearTimeout(maintenanceKickTimer);
+maintenanceKickTimer = setTimeout(maintenanceKickAll, 60000);
+} else if (maintenanceState.enabled){
+if (maintenanceKickTimer){ clearTimeout(maintenanceKickTimer); maintenanceKickTimer = null; }
+maintenanceState = { enabled:false, message:msg, bypassCode:"", since:null };
+await saveMaintenance();
+io.emit('maintenance_end', {});
+}
+socket.emit('maintenance_state', { enabled:maintenanceState.enabled, message:maintenanceState.message, hasCode:!!maintenanceState.bypassCode, since:maintenanceState.since, online:getOnlineCount() });
 });
   socket.on('admin_get_stats', () => {
   if (!socket.isAdmin) return;
@@ -2101,23 +2054,7 @@ socket.on('admin_force_refresh', async (data) => {
     const idx = parseInt(data && data.index);
     if (!Number.isFinite(idx) || idx < 0 || idx >= s.total || s.gone[idx]) return;
     const elapsed = (Date.now() - s.start) / 1000;
-    if (elapsed > s.def.time) { 
-    const r = await towerFail(player, s, 'timeout'); 
-    delete towerSessions[socket.id]; 
-    socket.emit('tower_fail', r);
-  
-  // 🛠️ Kick après défaite si maintenance active
-  if (socket._kickAfterMatch && maintBlocked(socket)) {
-    setTimeout(() => {
-      socket.emit('maintenance_kick', { 
-        message: maintenanceState.message,
-        afterMatch: true 
-      });
-      socket.disconnect(true);
-    }, 5000);
-  }
-  return; 
-}
+    if (elapsed > s.def.time) { const r = await towerFail(player, s, 'timeout'); delete towerSessions[socket.id]; socket.emit('tower_fail', r); cbMaybeKickAfterMatch(socket); return; }
     const v = s.nums[idx];
     let win = false, mistake = false;
 
@@ -2180,61 +2117,25 @@ socket.on('admin_force_refresh', async (data) => {
       } else {
         s.mistakes++;
         if (s.type === "memory") { s.revealed[idx] = true; setTimeout(() => { if (!s.done) { s.revealed[idx] = false; socket.emit('tower_state', towerStatePayload(s)); } }, 450); }
-        if (s.type === "nofail") { 
-  const r = await towerFail(player, s, 'nofail'); 
-  delete towerSessions[socket.id]; 
-  socket.emit('tower_fail', r);
-  
-  // 🛠️ Kick après défaite si maintenance active
-  if (socket._kickAfterMatch && maintBlocked(socket)) {
-    setTimeout(() => {
-      socket.emit('maintenance_kick', { 
-        message: maintenanceState.message,
-        afterMatch: true 
-      });
-      socket.disconnect(true);
-    }, 5000);
-  }
-  return; 
-}
+        if (s.type === "nofail") { const r = await towerFail(player, s, 'nofail'); delete towerSessions[socket.id]; socket.emit('tower_fail', r); cbMaybeKickAfterMatch(socket); return; }
       }
     }
-   if (win) {
+    if (win) {
   const r = await towerWin(player, s);
   delete towerSessions[socket.id];
   socket.emit('tower_result', r);
   socket.emit('player_registered', player);
-  
-  // 🛠️ Kick après victoire si maintenance active
-  if (socket._kickAfterMatch && maintBlocked(socket)) {
-    setTimeout(() => {
-      socket.emit('maintenance_kick', { 
-        message: maintenanceState.message,
-        afterMatch: true 
-      });
-      socket.disconnect(true);
-    }, 5000);
-  }
+  cbMaybeKickAfterMatch(socket);
   return;
 }
     socket.emit('tower_state', towerStatePayload(s));
   });
 
- socket.on('tower_quit', () => {
+  socket.on('tower_quit', () => {
   const s = towerSessions[socket.id];
   if (s && !s.done) { s.done = true; }
   delete towerSessions[socket.id];
-  
-  // 🛠️ Kick après quit si maintenance active
-  if (socket._kickAfterMatch && maintBlocked(socket)) {
-    setTimeout(() => {
-      socket.emit('maintenance_kick', { 
-        message: maintenanceState.message,
-        afterMatch: true 
-      });
-      socket.disconnect(true);
-    }, 5000);
-  }
+  cbMaybeKickAfterMatch(socket);
 });
 
   /* ---------- 🛒 BOUTIQUE AVENTURE (pièces = vies seulement) ---------- */
