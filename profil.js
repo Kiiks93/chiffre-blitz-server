@@ -1444,11 +1444,11 @@ let justCreatedAccount = false;
 socket.on('register_result', (res) => {
   if (!res.ok) {
     // ✅ 1. GESTION PROPRE DE LA MAINTENANCE (On ne wipe pas le localStorage !)
-    if (res.reason === 'maintenance') {
-      pendingProfileValidation = false;
-      pendingAccountLogin = false;
-      cbShowMaintenanceLocked(res.message); // Affiche l'écran de blocage
-      return; 
+     if (res.reason === 'maintenance') {
+    pendingProfileValidation = false;
+    pendingAccountLogin = false;
+    cbShowMaintenanceLocked(res.message);   // affiche l'écran verrouillé ici
+    return;
     }
     
     // ❌ 2. ERREURS CLASSIQUES (On wipe la session locale)
@@ -1849,27 +1849,3 @@ socket.on('maintenance_end', () => {
     location.reload(); 
 });
 
-// ✅ CORRECTION : Gestion du register_result pour éviter l'écrasement immédiat
-socket.on('register_result', (res) => {
-    if (res && !res.ok && res.reason === 'maintenance') {
-        if (window.__maintLockScheduled) return; // Déjà géré par maintenance_kick
-        
-        const isOnRecap = (typeof recapActive !== 'undefined' && recapActive) || 
-                          (document.getElementById('recap-modal') && document.getElementById('recap-modal').style.display === 'flex');
-        if (isOnRecap) {
-            window.__maintLockScheduled = true;
-            if (typeof showNotificationToast === 'function') {
-                showNotificationToast('🛠️ Maintenance : Fermeture dans 10 secondes...', 'announcement');
-            }
-            if (typeof socket !== 'undefined' && socket && socket.io) {
-                socket.io.reconnection(false);
-                socket.disconnect();
-            }
-            setTimeout(() => {
-                cbShowMaintenanceLocked(res.message);
-            }, 10000);
-        } else {
-            cbShowMaintenanceLocked(res.message);
-        }
-    }
-});
