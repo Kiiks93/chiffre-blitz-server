@@ -618,17 +618,16 @@ if ("serviceWorker" in navigator) {
 </script>
 <script>
 (function(){
-  var BASE = (typeof CONFIG !== 'undefined' && CONFIG.SERVER_URL) ? CONFIG.SERVER_URL : 'https://chiffre-blitz-server.onrender.com';
   function cbRemoveBanner(){ var b = document.getElementById('cb-maint-banner'); if (b){ if (b._iv) clearInterval(b._iv); b.remove(); } }
   function cbShowBanner(msg, seconds){
     cbRemoveBanner();
     var b = document.createElement('div'); b.id = 'cb-maint-banner';
-    b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99997;background:linear-gradient(90deg,#ff8a00,#ff4b2b);color:#fff;font-family:system-ui,sans-serif;font-weight:800;font-size:13px;padding:10px 12px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.5);pointer-events:none;';
+    b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483646;background:linear-gradient(90deg,#ff8a00,#ff4b2b);color:#fff;font-family:system-ui,sans-serif;font-weight:800;font-size:13px;padding:10px 12px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.5);pointer-events:none;';
     document.body.appendChild(b);
     var n = Math.max(0, parseInt(seconds,10)||0);
     var render = function(){ var m = Math.floor(n/60), s = n%60; b.innerHTML = '🛠️ MAINTENANCE DANS ' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0') + ' — termine ta partie !'; };
     render();
-    b._iv = setInterval(function(){ n--; if (n <= 0){ clearInterval(b._iv); b.innerHTML = '🛠️ Maintenance imminente — fin de partie = déconnexion'; return; } render(); }, 1000);
+    b._iv = setInterval(function(){ n--; if (n <= 0){ clearInterval(b._iv); b._iv = null; b.innerHTML = '🛠️ Maintenance imminente — fin de partie = déconnexion'; return; } render(); }, 1000);
   }
   function cbShowLocked(msg){
     cbRemoveBanner();
@@ -647,7 +646,7 @@ if ("serviceWorker" in navigator) {
     var m = document.getElementById('cbMaintMsg'); if (m) m.textContent = msg || '';
     if (!ov._probe){
       ov._probe = setInterval(function(){
-        fetch(BASE + '/api/maintenance?cb=' + Date.now(), { cache:'no-store' })
+        fetch('https://chiffre-blitz-server.onrender.com/api/maintenance?cb=' + Date.now(), { cache:'no-store' })
           .then(function(r){ return r.ok ? r.json() : Promise.reject(); })
           .then(function(d){ if (d && d.enabled === false){ localStorage.removeItem('cb_maint_code'); location.reload(); } })
           .catch(function(){});
@@ -657,8 +656,15 @@ if ("serviceWorker" in navigator) {
   window.cbMaintSend = function(){ var c = (document.getElementById('cbMaintCode').value||'').trim(); if (!c) return; localStorage.setItem('cb_maint_code', c); location.reload(); };
   if (typeof socket !== 'undefined' && socket && socket.on){
     socket.on('maintenance_announce', function(d){
-      if (d && d.delay > 0) cbShowBanner(d.message, d.delay);  // bannière NON bloquante
-      else cbShowLocked(d && d.message);                       // delay 0 = fin de partie
+      if (d && d.delay > 0) {
+        cbShowBanner(d.message, d.delay);
+      } else if (d && (d.inMatch || d.inTower)) {
+        // ✅ Joueur en partie : PAS de page verrouillée, juste le bandeau
+        var b = document.getElementById('cb-maint-banner');
+        if (b){ if (b._iv) clearInterval(b._iv); b._iv = null; b.innerHTML = '🛠️ Termine ta partie — déconnexion 10 s après les résultats'; }
+      } else {
+        cbShowLocked(d && d.message);
+      }
     });
     socket.on('maintenance_kick', function(d){ cbShowLocked(d && d.message); });
     socket.on('maintenance_end', function(){ localStorage.removeItem('cb_maint_code'); location.reload(); });
