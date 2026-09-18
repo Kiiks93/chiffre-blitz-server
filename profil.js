@@ -19,7 +19,9 @@ const CONFIG = {
   LOGO_CLICK_TIMEOUT_MS: 5000,
   LOGO_CLICK_COUNT: 10
 };
-
+if (!CONFIG.SERVER_URL || CONFIG.SERVER_URL.indexOf("chiffre-blitz.fr") !== -1) {
+  CONFIG.SERVER_URL = "https://chiffre-blitz-server.onrender.com";
+}
 const RANKS = [
   { min: 1300, fr: "Calculateur ⚡", en: "Calculator ⚡" },
   { min: 700, fr: "Expert 🧠", en: "Expert 🧠" },
