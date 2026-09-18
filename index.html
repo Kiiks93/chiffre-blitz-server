@@ -611,10 +611,20 @@ SCRIPTS (ordre de chargement important)
 </script>
 
 <script>
-// Désactive tout ancien Service Worker (nettoie automatiquement les mobiles qui l'ont déjà)
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
-}
+(function(){
+  if (!("serviceWorker" in navigator)) return;
+  // Nettoyage UNIQUE des vieux SW (une seule fois par téléphone)
+  if (!localStorage.getItem("cb_sw_cleaned")) {
+    navigator.serviceWorker.getRegistrations().then(rs => {
+      rs.forEach(r => r.unregister());
+      localStorage.setItem("cb_sw_cleaned", "1");
+    });
+    return; // le SW neuf s'enregistrera au prochain lancement
+  }
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+})();
 </script>
 <script>
 (function(){
