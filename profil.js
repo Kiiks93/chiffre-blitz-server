@@ -1795,8 +1795,15 @@ function cbShowMaintenanceLocked(message){
 }
 
 socket.on('maintenance_announce', (d) => {
-  if (d && d.delay > 0) cbShowMaintenanceCountdown(d.message, d.delay);
-  // delay = 0 (annonce de fin de partie) : rien, le kick arrive juste après
+  if (d && d.delay > 0) {
+    cbShowMaintenanceCountdown(d.message, d.delay);
+  } else if (d && (d.inMatch || d.inTower)) {
+    // ✅ Joueur en partie : on prévient juste avec un toast discret
+    if (typeof showNotificationToast === 'function') {
+      showNotificationToast('🛠️ Maintenance programmée. Tu seras déconnecté à la fin de ta partie.', 'announcement');
+    }
+  }
+  // Si delay = 0 et pas en partie, le kick immédiat arrive juste après, donc on ne fait rien ici.
 });
 socket.on('maintenance_kick', (d) => { cbShowMaintenanceLocked(d && d.message); });
 socket.on('maintenance_end', () => { localStorage.removeItem('cb_maint_code'); location.reload(); });
