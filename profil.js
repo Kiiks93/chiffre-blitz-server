@@ -886,30 +886,43 @@ function switchAccountTab(tab) {
 }
 
 function renderAccountForm(tab) {
-  const d = i18n[currentLang];
-  const container = document.getElementById('account-form-container');
-  if (!container) return;
+const d = i18n[currentLang];
+const container = document.getElementById('account-form-container');
+if (!container) return;
+if (tab === 'login') {
+container.innerHTML = `<input id="account-username" placeholder="${d.account_username_ph}" maxlength="16" style="width:100%; margin-bottom:6px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
+<div style="position:relative; margin-bottom:10px;">
+  <input id="account-secret" type="password" placeholder="${d.account_secret_ph}" maxlength="32" style="width:100%; padding:10px; padding-right:42px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
+  <button type="button" id="account-secret-eye" onclick="cbToggleAccountSecret()" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:16px; cursor:pointer; padding:4px; line-height:1;">👁️</button>
+</div>
+<button class="btn-main btn-blue" onclick="submitAccountForm('login')" style="width:100%;"> ${d.account_login_btn || "Accéder à mon compte"}</button>`;
+} else {
+container.innerHTML = `<input id="account-username" placeholder="${d.account_username_ph}" maxlength="16" oninput="onUsernameTyping()" style="width:100%; margin-bottom:2px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
+<div id="username-availability" style="font-size:10px; font-weight:bold; min-height:14px; margin-bottom:6px; text-align:center;"></div>
+<div style="position:relative; margin-bottom:4px;">
+  <input id="account-secret" type="password" placeholder="${d.account_secret_ph}" maxlength="32" style="width:100%; padding:10px; padding-right:42px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
+  <button type="button" id="account-secret-eye" onclick="cbToggleAccountSecret()" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:16px; cursor:pointer; padding:4px; line-height:1;">👁️</button>
+</div>
+<div style="font-size:9px; color:#aaa; text-align:center; margin-bottom:8px; line-height:1.4;">${d.account_secret_help}</div>
+<div style="background:rgba(248,181,0,0.12); border:1px solid #f8b500; border-radius:8px; padding:8px; margin-bottom:8px; font-size:10px; color:#f8b500; text-align:center; line-height:1.4;">⚠️ ${d.account_key_warning}</div>
+<div style="font-size:10px; color:#aaa; margin-bottom:4px; text-align:left;">🌍 ${currentLang === "fr" ? "Ta région (pour le classement régional)" : "Your region (for regional ranking)"}</div>
+<select id="account-region" style="width:100%; margin-bottom:10px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff;"></select>
+<button class="btn-main btn-gold" onclick="submitAccountForm('create')" style="width:100%;"> ${d.account_create_btn || "Créer mon compte"}</button>`;
+const srcRegion = document.getElementById("region-input");
+const dstRegion = document.getElementById("account-region");
+if (srcRegion && dstRegion) dstRegion.innerHTML = srcRegion.innerHTML;
+}
+}
 
-  if (tab === 'login') {
-    container.innerHTML = `
-      <input id="account-username" placeholder="${d.account_username_ph}" maxlength="16" style="width:100%; margin-bottom:6px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
-      <input id="account-secret" type="password" placeholder="${d.account_secret_ph}" maxlength="32" style="width:100%; margin-bottom:10px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
-      <button class="btn-main btn-blue" onclick="submitAccountForm('login')" style="width:100%;"> ${d.account_login_btn || "Accéder à mon compte"}</button>`;
-  } else {
-    container.innerHTML = `
-      <input id="account-username" placeholder="${d.account_username_ph}" maxlength="16" oninput="onUsernameTyping()" style="width:100%; margin-bottom:2px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
-      <div id="username-availability" style="font-size:10px; font-weight:bold; min-height:14px; margin-bottom:6px; text-align:center;"></div>
-      <input id="account-secret" type="password" placeholder="${d.account_secret_ph}" maxlength="32" style="width:100%; margin-bottom:4px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
-      <div style="font-size:9px; color:#aaa; text-align:center; margin-bottom:8px; line-height:1.4;">${d.account_secret_help}</div>
-      <div style="background:rgba(248,181,0,0.12); border:1px solid #f8b500; border-radius:8px; padding:8px; margin-bottom:8px; font-size:10px; color:#f8b500; text-align:center; line-height:1.4;">⚠️ ${d.account_key_warning}</div>
-      <div style="font-size:10px; color:#aaa; margin-bottom:4px; text-align:left;">🌍 ${currentLang === "fr" ? "Ta région (pour le classement régional)" : "Your region (for regional ranking)"}</div>
-      <select id="account-region" style="width:100%; margin-bottom:10px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff;"></select>
-      <button class="btn-main btn-gold" onclick="submitAccountForm('create')" style="width:100%;"> ${d.account_create_btn || "Créer mon compte"}</button>`;
-
-    const srcRegion = document.getElementById("region-input");
-    const dstRegion = document.getElementById("account-region");
-    if (srcRegion && dstRegion) dstRegion.innerHTML = srcRegion.innerHTML;
-  }
+// 👁️ Afficher / masquer le code secret (Connexion & Création)
+function cbToggleAccountSecret() {
+const input = document.getElementById('account-secret');
+const eye = document.getElementById('account-secret-eye');
+if (!input) return;
+const nowVisible = (input.type === 'text');
+input.type = nowVisible ? 'password' : 'text';
+if (eye) eye.textContent = nowVisible ? '👁️' : '🙈';
+input.focus();
 }
 
 let usernameCheckTimer = null;
@@ -946,30 +959,62 @@ socket.on('username_check_result', (res) => {
 });
 
 function showChangeCodeModal() {
-  const d = i18n[currentLang];
-  let modal = document.getElementById('modal-change-code');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'modal-change-code';
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-      <div class="modal-card" style="max-width:360px;">
-        <h3 style="color:#00d2ff; margin:0 0 10px 0; text-align:center;">🔑 CHANGER MON CODE SECRET</h3>
-        <div class="card-desc" style="font-size:11px; color:#aaa; text-align:center; margin-bottom:10px;">
-          8+ caractères avec <b>lettres</b>, <b>chiffres</b> et <b>caractère spécial</b> (!@#$%&*+-_)
-        </div>
-        <input type="password" id="change-old-code" placeholder="${d.change_old_code_ph}" style="width:100%; background:#0f051d; color:#fff; border:2px solid #00d2ff; border-radius:8px; padding:8px; font-size:13px; margin-bottom:6px;">
-        <input type="password" id="change-new-code" placeholder="${d.change_new_code_ph}" style="width:100%; background:#0f051d; color:#fff; border:2px solid #00d2ff; border-radius:8px; padding:8px; font-size:13px; margin-bottom:6px;">
-        <input type="password" id="change-confirm-code" placeholder="${d.change_confirm_code_ph}" style="width:100%; background:#0f051d; color:#fff; border:2px solid #00d2ff; border-radius:8px; padding:8px; font-size:13px; margin-bottom:10px;">
-        <div id="change-code-result" style="min-height:16px; font-size:11px; text-align:center; font-weight:bold; margin-bottom:8px;"></div>
-        <div style="display:flex; gap:6px;">
-          <button class="btn-secondary" onclick="closeChangeCodeModal()" style="margin-top:0;">${d.cancel}</button>
-          <button class="btn-main btn-gold" onclick="submitChangeCode()" style="margin-top:0;">${d.change_code_validate}</button>
-        </div>
-      </div>`;
-    document.body.appendChild(modal);
-  }
-  modal.style.display = 'flex';
+const d = i18n[currentLang];
+let modal = document.getElementById('modal-change-code');
+if (!modal) {
+modal = document.createElement('div');
+modal.id = 'modal-change-code';
+modal.className = 'modal-overlay';
+modal.innerHTML = `<div class="modal-card" style="max-width:360px;">
+<h3 style="color:#00d2ff; margin:0 0 10px 0; text-align:center;">🔑 CHANGER MON CODE SECRET</h3>
+<div class="card-desc" style="font-size:11px; color:#aaa; text-align:center; margin-bottom:10px;"> 8+ caractères avec <b>lettres</b>, <b>chiffres</b> et <b>caractère spécial</b> (!@#$%&*+-_) </div>
+
+<div style="position:relative; margin-bottom:6px;">
+<input type="password" id="change-old-code" placeholder="${d.change_old_code_ph}" style="width:100%; background:#0f051d; color:#fff; border:2px solid #00d2ff; border-radius:8px; padding:8px; padding-right:42px; font-size:13px;">
+<button type="button" class="eye-toggle" data-target="change-old-code" aria-label="Afficher le code" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:16px; cursor:pointer; padding:4px; line-height:1;">👁️</button>
+</div>
+
+<div style="position:relative; margin-bottom:6px;">
+<input type="password" id="change-new-code" placeholder="${d.change_new_code_ph}" style="width:100%; background:#0f051d; color:#fff; border:2px solid #00d2ff; border-radius:8px; padding:8px; padding-right:42px; font-size:13px;">
+<button type="button" class="eye-toggle" data-target="change-new-code" aria-label="Afficher le code" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:16px; cursor:pointer; padding:4px; line-height:1;">👁️</button>
+</div>
+
+<div style="position:relative; margin-bottom:10px;">
+<input type="password" id="change-confirm-code" placeholder="${d.change_confirm_code_ph}" style="width:100%; background:#0f051d; color:#fff; border:2px solid #00d2ff; border-radius:8px; padding:8px; padding-right:42px; font-size:13px;">
+<button type="button" class="eye-toggle" data-target="change-confirm-code" aria-label="Afficher le code" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:16px; cursor:pointer; padding:4px; line-height:1;">👁️</button>
+</div>
+
+<div id="change-code-result" style="min-height:16px; font-size:11px; text-align:center; font-weight:bold; margin-bottom:8px;"></div>
+<div style="display:flex; gap:6px;">
+<button class="btn-secondary" onclick="closeChangeCodeModal()" style="margin-top:0;">${d.cancel}</button>
+<button class="btn-main btn-gold" onclick="submitChangeCode()" style="margin-top:0;">${d.change_code_validate}</button>
+</div>
+</div>`;
+document.body.appendChild(modal);
+
+// 👁️ Clic sur l'œil = afficher / masquer le code saisi
+modal.querySelectorAll('.eye-toggle').forEach((btn) => {
+btn.addEventListener('click', () => {
+const input = document.getElementById(btn.dataset.target);
+if (!input) return;
+const nowVisible = (input.type === 'text');
+input.type = nowVisible ? 'password' : 'text';
+btn.textContent = nowVisible ? '👁️' : '🙈';
+input.focus();
+});
+});
+}
+
+// À chaque ouverture : champs vidés + yeux réinitialisés en "masqué"
+['change-old-code', 'change-new-code', 'change-confirm-code'].forEach((id) => {
+const input = document.getElementById(id);
+if (input) { input.value = ''; input.type = 'password'; }
+});
+modal.querySelectorAll('.eye-toggle').forEach((btn) => { btn.textContent = '👁️'; });
+const resultBox = document.getElementById('change-code-result');
+if (resultBox) { resultBox.innerText = ''; resultBox.style.color = ''; }
+
+modal.style.display = 'flex';
 }
 
 function closeChangeCodeModal() {
@@ -1766,7 +1811,7 @@ const render = () => {
     remaining--;
     if (remaining <= 0){
       clearInterval(bar._cbInterval);
-      bar.innerHTML = '🛠️ Maintenance imminente — fin de partie = déconnexion';
+      bar.innerHTML = '🛠️ Maintenance imminente (maintenance en cours) — fin de partie = déconnexion';
       return;
     }
     render();
