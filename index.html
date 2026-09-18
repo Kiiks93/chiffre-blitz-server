@@ -618,14 +618,52 @@ if ("serviceWorker" in navigator) {
 </script>
 <script>
 (function(){
-function cbMaintOverlay(show, msg){ let ov = document.getElementById('cbMaintOverlay'); if (!show){ if (ov) ov.remove(); return; } if (!ov){ ov = document.createElement('div'); ov.id='cbMaintOverlay'; ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(5,5,20,.96);display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;'; ov.innerHTML = '<div style="max-width:420px;padding:24px;"><div style="font-size:56px;">🚧</div><div id="cbMaintMsg" style="font-size:20px;font-weight:800;margin:12px 0;"></div><div id="cbMaintCount" style="opacity:.8;margin-bottom:16px;"></div><input id="cbMaintCode" placeholder="Tu as un code ? 🔑" style="width:70%;padding:10px;border-radius:10px;border:1px solid #444;background:#111;color:#fff;text-align:center;"><br><button onclick="cbMaintSend()" style="margin-top:10px;padding:10px 18px;border-radius:10px;border:none;background:#00d2ff;color:#001;font-weight:800;cursor:pointer;">Entrer</button><br><button onclick="location.reload()" style="margin-top:10px;padding:8px 14px;border-radius:10px;border:1px solid #444;background:transparent;color:#aaa;cursor:pointer;">Réessayer</button></div>'; document.body.appendChild(ov); } document.getElementById('cbMaintMsg').textContent = msg || ""; }
-window.cbMaintSend = function(){ const c = (document.getElementById('cbMaintCode').value||"").trim(); if (!c) return; localStorage.setItem('cb_maint_code', c); location.reload(); };
-if (typeof socket !== "undefined" && socket && socket.on){
-socket.on('maintenance_announce', d => { cbMaintOverlay(true, d && d.message); let n = (d && d.delay)||60; const t = setInterval(()=>{ n--; const el = document.getElementById('cbMaintCount'); if (el) el.textContent = "Fermeture dans " + n + " s…"; if (n<=0) clearInterval(t); },1000); const el0 = document.getElementById('cbMaintCount'); if (el0) el0.textContent = "Fermeture dans " + n + " s…"; });
-socket.on('maintenance_kick', d => { cbMaintOverlay(true, d && d.message); });
-socket.on('maintenance_end', () => { localStorage.removeItem('cb_maint_code'); location.reload(); });
-socket.on('register_result', d => { if (d && d.ok === false && d.reason === 'maintenance') cbMaintOverlay(true, d.message); });
-}
+  var BASE = (typeof CONFIG !== 'undefined' && CONFIG.SERVER_URL) ? CONFIG.SERVER_URL : 'https://chiffre-blitz-server.onrender.com';
+  function cbRemoveBanner(){ var b = document.getElementById('cb-maint-banner'); if (b){ if (b._iv) clearInterval(b._iv); b.remove(); } }
+  function cbShowBanner(msg, seconds){
+    cbRemoveBanner();
+    var b = document.createElement('div'); b.id = 'cb-maint-banner';
+    b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99997;background:linear-gradient(90deg,#ff8a00,#ff4b2b);color:#fff;font-family:system-ui,sans-serif;font-weight:800;font-size:13px;padding:10px 12px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.5);pointer-events:none;';
+    document.body.appendChild(b);
+    var n = Math.max(0, parseInt(seconds,10)||0);
+    var render = function(){ var m = Math.floor(n/60), s = n%60; b.innerHTML = '🛠️ MAINTENANCE DANS ' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0') + ' — termine ta partie !'; };
+    render();
+    b._iv = setInterval(function(){ n--; if (n <= 0){ clearInterval(b._iv); b.innerHTML = '🛠️ Maintenance imminente — fin de partie = déconnexion'; return; } render(); }, 1000);
+  }
+  function cbShowLocked(msg){
+    cbRemoveBanner();
+    var ov = document.getElementById('cbMaintOverlay');
+    if (!ov){ ov = document.createElement('div'); ov.id = 'cbMaintOverlay'; document.body.appendChild(ov); }
+    ov.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:#0a0514;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;';
+    ov.innerHTML = '<div style="max-width:420px;padding:24px;">' +
+      '<div style="font-size:56px;">🚧</div>' +
+      '<div style="font-size:22px;font-weight:900;color:#00d2ff;margin:10px 0 6px;">MAINTENANCE EN COURS</div>' +
+      '<div id="cbMaintMsg" style="font-size:14px;line-height:1.5;color:#ddd;margin-bottom:18px;"></div>' +
+      '<div style="height:8px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden;"><div style="height:100%;width:40%;border-radius:4px;background:linear-gradient(90deg,#00c6ff,#0072ff);animation:cbMaintSlide 1.6s ease-in-out infinite;"></div></div>' +
+      '<style>@keyframes cbMaintSlide{0%{margin-left:-40%}100%{margin-left:100%}}</style>' +
+      '<input id="cbMaintCode" placeholder="Tu as un code ? 🔑" style="width:70%;margin-top:18px;padding:10px;border-radius:10px;border:1px solid #444;background:#111;color:#fff;text-align:center;">' +
+      '<br><button onclick="cbMaintSend()" style="margin-top:10px;padding:10px 18px;border-radius:10px;border:none;background:#00d2ff;color:#001;font-weight:800;cursor:pointer;">Entrer</button>' +
+      '<div style="font-size:11px;color:#888;margin-top:14px;">Retour automatique dès la fin de la maintenance.</div></div>';
+    var m = document.getElementById('cbMaintMsg'); if (m) m.textContent = msg || '';
+    if (!ov._probe){
+      ov._probe = setInterval(function(){
+        fetch(BASE + '/api/maintenance?cb=' + Date.now(), { cache:'no-store' })
+          .then(function(r){ return r.ok ? r.json() : Promise.reject(); })
+          .then(function(d){ if (d && d.enabled === false){ localStorage.removeItem('cb_maint_code'); location.reload(); } })
+          .catch(function(){});
+      }, 10000);
+    }
+  }
+  window.cbMaintSend = function(){ var c = (document.getElementById('cbMaintCode').value||'').trim(); if (!c) return; localStorage.setItem('cb_maint_code', c); location.reload(); };
+  if (typeof socket !== 'undefined' && socket && socket.on){
+    socket.on('maintenance_announce', function(d){
+      if (d && d.delay > 0) cbShowBanner(d.message, d.delay);  // bannière NON bloquante
+      else cbShowLocked(d && d.message);                       // delay 0 = fin de partie
+    });
+    socket.on('maintenance_kick', function(d){ cbShowLocked(d && d.message); });
+    socket.on('maintenance_end', function(){ localStorage.removeItem('cb_maint_code'); location.reload(); });
+    socket.on('register_result', function(d){ if (d && d.ok === false && d.reason === 'maintenance') cbShowLocked(d.message); });
+  }
 })();
 </script>
 </body>
