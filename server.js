@@ -750,7 +750,8 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
   });
 
   socket.on('register_player', async (data) => {
-    if (maintBlocked(socket)) return socket.emit('register_result', { ok:false, reason:'maintenance', message:maintenanceState.message });
+  // Maintenance : bloque uniquement les joueurs PAS déjà connectés
+  if (maintBlocked(socket) && !activePlayers[socket.id]) return socket.emit('register_result', { ok:false, reason:'maintenance', message:maintenanceState.message });
     const rawUsername = (data.username || '').trim();
     const secretCode = (data.secretCode || '').trim();
     if (rawUsername.length < 3) { socket.emit('register_result', { ok: false, reason: 'short' }); return; }
