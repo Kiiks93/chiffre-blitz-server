@@ -1646,9 +1646,9 @@ if (want){
 const first = !maintenanceState.enabled;
 maintenanceState = { enabled:true, message:msg, bypassCode:code, since: first ? Date.now() : maintenanceState.since };
 await saveMaintenance();
-for (const s of maintSockets()){ if (!isMaintBypass(s)) s.emit('maintenance_announce', { message:msg, delay:60 }); }
+for (const s of maintSockets()){ if (!isMaintBypass(s)) s.emit('maintenance_announce', { message:msg, delay:120 }); }
 if (maintenanceKickTimer) clearTimeout(maintenanceKickTimer);
-maintenanceKickTimer = setTimeout(maintenanceKickAll, 60000);
+maintenanceKickTimer = setTimeout(maintenanceKickAll, 120000);
 } else if (maintenanceState.enabled){
 if (maintenanceKickTimer){ clearTimeout(maintenanceKickTimer); maintenanceKickTimer = null; }
 maintenanceState = { enabled:false, message:msg, bypassCode:"", since:null };
@@ -2531,8 +2531,18 @@ async function endMatch(id1, id2, matchData, isRanked) {
       }, 5000); // 5 secondes pour voir les résultats
     }
   }
-  io.to(id1).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents, rewards: matchRewards, isRanked, isCatch: !!matchData.isCatch });
-  io.to(id2).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents, rewards: matchRewards, isRanked, isCatch: !!matchData.isCatch });
+ io.to(id1).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents, rewards: matchRewards, isRanked, isCatch: !!matchData.isCatch });
+io.to(id2).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents, rewards: matchRewards, isRanked, isCatch: !!matchData.isCatch });
+// 🛠️ Maintenance : kick 5 s APRÈS l'envoi des résultats (le récap reste visible)
+for (let sId of [id1, id2]) {
+  const sock = io.sockets.sockets.get(sId);
+  if (sock && sock._kickAfterMatch && maintBlocked(sock)) {
+    setTimeout(() => {
+      sock.emit('maintenance_kick', { message: maintenanceState.message, afterMatch: true });
+      sock.disconnect(true);
+    }, 5000);
+  }
+}
 }
 
 const PORT = process.env.PORT || 3000;
