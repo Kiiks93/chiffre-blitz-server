@@ -73,6 +73,11 @@ const VERSION_GATE = {
   urlAndroid: "market://details?id=com.chiffreblitz.app"
 };
 app.get("/version", (req, res) => res.json(VERSION_GATE));
+app.get('/api/maintenance', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.json({ enabled: !!maintenanceState.enabled, message: maintenanceState.message });
+});
 
 function vgCompareServer(a, b) {
   const pa = String(a).split(".").map(Number), pb = String(b).split(".").map(Number);
@@ -391,7 +396,7 @@ function broadcastOnlineCount() { io.emit('online_count', { online: getOnlineCou
 /* ============================================================
    MODE MAINTENANCE + BYPASS ADMIN
    ============================================================ */
-let maintenanceState = { enabled:false, message:"🚧 Les chiffres se font une beauté ! On revient vite (promis) 😉", bypassCode:"", since:null };
+let maintenanceState = { enabled:false, message:"🔢 Maintenance en cours : on compte jusqu'à… bah non en fait, on répare ! Retour très vite 😉", bypassCode:"", since:null };
 let maintenanceKickTimer = null;
 function maintSockets(){ const m = io.sockets.sockets; return (typeof m.values === "function") ? [...m.values()] : Object.values(m); }
 function isMaintBypass(socket){ return !!socket.isAdmin || !!socket._maintBypass; }
@@ -413,6 +418,14 @@ function maintenanceKickAll(){
       }
     } 
   } 
+}
+function cbMaybeKickAfterMatch(sock){
+  if (sock && sock._kickAfterMatch && maintBlocked(sock)) {
+    setTimeout(() => {
+      sock.emit('maintenance_kick', { message: maintenanceState.message, afterMatch: true });
+      sock.disconnect(true);
+    }, 5000);
+  }
 }
 io.use((socket, next) => { const a = (socket.handshake && socket.handshake.auth) || {}; const c = String((a && a.maintCode) || ""); if (c && maintenanceState.bypassCode && c === maintenanceState.bypassCode) socket._maintBypass = true; next(); });
 async function logPlayerAction(p, action, detail, currency, amount, balanceAfter) {
@@ -1618,7 +1631,7 @@ socket.emit('maintenance_state', { enabled:maintenanceState.enabled, message:mai
 socket.on('admin_set_maintenance', async (data) => {
 if (!socket.isAdmin) return;
 const want = !!(data && data.enabled);
-const msg = String((data && data.message) || "").trim() || "🚧 Les chiffres se font une beauté ! On revient vite (promis) 😉";
+const msg = String((data && data.message) || "").trim() || "🔢 Maintenance en cours : on compte jusqu'à… bah non en fait, on répare ! Retour très vite 😉";
 const code = String((data && data.bypassCode) || "").trim();
 if (want){
 const first = !maintenanceState.enabled;
