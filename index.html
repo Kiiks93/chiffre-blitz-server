@@ -666,9 +666,16 @@ SCRIPTS (ordre de chargement important)
   }
   window.cbMaintSend = function(){ var c = (document.getElementById('cbMaintCode').value||'').trim(); if (!c) return; localStorage.setItem('cb_maint_code', c); location.reload(); };
   if (typeof socket !== 'undefined' && socket && socket.on){
-    socket.on('maintenance_announce', function(d){
-      if (d && d.delay > 0) cbShowBanner(d.message, d.delay);  // bannière NON bloquante
-      else cbShowLocked(d && d.message);                       // delay 0 = fin de partie
+        socket.on('maintenance_announce', function(d){
+      if (d && d.delay > 0) {
+        cbShowBanner(d.message, d.delay);
+      } else if (d && (d.inMatch || d.inTower)) {
+        // Joueur en partie : PAS de verrouillage, juste le bandeau qui prévient
+        var b = document.getElementById('cb-maint-banner');
+        if (b) b.innerHTML = '🛠️ Termine ta partie — déconnexion juste après les résultats';
+      } else {
+        cbShowLocked(d && d.message);
+      }
     });
     socket.on('maintenance_kick', function(d){ cbShowLocked(d && d.message); });
     socket.on('maintenance_end', function(){ localStorage.removeItem('cb_maint_code'); location.reload(); });
