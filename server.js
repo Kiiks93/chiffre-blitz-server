@@ -404,12 +404,12 @@ function maintBlocked(socket){ return maintenanceState.enabled && !isMaintBypass
 async function loadMaintenance(){ try { const { data } = await supabase.from('settings').select('maintenance').eq('id',1).maybeSingle(); if (data && data.maintenance) maintenanceState = Object.assign({}, maintenanceState, data.maintenance); console.log("Maintenance au demarrage : " + (maintenanceState.enabled ? "ACTIVE" : "inactive")); } catch(e){ console.error("loadMaintenance:", e && e.message); } }
 async function saveMaintenance(){ try { await supabase.from('settings').update({ maintenance: maintenanceState }).eq('id',1); } catch(e){ console.error("saveMaintenance:", e && e.message); } }
 function cbMaybeKickAfterMatch(sock){
-  if (sock && sock._kickAfterMatch && maintBlocked(sock)) {
-    setTimeout(() => {
-      sock.emit('maintenance_kick', { message: maintenanceState.message, afterMatch: true });
-      sock.disconnect(true);
-    }, 5000);
-  }
+if (sock && sock._kickAfterMatch && maintBlocked(sock)) {
+setTimeout(() => {
+sock.emit('maintenance_kick', { message: maintenanceState.message, afterMatch: true });
+sock.disconnect(true);
+}, 10000); // ⬅️ 10 s pour laisser voir le récap
+}
 }
 function maintenanceKickAll(){ 
   for (const s of maintSockets()){ 
@@ -1646,9 +1646,9 @@ if (want){
 const first = !maintenanceState.enabled;
 maintenanceState = { enabled:true, message:msg, bypassCode:code, since: first ? Date.now() : maintenanceState.since };
 await saveMaintenance();
-for (const s of maintSockets()){ if (!isMaintBypass(s)) s.emit('maintenance_announce', { message:msg, delay:60 }); }
+for (const s of maintSockets()){ if (!isMaintBypass(s)) s.emit('maintenance_announce', { message:msg, delay:120 }); }
 if (maintenanceKickTimer) clearTimeout(maintenanceKickTimer);
-maintenanceKickTimer = setTimeout(maintenanceKickAll, 60000);
+maintenanceKickTimer = setTimeout(maintenanceKickAll, 120000);
 } else if (maintenanceState.enabled){
 if (maintenanceKickTimer){ clearTimeout(maintenanceKickTimer); maintenanceKickTimer = null; }
 maintenanceState = { enabled:false, message:msg, bypassCode:"", since:null };
@@ -2528,7 +2528,7 @@ async function endMatch(id1, id2, matchData, isRanked) {
           afterMatch: true 
         });
         socket.disconnect(true);
-      }, 5000); // 5 secondes pour voir les résultats
+      }, 10000); // ⬅️ 10 secondes pour voir les résultats
     }
   }
   io.to(id1).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents, rewards: matchRewards, isRanked, isCatch: !!matchData.isCatch });
