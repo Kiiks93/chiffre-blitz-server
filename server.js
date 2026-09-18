@@ -398,6 +398,7 @@ function broadcastOnlineCount() { io.emit('online_count', { online: getOnlineCou
    ============================================================ */
 let maintenanceState = { enabled:false, message:"🔢 Maintenance en cours : on compte jusqu'à… bah non en fait, on répare ! Retour très vite 😉", bypassCode:"", since:null };
 let maintenanceKickTimer = null;
+let maintenanceKickTime = 0;
 function maintSockets(){ const m = io.sockets.sockets; return (typeof m.values === "function") ? [...m.values()] : Object.values(m); }
 function isMaintBypass(socket){ return !!socket.isAdmin || !!socket._maintBypass; }
 function maintBlocked(socket){ return maintenanceState.enabled && !isMaintBypass(socket); }
@@ -1638,24 +1639,34 @@ if (!socket.isAdmin) return;
 socket.emit('maintenance_state', { enabled:maintenanceState.enabled, message:maintenanceState.message, hasCode:!!maintenanceState.bypassCode, since:maintenanceState.since, online:getOnlineCount() });
 });
 socket.on('admin_set_maintenance', async (data) => {
-if (!socket.isAdmin) return;
-const want = !!(data && data.enabled);
-const msg = String((data && data.message) || "").trim() || "🔢 Maintenance en cours : on compte jusqu'à… bah non en fait, on répare ! Retour très vite 😉";
-const code = String((data && data.bypassCode) || "").trim();
-if (want){
-const first = !maintenanceState.enabled;
-maintenanceState = { enabled:true, message:msg, bypassCode:code, since: first ? Date.now() : maintenanceState.since };
-await saveMaintenance();
-for (const s of maintSockets()){ if (!isMaintBypass(s)) s.emit('maintenance_announce', { message:msg, delay:120 }); }
-if (maintenanceKickTimer) clearTimeout(maintenanceKickTimer);
-maintenanceKickTimer = setTimeout(maintenanceKickAll, 120000);
-} else if (maintenanceState.enabled){
-if (maintenanceKickTimer){ clearTimeout(maintenanceKickTimer); maintenanceKickTimer = null; }
-maintenanceState = { enabled:false, message:msg, bypassCode:"", since:null };
-await saveMaintenance();
-io.emit('maintenance_end', {});
-}
-socket.emit('maintenance_state', { enabled:maintenanceState.enabled, message:maintenanceState.message, hasCode:!!maintenanceState.bypassCode, since:maintenanceState.since, online:getOnlineCount() });
+    if (!socket.isAdmin) return;
+    const want = !!(data && data.enabled);
+    const msg = String((data && data.message) || " ").trim() || "🔢 Maintenance en cours : on compte jusqu'à… bah non en fait, on répare ! Retour très vite 😉 ";
+    const code = String((data && data.bypassCode) || " ").trim();
+    
+    if (want){
+        const first = !maintenanceState.enabled;
+        maintenanceState = { enabled:true, message:msg, bypassCode:code, since: first ? Date.now() : maintenanceState.since };
+        await saveMaintenance();
+        
+        const delaySec = 10; // ⬅️ Délai de 10 secondes
+        maintenanceKickTime = Date.now() + (delaySec * 1000);
+        
+        for (const s of maintSockets()){ 
+            if (!isMaintBypass(s)) {
+                s.emit('maintenance_announce', { message:msg, delay: delaySec }); 
+            }
+        }
+        if (maintenanceKickTimer) clearTimeout(maintenanceKickTimer);
+        maintenanceKickTimer = setTimeout(maintenanceKickAll, delaySec * 1000);
+    } else if (maintenanceState.enabled){
+        if (maintenanceKickTimer){ clearTimeout(maintenanceKickTimer); maintenanceKickTimer = null; }
+        maintenanceState = { enabled:false, message:msg, bypassCode:"", since:null };
+        maintenanceKickTime = 0; // ⬅️ Reset du temps
+        await saveMaintenance();
+        io.emit('maintenance_end', {});
+    }
+    socket.emit('maintenance_state', { enabled:maintenanceState.enabled, message:maintenanceState.message, hasCode:!!maintenanceState.bypassCode, since:maintenanceState.since, online:getOnlineCount() });
 });
   socket.on('admin_get_stats', () => {
   if (!socket.isAdmin) return;
