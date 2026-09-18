@@ -1757,10 +1757,10 @@ function cbShowMaintenanceCountdown(message, seconds){
   bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483646;background:linear-gradient(90deg,#ff8a00,#ff4b2b);color:#fff;font-family:system-ui,sans-serif;font-weight:800;font-size:13px;padding:10px 12px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.5);pointer-events:none;';
   document.body.appendChild(bar);
   let remaining = Math.max(0, parseInt(seconds, 10) || 0);
-  const render = () => {
-    const m = Math.floor(remaining / 60), s = remaining % 60;
-    bar.innerHTML = '🛠️ MAINTENANCE DANS ' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0') + ' — termine ta partie !';
-  };
+const render = () => {
+  const m = Math.floor(remaining / 60), s = remaining % 60;
+  bar.innerHTML = '🛠️ MAINTENANCE DANS ' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0') + ' — termine ta partie (maintenance en cours) !';
+};
   render();
   bar._cbInterval = setInterval(() => {
     remaining--;
