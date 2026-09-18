@@ -928,19 +928,20 @@ BOUTON FERMER (MOBILE)
 ============================================================ */
 (function(){
     var btn = document.getElementById('admin-close-btn');
+    var inIframe = (window.self !== window.top);
     var isMobile = /Android|iPhone|iPad|iPod|Tablet|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 2 && Math.min(screen.width, screen.height) < 900);
-    if (!isMobile) { btn.style.display = 'none'; }
+    // Dans l'overlay mobile (iframe) : la croix est déjà dans la barre du haut → on masque celle-ci
+    if (!isMobile || inIframe) { btn.style.display = 'none'; }
     btn.addEventListener('click', function(){
-    // Dans l'overlay mobile (iframe) : on ferme l'overlay du parent
-    if (window.self !== window.top) {
-      window.parent.postMessage({ cbAction: 'close_admin' }, '*');
-      return;
-    }
-    try { if (window.opener) { window.close(); return; } } catch(e){}
-    if (window.history.length > 1) { window.history.back(); }
-    else { window.location.href = 'index.html'; }
-  });
-})();
+        if (inIframe) {
+            window.parent.postMessage({ cbAction: 'close_admin', action: 'close_admin_panel' }, '*');
+            return;
+        }
+        try { if (window.opener) { window.close(); return; } } catch(e){}
+        if (window.history.length > 1) { window.history.back(); }
+        else { window.location.href = 'index.html'; }
+    });
+})();;
 
  function requestCloseAdmin() {
   if (window.parent !== window) {
