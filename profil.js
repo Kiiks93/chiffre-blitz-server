@@ -1443,12 +1443,24 @@ let justCreatedAccount = false;
 
 socket.on('register_result', (res) => {
   if (!res.ok) {
-    if (res.reason === 'maintenance') { pendingProfileValidation = false; pendingAccountLogin = false; return; }
+    // ✅ 1. GESTION PROPRE DE LA MAINTENANCE (On ne wipe pas le localStorage !)
+    if (res.reason === 'maintenance') {
+      pendingProfileValidation = false;
+      pendingAccountLogin = false;
+      cbShowMaintenanceLocked(res.message); // Affiche l'écran de blocage
+      return; 
+    }
+    
+    // ❌ 2. ERREURS CLASSIQUES (On wipe la session locale)
     pendingProfileValidation = false;
     localStorage.removeItem('cb_username'); localStorage.removeItem('cb_secret'); localStorage.removeItem('cb_region');
     localStorage.removeItem('cb_avatar'); localStorage.removeItem('cb_flag');
     localStorage.removeItem('cb_equipped_title'); localStorage.removeItem('cb_equipped_frame'); localStorage.removeItem('cb_equipped_theme');
-    myProfile.username = ''; myProfile.secretCode = ''; myProfile.inventory = { __equipped: {} };
+    
+    myProfile.username = ''; 
+    myProfile.secretCode = ''; 
+    myProfile.inventory = { __equipped: {} };
+    
     if (res.reason === 'taken') alert('❌ Code secret incorrect pour ce pseudo.');
     else if (res.reason === 'nocode') alert('🔒 Choisis un code secret (4 caractères minimum).');
     else if (res.reason === 'short') alert('Ton pseudo doit contenir au moins 3 caractères !');
@@ -1457,10 +1469,15 @@ socket.on('register_result', (res) => {
       checkAndShowProfileModal();
     }
     else alert('❌ Erreur de connexion au serveur. Réessaie.');
-    if (pendingAccountLogin) { pendingAccountLogin = false; renderAccountContent(); }
+    
+    if (pendingAccountLogin) { 
+      pendingAccountLogin = false; 
+      renderAccountContent(); 
+    }
     return;
   }
   
+  // ✅ 3. SUCCÈS : Création de compte
   if (pendingAccountLogin) {
     pendingAccountLogin = false;
     saveLocalPreferences();
@@ -1476,10 +1493,13 @@ socket.on('register_result', (res) => {
     return;
   }
   
+  // ✅ 4. SUCCÈS : Validation du profil (retour au jeu)
   if (pendingProfileValidation) {
     pendingProfileValidation = false;
     saveLocalPreferences();
-    document.getElementById('modal-username').style.display = 'none';
+    const modal = document.getElementById('modal-username');
+    if (modal) modal.style.display = 'none';
+    
     if (launchAdWatched) showMainMenu();
     else openLaunchAdModal();
   }
@@ -1807,6 +1827,4 @@ socket.on('maintenance_announce', (d) => {
 });
 socket.on('maintenance_kick', (d) => { cbShowMaintenanceLocked(d && d.message); });
 socket.on('maintenance_end', () => { localStorage.removeItem('cb_maint_code'); location.reload(); });
-socket.on('register_result', (res) => {
-  if (res && !res.ok && res.reason === 'maintenance') cbShowMaintenanceLocked(res.message);
-});
+
