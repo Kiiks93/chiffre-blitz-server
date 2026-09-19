@@ -1657,17 +1657,20 @@ socket.on('admin_set_maintenance', async (data) => {
     const msg = String((data && data.message) || " ").trim() || "🔢 Maintenance en cours : on compte jusqu'à… bah non en fait, on répare ! Retour très vite 😉 ";
     const code = String((data && data.bypassCode) || " ").trim();
     
+    // ⬇️ NOUVEAU : Délai configurable depuis le panel admin (défaut 60s)
+    const delaySec = Math.max(0, parseInt((data && data.delay) || 60, 10));
+    
     if (want){
         const first = !maintenanceState.enabled;
         maintenanceState = { enabled:true, message:msg, bypassCode:code, since: first ? Date.now() : maintenanceState.since };
         await saveMaintenance();
         
-        const delaySec = 10; // ⬅️ Délai de 10 secondes
         maintenanceKickTime = Date.now() + (delaySec * 1000);
         
-        for (const s of maintSockets()){ 
+        for (const s of maintSockets()){
             if (!isMaintBypass(s)) {
-                s.emit('maintenance_announce', { message:msg, delay: delaySec }); 
+                // On envoie le délai au client pour le compte à rebours
+                s.emit('maintenance_announce', { message: msg, delay: delaySec });
             }
         }
         if (maintenanceKickTimer) clearTimeout(maintenanceKickTimer);
@@ -1675,11 +1678,18 @@ socket.on('admin_set_maintenance', async (data) => {
     } else if (maintenanceState.enabled){
         if (maintenanceKickTimer){ clearTimeout(maintenanceKickTimer); maintenanceKickTimer = null; }
         maintenanceState = { enabled:false, message:msg, bypassCode:"", since:null };
-        maintenanceKickTime = 0; // ⬅️ Reset du temps
+        maintenanceKickTime = 0;
         await saveMaintenance();
         io.emit('maintenance_end', {});
     }
-    socket.emit('maintenance_state', { enabled:maintenanceState.enabled, message:maintenanceState.message, hasCode:!!maintenanceState.bypassCode, since:maintenanceState.since, online:getOnlineCount() });
+    socket.emit('maintenance_state', { 
+        enabled: maintenanceState.enabled, 
+        message: maintenanceState.message, 
+        hasCode: !!maintenanceState.bypassCode, 
+        since: maintenanceState.since, 
+        online: getOnlineCount(),
+        delay: delaySec  // ⬅️ On renvoie le délai pour l'afficher dans le panel
+    });
 });
   socket.on('admin_get_stats', () => {
   if (!socket.isAdmin) return;
