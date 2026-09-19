@@ -337,15 +337,27 @@ setInterval(() => {
 
 app.get('/', (req, res) => { res.send('Chiffre Blitz Server is running ⚡'); });
 
-// AJOUTE CES LIGNES :
 const path = require('path');
 
-app.get('/admin.html', (req, res) => {
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
-  res.sendFile(path.join(__dirname, 'admin.html'));
+// ✅ Sert la page du jeu au lieu du texte brut
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
+
+app.get('/admin.html', (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
+app.use(express.static(path.join(__dirname, '.'), {
+    setHeaders: (res, filePath) => {
+        if (/\.(html|js)$/.test(filePath)) {
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+        }
+    }
+}));
 app.use(express.static(path.join(__dirname, '.'), {
   setHeaders: (res, filePath) => {
     if (/\.(html|js)$/.test(filePath)) {
@@ -409,7 +421,7 @@ if (sock && sock._kickAfterMatch && maintBlocked(sock)) {
 setTimeout(() => {
 sock.emit('maintenance_kick', { message: maintenanceState.message, afterMatch: true });
 sock.disconnect(true);
-}, 10000); // ⬅️ 10 s pour laisser voir le récap
+}, 120000); // ⬅️ 2 MINUTES pour laisser voir le récap
 }
 }
 function maintenanceKickAll(){ 
