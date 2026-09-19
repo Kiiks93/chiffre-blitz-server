@@ -929,7 +929,19 @@ function adminResetPassword(btn) {
     socket.emit('admin_reset_password', { username, recoveryKey });
     setTimeout(() => { btn.disabled = false; btn.innerText = "Générer un nouveau code ⚡"; }, 2000);
 }
-
+function toggleMaintenance() {
+    const enabled = document.getElementById('maint-toggle').checked;
+    const message = document.getElementById('maint-message').value;
+    const bypassCode = document.getElementById('maint-code').value;
+    const delay = parseInt(document.getElementById('maint-delay').value) || 60; // ⬅️ NOUVEAU
+    
+    socket.emit('admin_set_maintenance', { 
+        enabled: enabled, 
+        message: message, 
+        bypassCode: bypassCode,
+        delay: delay  // ⬅️ On envoie le délai au serveur
+    });
+}
 /* ============================================================
 BOUTON FERMER (MOBILE)
 ============================================================ */
