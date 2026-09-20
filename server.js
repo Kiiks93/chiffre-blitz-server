@@ -1774,263 +1774,89 @@ socket.emit('maintenance_state', { enabled:maintenanceState.enabled, message:mai
 ADMIN — AVENTURE : FLAGS SAISONS & VIES/JOKERS
 ============================================================ */
 socket.on('admin_give_adventure', async (data) => {
-  console.log('🔵 admin_give_adventure reçu:', JSON.stringify(data, null, 2));
-  
-  if (!socket.isAdmin) {
-    console.log(' Pas admin');
-    return;
-  }
-  
-  try {
-    const { username, halloween, noel, lives, jokersTime, jokersShield, starsPerWorld, maxFloor } = data || {};
-    const clean = (username || '').trim();
-    if (!clean) return socket.emit('admin_adv_result', { ok: false, message: 'Pseudo requis.' });
-    
-    console.log('🔵 Paramètres reçus:', { halloween, noel, lives, jokersTime, jokersShield, starsPerWorld, maxFloor });
-    
-    // Chercher le joueur en ligne
-    let targetId = null;
-    for (const sId in activePlayers) {
-      if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === clean.toLowerCase()) {
-        targetId = sId;
-        break;
-      }
-    }
-    
-    console.log('🔵 Joueur en ligne:', targetId ? 'OUI (ID: ' + targetId + ')' : 'NON');
-    
-    if (targetId) {
-      const p = activePlayers[targetId];
-      console.log('🔵 Player unlocked_items:', p.unlocked_items);
-      
-      let changes = [];
-      
-      // 1. Flags de saison
-      p.unlocked_items = p.unlocked_items || [];
-      let flagsAdded = [];
-      
-      console.log('🔵 Vérification Halloween:', halloween, 'Déjà possédé:', p.unlocked_items.includes('season_s2_unlocked'));
-      if (halloween && !p.unlocked_items.includes('season_s2_unlocked')) {
-        p.unlocked_items.push('season_s2_unlocked');
-        flagsAdded.push('Halloween (M4-6)');
-        console.log('✅ Flag Halloween ajouté');
-      }
-      
-      console.log('🔵 Vérification Noël:', noel, 'Déjà possédé:', p.unlocked_items.includes('season_s3_unlocked'));
-      if (noel && !p.unlocked_items.includes('season_s3_unlocked')) {
-        p.unlocked_items.push('season_s3_unlocked');
-        flagsAdded.push('Noël (M7-9)');
-        console.log('✅ Flag Noël ajouté');
-      }
-      
-      if (flagsAdded.length) changes.push(`flags: ${flagsAdded.join(', ')}`);
-      
-      // 2. Étoiles par monde
-      if (starsPerWorld !== null && !isNaN(starsPerWorld)) {
-        const stars = Math.max(0, Math.min(240, parseInt(starsPerWorld)));
-        console.log(' Application étoiles:', stars, 'par monde');
-        p.towerStars = {};
-        for (let w = 1; w <= 9; w++) {
-          const start = (w - 1) * 200 + 1;
-          const end = w * 200;
-          const perFloor = Math.ceil(stars / 200);
-          let total = 0;
-          for (let f = start; f <= end && total < stars; f++) {
-            const add = Math.min(perFloor, stars - total);
-            p.towerStars[String(f)] = Math.min(3, add);
-            total += Math.min(3, add);
-          }
-        }
-        changes.push(`${stars}⭐/monde`);
-        console.log('✅ Étoiles appliquées:', Object.keys(p.towerStars).length, 'étages');
-      }
-      
-      // 3. Étage max
-      if (maxFloor !== null && !isNaN(maxFloor)) {
-        p.towerFloor = Math.max(0, Math.min(1800, parseInt(maxFloor)));
-        changes.push(`étage ${p.towerFloor}`);
-        console.log('✅ Étage max:', p.towerFloor);
-      }
-      
-      // 4. Vies
-      if (lives !== null && !isNaN(lives)) {
-        const newLives = Math.max(0, Math.min(10, parseInt(lives)));
-        if (newLives !== p.lives) {
-          p.lives = newLives;
-          if (p.lives >= 10) p.lives_ts = Date.now();
-          changes.push(`${p.lives} vies`);
-          console.log('✅ Vies:', p.lives);
-        }
-      }
-      
-      // 5. Jokers
-      p.jokers = normalizeJokers(p.jokers);
-      if (jokersTime !== null && !isNaN(jokersTime)) {
-        const newJt = Math.max(0, parseInt(jokersTime));
-        if (newJt !== p.jokers.time) {
-          p.jokers.time = newJt;
-          changes.push(`${p.jokers.time} jokers temps`);
-          console.log('✅ Jokers temps:', p.jokers.time);
-        }
-      }
-      if (jokersShield !== null && !isNaN(jokersShield)) {
-        const newJs = Math.max(0, parseInt(jokersShield));
-        if (newJs !== p.jokers.shield) {
-          p.jokers.shield = newJs;
-          changes.push(`${p.jokers.shield} jokers bouclier`);
-          console.log('✅ Jokers bouclier:', p.jokers.shield);
-        }
-      }
-      
-      console.log(' Changes finaux:', changes);
-      
-      if (!changes.length) {
-        console.log('️ Aucun changement détecté');
-        return socket.emit('admin_adv_result', { ok: false, message: 'Aucun changement (valeurs identiques).' });
-      }
-      
-      // Sauvegarder
-      console.log(' Appel savePlayerToSupabase...');
-      await savePlayerToSupabase(targetId);
-      console.log('✅ Save terminé');
-      
-      const detail = changes.join(' | ');
-      await logPlayerAction(p, 'admin_adventure', detail, null, null, null);
-      
-      // Notifier le joueur
-      io.to(targetId).emit('player_registered', p);
-      io.to(targetId).emit('tower_data', { 
-        floor: p.towerFloor || 0, 
-        stars: p.towerStars || {}, 
-        lives: p.lives, 
-        nextLifeIn: towerNextLifeIn(p), 
-        jokers: p.jokers 
-      });
-      
-      socket.emit('admin_adv_result', { 
-        ok: true, 
-        message: `✅ ${p.username} : ${detail}` 
-      });
-      return;
-    }
-    
-    // ===== CAS 2 : JOUEUR HORS-LIGNE =====
-    console.log(' Joueur hors-ligne, requête Supabase...');
-    const { data: matched, error } = await supabase.from('players').select('*').ilike('username', clean).limit(1);
-    if (error || !matched || matched.length === 0) {
-      console.log('❌ Joueur introuvable:', error);
-      return socket.emit('admin_adv_result', { ok: false, message: 'Pseudo introuvable.' });
-    }
-    
-    const row = matched[0];
-    console.log('🔵 Row trouvé:', row.username);
-    
-    let updates = {};
-    let changes = [];
-    
-    // 1. Flags de saison
-    let unlocked = row.unlocked_items || [];
-    if (typeof unlocked === 'string') {
-      try { unlocked = JSON.parse(unlocked); } catch(e) { unlocked = []; }
-    }
-    if (!Array.isArray(unlocked)) unlocked = [];
-    
-    let flagsAdded = [];
-    if (halloween && !unlocked.includes('season_s2_unlocked')) {
-      unlocked.push('season_s2_unlocked');
-      flagsAdded.push('Halloween (M4-6)');
-    }
-    if (noel && !unlocked.includes('season_s3_unlocked')) {
-      unlocked.push('season_s3_unlocked');
-      flagsAdded.push('Noël (M7-9)');
-    }
-    if (flagsAdded.length) {
-      updates.unlocked_items = unlocked;
-      changes.push(`flags: ${flagsAdded.join(', ')}`);
-    }
-    
-    // 2. Étoiles par monde
-    if (starsPerWorld !== null && !isNaN(starsPerWorld)) {
-      const stars = Math.max(0, Math.min(240, parseInt(starsPerWorld)));
-      const towerStars = {};
-      for (let w = 1; w <= 9; w++) {
-        const start = (w - 1) * 200 + 1;
-        const end = w * 200;
-        const perFloor = Math.ceil(stars / 200);
-        let total = 0;
-        for (let f = start; f <= end && total < stars; f++) {
-          const add = Math.min(perFloor, stars - total);
-          towerStars[String(f)] = Math.min(3, add);
-          total += Math.min(3, add);
-        }
-      }
-      updates.tower_stars = towerStars;
-      changes.push(`${stars}⭐/monde`);
-    }
-    
-    // 3. Étage max
-    if (maxFloor !== null && !isNaN(maxFloor)) {
-      updates.tower_floor = Math.max(0, Math.min(1800, parseInt(maxFloor)));
-      changes.push(`étage ${updates.tower_floor}`);
-    }
-    
-    // 4. Vies
-    if (lives !== null && !isNaN(lives)) {
-      const newLives = Math.max(0, Math.min(10, parseInt(lives)));
-      updates.tower_lives = newLives;
-      if (newLives >= 10) updates.tower_lives_ts = Date.now();
-      changes.push(`${newLives} vies`);
-    }
-    
-    // 5. Jokers
-    let jokers = row.tower_jokers || { time: 0, shield: 0 };
-    if (typeof jokers === 'string') {
-      try { jokers = JSON.parse(jokers); } catch(e) { jokers = { time: 0, shield: 0 }; }
-    }
-    jokers = normalizeJokers(jokers);
-    
-    let jokersChanged = false;
-    if (jokersTime !== null && !isNaN(jokersTime)) {
-      jokers.time = Math.max(0, parseInt(jokersTime));
-      jokersChanged = true;
-      changes.push(`${jokers.time} jokers temps`);
-    }
-    if (jokersShield !== null && !isNaN(jokersShield)) {
-      jokers.shield = Math.max(0, parseInt(jokersShield));
-      jokersChanged = true;
-      changes.push(`${jokers.shield} jokers bouclier`);
-    }
-    if (jokersChanged) updates.tower_jokers = jokers;
-    
-    console.log('🔵 Updates à envoyer:', updates);
-    console.log('🔵 Changes:', changes);
-    
-    if (!changes.length) {
-      return socket.emit('admin_adv_result', { ok: false, message: 'Aucun changement demandé.' });
-    }
-    
-    // Update Supabase
-    console.log(' Appel Supabase update...');
-    const { error: updErr, data: updData } = await supabase.from('players').update(updates).eq('id', row.id);
-    console.log(' Résultat Supabase:', { error: updErr, data: updData });
-    
-    if (updErr) {
-      console.error('❌ Erreur Supabase:', updErr);
-      return socket.emit('admin_adv_result', { ok: false, message: 'Erreur BDD: ' + updErr.message });
-    }
-    
-    const detail = changes.join(' | ');
-    await logPlayerAction({ username: row.username, socketId: null }, 'admin_adventure', `${detail} (hors-ligne)`, null, null, null);
-    
-    socket.emit('admin_adv_result', { 
-      ok: true, 
-      message: `✅ ${row.username} (hors-ligne) : ${detail}` 
-    });
-    
-  } catch (e) {
-    console.error('❌ admin_give_adventure error:', e);
-    socket.emit('admin_adv_result', { ok: false, message: 'Erreur: ' + e.message });
-  }
+if (!socket.isAdmin) return;
+try {
+const { username, halloween, noel, lives, jokersTime, jokersShield, starsPerWorld, maxFloor } = data || {};
+const clean = (username || '').trim();
+if (!clean) return socket.emit('admin_adv_result', { ok: false, message: 'Pseudo requis.' });
+let targetId = null;
+for (const sId in activePlayers) {
+if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === clean.toLowerCase()) { targetId = sId; break; }
+}
+if (targetId) {
+const p = activePlayers[targetId];
+let changes = [];
+p.unlocked_items = p.unlocked_items || [];
+let flagsAdded = [];
+if (halloween && !p.unlocked_items.includes('season_s2_unlocked')) { p.unlocked_items.push('season_s2_unlocked'); flagsAdded.push('Halloween (M4-6)'); }
+if (noel && !p.unlocked_items.includes('season_s3_unlocked')) { p.unlocked_items.push('season_s3_unlocked'); flagsAdded.push('Noël (M7-9)'); }
+if (flagsAdded.length) changes.push(`flags: ${flagsAdded.join(', ')}`);
+if (starsPerWorld !== null && !isNaN(starsPerWorld)) {
+const stars = Math.max(0, Math.min(240, parseInt(starsPerWorld)));
+p.towerStars = {};
+for (let w = 1; w <= 9; w++) {
+const start = (w - 1) * 200 + 1, end = w * 200, perFloor = Math.ceil(stars / 200);
+let total = 0;
+for (let f = start; f <= end && total < stars; f++) { const add = Math.min(perFloor, stars - total); p.towerStars[String(f)] = Math.min(3, add); total += Math.min(3, add); }
+}
+changes.push(`${stars}⭐/monde`);
+}
+if (maxFloor !== null && !isNaN(maxFloor)) { p.towerFloor = Math.max(0, Math.min(1800, parseInt(maxFloor))); changes.push(`étage ${p.towerFloor}`); }
+if (lives !== null && !isNaN(lives)) {
+const newLives = Math.max(0, Math.min(10, parseInt(lives)));
+if (newLives !== p.lives) { p.lives = newLives; if (p.lives >= 10) p.lives_ts = Date.now(); changes.push(`${p.lives} vies`); }
+}
+p.jokers = normalizeJokers(p.jokers);
+if (jokersTime !== null && !isNaN(jokersTime)) { const newJt = Math.max(0, parseInt(jokersTime)); if (newJt !== p.jokers.time) { p.jokers.time = newJt; changes.push(`${p.jokers.time} jokers temps`); } }
+if (jokersShield !== null && !isNaN(jokersShield)) { const newJs = Math.max(0, parseInt(jokersShield)); if (newJs !== p.jokers.shield) { p.jokers.shield = newJs; changes.push(`${p.jokers.shield} jokers bouclier`); } }
+if (!changes.length) return socket.emit('admin_adv_result', { ok: false, message: 'Aucun changement (valeurs identiques).' });
+await savePlayerToSupabase(targetId);
+const detail = changes.join(' | ');
+await logPlayerAction(p, 'admin_adventure', detail, null, null, null);
+io.to(targetId).emit('player_registered', p);
+io.to(targetId).emit('tower_data', { floor: p.towerFloor || 0, stars: p.towerStars || {}, lives: p.lives, nextLifeIn: towerNextLifeIn(p), jokers: p.jokers });
+return socket.emit('admin_adv_result', { ok: true, message: `✅ ${p.username} : ${detail}` });
+}
+const { data: matched, error } = await supabase.from('players').select('*').ilike('username', clean).limit(1);
+if (error || !matched || matched.length === 0) return socket.emit('admin_adv_result', { ok: false, message: 'Pseudo introuvable.' });
+const row = matched[0];
+let updates = {}, changes = [];
+let unlocked = row.unlocked_items || [];
+if (typeof unlocked === 'string') { try { unlocked = JSON.parse(unlocked); } catch(e) { unlocked = []; } }
+if (!Array.isArray(unlocked)) unlocked = [];
+let flagsAdded = [];
+if (halloween && !unlocked.includes('season_s2_unlocked')) { unlocked.push('season_s2_unlocked'); flagsAdded.push('Halloween (M4-6)'); }
+if (noel && !unlocked.includes('season_s3_unlocked')) { unlocked.push('season_s3_unlocked'); flagsAdded.push('Noël (M7-9)'); }
+if (flagsAdded.length) { updates.unlocked_items = unlocked; changes.push(`flags: ${flagsAdded.join(', ')}`); }
+if (starsPerWorld !== null && !isNaN(starsPerWorld)) {
+const stars = Math.max(0, Math.min(240, parseInt(starsPerWorld)));
+const towerStars = {};
+for (let w = 1; w <= 9; w++) {
+const start = (w - 1) * 200 + 1, end = w * 200, perFloor = Math.ceil(stars / 200);
+let total = 0;
+for (let f = start; f <= end && total < stars; f++) { const add = Math.min(perFloor, stars - total); towerStars[String(f)] = Math.min(3, add); total += Math.min(3, add); }
+}
+updates.tower_stars = towerStars;
+changes.push(`${stars}⭐/monde`);
+}
+if (maxFloor !== null && !isNaN(maxFloor)) { updates.tower_floor = Math.max(0, Math.min(1800, parseInt(maxFloor))); changes.push(`étage ${updates.tower_floor}`); }
+if (lives !== null && !isNaN(lives)) { const newLives = Math.max(0, Math.min(10, parseInt(lives))); updates.tower_lives = newLives; if (newLives >= 10) updates.tower_lives_ts = Date.now(); changes.push(`${newLives} vies`); }
+let jokers = row.tower_jokers || { time: 0, shield: 0 };
+if (typeof jokers === 'string') { try { jokers = JSON.parse(jokers); } catch(e) { jokers = { time: 0, shield: 0 }; } }
+jokers = normalizeJokers(jokers);
+let jokersChanged = false;
+if (jokersTime !== null && !isNaN(jokersTime)) { jokers.time = Math.max(0, parseInt(jokersTime)); jokersChanged = true; changes.push(`${jokers.time} jokers temps`); }
+if (jokersShield !== null && !isNaN(jokersShield)) { jokers.shield = Math.max(0, parseInt(jokersShield)); jokersChanged = true; changes.push(`${jokers.shield} jokers bouclier`); }
+if (jokersChanged) updates.tower_jokers = jokers;
+if (!changes.length) return socket.emit('admin_adv_result', { ok: false, message: 'Aucun changement demandé.' });
+const { error: updErr } = await supabase.from('players').update(updates).eq('id', row.id);
+if (updErr) return socket.emit('admin_adv_result', { ok: false, message: 'Erreur BDD: ' + updErr.message });
+const detail = changes.join(' | ');
+await logPlayerAction({ username: row.username, socketId: null }, 'admin_adventure', `${detail} (hors-ligne)`, null, null, null);
+socket.emit('admin_adv_result', { ok: true, message: `✅ ${row.username} (hors-ligne) : ${detail}` });
+} catch (e) {
+socket.emit('admin_adv_result', { ok: false, message: 'Erreur: ' + e.message });
+}
 });
 
 socket.on('admin_force_refresh', async (data) => {
