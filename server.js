@@ -45,7 +45,6 @@ function checkCooldown(p, key, minMs) {
   if (elapsed < minMs) return { ok: false, remaining: minMs - elapsed };
   return { ok: true };
 }
-
 const app = express();
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -63,6 +62,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 if (!ADMIN_PASSWORD) { console.error("ADMIN_PASSWORD doit etre definie."); process.exit(1); }
+const IAP_SHARED_SECRET = process.env.IAP_SHARED_SECRET || '';
 
 /* ----- VERSION GATING ----- */
 const VERSION_GATE = {
@@ -1467,11 +1467,11 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
     socket.isAdmin = true; 
     socket.emit('admin_auth_success', { events: globalEvents, schedules: eventSchedules }); 
   }
-  else { 
-    console.log('❌ Mot de passe incorrect. Attendu:', ADMIN_PASSWORD?.substring(0,3) + '***');
-    socket.adminAttempts++; 
-    socket.emit('admin_auth_fail', "Mot de passe administrateur incorrect !"); 
-  }
+  else {
+  console.log('❌ ADMIN_AUTH refusé (tentative ' + ((socket.adminAttempts || 0) + 1) + ')');
+  socket.adminAttempts = (socket.adminAttempts || 0) + 1;
+  socket.emit('admin_auth_fail', "Mot de passe administrateur incorrect !");
+}
 });
 
   socket.on('admin_update_schedule', (schedulesData) => {
@@ -2609,8 +2609,13 @@ const IAP_PACKS = {
 };
 const LIFE_RESERVE_MAX = 30;
 
-app.post('/api/iap_grant', async (req, res) => {
-  try {
+    app.post('/api/iap_grant', async (req, res) => {
+    // 🔐 Test fermé : secret partagé (APK). À la sortie : vérification RevenueCat/Google (route G).
+    const iapKey = req.get('x-cb-iap-key') || '';
+    if (!IAP_SHARED_SECRET || iapKey !== IAP_SHARED_SECRET) {
+    return res.json({ ok: false, reason: 'unauthorized' });
+    }
+    try {
     console.log('[iap_grant] reçu → body:', JSON.stringify(req.body || null), '| query:', JSON.stringify(req.query || null));
     const src = (req.body && (req.body.pseudo || req.body.sku || req.body.token)) ? req.body : (req.query || {});
     const pseudo = src.pseudo, sku = src.sku, token = src.token;
