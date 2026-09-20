@@ -61,6 +61,16 @@ const socket = io(CONFIG.SERVER_URL, {
 });
 socket.on("disconnect", () => { SoundEngine.stopMusic(true); });
 
+// 🛡️ Gestion du blocage de version par le serveur
+socket.on("version_blocked", () => {
+  if (socket.io && socket.io.opts) socket.io.opts.reconnection = false; // Stop la reconnexion infinie
+  if (typeof vgShowBlock === 'function') vgShowBlock();
+  else {
+    alert("⚠️ Version obsolète ! Veuillez mettre à jour le jeu.");
+    location.reload();
+  }
+});
+
 socket.on("connect", () => {
   if (localStorage.getItem('cb_secret')) registerIfPossible();
   const urlParams = new URLSearchParams(window.location.search);
@@ -253,12 +263,11 @@ function getFrameClass(equippedFrame) {
 }
 
 function isStrongCode(code) {
-  if (!code || code.length < CONFIG.MIN_CODE_LENGTH) return false;
-  const hasLower = /[a-z]/.test(code);
-  const hasUpper = /[A-Z]/.test(code);
+  if (!code || code.length < 8) return false;
+  const hasLetter = /[a-zA-Z]/.test(code);
   const hasDigit = /\d/.test(code);
   const hasSpecial = /[!@#$%&*+\-_=]/.test(code);
-  return hasLower && hasUpper && hasDigit && hasSpecial;
+  return hasLetter && hasDigit && hasSpecial;
 }
 
 /* ============================================================
@@ -1133,11 +1142,11 @@ function submitAccountForm(mode) {
   
   if (mode === 'create') {
     if (code.length < CONFIG.MIN_CODE_LENGTH) {
-      alert('Code secret : 8 caractères minimum (avec majuscule, minuscule, chiffre et caractère spécial).');
+      alert('Code secret : 8 caractères minimum (avec lettres, chiffres et caractère spécial).');
       return;
     }
     if (!isStrongCode(code)) {
-      alert('⚠️ Code trop faible !\n\nUn code fort doit contenir :\n• 8+ caractères\n• 1 MAJUSCULE\n• 1 minuscule\n• 1 chiffre\n• 1 caractère spécial (!@#$%&*+-_)\n\nExemple : Blitz2026!');
+      alert('⚠️ Code trop faible !\n\nUn code fort doit contenir :\n• 8+ caractères\n• Des lettres\n• Des chiffres\n• 1 caractère spécial (!@#$%&*+-_)\n\nExemple : Blitz2026!');
       return;
     }
   } else {
