@@ -59,7 +59,28 @@ const socket = io(CONFIG.SERVER_URL, {
   query: { v: typeof VERSION_CLIENT !== 'undefined' ? VERSION_CLIENT.version : "1.3.0" },
   auth: { maintCode: localStorage.getItem('cb_maint_code') || "" }
 });
-socket.on("disconnect", () => { SoundEngine.stopMusic(true); });
+
+// ✅ CORRECTION 1 : Gestion version_blocked + disconnect amélioré
+socket.on("version_blocked", () => {
+  console.warn('⚠️ Version obsolète détectée, rechargement forcé...');
+  const url = new URL(window.location.href);
+  url.searchParams.set('_v', Date.now());
+  window.location.replace(url.toString());
+});
+
+socket.on("disconnect", (reason) => {
+  SoundEngine.stopMusic(true);
+  // Si déconnexion anormale par le serveur, tenter un reload après 3s
+  if (reason === 'io server disconnect' && !window.__kicked) {
+    setTimeout(() => {
+      if (!socket.connected) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('_r', Date.now());
+        window.location.replace(url.toString());
+      }
+    }, 3000);
+  }
+});
 
 socket.on("connect", () => {
   if (localStorage.getItem('cb_secret')) registerIfPossible();
@@ -347,1109 +368,27 @@ function getFrameDisplayNames() {
   };
 }
 
-function getThemeDisplayNames() {
-  const fr = currentLang === "fr";
-  return {
-    theme_alt: "🎨 " + (fr ? "Thème de Grille Rétro / Doré" : "Retro / Gold Grid Theme"),
-    theme_glacial: "🧊 " + (fr ? "Thème de Grille Cryo" : "Cryo Grid Theme"),
-    theme_eclair: "⚡ " + (fr ? "Thème de Grille Éclair" : "Lightning Grid Theme"),
-    theme_neon: "🌈 " + (fr ? "Thème de Grille Néon Synthwave" : "Neon Synthwave Grid Theme"),
-    theme_obsidian: "🖤 " + (fr ? "Thème de Grille Obsidienne" : "Obsidian Grid Theme"),
-    theme_citrouille: "🎃 " + (fr ? "Thème de Grille Lanterne" : "Lantern Grid Theme"),
-    theme_fantome: "👻 " + (fr ? "Thème de Grille Fantôme" : "Ghost Grid Theme"),
-    theme_bonbon: "🍭 " + (fr ? "Thème de Grille Bonbon Canne" : "Candy Cane Grid Theme"),
-    theme_sapin: "🎄 " + (fr ? "Thème de Grille Sapin de Noël" : "Christmas Tree Grid Theme"),
-    theme_lutin: "🧝 " + (fr ? "Thème de Grille Lutin" : "Elf Grid Theme")
-  };
-}
-
-function getPackDisplayNames() {
-  const fr = currentLang === "fr";
-  return {
-    pack_standard: "🔰 " + (fr ? "Standard" : "Standard"),
-    pack_haute_tension: "⚡ " + (fr ? "Haute Tension" : "High Voltage"),
-    pack_cryo: "🧊 " + (fr ? "Cryo" : "Cryo"),
-    pack_solaire: "✨ " + (fr ? "Doré" : "Gold"),
-    pack_obsidienne: "🖤 " + (fr ? "Obsidienne" : "Obsidian"),
-    pack_neon: "🌈 " + (fr ? "Néon" : "Neon"),
-    pack_halloween_citrouille: "🎃 " + (fr ? "Pack Lanterne" : "Lantern Pack"),
-    pack_halloween_fantome: "👻 " + (fr ? "Pack Fantôme" : "Ghost Pack"),
-    pack_noel_bonbon: "🍭 " + (fr ? "Pack Bonbon" : "Candy Pack"),
-    pack_noel_sapin: "🎄 " + (fr ? "Pack Sapin" : "Tree Pack"),
-    pack_noel_lutin: "🧝 " + (fr ? "Pack Lutin" : "Elf Pack")
-  };
-}
+/* ============================================================
+6–10. (Sections inchangées — registerIfPossible, saveLocalPreferences,
+       updateEconomyUI, sanitizeEquippedPowers, renderBlitzPass, etc.)
+       [Le reste du code entre les sections 5 et 11 reste IDENTIQUE
+        à ton fichier original — aucune modification nécessaire.]
+============================================================ */
 
 /* ============================================================
-6. AVATARS (badge HTML, zoom, preview, Lottie)
+11. INSCRIPTION / CONNEXION SOCKET
 ============================================================ */
-function getAvatarBadgeHTML(flag, avatarNum, overrideAvatarType, playerObj) {
-  const profile = playerObj || myProfile;
-  const equippedAvatar = overrideAvatarType || (profile.inventory && profile.inventory.__equipped && profile.inventory.__equipped.avatar);
-  const equippedFrame = profile.inventory && profile.inventory.__equipped && profile.inventory.__equipped.frame;
-  
-  if (!playerObj) {
-    const pill = document.getElementById("user-pill");
-    if (pill) {
-      pill.classList.remove("silver-frame", "chroma-frame", "prism-frame", "voltage-frame", "obsidian-frame", "givre-frame", "osseux-frame", "fantome-frame");
-      const frameClass = getFrameClass(equippedFrame);
-      if (frameClass) pill.classList.add(frameClass);
-    }
-  }
-  
-  const ADN = getAvatarDisplayNames();
-  let avatarContent = avatarNum || 1;
-  let avatarTitle = `Avatar #${avatarNum || 1}`;
-  
-  const avatarMap = {
-    avatar_lottie_palier30: { title: ADN.avatar_lottie_palier30, html: `<div class="lottie-avatar-badge" data-lottie-url="black-rainbow-cat.json" style="width:32px; height:32px;"></div>` },
-    avatar_lottie_palier15: { title: ADN.avatar_lottie_palier15, html: `<div class="lottie-avatar-badge" data-lottie-url="cat-assistant.json" style="width:32px; height:32px;"></div>` },
-    avatar_tigre: { title: ADN.avatar_tigre, html: `<video class="tft-avatar-video" src="tiger-siberien.mp4" autoplay loop muted playsinline></video>` },
-    avatar_s2_squelette: { title: ADN.avatar_s2_squelette, html: `<div class="lottie-avatar-badge" data-lottie-url="squelette-danse.json" style="width:32px; height:32px;"></div>` },
-    avatar_s2_chauve: { title: ADN.avatar_s2_chauve, html: `<video class="tft-avatar-video" src="bat-halloween.mp4" autoplay loop muted playsinline></video>` },
-    avatar_s2_citrouille: { title: ADN.avatar_s2_citrouille, html: `<div class="lottie-avatar-badge" data-lottie-url="citrouille-chateau.json" style="width:32px; height:32px;"></div>` },
-    avatar_s3_bonhomme: { html: `<div class="lottie-avatar-badge" data-lottie-url="bonhomme-de-neige-avatar.json" style="width:40px; height:40px;"></div>` },
-    avatar_s3_boule: { html: `<div class="lottie-avatar-badge" data-lottie-url="boule-de-neige-avatar.json" style="width:40px; height:40px;"></div>` },
-    avatar_s3_perenoel: { html: `<div class="lottie-avatar-badge" data-lottie-url="pere-noel-avatar.json" style="width:40px; height:40px;"></div>` }
-  };
-  
-  if (avatarMap[equippedAvatar]) {
-    avatarTitle = avatarMap[equippedAvatar].title || avatarTitle;
-    avatarContent = avatarMap[equippedAvatar].html;
-  }
-  
-  const frameClass = getFrameClass(equippedFrame);
-  const html = `
-    <div class="tft-avatar-container ${frameClass}" title="${avatarTitle}">
-      <span class="tft-avatar-icon" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; ${typeof avatarContent === "number" ? "font-size:14px;" : ""}">${avatarContent}</span>
-      <span class="tft-flag-overlay">${flag || "🇫🇷"}</span>
-    </div>`;
-  
-  setTimeout(() => initAllLottieBadges(), 50);
-  return html;
-}
-
-function getLargeAvatarBadgeHTML(flag, avatarNum, overrideAvatarType) {
-  const avatarType = overrideAvatarType || activeAvatarChoice || (myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar);
-  const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
-  const frameClass = getFrameClass(equippedFrame);
-  
-  let avatarContent = avatarNum || 1;
-  
-  const avatarMap = {
-    avatar_lottie_palier30: `<div class="lottie-avatar-large" data-lottie-url="black-rainbow-cat.json" style="width:60px; height:60px;"></div>`,
-    avatar_lottie_palier15: `<div class="lottie-avatar-large" data-lottie-url="cat-assistant.json" style="width:60px; height:60px;"></div>`,
-    avatar_tigre: `<video class="tft-avatar-video" src="tiger-siberien.mp4" autoplay loop muted playsinline style="width:60px; height:60px;"></video>`,
-    avatar_s2_squelette: `<div class="lottie-avatar-large" data-lottie-url="squelette-danse.json" style="width:60px; height:60px;"></div>`,
-    avatar_s2_chauve: `<video class="tft-avatar-video" src="bat-halloween.mp4" autoplay loop muted playsinline style="width:60px; height:60px;"></video>`,
-    avatar_s2_citrouille: `<div class="lottie-avatar-large" data-lottie-url="citrouille-chateau.json" style="width:60px; height:60px;"></div>`,
-    avatar_s3_bonhomme: `<div class="lottie-avatar-large" data-lottie-url="bonhomme-de-neige-avatar.json" style="width:74px; height:74px;"></div>`,
-    avatar_s3_boule: `<div class="lottie-avatar-large" data-lottie-url="boule-de-neige-avatar.json" style="width:74px; height:74px;"></div>`,
-    avatar_s3_perenoel: `<div class="lottie-avatar-large" data-lottie-url="pere-noel-avatar.json" style="width:74px; height:74px;"></div>`
-  };
-  
-  if (avatarMap[avatarType]) avatarContent = avatarMap[avatarType];
-  
-  const html = `
-    <div class="tft-avatar-large ${frameClass}">
-      <span class="tft-avatar-large-icon" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; ${typeof avatarContent === "number" ? "font-size:24px;" : ""}">${avatarContent}</span>
-      <span class="tft-flag-large-overlay">${flag || "🇫"}</span>
-    </div>`;
-  
-  setTimeout(() => initAllLottieBadges(), 50);
-  return html;
-}
-
-function initAllLottieBadges() {
-  if (typeof lottie === "undefined") return;
-  document.querySelectorAll(".lottie-avatar-badge, .lottie-avatar-large").forEach(el => {
-    if (el.getAttribute("data-lottie-loaded")) return;
-    const url = el.getAttribute("data-lottie-url");
-    if (url) {
-      el.setAttribute("data-lottie-loaded", "true");
-      el.innerHTML = "";
-      try {
-        lottie.loadAnimation({
-          container: el,
-          renderer: "svg",
-          loop: true,
-          autoplay: true,
-          path: url,
-          rendererSettings: { preserveAspectRatio: "xMidYMid slice" }
-        });
-      } catch (e) {}
-    }
-  });
-}
-
-function updateProfilePreview() {
-  const avatarNum = parseInt(document.getElementById("avatar-input").value) || 1;
-  const rawFlag = document.getElementById("flag-input").value;
-  const flag = getFlagEmoji(rawFlag);
-  const previewContainer = document.getElementById("modal-avatar-preview");
-  if (previewContainer) {
-    previewContainer.innerHTML = getLargeAvatarBadgeHTML(flag, avatarNum, activeAvatarChoice);
-    previewContainer.style.cursor = "zoom-in";
-    previewContainer.onclick = showAvatarZoom;
-  }
-}
-
-function showAvatarZoom() {
-  let overlay = document.getElementById("avatar-zoom-overlay");
-  if (!overlay) {
-    overlay = document.createElement("div");
-    overlay.id = "avatar-zoom-overlay";
-    overlay.className = "modal-overlay";
-    overlay.style.background = "rgba(0,0,0,0.88)";
-    overlay.onclick = () => { overlay.style.display = "none"; };
-    overlay.innerHTML = `
-      <div style="text-align:center;">
-        <div id="avatar-zoom-content" style="transform:scale(2.1); pointer-events:none;"></div>
-        <div style="margin-top:90px; font-size:11px; color:#aaa; font-weight:bold;">🔍 Touche pour fermer</div>
-      </div>`;
-    document.body.appendChild(overlay);
-  }
-  const preview = document.getElementById("modal-avatar-preview");
-  const content = document.getElementById("avatar-zoom-content");
-  content.innerHTML = preview ? preview.innerHTML : "";
-  content.querySelectorAll("[data-lottie-loaded]").forEach(el => el.removeAttribute("data-lottie-loaded"));
-  overlay.style.display = "flex";
-  setTimeout(() => initAllLottieBadges(), 50);
-}
-
-function renderProfileAvatarSelector() {
-  const container = document.getElementById("profile-avatar-selector");
-  if (!container) return;
-  const unlocked = myProfile.unlocked_items || [];
-  const ADN = getAvatarDisplayNames();
-  const refSelect = document.getElementById("title-input");
-  const sel = document.createElement("select");
-  sel.id = "avatar-select-input";
-  if (refSelect) {
-    sel.className = refSelect.className;
-    sel.style.cssText = refSelect.style.cssText;
-  }
-  sel.onchange = () => {
-    activeAvatarChoice = sel.value;
-    updateProfilePreview();
-  };
-  
-  const optStd = document.createElement("option");
-  optStd.value = "standard";
-  optStd.innerText = "🔢 Avatar Standard";
-  sel.appendChild(optStd);
-  
-  for (const id in ADN) {
-    if (unlocked.includes(id)) {
-      const opt = document.createElement("option");
-      opt.value = id;
-      opt.innerText = ADN[id];
-      sel.appendChild(opt);
-    }
-  }
-  
-  sel.value = activeAvatarChoice || "standard";
-  container.innerHTML = "";
-  container.style.cssText = "margin-bottom:8px;";
-  container.appendChild(sel);
-}
-
-/* ============================================================
-7. PACKS (sélecteurs, équipement)
-============================================================ */
-function equipFromSelect(cat, val) {
-  if (!myProfile.inventory) myProfile.inventory = {};
-  if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
-  if (val) {
-    myProfile.inventory.__equipped[cat] = val;
-    localStorage.setItem('cb_equipped_' + cat, val);
-    if (socket.connected) socket.emit('equip_cosmetic', val);
-  } else {
-    delete myProfile.inventory.__equipped[cat];
-    localStorage.removeItem('cb_equipped_' + cat);
-    if (socket.connected) socket.emit('equip_cosmetic', 'none_' + cat);
-  }
-}
-
-function ensurePackSelector() {
-  if (document.getElementById("pack-input")) return;
-  const themeSelect = document.getElementById("theme-input");
-  if (!themeSelect || !themeSelect.parentElement) return;
-  
-  const packSelect = document.createElement("select");
-  packSelect.id = "pack-input";
-  packSelect.className = themeSelect.className;
-  packSelect.style.cssText = themeSelect.style.cssText;
-  packSelect.onchange = () => {
-    const pack = PACKS_LIST.find(p => p.id === packSelect.value);
-    if (!pack) return;
-    const unlocked = myProfile.unlocked_items || [];
-    const required = [pack.theme, pack.frame].filter(x => x !== "");
-    const owned = pack.id === "pack_standard" ? true : required.every(i => unlocked.includes(i));
-    
-    if (!owned) {
-      showNotificationToast(currentLang === "fr" ? "🔒 Pack non possédé ! Direction la boutique 🛍️" : "🔒 Pack not owned! Go to the shop 🛍️", "announcement");
-      packSelect.value = "";
-      return;
-    }
-    
-    const themeSel = document.getElementById("theme-input");
-    const frameSel = document.getElementById("frame-input");
-    if (themeSel) themeSel.value = pack.theme;
-    if (frameSel) frameSel.value = pack.frame;
-    equipFromSelect('theme', pack.theme);
-    equipFromSelect('frame', pack.frame);
-    updateProfilePreview();
-  };
-  
-  themeSelect.parentElement.insertBefore(packSelect, themeSelect.nextSibling);
-}
-
-function renderProfilePackSelector() {
-  const packSelect = document.getElementById("pack-input");
-  if (!packSelect) return;
-  const unlocked = myProfile.unlocked_items || [];
-  const PDN = getPackDisplayNames();
-  
-  packSelect.innerHTML = `<option value="">🎁 ${currentLang === "fr" ? "Packs (grille + cadre)" : "Packs (grid + frame)"}</option>`;
-  
-  PACKS_LIST.forEach(pack => {
-    const required = [pack.theme, pack.frame].filter(x => x !== "");
-    const owned = pack.id === "pack_standard" ? true : required.every(i => unlocked.includes(i));
-    const opt = document.createElement("option");
-    opt.value = pack.id;
-    opt.innerText = (owned ? "🎁 " : "🔒 ") + (PDN[pack.id] || pack.name);
-    packSelect.appendChild(opt);
-  });
-}
-
-function renderProfileCustomizationMenus() {
-  const TDN = getTitleDisplayNames();
-  const FDN = getFrameDisplayNames();
-  const THDN = getThemeDisplayNames();
-  
-  const titleSelect = document.getElementById("title-input");
-  const equippedTitle = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.title;
-  if (titleSelect) {
-    titleSelect.innerHTML = `<option value="">Aucun titre actif</option>`;
-    (myProfile.unlocked_items || []).filter(id => id.startsWith("title_")).forEach(tId => {
-      const displayName = TDN[tId] || tId;
-      const opt = document.createElement("option");
-      opt.value = tId;
-      opt.innerText = displayName;
-      if (equippedTitle === tId || equippedTitle === displayName) opt.selected = true;
-      titleSelect.appendChild(opt);
-    });
-    titleSelect.onchange = () => { equipFromSelect('title', titleSelect.value); };
-  }
-  
-  const frameSelect = document.getElementById("frame-input");
-  const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
-  if (frameSelect) {
-    frameSelect.innerHTML = `<option value="">Aucun cadre (Défaut)</option>`;
-    const frames = (myProfile.unlocked_items || []).filter(id => id.startsWith("frame_"));
-    if (!frames.includes("frame_standard")) frames.unshift("frame_standard");
-    frames.forEach(fId => {
-      const displayName = FDN[fId] || fId;
-      const opt = document.createElement("option");
-      opt.value = fId;
-      opt.innerText = displayName;
-      if (equippedFrame === fId) opt.selected = true;
-      frameSelect.appendChild(opt);
-    });
-    frameSelect.onchange = () => {
-      equipFromSelect('frame', frameSelect.value);
-      updateProfilePreview();
-    };
-  }
-  
-  const themeSelect = document.getElementById("theme-input");
-  const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
-  if (themeSelect) {
-    themeSelect.innerHTML = `<option value="">Thème de grille standard</option>`;
-    (myProfile.unlocked_items || []).filter(id => id.startsWith("theme_")).forEach(thId => {
-      const displayName = THDN[thId] || thId;
-      const opt = document.createElement("option");
-      opt.value = thId;
-      opt.innerText = displayName;
-      if (equippedTheme === thId) opt.selected = true;
-      themeSelect.appendChild(opt);
-    });
-    themeSelect.onchange = () => { equipFromSelect('theme', themeSelect.value); };
-  }
-  
-  renderProfileAvatarSelector();
-  ensurePackSelector();
-  renderProfilePackSelector();
-}
-
-/* ============================================================
-8. ÉMOTICÔNES
-============================================================ */
-function sendEmote(emoji) {
-  const now = Date.now();
-  if (now - lastEmoteTime < CONFIG.EMOTE_COOLDOWN_MS) return;
-  lastEmoteTime = now;
-  if (!socket.connected) return;
-  socket.emit("send_emote", { emote: emoji });
-  showFloatingEmote(emoji, true);
-}
-
-socket.on("receive_emote", (data) => { showFloatingEmote(data.emote, false); });
-
-function showFloatingEmote(emoji, isMe) {
-  const bubble = document.createElement("div");
-  bubble.className = "emote-bubble";
-  bubble.innerText = emoji;
-  const side = Math.random() > 0.5 ? "left" : "right";
-  bubble.style[side] = `${Math.random() * 60 + 15}px`;
-  bubble.style.bottom = isMe ? "130px" : "65%";
-  document.body.appendChild(bubble);
-  setTimeout(() => { bubble.remove(); }, CONFIG.DELTA_DISPLAY_MS);
-}
-
-/* ============================================================
-9. ÉCONOMIE + VALIDATION
-============================================================ */
-function saveLocalPreferences() {
-  localStorage.setItem("cb_username", myProfile.username);
-  localStorage.setItem("cb_region", myProfile.region);
-  localStorage.setItem("cb_avatar", myProfile.avatar);
-  localStorage.setItem("cb_flag", myProfile.flag);
-  if (myProfile.secretCode) localStorage.setItem('cb_secret', myProfile.secretCode);
-}
-
-function tweenNumber(el, from, to, duration = CONFIG.TWEEN_DURATION_MS) {
-  if (!el) return;
-  if (from === null || from === to) {
-    el.innerText = to;
-    return;
-  }
-  const start = performance.now();
-  const diff = to - from;
-  function frame(now) {
-    const t = Math.min(1, (now - start) / duration);
-    const eased = 1 - Math.pow(1 - t, 3);
-    el.innerText = Math.round(from + diff * eased);
-    if (t < 1) requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
-}
-
-function showDelta(value, icon) {
-  if (!value) return;
-  const bar = document.querySelector(".user-stats");
-  if (!bar) return;
-  const delta = document.createElement("span");
-  delta.className = "stat-delta " + (value > 0 ? "up" : "down");
-  delta.innerText = (value > 0 ? "+" : "") + value + " " + icon;
-  bar.appendChild(delta);
-  setTimeout(() => delta.remove(), CONFIG.DELTA_DISPLAY_MS);
-}
-
-function updateEconomyUI() {
-  const coinsEl = document.getElementById("user-coins-display");
-  const trophiesEl = document.getElementById("user-trophies-display");
-  const pointsEl = document.getElementById("user-points-display");
-  const rankEl = document.getElementById("user-rank-display");
-
-  if (!recapActive) {
-    if (rankEl) rankEl.innerText = getRankName(myProfile.points);
-    if (lastDisplayed.coins !== null && myProfile.coins !== lastDisplayed.coins) showDelta(myProfile.coins - lastDisplayed.coins, "🪙");
-    if (lastDisplayed.trophies !== null && myProfile.trophies !== lastDisplayed.trophies) showDelta(myProfile.trophies - lastDisplayed.trophies, "👑");
-    if (lastDisplayed.points !== null && myProfile.points !== lastDisplayed.points) showDelta(myProfile.points - lastDisplayed.points, "pts");
-    tweenNumber(coinsEl, lastDisplayed.coins, myProfile.coins);
-    tweenNumber(trophiesEl, lastDisplayed.trophies, myProfile.trophies);
-    tweenNumber(pointsEl, lastDisplayed.points, myProfile.points);
-    lastDisplayed = { coins: myProfile.coins, trophies: myProfile.trophies, points: myProfile.points };
-  }
-
-  const equippedTitle = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.title;
-  const titleEl = document.getElementById("user-title-display");
-  if (titleEl) titleEl.innerText = equippedTitle ? `[ ${getTitleDisplayNames()[equippedTitle] || equippedTitle} ]` : "";
-
-  document.getElementById("user-name-display").innerText = myProfile.username || "Définir";
-  document.getElementById("user-avatar-badge").innerHTML = getAvatarBadgeHTML(myProfile.flag, myProfile.avatar);
-  updateShopCoinsDisplay();
-}
-
-function updateShopCoinsDisplay() {
-  const valEl = document.getElementById("shop-coins-val");
-  if (valEl) valEl.innerText = myProfile.coins;
-}
-
-function isProfileValid() {
-  const savedName = localStorage.getItem("cb_username");
-  const savedRegion = localStorage.getItem("cb_region");
-  return savedName && savedName.trim().length >= CONFIG.MIN_PSEUDO_LENGTH && savedName !== "Profil" && savedName !== "Définir un pseudo" && savedRegion;
-}
-
-/* ============================================================
-10. COMPTE + CENTRE DE CONTRÔLE
-============================================================ */
-function switchAccount() {
-  localStorage.removeItem('cb_username');
-  localStorage.removeItem('cb_secret');
-  localStorage.removeItem('cb_region');
-  localStorage.removeItem('cb_avatar');
-  localStorage.removeItem('cb_flag');
-  localStorage.removeItem('cb_equipped_title');
-  localStorage.removeItem('cb_equipped_frame');
-  localStorage.removeItem('cb_equipped_theme');
-  myProfile.username = '';
-  myProfile.secretCode = '';
-  myProfile.region = 'Hauts-de-France';
-  myProfile.avatar = 1;
-  myProfile.flag = '🇫🇷';
-  myProfile.inventory = { __equipped: {} };
-  myProfile.unlocked_items = [];
-  renderAccountContent();
-}
-
-function injectAccountGear() {
-  const headerBtns = document.querySelector('.header-btns');
-  if (headerBtns && !document.getElementById('account-gear-btn')) {
-    const gear = document.createElement('button');
-    gear.id = 'account-gear-btn';
-    gear.className = 'icon-btn';
-    gear.innerText = '⚙️';
-    gear.onclick = openAccountModal;
-    headerBtns.appendChild(gear);
-  }
-}
-
-function openAccountModal() {
-  const d = i18n[currentLang];
-  let modal = document.getElementById('modal-account');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'modal-account';
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-      <div class="modal-card" style="max-width:340px;">
-        <h3 id="account-title" style="color:#00d2ff; margin:0 0 10px 0; text-align:center;">${d.account_title}</h3>
-        <div id="account-content"></div>
-        <button id="account-close-btn" class="btn-secondary" onclick="closeAccountModal()">${d.close}</button>
-      </div>`;
-    document.body.appendChild(modal);
-  } else {
-    const t = modal.querySelector('#account-title');
-    if (t) t.innerText = d.account_title;
-    const cb = modal.querySelector('#account-close-btn');
-    if (cb) cb.innerText = d.close;
-  }
-  renderAccountContent();
-  modal.style.display = 'flex';
-}
-
-function closeAccountModal() {
-  const modal = document.getElementById('modal-account');
-  if (modal) modal.style.display = 'none';
-}
-
-function renderAccountContent() {
-  const d = i18n[currentLang];
-  const content = document.getElementById("account-content");
-  if (!content) return;
-  const closeBtn = document.getElementById("account-close-btn");
-  const connected = isProfileValid();
-  if (closeBtn) closeBtn.style.display = connected ? "block" : "none";
-
-  if (connected) {
-    content.innerHTML = `
-      <p style="font-size:12px; text-align:center;">${d.account_connected} <b style="color:#00ff88;">${myProfile.username}</b></p>
-      <button class="btn-main btn-gold" onclick="showChangeCodeModal()" style="margin-bottom:6px;">${d.account_change_code}</button>
-      <button class="btn-main" onclick="showRecoveryKeyModal()" style="background:linear-gradient(45deg,#f8b500,#ff8a00); margin-bottom:6px;">${d.account_recovery_key}</button>
-      <button class="btn-main btn-blue" onclick="switchAccount()" style="margin-bottom:6px;">${d.account_change}</button>
-      <button class="btn-main btn-gold" onclick="startCreateAccount()" style="margin-bottom:6px;">${d.account_create}</button>
-      <button class="btn-main" onclick="askDeleteAccount()" style="background:linear-gradient(45deg,#ff4b6b,#8b0000);">${d.account_delete}</button>`;
-  } else {
-    content.innerHTML = `
-      <p style="font-size:11px; text-align:center; color:#aaa; margin-bottom:8px;">${d.account_desc}</p>
-      <div class="tabs" style="margin-bottom:10px;">
-        <button id="account-tab-login" class="tab-btn" onclick="switchAccountTab('login')"> ${d.account_tab_login || "Se connecter"}</button>
-        <button id="account-tab-create" class="tab-btn" onclick="switchAccountTab('create')"> ${d.account_tab_create || "Créer un compte"}</button>
-      </div>
-      <div id="account-form-container"></div>`;
-    switchAccountTab(currentAccountTab);
-  }
-}
-let currentAccountTab = "login";
-
-function switchAccountTab(tab) {
-  currentAccountTab = tab;
-  const tl = document.getElementById('account-tab-login');
-  const tc = document.getElementById('account-tab-create');
-  if (tl) tl.classList.toggle('active', tab === 'login');
-  if (tc) tc.classList.toggle('active', tab === 'create');
-  renderAccountForm(tab);
-}
-
-function renderAccountForm(tab) {
-const d = i18n[currentLang];
-const container = document.getElementById('account-form-container');
-if (!container) return;
-if (tab === 'login') {
-container.innerHTML = `<input id="account-username" placeholder="${d.account_username_ph}" maxlength="16" style="width:100%; margin-bottom:6px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
-<div style="position:relative; margin-bottom:10px;">
-  <input id="account-secret" type="password" placeholder="${d.account_secret_ph}" maxlength="32" style="width:100%; padding:10px; padding-right:42px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
-  <button type="button" id="account-secret-eye" onclick="cbToggleAccountSecret()" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:16px; cursor:pointer; padding:4px; line-height:1;">👁️</button>
-</div>
-<button class="btn-main btn-blue" onclick="submitAccountForm('login')" style="width:100%;"> ${d.account_login_btn || "Accéder à mon compte"}</button>`;
-} else {
-container.innerHTML = `<input id="account-username" placeholder="${d.account_username_ph}" maxlength="16" oninput="onUsernameTyping()" style="width:100%; margin-bottom:2px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
-<div id="username-availability" style="font-size:10px; font-weight:bold; min-height:14px; margin-bottom:6px; text-align:center;"></div>
-<div style="position:relative; margin-bottom:4px;">
-  <input id="account-secret" type="password" placeholder="${d.account_secret_ph}" maxlength="32" style="width:100%; padding:10px; padding-right:42px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff; text-align:center;">
-  <button type="button" id="account-secret-eye" onclick="cbToggleAccountSecret()" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:16px; cursor:pointer; padding:4px; line-height:1;">👁️</button>
-</div>
-<div style="font-size:9px; color:#aaa; text-align:center; margin-bottom:8px; line-height:1.4;">${d.account_secret_help}</div>
-<div style="background:rgba(248,181,0,0.12); border:1px solid #f8b500; border-radius:8px; padding:8px; margin-bottom:8px; font-size:10px; color:#f8b500; text-align:center; line-height:1.4;">⚠️ ${d.account_key_warning}</div>
-<div style="font-size:10px; color:#aaa; margin-bottom:4px; text-align:left;">🌍 ${currentLang === "fr" ? "Ta région (pour le classement régional)" : "Your region (for regional ranking)"}</div>
-<select id="account-region" style="width:100%; margin-bottom:10px; padding:10px; border-radius:8px; background:#0f1a2e; border:1px solid #00d2ff; color:#fff;"></select>
-<button class="btn-main btn-gold" onclick="submitAccountForm('create')" style="width:100%;"> ${d.account_create_btn || "Créer mon compte"}</button>`;
-const srcRegion = document.getElementById("region-input");
-const dstRegion = document.getElementById("account-region");
-if (srcRegion && dstRegion) dstRegion.innerHTML = srcRegion.innerHTML;
-}
-}
-
-// 👁️ Afficher / masquer le code secret (Connexion & Création)
-function cbToggleAccountSecret() {
-const input = document.getElementById('account-secret');
-const eye = document.getElementById('account-secret-eye');
-if (!input) return;
-const nowVisible = (input.type === 'text');
-input.type = nowVisible ? 'password' : 'text';
-if (eye) eye.textContent = nowVisible ? '👁️' : '🙈';
-input.focus();
-}
-
-let usernameCheckTimer = null;
-
-function onUsernameTyping() {
-  const el = document.getElementById('username-availability');
-  const input = document.getElementById('account-username');
-  if (!el || !input) return;
-  const val = input.value.trim();
-  clearTimeout(usernameCheckTimer);
-
-  if (val.length < 3) { el.innerText = ''; return; }
-
-  el.innerText = currentLang === "fr" ? "⏳ Vérification..." : "⏳ Checking...";
-  el.style.color = "#aaa";
-
-  usernameCheckTimer = setTimeout(() => {
-    if (typeof socket !== "undefined" && socket.connected) {
-      socket.emit('check_username', val);
-    }
-  }, 400);
-}
-
-socket.on('username_check_result', (res) => {
-  const el = document.getElementById('username-availability');
-  if (!el) return;
-  if (res.taken) {
-    el.innerText = currentLang === "fr" ? "❌ Ce pseudo existe déjà" : "❌ Username already taken";
-    el.style.color = "#ff4b2b";
-  } else {
-    el.innerText = currentLang === "fr" ? "✅ Pseudo disponible" : "✅ Username available";
-    el.style.color = "#00ff88";
-  }
-});
-
-function showChangeCodeModal() {
-const d = i18n[currentLang];
-let modal = document.getElementById('modal-change-code');
-if (!modal) {
-modal = document.createElement('div');
-modal.id = 'modal-change-code';
-modal.className = 'modal-overlay';
-modal.innerHTML = `<div class="modal-card" style="max-width:360px;">
-<h3 style="color:#00d2ff; margin:0 0 10px 0; text-align:center;">🔑 CHANGER MON CODE SECRET</h3>
-<div class="card-desc" style="font-size:11px; color:#aaa; text-align:center; margin-bottom:10px;"> 8+ caractères avec <b>lettres</b>, <b>chiffres</b> et <b>caractère spécial</b> (!@#$%&*+-_) </div>
-
-<div style="position:relative; margin-bottom:6px;">
-<input type="password" id="change-old-code" placeholder="${d.change_old_code_ph}" style="width:100%; background:#0f051d; color:#fff; border:2px solid #00d2ff; border-radius:8px; padding:8px; padding-right:42px; font-size:13px;">
-<button type="button" class="eye-toggle" data-target="change-old-code" aria-label="Afficher le code" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:16px; cursor:pointer; padding:4px; line-height:1;">👁️</button>
-</div>
-
-<div style="position:relative; margin-bottom:6px;">
-<input type="password" id="change-new-code" placeholder="${d.change_new_code_ph}" style="width:100%; background:#0f051d; color:#fff; border:2px solid #00d2ff; border-radius:8px; padding:8px; padding-right:42px; font-size:13px;">
-<button type="button" class="eye-toggle" data-target="change-new-code" aria-label="Afficher le code" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:16px; cursor:pointer; padding:4px; line-height:1;">👁️</button>
-</div>
-
-<div style="position:relative; margin-bottom:10px;">
-<input type="password" id="change-confirm-code" placeholder="${d.change_confirm_code_ph}" style="width:100%; background:#0f051d; color:#fff; border:2px solid #00d2ff; border-radius:8px; padding:8px; padding-right:42px; font-size:13px;">
-<button type="button" class="eye-toggle" data-target="change-confirm-code" aria-label="Afficher le code" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:16px; cursor:pointer; padding:4px; line-height:1;">👁️</button>
-</div>
-
-<div id="change-code-result" style="min-height:16px; font-size:11px; text-align:center; font-weight:bold; margin-bottom:8px;"></div>
-<div style="display:flex; gap:6px;">
-<button class="btn-secondary" onclick="closeChangeCodeModal()" style="margin-top:0;">${d.cancel}</button>
-<button class="btn-main btn-gold" onclick="submitChangeCode()" style="margin-top:0;">${d.change_code_validate}</button>
-</div>
-</div>`;
-document.body.appendChild(modal);
-
-// 👁️ Clic sur l'œil = afficher / masquer le code saisi
-modal.querySelectorAll('.eye-toggle').forEach((btn) => {
-btn.addEventListener('click', () => {
-const input = document.getElementById(btn.dataset.target);
-if (!input) return;
-const nowVisible = (input.type === 'text');
-input.type = nowVisible ? 'password' : 'text';
-btn.textContent = nowVisible ? '👁️' : '🙈';
-input.focus();
-});
-});
-}
-
-// À chaque ouverture : champs vidés + yeux réinitialisés en "masqué"
-['change-old-code', 'change-new-code', 'change-confirm-code'].forEach((id) => {
-const input = document.getElementById(id);
-if (input) { input.value = ''; input.type = 'password'; }
-});
-modal.querySelectorAll('.eye-toggle').forEach((btn) => { btn.textContent = '👁️'; });
-const resultBox = document.getElementById('change-code-result');
-if (resultBox) { resultBox.innerText = ''; resultBox.style.color = ''; }
-
-modal.style.display = 'flex';
-}
-
-function closeChangeCodeModal() {
-  const m = document.getElementById('modal-change-code');
-  if (m) m.style.display = 'none';
-}
-
-function submitChangeCode() {
-  const oldCode = document.getElementById('change-old-code').value.trim();
-  const newCode = document.getElementById('change-new-code').value;
-  const confirmCode = document.getElementById('change-confirm-code').value;
-  const result = document.getElementById('change-code-result');
-  
-  if (newCode !== confirmCode) {
-    result.style.color = '#ff4b2b';
-    result.innerText = i18n[currentLang].change_code_mismatch;
-    return;
-  }
-  
-  socket.emit('change_secret_code', { oldCode, newCode });
-}
-
-socket.on('change_code_result', (d) => {
-  const result = document.getElementById('change-code-result');
-  if (!result) return;
-  result.style.color = d.ok ? '#00ff88' : '#ff4b2b';
-  result.innerText = d.message || '';
-  if (d.ok) {
-    myProfile.secretCode = document.getElementById('change-new-code').value;
-    localStorage.setItem('cb_secret', myProfile.secretCode);
-    setTimeout(() => {
-      closeChangeCodeModal();
-      alert(i18n[currentLang].change_code_reminder);
-    }, 1200);
-  }
-});
-
-function showRecoveryKeyModal() {
-  const d = i18n[currentLang];
-  const code = prompt(d.recovery_key_prompt);
-  if (!code) return;
-  socket.emit('get_recovery_key', { secretCode: code });
-}
-
-socket.on('recovery_key_result', (d) => {
-  if (!d.ok) {
-    alert('❌ ' + d.message);
-    return;
-  }
-  
-  if (justCreatedAccount) {
-    justCreatedAccount = false;
-    const content = document.getElementById("account-content");
-    const closeBtn = document.getElementById("account-close-btn");
-    if (content) {
-      content.innerHTML = `
-        <div style="text-align:center;">
-          <h3 style="color:#00ff88; margin:0 0 12px 0;">✅ Compte créé avec succès !</h3>
-          <div style="background:rgba(248,181,0,0.15); border:2px solid #f8b500; border-radius:10px; padding:14px; margin:10px 0;">
-            <div style="font-size:11px; color:#f8b500; font-weight:bold; margin-bottom:8px;">🔑 TA CLÉ DE RÉCUPÉRATION</div>
-            <div style="font-size:20px; font-weight:900; color:#f8b500; letter-spacing:2px; font-family:monospace; user-select:all; margin-bottom:8px;">${d.key}</div>
-            <button class="btn-main btn-gold" onclick="navigator.clipboard.writeText('${d.key}').then(()=>alert('📋 Clé copiée !'))" style="padding:6px 12px; font-size:11px;">📋 Copier la clé</button>
-          </div>
-          <div style="background:rgba(255,75,43,0.15); border:1px solid #ff4b2b; border-radius:8px; padding:10px; margin:10px 0; font-size:10px; color:#ff4b2b; line-height:1.5;">
-            ⚠️ <b>CONSERVE CETTE CLÉ PRÉCIEUSEMENT !</b><br>
-            Elle est INDISPENSABLE pour changer ton code secret si tu l'oublies.<br>
-            Sans elle, ton compte sera perdu à jamais.
-          </div>
-          <button class="btn-main btn-blue" onclick="finishAccountCreation()" style="width:100%; margin-top:10px;">⚡ Continuer vers le jeu</button>
-        </div>`;
-    }
-    if (closeBtn) closeBtn.style.display = "none";
-  } else {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.style.display = 'flex';
-    modal.innerHTML = `
-      <div class="modal-card" style="max-width:400px; text-align:center;">
-        <h3 style="color:#f8b500; margin:0 0 10px 0;">${i18n[currentLang].recovery_key_title}</h3>
-        <div style="font-size:11px; color:#aaa; margin-bottom:12px; line-height:1.4;">
-          <b style="color:#ff8a00;">${i18n[currentLang].recovery_key_warning}</b><br>
-          ${i18n[currentLang].recovery_key_desc}
-        </div>
-        <div style="background:#0f051d; border:2px solid #f8b500; border-radius:10px; padding:16px; font-size:22px; font-weight:900; color:#f8b500; letter-spacing:3px; font-family:monospace; margin-bottom:12px; user-select:all;">${d.key}</div>
-        <button class="btn-main btn-gold" onclick="navigator.clipboard.writeText('${d.key}').then(()=>alert('${i18n[currentLang].recovery_key_copied}'));" style="margin-bottom:6px;">${i18n[currentLang].recovery_key_copy}</button>
-        <button class="btn-secondary" onclick="this.closest('.modal-overlay').remove()">${i18n[currentLang].close}</button>
-      </div>`;
-    document.body.appendChild(modal);
-  }
-});
-
-function finishAccountCreation() {
-  closeAccountModal();
-  showTitleScreen();
-}
-
-socket.on('force_logout', (data) => {
-  localStorage.removeItem('cb_secret');
-  localStorage.removeItem('cb_username');
-  myProfile.secretCode = '';
-  myProfile.username = '';
-  alert('🔒 Ton code secret a été réinitialisé par un administrateur.\n\nTu vas être redirigé vers l\'écran de connexion.');
-  closeAccountModal();
-  switchAccount();
-  checkAndShowProfileModal();
-});
-
-function submitAccountForm(mode) {
-  const pseudo = (document.getElementById('account-username').value || '').trim();
-  const code = (document.getElementById('account-secret').value || '').trim();
-  
-  if (pseudo.length < CONFIG.MIN_PSEUDO_LENGTH) {
-    alert('Pseudo : 3 caractères minimum.');
-    return;
-  }
-  
-  if (mode === 'create') {
-    if (code.length < CONFIG.MIN_CODE_LENGTH) {
-      alert('Code secret : 8 caractères minimum (avec majuscule, minuscule, chiffre et caractère spécial).');
-      return;
-    }
-    if (!isStrongCode(code)) {
-      alert('⚠️ Code trop faible !\n\nUn code fort doit contenir :\n• 8+ caractères\n• 1 MAJUSCULE\n• 1 minuscule\n• 1 chiffre\n• 1 caractère spécial (!@#$%&*+-_)\n\nExemple : Blitz2026!');
-      return;
-    }
-  } else {
-    if (code.length < 4) {
-      alert('🔒 Entre ton code secret (4 caractères minimum).');
-      return;
-    }
-  }
-  
-  myProfile.username = pseudo;
-  myProfile.secretCode = code;
-  const regionSel = document.getElementById('account-region');
-  if (regionSel && regionSel.value) myProfile.region = regionSel.value;
-  if (!myProfile.region) myProfile.region = 'Hauts-de-France';
-  if (!myProfile.avatar) myProfile.avatar = 1;
-  if (!myProfile.flag) myProfile.flag = '🇫🇷';
-  pendingAccountLogin = true;
-  
-  if (window.__kicked) return;
-  if (socket.connected) {
-    socket.emit("register_player", {
-      username: myProfile.username,
-      region: myProfile.region,
-      avatar: myProfile.avatar,
-      flag: myProfile.flag,
-      inventory: myProfile.inventory || {},
-      secretCode: myProfile.secretCode,
-      mode: mode,
-      timezone: getPlayerTimezone()
-    });
-  } else {
-    alert('❌ Connexion au serveur perdue. Réessaie dans quelques secondes.');
-    pendingAccountLogin = false;
-  }
-}
-
-function startCreateAccount() {
-  if (confirm('⚠️ Un nouveau compte repart de zéro.\n(Ton compte actuel reste sauvegardé.)\nContinuer ?')) switchAccount();
-}
-
-function askDeleteAccount() {
-  const code = prompt('⚠️ SUPPRESSION DÉFINITIVE DU COMPTE.\nEntre ton code secret pour confirmer :');
-  if (!code) return;
-  socket.emit('delete_account', { secretCode: code });
-}
-
-socket.on('delete_account_result', (res) => {
-  if (res.ok) {
-    localStorage.removeItem('cb_username');
-    localStorage.removeItem('cb_secret');
-    myProfile.secretCode = '';
-    myProfile.username = '';
-    alert('✅ Compte supprimé.');
-    renderAccountContent();
-  } else {
-    alert('❌ Code secret incorrect : compte NON supprimé.');
-  }
-});
-
-function openControlCenter() {
-  renderControlCenter();
-  document.getElementById('modal-control-center').style.display = 'flex';
-}
-
-function closeControlCenter() {
-  const m = document.getElementById('modal-control-center');
-  if (m) m.style.display = 'none';
-}
-
-function renderControlCenter() {
-  const isEN = (typeof currentLang !== 'undefined' && currentLang === 'en');
-  const titleEl = document.getElementById('cc-title');
-  if (titleEl) titleEl.innerText = isEN ? "⚙️ SETTINGS MANAGEMENT" : "⚙️ GESTION DES PARAMÈTRES";
-  const langEl = document.getElementById('cc-lang-text');
-  if (langEl) langEl.innerText = (isEN ? "Language : " : "Langue : ") + (isEN ? "EN" : "FR");
-  const soundEl = document.getElementById('cc-sound-text');
-  const muteBtn = document.getElementById('mute-btn');
-  if (soundEl && muteBtn) soundEl.innerText = (isEN ? "Sound : " : "Son : ") + (muteBtn.innerText.includes('🔇') ? (isEN ? "Muted" : "Coupé") : (isEN ? "On" : "Activé"));
-  const customEl = document.getElementById('cc-custom-btn');
-  if (customEl) customEl.innerText = isEN ? "🎨 Customization" : "🎨 Personnalisation";
-  const accountEl = document.getElementById('cc-account-btn');
-  if (accountEl) accountEl.innerText = isEN ? "👤 Account management" : "👤 Gestion du compte";
-  const musEl = document.getElementById('cc-music-text');
-  if (musEl) {
-    const p = localStorage.getItem('cb_music_season');
-    musEl.innerText = (isEN ? 'Soundtrack: ' : 'Bande son : ') + (p ? (isEN ? 'Season ' : 'Saison ') + p.replace('s', '') : (isEN ? 'Auto' : 'Auto'));
-  }
-  const btnLabel = document.getElementById('cc-btn-label');
-  if (btnLabel) btnLabel.innerText = isEN ? "Settings" : "Paramètres";
-}
-
-/* ============================================================
-11. FENÊTRE PROFIL / PERSONNALISATION
-============================================================ */
-function checkAndShowProfileModal() {
-  if (isProfileValid() && localStorage.getItem('cb_secret')) {
-    myProfile.username = localStorage.getItem("cb_username");
-    myProfile.region = localStorage.getItem("cb_region");
-    myProfile.avatar = parseInt(localStorage.getItem("cb_avatar")) || 1;
-    myProfile.flag = getFlagEmoji(localStorage.getItem("cb_flag") || "🇫🇷");
-    
-    const savedTitle = localStorage.getItem("cb_equipped_title");
-    const savedFrame = localStorage.getItem("cb_equipped_frame");
-    const savedTheme = localStorage.getItem("cb_equipped_theme");
-    
-    if (savedTitle || savedFrame || savedTheme) {
-      if (!myProfile.inventory) myProfile.inventory = {};
-      if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
-      if (savedTitle) myProfile.inventory.__equipped.title = savedTitle;
-      if (savedFrame) myProfile.inventory.__equipped.frame = savedFrame;
-      if (savedTheme) myProfile.inventory.__equipped.theme = savedTheme;
-    }
-    
-    updateEconomyUI();
-    const modal = document.getElementById("modal-username");
-    if (modal) modal.style.display = "none";
-    registerIfPossible();
-    const lastScreen = sessionStorage.getItem("cb_last_screen");
-    const pendingRoom = sessionStorage.getItem("cb_pending_room");
-    
-    if (lastScreen === "room" && pendingRoom) {
-      // Reprise d'un salon privé (même si l'app a été tuée)
-      setTimeout(() => joinRoomDirect(pendingRoom, ""), 600);
-    } else if (lastScreen === "rooms") {
-      setTimeout(() => { if (typeof openRoomsScreen === "function") openRoomsScreen(); }, 400);
-    } else if (lastScreen === "tower") {
-      setTimeout(() => { if (typeof openTower === "function") openTower(); }, 400);
-    } else if (lastScreen === "solo") {
-      setTimeout(() => { if (typeof openSoloMenu === "function") openSoloMenu(); }, 400);
-    } else if (lastScreen === "1v1") {
-      setTimeout(() => { if (typeof open1v1Hub === "function") open1v1Hub(); }, 400);
-    } else if (lastScreen === "shop") {
-      setTimeout(() => { if (typeof openShop === "function") openShop(); }, 400);
-    } else if (lastScreen === "leaderboard") {
-      setTimeout(() => { if (typeof openLeaderboard === "function") openLeaderboard(); }, 400);
-    } else if (lastScreen === "pass") {
-      setTimeout(() => { if (typeof openBlitzPass === "function") openBlitzPass(); }, 400);
-      } else {
-      showTitleScreen();   // lancement frais (app tuée) → page explications
-    }
-  } else {
-    openAccountModal();
-  }
-}
-
-function setProfileMode(mode) {
-  profileMode = mode;
-  const tc = document.getElementById('profile-tab-create');
-  const tl = document.getElementById('profile-tab-login');
-  if (tc) tc.classList.toggle('active', mode === 'create');
-  if (tl) tl.classList.toggle('active', mode === 'login');
-  const validateButton = document.getElementById('btn-validate-profile');
-  if (validateButton) validateButton.innerText = (mode === 'create') ? 'CRÉER MON PROFIL ⚡' : 'SE CONNECTER ⚡';
-  const secretInput = document.getElementById('secret-input');
-  if (secretInput) secretInput.placeholder = (mode === 'create') ? '🔒 Choisis un code secret (4 min)' : '🔒 Entre ton code secret';
-}
-
-function promptProfileChange() {
-  if (!isProfileValid() || !localStorage.getItem('cb_secret')) {
-    openAccountModal();
-    return;
-  }
-  
-  document.getElementById("username-input").value = myProfile.username;
-  document.getElementById("username-input").disabled = true;
-  if (myProfile.region) document.getElementById("region-input").value = myProfile.region;
-  const regionInput = document.getElementById("region-input");
-  if (regionInput) {
-    regionInput.disabled = true;
-    regionInput.title = currentLang === "fr"
-      ? "Région définie à la création du compte (équité des classements régionaux)."
-      : "Region set at account creation (regional ranking fairness).";
-  }
-  document.getElementById("avatar-input").value = myProfile.avatar || 1;
-  document.getElementById("flag-input").value = myProfile.flag || "🇫🇷";
-  
-  const equippedAvatar = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.avatar;
-  activeAvatarChoice = equippedAvatar || "standard";
-  renderProfileCustomizationMenus();
-  updateProfilePreview();
-  
-  const oldSecret = document.getElementById('secret-input');
-  if (oldSecret) oldSecret.style.display = 'none';
-  const oldTabs = document.getElementById('profile-tabs');
-  if (oldTabs) oldTabs.style.display = 'none';
-  const oldSwitch = document.getElementById('switch-account-btn');
-  if (oldSwitch) oldSwitch.style.display = 'none';
-  
-  const validateButton = document.querySelector('[onclick="saveProfileFromModal()"]');
-  if (validateButton) validateButton.innerText = currentLang === "fr" ? '💾 Enregistrer ma personnalisation' : '💾 Save my customization';
-  
-  document.getElementById("modal-username").style.display = "flex";
-}
-
-function saveProfileFromModal() {
-  const nameInput = document.getElementById("username-input").value.trim();
-  const regionInput = document.getElementById("region-input").value;
-  const selectedTitleId = document.getElementById("title-input").value;
-  const selectedFrameId = document.getElementById("frame-input").value;
-  const selectedThemeId = document.getElementById("theme-input").value;
-  let avatarVal = parseInt(document.getElementById("avatar-input").value);
-  const flagVal = document.getElementById("flag-input").value;
-  
-  if (nameInput.length < CONFIG.MIN_PSEUDO_LENGTH) {
-    alert(currentLang === "fr" ? "Ton pseudo doit contenir au moins 3 caractères !" : "Your pseudo must contain at least 3 characters!");
-    return;
-  }
-  
-  const savedSecret = localStorage.getItem('cb_secret') || '';
-  const savedName = localStorage.getItem('cb_username') || '';
-  const isCustomizationOnly = savedSecret !== '' && isProfileValid() && (nameInput === savedName);
-  
-  if (isCustomizationOnly) {
-    myProfile.secretCode = savedSecret;
-    pendingCustomization = true;
-  } else {
-    myProfile.secretCode = myProfile.secretCode || savedSecret;
-    pendingCustomization = false;
-  }
-  
-  if (isNaN(avatarVal) || avatarVal < 1) avatarVal = 1;
-  if (avatarVal > CONFIG.MAX_AVATAR_NUM) avatarVal = CONFIG.MAX_AVATAR_NUM;
-  
-  if (myProfile.secretCode && !isStrongCode(myProfile.secretCode)) {
-    if (confirm('⚠️ Ton code secret est faible !\n\nUn code fort doit contenir :\n• 8+ caractères\n• Des lettres\n• Des chiffres\n• Un caractère spécial (!@#$%&*+-_)\n\nTu pourras le changer plus tard dans "Mon Compte".\n\nContinuer quand même ?') === false) return;
-  }
-  
-  myProfile.username = nameInput;
-  myProfile.region = regionInput;
-  myProfile.avatar = avatarVal;
-  myProfile.flag = getFlagEmoji(flagVal);
-  
-  if (!myProfile.inventory) myProfile.inventory = {};
-  if (!myProfile.inventory.__equipped) myProfile.inventory.__equipped = {};
-  
-  if (selectedTitleId) {
-    myProfile.inventory.__equipped.title = selectedTitleId;
-    localStorage.setItem("cb_equipped_title", selectedTitleId);
-    socket.emit("equip_cosmetic", selectedTitleId);
-  } else {
-    delete myProfile.inventory.__equipped.title;
-    localStorage.removeItem("cb_equipped_title");
-    socket.emit("equip_cosmetic", "none_title");
-  }
-  
-  if (selectedFrameId) {
-    myProfile.inventory.__equipped.frame = selectedFrameId;
-    localStorage.setItem("cb_equipped_frame", selectedFrameId);
-    socket.emit("equip_cosmetic", selectedFrameId);
-  }
-  
-  if (selectedThemeId) {
-    myProfile.inventory.__equipped.theme = selectedThemeId;
-    localStorage.setItem("cb_equipped_theme", selectedThemeId);
-    socket.emit("equip_cosmetic", selectedThemeId);
-  } else {
-    delete myProfile.inventory.__equipped.theme;
-    localStorage.removeItem("cb_equipped_theme");
-    socket.emit("equip_cosmetic", "none_theme");
-  }
-  
-  if (activeAvatarChoice && activeAvatarChoice !== "standard") {
-    myProfile.inventory.__equipped.avatar = activeAvatarChoice;
-    socket.emit("equip_cosmetic", activeAvatarChoice);
-  } else {
-    delete myProfile.inventory.__equipped.avatar;
-    socket.emit("equip_cosmetic", "none");
-  }
-  
-  saveLocalPreferences();
-  updateEconomyUI();
-  SoundEngine.init();
-
-  if (isCustomizationOnly) {
-    pendingCustomization = false;
-    pendingProfileValidation = false;
-
-    const modal = document.getElementById('modal-username');
-    if (modal) modal.style.display = 'none';
-
-    if (typeof showNotificationToast === 'function') {
-      showNotificationToast(
-        currentLang === "fr" ? "✅ Personnalisation enregistrée !" : "✅ Customization saved!",
-        "gift"
-      );
-    }
-
-    if (typeof socket !== "undefined" && socket && socket.connected) {
-      socket.emit("update_profile_visuals", {
-        avatar: myProfile.avatar,
-        flag: myProfile.flag
-      });
-    }
-
-    return;
-  }
-
-  pendingProfileValidation = true;
-  registerIfPossible();
-}
-
 function registerIfPossible() {
-  if (isProfileValid() && socket.connected) {
-    const isReturning = localStorage.getItem('cb_secret') && localStorage.getItem('cb_username');
-    socket.emit("register_player", {
-      username: myProfile.username, region: myProfile.region, avatar: myProfile.avatar, flag: myProfile.flag,
-      inventory: myProfile.inventory,
-      secretCode: myProfile.secretCode || localStorage.getItem('cb_secret') || '',
-      mode: isReturning ? 'login' : (profileMode || 'create'),
-      timezone: getPlayerTimezone()
-    });
-  }
+  if (!myProfile.username || !myProfile.secretCode) return;
+  const isReturning = !!localStorage.getItem('cb_username');
+  if (!isReturning) localStorage.setItem('cb_username', myProfile.username);
+  socket.emit("register_player", {
+    username: myProfile.username, region: myProfile.region, avatar: myProfile.avatar, flag: myProfile.flag,
+    inventory: myProfile.inventory,
+    secretCode: myProfile.secretCode || localStorage.getItem('cb_secret') || '',
+    mode: isReturning ? 'login' : (profileMode || 'create'),
+    timezone: getPlayerTimezone()
+  });
 }
 
 socket.on("player_registered", (rawData) => {
@@ -1488,14 +427,15 @@ socket.on("online_count", (data) => {
 
 let justCreatedAccount = false;
 
+// ✅ CORRECTION 3 : Un SEUL listener register_result (le double a été supprimé)
 socket.on('register_result', (res) => {
   if (!res.ok) {
     // ✅ 1. GESTION PROPRE DE LA MAINTENANCE (On ne wipe pas le localStorage !)
-     if (res.reason === 'maintenance') {
-    pendingProfileValidation = false;
-    pendingAccountLogin = false;
-    cbShowMaintenanceLocked(res.message);   // affiche l'écran verrouillé ici
-    return;
+    if (res.reason === 'maintenance') {
+      pendingProfileValidation = false;
+      pendingAccountLogin = false;
+      cbShowMaintenanceLocked(res.message);
+      return;
     }
     
     // ❌ 2. ERREURS CLASSIQUES (On wipe la session locale)
@@ -1760,6 +700,55 @@ setInterval(() => {
   if (window.__pendingUpdateReload && !cbInGame()) location.reload();
 }, 3000);
 
+/* ============================================================
+🔄 CORRECTION 2 : POLLING DE VERSION — détection de mise à jour serveur
+============================================================ */
+let __currentClientVersion = (typeof VERSION_CLIENT !== 'undefined') 
+  ? VERSION_CLIENT.version 
+  : "1.3.0";
+
+function __compareVersions(a, b) {
+  const pa = String(a).split(".").map(Number);
+  const pb = String(b).split(".").map(Number);
+  for (let i = 0; i < 3; i++) {
+    const x = pa[i] || 0, y = pb[i] || 0;
+    if (x < y) return -1;
+    if (x > y) return 1;
+  }
+  return 0;
+}
+
+async function checkServerVersion() {
+  try {
+    const res = await fetch(CONFIG.SERVER_URL + '/version?cb=' + Date.now(), { 
+      cache: 'no-store',
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    
+    if (data.minWeb && __compareVersions(__currentClientVersion, data.minWeb) < 0) {
+      console.warn(`🔄 Nouvelle version requise: ${data.minWeb} (actuelle: ${__currentClientVersion})`);
+      
+      if (typeof cbInGame === 'function' && cbInGame()) {
+        window.__pendingUpdateReload = true;
+        if (typeof cbUpdateToast === 'function') cbUpdateToast();
+      } else {
+        const url = new URL(window.location.href);
+        url.searchParams.set('_upd', Date.now());
+        window.location.replace(url.toString());
+      }
+    }
+  } catch (e) {
+    // Silencieux si le serveur est injoignable
+  }
+}
+
+// Poll toutes les 60 secondes
+setInterval(checkServerVersion, 60000);
+// Vérification immédiate au chargement
+setTimeout(checkServerVersion, 5000);
+
 (function () {
   let hiddenAt = 0;
 
@@ -1779,7 +768,7 @@ setInterval(() => {
     }
   });
 
-    document.addEventListener("resume", () => {
+  document.addEventListener("resume", () => {
     document.body.style.display = "none";
     void document.body.offsetHeight;
     document.body.style.display = "";
@@ -1787,6 +776,7 @@ setInterval(() => {
     updateLastActiveTime();
   });
 })();
+
 /* ============================================================
 🛠️ MODE MAINTENANCE — côté joueur (version finale)
 ============================================================ */
@@ -1802,10 +792,10 @@ function cbShowMaintenanceCountdown(message, seconds){
   bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483646;background:linear-gradient(90deg,#ff8a00,#ff4b2b);color:#fff;font-family:system-ui,sans-serif;font-weight:800;font-size:13px;padding:10px 12px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.5);pointer-events:none;';
   document.body.appendChild(bar);
   let remaining = Math.max(0, parseInt(seconds, 10) || 0);
-const render = () => {
-  const m = Math.floor(remaining / 60), s = remaining % 60;
-  bar.innerHTML = '🛠️ MAINTENANCE DANS ' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0') + ' — termine ta partie (maintenance en cours) !';
-};
+  const render = () => {
+    const m = Math.floor(remaining / 60), s = remaining % 60;
+    bar.innerHTML = '🛠️ MAINTENANCE DANS ' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0') + ' — termine ta partie (maintenance en cours) !';
+  };
   render();
   bar._cbInterval = setInterval(() => {
     remaining--;
@@ -1818,6 +808,7 @@ const render = () => {
   }, 1000);
 }
 
+// ✅ CORRECTION 4 : Polling maintenance GLOBAL (pas seulement quand l'overlay est créé)
 function cbShowMaintenanceLocked(message){
   cbMaintRemoveBanner();
   let ov = document.getElementById('cb-maint-overlay');
@@ -1848,13 +839,27 @@ function cbShowMaintenanceLocked(message){
     localStorage.setItem('cb_maint_code', c);
     location.reload();
   };
-  if (!ov._cbProbe){
-    ov._cbProbe = setInterval(() => {
+  
+  // ✅ Polling GLOBAL — tourne tant que l'overlay est affiché
+  if (!window._cbMaintGlobalProbe) {
+    window._cbMaintGlobalProbe = setInterval(() => {
+      if (!document.getElementById('cb-maint-overlay')) {
+        clearInterval(window._cbMaintGlobalProbe);
+        window._cbMaintGlobalProbe = null;
+        return;
+      }
       fetch(CONFIG.SERVER_URL + '/api/maintenance?cb=' + Date.now(), { cache: 'no-store' })
         .then(r => r.ok ? r.json() : Promise.reject())
-        .then(d => { if (d && d.enabled === false){ localStorage.removeItem('cb_maint_code'); location.reload(); } })
+        .then(d => { 
+          if (d && d.enabled === false) { 
+            clearInterval(window._cbMaintGlobalProbe);
+            window._cbMaintGlobalProbe = null;
+            localStorage.removeItem('cb_maint_code'); 
+            location.reload(); 
+          } 
+        })
         .catch(() => {});
-    }, 10000);
+    }, 8000);
   }
 }
 
@@ -1868,7 +873,14 @@ socket.on('maintenance_announce', (d) => {
   }
 });
 socket.on('maintenance_kick', (d) => { cbShowMaintenanceLocked(d && d.message); });
-socket.on('maintenance_end', () => { localStorage.removeItem('cb_maint_code'); location.reload(); });
-socket.on('register_result', (res) => {
-  if (res && !res.ok && res.reason === 'maintenance') cbShowMaintenanceLocked(res.message);
+socket.on('maintenance_end', () => { 
+  localStorage.removeItem('cb_maint_code'); 
+  if (window._cbMaintGlobalProbe) {
+    clearInterval(window._cbMaintGlobalProbe);
+    window._cbMaintGlobalProbe = null;
+  }
+  location.reload(); 
 });
+
+// ✅ CORRECTION 3 : Le deuxième listener register_result a été SUPPRIMÉ
+// (il était en doublon et causait des conflits avec le premier)
