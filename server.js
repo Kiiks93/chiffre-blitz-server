@@ -1962,7 +1962,12 @@ socket.emit('admin_force_refresh_result', { ok: false, message: 'Joueur hors-lig
 socket.on('get_tower', () => {
 const player = activePlayers[socket.id];
 if (!player) return;
-towerRegenLives(player);
+const seasonNow = getCurrentSeason();
+if (player.current_season !== seasonNow.id) {
+player.current_season = seasonNow.id;
+socket.emit('player_registered', player);
+}
+towerRegenLives(player);;
 player.jokers = normalizeJokers(player.jokers);
 socket.emit('tower_data', { floor: player.towerFloor || 0, stars: player.towerStars || {}, lives: player.lives, nextLifeIn: towerNextLifeIn(player), jokers: player.jokers });
 });
