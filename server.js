@@ -983,27 +983,13 @@ if (!isAdminConn && vgCompareServer(cv, VERSION_GATE.minWeb) < 0) {
     }
   });
 
-  socket.on('buy_blitz_pass', async () => {
-    const player = activePlayers[socket.id];
-    if (!player) return;
-    const seasonId = getCurrentSeason().id;
-    player.claimedPassTiers = normalizeClaimedTiers(player.claimedPassTiers);
-    player.claimedPassTiers[seasonId] = player.claimedPassTiers[seasonId] || {};
-    if (player.claimedPassTiers[seasonId].premium) return;
-    if (player.coins >= 1000) {
-      player.coins -= 1000;
-      player.claimedPassTiers[seasonId].premium = true;
-      player.blitzPassPremium = true;
-      await savePlayerToSupabase(socket.id);
-      await logPlayerAction(player, 'buy_blitz_pass', `Season ${seasonId} (1000🪙)`, 'coins', -1000, player.coins);
-      socket.emit('player_registered', player);
-      socket.emit('blitz_pass_updated', { coins: player.coins, blitzPassPremium: true, claimedPassTiers: player.claimedPassTiers });
-      socket.emit('pass_reward_received', { message: "Passe Premium « " + getCurrentSeason().name + " » activé !" });
-    } else {
-      await logPlayerAction(player, 'buy_blitz_pass_fail', `Fonds insuffisants (besoin: 1000, avoir: ${player.coins})`, 'coins', 0, player.coins);
-      socket.emit('room_error', "Tu n'as pas assez de pieces !");
-    }
-  });
+// ❌ E2-B : ACHAT PASS EN PIÈCES DÉSACTIVÉ — le Passe de Saison sera IAP uniquement (route G)
+socket.on('buy_blitz_pass', async () => {
+  const player = activePlayers[socket.id];
+  if (!player) return;
+  await logPlayerAction(player, 'buy_blitz_pass_refused', 'Achat pass en pièces désactivé (pass dispo via IAP à la sortie)', null, null, null);
+  socket.emit('room_error', "🚧 Le Passe de Saison n'est pas encore disponible à l'achat.");
+});
 
   socket.on('claim_pass_tier', async (data) => {
     const player = activePlayers[socket.id];
