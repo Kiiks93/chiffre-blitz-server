@@ -1001,8 +1001,8 @@ const seasonName = ["", "Saison 1", "Halloween", "Noël"][season] || "Saison " +
 const flag = "season_s" + season + "_unlocked";
 const hasFlag = (myProfile.unlocked_items || []).includes(flag);
 if (season === 1) {
-lock.innerText = `🔒 Quota  ${WORLD_QUOTA} requis dans le monde précédent`;
-} else if (!hasFlag) {
+lock.innerText = `🔒 Quota ⭐ ${WORLD_QUOTA} requis dans le monde précédent`;
+} else if (!hasFlag && TowerUtils.currentSeasonNum() < season) {
 lock.innerText = `🔒 Atteins le Tier 1 du Pass ${seasonName} pour débloquer`;
 } else {
 lock.innerText = `🔒 Quota ⭐ ${WORLD_QUOTA} requis dans le monde précédent`;
