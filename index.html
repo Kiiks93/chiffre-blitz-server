@@ -602,6 +602,19 @@ SCRIPTS (ordre de chargement important)
 ============================================================ -->
 <script>
 (function(){
+  function cbScale(){
+    // Référence = écran mobile type 480 x 900
+    var s = Math.min(window.innerWidth / 480, window.innerHeight / 900);
+    var z = Math.max(1, Math.min(2.2, s));   // 1 = mobile inchangé, max x2.2 sur grand écran
+    document.documentElement.style.zoom = z;
+  }
+  window.addEventListener('resize', cbScale);
+  window.addEventListener('orientationchange', cbScale);
+  cbScale();
+})();
+</script>
+<script>
+(function(){
   var v = "?v=" + Date.now();
   var files = ["i18n.js","audio.js","son-saisons.js","version.js","profil.js","admin.js","social.js","passe.js","saisons.js","fx.js","jeu.js","modes-catch.js","tour.js","mobile-menu.js","ads.js","iap.js"];
   for (var i = 0; i < files.length; i++) {
@@ -619,6 +632,7 @@ if ("serviceWorker" in navigator) {
 <script>
 (function(){
   function cbRemoveBanner(){ var b = document.getElementById('cb-maint-banner'); if (b){ if (b._iv) clearInterval(b._iv); b.remove(); } }
+    var CB_SERVER = (location.hostname.endsWith('.onrender.com') || location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? location.origin : 'https://chiffre-blitz-server.onrender.com';
   function cbShowBanner(msg, seconds){
     cbRemoveBanner();
     var b = document.createElement('div'); b.id = 'cb-maint-banner';
@@ -646,7 +660,7 @@ if ("serviceWorker" in navigator) {
     var m = document.getElementById('cbMaintMsg'); if (m) m.textContent = msg || '';
     if (!ov._probe){
       ov._probe = setInterval(function(){
-        fetch('https://chiffre-blitz-server.onrender.com/api/maintenance?cb=' + Date.now(), { cache:'no-store' })
+            fetch(CB_SERVER + '/api/maintenance?cb=' + Date.now(), { cache:'no-store' })
           .then(function(r){ return r.ok ? r.json() : Promise.reject(); })
           .then(function(d){ if (d && d.enabled === false){ localStorage.removeItem('cb_maint_code'); location.reload(); } })
           .catch(function(){});
