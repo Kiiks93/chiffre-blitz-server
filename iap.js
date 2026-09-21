@@ -3,7 +3,10 @@
    VERSION FINALE NETTOYÉE — remplacer le fichier entier
 ============================================================ */
 const RC_API_KEY = 'goog_XFlNDHkJppdgUrBvKgMQilmCiaR';
-const IAP_SERVER_URL = window.location.hostname.endsWith('.onrender.com') ? window.location.origin : 'https://chiffre-blitz-server.onrender.com';
+// 🔐 Secret partagé avec le serveur (variable Render IAP_SHARED_SECRET).
+// Test fermé uniquement — remplacé par la vérification RevenueCat/Google à la sortie (route G).
+const IAP_SHARED_SECRET = '301fce065a6794b383e54ccd4aa249b6';
+const IAP_SERVER_URL = location.hostname.endsWith(".onrender.com") ? location.origin : "https://chiffre-blitz-server.onrender.com";
 
 const IAP = {
   ready: false,
@@ -108,7 +111,7 @@ const IAP = {
     try {
       response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-cb-iap-key': IAP_SHARED_SECRET },
         body: JSON.stringify({ pseudo: pseudo, sku: sku, token: token })
       });
     } catch (e) {
