@@ -950,27 +950,6 @@ console.error("Erreur update_profile_visuals :", err);
 socket.emit("profile_visuals_updated", { ok: false });
 }
 });
-socket.on('buy_blitz_pass', async () => {
-const player = activePlayers[socket.id];
-if (!player) return;
-const seasonId = getCurrentSeason().id;
-player.claimedPassTiers = normalizeClaimedTiers(player.claimedPassTiers);
-player.claimedPassTiers[seasonId] = player.claimedPassTiers[seasonId] || {};
-if (player.claimedPassTiers[seasonId].premium) return;
-if (player.coins >= 1000) {
-player.coins -= 1000;
-player.claimedPassTiers[seasonId].premium = true;
-player.blitzPassPremium = true;
-await savePlayerToSupabase(socket.id);
-await logPlayerAction(player, 'buy_blitz_pass', `Season ${seasonId} (1000🪙)`, 'coins', -1000, player.coins);
-socket.emit('player_registered', player);
-socket.emit('blitz_pass_updated', { coins: player.coins, blitzPassPremium: true, claimedPassTiers: player.claimedPassTiers });
-socket.emit('pass_reward_received', { message: "Passe Premium « " + getCurrentSeason().name + " » activé !" });
-} else {
-await logPlayerAction(player, 'buy_blitz_pass_fail', `Fonds insuffisants (besoin: 1000, avoir: ${player.coins})`, 'coins', 0, player.coins);
-socket.emit('room_error', "Tu n'as pas assez de pieces !");
-}
-});
 socket.on('claim_pass_tier', async (data) => {
 const player = activePlayers[socket.id];
 if (!player) return;
@@ -1387,7 +1366,11 @@ await logPlayerAction(player, 'delete_account_fail', 'Bad code', null, null, nul
 socket.emit('delete_account_result', { ok: false, reason: 'bad_code' });
 return;
 }
-await logPlayerAction(player, 'account_deleted', `Username: ${player.username}`, null, null, null);
+// 🇪🇺 RGPD : purge de toutes les données liées au pseudo avant suppression
+const pseudo = row.username;
+try { await supabase.from('friendships').delete().or(`user_username.eq.${pseudo},friend_username.eq.${pseudo}`); } catch (e) {}
+try { await supabase.from('player_logs').delete().eq('username', pseudo); } catch (e) {}
+try { await supabase.from('iap_receipts').delete().eq('username', pseudo); } catch (e) {}
 await supabase.from('players').delete().eq('id', row.id);
 delete activePlayers[socket.id];
 socket.emit('delete_account_result', { ok: true });
