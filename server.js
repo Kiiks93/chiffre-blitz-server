@@ -337,14 +337,14 @@ function cbWebGate(req, res, next) {
   const isApkWebView = /wv|Version\/4\.0|Capacitor/i.test(ua);
   const hasDevCookie = (req.headers.cookie || '').indexOf('cb_web_dev=') !== -1;
   if (/([?&])dev=/.test(req.url || '')) {
-    res.setHeader('Set-Cookie', 'cb_web_dev=1; Path=/; Max-Age=31536000; SameSite=Lax');
+    res.setHeader('Set-Cookie', 'cb_web_dev=1; Path=/; Max-Age=31536000; SameSite=Lax')
     return next();
   }
   if (isApkWebView || hasDevCookie) return next();
   return res.redirect('/mobile.html');
 }
-app.get('/', cbWebGate, (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
-app.get('/index.html', webGate, (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
+app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
+app.get('/index.html', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 app.get('/admin.html', (req, res) => {
 res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
 res.setHeader('Pragma', 'no-cache');
@@ -804,7 +804,14 @@ socket.emit('username_check_result', { taken: !error && data && data.length > 0 
 socket.on('register_player', async (data) => {
 // Maintenance : bloque uniquement les joueurs PAS déjà connectés
 if (maintBlocked(socket) && !activePlayers[socket.id]) return socket.emit('register_result', { ok:false, reason:'maintenance', message:maintenanceState.message });
-// 🔒 Web fermé au public : APK ou code dev uniquement
+// 🚫 WEB FERMÉ (provisoire) : APK ou code dev uniquement (sans WEB_DEV_CODE = ouvert, ex. staging)
+if (WEB_DEV_CODE) {
+  const ha = (socket.handshake && socket.handshake.auth) || {};
+  const ua = String(((socket.handshake || {}).headers || {})['user-agent'] || '');
+  const isApk = String((data && data.platform) || ha.platform || '') === 'apk' || /wv\)|Version\/4\.0|Capacitor/i.test(ua);
+  const isDev = String((data && data.dev) || ha.dev || '') === WEB_DEV_CODE;
+  if (!isApk && !isDev) return socket.emit('register_result', { ok: false, reason: 'web_closed' });
+}
 const q = socket.handshake.query || {};
 const isApk = (q.platform === 'apk') || !!q.shell;
 if (WEB_DEV_CODE && !isApk && !socket._webDev) return socket.emit('register_result', { ok:false, reason:'web_closed' });
