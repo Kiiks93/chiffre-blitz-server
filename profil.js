@@ -55,9 +55,9 @@ if (!CONFIG.SERVER_URL || CONFIG.SERVER_URL.indexOf("chiffre-blitz.fr") !== -1) 
 // ?dev=CODE → mémorise puis recharge sans le paramètre
 (function(){ const m = location.search.match(/[?&]dev=([^&]+)/); if (m) { localStorage.setItem('cb_web_dev', decodeURIComponent(m[1])); location.replace(location.pathname); } })();
 // 🚫 WEB FERMÉ (provisoire) : identité envoyée au serveur à la connexion
-(function(){ const m = location.search.match(/[?&]dev=([^&]+)/); if (m) { localStorage.setItem('cb_web_dev', '1'); history.replaceState({}, '', location.pathname); } })();
-const CB_IS_APK = !!(window.Capacitor && window.Capacitor.Plugins);
-const CB_DEV = localStorage.getItem('cb_web_dev') === '1';
+(function(){ const m = location.search.match(/[?&]dev=([^&]+)/); if (m) { localStorage.setItem('cb_web_dev', decodeURIComponent(m[1])); history.replaceState({}, '', location.pathname); } })();
+const CB_IS_APK = !!(window.Capacitor && window.Capacitor.Plugins) || /wv\)|Version\/4\.0|Capacitor/i.test(navigator.userAgent);
+const CB_DEV = localStorage.getItem('cb_web_dev') || '';
 function cbShowMobileOnly(){
   if (document.getElementById('cb-mobile-only')) return;
   const ov = document.createElement('div');
