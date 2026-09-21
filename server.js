@@ -330,8 +330,20 @@ if (globalEvents[key] !== shouldBeActive) { globalEvents[key] = shouldBeActive; 
 if (changed) io.emit("events_state_update", globalEvents);
 }, 5000);
 const path = require('path');
-// ✅ Sert la page du jeu au lieu du texte brut (gate web dev)
-app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
+// 🚪 Portail : APK (WebView Android) + dev → jeu · navigateur public → mobile.html
+function cbWebGate(req, res, next) {
+  const ua = String(req.headers['user-agent'] || '');
+  // WebView Android (APK) : contient "wv" et/ou "Version/4.0" ; Chrome mobile n'a PAS "Version/4.0"
+  const isApkWebView = /wv|Version\/4\.0|Capacitor/i.test(ua);
+  const hasDevCookie = (req.headers.cookie || '').indexOf('cb_web_dev=') !== -1;
+  if (/([?&])dev=/.test(req.url || '')) {
+    res.setHeader('Set-Cookie', 'cb_web_dev=1; Path=/; Max-Age=31536000; SameSite=Lax');
+    return next();
+  }
+  if (isApkWebView || hasDevCookie) return next();
+  return res.redirect('/mobile.html');
+}
+app.get('/', cbWebGate, (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 app.get('/index.html', webGate, (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 app.get('/admin.html', (req, res) => {
 res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
