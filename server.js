@@ -331,7 +331,7 @@ if (changed) io.emit("events_state_update", globalEvents);
 }, 5000);
 const path = require('path');
 // ✅ Sert la page du jeu au lieu du texte brut (gate web dev)
-app.get('/', webGate, (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
+app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 app.get('/index.html', webGate, (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 app.get('/admin.html', (req, res) => {
 res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
