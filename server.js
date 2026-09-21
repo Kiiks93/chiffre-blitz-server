@@ -60,6 +60,18 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 if (!ADMIN_PASSWORD) { console.error("ADMIN_PASSWORD doit etre definie."); process.exit(1); }
 const IAP_SHARED_SECRET = process.env.IAP_SHARED_SECRET || '';
+// 🔒 Accès web réservé au test : si défini, le navigateur sans code dev reçoit mobile.html
+const WEB_DEV_CODE = process.env.WEB_DEV_CODE || '';
+function webGate(req, res, next) {
+  if (!WEB_DEV_CODE) return next();                       // staging / mode ouvert
+  const q = req.query.dev ? String(req.query.dev) : '';
+  if (q && q === WEB_DEV_CODE) {
+    res.setHeader('Set-Cookie', 'cb_web_dev=' + encodeURIComponent(WEB_DEV_CODE) + '; Path=/; Max-Age=31536000; SameSite=Lax');
+    return next();
+  }
+  if ((req.headers.cookie || '').indexOf('cb_web_dev=' + encodeURIComponent(WEB_DEV_CODE)) !== -1) return next();
+  return res.sendFile(path.join(__dirname, 'mobile.html'));
+}
 /* ----- VERSION GATING ----- */
 const VERSION_GATE = {
 latest:   "1.3.0",
@@ -318,8 +330,9 @@ if (globalEvents[key] !== shouldBeActive) { globalEvents[key] = shouldBeActive; 
 if (changed) io.emit("events_state_update", globalEvents);
 }, 5000);
 const path = require('path');
-// ✅ Sert la page du jeu au lieu du texte brut
-app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
+// ✅ Sert la page du jeu au lieu du texte brut (gate web dev)
+app.get('/', webGate, (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
+app.get('/index.html', webGate, (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 app.get('/admin.html', (req, res) => {
 res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
 res.setHeader('Pragma', 'no-cache');
@@ -471,7 +484,7 @@ s.disconnect(true);
 }
 }
 }, 10000);
-io.use((socket, next) => { const a = (socket.handshake && socket.handshake.auth) || {}; const c = String((a && a.maintCode) || ""); if (c && maintenanceState.bypassCode && c === maintenanceState.bypassCode) socket._maintBypass = true; next(); });
+io.use((socket, next) => { const a = (socket.handshake && socket.handshake.auth) || {}; const c = String((a && a.maintCode) || ""); if (c && maintenanceState.bypassCode && c === maintenanceState.bypassCode) socket._maintBypass = true; if (WEB_DEV_CODE && a.devCode === WEB_DEV_CODE) socket._webDev = true; next(); });
 async function logPlayerAction(p, action, detail, currency, amount, balanceAfter) {
 try {
 await supabase.from('player_logs').insert([{
@@ -779,6 +792,10 @@ socket.emit('username_check_result', { taken: !error && data && data.length > 0 
 socket.on('register_player', async (data) => {
 // Maintenance : bloque uniquement les joueurs PAS déjà connectés
 if (maintBlocked(socket) && !activePlayers[socket.id]) return socket.emit('register_result', { ok:false, reason:'maintenance', message:maintenanceState.message });
+// 🔒 Web fermé au public : APK ou code dev uniquement
+const q = socket.handshake.query || {};
+const isApk = (q.platform === 'apk') || !!q.shell;
+if (WEB_DEV_CODE && !isApk && !socket._webDev) return socket.emit('register_result', { ok:false, reason:'web_closed' });
 const rawUsername = (data.username || '').trim();
 const secretCode = (data.secretCode || '').trim();
 if (rawUsername.length < 3) { socket.emit('register_result', { ok: false, reason: 'short' }); return; }
