@@ -1,6 +1,8 @@
 // 🔒 Passe de Saison : activation AUTOMATIQUE à la date de début de la saison en cours
 // (S1 = 01/10/2026 → paliers, claims et achat s'activent tout seuls ce jour-là)
 function isSeasonPassLive(){
+// 🎛️ Saison forcée par l'admin (Contrôle de Saison) = passe live (tests)
+if (seasonOverride) return true;
 const s = getCurrentSeason();
 return Date.now() >= new Date(s.start + "T00:00:00Z").getTime();
 }
@@ -856,6 +858,7 @@ trophies: playerData.trophies || 0, wins: playerData.wins || 0, losses: playerDa
 inventory: playerData.inventory, equippedPower: playerData.equipped_power || null,
 unlocked_items: playerData.unlocked_items, blitzPassPremium: premNow, claimedPassTiers: claimedNorm,
 current_season: seasonNow.id, seasonProgress: playerData.season_progress, unlockedTier: progress.unlocked_tier || 0,
+seasonPassLive: isSeasonPassLive(),
 matches_played: playerData.matches_played || 0, win_streak: playerData.win_streak || 0,
 best_combo: playerData.best_combo || 0, best_avalanche: playerData.best_avalanche || 0,
 solo_games: playerData.solo_games || 0, total_coins_earned: playerData.total_coins_earned || 0,
@@ -1467,6 +1470,23 @@ const p = activePlayers[sId];
 p.claimedPassTiers = normalizeClaimedTiers(p.claimedPassTiers);
 p.current_season = seasonNow.id;
 p.blitzPassPremium = !!(p.claimedPassTiers[seasonNow.id] && p.claimedPassTiers[seasonNow.id].premium);
+p.seasonPassLive = isSeasonPassLive();
+
+// 🔧 FIX : Initialiser la progression de la saison et débloquer le palier 1 immédiatement
+if (!p.seasonProgress) p.seasonProgress = {};
+if (!p.seasonProgress[seasonNow.id]) {
+    p.seasonProgress[seasonNow.id] = { unlocked_tier: 0, last_login_date: null };
+}
+const prog = p.seasonProgress[seasonNow.id];
+if (isSeasonPassLive() && (prog.unlocked_tier || 0) < 1) {
+    prog.unlocked_tier = 1;
+    // Sauvegarde en base pour que ce soit persistant
+    if (p.dbId && String(p.dbId) !== sId) {
+        supabase.from('players').update({ season_progress: p.seasonProgress }).eq('id', p.dbId).catch(()=>{});
+    }
+}
+p.unlockedTier = prog.unlocked_tier || 0;
+
 io.to(sId).emit('player_registered', p);
 }
 socket.emit('admin_season_result', { ok: true, season: seasonNow.id });
@@ -1477,8 +1497,29 @@ if (!socket.isAdmin) return;
 applySeasonDates(dates);
 try { await supabase.from('settings').update({ season_dates: dates }).eq('id', 1); } catch (e) {}
 const seasonNow = getCurrentSeason();
-for (let sId in activePlayers) { const p = activePlayers[sId]; p.current_season = seasonNow.id; io.to(sId).emit('player_registered', p); }
+for (let sId in activePlayers) { 
+    const p = activePlayers[sId]; 
+    p.current_season = seasonNow.id; 
+    p.seasonPassLive = isSeasonPassLive(); 
+    
+    // 🔧 FIX : Idem, on s'assure que le palier 1 est débloqué si la saison est live
+    if (!p.seasonProgress) p.seasonProgress = {};
+    if (!p.seasonProgress[seasonNow.id]) {
+        p.seasonProgress[seasonNow.id] = { unlocked_tier: 0, last_login_date: null };
+    }
+    const prog = p.seasonProgress[seasonNow.id];
+    if (isSeasonPassLive() && (prog.unlocked_tier || 0) < 1) {
+        prog.unlocked_tier = 1;
+        if (p.dbId && String(p.dbId) !== sId) {
+            supabase.from('players').update({ season_progress: p.seasonProgress }).eq('id', p.dbId).catch(()=>{});
+        }
+    }
+    p.unlockedTier = prog.unlocked_tier || 0;
+
+    io.to(sId).emit('player_registered', p); 
+}
 io.emit('seasons_updated', getSeasonDatesPublic());
+io.emit('season_updated', getSeasonDatesPublic());
 socket.emit('admin_season_result', { ok: true, season: seasonNow.id });
 });
 socket.on('admin_get_catalog', () => {
