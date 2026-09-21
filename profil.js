@@ -793,6 +793,15 @@ function isProfileValid() {
   return savedName && savedName.trim().length >= CONFIG.MIN_PSEUDO_LENGTH && savedName !== "Profil" && savedName !== "Définir un pseudo" && savedRegion;
 }
 
+// ✅ Nettoyage des pouvoirs équipés (défini ici pour que profil.js soit autonome)
+function sanitizeEquippedPowers() {
+  if (!myProfile.inventory) myProfile.inventory = {};
+  if (myProfile.equippedPower && (myProfile.inventory[myProfile.equippedPower] || 0) <= 0) myProfile.equippedPower = null;
+  if (myProfile.equippedPowers && myProfile.equippedPowers.length > 0) {
+    myProfile.equippedPowers = myProfile.equippedPowers.filter(p => (myProfile.inventory[p] || 0) > 0);
+  }
+}
+
 /* ============================================================
 10. COMPTE + CENTRE DE CONTRÔLE
 ============================================================ */
