@@ -1,21 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<script>
-/* 🚪 Verrou web/mobile : seul un navigateur est redirigé vers mobile.html.
-   L'APK (Capacitor) et les accès dev restent dans le jeu. */
-(function(){
-  function decide(){
-    try {
-      var isApk = !!(window.Capacitor && window.Capacitor.Plugins);
-      var dev = localStorage.getItem('cb_web_dev') || sessionStorage.getItem('cb_web_dev') || /[?&]dev=/.test(location.search);
-      if (!isApk && !dev && location.pathname === '/') location.replace('/mobile.html');
-    } catch(e){}
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', decide);
-  else decide();
-})();
-</script>
     <meta charset="UTF-8">
     <meta name="color-scheme" content="dark">
     <meta name="theme-color" content="#051525">
