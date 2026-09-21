@@ -660,11 +660,15 @@ function openLaunchAdModal() {
 }
 
 function playLaunchAd() {
-  document.getElementById("modal-launch-ad").style.display = "none";
-  simulateAd(() => {
-    launchAdWatched = true;
-    showMainMenu();
-  });
+document.getElementById("modal-launch-ad").style.display = "none";
+if (typeof ADS !== "undefined" && ADS.native()) {
+ADS.showInterstitial().then(() => { launchAdWatched = true; showMainMenu(); });
+return;
+}
+simulateAd(() => {
+launchAdWatched = true;
+showMainMenu();
+});
 }
 
 function simulateAd(callback) {
@@ -699,19 +703,24 @@ function closeSimulatedAd() {
 }
 
 function watchAdToDoubleReward() {
-  const d = i18n[currentLang];
-  if (rewardDoubled) return;
-  simulateAd(() => {
-    rewardDoubled = true;
-    socket.emit("double_reward");
-    currentCoinsGained *= 2;
-    document.getElementById("recap-coins-gained").innerText = `+${currentCoinsGained} (x2 ⚡)`;
-    const doubleBtn = document.getElementById("btn-double-reward");
-    doubleBtn.disabled = true;
-    doubleBtn.style.opacity = "0.5";
-    doubleBtn.innerText = d.reward_doubled;
-    document.getElementById("recap-modal").style.display = "flex";
-  });
+const d = i18n[currentLang];
+if (rewardDoubled) return;
+const onDone = () => {
+rewardDoubled = true;
+socket.emit("double_reward");
+currentCoinsGained *= 2;
+document.getElementById("recap-coins-gained").innerText = `+${currentCoinsGained} (x2 ⚡)`;
+const doubleBtn = document.getElementById("btn-double-reward");
+doubleBtn.disabled = true;
+doubleBtn.style.opacity = "0.5";
+doubleBtn.innerText = d.reward_doubled;
+document.getElementById("recap-modal").style.display = "flex";
+};
+if (typeof ADS !== "undefined" && ADS.native()) {
+ADS.showRewarded().then(ok => { if (ok) onDone(); });
+return;
+}
+simulateAd(onDone);
 }
 
 function openSoloMenu() {
