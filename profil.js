@@ -52,12 +52,18 @@ const EMOTES = ["\u{1F525}", "\u26A1", "\u{1F916}", "\u{1F480}", "\u{1F602}", "\
 if (!CONFIG.SERVER_URL || CONFIG.SERVER_URL.indexOf("chiffre-blitz.fr") !== -1) {
   CONFIG.SERVER_URL = "https://chiffre-blitz-server.onrender.com";
 }
+// ?dev=CODE → mémorise puis recharge sans le paramètre
+(function(){ const m = location.search.match(/[?&]dev=([^&]+)/); if (m) { localStorage.setItem('cb_web_dev', decodeURIComponent(m[1])); location.replace(location.pathname); } })();
 const socket = io(CONFIG.SERVER_URL, {
   reconnection: true,
   reconnectionAttempts: CONFIG.RECONNECTION_ATTEMPTS,
   reconnectionDelay: CONFIG.RECONNECTION_DELAY_MS,
-  query: { v: typeof VERSION_CLIENT !== 'undefined' ? VERSION_CLIENT.version : "1.3.0" },
-  auth: { maintCode: localStorage.getItem('cb_maint_code') || "" }
+  query: {
+    v: typeof VERSION_CLIENT !== 'undefined' ? VERSION_CLIENT.version : "1.3.0",
+    shell: typeof VERSION_CLIENT !== 'undefined' ? VERSION_CLIENT.shell : 0,
+    platform: (window.Capacitor && window.Capacitor.Plugins) ? 'apk' : 'web'
+  },
+  auth: { maintCode: localStorage.getItem('cb_maint_code') || "", devCode: localStorage.getItem('cb_web_dev') || "" }
 });
 socket.on("disconnect", () => { SoundEngine.stopMusic(true); });
 
@@ -1509,6 +1515,7 @@ let justCreatedAccount = false;
 
 socket.on('register_result', (res) => {
   if (!res.ok) {
+    if (res.reason === 'web_closed') { cbShowMobileOnly(); return; }
     // ✅ 1. GESTION PROPRE DE LA MAINTENANCE (On ne wipe pas le localStorage !)
      if (res.reason === 'maintenance') {
     pendingProfileValidation = false;
@@ -1891,3 +1898,18 @@ socket.on('maintenance_end', () => { localStorage.removeItem('cb_maint_code'); l
 socket.on('register_result', (res) => {
   if (res && !res.ok && res.reason === 'maintenance') cbShowMaintenanceLocked(res.message);
 });
+
+function cbShowMobileOnly(){
+  if (document.getElementById('cb-mobile-only')) return;
+  const ov = document.createElement('div');
+  ov.id = 'cb-mobile-only';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:#0a0514;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.innerHTML =
+    '<div style="max-width:420px;width:100%;text-align:center;color:#fff;font-family:system-ui,sans-serif;">' +
+    '<div style="font-size:52px;">📱</div>' +
+    '<h2 style="color:#00d2ff;margin:12px 0 6px;font-size:22px;">CHIFFRE BLITZ SUR MOBILE</h2>' +
+    '<p style="font-size:14px;line-height:1.5;color:#ddd;margin-bottom:18px;">Le jeu est disponible gratuitement sur Android. Le navigateur est réservé aux tests.</p>' +
+    '<a href="https://play.google.com/store/apps/details?id=com.chiffreblitz.app" style="display:block;background:linear-gradient(45deg,#3ae05a,#1a9a3a);color:#fff;font-weight:800;padding:12px;border-radius:12px;text-decoration:none;margin-bottom:10px;">▶ GOOGLE PLAY</a>' +
+    '</div>';
+  document.body.appendChild(ov);
+}
