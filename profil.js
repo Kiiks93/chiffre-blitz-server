@@ -1489,6 +1489,7 @@ socket.on("player_registered", (rawData) => {
   myProfile.blitzPassPremium = player.blitzPassPremium;
   myProfile.claimedPassTiers = player.claimedPassTiers;
   myProfile.currentSeasonId = rawData.current_season || rawData.currentSeasonId || "s1";
+  if (rawData.seasonPassLive !== undefined) myProfile.seasonPassLive = !!rawData.seasonPassLive;
   myProfile.seasonProgress = rawData.seasonProgress || {};
   myProfile.unlockedTier = rawData.unlockedTier || 0;
   sanitizeEquippedPowers();
