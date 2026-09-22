@@ -731,7 +731,7 @@ return;
 console.log('Connexion : ' + socket.id);
 const _ha = (socket.handshake && socket.handshake.auth) || {};
 const _q = (socket.handshake && socket.handshake.query) || {};
-const _isApk = (_ha.platform === 'apk') || (_q.platform === 'apk') || !!_q.shell;
+const _isApk = (_ha.platform === 'apk') || (_q.platform === 'apk') || /wv|Version\/4\.0|Capacitor/i.test(String((socket.handshake.headers || {})['user-agent'] || ''));
 const _isDev = !!socket._webDev || (_ha.devCode === WEB_DEV_CODE) || (_q.dev === WEB_DEV_CODE);
 socket.emit('web_policy', { closed: !!WEB_DEV_CODE && !_isApk && !_isDev });
 socket.emit('events_state_update', globalEvents);
@@ -789,7 +789,7 @@ if (maintBlocked(socket) && !activePlayers[socket.id]) return socket.emit('regis
 if (WEB_DEV_CODE) {
   const ha = (socket.handshake && socket.handshake.auth) || {};
   const q = (socket.handshake && socket.handshake.query) || {};
-  const isApk = (ha.platform === 'apk') || (q.platform === 'apk') || !!q.shell;
+  const isApk = (ha.platform === 'apk') || (q.platform === 'apk') || /wv|Version\/4\.0|Capacitor/i.test(String((socket.handshake.headers || {})['user-agent'] || ''));
   const isDev = (ha.devCode === WEB_DEV_CODE) || (q.dev === WEB_DEV_CODE);
   if (!isApk && !isDev) return socket.emit('register_result', { ok:false, reason:'web_closed' });
 }
