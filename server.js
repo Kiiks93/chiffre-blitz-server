@@ -336,9 +336,9 @@ function cbWebGate(req, res, next) {
   // WebView Android (APK) : contient "wv" et/ou "Version/4.0" ; Chrome mobile n'a PAS "Version/4.0"
   const isApkWebView = /wv|Version\/4\.0|Capacitor/i.test(ua);
   const hasDevCookie = (req.headers.cookie || '').indexOf('cb_web_dev=') !== -1;
-  if (/([?&])dev=/.test(req.url || '')) {
-    res.setHeader('Set-Cookie', 'cb_web_dev=1; Path=/; Max-Age=31536000; SameSite=Lax')
-    return next();
+   if (req.query.dev && String(req.query.dev) === WEB_DEV_CODE) {
+  res.setHeader('Set-Cookie', 'cb_web_dev=1; Path=/; Max-Age=31536000; SameSite=Lax');
+  return next();
   }
   if (isApkWebView || hasDevCookie) return next();
   return res.redirect('/mobile.html');
@@ -496,7 +496,13 @@ s.disconnect(true);
 }
 }
 }, 10000);
-io.use((socket, next) => { const a = (socket.handshake && socket.handshake.auth) || {}; const c = String((a && a.maintCode) || ""); if (c && maintenanceState.bypassCode && c === maintenanceState.bypassCode) socket._maintBypass = true; if (WEB_DEV_CODE && a.devCode === WEB_DEV_CODE) socket._webDev = true; next(); });
+io.use((socket, next) => {
+const a = (socket.handshake && socket.handshake.auth) || {};
+const c = String((a && a.maintCode) || "");
+if (c && maintenanceState.bypassCode && c === maintenanceState.bypassCode) socket._maintBypass = true;
+if (WEB_DEV_CODE && (a.devCode === WEB_DEV_CODE || String((socket.handshake.headers || {}).cookie || '').indexOf('cb_web_dev=1') !== -1)) socket._webDev = true;
+next();
+});
 async function logPlayerAction(p, action, detail, currency, amount, balanceAfter) {
 try {
 await supabase.from('player_logs').insert([{
@@ -804,18 +810,13 @@ socket.emit('username_check_result', { taken: !error && data && data.length > 0 
 socket.on('register_player', async (data) => {
 // Maintenance : bloque uniquement les joueurs PAS déjà connectés
 if (maintBlocked(socket) && !activePlayers[socket.id]) return socket.emit('register_result', { ok:false, reason:'maintenance', message:maintenanceState.message });
-// 🚫 WEB FERMÉ (provisoire) : APK ou code dev uniquement (sans WEB_DEV_CODE = ouvert, ex. staging)
+// 🔒 Web fermé au public : APK ou accès dev uniquement (le HTTP sert déjà mobile.html aux navigateurs)
 if (WEB_DEV_CODE) {
-  const ha = (socket.handshake && socket.handshake.auth) || {};
-  const ua = String(((socket.handshake || {}).headers || {})['user-agent'] || '');
-  const isApk = String((data && data.platform) || ha.platform || '') === 'apk' || /wv\)|Version\/4\.0|Capacitor/i.test(ua);
-  const isDev = String((data && data.dev) || ha.dev || '') === WEB_DEV_CODE;
-  if (!isApk && !isDev) return socket.emit('register_result', { ok: false, reason: 'web_closed' });
-}
 const q = socket.handshake.query || {};
 const isApk = (q.platform === 'apk') || !!q.shell;
-if (WEB_DEV_CODE && !isApk && !socket._webDev) return socket.emit('register_result', { ok:false, reason:'web_closed' });
-const rawUsername = (data.username || '').trim();
+if (!isApk && !socket._webDev) return socket.emit('register_result', { ok:false, reason:'web_closed' });
+}
+const rawUsername = (data.username || '').trim();;
 const secretCode = (data.secretCode || '').trim();
 if (rawUsername.length < 3) { socket.emit('register_result', { ok: false, reason: 'short' }); return; }
 if (secretCode.length < 4) { socket.emit('register_result', { ok: false, reason: 'nocode' }); return; }
@@ -1507,22 +1508,15 @@ p.claimedPassTiers = normalizeClaimedTiers(p.claimedPassTiers);
 p.current_season = seasonNow.id;
 p.blitzPassPremium = !!(p.claimedPassTiers[seasonNow.id] && p.claimedPassTiers[seasonNow.id].premium);
 p.seasonPassLive = isSeasonPassLive();
-
-// 🔧 FIX : Initialiser la progression de la saison et débloquer le palier 1 immédiatement
+// 🔧 FIX : initialiser la progression et débloquer le palier 1 immédiatement
 if (!p.seasonProgress) p.seasonProgress = {};
-if (!p.seasonProgress[seasonNow.id]) {
-    p.seasonProgress[seasonNow.id] = { unlocked_tier: 0, last_login_date: null };
-}
+if (!p.seasonProgress[seasonNow.id]) p.seasonProgress[seasonNow.id] = { unlocked_tier: 0, last_login_date: null };
 const prog = p.seasonProgress[seasonNow.id];
 if (isSeasonPassLive() && (prog.unlocked_tier || 0) < 1) {
-    prog.unlocked_tier = 1;
-    // Sauvegarde en base pour que ce soit persistant
-    if (p.dbId && String(p.dbId) !== sId) {
-        supabase.from('players').update({ season_progress: p.seasonProgress }).eq('id', p.dbId).catch(()=>{});
-    }
+prog.unlocked_tier = 1;
+if (p.dbId && String(p.dbId) !== sId) supabase.from('players').update({ season_progress: p.seasonProgress }).eq('id', p.dbId).catch(()=>{});
 }
 p.unlockedTier = prog.unlocked_tier || 0;
-
 io.to(sId).emit('player_registered', p);
 }
 socket.emit('admin_season_result', { ok: true, season: seasonNow.id });
