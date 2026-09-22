@@ -67,6 +67,8 @@ function cbShowMobileOnly(){
     '<a href="https://play.google.com/store/apps/details?id=com.chiffreblitz.app" style="display:block;background:linear-gradient(45deg,#3ae05a,#1a9a3a);color:#fff;font-weight:800;padding:12px;border-radius:12px;text-decoration:none;">▶ GOOGLE PLAY</a></div>';
   document.body.appendChild(ov);
 }
+// ?dev=CODE → accès test PC mémorisé
+(function(){ const m = location.search.match(/[?&]dev=([^&]+)/); if (m) { localStorage.setItem('cb_web_dev_code', decodeURIComponent(m[1])); history.replaceState({}, '', location.pathname); } })();
 const socket = io(CONFIG.SERVER_URL, {
   reconnection: true,
   reconnectionAttempts: CONFIG.RECONNECTION_ATTEMPTS,
@@ -76,10 +78,8 @@ const socket = io(CONFIG.SERVER_URL, {
     shell: typeof VERSION_CLIENT !== 'undefined' ? VERSION_CLIENT.shell : 0,
     platform: CB_IS_APK ? 'apk' : 'web'
   },
-  auth: { maintCode: localStorage.getItem('cb_maint_code') || "", devCode: localStorage.getItem('cb_web_dev_code') || "" }
+auth: { maintCode: localStorage.getItem('cb_maint_code') || "", platform: CB_IS_APK ? 'apk' : 'web', devCode: localStorage.getItem('cb_web_dev_code') || localStorage.getItem('cb_web_dev') || "" }
 });
-  auth: { maintCode: localStorage.getItem('cb_maint_code') || "" }
-
 socket.on("disconnect", () => { SoundEngine.stopMusic(true); });
 
 // 🛡️ Gestion du blocage de version par le serveur
