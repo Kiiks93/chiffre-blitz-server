@@ -72,12 +72,16 @@ const socket = io(CONFIG.SERVER_URL, {
   reconnection: true,
   reconnectionAttempts: CONFIG.RECONNECTION_ATTEMPTS,
   reconnectionDelay: CONFIG.RECONNECTION_DELAY_MS,
-   query: {
+  query: { 
     v: typeof VERSION_CLIENT !== 'undefined' ? VERSION_CLIENT.version : "1.3.0",
     shell: typeof VERSION_CLIENT !== 'undefined' ? VERSION_CLIENT.shell : 0,
-    platform: (window.Capacitor && window.Capacitor.Plugins) ? 'apk' : 'web'
+    platform: CB_IS_APK ? 'apk' : 'web' // <--- AJOUTER CECI
   },
-  auth: { maintCode: localStorage.getItem('cb_maint_code') || "", devCode: localStorage.getItem('cb_web_dev_code') || "" }
+  auth: { 
+    maintCode: localStorage.getItem('cb_maint_code') || "", 
+    platform: CB_IS_APK ? 'apk' : 'web', 
+    dev: CB_DEV ? '1' : '' 
+  }
 });
 socket.on("disconnect", () => { SoundEngine.stopMusic(true); });
 
