@@ -63,14 +63,14 @@ const IAP_SHARED_SECRET = process.env.IAP_SHARED_SECRET || '';
 // 🔒 Accès web réservé au test : si défini, le navigateur sans code dev reçoit mobile.html
 const WEB_DEV_CODE = process.env.WEB_DEV_CODE || '';
 function webGate(req, res, next) {
-  if (!WEB_DEV_CODE) return next();                       // staging / mode ouvert
-  const q = req.query.dev ? String(req.query.dev) : '';
-  if (q && q === WEB_DEV_CODE) {
-    res.setHeader('Set-Cookie', 'cb_web_dev=' + encodeURIComponent(WEB_DEV_CODE) + '; Path=/; Max-Age=31536000; SameSite=Lax');
-    return next();
-  }
-  if ((req.headers.cookie || '').indexOf('cb_web_dev=' + encodeURIComponent(WEB_DEV_CODE)) !== -1) return next();
-  return res.sendFile(path.join(__dirname, 'mobile.html'));
+if (!WEB_DEV_CODE) return next();                       // staging / mode ouvert
+const q = req.query.dev ? String(req.query.dev) : '';
+if (q && q === WEB_DEV_CODE) {
+res.setHeader('Set-Cookie', 'cb_web_dev=1; Path=/; Max-Age=31536000; SameSite=Lax');
+return next();
+}
+if ((req.headers.cookie || '').indexOf('cb_web_dev=') !== -1) return next();
+return res.sendFile(path.join(__dirname, 'mobile.html'));
 }
 /* ----- VERSION GATING ----- */
 const VERSION_GATE = {
