@@ -333,35 +333,60 @@ const path = require('path');
 
 // 🚪 Portail : APK (WebView Android) + dev → jeu · navigateur public → mobile.html
 function cbWebGate(req, res, next) {
+  // ⚠️ IMPORTANT : On n'intercepte QUE la racine et index.html.
+  // Cela laisse passer les requêtes pour /mobile.html, les JS, CSS, images, etc.
+  if (req.path !== '/' && req.path !== '/index.html') {
+    return next();
+  }
+
   const ua = String(req.headers['user-agent'] || '');
   const xrw = String(req.headers['x-requested-with'] || '');
   
   // WebView Android (APK) : contient "wv", "Version/4.0", "Capacitor" ou le nom du package
   const isApkWebView = /wv|Version\/4\.0|Capacitor/i.test(ua) || xrw === 'com.chiffreblitz.app';
-  const hasDevCookie = (req.headers.cookie || '').indexOf('cb_web_dev=') !== -1;
+  const hasDevCookie = (req.headers.cookie || '').includes('cb_web_dev=');
   
+  // 1. Accès dev via query parameter (ex: ?dev=1)
   if (/([?&])dev=/.test(req.url || '')) {
     res.setHeader('Set-Cookie', 'cb_web_dev=1; Path=/; Max-Age=31536000; SameSite=Lax');
     return next();
   }
   
-  if (isApkWebView || hasDevCookie) return next();
+  // 2. Si APK ou cookie Dev présent → on laisse passer vers index.html
+  if (isApkWebView || hasDevCookie) {
+    return next();
+  }
+  
+  // 3. Sinon, navigateur web classique → redirection vers la page mobile
   return res.redirect('/mobile.html');
 }
-app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
-app.get('/index.html', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
-app.get('/admin.html', (req, res) => {
-res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-res.setHeader('Pragma', 'no-cache');
-res.setHeader('Expires', '0');
-res.sendFile(path.join(__dirname, 'admin.html'));
+
+// 🔌 Montage du middleware (IL FAUT l'appliquer pour qu'il s'exécute)
+app.use(cbWebGate);
+
+// 📄 Routes explicites
+app.get('/', (req, res) => { 
+  res.sendFile(path.join(__dirname, 'index.html')); 
 });
+
+app.get('/index.html', (req, res) => { 
+  res.sendFile(path.join(__dirname, 'index.html')); 
+});
+
+app.get('/admin.html', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
+// 📂 Fichiers statiques (JS, CSS, images, mobile.html...)
 app.use(express.static(path.join(__dirname, '.'), {
-setHeaders: (res, filePath) => {
-if (/\.(html|js)$/.test(filePath)) {
-res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-}
-}
+  setHeaders: (res, filePath) => {
+    if (/\.(html|js)$/.test(filePath)) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    }
+  }
 }));
 async function savePlayerToSupabase(socketId) {
 const p = activePlayers[socketId];
