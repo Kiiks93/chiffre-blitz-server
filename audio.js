@@ -11,7 +11,8 @@ const SoundEngine = {
   bpm: 115,
   _currentBoom: null,
   _noiseBuffers: {},
-  _isPaused: false,  // ⬅️ Nouveau : état de pause
+  _isPaused: false,
+  _audioCache: {}, // ⬅️ NOUVEAU : Cache mémoire pour les fichiers .mp3 préchargés
 
   /* ============================================================
   1. INITIALISATION & CONTRÔLE
@@ -43,7 +44,7 @@ const SoundEngine = {
 
   startMusic(mode) {
     if (this.isMuted) return;
-    if (this.timerId && this.currentMode === mode) return;  // ⬅️ Évite les doubles starts
+    if (this.timerId && this.currentMode === mode) return;
     
     this.init();
     if (!this.ctx) return;
@@ -64,34 +65,28 @@ const SoundEngine = {
     }, intervalMs);
   },
 
-  // ⬅️ NOUVEAU : Pause propre (utilisée par les listeners)
   pause() {
     if (this._isPaused) return;
     this._isPaused = true;
     
-    // Arrête le timer
     if (this.timerId) {
       clearInterval(this.timerId);
       this.timerId = null;
     }
     
-    // Suspend le contexte AudioContext
     if (this.ctx && this.ctx.state === 'running') {
       this.ctx.suspend();
     }
   },
 
-  // ⬅️ NOUVEAU : Reprise propre
   resume() {
     if (!this._isPaused) return;
     this._isPaused = false;
     
-    // Relance le contexte
     if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume();
     }
     
-    // Relance la musique si un mode était actif
     if (this.currentMode && !this.isMuted) {
       this.startMusic(this.currentMode);
     }
@@ -172,7 +167,6 @@ const SoundEngine = {
     ];
     const chord = chords[bar % 4];
 
-    // Kick (temps 0 et 8)
     if (inBar === 0 || inBar === 8) {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
@@ -187,7 +181,6 @@ const SoundEngine = {
       osc.stop(t + 0.12);
     }
 
-    // Hi-hat (temps 2, 6, 10, 14)
     if (inBar % 4 === 2) {
       const noise = this._getNoiseBuffer(0.03);
       const src = this.ctx.createBufferSource();
@@ -204,7 +197,6 @@ const SoundEngine = {
       src.start(t);
     }
 
-    // Basse (temps pairs)
     if (inBar % 2 === 0) {
       const osc = this.ctx.createOscillator();
       const filter = this.ctx.createBiquadFilter();
@@ -223,7 +215,6 @@ const SoundEngine = {
       osc.stop(t + 0.11);
     }
 
-    // Mélodie (temps pairs)
     if (inBar % 2 === 0) {
       const melodyA = [
         [440, 493.88, 523.25, 659.25, 587.33, 523.25, 493.88, 440],
@@ -258,7 +249,6 @@ const SoundEngine = {
       }
     }
 
-    // Pad (début de mesure)
     if (inBar === 0) {
       chord.notes.forEach((f) => {
         const o = this.ctx.createOscillator();
@@ -274,7 +264,6 @@ const SoundEngine = {
         o.stop(t + 2.2);
       });
 
-      // Effet visuel (glow)
       const glow = document.getElementById('bg-glow');
       if (glow) {
         glow.style.opacity = '0.22';
@@ -301,25 +290,16 @@ const SoundEngine = {
     ];
     const root = progs[section][bar % 4];
 
-    // Kick (temps 0, 4, 8, 12)
     if (inBar % 4 === 0) this._kick(t, 0.28);
-
-    // Snare (temps 4 et 12)
     if (inBar === 4 || inBar === 12) this._snare(t, section >= 2 ? 0.2 : 0.13);
-
-    // Hi-hat (temps pairs, section 1+)
     if (section >= 1 && inBar % 2 === 0) this._hat(t, inBar % 4 === 2 ? 0.05 : 0.03);
-
-    // Snare roll (fin section 3)
     if (section === 3 && inBar >= 14) this._snare(t, 0.08 + (inBar - 14) * 0.05);
 
-    // Basse
     if (!(section === 3 && inBar >= 8)) {
       if (inBar % 2 === 0) this._bass(t, root, 0.14);
       else this._bass(t, root * 2, 0.09);
     }
 
-    // Lead (section 1+)
     if (section >= 1) {
       const leadNotes = [220, 261.63, 293.66, 329.63, 392, 440, 523.25, 587.33];
       const patterns = [
@@ -332,12 +312,11 @@ const SoundEngine = {
       if (idx >= 0) this._lead(t, leadNotes[idx] * (section === 2 ? 2 : 1), 0.06);
     }
 
-    // Pad (section 0 et 3, début de mesure)
     if ((section === 0 || section === 3) && inBar === 0) this._pad(t, root);
   },
 
   /* ============================================================
-  5. INSTRUMENTS INTERNES (kick, snare, hat, bass, lead, pad)
+  5. INSTRUMENTS INTERNES
   ============================================================ */
   _kick(t, vol) {
     const osc = this.ctx.createOscillator();
@@ -438,7 +417,7 @@ const SoundEngine = {
   },
 
   /* ============================================================
-  6. BUFFER NOISE RÉUTILISABLE (optimisation performance)
+  6. BUFFER NOISE RÉUTILISABLE
   ============================================================ */
   _getNoiseBuffer(duration) {
     const key = duration.toFixed(3);
@@ -455,7 +434,7 @@ const SoundEngine = {
   },
 
   /* ============================================================
-  7. SONS DE COMBO (par thème)
+  7. SONS DE COMBO (Synthétiseur de secours)
   ============================================================ */
   playCrack(theme) {
     if (this.isMuted || !this.ctx || this._isPaused) return;
@@ -642,11 +621,13 @@ const BOOM_FILES = {
   default: ""
 };
 
-// Précharge les fichiers (zéro latence au premier play)
+// ✅ Précharge les fichiers et les maintient en mémoire (zéro latence)
 Object.values(CRACK_FILES).concat(Object.values(BOOM_FILES)).forEach(f => {
   if (f) {
     const p = new Audio(f);
     p.preload = "auto";
+    p.load();
+    SoundEngine._audioCache[f] = p; // Stockage en mémoire
   }
 });
 
@@ -657,22 +638,25 @@ SoundEngine._synthBoom = SoundEngine.playPerfectionBoom;
 SoundEngine.playCrack = function(theme) {
   if (this.isMuted || this._isPaused) return;
   const file = CRACK_FILES[theme] || CRACK_FILES.default;
-  if (file) {
-    const a = new Audio(file);
+  
+  // ✅ Utilisation du cloneNode pour éviter les fuites mémoire et permettre les sons superposés
+  if (file && this._audioCache[file]) {
+    const a = this._audioCache[file].cloneNode();
     a.volume = 0.7;
     a.playbackRate = 0.9 + Math.random() * 0.25;
     a.play().catch(() => {});
     return;
   }
-  this._synthCrack(theme);
+  this._synthCrack.call(this, theme); // Fallback WebAudio
 };
 
 SoundEngine.playPerfectionBoom = function(theme) {
   if (this.isMuted || this._isPaused) return;
   this.stopBoom();
   const file = BOOM_FILES[theme] || BOOM_FILES.default;
-  if (file) {
-    const a = new Audio(file);
+  
+  if (file && this._audioCache[file]) {
+    const a = this._audioCache[file].cloneNode();
     a.volume = 0.5;
     this._currentBoom = a;
     a.onended = () => {
@@ -681,7 +665,7 @@ SoundEngine.playPerfectionBoom = function(theme) {
     a.play().catch(() => {});
     return;
   }
-  this._synthBoom(theme);
+  this._synthBoom.call(this, theme); // Fallback WebAudio
 };
 
 /* ============================================================
@@ -706,7 +690,6 @@ function setupAudioListeners() {
   if (_audioListenersAdded) return;
   _audioListenersAdded = true;
 
-  // ⬅️ Mobile : verrouillage écran, retour accueil, changement d'app
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       SoundEngine.pause();
@@ -715,7 +698,6 @@ function setupAudioListeners() {
     }
   });
 
-  // ⬅️ PC : perte de focus (changement d'onglet, Alt+Tab)
   window.addEventListener('blur', () => {
     SoundEngine.pause();
   });
@@ -724,7 +706,6 @@ function setupAudioListeners() {
     setTimeout(() => SoundEngine.resume(), 100);
   });
 
-  // ⬅️ Mobile : navigation away, fermeture d'onglet
   window.addEventListener('pagehide', () => {
     SoundEngine.pause();
   });
@@ -733,11 +714,9 @@ function setupAudioListeners() {
     setTimeout(() => SoundEngine.resume(), 100);
   });
 
-  // ⬅️ Reprend la musique après un reload (push Render, refresh)
   window.addEventListener('load', () => {
     setTimeout(() => {
       if (!document.hidden && !SoundEngine._isPaused) {
-        // Si un mode était actif avant le reload, le relancer
         const savedMode = localStorage.getItem('cb_music_mode');
         if (savedMode && !SoundEngine.isMuted) {
           SoundEngine.startMusic(savedMode);
@@ -747,7 +726,6 @@ function setupAudioListeners() {
   });
 }
 
-// ⬅️ Sauvegarde le mode de musique pour reprise après reload
 const _originalStartMusic = SoundEngine.startMusic;
 SoundEngine.startMusic = function(mode) {
   localStorage.setItem('cb_music_mode', mode);
@@ -760,7 +738,6 @@ SoundEngine.stopMusic = function(clear = true) {
   return _originalStopMusic.call(this, clear);
 };
 
-// ⬅️ Initialise les listeners au chargement
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', setupAudioListeners);
 } else {
