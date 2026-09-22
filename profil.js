@@ -81,6 +81,8 @@ const socket = io(CONFIG.SERVER_URL, {
 auth: { maintCode: localStorage.getItem('cb_maint_code') || "", platform: CB_IS_APK ? 'apk' : 'web', devCode: localStorage.getItem('cb_web_dev_code') || localStorage.getItem('cb_web_dev') || "" }
 });
 socket.on("disconnect", () => { SoundEngine.stopMusic(true); });
+// 🚫 Web fermé : le serveur dit si ce client est autorisé à jouer
+socket.on('web_policy', (p) => { if (p && p.closed) cbShowMobileOnly(); });
 
 // 🛡️ Gestion du blocage de version par le serveur
 socket.on("version_blocked", () => {
