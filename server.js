@@ -1496,8 +1496,10 @@ if (isSeasonPassLive() && (prog.unlocked_tier || 0) < 1) {
     prog.unlocked_tier = 1;
     // Sauvegarde en base pour que ce soit persistant
     if (p.dbId && String(p.dbId) !== sId) {
-        supabase.from('players').update({ season_progress: p.seasonProgress }).eq('id', p.dbId).catch(()=>{});
-    }
+    Promise.resolve(
+        supabase.from('players').update({ season_progress: p.seasonProgress }).eq('id', p.dbId)
+    ).catch(() => {});
+}
 }
 p.unlockedTier = prog.unlocked_tier || 0;
 
@@ -1525,8 +1527,10 @@ for (let sId in activePlayers) {
     if (isSeasonPassLive() && (prog.unlocked_tier || 0) < 1) {
         prog.unlocked_tier = 1;
         if (p.dbId && String(p.dbId) !== sId) {
-            supabase.from('players').update({ season_progress: p.seasonProgress }).eq('id', p.dbId).catch(()=>{});
-        }
+    Promise.resolve(
+        supabase.from('players').update({ season_progress: p.seasonProgress }).eq('id', p.dbId)
+    ).catch(() => {});
+}
     }
     p.unlockedTier = prog.unlocked_tier || 0;
 
