@@ -60,8 +60,6 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 if (!ADMIN_PASSWORD) { console.error("ADMIN_PASSWORD doit etre definie."); process.exit(1); }
 const IAP_SHARED_SECRET = process.env.IAP_SHARED_SECRET || '';
-// 🔒 Blocage web PROPRE : si défini, seul l'APK (ou un dev avec ?dev=CODE) peut s'inscrire.
-//    Staging = variable absente = tout ouvert. Prod = variable définie = PC bloqué.
 const WEB_DEV_CODE = process.env.WEB_DEV_CODE || '';
 /* ----- VERSION GATING ----- */
 const VERSION_GATE = {
@@ -731,6 +729,11 @@ socket.disconnect(true);
 return;
 }
 console.log('Connexion : ' + socket.id);
+const _ha = (socket.handshake && socket.handshake.auth) || {};
+const _q = (socket.handshake && socket.handshake.query) || {};
+const _isApk = (_ha.platform === 'apk') || (_q.platform === 'apk') || !!_q.shell;
+const _isDev = !!socket._webDev || (_ha.devCode === WEB_DEV_CODE) || (_q.dev === WEB_DEV_CODE);
+socket.emit('web_policy', { closed: !!WEB_DEV_CODE && !_isApk && !_isDev });
 socket.emit('events_state_update', globalEvents);
 socket.emit('online_count', { online: getOnlineCount() });
 // 🔄 Refresh pendant le décompte : on renvoie la bannière au joueur qui se reconnecte
