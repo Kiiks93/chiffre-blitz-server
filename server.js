@@ -848,7 +848,7 @@ socket.on('register_player', async (data) => {
   const xrw = String(((socket.handshake || {}).headers || {})['x-requested-with'] || '');
   
   // On vérifie dans query, dans auth, ET dans l'User-Agent (WebView Android)
-  const isApk = (q.platform === 'apk') || (ha.platform === 'apk') || !!q.shell || /wv|Version\/4\.0|Capacitor/i.test(ua) || xrw === 'com.chiffreblitz.app';
+  const isApk = String((data && data.platform) || ha.platform || '') === 'apk' || /wv|Version\/4\.0|Capacitor/i.test(ua);
   
   if (WEB_DEV_CODE && !isApk && !socket._webDev) {
     return socket.emit('register_result', { ok:false, reason:'web_closed' });
