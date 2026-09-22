@@ -330,16 +330,21 @@ if (globalEvents[key] !== shouldBeActive) { globalEvents[key] = shouldBeActive; 
 if (changed) io.emit("events_state_update", globalEvents);
 }, 5000);
 const path = require('path');
+
 // 🚪 Portail : APK (WebView Android) + dev → jeu · navigateur public → mobile.html
 function cbWebGate(req, res, next) {
   const ua = String(req.headers['user-agent'] || '');
-  // WebView Android (APK) : contient "wv" et/ou "Version/4.0" ; Chrome mobile n'a PAS "Version/4.0"
-  const isApkWebView = /wv|Version\/4\.0|Capacitor/i.test(ua);
+  const xrw = String(req.headers['x-requested-with'] || '');
+  
+  // WebView Android (APK) : contient "wv", "Version/4.0", "Capacitor" ou le nom du package
+  const isApkWebView = /wv|Version\/4\.0|Capacitor/i.test(ua) || xrw === 'com.chiffreblitz.app';
   const hasDevCookie = (req.headers.cookie || '').indexOf('cb_web_dev=') !== -1;
-   if (req.query.dev && String(req.query.dev) === WEB_DEV_CODE) {
-  res.setHeader('Set-Cookie', 'cb_web_dev=1; Path=/; Max-Age=31536000; SameSite=Lax');
-  return next();
+  
+  if (/([?&])dev=/.test(req.url || '')) {
+    res.setHeader('Set-Cookie', 'cb_web_dev=1; Path=/; Max-Age=31536000; SameSite=Lax');
+    return next();
   }
+  
   if (isApkWebView || hasDevCookie) return next();
   return res.redirect('/mobile.html');
 }
@@ -808,15 +813,22 @@ socket.emit('username_check_result', { taken: !error && data && data.length > 0 
 } catch (e) { socket.emit('username_check_result', { taken: false }); }
 });
 socket.on('register_player', async (data) => {
-// Maintenance : bloque uniquement les joueurs PAS déjà connectés
-if (maintBlocked(socket) && !activePlayers[socket.id]) return socket.emit('register_result', { ok:false, reason:'maintenance', message:maintenanceState.message });
-// 🔒 Web fermé au public : APK ou accès dev uniquement (le HTTP sert déjà mobile.html aux navigateurs)
-if (WEB_DEV_CODE) {
-const q = socket.handshake.query || {};
-const isApk = (q.platform === 'apk') || !!q.shell;
-if (!isApk && !socket._webDev) return socket.emit('register_result', { ok:false, reason:'web_closed' });
-}
-const rawUsername = (data.username || '').trim();;
+  // Maintenance : bloque uniquement les joueurs PAS déjà connectés
+  if (maintBlocked(socket) && !activePlayers[socket.id]) return socket.emit('register_result', { ok:false, reason:'maintenance', message:maintenanceState.message });
+  
+  // 🔒 Web fermé au public : APK ou code dev uniquement
+  const q = socket.handshake.query || {};
+  const ha = socket.handshake.auth || {};
+  const ua = String(((socket.handshake || {}).headers || {})['user-agent'] || '');
+  const xrw = String(((socket.handshake || {}).headers || {})['x-requested-with'] || '');
+  
+  // On vérifie dans query, dans auth, ET dans l'User-Agent (WebView Android)
+  const isApk = (q.platform === 'apk') || (ha.platform === 'apk') || !!q.shell || /wv|Version\/4\.0|Capacitor/i.test(ua) || xrw === 'com.chiffreblitz.app';
+  
+  if (WEB_DEV_CODE && !isApk && !socket._webDev) {
+    return socket.emit('register_result', { ok:false, reason:'web_closed' });
+  }
+const rawUsername = (data.username || '').trim();
 const secretCode = (data.secretCode || '').trim();
 if (rawUsername.length < 3) { socket.emit('register_result', { ok: false, reason: 'short' }); return; }
 if (secretCode.length < 4) { socket.emit('register_result', { ok: false, reason: 'nocode' }); return; }
