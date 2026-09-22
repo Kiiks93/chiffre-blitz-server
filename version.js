@@ -8,7 +8,7 @@ WORKFLOW À CHAQUE RELEASE :
 ============================================================ */
 const VERSION_CLIENT = {
   version: "1.3.0",                                  // version WEB actuelle (semver)
-  shell: 8,                                          // versionCode Capacitor (Android)
+  shell: 9,                                          // versionCode Capacitor (Android)
   serverUrl: window.location.hostname.endsWith('.onrender.com') ? window.location.origin : 'https://chiffre-blitz-server.onrender.com'  // ← ton URL Render
 };
 
