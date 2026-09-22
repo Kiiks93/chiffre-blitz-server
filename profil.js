@@ -1,7 +1,14 @@
 /* ============================================================
 PROFIL.JS — GESTION PROFIL, COMPTE & PERSONNALISATION
 ============================================================ */
-
+// 🎬 Le splash reste affiché jusqu'à ce que la page soit chargée ET peinte
+(function(){
+  function hideSplash(){
+    try { if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.SplashScreen) Capacitor.Plugins.SplashScreen.hide(); } catch(e){}
+  }
+  if (document.readyState === 'complete') { requestAnimationFrame(()=>requestAnimationFrame(hideSplash)); }
+  else { window.addEventListener('load', ()=>requestAnimationFrame(()=>requestAnimationFrame(hideSplash))); }
+})();
 /* ============================================================
 1. CONSTANTES
 ============================================================ */
