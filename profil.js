@@ -52,10 +52,20 @@ const EMOTES = ["\u{1F525}", "\u26A1", "\u{1F916}", "\u{1F480}", "\u{1F602}", "\
 if (!CONFIG.SERVER_URL || CONFIG.SERVER_URL.indexOf("chiffre-blitz.fr") !== -1) {
   CONFIG.SERVER_URL = "https://chiffre-blitz-server.onrender.com";
 }
+
 // ?dev=CODE → mémorise le code dev + marqueur, puis recharge sans le paramètre
-(function(){ const m = location.search.match(/[?&]dev=([^&]+)/); if (m) { localStorage.setItem('cb_web_dev_code', decodeURIComponent(m[1])); localStorage.setItem('cb_web_dev', '1'); location.replace(location.pathname); } })();
+(function(){ 
+  const m = location.search.match(/[?&]dev=([^&]+)/); 
+  if (m) { 
+    localStorage.setItem('cb_web_dev_code', decodeURIComponent(m[1])); 
+    localStorage.setItem('cb_web_dev', '1'); 
+    location.replace(location.pathname); 
+  } 
+})();
+
 const CB_IS_APK = !!(window.Capacitor && window.Capacitor.Plugins) || /wv\)|Version\/4\.0|Capacitor/i.test(navigator.userAgent);
 const CB_DEV = localStorage.getItem('cb_web_dev') || '';
+
 function cbShowMobileOnly(){
   if (document.getElementById('cb-mobile-only')) return;
   const ov = document.createElement('div');
@@ -68,6 +78,7 @@ function cbShowMobileOnly(){
     '<a href="https://play.google.com/store/apps/details?id=com.chiffreblitz.app" style="display:block;background:linear-gradient(45deg,#3ae05a,#1a9a3a);color:#fff;font-weight:800;padding:12px;border-radius:12px;text-decoration:none;">▶ GOOGLE PLAY</a></div>';
   document.body.appendChild(ov);
 }
+
 const socket = io(CONFIG.SERVER_URL, {
   reconnection: true,
   reconnectionAttempts: CONFIG.RECONNECTION_ATTEMPTS,
@@ -75,14 +86,16 @@ const socket = io(CONFIG.SERVER_URL, {
   query: { 
     v: typeof VERSION_CLIENT !== 'undefined' ? VERSION_CLIENT.version : "1.3.0",
     shell: typeof VERSION_CLIENT !== 'undefined' ? VERSION_CLIENT.shell : 0,
-    platform: CB_IS_APK ? 'apk' : 'web' // <--- AJOUTER CECI
+    platform: CB_IS_APK ? 'apk' : 'web' // ✅ Parfait pour que le serveur identifie l'APK
   },
   auth: { 
     maintCode: localStorage.getItem('cb_maint_code') || "", 
     platform: CB_IS_APK ? 'apk' : 'web', 
-    dev: CB_DEV ? '1' : '' 
+    // ✅ CORRECTION : On envoie le vrai code stocké pour que le serveur le valide
+    devCode: localStorage.getItem('cb_web_dev_code') || '' 
   }
 });
+
 socket.on("disconnect", () => { SoundEngine.stopMusic(true); });
 
 // 🛡️ Gestion du blocage de version par le serveur
