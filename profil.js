@@ -52,10 +52,8 @@ const EMOTES = ["\u{1F525}", "\u26A1", "\u{1F916}", "\u{1F480}", "\u{1F602}", "\
 if (!CONFIG.SERVER_URL || CONFIG.SERVER_URL.indexOf("chiffre-blitz.fr") !== -1) {
   CONFIG.SERVER_URL = "https://chiffre-blitz-server.onrender.com";
 }
-// ?dev=CODE → mémorise puis recharge sans le paramètre
-(function(){ const m = location.search.match(/[?&]dev=([^&]+)/); if (m) { localStorage.setItem('cb_web_dev', decodeURIComponent(m[1])); location.replace(location.pathname); } })();
-// 🚫 WEB FERMÉ (provisoire) : identité envoyée au serveur à la connexion
-(function(){ const m = location.search.match(/[?&]dev=([^&]+)/); if (m) { localStorage.setItem('cb_web_dev', decodeURIComponent(m[1])); history.replaceState({}, '', location.pathname); } })();
+// ?dev=CODE → mémorise le code dev + marqueur, puis recharge sans le paramètre
+(function(){ const m = location.search.match(/[?&]dev=([^&]+)/); if (m) { localStorage.setItem('cb_web_dev_code', decodeURIComponent(m[1])); localStorage.setItem('cb_web_dev', '1'); location.replace(location.pathname); } })();
 const CB_IS_APK = !!(window.Capacitor && window.Capacitor.Plugins) || /wv\)|Version\/4\.0|Capacitor/i.test(navigator.userAgent);
 const CB_DEV = localStorage.getItem('cb_web_dev') || '';
 function cbShowMobileOnly(){
@@ -74,8 +72,12 @@ const socket = io(CONFIG.SERVER_URL, {
   reconnection: true,
   reconnectionAttempts: CONFIG.RECONNECTION_ATTEMPTS,
   reconnectionDelay: CONFIG.RECONNECTION_DELAY_MS,
-  query: { v: typeof VERSION_CLIENT !== 'undefined' ? VERSION_CLIENT.version : "1.3.0" },
-  auth: { maintCode: localStorage.getItem('cb_maint_code') || "", platform: CB_IS_APK ? 'apk' : 'web', dev: CB_DEV ? '1' : '' }
+   query: {
+    v: typeof VERSION_CLIENT !== 'undefined' ? VERSION_CLIENT.version : "1.3.0",
+    shell: typeof VERSION_CLIENT !== 'undefined' ? VERSION_CLIENT.shell : 0,
+    platform: (window.Capacitor && window.Capacitor.Plugins) ? 'apk' : 'web'
+  },
+  auth: { maintCode: localStorage.getItem('cb_maint_code') || "", devCode: localStorage.getItem('cb_web_dev_code') || "" }
 });
 socket.on("disconnect", () => { SoundEngine.stopMusic(true); });
 
