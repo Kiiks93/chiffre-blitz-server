@@ -60,18 +60,6 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 if (!ADMIN_PASSWORD) { console.error("ADMIN_PASSWORD doit etre definie."); process.exit(1); }
 const IAP_SHARED_SECRET = process.env.IAP_SHARED_SECRET || '';
-// 🔒 Accès web réservé au test : si défini, le navigateur sans code dev reçoit mobile.html
-const WEB_DEV_CODE = process.env.WEB_DEV_CODE || '';
-function webGate(req, res, next) {
-if (!WEB_DEV_CODE) return next();                       // staging / mode ouvert
-const q = req.query.dev ? String(req.query.dev) : '';
-if (q && q === WEB_DEV_CODE) {
-res.setHeader('Set-Cookie', 'cb_web_dev=1; Path=/; Max-Age=31536000; SameSite=Lax');
-return next();
-}
-if ((req.headers.cookie || '').indexOf('cb_web_dev=') !== -1) return next();
-return res.sendFile(path.join(__dirname, 'mobile.html'));
-}
 /* ----- VERSION GATING ----- */
 const VERSION_GATE = {
 latest:   "1.3.0",
@@ -330,63 +318,20 @@ if (globalEvents[key] !== shouldBeActive) { globalEvents[key] = shouldBeActive; 
 if (changed) io.emit("events_state_update", globalEvents);
 }, 5000);
 const path = require('path');
-
-// 🚪 Portail : APK (WebView Android) + dev → jeu · navigateur public → mobile.html
-function cbWebGate(req, res, next) {
-  // ⚠️ IMPORTANT : On n'intercepte QUE la racine et index.html.
-  // Cela laisse passer les requêtes pour /mobile.html, les JS, CSS, images, etc.
-  if (req.path !== '/' && req.path !== '/index.html') {
-    return next();
-  }
-
-  const ua = String(req.headers['user-agent'] || '');
-  const xrw = String(req.headers['x-requested-with'] || '');
-  
-  // WebView Android (APK) : contient "wv", "Version/4.0", "Capacitor" ou le nom du package
-  const isApkWebView = /wv|Version\/4\.0|Capacitor/i.test(ua) || xrw === 'com.chiffreblitz.app';
-  const hasDevCookie = (req.headers.cookie || '').includes('cb_web_dev=');
-  
-  // 1. Accès dev via query parameter (ex: ?dev=1)
-  if (/([?&])dev=/.test(req.url || '')) {
-    res.setHeader('Set-Cookie', 'cb_web_dev=1; Path=/; Max-Age=31536000; SameSite=Lax');
-    return next();
-  }
-  
-  // 2. Si APK ou cookie Dev présent → on laisse passer vers index.html
-  if (isApkWebView || hasDevCookie) {
-    return next();
-  }
-  
-  // 3. Sinon, navigateur web classique → redirection vers la page mobile
-  return res.redirect('/mobile.html');
-}
-
-// 🔌 Montage du middleware (IL FAUT l'appliquer pour qu'il s'exécute)
-app.use(cbWebGate);
-
-// 📄 Routes explicites
-app.get('/', (req, res) => { 
-  res.sendFile(path.join(__dirname, 'index.html')); 
-});
-
-app.get('/index.html', (req, res) => { 
-  res.sendFile(path.join(__dirname, 'index.html')); 
-});
-
+// ✅ Sert la page du jeu au lieu du texte brut
+app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 app.get('/admin.html', (req, res) => {
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
-  res.sendFile(path.join(__dirname, 'admin.html'));
+res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+res.setHeader('Pragma', 'no-cache');
+res.setHeader('Expires', '0');
+res.sendFile(path.join(__dirname, 'admin.html'));
 });
-
-// 📂 Fichiers statiques (JS, CSS, images, mobile.html...)
 app.use(express.static(path.join(__dirname, '.'), {
-  setHeaders: (res, filePath) => {
-    if (/\.(html|js)$/.test(filePath)) {
-      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-    }
-  }
+setHeaders: (res, filePath) => {
+if (/\.(html|js)$/.test(filePath)) {
+res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+}
+}
 }));
 async function savePlayerToSupabase(socketId) {
 const p = activePlayers[socketId];
@@ -526,13 +471,7 @@ s.disconnect(true);
 }
 }
 }, 10000);
-io.use((socket, next) => {
-const a = (socket.handshake && socket.handshake.auth) || {};
-const c = String((a && a.maintCode) || "");
-if (c && maintenanceState.bypassCode && c === maintenanceState.bypassCode) socket._maintBypass = true;
-if (WEB_DEV_CODE && (a.devCode === WEB_DEV_CODE || String((socket.handshake.headers || {}).cookie || '').indexOf('cb_web_dev=1') !== -1)) socket._webDev = true;
-next();
-});
+io.use((socket, next) => { const a = (socket.handshake && socket.handshake.auth) || {}; const c = String((a && a.maintCode) || ""); if (c && maintenanceState.bypassCode && c === maintenanceState.bypassCode) socket._maintBypass = true; next(); });
 async function logPlayerAction(p, action, detail, currency, amount, balanceAfter) {
 try {
 await supabase.from('player_logs').insert([{
@@ -838,21 +777,8 @@ socket.emit('username_check_result', { taken: !error && data && data.length > 0 
 } catch (e) { socket.emit('username_check_result', { taken: false }); }
 });
 socket.on('register_player', async (data) => {
-  // Maintenance : bloque uniquement les joueurs PAS déjà connectés
-  if (maintBlocked(socket) && !activePlayers[socket.id]) return socket.emit('register_result', { ok:false, reason:'maintenance', message:maintenanceState.message });
-  
-  // 🔒 Web fermé au public : APK ou code dev uniquement
-  const q = socket.handshake.query || {};
-  const ha = socket.handshake.auth || {};
-  const ua = String(((socket.handshake || {}).headers || {})['user-agent'] || '');
-  const xrw = String(((socket.handshake || {}).headers || {})['x-requested-with'] || '');
-  
-  // On vérifie dans query, dans auth, ET dans l'User-Agent (WebView Android)
-  const isApk = String((data && data.platform) || ha.platform || '') === 'apk' || /wv|Version\/4\.0|Capacitor/i.test(ua);
-  
-  if (WEB_DEV_CODE && !isApk && !socket._webDev) {
-    return socket.emit('register_result', { ok:false, reason:'web_closed' });
-  }
+// Maintenance : bloque uniquement les joueurs PAS déjà connectés
+if (maintBlocked(socket) && !activePlayers[socket.id]) return socket.emit('register_result', { ok:false, reason:'maintenance', message:maintenanceState.message });
 const rawUsername = (data.username || '').trim();
 const secretCode = (data.secretCode || '').trim();
 if (rawUsername.length < 3) { socket.emit('register_result', { ok: false, reason: 'short' }); return; }
@@ -1545,15 +1471,22 @@ p.claimedPassTiers = normalizeClaimedTiers(p.claimedPassTiers);
 p.current_season = seasonNow.id;
 p.blitzPassPremium = !!(p.claimedPassTiers[seasonNow.id] && p.claimedPassTiers[seasonNow.id].premium);
 p.seasonPassLive = isSeasonPassLive();
-// 🔧 FIX : initialiser la progression et débloquer le palier 1 immédiatement
+
+// 🔧 FIX : Initialiser la progression de la saison et débloquer le palier 1 immédiatement
 if (!p.seasonProgress) p.seasonProgress = {};
-if (!p.seasonProgress[seasonNow.id]) p.seasonProgress[seasonNow.id] = { unlocked_tier: 0, last_login_date: null };
+if (!p.seasonProgress[seasonNow.id]) {
+    p.seasonProgress[seasonNow.id] = { unlocked_tier: 0, last_login_date: null };
+}
 const prog = p.seasonProgress[seasonNow.id];
 if (isSeasonPassLive() && (prog.unlocked_tier || 0) < 1) {
-prog.unlocked_tier = 1;
-if (p.dbId && String(p.dbId) !== sId) supabase.from('players').update({ season_progress: p.seasonProgress }).eq('id', p.dbId).catch(()=>{});
+    prog.unlocked_tier = 1;
+    // Sauvegarde en base pour que ce soit persistant
+    if (p.dbId && String(p.dbId) !== sId) {
+        supabase.from('players').update({ season_progress: p.seasonProgress }).eq('id', p.dbId).catch(()=>{});
+    }
 }
 p.unlockedTier = prog.unlocked_tier || 0;
+
 io.to(sId).emit('player_registered', p);
 }
 socket.emit('admin_season_result', { ok: true, season: seasonNow.id });
