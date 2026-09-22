@@ -79,7 +79,7 @@ const socket = io(CONFIG.SERVER_URL, {
   auth: { maintCode: localStorage.getItem('cb_maint_code') || "", devCode: localStorage.getItem('cb_web_dev_code') || "" }
 });
   auth: { maintCode: localStorage.getItem('cb_maint_code') || "" }
-});
+
 socket.on("disconnect", () => { SoundEngine.stopMusic(true); });
 
 // 🛡️ Gestion du blocage de version par le serveur
