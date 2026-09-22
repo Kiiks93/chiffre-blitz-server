@@ -60,6 +60,9 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 if (!ADMIN_PASSWORD) { console.error("ADMIN_PASSWORD doit etre definie."); process.exit(1); }
 const IAP_SHARED_SECRET = process.env.IAP_SHARED_SECRET || '';
+// 🔒 Blocage web PROPRE : si défini, seul l'APK (ou un dev avec ?dev=CODE) peut s'inscrire.
+//    Staging = variable absente = tout ouvert. Prod = variable définie = PC bloqué.
+const WEB_DEV_CODE = process.env.WEB_DEV_CODE || '';
 /* ----- VERSION GATING ----- */
 const VERSION_GATE = {
 latest:   "1.3.0",
