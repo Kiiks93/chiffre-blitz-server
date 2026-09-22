@@ -782,6 +782,14 @@ socket.emit('username_check_result', { taken: !error && data && data.length > 0 
 socket.on('register_player', async (data) => {
 // Maintenance : bloque uniquement les joueurs PAS déjà connectés
 if (maintBlocked(socket) && !activePlayers[socket.id]) return socket.emit('register_result', { ok:false, reason:'maintenance', message:maintenanceState.message });
+// 🔒 WEB FERMÉ (prod uniquement) : APK ou dev autorisé, navigateur public refusé
+if (WEB_DEV_CODE) {
+  const ha = (socket.handshake && socket.handshake.auth) || {};
+  const q = (socket.handshake && socket.handshake.query) || {};
+  const isApk = (ha.platform === 'apk') || (q.platform === 'apk') || !!q.shell;
+  const isDev = (ha.devCode === WEB_DEV_CODE) || (q.dev === WEB_DEV_CODE);
+  if (!isApk && !isDev) return socket.emit('register_result', { ok:false, reason:'web_closed' });
+}
 const rawUsername = (data.username || '').trim();
 const secretCode = (data.secretCode || '').trim();
 if (rawUsername.length < 3) { socket.emit('register_result', { ok: false, reason: 'short' }); return; }
