@@ -1146,8 +1146,15 @@ function tryBuyPack(id) {
       if (!ok) return;
     }
   }
-  if (typeof IAP !== 'undefined' && typeof IAP.buyPack === 'function') {
-    IAP.buyPack(id);
+    if (typeof IAP !== 'undefined' && typeof IAP.buyPack === 'function') {
+    console.log('[shop] IAP présent → buyPack', id);
+    IAP.buyPack(id).catch(e => {
+      console.warn('[shop] échec buyPack', e);
+      if (typeof showNotificationToast === 'function') showNotificationToast(i18n[currentLang].iap_error, 'announcement');
+    });
+  } else if (typeof showNotificationToast === 'function') {
+    console.warn('[shop] IAP ABSENT → iap.js non chargé ou buyPack manquant');
+    showNotificationToast(i18n[currentLang].iap_unavailable, 'announcement');
   }
 }
 function towerShopBuy(id) {
