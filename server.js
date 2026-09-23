@@ -10,7 +10,6 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const { createClient } = require('@supabase/supabase-js');
-const crypto = require('crypto');
 const RECOVERY_SECRET = process.env.RECOVERY_SECRET || 'change-moi-en-prod-une-longue-chaine-secrete';
 function generateRecoveryKey(username) {
 return crypto.createHmac('sha256', RECOVERY_SECRET)
@@ -2515,6 +2514,62 @@ pack_mixte_3:       { type: 'mixed',  lives: 5,  jTime: 2, jShield: 2 },
 pack_blitz_5:       { type: 'mixed',  lives: 10, jTime: 5, jShield: 5 }
 };
 const LIFE_RESERVE_MAX = 30;
+
+/* ============================================================
+VÉRIFICATION GOOGLE PLAY (Route G1)
+============================================================ */
+const crypto = require('crypto');
+const PLAY_PKG = process.env.PLAY_PACKAGE_NAME || '';
+const PLAY_SA_EMAIL = process.env.PLAY_SERVICE_ACCOUNT_EMAIL || '';
+const PLAY_SA_KEY = (process.env.PLAY_PRIVATE_KEY || '').replace(/\\n/g, '\n');
+let _playCache = { token: null, expiry: 0 };
+
+function b64url(x) {
+  const b = Buffer.isBuffer(x) ? x : Buffer.from(x);
+  return b.toString('base64').replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+
+async function getPlayAccessToken() {
+  if (_playCache.token && Date.now() < _playCache.expiry - 60000) return _playCache.token;
+  const now = Math.floor(Date.now() / 1000);
+  const header = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const claims = b64url(JSON.stringify({
+    iss: PLAY_SA_EMAIL,
+    scope: 'https://www.googleapis.com/auth/androidpublisher',
+    aud: 'https://oauth2.googleapis.com/token',
+    exp: now + 3600, iat: now
+  }));
+  const sign = crypto.createSign('RSA-SHA256');
+  sign.update(header + '.' + claims);
+  const jwt = header + '.' + claims + '.' + b64url(sign.sign(PLAY_SA_KEY));
+  const r = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + jwt
+  });
+  const j = await r.json();
+  if (!j.access_token) throw new Error('OAuth Play: ' + JSON.stringify(j));
+  _playCache = { token: j.access_token, expiry: Date.now() + (j.expires_in || 3600) * 1000 };
+  return j.access_token;
+}
+
+async function verifyGooglePurchase(sku, token) {
+  // Si config absente (staging sans vars), on skip la vérif Google
+  if (!PLAY_SA_EMAIL || !PLAY_SA_KEY) return { ok: true, unconfigured: true };
+  
+  const at = await getPlayAccessToken();
+  const url = 'https://androidpublisher.googleapis.com/androidpublisher/v3/applications/' + PLAY_PKG +
+              '/purchases/products/' + encodeURIComponent(sku) + '/tokens/' + encodeURIComponent(token);
+  const r = await fetch(url, { headers: { Authorization: 'Bearer ' + at } });
+  
+  if (r.status === 404) return { ok: false, reason: 'token_inconnu' };
+  const j = await r.json().catch(() => null);
+  if (!r.ok || !j) return { ok: false, reason: 'api_erreur' };
+  if (j.purchaseState !== 0) return { ok: false, reason: 'non_achete' }; // 1=annulé, 2=remboursé
+  
+  return { ok: true };
+}
+
 app.post('/api/iap_grant', async (req, res) => {
 // 🔐 Test fermé : secret partagé (APK). À la sortie : vérification RevenueCat/Google (route G).
 const iapKey = req.get('x-cb-iap-key') || '';
@@ -2528,8 +2583,19 @@ const pseudo = src.pseudo, sku = src.sku, token = src.token;
 if (!pseudo || !sku || !token) return res.json({ ok: false, reason: 'params' });
 const pack = IAP_PACKS[sku];
 if (!pack) return res.json({ ok: false, reason: 'unknown_sku' });
+// 1) Anti-replay : token déjà consommé ?
 const { data: existing } = await supabase.from('iap_receipts').select('id').eq('token', token).maybeSingle();
 if (existing) return res.json({ ok: true, already: true });
+
+// 2) Vérification Google Play (fail closed si config présente)
+const v = await verifyGooglePurchase(sku, token);
+if (!v.ok) { 
+  console.warn('[iap_grant] ❌ refus Google:', v.reason, pseudo, sku); 
+  return res.json({ ok: false, reason: 'google_' + v.reason }); 
+}
+if (v.unconfigured) {
+  console.warn('[iap_grant] ⚠️ vérif Google NON configurée (mode anti-replay seul)');
+}
 let targetId = null;
 for (const sId in activePlayers) {
 if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === String(pseudo).toLowerCase()) { targetId = sId; break; }
