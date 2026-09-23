@@ -61,13 +61,15 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 if (!ADMIN_PASSWORD) { console.error("ADMIN_PASSWORD doit etre definie."); process.exit(1); }
 const IAP_SHARED_SECRET = process.env.IAP_SHARED_SECRET || '';
 const WEB_DEV_CODE = process.env.WEB_DEV_CODE || '';
+
 /* ----- VERSION GATING ----- */
 const VERSION_GATE = {
-latest:   "1.3.0",
-minWeb:   "1.3.0",
-minShell: 3,
-urlWeb:   "https://chiffre-blitz.fr",
-urlAndroid: "market://details?id=com.chiffreblitz.app"
+  latest: "1.4.0",       // dernière version WEB publiée
+  minWeb: "1.3.0",       // web mini acceptée (en dessous = blocage dur)
+  minShell: 9,           // versionCode mini accepté (en dessous = maj FORCÉE)
+  latestShell: 10,       // dernier versionCode publié (en dessous = bandeau doux)
+  urlAndroid: "https://play.google.com/store/apps/details?id=com.chiffreblitz.app",
+  urlWeb: "https://chiffre-blitz.fr"
 };
 app.get("/version", (req, res) => res.json(VERSION_GATE));
 app.get('/api/maintenance', (req, res) => {
