@@ -66,6 +66,19 @@ function vgCompare(a, b) {
   return 0;
 }
 function vgIsNative() { return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }
+
+// ✅ NOUVEAU : lit le VRAI versionCode installé (pas celui du web distant)
+async function vgNativeBuild() {
+  try {
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App && typeof window.Capacitor.Plugins.App.getInfo === 'function') {
+      const info = await window.Capacitor.Plugins.App.getInfo();
+      const b = parseInt(info.build, 10);
+      if (b > 0) return b;
+    }
+  } catch (e) {}
+  return VERSION_CLIENT.shell;
+}
+
 function vgFr() { return (typeof currentLang !== "undefined" ? currentLang === "fr" : true); }
 
 /* ----- UI : bannière douce (nouvelle version) ----- */
@@ -111,8 +124,12 @@ async function vgCheck() {
     const r = await fetch(VERSION_CLIENT.serverUrl + "/version", { cache: "no-store" });
     if (!r.ok) return;
     VG_state = await r.json();
+    
+    // ✅ NOUVEAU : lit le VRAI versionCode installé
+    const nativeBuild = await vgNativeBuild();
+    
     // 1) App native trop vieille → In-App Updates si plugin installé, sinon blocage
-    if (vgIsNative() && VERSION_CLIENT.shell < (VG_state.minShell || 0)) {
+    if (vgIsNative() && nativeBuild < (VG_state.minShell || 0)) {
       try {
         const mod = await import("@capacitor/in-app-update");
         if (mod && mod.InAppUpdate) { await mod.InAppUpdate.startUpdate({ updatePriority: 5 }); return; }
@@ -120,7 +137,7 @@ async function vgCheck() {
       vgShowBlock(); return;
     }
     // 1bis) APK : un versionCode plus récent est publié → bandeau doux (non bloquant)
-    if (vgIsNative() && VERSION_CLIENT.shell < (VG_state.latestShell || 0)) { vgShowBanner(); return; }
+    if (vgIsNative() && nativeBuild < (VG_state.latestShell || 0)) { vgShowBanner(); return; }
     // 2) Version web sous le minimum → blocage dur
     if (vgCompare(VERSION_CLIENT.version, VG_state.minWeb || VERSION_CLIENT.version) < 0) { vgShowBlock(); return; }
     // 3) Version sous la dernière → bannière douce
