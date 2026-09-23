@@ -119,6 +119,8 @@ async function vgCheck() {
       } catch (e) { /* plugin absent → fallback blocage */ }
       vgShowBlock(); return;
     }
+    // 1bis) APK : un versionCode plus récent est publié → bandeau doux (non bloquant)
+    if (vgIsNative() && VERSION_CLIENT.shell < (VG_state.latestShell || 0)) { vgShowBanner(); return; }
     // 2) Version web sous le minimum → blocage dur
     if (vgCompare(VERSION_CLIENT.version, VG_state.minWeb || VERSION_CLIENT.version) < 0) { vgShowBlock(); return; }
     // 3) Version sous la dernière → bannière douce
