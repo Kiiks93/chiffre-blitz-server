@@ -1307,6 +1307,22 @@ function getWinnerAvatarShowcaseHTML(playerObj) {
   return `<div class="victory-avatar-showcase"><div class="victory-badge-large ${frameClass}" style="display:flex; align-items:center; justify-content:center;"><span style="font-weight:900; color:#fff;">${iconContent}</span><span style="position:absolute; bottom:-2px; right:-2px; font-size:14px; background:#0f051d; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; border:2px solid #fff; z-index:3;">${playerObj.flag || "🇫🇷"}</span></div><div style="font-size:13px; font-weight:900; color:#f8b500; margin-top:4px;">${playerObj.username || "Joueur"} ${d.triomphe}</div></div>`;
 }
 
+function localizeReason(r) {
+  if (currentLang !== "fr" && r) {
+    const map = {
+      "Temps ecoule": "Time's up!",
+      "Temps écoulé": "Time's up!",
+      "KO": "KO!",
+      "Egalite": "Draw!",
+      "Égalité": "Draw!",
+      "Corde": "Rope snapped!",
+      "deconnecte": "Opponent disconnected",
+      "Abandon": "Forfeit"
+    };
+    for (const k in map) { if (String(r).indexOf(k) !== -1) return map[k]; }
+  }
+  return r;
+}
 function showGameOverRecap(data) {
   const d = i18n[currentLang];
   recapActive = true;
@@ -1360,7 +1376,7 @@ function showGameOverRecap(data) {
     banner.innerText = d.equality_timeout;
     banner.style.color = "#ff8a00";
   }
-  document.getElementById("recap-reason").innerText = data.reason;
+  document.getElementById("recap-reason").innerText = localizeReason(data.reason);
   document.getElementById("recap-my-target").innerText = myData ? myData.target : "-";
   document.getElementById("recap-opp-target").innerText = oppData ? oppData.target : "-";
   document.getElementById("recap-my-score").innerText = myData ? myData.score : 0;
@@ -1740,7 +1756,8 @@ function endSoloGame() {
 19. SALLE DES TROPHÉES
 ============================================================ */
 function openTrophyRoom(targetUsername = null) {
-  document.getElementById('modal-trophy-room').style.display = 'flex';
+  window.__trophyRoomTarget = targetUsername || null;
+  document.getElementById('modal-trophy-room').style.display = 'flex';;
   if (targetUsername) socket.emit('get_trophy_room', targetUsername);
   else socket.emit('get_my_trophy_room');
 }
@@ -1790,7 +1807,8 @@ socket.on('trophy_room_data', (data) => {
           <div class="trophy-name">${isUnlocked ? trophy.name : '???'}</div>
           ${!isUnlocked ? '<div class="trophy-lock">🔒</div>' : ''}
         `;
-        vitrine.onmouseenter = (e) => showTrophyTooltip(e, trophy, data, isUnlocked);
+        vitrine.onmouseenter = (e) => showTrophyTooltip(e, id, data, isUnlocked);
+        vitrine.onclick = (e) => { e.stopPropagation(); showTrophyTooltip(e, id, data, isUnlocked); };
         vitrine.onmousemove = (e) => moveTrophyTooltip(e);
         vitrine.onmouseleave = hideTrophyTooltip;
         grid.appendChild(vitrine);
@@ -1803,9 +1821,12 @@ socket.on('trophy_room_data', (data) => {
 
 let tooltipEl = null;
 
-function showTrophyTooltip(e, trophy, playerData, isUnlocked) {
+  function showTrophyTooltip(e, trophyOrId, playerData, isUnlocked) {
   const d = i18n[currentLang];
   hideTrophyTooltip();
+  // ✅ Relit les noms dans la langue ACTUELLE à chaque survol
+  const cat = (typeof getTrophyCatalogClient === 'function') ? getTrophyCatalogClient() : {};
+  const trophy = (typeof trophyOrId === 'string') ? (cat[trophyOrId] || {}) : trophyOrId;
   tooltipEl = document.createElement('div');
   tooltipEl.className = 'trophy-tooltip';
   const progressText = trophy.progress(playerData);

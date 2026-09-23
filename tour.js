@@ -13,6 +13,10 @@ const TOWER_CHAPTERS = [
 { id:8, season:3, name:"Forêt de Sapins", icon:"🎄", boss:"⛄", objects:[] },
 { id:9, season:3, name:"Atelier du Père Noël", icon:"🎅", boss:"🎅", objects:[] }
 ];
+function chapterName(chap) {
+    const d = (typeof i18n !== "undefined" && i18n[currentLang]) ? i18n[currentLang] : null;
+    return (d && d["tower_chapter_" + chap.id]) || chap.name;
+}
 const FPC = 200;
 const TOTAL_FLOORS = 9 * FPC;
 const WORLD_QUOTA = 240;
@@ -117,7 +121,7 @@ return { floor, gridSize: g, time, type: t, diff: tier };
 },
 typeLabel(t) {
 const fr = currentLang === "fr";
-return ({classic:fr?"⚡ Croissant":" Ascending",reverse:fr?"🔽 Décroissant":"🔽 Descending",color:fr?"🎨 Couleurs":"🎨 Colors",pairs:fr?"🧩 Paires":"🧩 Pairs",parity:fr?"🔢 Pair/Impair":"🔢 Even/Odd",forbidden:fr?"🚫 Interdit":"🚫 Forbidden",sprint:fr?"⏱️ Sprint":"⏱️ Sprint",memory:fr?"🧠 Mémoire":"🧠 Memory",nofail:fr?"💎 Sans faute":"💎 No mistake",boss:fr?"⚔️ GARDIEN":"⚔️ GUARDIAN"})[t] || t;
+return ({classic:fr?"⚡ Croissant":"⚡ Ascending",reverse:fr?"🔽 Décroissant":"🔽 Descending",color:fr?"🎨 Couleurs":"🎨 Colors",pairs:fr?"🧩 Paires":"🧩 Pairs",parity:fr?"🔢 Pair/Impair":"🔢 Even/Odd",forbidden:fr?"🚫 Interdit":"🚫 Forbidden",sprint:fr?"⏱️ Sprint":"⏱️ Sprint",memory:fr?"🧠 Mémoire":"🧠 Memory",nofail:fr?"💎 Sans faute":"💎 No mistake",boss:fr?"⚔️ GARDIEN":"⚔️ GUARDIAN"})[t] || t;
 }
 };
 /* ----- 3a. ANTI-SPOIL : visibilité des mondes ----- */
@@ -981,7 +985,7 @@ const stars = TowerUtils.starsInWorld(world);
 const pct = Math.min(100, Math.round(stars / WORLD_QUOTA * 100));
 document.getElementById("tw-q-lbl").innerText = `⭐ ${stars}/${WORLD_QUOTA}`;
 document.getElementById("tw-q-fill").style.width = pct + "%";
-document.getElementById("tw-worldtag").innerText = `${chap.icon} ${chap.name}`;
+document.getElementById("tw-worldtag").innerText = `${chap.icon} ${chapterName(chap)}`;
 document.getElementById("tw-coins-n").innerText = (myProfile.coins || 0);
 document.getElementById("tw-lives-n").innerText = twLives;
 updateRegenLabel();
@@ -990,27 +994,31 @@ const inChap = ((twViewFloor - 1) % FPC) + 1;
 const isBoss = (inChap === FPC || inChap % 50 === 0);
 document.getElementById("tw-panel").classList.toggle("boss", isBoss);
 document.getElementById("tw-panel-num").innerText = twViewFloor;
-document.getElementById("tw-panel-typ").innerText = isBoss ? `⚔️ ${chap.boss} GARDIEN` : diffLabel(Number.isFinite(def.diff) ? def.diff : 1) + " · " + TowerUtils.typeLabel(def.type);
+const dTw = i18n[currentLang];
+document.getElementById("tw-panel-typ").innerText = isBoss ? `⚔️ ${chap.boss} ${dTw.tw_guardian}` : diffLabel(Number.isFinite(def.diff) ? def.diff : 1) + " · " + TowerUtils.typeLabel(def.type);
 const stGot = towerProgress.stars[String(twViewFloor)] || 0;
 document.getElementById("tw-panel-stars").innerHTML = [1,2,3].map(i => `<span class="${i <= stGot ? "on" : ""}">⭐</span>`).join("");
 const lock = document.getElementById("tw-lockmsg");
 if (!unlocked) {
 lock.style.display = "block";
 const season = TOWER_CHAPTERS[world - 1].season;
-const seasonName = ["", "Saison 1", "Halloween", "Noël"][season] || "Saison " + season;
+const dTw = i18n[currentLang];
+const seasonName = ["", dTw.tw_season_1, dTw.tw_season_2, dTw.tw_season_3][season] || ((currentLang === "fr" ? "Saison " : "Season ") + season);
 const flag = "season_s" + season + "_unlocked";
 const hasFlag = (myProfile.unlocked_items || []).includes(flag);
 if (season === 1) {
-lock.innerText = `🔒 Quota ⭐ ${WORLD_QUOTA} requis dans le monde précédent`;
+lock.innerText = dTw.tw_lock_quota;
 } else if (!hasFlag && TowerUtils.currentSeasonNum() < season) {
-lock.innerText = `🔒 Atteins le Tier 1 du Pass ${seasonName} pour débloquer`;
+lock.innerText = dTw.tw_lock_pass.replace("{season}", seasonName);
 } else {
-lock.innerText = `🔒 Quota ⭐ ${WORLD_QUOTA} requis dans le monde précédent`;
+lock.innerText = dTw.tw_lock_quota;
 }
 } else {
 lock.style.display = "none";
 }
-document.getElementById("tw-play").disabled = !unlocked || twLives <= 0;
+const twPlayBtn = document.getElementById("tw-play");
+twPlayBtn.disabled = !unlocked || twLives <= 0;
+twPlayBtn.innerText = (i18n[currentLang].tower_play_btn) || "PLAY";
 document.getElementById("tw-prev").disabled = twViewFloor <= 1;
 document.getElementById("tw-next").disabled = twViewFloor >= Math.min(towerProgress.floor + 1, maxVisibleWorld() * FPC);
 }
@@ -1033,7 +1041,7 @@ if (!worldVisible(w)) continue;
 const chap = TOWER_CHAPTERS[w - 1];
 const stars = TowerUtils.starsInWorld(w);
 const selected = w === selWorld ? 'selected' : '';
-worldOptions += `<option value="${w}" ${selected}>${chap.icon} ${chap.name} ⭐${stars}</option>`;
+worldOptions += `<option value="${w}" ${selected}>${chap.icon} ${chapterName(chap)} ⭐${stars}</option>`;
 }
 const d = document.createElement("div");
 d.className = "tw-lvlpop"; d.id = "tw-lvlpop";
@@ -1088,7 +1096,8 @@ function showWorldTransition(w) {
 const chap = TOWER_CHAPTERS[w - 1];
 let f = document.createElement("div");
 f.className = "tw-worldfade";
-f.innerHTML = `<div class="big">${chap.icon} ${chap.name}</div><div class="sub">${currentLang==="fr"?"Nouveau monde débloqué !":"New world unlocked!"}</div>`;
+const d = i18n[currentLang];
+f.innerHTML = `<div class="big">${chap.icon} ${chapterName(chap)}</div><div class="sub">${d.tower_new_world || (currentLang==="fr"?"Nouveau monde débloqué !":"New world unlocked!")}</div>`;
 document.body.appendChild(f);
 requestAnimationFrame(() => f.classList.add("on"));
 setTimeout(() => {
@@ -1107,9 +1116,10 @@ d.className = "tw-shop"; d.id = "tw-shop";
 let items = "";
 SHOP_ITEMS.forEach(it => {
   const btn = it.iap ? `<button class="buy iap" onclick="tryBuyPack('${it.id}')">${it.eur} 💳</button>` : `<button class="buy" onclick="towerShopBuy('${it.id}')">${it.price} 🪙</button>`;
-  items += `<div class="tw-shop-item"><span class="ic">${it.icon}</span><span class="nm">${it.name}</span>${btn}</div>`;
+  const dTwS = i18n[currentLang];
+items += `<div class="tw-shop-item"><span class="ic">${it.icon}</span><span class="nm">${dTwS["tw_shop_" + it.id] || it.name}</span>${btn}</div>`;
 });
-d.innerHTML = `<div class="tw-shop-card"><h3>🛒 BOUTIQUE AVENTURE</h3>${items}<button class="btn-secondary" style="width:100%;" onclick="closeTowerShop()">❌ ${fr?"Fermer":"Close"}</button></div>`;
+d.innerHTML = `<div class="tw-shop-card"><h3>${dTwS.tw_shop_title}</h3>${items}<button class="btn-secondary" style="width:100%;" onclick="closeTowerShop()">❌ ${fr?"Fermer":"Close"}</button></div>`;
 document.body.appendChild(d);
 }
 function closeTowerShop() { const s = document.getElementById("tw-shop"); if (s) s.remove(); }
@@ -1162,9 +1172,11 @@ if (typeof showNotificationToast === "function") showNotificationToast(msg, "ann
 }
 });
 /* ----- 9. BRIEFING ----- */
+const d = i18n[currentLang];
 function showBriefing(def) {
 closeBriefing();
 const fr = currentLang === "fr";
+const d = i18n[currentLang];
 const curStars = towerProgress.stars[String(def.floor)] || 0;
 const starTime = Math.floor(def.time * 0.6);
 const ST = "\u{2B50}";
@@ -1179,7 +1191,7 @@ b.innerHTML = `<div class="tw-brief-card">
 <div style="font-size:10px;font-weight:700;color:#aaa;margin-bottom:6px;">${diffLabel(Number.isFinite(def.diff) ? def.diff : 1)}${(def.diff||0) >= 2 ? " · bonus 🪙" : ""}</div>
 <div style="font-size:9px;color:#aaa;margin-bottom:8px;">${starRule}</div>
 ${replayLine}
-<button class="btn-main btn-blue" style="width:100%;margin-bottom:6px;" onclick="closeBriefing();startTowerFloor(TowerUtils.getFloorDef(${def.floor}))">${def.replay?"🔄 REJOUER":"⚡ LANCER !"}</button>
+<button class="btn-main btn-blue" style="width:100%;margin-bottom:6px;" onclick="closeBriefing();startTowerFloor(TowerUtils.getFloorDef(${def.floor}))">${def.replay ? d.tw_replay : d.tw_start}</button>
 <button class="btn-secondary" style="width:100%;" onclick="closeBriefing()">❌ ${fr?"Annuler":"Cancel"}</button>
 </div>`;
 document.body.appendChild(b);
@@ -1191,7 +1203,7 @@ let ov = document.getElementById("tower-game");
 if (!ov) {
 ov = document.createElement("div");
 ov.id = "tower-game"; ov.className = "twg-screen";
-ov.innerHTML = `<div class="twg-header"><button class="tw-back" onclick="quitFloor()">⬅️</button><b id="twg-title"></b><span id="tg-shield" style="color:#f8b500;font-weight:900;font-size:15px;display:none;">🛡️</span><span id="tg-err" style="color:#ff4b2b;font-weight:900;font-size:13px;min-width:40px;text-align:right;">❌ 0</span><span id="twg-timer">⏱️</span></div><div id="tg-bar" class="twg-bar"></div><div id="tg-hud" class="twg-hud"></div><div class="twg-gridwrap"><div id="tg-grid" class="tg-grid"></div></div><div class="twj-bar"><button class="twj-btn" id="twg-jt" onclick="useJoker('time')">⏱️ +10s <b id="twg-jt-n">0</b></button><button class="twj-btn" id="twg-js" onclick="useJoker('shield')">🛡️ Bouclier <b id="twg-js-n">0</b></button></div><div id="tg-msg" class="twg-msg"></div>`;
+ov.innerHTML = `<div class="twg-header"><button class="tw-back" onclick="quitFloor()">⬅️</button><b id="twg-title"></b><span id="tg-shield" style="color:#f8b500;font-weight:900;font-size:15px;display:none;">🛡️</span><span id="tg-err" style="color:#ff4b2b;font-weight:900;font-size:13px;min-width:40px;text-align:right;">❌ 0</span><span id="twg-timer">⏱️</span></div><div id="tg-bar" class="twg-bar"></div><div id="tg-hud" class="twg-hud"></div><div class="twg-gridwrap"><div id="tg-grid" class="tg-grid"></div></div><div class="twj-bar"><button class="twj-btn" id="twg-jt" onclick="useJoker('time')">⏱️ +10s <b id="twg-jt-n">0</b></button><button class="twj-btn" id="twg-js" onclick="useJoker('shield')">🛡️ <span id="twg-js-lbl"></span> <b id="twg-js-n">0</b></button></div><div id="tg-msg" class="twg-msg"></div>`;
 document.body.appendChild(ov);
 }
 return ov;
@@ -1205,12 +1217,14 @@ return;
 socket.emit("tower_use_joker", { kind: kind });
 }
 function updateJokerButtons() {
-const jt = document.getElementById("twg-jt-n"), js = document.getElementById("twg-js-n");
-const bt = document.getElementById("twg-jt"), bs = document.getElementById("twg-js");
-if (jt) jt.innerText = twJokers.time || 0;
-if (js) js.innerText = twJokers.shield || 0;
-if (bt) { bt.style.display = (twJokers.time || 0) > 0 ? "flex" : "none"; bt.disabled = !TW; }
-if (bs) { bs.style.display = (twJokers.shield || 0) > 0 ? "flex" : "none"; bs.disabled = !TW; }
+    const jt = document.getElementById("twg-jt-n"), js = document.getElementById("twg-js-n");
+    const bt = document.getElementById("twg-jt"), bs = document.getElementById("twg-js");
+    const jl = document.getElementById("twg-js-lbl");
+    if (jl) jl.innerText = i18n[currentLang].tw_shield_word;
+    if (jt) jt.innerText = twJokers.time || 0;
+    if (js) js.innerText = twJokers.shield || 0;
+    if (bt) { bt.style.display = (twJokers.time || 0) > 0 ? "flex" : "none"; bt.disabled = !TW; }
+    if (bs) { bs.style.display = (twJokers.shield || 0) > 0 ? "flex" : "none"; bs.disabled = !TW; }
 }
 socket.on("joker_denied", () => {
 if (typeof showNotificationToast === "function") showNotificationToast(currentLang === "fr" ? "❌ Joker indisponible." : "❌ Joker unavailable.", "announcement");
@@ -1241,7 +1255,7 @@ TW_lastFloor = def.floor;
 TW = null; TW_dom = null; TW_buttons = []; TW_hudCache = "";
 stopLocalTimer();
 document.getElementById("tg-grid").innerHTML = "";
-document.getElementById("twg-title").innerText = "🏰 ÉTAGE " + def.floor;
+document.getElementById("twg-title").innerText = i18n[currentLang].tw_floor + " " + def.floor;
 updateJokerButtons();
 socket.emit("tower_floor_start", { floor: def.floor });
 }
@@ -1313,18 +1327,20 @@ paint();
 TW_localTimer = setInterval(() => { left -= 0.25; paint(); }, 250);
 }
 function renderHUDFromState() {
-const h = document.getElementById("tg-hud"); if (!h || !TW) return;
-let main = "";
-if (TW.type === "color" && TW.targetColor) main = `COULEUR : <span style="color:${TW.targetColor.hex};">${TW.targetColor.name}</span>`;
-else if (TW.type === "pairs") main = (TW.revealLeft > 0) ? `👀 MÉMORISE ! ${TW.revealLeft}s` : "🧩 RETROUVE LES PAIRES";
-else if (TW.type === "parity") main = TW.targetParity === "even" ? "CLIQUE : PAIRS" : "CLIQUE : IMPAIRS";
-else if (TW.type === "forbidden") main = `INTERDIT : <span style="color:#ff4b2b;">${TW.forbidden}</span> · CIBLE : ${TW.target}`;
-else if (TW.type === "memory") main = (TW.revealLeft > 0) ? `👀 MÉMORISE ! ${TW.revealLeft}s` : "🧠 CLIQUE DANS L'ORDRE (1→N)";
-else if (TW.target !== null && TW.target !== undefined) main = `CIBLE : ${TW.target}`;
+    const h = document.getElementById("tg-hud"); if (!h || !TW) return;
+    const dH = i18n[currentLang];
+    const colorName = (TW.targetColor && dH["tw_color_" + TW.targetColor.key]) || (TW.targetColor ? TW.targetColor.name : "");
+    let main = "";
+    if (TW.type === "color" && TW.targetColor) main = `${dH.tw_hud_color} <span style="color:${TW.targetColor.hex};">${colorName}</span>`;
+    else if (TW.type === "pairs") main = (TW.revealLeft > 0) ? `${dH.tw_hud_memorize} ${TW.revealLeft}s` : dH.tw_hud_pairs;
+    else if (TW.type === "parity") main = TW.targetParity === "even" ? dH.tw_hud_parity_even : dH.tw_hud_parity_odd;
+    else if (TW.type === "forbidden") main = `${dH.tw_hud_forbidden} <span style="color:#ff4b2b;">${TW.forbidden}</span> · ${dH.tw_hud_target} ${TW.target}`;
+    else if (TW.type === "memory") main = (TW.revealLeft > 0) ? `${dH.tw_hud_memorize} ${TW.revealLeft}s` : dH.tw_hud_memory_order;
+    else if (TW.target !== null && TW.target !== undefined) main = `${dH.tw_hud_target} ${TW.target}`;
 if (main !== TW_hudCache) { h.innerHTML = main; TW_hudCache = main; }
 const bar = document.getElementById("tg-bar");
 if (bar) { if (TW.type === "boss") { bar.style.display = "block"; bar.innerHTML = `<div style="width:${Math.min(100,TW.ai/TW.total*100)}%;height:100%;background:linear-gradient(90deg,#ff4b2b,#f8b500);"></div>`; } else bar.style.display = "none"; }
-document.getElementById("twg-title").innerText = "🏰 ÉTAGE " + TW.floor + " — " + TowerUtils.typeLabel(TW.type);
+document.getElementById("twg-title").innerText = dH.tw_floor + " " + TW.floor + " — " + TowerUtils.typeLabel(TW.type);
 const errEl = document.getElementById("tg-err");
 if (errEl) errEl.innerText = "❌ " + (TW.mistakes || 0);
 const shEl = document.getElementById("tg-shield");

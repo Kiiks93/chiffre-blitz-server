@@ -93,12 +93,12 @@ socket.on('web_policy', (p) => { if (p && p.closed) cbShowMobileOnly(); });
 
 // 🛡️ Gestion du blocage de version par le serveur
 socket.on("version_blocked", () => {
-  if (socket.io && socket.io.opts) socket.io.opts.reconnection = false; // Stop la reconnexion infinie
-  if (typeof vgShowBlock === 'function') vgShowBlock();
-  else {
-    alert("⚠️ Version obsolète ! Veuillez mettre à jour le jeu.");
-    location.reload();
-  }
+    if (socket.io && socket.io.opts) socket.io.opts.reconnection = false;
+    if (typeof vgShowBlock === 'function') vgShowBlock();
+    else {
+        alert(i18n[currentLang].version_obsolete || "⚠️ Version obsolète ! Veuillez mettre à jour le jeu.");
+        location.reload();
+    }
 });
 
 socket.on("connect", () => {
@@ -575,7 +575,7 @@ function renderProfileAvatarSelector() {
   
   const optStd = document.createElement("option");
   optStd.value = "standard";
-  optStd.innerText = "🔢 Avatar Standard";
+  optStd.innerText = i18n[currentLang].profile_avatar_std;
   sel.appendChild(optStd);
   
   for (const id in ADN) {
@@ -670,7 +670,7 @@ function renderProfileCustomizationMenus() {
   const titleSelect = document.getElementById("title-input");
   const equippedTitle = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.title;
   if (titleSelect) {
-    titleSelect.innerHTML = `<option value="">Aucun titre actif</option>`;
+    titleSelect.innerHTML = `<option value="">${i18n[currentLang].profile_no_title}</option>`;
     (myProfile.unlocked_items || []).filter(id => id.startsWith("title_")).forEach(tId => {
       const displayName = TDN[tId] || tId;
       const opt = document.createElement("option");
@@ -685,7 +685,7 @@ function renderProfileCustomizationMenus() {
   const frameSelect = document.getElementById("frame-input");
   const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
   if (frameSelect) {
-    frameSelect.innerHTML = `<option value="">Aucun cadre (Défaut)</option>`;
+    titleSelect.innerHTML = `<option value="">${i18n[currentLang].profile_no_title}</option>`;
     const frames = (myProfile.unlocked_items || []).filter(id => id.startsWith("frame_"));
     if (!frames.includes("frame_standard")) frames.unshift("frame_standard");
     frames.forEach(fId => {
@@ -705,7 +705,7 @@ function renderProfileCustomizationMenus() {
   const themeSelect = document.getElementById("theme-input");
   const equippedTheme = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.theme;
   if (themeSelect) {
-    themeSelect.innerHTML = `<option value="">Thème de grille standard</option>`;
+    themeSelect.innerHTML = `<option value="">${i18n[currentLang].profile_std_theme}</option>`;
     (myProfile.unlocked_items || []).filter(id => id.startsWith("theme_")).forEach(thId => {
       const displayName = THDN[thId] || thId;
       const opt = document.createElement("option");
@@ -1108,10 +1108,10 @@ function showRecoveryKeyModal() {
 }
 
 socket.on('recovery_key_result', (d) => {
-  if (!d.ok) {
-    alert('❌ ' + d.message);
-    return;
-  }
+    if (!d.ok) {
+        alert('❌ ' + (d.message || 'Erreur'));
+        return;
+    }
   
   if (justCreatedAccount) {
     justCreatedAccount = false;
@@ -1124,7 +1124,7 @@ socket.on('recovery_key_result', (d) => {
           <div style="background:rgba(248,181,0,0.15); border:2px solid #f8b500; border-radius:10px; padding:14px; margin:10px 0;">
             <div style="font-size:11px; color:#f8b500; font-weight:bold; margin-bottom:8px;">🔑 TA CLÉ DE RÉCUPÉRATION</div>
             <div style="font-size:20px; font-weight:900; color:#f8b500; letter-spacing:2px; font-family:monospace; user-select:all; margin-bottom:8px;">${d.key}</div>
-            <button class="btn-main btn-gold" onclick="navigator.clipboard.writeText('${d.key}').then(()=>alert('📋 Clé copiée !'))" style="padding:6px 12px; font-size:11px;">📋 Copier la clé</button>
+            <button class="btn-main btn-gold" onclick="navigator.clipboard.writeText('${d.key}').then(()=>alert('${i18n[currentLang].recovery_key_copied}'))" style="padding:6px 12px; font-size:11px;">📋 Copier la clé</button>
           </div>
           <div style="background:rgba(255,75,43,0.15); border:1px solid #ff4b2b; border-radius:8px; padding:10px; margin:10px 0; font-size:10px; color:#ff4b2b; line-height:1.5;">
             ⚠️ <b>CONSERVE CETTE CLÉ PRÉCIEUSEMENT !</b><br>
@@ -1160,40 +1160,41 @@ function finishAccountCreation() {
 }
 
 socket.on('force_logout', (data) => {
-  localStorage.removeItem('cb_secret');
-  localStorage.removeItem('cb_username');
-  myProfile.secretCode = '';
-  myProfile.username = '';
-  alert('🔒 Ton code secret a été réinitialisé par un administrateur.\n\nTu vas être redirigé vers l\'écran de connexion.');
-  closeAccountModal();
-  switchAccount();
-  checkAndShowProfileModal();
+    const d = i18n[currentLang];
+    localStorage.removeItem('cb_secret');
+    localStorage.removeItem('cb_username');
+    myProfile.secretCode = '';
+    myProfile.username = '';
+    alert(d.account_force_logout || '🔒 Ton code secret a été réinitialisé par un administrateur.\n\nTu vas être redirigé vers l\'écran de connexion.');
+    closeAccountModal();
+    switchAccount();
+    checkAndShowProfileModal();
 });
 
 function submitAccountForm(mode) {
   const pseudo = (document.getElementById('account-username').value || '').trim();
   const code = (document.getElementById('account-secret').value || '').trim();
   
-  if (pseudo.length < CONFIG.MIN_PSEUDO_LENGTH) {
-    alert('Pseudo : 3 caractères minimum.');
+  const d = i18n[currentLang];
+if (pseudo.length < CONFIG.MIN_PSEUDO_LENGTH) {
+    alert(d.account_pseudo_min || 'Pseudo : 3 caractères minimum.');
     return;
-  }
-  
-  if (mode === 'create') {
+}
+if (mode === 'create') {
     if (code.length < CONFIG.MIN_CODE_LENGTH) {
-      alert('Code secret : 8 caractères minimum (avec lettres, chiffres et caractère spécial).');
-      return;
+        alert(d.account_code_min || 'Code secret : 8 caractères minimum (avec lettres, chiffres et caractère spécial).');
+        return;
     }
     if (!isStrongCode(code)) {
-      alert('⚠️ Code trop faible !\n\nUn code fort doit contenir :\n• 8+ caractères\n• Des lettres\n• Des chiffres\n• 1 caractère spécial (!@#$%&*+-_)\n\nExemple : Blitz2026!');
-      return;
+        alert(d.account_code_weak || '⚠️ Code trop faible !\n\nUn code fort doit contenir :\n• 8+ caractères\n• Des lettres\n• Des chiffres\n• 1 caractère spécial (!@#$%&*+-_)\n\nExemple : Blitz2026!');
+        return;
     }
-  } else {
+} else {
     if (code.length < 4) {
-      alert('🔒 Entre ton code secret (4 caractères minimum).');
-      return;
+        alert(d.account_code_enter || '🔒 Entre ton code secret (4 caractères minimum).');
+        return;
     }
-  }
+}
   
   myProfile.username = pseudo;
   myProfile.secretCode = code;
@@ -1216,33 +1217,36 @@ function submitAccountForm(mode) {
       mode: mode,
       timezone: getPlayerTimezone()
     });
-  } else {
-    alert('❌ Connexion au serveur perdue. Réessaie dans quelques secondes.');
+ } else {
+    alert(d.account_server_lost || '❌ Connexion au serveur perdue. Réessaie dans quelques secondes.');
     pendingAccountLogin = false;
   }
-}
+  }
 
 function startCreateAccount() {
-  if (confirm('⚠️ Un nouveau compte repart de zéro.\n(Ton compte actuel reste sauvegardé.)\nContinuer ?')) switchAccount();
+    const d = i18n[currentLang];
+    if (confirm(d.account_create_confirm || '⚠️ Un nouveau compte repart de zéro.\n(Ton compte actuel reste sauvegardé.)\nContinuer ?')) switchAccount();
 }
 
 function askDeleteAccount() {
-  const code = prompt('⚠️ SUPPRESSION DÉFINITIVE DU COMPTE.\nEntre ton code secret pour confirmer :');
-  if (!code) return;
-  socket.emit('delete_account', { secretCode: code });
+    const d = i18n[currentLang];
+    const code = prompt(d.account_delete_prompt || '⚠️ SUPPRESSION DÉFINITIVE DU COMPTE.\nEntre ton code secret pour confirmer :');
+    if (!code) return;
+    socket.emit('delete_account', { secretCode: code });
 }
 
 socket.on('delete_account_result', (res) => {
-  if (res.ok) {
-    localStorage.removeItem('cb_username');
-    localStorage.removeItem('cb_secret');
-    myProfile.secretCode = '';
-    myProfile.username = '';
-    alert('✅ Compte supprimé.');
-    renderAccountContent();
-  } else {
-    alert('❌ Code secret incorrect : compte NON supprimé.');
-  }
+    const d = i18n[currentLang];
+    if (res.ok) {
+        localStorage.removeItem('cb_username');
+        localStorage.removeItem('cb_secret');
+        myProfile.secretCode = '';
+        myProfile.username = '';
+        alert(d.account_deleted || '✅ Compte supprimé.');
+        renderAccountContent();
+    } else {
+        alert(d.account_delete_fail || '❌ Code secret incorrect : compte NON supprimé.');
+    }
 });
 
 function openControlCenter() {
@@ -1256,25 +1260,26 @@ function closeControlCenter() {
 }
 
 function renderControlCenter() {
-  const isEN = (typeof currentLang !== 'undefined' && currentLang === 'en');
-  const titleEl = document.getElementById('cc-title');
-  if (titleEl) titleEl.innerText = isEN ? "⚙️ SETTINGS MANAGEMENT" : "⚙️ GESTION DES PARAMÈTRES";
-  const langEl = document.getElementById('cc-lang-text');
-  if (langEl) langEl.innerText = (isEN ? "Language : " : "Langue : ") + (isEN ? "EN" : "FR");
-  const soundEl = document.getElementById('cc-sound-text');
-  const muteBtn = document.getElementById('mute-btn');
-  if (soundEl && muteBtn) soundEl.innerText = (isEN ? "Sound : " : "Son : ") + (muteBtn.innerText.includes('🔇') ? (isEN ? "Muted" : "Coupé") : (isEN ? "On" : "Activé"));
-  const customEl = document.getElementById('cc-custom-btn');
-  if (customEl) customEl.innerText = isEN ? "🎨 Customization" : "🎨 Personnalisation";
-  const accountEl = document.getElementById('cc-account-btn');
-  if (accountEl) accountEl.innerText = isEN ? "👤 Account management" : "👤 Gestion du compte";
-  const musEl = document.getElementById('cc-music-text');
-  if (musEl) {
-    const p = localStorage.getItem('cb_music_season');
-    musEl.innerText = (isEN ? 'Soundtrack: ' : 'Bande son : ') + (p ? (isEN ? 'Season ' : 'Saison ') + p.replace('s', '') : (isEN ? 'Auto' : 'Auto'));
-  }
-  const btnLabel = document.getElementById('cc-btn-label');
-  if (btnLabel) btnLabel.innerText = isEN ? "Settings" : "Paramètres";
+    const d = (typeof i18n !== 'undefined') ? i18n[currentLang] : null;
+    const isEN = currentLang === 'en';
+    const titleEl = document.getElementById('cc-title');
+    if (titleEl) titleEl.innerText = d?.cc_title || (isEN ? "⚙️ SETTINGS MANAGEMENT" : "⚙️ GESTION DES PARAMÈTRES");
+    const langEl = document.getElementById('cc-lang-text');
+    if (langEl) langEl.innerText = (d?.cc_language || (isEN ? "Language: " : "Langue : ")) + (isEN ? "EN" : "FR");
+    const soundEl = document.getElementById('cc-sound-text');
+    const muteBtn = document.getElementById('mute-btn');
+    if (soundEl && muteBtn) soundEl.innerText = (d?.cc_sound || (isEN ? "Sound: " : "Son : ")) + (muteBtn.innerText.includes('🔇') ? (d?.cc_muted || (isEN ? "Muted" : "Coupé")) : (d?.cc_on || (isEN ? "On" : "Activé")));
+    const customEl = document.getElementById('cc-custom-btn');
+    if (customEl) customEl.innerText = d?.cc_custom || (isEN ? "🎨 Customization" : "🎨 Personnalisation");
+    const accountEl = document.getElementById('cc-account-btn');
+    if (accountEl) accountEl.innerText = d?.cc_account || (isEN ? "👤 Account management" : "👤 Gestion du compte");
+    const musEl = document.getElementById('cc-music-text');
+    if (musEl) {
+        const p = localStorage.getItem('cb_music_season');
+        musEl.innerText = (d?.cc_soundtrack || (isEN ? 'Soundtrack: ' : 'Bande son : ')) + (p ? (isEN ? 'Season ' : 'Saison ') + p.replace('s', '') : 'Auto');
+    }
+    const btnLabel = document.getElementById('cc-btn-label');
+    if (btnLabel) btnLabel.innerText = d?.cc_settings || (isEN ? "Settings" : "Paramètres");
 }
 
 /* ============================================================
@@ -1389,10 +1394,10 @@ function saveProfileFromModal() {
   let avatarVal = parseInt(document.getElementById("avatar-input").value);
   const flagVal = document.getElementById("flag-input").value;
   
-  if (nameInput.length < CONFIG.MIN_PSEUDO_LENGTH) {
-    alert(currentLang === "fr" ? "Ton pseudo doit contenir au moins 3 caractères !" : "Your pseudo must contain at least 3 characters!");
+ if (nameInput.length < CONFIG.MIN_PSEUDO_LENGTH) {
+    alert(i18n[currentLang].account_pseudo_short || "Ton pseudo doit contenir au moins 3 caractères !");
     return;
-  }
+}
   
   const savedSecret = localStorage.getItem('cb_secret') || '';
   const savedName = localStorage.getItem('cb_username') || '';
@@ -1410,8 +1415,9 @@ function saveProfileFromModal() {
   if (avatarVal > CONFIG.MAX_AVATAR_NUM) avatarVal = CONFIG.MAX_AVATAR_NUM;
   
   if (myProfile.secretCode && !isStrongCode(myProfile.secretCode)) {
-    if (confirm('⚠️ Ton code secret est faible !\n\nUn code fort doit contenir :\n• 8+ caractères\n• Des lettres\n• Des chiffres\n• Un caractère spécial (!@#$%&*+-_)\n\nTu pourras le changer plus tard dans "Mon Compte".\n\nContinuer quand même ?') === false) return;
-  }
+    const d = i18n[currentLang];
+    if (confirm(d.account_code_weak_continue || '⚠️ Ton code secret est faible !\n\nUn code fort doit contenir :\n• 8+ caractères\n• Des lettres\n• Des chiffres\n• Un caractère spécial (!@#$%&*+-_)\n\nTu pourras le changer plus tard dans "Mon Compte".\n\nContinuer quand même ?') === false) return;
+}
   
   myProfile.username = nameInput;
   myProfile.region = regionInput;
@@ -1558,14 +1564,15 @@ socket.on("register_result", (res) => {
     myProfile.secretCode = ''; 
     myProfile.inventory = { __equipped: {} };
     
-    if (res.reason === 'taken') alert('❌ Code secret incorrect pour ce pseudo.');
-    else if (res.reason === 'nocode') alert('🔒 Choisis un code secret (4 caractères minimum).');
-    else if (res.reason === 'short') alert('Ton pseudo doit contenir au moins 3 caractères !');
-    else if (res.reason === 'not_found') {
-      alert('❌ Compte introuvable. Veuillez créer un nouveau compte.');
-      checkAndShowProfileModal();
-    }
-    else alert('❌ Erreur de connexion au serveur. Réessaie.');
+   const d = i18n[currentLang];
+if (res.reason === 'taken') alert(d.account_wrong_code || '❌ Code secret incorrect pour ce pseudo.');
+else if (res.reason === 'nocode') alert(d.account_nocode || '🔒 Choisis un code secret (4 caractères minimum).');
+else if (res.reason === 'short') alert(d.account_pseudo_short || 'Ton pseudo doit contenir au moins 3 caractères !');
+else if (res.reason === 'not_found') {
+    alert(d.account_not_found || '❌ Compte introuvable. Veuillez créer un nouveau compte.');
+    checkAndShowProfileModal();
+}
+else alert(d.account_server_error || '❌ Erreur de connexion au serveur. Réessaie.');
     
     if (pendingAccountLogin) { 
       pendingAccountLogin = false; 
@@ -1854,14 +1861,16 @@ function cbShowMaintenanceCountdown(message, seconds){
   let remaining = Math.max(0, parseInt(seconds, 10) || 0);
 const render = () => {
   const m = Math.floor(remaining / 60), s = remaining % 60;
-  bar.innerHTML = '🛠️ MAINTENANCE DANS ' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0') + ' — termine ta partie (maintenance en cours) !';
+  const d = (typeof i18n !== 'undefined') ? i18n[currentLang] : null;
+  bar.innerHTML = (d?.maint_countdown || '🛠️ MAINTENANCE DANS') + ' ' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0') + ' — ' + (d?.maint_finish_game || 'termine ta partie (maintenance en cours) !');
 };
   render();
   bar._cbInterval = setInterval(() => {
     remaining--;
     if (remaining <= 0){
       clearInterval(bar._cbInterval);
-      bar.innerHTML = '🛠️ Maintenance imminente (maintenance en cours) — fin de partie = déconnexion';
+      const d = (typeof i18n !== 'undefined') ? i18n[currentLang] : null;
+      bar.innerHTML = '🛠️ ' + (d?.maint_imminent || 'Maintenance imminente') + ' — ' + (d?.maint_end_disconnect || 'fin de partie = déconnexion');
       return;
     }
     render();
@@ -1880,14 +1889,14 @@ function cbShowMaintenanceLocked(message){
   ov.innerHTML =
     '<div style="max-width:420px;width:100%;text-align:center;color:#fff;font-family:system-ui,sans-serif;">' +
     '<div style="font-size:52px;">🛠️</div>' +
-    '<h2 style="color:#00d2ff;margin:12px 0 6px;font-size:22px;letter-spacing:1px;">MAINTENANCE EN COURS</h2>' +
+    '<h2 style="color:#00d2ff;margin:12px 0 6px;font-size:22px;letter-spacing:1px;">' + ((typeof i18n !== 'undefined') ? i18n[currentLang].maint_title : 'MAINTENANCE EN COURS') + '</h2>' +
     '<p id="cb-maint-msg" style="font-size:14px;line-height:1.5;color:#ddd;margin-bottom:18px;"></p>' +
     '<div style="height:8px;border-radius:4px;background:rgba(255,255,255,0.12);overflow:hidden;">' +
     '<div style="height:100%;width:40%;border-radius:4px;background:linear-gradient(90deg,#00c6ff,#0072ff);animation:cbMaintSlide 1.6s ease-in-out infinite;"></div>' +
     '</div>' +
-    '<input id="cb-maint-code" placeholder="Tu as un code ? 🔑" style="margin-top:18px;width:80%;padding:10px;border-radius:10px;border:1px solid #444;background:#111;color:#fff;text-align:center;">' +
-    '<div style="margin-top:10px;"><button id="cb-maint-enter" style="padding:10px 22px;border:none;border-radius:10px;background:#00d2ff;color:#001;font-weight:800;cursor:pointer;">Entrer</button></div>' +
-    '<p style="font-size:12px;color:#888;margin-top:14px;">Retour automatique dès la fin de la maintenance.</p>' +
+    '<input id="cb-maint-code" placeholder="' + ((typeof i18n !== 'undefined') ? i18n[currentLang].maint_code_ph : 'Tu as un code ? 🔑') + '" style="margin-top:18px;width:80%;padding:10px;border-radius:10px;border:1px solid #444;background:#111;color:#fff;text-align:center;">' +
+    '<div style="margin-top:10px;"> <button id="cb-maint-enter" style="padding:10px 22px;border:none;border-radius:10px;background:#00d2ff;color:#001;font-weight:800;cursor:pointer;">' + ((typeof i18n !== 'undefined') ? i18n[currentLang].maint_enter : 'Entrer') + '</button></div>' +
+    '<p style="font-size:12px;color:#888;margin-top:14px;">' + ((typeof i18n !== 'undefined') ? i18n[currentLang].maint_auto_return : 'Retour automatique dès la fin de la maintenance.') + '</p>' +
     '<style>@keyframes cbMaintSlide{0%{margin-left:-40%}100%{margin-left:100%}}</style>' +
     '</div>';
   const msgEl = ov.querySelector('#cb-maint-msg');

@@ -28,19 +28,29 @@ function applyPassLockToMenu() {
   if (!titleEl) return;
   const banner = titleEl.closest("button") || titleEl.closest("[onclick]") || titleEl.parentElement.parentElement;
   if (!banner) return;
+  const d = (typeof i18n !== "undefined") ? i18n[currentLang] : null;
 
   if (!isSeasonPassEnabled()) {
-    if (!banner.querySelector(".pass-lock-overlay")) {
-      banner.classList.add("pass-locked");
-      banner.style.minHeight = "60px";
-      const ov = document.createElement("div");
+    banner.classList.add("pass-locked");
+    banner.style.minHeight = "60px";
+
+    // ✅ On réutilise l'overlay s'il existe déjà (au lieu de skipper)
+    let ov = banner.querySelector(".pass-lock-overlay");
+    if (!ov) {
+      ov = document.createElement("div");
       ov.className = "pass-lock-overlay";
       ov.innerHTML = `
         <span class="pass-lock-icon">🔒</span>
-        <span class="pass-lock-label">${currentLang === "fr" ? "VERROUILLÉ" : "LOCKED"}</span>
-        <span class="pass-lock-soon">${currentLang === "fr" ? "Ouverture bientôt" : "Opening soon"}</span>`;
+        <span class="pass-lock-label"></span>
+        <span class="pass-lock-soon"></span>`;
       banner.appendChild(ov);
     }
+
+    // ✅ Textes rafraîchis à CHAQUE appel → suivent la bascule de langue
+    ov.querySelector(".pass-lock-label").innerText =
+      (d && d.pass_locked) || (currentLang === "fr" ? "VERROUILLÉ" : "LOCKED");
+    ov.querySelector(".pass-lock-soon").innerText =
+      (d && d.pass_opening_soon) || (currentLang === "fr" ? "Ouverture bientôt" : "Opening soon");
   } else {
     banner.classList.remove("pass-locked");
     const ov = banner.querySelector(".pass-lock-overlay");
@@ -572,20 +582,21 @@ socket.on("pass_claim_denied", (data) => {
 10. PASSE DE SAISON — EFFETS VISUELS
 ============================================================ */
 function showRewardPopUp(rewardName, rewardIcon) {
-  let popup = document.getElementById("reward-popup-overlay");
-  if (!popup) {
-    popup = document.createElement("div");
-    popup.id = "reward-popup-overlay";
-    popup.className = "modal-overlay";
-    popup.innerHTML = `
-      <div class="modal-card" style="text-align:center; animation: victoryScalePop 0.5s cubic-bezier(0.175,0.885,0.32,1.275) forwards; border-color:#f8b500; box-shadow:0 0 40px rgba(248,181,0,0.8);">
-        <div style="font-size:55px; margin-bottom:10px;" id="popup-reward-icon">🎁</div>
-        <div style="font-size:10px; font-weight:900; color:#f8b500; letter-spacing:2px; margin-bottom:4px;">RÉCOMPENSE DÉBLOQUÉE</div>
-        <div id="popup-reward-name" style="color:#fff; font-size:15px; font-weight:bold; margin-bottom:20px; line-height:1.4;">-</div>
-        <button class="btn-main btn-gold" onclick="document.getElementById('reward-popup-overlay').style.display='none'" style="width:100%; margin-top:0;">Récupéré ! ⚡</button>
-      </div>`;
-    document.body.appendChild(popup);
-  }
+    const d = i18n[currentLang];
+    let popup = document.getElementById("reward-popup-overlay");
+    if (!popup) {
+        popup = document.createElement("div");
+        popup.id = "reward-popup-overlay";
+        popup.className = "modal-overlay";
+        popup.innerHTML = `
+            <div class="modal-card" style="text-align:center; animation: victoryScalePop 0.5s cubic-bezier(0.175,0.885,0.32,1.275) forwards; border-color:#f8b500; box-shadow:0 0 40px rgba(248,181,0,0.8);">
+                <div style="font-size:55px; margin-bottom:10px;" id="popup-reward-icon">🎁</div>
+                <div style="font-size:10px; font-weight:900; color:#f8b500; letter-spacing:2px; margin-bottom:4px;">${d.reward_unlocked}</div>
+                <div id="popup-reward-name" style="color:#fff; font-size:15px; font-weight:bold; margin-bottom:20px; line-height:1.4;">-</div>
+                <button class="btn-main btn-gold" onclick="document.getElementById('reward-popup-overlay').style.display='none'" style="width:100%; margin-top:0;">${d.btn_claimed}</button>
+            </div>`;
+        document.body.appendChild(popup);
+    }
   
   document.getElementById("popup-reward-icon").innerText = rewardIcon || "🎁";
   document.getElementById("popup-reward-name").innerText = rewardName;

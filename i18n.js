@@ -32,6 +32,7 @@ const i18n = {
     menu_friends: "👥 SALONS & AMIS", menu_shop: "🛍️ BOUTIQUE", menu_lb: "👑 CLASSEMENT",
     menu_tourney: "🎯 TOURNOIS", menu_info: "ℹ️ Informations & Règles",
     menu_halloween: "🎃 Mode Exclusif Halloween", menu_noel: "🎄 Mode Exclusif Noël",
+    menu_trophies: "🏆 Trophées", menu_pass: "🎫 Passe de saison",
 
     /* ----- Solo ----- */
     solo_menu_title: "MODES D'ENTRAÎNEMENT",
@@ -106,7 +107,7 @@ const i18n = {
     account_title: "⚙️ MON COMPTE", account_connected: "Connecté :",
     account_change: "🔑 Changer de compte", account_create: "➕ Créer un nouveau compte", account_delete: "🗑️ Supprimer mon compte",
     account_login_desc: "Entre ton pseudo + ton code secret.<br>Si le compte existe → connexion. Sinon → création.",
-    account_pseudo_ph: "Pseudo", account_code_ph: "🔒 Code secret (4 min)", 
+    account_pseudo_ph: "Pseudo", account_code_ph: "🔒 Code secret (4 min)",
     account_login_btn: "🔑 Accéder à mon compte",
     account_create_btn: "✨ Créer mon compte",
     account_tab_login: "🔑 Se connecter",
@@ -132,39 +133,6 @@ const i18n = {
     account_recovery_key: "🔐 Voir ma clé de récupération",
     change_code_validate: "Valider ⚡",
     change_code_reminder: "✅ N'oublie pas ton nouveau code !",
-    
-        /* ----- Tour ----- */
-    tower_title: "🗼 TOUR BLITZ",
-    tower_current_floor: "Étage actuel : ",
-    tower_floor_won: "✅ ÉTAGE {floor} VAINCU !",
-    tower_new_object: "Nouvel objet placé dans la pièce :",
-    tower_chapter_done: "🎁 CHAPITRE TERMINÉ : {reward} débloqué !",
-    tower_here: "▶ TU ES ICI",
-    tower_guardian_awake: "⚠️ GARDIEN RÉVEILLÉ",
-    tower_guardian_sleeping: "😴 {count}/9 objets",
-    tower_challenge: "⚔️ DÉFIER",
-    tower_play: "▶",
-    tower_continue: "Continuer ⚡",
-    tower_season_locked: "Saison S{season}",
-    tower_chapter_1: "Quartier Néon",
-    tower_chapter_2: "Grottes de Cristal",
-    tower_chapter_3: "Circuit Doré",
-    tower_chapter_4: "Tour Hantée",
-    tower_chapter_5: "Cimetière Brumeux",
-    tower_chapter_6: "Antre Citrouille",
-    tower_chapter_7: "Cime Bonbon",
-    tower_chapter_8: "Forêt de Sapins",
-    tower_chapter_9: "Atelier du Père Noël",
-    tower_type_classic: "⚡ Croissant",
-    tower_type_reverse: "🔽 Décroissant",
-    tower_type_random: "🎲 Chaos",
-    tower_type_calc_plus: "🧮 Addition",
-    tower_type_calc_minus: "🧮 Soustraction",
-    tower_type_sprint: "⏱️ Sprint",
-    tower_type_memory: "🙈 Mémoire",
-    tower_type_fog: "🌫️ Brouillard",
-    tower_type_nofail: "💎 Sans faute",
-    tower_type_boss: "⚔️ GARDIEN",
 
     /* ----- Pass de saison ----- */
     pass_title: "🎫 PASSE DE SAISON",
@@ -246,7 +214,7 @@ const i18n = {
     support_skip: "Passer et jouer ⚡",
     support_watch: "📺 Regarder la pub (soutenir) ❤️",
 
-       /* ----- Pouvoirs ----- */
+    /* ----- Pouvoirs ----- */
     powers: {
       spotlight: { name: "💡 Projecteur", desc: "Révèle la bonne tuile pendant 2s. Zéro hésitation." },
       freeze: { name: "⏳ Blocage du Temps", desc: "Gèle le chrono 3s. Respire, tu as le temps." },
@@ -258,7 +226,7 @@ const i18n = {
       chaos: { name: "🌪️ Chaos Absolu", desc: "GIGA : séisme + micro + éclipse en chaîne (5s)." }
     },
 
-    // === IAP REVENUECAT (achats réels) ===
+    /* ----- IAP RevenueCat ----- */
     iap_unavailable: "Achats indisponibles sur le navigateur",
     iap_error: "Achat annulé ou en erreur",
     iap_success: "Achat confirmé ! Merci ⚡",
@@ -266,7 +234,203 @@ const i18n = {
     btn_buy_pass: "💳 Acheter le Passe Premium (3€)",
     btn_buy_pack_vies: "💳 Pack 10 vies (1€)",
     btn_buy_pack_mixte: "💳 Pack Mixte 5 vies + 2 jokers (3€)",
-    btn_buy_pack_blitz: "💳 Pack Blitz 10 vies + 5 jokers (5€)"
+    btn_buy_pack_blitz: "💳 Pack Blitz 10 vies + 5 jokers (5€)",
+
+    /* ----- Admin Panel ----- */
+    admin_independent_window: "FENÊTRE INDÉPENDANTE",
+    admin_panel_title: "⚡ PANEL ADMIN",
+    admin_dashboard: "🎛️ Dashboard",
+    admin_logout: "🚪 Déconnexion",
+    admin_maintenance_title: "🛠️ Mode Maintenance",
+    admin_maintenance_disabled: "🟢 Désactivée",
+    admin_maintenance_active: "🔴 ACTIVE depuis",
+    admin_maintenance_enable: "Activer la maintenance (Déconnecte les joueurs)",
+    admin_maintenance_message: "Message affiché aux joueurs :",
+    admin_maintenance_bypass: "Code Bypass (Admin/Test) :",
+    admin_maintenance_delay: "⏱️ Délai avant coupure (secondes)",
+    admin_maintenance_delay_help: "0 = coupure immédiate · 60 = 1 min · 120 = 2 min · 300 = 5 min (max 600)",
+    admin_maintenance_save: "💾 Enregistrer / Appliquer",
+    admin_maintenance_refresh: "🔄 Rafraîchir",
+    admin_online_title: "🟢 Joueurs en ligne",
+    admin_online_desc: "Nombre de joueurs réellement connectés (mis à jour toutes les 5s).",
+    admin_broadcast_title: "📢 Diffuseur d'Annonce",
+    admin_broadcast_placeholder: "Message global...",
+    admin_broadcast_btn: "Diffuser l'annonce 🚀",
+    admin_adjust_title: "💰 Ajuster Pièces / Points / Trophées",
+    admin_adjust_all: "Tout le monde",
+    admin_adjust_pseudo: "👤 Par pseudo",
+    admin_adjust_random: "🎲 Aléatoire",
+    admin_adjust_pseudo_ph: "Pseudo exact...",
+    admin_adjust_count_ph: "Nb de joueurs (X)",
+    admin_adjust_coins: "🪙 Pièces",
+    admin_adjust_points: "⚡ Points",
+    admin_adjust_trophies: "🏆 Trophées",
+    admin_adjust_amount_ph: "Montant (+ donner / - retirer)",
+    admin_adjust_apply: "Appliquer ⚡",
+    admin_adventure_title: "🏰 Aventure — Flags, Étoiles, Vies & Jokers",
+    admin_adventure_desc: "Donne les flags de déblocage des mondes saisonniers + ajuste les étoiles, vies et jokers.",
+    admin_adventure_flags: "🌍 Flags de saison",
+    admin_adventure_halloween: "🎃 Débloquer Halloween (Mondes 4-6)",
+    admin_adventure_noel: "🎄 Débloquer Noël (Mondes 7-9)",
+    admin_adventure_stars: "⭐ Étoiles & 🏰 Étage max",
+    admin_adventure_stars_label: "⭐ Étoiles par monde (max 240)",
+    admin_adventure_floor_label: "🏰 Étage max (1-1800)",
+    admin_adventure_lives: "❤️ Vies & 🎴 Jokers",
+    admin_adventure_lives_label: "❤️ Vies (max 10)",
+    admin_adventure_jokers_time: "⏱️ Jokers temps",
+    admin_adventure_jokers_shield: "🛡️ Jokers bouclier",
+    admin_adventure_apply: "Appliquer ⚡",
+    admin_adventure_unlock_all: "🔓 Tout débloquer",
+    admin_logs_title: "📜 Journal des transactions",
+    admin_logs_desc: "Vérifie l'historique d'un joueur (pertes, achats, gains, ajustements).",
+    admin_logs_ph: "Pseudo (vide = tout le monde)",
+    admin_logs_btn: "Consulter 🔍",
+    admin_give_title: "🎁 Attribuer objet / trophée",
+    admin_give_desc: "Compense un bug ou offre : cadres, grilles, avatars, titres, packs, pouvoirs, trophées. Marche hors-ligne.",
+    admin_give_ph: "Pseudo exact...",
+    admin_give_select: "-- Charger le catalogue... --",
+    admin_give_btn: "Attribuer ⚡",
+    admin_reset_title: "🔑 Réinitialiser un code secret",
+    admin_reset_desc: "Le joueur doit te donner son pseudo + sa clé de récupération. Si la clé est correcte → un nouveau code est généré.",
+    admin_reset_pseudo_ph: "Pseudo exact du joueur",
+    admin_reset_key_ph: "Clé de récupération (XXXX-XXXX-XXXX)",
+    admin_reset_btn: "Générer un nouveau code ⚡",
+    admin_season_title: "🗓️ Contrôle de Saison",
+    admin_season_warning: "Permet de forcer temporairement la saison active pour tester le Pass.",
+    admin_season_auto: "⏱️ Auto — date réelle du serveur",
+    admin_season_s1: "🐱 S1 — Félin & Néon",
+    admin_season_s2: "🎃 S2 — Halloween",
+    admin_season_s3: "🎄 S3 — Noël",
+    admin_season_apply: "Appliquer la saison 🎃",
+    admin_dates_title: "📅 Dates des Saisons",
+    admin_dates_desc: "Définis les dates de début et fin de chaque saison.",
+    admin_dates_save: "💾 Enregistrer les dates",
+    admin_events_title: "⚡ Planification des Événements & Abuses",
+    admin_events_save: "Sauvegarder les Configurations 💾",
+    admin_close_btn: "✕",
+    admin_login_title: "🔒 ACCÈS RESTREINT DÉVELOPPEUR",
+    admin_login_ph: "Mot de passe admin",
+    admin_login_btn: "CONNEXION STUDIO ⚡",
+    admin_server_connecting: "Connexion serveur...",
+    admin_server_connected: "✅ Connecté au serveur",
+    admin_server_disconnected: "❌ Déconnecté du serveur",
+
+    /* ----- Tour (Aventure) ----- */
+    tower_title: "🗼 TOUR BLITZ",
+    tower_current_floor: "Étage actuel : ",
+    tower_floor_won: "✅ ÉTAGE {floor} VAINCU !",
+    tower_new_object: "Nouvel objet placé dans la salle :",
+    tower_chapter_done: "🎁 CHAPITRE TERMINÉ : {reward} débloqué !",
+    tower_here: "▶ TU ES ICI",
+    tower_guardian_awake: "⚠️ GARDIEN ÉVEILLÉ",
+    tower_guardian_sleeping: "😴 {count}/9 objets",
+    tower_challenge: "⚔️ DÉFI",
+    tower_play: "▶",
+    tower_continue: "Continuer ⚡",
+    tower_season_locked: "Saison S{season}",
+    tower_chapter_1: "Quartier Néon",
+    tower_chapter_2: "Grottes de Cristal",
+    tower_chapter_3: "Banque Dorée",
+    tower_chapter_4: "Tour Hantée",
+    tower_chapter_5: "Cimetière Brumeux",
+    tower_chapter_6: "Antre Chauves-Souris",
+    tower_chapter_7: "Cime Bonbon",
+    tower_chapter_8: "Forêt de Sapins",
+    tower_chapter_9: "Atelier du Père Noël",
+    tower_type_classic: "⚡ Croissant",
+    tower_type_reverse: "🔽 Décroissant",
+    tower_type_random: "🎲 Chaos",
+    tower_type_calc_plus: "🧮 Addition",
+    tower_type_calc_minus: "🧮 Soustraction",
+    tower_type_sprint: "⏱️ Sprint",
+    tower_type_memory: "🙈 Mémoire",
+    tower_type_fog: "🌫️ Brouillard",
+    tower_type_nofail: "💎 Sans faute",
+    tower_type_boss: "⚔️ GARDIEN",
+    tw_shop_title: "🛒 BOUTIQUE AVENTURE",
+    tw_shop_vies: "+3 Vies",
+    tw_shop_pack_vies_1: "Pack Vies (10 vies)",
+    tw_shop_pack_jokers_2: "Pack Jokers (2⏱️ + 2🛡️)",
+    tw_shop_pack_mixte_3: "Pack Mixte (5 vies + 2⏱️ + 2🛡️)",
+    tw_shop_pack_blitz_5: "Pack Blitz (10 vies + 5⏱️ + 5🛡️)",
+    tw_guardian: "GARDIEN",
+    tw_lock_quota: "🔒 Quota ⭐ 240 requis dans le monde précédent",
+    tw_lock_pass: "🔒 Atteins le Tier 1 du Pass {season} pour débloquer",
+    tw_season_1: "Saison 1",
+    tw_season_2: "Halloween",
+    tw_season_3: "Noël",
+    tw_replay: "🔄 REJOUER",
+    tw_start: "⚡ LANCER !",
+    tw_shield_word: "Bouclier",
+    tw_floor: "🏰 ÉTAGE",
+    tw_hud_color: "COULEUR :",
+    tw_hud_memorize: "👀 MÉMORISE !",
+    tw_hud_pairs: "🧩 RETROUVE LES PAIRES",
+    tw_hud_parity_even: "CLIQUE : PAIRS",
+    tw_hud_parity_odd: "CLIQUE : IMPAIRS",
+    tw_hud_forbidden: "INTERDIT :",
+    tw_hud_target: "CIBLE :",
+    tw_hud_memory_order: "🧠 CLIQUE DANS L'ORDRE (1→N)",
+    tw_color_red: "ROUGE",
+    tw_color_blue: "BLEU",
+    tw_color_green: "VERT",
+    tw_color_yellow: "JAUNE",
+    tw_color_pink: "ROSE",
+    tw_color_purple: "VIOLET",
+    pass_locked: "VERROUILLÉ",
+    pass_opening_soon: "Ouverture bientôt",
+    trophy_popup_title: "🏆 NOUVEAU TROPHÉE DÉBLOQUÉ !",
+    trophy_popup_name: "Nom du trophée",
+    tower_play_btn: "JOUER",
+
+    /* ----- Mobile Menu ----- */
+    wheel_adventure: "Aventure",
+    wheel_noel: "Noël",
+    wheel_tug: "Corde",
+    btn_play_short: "Jouer",
+    btn_admire: "Admirer",
+
+    /* ----- Social (supplément) ----- */
+    friend_someone: "Quelqu'un",
+    friend_request_toast: "t'a envoyé une demande d'ami !",
+    share_room_title: "📤 Partager le salon",
+    btn_copy_link: "📋 Copier le lien",
+    toast_link_copied: "📋 Lien copié !",
+
+    /* ----- Modes Catch (supplément) ----- */
+    error_server_lost: "❌ Connexion serveur perdue. Attends 2-3 s puis réessaie.",
+    error_catch_unregistered: "⚠️ Récompense refusée par le serveur (partie non enregistrée). Relance une partie normalement.",
+
+    /* ----- Passe (supplément) ----- */
+    reward_unlocked: "RÉCOMPENSE DÉBLOQUÉE",
+    btn_claimed: "Récupéré ! ⚡",
+
+    /* ----- IAP (supplément) ----- */
+    iap_app_only: "Achats disponibles uniquement sur l'application Android",
+    iap_store_unavailable: "Boutique indisponible pour le moment",
+    iap_product_not_found: "Produit introuvable côté Google",
+    iap_missing_token: "Token Google manquant",
+    iap_login_required: "Connecte-toi avant d'acheter",
+    iap_network_error: "Erreur réseau pendant l'achat",
+    iap_unreadable_response: "Réponse serveur illisible",
+    iap_server_failed: "Achat impossible (serveur)",
+    iap_confirm_lives: "⚠️ Tu as {lives} vies (réserve max 30). Tu ne recevras que {willGet} vies sur {packLives}.\nAstuce : le 🃏 Pack Jokers ne contient aucune vie.\nContinuer cet achat ?",
+
+    /* ----- Jeu (supplément) ----- */
+    error_game_too_short: "⚠️ Anti-triche : les parties très courtes ne donnent pas de récompenses",
+    error_game_not_recorded: "⚠️ La partie n'a pas été correctement enregistrée par le serveur",
+    text_game_too_short: "Partie trop courte (min 3s)",
+    text_game_not_recorded: "Partie non enregistrée",
+    label_stock: "Stock",
+    fallback_player: "Joueur",
+    toast_ad_limit: "📺 Limite de pubs atteinte ({limit}/jour). Reviens demain !",
+    toast_wheel_limit: "🎰 Limite de roulette atteinte ({limit}/jour). Reviens demain !",
+    set_pseudo: "Définir pseudo",
+
+    profile_no_title: "Aucun titre actif",
+    profile_no_frame: "Aucun cadre (Défaut)",
+    profile_std_theme: "Thème de grille standard",
+    profile_avatar_std: "🔢 Avatar Standard"
   },
 
   /* ============================================================
@@ -287,17 +451,17 @@ const i18n = {
     rule3_desc: "Face a player in real time (unranked, ranked SBMM or private room). Best score in 30s wins!",
     rule4_title: "👑 Ranks & Crowns",
     rule4_desc: "Climb ranked to earn crowns 👑 and unlock the 16 trophies 🏆 of your Trophy Room!",
-    rule5_tile: "Coming soon! Earn unique crowns 👑.",
+    rule5_title: "🎯 Tournament Mode",
     tourney_teaser_desc: "In design and development... Tournaments will reward crowns 👑!",
     rule_tower_title: "🏰 Adventure Mode",
     rule_tower_desc: "Progress through 9 themed worlds: complete 200 levels per world, face Guardians every 50 levels, and unlock exclusive rewards!",
-    
 
     /* ----- Main Menu ----- */
     menu_solo: "🏋️ TRAINING", menu_1v1: "⚔️ 1v1 DUEL", menu_tow: "🪢 Tug-of-War Mode",
     menu_friends: "👥 ROOMS", menu_shop: "🛍️ SHOP", menu_lb: "👑 LEADERBOARD",
     menu_tourney: "🎯 TOURNAMENTS", menu_info: "ℹ️ Info & Rules",
     menu_halloween: "🎃 Halloween Exclusive Mode", menu_noel: "🎄 Christmas Exclusive Mode",
+    menu_trophies: "🏆 Trophies", menu_pass: "🎫 Season Pass",
 
     /* ----- Solo ----- */
     solo_menu_title: "TRAINING MODES",
@@ -372,7 +536,7 @@ const i18n = {
     account_title: "⚙️ MY ACCOUNT", account_connected: "Connected:",
     account_change: "🔑 Switch account", account_create: "➕ Create a new account", account_delete: "🗑️ Delete my account",
     account_login_desc: "Enter your username + secret code.<br>If the account exists → login. Else → creation.",
-    account_pseudo_ph: "Username", account_code_ph: "🔒 Secret code (4 min)", 
+    account_pseudo_ph: "Username", account_code_ph: "🔒 Secret code (4 min)",
     account_login_btn: "🔑 Access my account",
     account_create_btn: "✨ Create my account",
     account_tab_login: "🔑 Sign in",
@@ -414,10 +578,10 @@ const i18n = {
     tower_season_locked: "Season S{season}",
     tower_chapter_1: "Neon District",
     tower_chapter_2: "Crystal Caves",
-    tower_chapter_3: "Golden Circuit",
+    tower_chapter_3: "Golden Bank",
     tower_chapter_4: "Haunted Tower",
     tower_chapter_5: "Misty Cemetery",
-    tower_chapter_6: "Pumpkin Lair",
+    tower_chapter_6: "Bat Lair",
     tower_chapter_7: "Candy Summit",
     tower_chapter_8: "Pine Forest",
     tower_chapter_9: "Santa's Workshop",
@@ -431,6 +595,11 @@ const i18n = {
     tower_type_fog: "🌫️ Fog",
     tower_type_nofail: "💎 No mistake",
     tower_type_boss: "⚔️ GUARDIAN",
+    pass_locked: "LOCKED",
+    pass_opening_soon: "Opening soon",
+    trophy_popup_title: "🏆 NEW TROPHY UNLOCKED!",
+    trophy_popup_name: "Trophy name",
+    tower_play_btn: "PLAY",
 
     /* ----- Season Pass ----- */
     pass_title: "🎫 SEASON PASS",
@@ -512,7 +681,7 @@ const i18n = {
     support_skip: "Skip and play ⚡",
     support_watch: "📺 Watch the ad (support) ❤️",
 
-        /* ----- Powers ----- */
+    /* ----- Powers ----- */
     powers: {
       spotlight: { name: "💡 Spotlight", desc: "Reveals the correct tile for 2s. Zero hesitation." },
       freeze: { name: "⏳ Time Freeze", desc: "Freezes the timer for 3s. Breathe, you've got time." },
@@ -524,7 +693,7 @@ const i18n = {
       chaos: { name: "🌪️ Absolute Chaos", desc: "GIGA: quake + micro + eclipse chained (5s)." }
     },
 
-    // === IAP REVENUECAT (real purchases) ===
+    /* ----- IAP RevenueCat ----- */
     iap_unavailable: "Purchases unavailable in browser",
     iap_error: "Purchase cancelled or failed",
     iap_success: "Purchase confirmed! Thank you ⚡",
@@ -532,7 +701,166 @@ const i18n = {
     btn_buy_pass: "💳 Buy Premium Pass (€3)",
     btn_buy_pack_vies: "💳 10 lives pack (€1)",
     btn_buy_pack_mixte: "💳 Mixed pack 5 lives + 2 jokers (€3)",
-    btn_buy_pack_blitz: "💳 Blitz pack 10 lives + 5 jokers (€5)"
+    btn_buy_pack_blitz: "💳 Blitz pack 10 lives + 5 jokers (€5)",
+
+    /* ----- Admin Panel ----- */
+    admin_independent_window: "INDEPENDENT WINDOW",
+    admin_panel_title: "⚡ ADMIN PANEL",
+    admin_dashboard: "🎛️ Dashboard",
+    admin_logout: "🚪 Logout",
+    admin_maintenance_title: "🛠️ Maintenance Mode",
+    admin_maintenance_disabled: "🟢 Disabled",
+    admin_maintenance_active: "🔴 ACTIVE since",
+    admin_maintenance_enable: "Enable maintenance (Disconnects players)",
+    admin_maintenance_message: "Message displayed to players:",
+    admin_maintenance_bypass: "Bypass Code (Admin/Test):",
+    admin_maintenance_delay: "⏱️ Delay before cutoff (seconds)",
+    admin_maintenance_delay_help: "0 = immediate cutoff · 60 = 1 min · 120 = 2 min · 300 = 5 min (max 600)",
+    admin_maintenance_save: "💾 Save / Apply",
+    admin_maintenance_refresh: "🔄 Refresh",
+    admin_online_title: "🟢 Online Players",
+    admin_online_desc: "Number of actually connected players (updated every 5s).",
+    admin_broadcast_title: "📢 Announcement Broadcaster",
+    admin_broadcast_placeholder: "Global message...",
+    admin_broadcast_btn: "Broadcast announcement 🚀",
+    admin_adjust_title: "💰 Adjust Coins / Points / Trophies",
+    admin_adjust_all: "Everyone",
+    admin_adjust_pseudo: "👤 By username",
+    admin_adjust_random: "🎲 Random",
+    admin_adjust_pseudo_ph: "Exact username...",
+    admin_adjust_count_ph: "Number of players (X)",
+    admin_adjust_coins: "🪙 Coins",
+    admin_adjust_points: "⚡ Points",
+    admin_adjust_trophies: "🏆 Trophies",
+    admin_adjust_amount_ph: "Amount (+ give / - remove)",
+    admin_adjust_apply: "Apply ⚡",
+    admin_adventure_title: "🏰 Adventure — Flags, Stars, Lives & Jokers",
+    admin_adventure_desc: "Give seasonal world unlock flags + adjust stars, lives and jokers.",
+    admin_adventure_flags: "🌍 Season Flags",
+    admin_adventure_halloween: "🎃 Unlock Halloween (Worlds 4-6)",
+    admin_adventure_noel: "🎄 Unlock Christmas (Worlds 7-9)",
+    admin_adventure_stars: "⭐ Stars & 🏰 Max Floor",
+    admin_adventure_stars_label: "⭐ Stars per world (max 240)",
+    admin_adventure_floor_label: "🏰 Max floor (1-1800)",
+    admin_adventure_lives: "❤️ Lives & 🎴 Jokers",
+    admin_adventure_lives_label: "❤️ Lives (max 10)",
+    admin_adventure_jokers_time: "⏱️ Time Jokers",
+    admin_adventure_jokers_shield: "🛡️ Shield Jokers",
+    admin_adventure_apply: "Apply ⚡",
+    admin_adventure_unlock_all: "🔓 Unlock All",
+    admin_logs_title: "📜 Transaction Log",
+    admin_logs_desc: "Check a player's history (losses, purchases, gains, adjustments).",
+    admin_logs_ph: "Username (empty = everyone)",
+    admin_logs_btn: "View 🔍",
+    admin_give_title: "🎁 Give Item / Trophy",
+    admin_give_desc: "Compensate a bug or gift: frames, grids, avatars, titles, packs, powers, trophies. Works offline.",
+    admin_give_ph: "Exact username...",
+    admin_give_select: "-- Load catalog... --",
+    admin_give_btn: "Give ⚡",
+    admin_reset_title: "🔑 Reset Secret Code",
+    admin_reset_desc: "The player must give you their username + recovery key. If the key is correct → a new code is generated.",
+    admin_reset_pseudo_ph: "Exact player username",
+    admin_reset_key_ph: "Recovery key (XXXX-XXXX-XXXX)",
+    admin_reset_btn: "Generate new code ⚡",
+    admin_season_title: "🗓️ Season Control",
+    admin_season_warning: "Allows temporarily forcing the active season to test the Pass.",
+    admin_season_auto: "⏱️ Auto — real server date",
+    admin_season_s1: "🐱 S1 — Feline & Neon",
+    admin_season_s2: "🎃 S2 — Halloween",
+    admin_season_s3: "🎄 S3 — Christmas",
+    admin_season_apply: "Apply season 🎃",
+    admin_dates_title: "📅 Season Dates",
+    admin_dates_desc: "Define start and end dates for each season.",
+    admin_dates_save: "💾 Save dates",
+    admin_events_title: "⚡ Events & Abuses Scheduling",
+    admin_events_save: "Save Configurations 💾",
+    admin_close_btn: "✕",
+    admin_login_title: "🔒 DEVELOPER RESTRICTED ACCESS",
+    admin_login_ph: "Admin password",
+    admin_login_btn: "STUDIO LOGIN ⚡",
+    admin_server_connecting: "Connecting to server...",
+    admin_server_connected: "✅ Connected to server",
+    admin_server_disconnected: "❌ Disconnected from server",
+
+    /* ----- Tour (Adventure) extra ----- */
+    tw_shop_title: "🛒 ADVENTURE SHOP",
+    tw_shop_vies: "+3 Lives",
+    tw_shop_pack_vies_1: "Lives Pack (10 lives)",
+    tw_shop_pack_jokers_2: "Jokers Pack (2⏱️ + 2🛡️)",
+    tw_shop_pack_mixte_3: "Mixed Pack (5 lives + 2⏱️ + 2🛡️)",
+    tw_shop_pack_blitz_5: "Blitz Pack (10 lives + 5⏱️ + 5🛡️)",
+    tw_guardian: "GUARDIAN",
+    tw_lock_quota: "🔒 ⭐ 240 quota required in the previous world",
+    tw_lock_pass: "🔒 Reach Tier 1 of the {season} Pass to unlock",
+    tw_season_1: "Season 1",
+    tw_season_2: "Halloween",
+    tw_season_3: "Christmas",
+    tw_replay: "🔄 REPLAY",
+    tw_start: "⚡ START!",
+    tw_shield_word: "Shield",
+    tw_floor: "🏰 FLOOR",
+    tw_hud_color: "COLOR:",
+    tw_hud_memorize: "👀 MEMORIZE!",
+    tw_hud_pairs: "🧩 FIND THE PAIRS",
+    tw_hud_parity_even: "CLICK: EVEN",
+    tw_hud_parity_odd: "CLICK: ODD",
+    tw_hud_forbidden: "FORBIDDEN:",
+    tw_hud_target: "TARGET:",
+    tw_hud_memory_order: "🧠 CLICK IN ORDER (1→N)",
+    tw_color_red: "RED",
+    tw_color_blue: "BLUE",
+    tw_color_green: "GREEN",
+    tw_color_yellow: "YELLOW",
+    tw_color_pink: "PINK",
+    tw_color_purple: "PURPLE",
+
+    /* ----- Mobile Menu ----- */
+    wheel_adventure: "Adventure",
+    wheel_noel: "Christmas",
+    wheel_tug: "Tug",
+    btn_play_short: "Play",
+    btn_admire: "Admire",
+
+    /* ----- Social extra ----- */
+    friend_someone: "Someone",
+    friend_request_toast: "sent you a friend request!",
+    share_room_title: "📤 Share room",
+    btn_copy_link: "📋 Copy link",
+    toast_link_copied: "📋 Link copied!",
+
+    /* ----- Modes Catch extra ----- */
+    error_server_lost: "❌ Server connection lost. Wait 2-3 s and retry.",
+    error_catch_unregistered: "⚠️ Reward denied by server (unregistered game). Start a new game normally.",
+
+    /* ----- Pass extra ----- */
+    reward_unlocked: "REWARD UNLOCKED",
+    btn_claimed: "Claimed! ⚡",
+
+    /* ----- IAP extra ----- */
+    iap_app_only: "Purchases available only on the Android app",
+    iap_store_unavailable: "Store unavailable right now",
+    iap_product_not_found: "Product not found on Google",
+    iap_missing_token: "Missing Google token",
+    iap_login_required: "Log in before purchasing",
+    iap_network_error: "Network error during purchase",
+    iap_unreadable_response: "Unreadable server response",
+    iap_server_failed: "Purchase failed (server)",
+    iap_confirm_lives: "⚠️ You have {lives} lives (reserve max 30). You will only receive {willGet} of {packLives} lives.\nTip: the 🃏 Jokers Pack contains no lives.\nContinue purchase?",
+
+    /* ----- Game extra ----- */
+    error_game_too_short: "⚠️ Anti-cheat: very short games don't give rewards",
+    error_game_not_recorded: "⚠️ The game was not properly recorded by the server",
+    text_game_too_short: "Game too short (min 3s)",
+    text_game_not_recorded: "Game not recorded",
+    label_stock: "Stock",
+    fallback_player: "Player",
+    toast_ad_limit: "📺 Ad limit reached ({limit}/day). Come back tomorrow!",
+    toast_wheel_limit: "🎰 Wheel limit reached ({limit}/day). Come back tomorrow!",
+    set_pseudo: "Set username",
+    profile_no_title: "No active title",
+    profile_no_frame: "No frame (Default)",
+    profile_std_theme: "Standard grid theme",
+    profile_avatar_std: "🔢 Standard Avatar"
   }
 };
 
@@ -552,10 +880,17 @@ function toggleLanguage() {
   currentLang = (currentLang === "fr") ? "en" : "fr";
   localStorage.setItem("cb_lang", currentLang);
   applyTranslations();
-  if (typeof switchShopTab === "function" && document.getElementById("modal-shop").style.display === "flex") switchShopTab(currentShopTab);
-  if (typeof renderRankedLoadoutItems === "function" && document.getElementById("modal-ranked-loadout").style.display === "flex") renderRankedLoadoutItems();
-  if (typeof renderBlitzPass === "function" && document.getElementById("modal-blitz-pass").style.display === "flex") renderBlitzPass();
+  if (typeof switchShopTab === "function" && document.getElementById("modal-shop") && document.getElementById("modal-shop").style.display === "flex") switchShopTab(currentShopTab);
+  if (typeof renderRankedLoadoutItems === "function" && document.getElementById("modal-ranked-loadout") && document.getElementById("modal-ranked-loadout").style.display === "flex") renderRankedLoadoutItems();
+  if (typeof renderBlitzPass === "function" && document.getElementById("modal-blitz-pass") && document.getElementById("modal-blitz-pass").style.display === "flex") renderBlitzPass();
   if (typeof updateCombinedExplanationVisibility === "function") updateCombinedExplanationVisibility();
+  if (typeof applyPassLockToMenu === "function") applyPassLockToMenu();
+  if (typeof renderAdventure === "function") renderAdventure();
+  const trm = document.getElementById("modal-trophy-room");
+  if (trm && trm.style.display === "flex" && typeof socket !== "undefined") {
+    if (window.__trophyRoomTarget) socket.emit("get_trophy_room", window.__trophyRoomTarget);
+    else socket.emit("get_my_trophy_room");
+  }
 }
 
 function applyTranslations() {
@@ -563,6 +898,11 @@ function applyTranslations() {
   document.querySelectorAll("[data-i18n]").forEach(el => {
     const key = el.getAttribute("data-i18n");
     if (d[key]) el.innerText = d[key];
+  });
+
+  document.querySelectorAll("[data-i18n-ph]").forEach(el => {
+    const key = el.getAttribute("data-i18n-ph");
+    if (d[key]) el.placeholder = d[key];
   });
 
   // Éléments sans data-i18n (IDs spécifiques)

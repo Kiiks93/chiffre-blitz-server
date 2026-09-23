@@ -2,8 +2,8 @@
 PANEL ADMIN — PC : fenêtre popup · MOBILE : overlay DANS l'app
 ============================================================ */
 
-// ⚠️ URL ABSOLUE OBLIGATOIRE (Le panel est servi par le backend Render)
-const ADMIN_PANEL_URL = "https://chiffre-blitz-server.onrender.com/admin.html";
+// ✅ Panel admin du même environnement que la page actuelle (staging → staging, prod → prod)
+const ADMIN_PANEL_URL = window.location.origin + "/admin.html";
 
 function isAdminMobile() {
   return /Android|iPhone|iPad|iPod|Tablet|Mobile/i.test(navigator.userAgent) ||

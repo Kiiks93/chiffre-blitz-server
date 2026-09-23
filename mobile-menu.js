@@ -1,14 +1,18 @@
 /* ============================================================
 MENU MOBILE — Halo demi-cercle + projection + Néon S1 (mobile only)
 ============================================================ */
-const WHEEL_MODES = [
-  { id:'tower',     icon:'🗺️', name:'Aventure',  fn:'openTower' },
-  { id:'solo',      icon:'🏋️', name:'Solo',      fn:'openSoloMenu' },
-  { id:'1v1',       icon:'⚔️', name:'1v1',       fn:'open1v1Hub' },
-  { id:'halloween', icon:'🎃', name:'Halloween', fn:'startHalloweenQueue', cond:'btn-halloween-menu' },
-  { id:'noel',      icon:'🎄', name:'Noël',      fn:'startNoelQueue',      cond:'btn-noel-menu' },
-  { id:'tow',       icon:'🪢', name:'Corde',     fn:'startTugOfWarQueue',  cond:'btn-tow-menu' }
-];
+function getWheelModes() {
+    const d = (typeof i18n !== 'undefined') ? i18n[currentLang] : {};
+    return [
+        { id:'tower', icon:'🗼', name: d.wheel_adventure || 'Aventure', fn:'openTower' },
+        { id:'solo', icon:'🏋️', name:'Solo', fn:'openSoloMenu' },
+        { id:'1v1', icon:'⚔️', name:'1v1', fn:'open1v1Hub' },
+        { id:'halloween', icon:'🎃', name:'Halloween', fn:'startHalloweenQueue', cond:'btn-halloween-menu' },
+        { id:'noel', icon:'🎄', name: d.wheel_noel || 'Noël', fn:'startNoelQueue', cond:'btn-noel-menu' },
+        { id:'tow', icon:'🪢', name: d.wheel_tug || 'Corde', fn:'startTugOfWarQueue', cond:'btn-tow-menu' }
+    ];
+}
+const WHEEL_MODES = getWheelModes();
 let wheelCurrent = 0;
 const WHEEL_R = 150, WHEEL_STEP = 26;
 
@@ -30,12 +34,14 @@ function toggleAdmireMode() {
   if (!m) return;
   const active = m.classList.toggle('admire-active');
   btn.classList.toggle('active', active);
-  if (active) { icon.textContent='🎮'; text.textContent='Jouer';
+  const d = (typeof i18n !== 'undefined') ? i18n[currentLang] : {};
+if (active) { icon.textContent='🎮'; text.textContent = d.btn_play_short || 'Jouer';
     setTimeout(function(){ if(m.classList.contains('admire-active')) toggleAdmireMode(); },8000);
-  } else { icon.textContent='👁️'; text.textContent='Admirer'; }
+} else { icon.textContent='👁️'; text.textContent = d.btn_admire || 'Admirer'; }
 }
 
 function visibleWheelModes(){ return WHEEL_MODES.filter(function(m){ return !m.cond || (document.getElementById(m.cond)&&document.getElementById(m.cond).style.display!=='none'); }); }
+function wheelName(m){ var d=(typeof i18n!=='undefined')?i18n[currentLang]:null; var k={tower:'wheel_adventure',noel:'wheel_noel',tow:'wheel_tug'}[m.id]; return (d&&k&&d[k])?d[k]:m.name; }
 
 function buildModeWheel(){
   const wrap=document.getElementById('mode-wheel'); if(!wrap)return;
@@ -64,7 +70,7 @@ function renderWheel(){
   });
   const m=modes[c];
   if(m){ const ic=document.getElementById('mode-wheel-icon'),nm=document.getElementById('mode-wheel-name');
-    if(ic)ic.textContent=m.icon; if(nm)nm.textContent=m.name; }
+    if(ic)ic.textContent=m.icon; if(nm)nm.textContent=wheelName(m); }
 }
 function launchMode(m){ if(m&&typeof window[m.fn]==='function') window[m.fn](); }
 function launchCenterMode(){ launchMode(visibleWheelModes()[Math.round(wheelCurrent)]); }

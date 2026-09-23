@@ -141,7 +141,7 @@ socket.on('game_over_1v1', (data) => {
 ============================================================ */
 function beginCatch(theme, is1v1, opponent) {
   if (!is1v1 && (typeof socket === 'undefined' || !socket.connected)) {
-  if (typeof showNotificationToast === 'function') showNotificationToast(currentLang === 'fr' ? '❌ Connexion serveur perdue. Attends 2-3 s puis réessaie.' : '❌ Server connection lost. Wait 2-3 s and retry.', 'announcement');
+  if (typeof showNotificationToast === 'function') showNotificationToast(i18n[currentLang].error_server_lost, 'announcement');
   return;
 }
   clearCatchArena();
@@ -423,9 +423,7 @@ socket.on('catch_solo_result', (data) => {
     catchState = null;
     hideAllScreens();
     if (typeof showMainMenu === "function") showMainMenu();
-    showNotificationToast(currentLang === 'fr'
-      ? '⚠️ Récompense refusée par le serveur (partie non enregistrée). Relance une partie normalement.'
-      : '⚠️ Reward denied by server (unregistered game). Start a new game normally.', 'announcement');
+      showNotificationToast(i18n[currentLang].error_catch_unregistered, 'announcement');
     return;
   }
   

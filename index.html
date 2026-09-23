@@ -47,7 +47,7 @@ HEADER (logo + user-pill + boutons)
     <div id="user-pill" class="user-pill" onclick="promptProfileChange()">
         <div id="user-avatar-badge"></div>
         <div style="display: flex; flex-direction: column; overflow: hidden; text-align: left;">
-            <span id="user-name-display">Définir pseudo</span>
+            <span id="user-name-display" data-i18n="set_pseudo">Définir pseudo</span>
             <span id="user-title-display" style="font-size: 8px; color: #f8b500; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></span>
         </div>
     </div>
@@ -174,23 +174,23 @@ EN DEHORS de #screen-menu pour ne pas être masqué avec lui
 <div id="screen-menu-mobile" class="menu-mobile" style="display:none;">
     <button id="admire-btn" class="admire-btn" onclick="toggleAdmireMode()">
         <span id="admire-icon">👁️</span>
-        <span id="admire-text">Admirer</span>
+        <span id="admire-text" data-i18n="btn_admire">Admirer</span>
     </button>
     <div id="mode-wheel-center" onclick="launchCenterMode()">
         <div id="mode-wheel-frame">
             <span id="mode-wheel-icon">🗺️</span>
-            <span id="mode-wheel-name">Aventure</span>
+            <span id="mode-wheel-name" data-i18n="wheel_adventure">Aventure</span>
         </div>
     </div>
     <div id="mode-wheel-halo"></div>
     <div id="mode-wheel"></div>
     <div class="mobile-dock">
-        <button class="dock-item" onclick="enterTrophyRoom()"><span class="dock-icon">🏛️</span><span class="dock-label">Trophées</span></button>
-        <button class="dock-item" onclick="openBlitzPass()"><span class="dock-icon">🎫</span><span class="dock-label">Passe de saison</span></button>
-        <button class="dock-item" onclick="openShop()"><span class="dock-icon">🛍️</span><span class="dock-label">Boutique</span></button>
-        <button class="dock-item" onclick="openLeaderboard()"><span class="dock-icon">👑</span><span class="dock-label">Classement</span></button>
-        <button class="dock-item" onclick="openRoomsScreen()"><span class="dock-icon">👥</span><span class="dock-label">Amis</span></button>
-        <button class="dock-item" onclick="openTournamentScreen()"><span class="dock-icon">🎯</span><span class="dock-label">Tournois</span></button>
+        <button class="dock-item" onclick="enterTrophyRoom()"><span class="dock-icon">🏛️</span><span class="dock-label" data-i18n="menu_trophies">Trophées</span></button>
+        <button class="dock-item" onclick="openBlitzPass()"><span class="dock-icon">🎫</span><span class="dock-label" data-i18n="menu_pass">Passe de saison</span></button>
+        <button class="dock-item" onclick="openShop()"><span class="dock-icon">🛍️</span><span class="dock-label" data-i18n="menu_shop">Boutique</span></button>
+        <button class="dock-item" onclick="openLeaderboard()"><span class="dock-icon">👑</span><span class="dock-label" data-i18n="menu_lb">Classement</span></button>
+        <button class="dock-item" onclick="openRoomsScreen()"><span class="dock-icon">👥</span><span class="dock-label" data-i18n="menu_friends">Amis</span></button>
+        <button class="dock-item" onclick="openTournamentScreen()"><span class="dock-icon">🎯</span><span class="dock-label" data-i18n="menu_tourney">Tournois</span></button>
     </div>
 </div>
 <!-- ============================================================
@@ -580,10 +580,10 @@ TROPHÉES (salle + popup)
 </div>
 
 <div id="trophy-unlock-popup" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); z-index:9999; background:linear-gradient(135deg,#1a0033,#0f051d); border:2px solid #f8b500; border-radius:16px; padding:20px 40px; text-align:center; box-shadow:0 0 40px rgba(248,181,0,0.8); animation:trophyBurst 0.8s ease;">
-    <div style="font-size:11px; color:#f8b500; letter-spacing:2px; margin-bottom:8px;">🏆 NOUVEAU TROPHÉE DÉBLOQUÉ !</div>
-    <div id="trophy-unlock-emoji" style="font-size:64px; margin:8px 0;">🏆</div>
-    <div id="trophy-unlock-name" style="font-size:20px; font-weight:900; color:#fff;">Nom du trophée</div>
-    <div id="trophy-unlock-title" style="font-size:13px; color:#00d2ff; margin-top:6px;">Titre débloqué</div>
+<div style="font-size:11px; color:#f8b500; letter-spacing:2px; margin-bottom:8px;" data-i18n="trophy_popup_title">🏆 NOUVEAU TROPHÉE DÉBLOQUÉ !</div>
+<div id="trophy-unlock-emoji" style="font-size:64px; margin:8px 0;">🏆</div>
+<div id="trophy-unlock-name" style="font-size:20px; font-weight:900; color:#fff;" data-i18n="trophy_popup_name">Nom du trophée</div>
+<div id="trophy-unlock-title" style="font-size:13px; color:#00d2ff; margin-top:6px;">Titre débloqué</div>
 </div>
 
 <!-- ============================================================

@@ -67,10 +67,11 @@ socket.on("receive_game_invite", (data) => {
 
 // 📬 Demande d'ami reçue EN TEMPS RÉEL → pastille immédiate
 socket.on("friend_request_received", (data) => {
-  window.lastRequestsCount = (window.lastRequestsCount || 0) + 1;
-  updateFriendsBadge();
-  showNotificationToast("👥 " + ((data && data.from) || "Quelqu'un") + " t'a envoyé une demande d'ami !", "gift");
-  socket.emit("get_friends_list");
+    const d = i18n[currentLang];
+    window.lastRequestsCount = (window.lastRequestsCount || 0) + 1;
+    updateFriendsBadge();
+    showNotificationToast("👥 " + ((data && data.from) || d.friend_someone) + " " + d.friend_request_toast, "gift");
+    socket.emit("get_friends_list");
 });
 socket.on("connect", () => {
   if (typeof isProfileValid === "function" && isProfileValid()) socket.emit("get_friends_list");
@@ -231,15 +232,15 @@ async function shareRoomLink() {
   const m = document.createElement("div");
   m.id = "cb-share-modal"; m.className = "modal-overlay"; m.style.display = "flex"; m.style.zIndex = "10000";
   m.innerHTML = `<div class="modal-card" style="max-width:340px;text-align:center;">
-    <h3 style="color:#00d2ff;margin:0 0 12px 0;">📤 Partager le salon</h3>
+    <h3 style="color:#00d2ff;margin:0 0 12px 0;">${d.share_room_title}</h3>
     <div style="display:flex;flex-direction:column;gap:8px;">
-      <a href="https://wa.me/?text=${et}%20${eu}" target="_blank" class="btn-main btn-blue" style="text-decoration:none;">💬 WhatsApp</a>
-      <a href="sms:?body=${et}%20${eu}" class="btn-main btn-blue" style="text-decoration:none;">💬 SMS</a>
-      <a href="mailto:?subject=${encodeURIComponent("Chiffre Blitz")}&body=${et}%20${eu}" class="btn-main btn-blue" style="text-decoration:none;">📧 Email</a>
-      <button class="btn-secondary" onclick="navigator.clipboard.writeText('${url}').then(()=>showNotificationToast('📋 Lien copié !','gift'));document.getElementById('cb-share-modal').remove();">📋 Copier le lien</button>
+        <a href="https://wa.me/?text=${et}%20${eu}" target="_blank" class="btn-main btn-blue" style="text-decoration:none;">💬 WhatsApp</a>
+        <a href="sms:?body=${et}%20${eu}" class="btn-main btn-blue" style="text-decoration:none;">💬 SMS</a>
+        <a href="mailto:?subject=${encodeURIComponent("Chiffre Blitz")}&body=${et}%20${eu}" class="btn-main btn-blue" style="text-decoration:none;">📧 Email</a>
+        <button class="btn-secondary" onclick="navigator.clipboard.writeText('${url}').then(()=>showNotificationToast('${d.toast_link_copied}','gift'));document.getElementById('cb-share-modal').remove();">${d.btn_copy_link}</button>
     </div>
-    <button class="btn-secondary" onclick="document.getElementById('cb-share-modal').remove()" style="margin-top:10px;">❌ Fermer</button>
-  </div>`;
+       <button class="btn-secondary" onclick="document.getElementById('cb-share-modal').remove()" style="margin-top:10px;">❌ ${d.close}</button>
+</div>`;
   document.body.appendChild(m);
 }
 
