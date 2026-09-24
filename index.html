@@ -38,42 +38,7 @@
     <link rel="apple-touch-icon" href="/icons/icon-192.png">
 </head>
 <body>
-<!-- ===== BOOT LOADER NÉON ===== -->
-<div id="cb-boot">
-  <div class="cb-boot-logo">⚡</div>
-  <div class="cb-boot-title">CHIFFRE BLITZ</div>
-  <div class="cb-boot-bar"><span></span></div>
-  <div class="cb-boot-status" id="cb-boot-status">Connexion aux serveurs…</div>
-</div>
-<style>
-  #cb-boot{position:fixed;inset:0;z-index:999999;background:radial-gradient(ellipse at 50% 35%,#12081f 0%,#05050f 70%);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .4s;}
-  #cb-boot.cb-hide{opacity:0;pointer-events:none;}
-  .cb-boot-logo{font-size:64px;filter:drop-shadow(0 0 18px #00d2ff88);animation:cbPulse 1.6s ease-in-out infinite;}
-  .cb-boot-title{color:#fff;font-weight:900;letter-spacing:6px;font-size:22px;text-shadow:0 0 16px #00d2ff,0 0 40px #00d2ff66;}
-  .cb-boot-bar{width:220px;height:6px;border-radius:6px;background:#ffffff14;overflow:hidden;border:1px solid #00d2ff44;}
-  .cb-boot-bar span{display:block;height:100%;width:40%;border-radius:6px;
-    background:linear-gradient(90deg,#00d2ff,#ff2bd6,#f8b500,#00d2ff);background-size:300% 100%;
-    animation:cbSlide 1.2s cubic-bezier(.4,0,.6,1) infinite, cbFlow 2s linear infinite;}
-  .cb-boot-status{color:#9aa5bd;font-size:12px;font-weight:600;letter-spacing:.5px;}
-  @keyframes cbPulse{50%{transform:scale(1.08);filter:drop-shadow(0 0 28px #00d2ffcc);}}
-  @keyframes cbSlide{0%{margin-left:-40%}100%{margin-left:100%}}
-  @keyframes cbFlow{to{background-position:300% 0}}
-</style>
-<script>
-  window.hideBootLoader = function(){
-    clearInterval(window.__cbBootTimer);
-    const b = document.getElementById('cb-boot');
-    if (b) { b.classList.add('cb-hide'); setTimeout(()=>b.remove(), 500); }
-  };
-  (function(){
-    const st = document.getElementById('cb-boot-status');
-    const msgs = ["Connexion aux serveurs…", "Réveil du serveur néon…", "Synchronisation des chiffres…", "Chauffage des combos…"];
-    let i = 0;
-    window.__cbBootTimer = setInterval(()=>{ if (st) st.textContent = msgs[(i++) % msgs.length]; }, 2500);
-    setTimeout(()=>window.hideBootLoader(), 15000); // filet de sécurité
-  })();
-</script>
+
 <!-- ============================================================
 HEADER (logo + user-pill + boutons)
 ============================================================ -->
@@ -722,5 +687,50 @@ if ("serviceWorker" in navigator) {
   }
 })();
 </script>
+<!-- ===== BOOT LOADER NÉON ===== -->
+<div id="cb-boot">
+  <div class="cb-boot-logo">⚡</div>
+  <div class="cb-boot-title">CHIFFRE BLITZ</div>
+  <div class="cb-boot-bar"><span></span></div>
+  <div class="cb-boot-status" id="cb-boot-status">Connexion aux serveurs…</div>
+</div>
+<style>
+  #cb-boot{position:fixed;inset:0;z-index:999999;background:radial-gradient(ellipse at 50% 35%,#12081f 0%,#05050f 70%);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .4s;}
+  #cb-boot.cb-hide{opacity:0;pointer-events:none;}
+  .cb-boot-logo{font-size:64px;filter:drop-shadow(0 0 18px #00d2ff88);animation:cbPulse 1.6s ease-in-out infinite;}
+  .cb-boot-title{color:#fff;font-weight:900;letter-spacing:6px;font-size:22px;text-shadow:0 0 16px #00d2ff,0 0 40px #00d2ff66;}
+  .cb-boot-bar{width:220px;height:6px;border-radius:6px;background:#ffffff14;overflow:hidden;border:1px solid #00d2ff44;}
+  .cb-boot-bar span{display:block;height:100%;width:40%;border-radius:6px;
+    background:linear-gradient(90deg,#00d2ff,#ff2bd6,#f8b500,#00d2ff);background-size:300% 100%;
+    animation:cbSlide 1.2s cubic-bezier(.4,0,.6,1) infinite, cbFlow 2s linear infinite;}
+  .cb-boot-status{color:#9aa5bd;font-size:12px;font-weight:600;letter-spacing:.5px;}
+  @keyframes cbPulse{50%{transform:scale(1.08);filter:drop-shadow(0 0 28px #00d2ffcc);}}
+  @keyframes cbSlide{0%{margin-left:-40%}100%{margin-left:100%}}
+  @keyframes cbFlow{to{background-position:300% 0}}
+</style>
+<script>
+  window.hideBootLoader = function(){
+    clearInterval(window.__cbBootTimer);
+    const b = document.getElementById('cb-boot');
+    if (b) { b.classList.add('cb-hide'); setTimeout(()=>b.remove(), 500); }
+  };
+  (function(){
+    const st = document.getElementById('cb-boot-status');
+    const msgs = ["Connexion aux serveurs…", "Réveil du serveur néon…", "Synchronisation des chiffres…", "Chauffage des combos…"];
+    let i = 0;
+    window.__cbBootTimer = setInterval(()=>{ if (st) st.textContent = msgs[(i++) % msgs.length]; }, 2500);
+    setTimeout(()=>window.hideBootLoader(), 15000); // filet de sécurité
+  })();
+</script>
+
+<script>
+  // ✅ Cache le splash screen Capacitor dès que la page est prête
+  window.addEventListener('load', () => {
+    try { if (window.Capacitor && Capacitor.Plugins.SplashScreen) Capacitor.Plugins.SplashScreen.hide(); } catch (e) {}
+  });
+</script>
+
+</body>
 </body>
 </html>
