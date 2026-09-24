@@ -16,8 +16,8 @@ const ADS = {
     if (!this.native()) return Promise.resolve(false);
     const A = window.Capacitor.Plugins.AdMob;
     if (!A || typeof A.initialize !== 'function') return Promise.resolve(false);
-       const start = () => A.initialize()
-      .then(() => { this.ready = true; this.preloadRewarded(); return true; })
+      const start = () => A.initialize()
+      .then(() => { this.ready = true; this.preloadRewarded(); this.preloadInterstitial(); return true; })
       .catch(() => { this.ready = false; return false; });
     // ✅ Consentement UMP (RGPD) obligatoire pour la France/UE
     if (typeof A.requestConsentInfo === 'function') {
@@ -25,15 +25,26 @@ const ADS = {
     }
     return start();
   },
+   preloadInterstitial() {
+    if (!this.native()) return;
+    const A = window.Capacitor.Plugins.AdMob;
+    if (!A || typeof A.prepareInterstitial !== 'function') return;
+    A.prepareInterstitial({ adId: ADMOB_IDS.interstitial })
+      .then(() => { this.__intReady = true; })
+      .catch(() => { this.__intReady = false; });
+  },
   showInterstitial() {
     if (!this.native()) return Promise.resolve(false);
     const A = window.Capacitor.Plugins.AdMob;
-    const prep = () => A.prepareInterstitial({ adId: ADMOB_IDS.interstitial })
-      .then(() => A.showInterstitial())
-      .then(() => true);
-    return prep()
-      .catch(() => this.init().then(() => prep()))   // 1 retry après init
-      .catch(() => false);
+    // ✅ Si déjà préchargée → affichage instantané
+    const prep = this.__intReady ? Promise.resolve() : A.prepareInterstitial({ adId: ADMOB_IDS.interstitial });
+    return prep
+      .then(() => { this.__intReady = false; return A.showInterstitial(); })
+      .then(() => { setTimeout(() => ADS.preloadInterstitial(), 1500); return true; })
+      .catch(() => this.init().then(() => A.prepareInterstitial({ adId: ADMOB_IDS.interstitial })
+        .then(() => A.showInterstitial()))
+        .then(() => { setTimeout(() => ADS.preloadInterstitial(), 1500); return true; })
+        .catch(() => false));
   },
      preloadRewarded() {
     if (!this.native()) return;
