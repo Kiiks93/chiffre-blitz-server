@@ -102,6 +102,7 @@ socket.on("version_blocked", () => {
 });
 
 socket.on("connect", () => {
+  if (window.hideBootLoader) window.hideBootLoader();
   if (localStorage.getItem('cb_secret')) registerIfPossible();
   const urlParams = new URLSearchParams(window.location.search);
   const targetRoom = urlParams.get("room");
