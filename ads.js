@@ -16,8 +16,8 @@ const ADS = {
     if (!this.native()) return Promise.resolve(false);
     const A = window.Capacitor.Plugins.AdMob;
     if (!A || typeof A.initialize !== 'function') return Promise.resolve(false);
-    const start = () => A.initialize()
-      .then(() => { this.ready = true; return true; })
+       const start = () => A.initialize()
+      .then(() => { this.ready = true; this.preloadRewarded(); return true; })
       .catch(() => { this.ready = false; return false; });
     // ✅ Consentement UMP (RGPD) obligatoire pour la France/UE
     if (typeof A.requestConsentInfo === 'function') {
@@ -35,24 +35,45 @@ const ADS = {
       .catch(() => this.init().then(() => prep()))   // 1 retry après init
       .catch(() => false);
   },
-   showRewarded() {
-    if (!this.native()) return Promise.resolve(false);
+     preloadRewarded() {
+    if (!this.native()) return;
+    const A = window.Capacitor.Plugins.AdMob;
+    if (!A || typeof A.prepareRewardVideoAd !== 'function') return;
+    A.prepareRewardVideoAd({ adId: ADMOB_IDS.rewarded })
+      .then(() => { this.__rwReady = true; })
+      .catch(() => { this.__rwReady = false; });
+  },
+  showRewarded() {
+    if (!this.native()) return Promise.resolve({ ok: false, early: false });
     const A = window.Capacitor.Plugins.AdMob;
     return new Promise((resolve) => {
-      let earned = false, done = false;
-      const finish = (ok) => { if (done) return; done = true;
-        try { h1.remove(); h2.remove(); } catch (e) {}
-        resolve(ok);
+      let earned = false, shown = false, done = false;
+      const handles = [];
+      const finish = (ok, early) => {
+        if (done) return; done = true;
+        handles.forEach(h => { try { h.remove(); } catch (e) {} });
+        ADS.__rwReady = false;
+        setTimeout(() => ADS.preloadRewarded(), 1500);   // ✅ prépare la suivante
+        resolve({ ok, early });
       };
-      // ✅ Récompense validée UNIQUEMENT si la vidéo est regardée jusqu'au bout
-      const h1 = A.addListener('rewardedVideoAdReward', () => { earned = true; });
-      const h2 = A.addListener('rewardedVideoAdDidDismiss', () => finish(earned));
-      A.prepareRewardVideoAd({ adId: ADMOB_IDS.rewarded })
-        .then(() => A.showRewardVideoAd())
-        .catch(() => this.init().then(() => A.prepareRewardVideoAd({ adId: ADMOB_IDS.rewarded })
-          .then(() => A.showRewardVideoAd())))
-        .catch(() => finish(false));
-      setTimeout(() => finish(earned), 120000);
+      const on = (name, cb) => {
+        try {
+          const p = A.addListener(name, cb);
+          if (p && p.then) p.then(h => handles.push(h)); else if (p) handles.push(p);
+        } catch (e) {}
+      };
+      // ✅ Toutes les familles de noms d'événements selon versions du plugin
+      ['onRewardedVideoAdReward','rewardedVideoAdReward'].forEach(n => on(n, () => { earned = true; }));
+      ['onRewardedVideoAdDismissed','rewardedVideoAdDidDismiss'].forEach(n => on(n, () => finish(earned, !earned && shown)));
+      // ✅ Si déjà préchargée → affichage immédiat
+      const prep = this.__rwReady ? Promise.resolve() : A.prepareRewardVideoAd({ adId: ADMOB_IDS.rewarded });
+      prep.then(() => A.showRewardVideoAd())
+        .then((payload) => {
+          shown = true;
+          if (payload && (payload.adRewardAmount !== undefined || payload.adRewardType !== undefined)) earned = true;
+        })
+        .catch(() => finish(false, false));
+      setTimeout(() => finish(earned, !earned && shown), 120000);   // ✅ garde 2 min (vidéo 30 s)
     });
   }
 };
