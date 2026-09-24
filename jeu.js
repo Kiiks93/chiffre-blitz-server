@@ -1356,6 +1356,35 @@ function localizeReason(r) {
 function showGameOverRecap(data) {
   const d = i18n[currentLang];
   recapActive = true;
+    // ✅ Ligne Points (classé) — créée dynamiquement
+  let ptsRow = document.getElementById("recap-points-row");
+  if (!ptsRow) {
+    const coinsEl = document.getElementById("recap-coins-gained");
+    if (coinsEl && coinsEl.parentElement) {
+      ptsRow = document.createElement("div");
+      ptsRow.id = "recap-points-row";
+      ptsRow.className = coinsEl.parentElement.className;
+      ptsRow.innerHTML = `<span>${(i18n[currentLang].recap_points) || "🏅 Points : "}</span><b id="recap-points-gained">0</b>`;
+      coinsEl.parentElement.after(ptsRow);
+    }
+  }
+  if (ptsRow) {
+    const myRew = (data.rewards && data.rewards[socket.id]) ? data.rewards[socket.id] : null;
+    let delta = (myRew && typeof myRew.pointsDelta === "number") ? myRew.pointsDelta : null;
+    if (delta === null && data.isRanked) {
+      if (!data.winnerId) delta = 0;
+      else if (data.winnerId === socket.id) delta = 25;
+      else delta = (data.globalEvents && data.globalEvents.rankShield) ? 0 : -15;
+    }
+    if (data.isRanked && delta) {
+      ptsRow.style.display = "";
+      const el = document.getElementById("recap-points-gained");
+      el.innerText = (delta > 0 ? "+" : "") + delta;
+      el.style.color = delta > 0 ? "#00ff88" : "#ff4b2b";
+    } else {
+      ptsRow.style.display = "none";
+    }
+  }
   if (typeof ADS !== 'undefined' && ADS.preloadRewarded) ADS.preloadRewarded();
   if (typeof clearCatchArena === "function") clearCatchArena();
   hideAllScreens();
