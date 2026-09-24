@@ -2531,7 +2531,7 @@ VÉRIFICATION GOOGLE PLAY (Route G1)
 const crypto = require('crypto');
 const PLAY_PKG = process.env.PLAY_PACKAGE_NAME || '';
 const PLAY_SA_EMAIL = process.env.PLAY_SERVICE_ACCOUNT_EMAIL || '';
-const PLAY_SA_KEY = (process.env.PLAY_PRIVATE_KEY || '').replace(/\\n/g, '\n');
+const PLAY_SA_KEY = (process.env.PLAY_PRIVATE_KEY || '').replace(/\\n/g, '\n').trim();
 let _playCache = { token: null, expiry: 0 };
 
 function b64url(x) {
@@ -2611,12 +2611,7 @@ if (!v.ok) {
       console.warn('[iap_grant] ⚠️ vérif Google NON configurée (mode anti-replay seul)');
     }
     // ✅ Consomme le token AVANT tout crédit (anti double-grant atomique)
-    const ins = await supabase.from('iap_receipts').insert([{ username: String(pseudo), sku, token }]);
-    if (ins.error) {
-      if (String(ins.error.code) === '23505') return res.json({ ok: true, already: true });
-      return res.json({ ok: false, reason: 'db' });
-    }
-let targetId = null;
+   let targetId = null;
 for (const sId in activePlayers) {
 if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === String(pseudo).toLowerCase()) { targetId = sId; break; }
 }
@@ -2626,6 +2621,12 @@ if (!player) {
 const { data, error } = await supabase.from('players').select('*').ilike('username', String(pseudo)).limit(1);
 if (error || !data || !data.length) return res.json({ ok: false, reason: 'not_found' });
 row = data[0];
+}
+// ✅ Consomme le token AVANT tout crédit (anti double-grant atomique)
+const ins = await supabase.from('iap_receipts').insert([{ username: String(pseudo), sku, token }]);
+if (ins.error) {
+if (String(ins.error.code) === '23505') return res.json({ ok: true, already: true });
+return res.json({ ok: false, reason: 'db' });
 }
 const seasonId = getCurrentSeason().id;
 const apply = (p, isOnline) => {
