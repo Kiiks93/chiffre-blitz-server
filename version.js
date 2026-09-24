@@ -7,8 +7,8 @@ WORKFLOW À CHAQUE RELEASE :
  3. Mets à jour VERSION_GATE côté serveur (latest / minWeb)
 ============================================================ */
 const VERSION_CLIENT = {
-  version: "1.4."",                                  // version WEB actuelle (semver)
-  shell: 13,                                          // versionCode Capacitor (Android)
+  version: "1.4.2",                                  // version WEB actuelle (semver)
+  shell: 12,                                          // versionCode Capacitor (Android)
   serverUrl: window.location.hostname.endsWith('.onrender.com') ? window.location.origin : 'https://chiffre-blitz-server.onrender.com'  // ← ton URL Render
 };
 
