@@ -2566,7 +2566,11 @@ async function getPlayAccessToken() {
 
 async function verifyGooglePurchase(sku, token) {
   // Si config absente (staging sans vars), on skip la vérif Google
-  if (!PLAY_SA_EMAIL || !PLAY_SA_KEY) return { ok: true, unconfigured: true };
+    if (!PLAY_SA_EMAIL || !PLAY_SA_KEY) {
+    // Staging : tolérant · Prod : fail closed (jamais de crédit sans vérification)
+    if (process.env.IAP_REQUIRE_VERIF === '1') return { ok: false, reason: 'verify_unconfigured' };
+    return { ok: true, unconfigured: true };
+  }
   
   const at = await getPlayAccessToken();
   const url = 'https://androidpublisher.googleapis.com/androidpublisher/v3/applications/' + PLAY_PKG +
