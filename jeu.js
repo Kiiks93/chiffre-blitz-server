@@ -1326,6 +1326,7 @@ function localizeReason(r) {
 function showGameOverRecap(data) {
   const d = i18n[currentLang];
   recapActive = true;
+  if (typeof ADS !== 'undefined' && ADS.preloadRewarded) ADS.preloadRewarded();
   if (typeof clearCatchArena === "function") clearCatchArena();
   hideAllScreens();
   window.history.replaceState({}, "", window.location.pathname);
