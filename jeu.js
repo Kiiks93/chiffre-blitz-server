@@ -710,7 +710,7 @@ rewardDoubled = true;
 socket.emit("double_reward");
 currentCoinsGained *= 2;
 document.getElementById("recap-coins-gained").innerText = `+${currentCoinsGained} (x2 ⚡)`;
-// ✅ Ligne Points (classé uniquement) — créée dynamiquement
+// ✅ Ligne Points (classé) — créée dynamiquement
 let ptsRow = document.getElementById("recap-points-row");
 if (!ptsRow) {
   const coinsEl = document.getElementById("recap-coins-gained");
@@ -724,11 +724,18 @@ if (!ptsRow) {
 }
 if (ptsRow) {
   const myRew = (data.rewards && data.rewards[socket.id]) ? data.rewards[socket.id] : null;
-  if (data.isRanked && myRew && myRew.pointsDelta) {
+  let delta = (myRew && typeof myRew.pointsDelta === "number") ? myRew.pointsDelta : null;
+  if (delta === null && data.isRanked) {
+    // 🛟 Fallback si le serveur n'envoie pas encore pointsDelta
+    if (!data.winnerId) delta = 0;
+    else if (data.winnerId === socket.id) delta = 25;
+    else delta = (data.globalEvents && data.globalEvents.rankShield) ? 0 : -15;
+  }
+  if (data.isRanked && delta) {
     ptsRow.style.display = "";
     const el = document.getElementById("recap-points-gained");
-    el.innerText = (myRew.pointsDelta > 0 ? "+" : "") + myRew.pointsDelta;
-    el.style.color = myRew.pointsDelta > 0 ? "#00ff88" : "#ff4b2b";
+    el.innerText = (delta > 0 ? "+" : "") + delta;
+    el.style.color = delta > 0 ? "#00ff88" : "#ff4b2b";
   } else {
     ptsRow.style.display = "none";
   }
