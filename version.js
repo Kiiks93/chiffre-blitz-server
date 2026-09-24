@@ -76,7 +76,7 @@ async function vgNativeBuild() {
       if (b > 0) return b;
     }
   } catch (e) {}
-  return VERSION_CLIENT.shell;
+  return -1;   // -1 = lecture native impossible → aucune décision native
 }
 
 function vgFr() { return (typeof currentLang !== "undefined" ? currentLang === "fr" : true); }
