@@ -2447,7 +2447,6 @@ for (let sId of [id1, id2]) {
 const p = activePlayers[sId];
 if (p) {
 const isWinner = (winnerId === sId);
-// ✅ Option A : le classé rapporte x2 pièces vs non classé
 let baseCoins = isWinner ? (isRanked ? 60 : 30) : (isRanked ? 20 : 10);
 let rushBonus = globalEvents.coinRush ? baseCoins : 0;
 p.coins += baseCoins + rushBonus;
@@ -2608,9 +2607,15 @@ if (!v.ok) {
   console.warn('[iap_grant] ❌ refus Google:', v.reason, pseudo, sku); 
   return res.json({ ok: false, reason: 'google_' + v.reason }); 
 }
-if (v.unconfigured) {
-  console.warn('[iap_grant] ⚠️ vérif Google NON configurée (mode anti-replay seul)');
-}
+    if (v.unconfigured) {
+      console.warn('[iap_grant] ⚠️ vérif Google NON configurée (mode anti-replay seul)');
+    }
+    // ✅ Consomme le token AVANT tout crédit (anti double-grant atomique)
+    const ins = await supabase.from('iap_receipts').insert([{ username: String(pseudo), sku, token }]);
+    if (ins.error) {
+      if (String(ins.error.code) === '23505') return res.json({ ok: true, already: true });
+      return res.json({ ok: false, reason: 'db' });
+    }
 let targetId = null;
 for (const sId in activePlayers) {
 if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === String(pseudo).toLowerCase()) { targetId = sId; break; }
@@ -2680,7 +2685,6 @@ tower_lives_ts: row.tower_lives_ts,
 tower_jokers: row.tower_jokers
 }).eq('id', row.id);
 }
-await supabase.from('iap_receipts').insert([{ username: String(pseudo), sku, token }]);
 await logPlayerAction(player || { username: String(pseudo), socketId: null },
 'iap_grant', `SKU: ${sku} (token: ${String(token).substring(0, 16)}...)`, null, null, null);
 console.log('[iap_grant] ✅ OK pour', pseudo, sku);
