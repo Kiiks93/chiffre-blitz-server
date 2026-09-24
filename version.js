@@ -125,11 +125,11 @@ async function vgCheck() {
     if (!r.ok) return;
     VG_state = await r.json();
     
-    // ✅ NOUVEAU : lit le VRAI versionCode installé
+      // ✅ Lit le VRAI versionCode installé (-1 = non lisible)
     const nativeBuild = await vgNativeBuild();
-    
+    const nativeTrusted = vgIsNative() && nativeBuild > 0;
     // 1) App native trop vieille → In-App Updates si plugin installé, sinon blocage
-    if (vgIsNative() && nativeBuild < (VG_state.minShell || 0)) {
+    if (nativeTrusted && nativeBuild < (VG_state.minShell || 0)) {
       try {
         const mod = await import("@capacitor/in-app-update");
         if (mod && mod.InAppUpdate) { await mod.InAppUpdate.startUpdate({ updatePriority: 5 }); return; }
@@ -137,7 +137,7 @@ async function vgCheck() {
       vgShowBlock(); return;
     }
     // 1bis) APK : un versionCode plus récent est publié → bandeau doux (non bloquant)
-    if (vgIsNative() && nativeBuild < (VG_state.latestShell || 0)) { vgShowBanner(); return; }
+    if (nativeTrusted && nativeBuild < (VG_state.latestShell || 0)) { vgShowBanner(); return; }
     // 2) Version web sous le minimum → blocage dur
     if (vgCompare(VERSION_CLIENT.version, VG_state.minWeb || VERSION_CLIENT.version) < 0) { vgShowBlock(); return; }
     // 3) Version sous la dernière → bannière douce
