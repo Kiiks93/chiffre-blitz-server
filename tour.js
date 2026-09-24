@@ -1111,15 +1111,17 @@ setTimeout(() => f.remove(), 700);
 function openTowerShop() {
 closeTowerShop();
 const fr = currentLang === "fr";
+const dTwS = (typeof i18n !== "undefined") ? i18n[currentLang] : null;
 const d = document.createElement("div");
 d.className = "tw-shop"; d.id = "tw-shop";
 let items = "";
 SHOP_ITEMS.forEach(it => {
-  const btn = it.iap ? `<button class="buy iap" onclick="tryBuyPack('${it.id}')">${it.eur} 💳</button>` : `<button class="buy" onclick="towerShopBuy('${it.id}')">${it.price} 🪙</button>`;
-  const dTwS = i18n[currentLang];
-items += `<div class="tw-shop-item"><span class="ic">${it.icon}</span><span class="nm">${dTwS["tw_shop_" + it.id] || it.name}</span>${btn}</div>`;
+const btn = it.iap ? `<button class="buy iap" onclick="tryBuyPack('${it.id}')">${it.eur} 💳</button>` : `<button class="buy" onclick="towerShopBuy('${it.id}')">${it.price} 🪙</button>`;
+const nm = (dTwS && dTwS["tw_shop_" + it.id]) || it.name;
+items += `<div class="tw-shop-item"><span class="ic">${it.icon}</span><span class="nm">${nm}</span>${btn}</div>`;
 });
-d.innerHTML = `<div class="tw-shop-card"><h3>${dTwS.tw_shop_title}</h3>${items}<button class="btn-secondary" style="width:100%;" onclick="closeTowerShop()">❌ ${fr?"Fermer":"Close"}</button></div>`;
+const title = (dTwS && dTwS.tw_shop_title) || (fr ? "🛒 BOUTIQUE AVENTURE" : "🛒 ADVENTURE SHOP");
+d.innerHTML = `<div class="tw-shop-card"><h3>${title}</h3>${items}<button class="btn-secondary" style="width:100%;" onclick="closeTowerShop()">❌ ${fr?"Fermer":"Close"}</button></div>`;
 document.body.appendChild(d);
 }
 function closeTowerShop() { const s = document.getElementById("tw-shop"); if (s) s.remove(); }
