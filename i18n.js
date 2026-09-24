@@ -20,8 +20,8 @@ const i18n = {
     rule2_desc: "Classique, Aléatoire ou Avalanche : enchaîne les chiffres, bats tes records et fais le plein de pièces (🪙).",
     rule3_title: "⚔️ Duel 1v1 Online",
     rule3_desc: "Affronte un joueur en temps réel (non classé, classé SBMM ou salon privé). Le meilleur score en 30s l'emporte !",
-    rule4_title: "👑 Rangs & Couronnes",
-    rule4_desc: "Grimpe en classé pour gagner des couronnes 👑 et débloque les 16 trophées 🏆 de ta Salle des Trophées !",
+    rule4_title: "🏅 Rangs & Points",
+    rule4_desc: "Grimpe en classé pour gagner plus de points 🏅 et de pièces 🪙, et débloque les 16 trophées 🏆 ! Les couronnes 👑 ? Réservées aux tournois !",
     rule5_title: "🎯 Mode Tournoi",
     tourney_teaser_desc: "En cours de réflexion et de développement... Les tournois récompenseront en couronnes 👑 !",
     rule_tower_title: "🏰 Mode Aventure",
@@ -40,7 +40,7 @@ const i18n = {
     avalanche_menu_title: "🧊 AVALANCHE (Difficultés)",
     diff_easy: "Facile", diff_medium: "Moyen", diff_hard: "Difficile 💀",
     solo_training_done: "🏋️ ENTRAÎNEMENT TERMINÉ", solo_score_label: "Score :",
-    solo_perfection_banner: "💥 PERFECTION x35 !", solo_perfection_reason: "PERFECTION ! Récompense maximale + Succès ⭐",
+    solo_perfection_banner: "💥 PERFECTION x35 !", solo_perfection_reason: "PERFECTION ! Récompense maximale + Succès 🏆",
 
     /* ----- 1v1 ----- */
     hub_title: "⚔️ DUEL 1v1 ONLINE", hub_subtitle: "Choisis ton mode de jeu :",
@@ -92,14 +92,14 @@ const i18n = {
     /* ----- Classement ----- */
     lb_title: "👑 CLASSEMENT",
     lb_reg: "📍 Région", lb_nat: "🇫🇷 France", lb_glb: "🌍 Monde",
-    lb_cat_points: "🏅 Points", lb_cat_trophies: "👑 Couronnes", lb_cat_coins: "🪙 Argent", lb_cat_combined: "⭐ Combiné",
-    lb_combined_desc: "💡 Combiné : Couronnes prioritaires, départagées par les points",
+    lb_cat_points: "🏅 Points", lb_cat_trophies: "👑 Couronnes", lb_cat_coins: "🪙 Argent", lb_cat_combined: "🥇 Global",
+    lb_combined_desc: "💡 Global : Couronnes (tournois) prioritaires, départagées par les points",
     lb_regional_label: "Régional", lb_no_players: "Aucun joueur.",
 
     /* ----- Tournois ----- */
     tourney_screen_title: "🎯 Tournoi Blitz",
     tourney_teaser_title: "Bientôt disponible !",
-    tourney_rewards: "Récompenses : 200 🪙 + 1 👑 + 50 ⭐",
+    tourney_rewards: "Récompenses : 200 🪙 + 1 👑 + 50 🏅",
 
     /* ----- Profil & Compte ----- */
     welcome_title: "⚡ IDENTITÉ BLITZ ⚡", welcome_sub: "Personnalise ton profil compétitif :",
@@ -143,7 +143,7 @@ const i18n = {
     timer_label: "Temps", target_label: "CIBLE : ",
     tow_title: "🪢 CORDE RAIDE (TUG-OF-WAR)",
     recap_my_target: "🎯 Ma Cible : ", recap_opp_target: "🎯 Cible Adversaire : ",
-    recap_my_score: "⭐ Mon Score : ", recap_coins: "🪙 Pièces Gagnées : ",
+    recap_my_score: "⚡ Mon Score : ", recap_coins: "🪙 Pièces Gagnées : ",
     double_reward: "📺 Doubler mes gains (Pub)", main_menu: "MENU PRINCIPAL",
     triomphe: "TRIOMPHE !", equality: "ÉGALITÉ !", victory_supreme: "🏆 VICTOIRE SUPRÊME !",
     defeat_bitter: "💥 DÉFAITE AMÈRE...", equality_timeout: "⏱️ ÉGALITÉ !",
@@ -151,7 +151,7 @@ const i18n = {
 
     /* ----- Combo ----- */
     combo_x15: "⚡ COMBO x15 !", combo_x30: "🔥 COMBO x30 !!", combo_perfection: "💥 PERFECTION x35 !!!",
-    perfection_popup_text: "⚡ PERFECTION — Combo x35 atteint ! Récompense maximale + Succès ⭐ débloqué !",
+    perfection_popup_text: "⚡ PERFECTION — Combo x35 atteint ! Récompense maximale + Succès 🏆 débloqué !",
 
     /* ----- Modes saisonniers (Catch) ----- */
     catch_how_to_play: "📖 COMMENT JOUER :",
@@ -449,8 +449,8 @@ const i18n = {
     rule2_desc: "Classic, Random or Avalanche: chain numbers, beat your records and stack up coins (🪙).",
     rule3_title: "⚔️ Online 1v1 Duel",
     rule3_desc: "Face a player in real time (unranked, ranked SBMM or private room). Best score in 30s wins!",
-    rule4_title: "👑 Ranks & Crowns",
-    rule4_desc: "Climb ranked to earn crowns 👑 and unlock the 16 trophies 🏆 of your Trophy Room!",
+    rule4_title: "🏅 Ranks & Points",
+    rule4_desc: "Climb ranked to earn more points 🏅 and coins 🪙, and unlock the 16 trophies 🏆! Crowns 👑? Tournaments only!",
     rule5_title: "🎯 Tournament Mode",
     tourney_teaser_desc: "In design and development... Tournaments will reward crowns 👑!",
     rule_tower_title: "🏰 Adventure Mode",
@@ -469,7 +469,7 @@ const i18n = {
     avalanche_menu_title: "🧊 Avalanche (Difficulties)",
     diff_easy: "Easy", diff_medium: "Medium", diff_hard: "Hard 💀",
     solo_training_done: "🏋️ TRAINING DONE", solo_score_label: "Score:",
-    solo_perfection_banner: "💥 PERFECTION x35!", solo_perfection_reason: "PERFECTION! Max reward + Achievement ⭐",
+    solo_perfection_banner: "💥 PERFECTION x35!", solo_perfection_reason: "PERFECTION! Max reward + Achievement 🏆",
 
     /* ----- 1v1 ----- */
     hub_title: "⚔️ ONLINE 1v1 DUEL", hub_subtitle: "Choose your game mode:",
@@ -521,14 +521,14 @@ const i18n = {
     /* ----- Leaderboard ----- */
     lb_title: "👑 LEADERBOARD",
     lb_reg: "📍 Region", lb_nat: "🇫🇷 France", lb_glb: "🌍 World",
-    lb_cat_points: "🏅 Points", lb_cat_trophies: "👑 Crowns", lb_cat_coins: "🪙 Money", lb_cat_combined: "⭐ Combined",
-    lb_combined_desc: "💡 Combined: Crowns first, tied by points",
+    lb_cat_points: "🏅 Points", lb_cat_trophies: "👑 Crowns", lb_cat_coins: "🪙 Money", lb_cat_combined: "🥇 Global",
+    lb_combined_desc: "💡 Global: Crowns (tournaments) first, tied by points",
     lb_regional_label: "Regional", lb_no_players: "No players.",
 
     /* ----- Tournaments ----- */
     tourney_screen_title: "🎯 Blitz Tournament",
     tourney_teaser_title: "Coming soon!",
-    tourney_rewards: "Rewards: 200 🪙 + 1 👑 + 50 ⭐",
+    tourney_rewards: "Rewards: 200 🪙 + 1 👑 + 50 🏅",
 
     /* ----- Profile & Account ----- */
     welcome_title: "⚡ BLITZ IDENTITY ⚡", welcome_sub: "Customize your competitive profile:",
@@ -610,7 +610,7 @@ const i18n = {
     timer_label: "Time", target_label: "TARGET: ",
     tow_title: "🪢 TUG-OF-WAR",
     recap_my_target: "🎯 My Target: ", recap_opp_target: "🎯 Opponent Target: ",
-    recap_my_score: "⭐ My Score: ", recap_coins: "🪙 Coins Earned: ",
+    recap_my_score: "⚡ My Score: ", recap_coins: "🪙 Coins Earned: ",
     double_reward: "📺 Double my rewards (Ad)", main_menu: "MAIN MENU",
     triomphe: "TRIUMPH!", equality: "DRAW!", victory_supreme: "🏆 SUPREME VICTORY!",
     defeat_bitter: "💥 BITTER DEFEAT...", equality_timeout: "⏱️ DRAW!",
@@ -618,7 +618,7 @@ const i18n = {
 
     /* ----- Combo ----- */
     combo_x15: "⚡ COMBO x15!", combo_x30: "🔥 COMBO x30!!", combo_perfection: "💥 PERFECTION x35!!!",
-    perfection_popup_text: "⚡ PERFECTION — Combo x35 reached! Max reward + Achievement ⭐ unlocked!",
+    perfection_popup_text: "⚡ PERFECTION — Combo x35 reached! Max reward + Achievement 🏆 unlocked!",
 
     /* ----- Seasonal Modes (Catch) ----- */
     catch_how_to_play: "📖 HOW TO PLAY:",
