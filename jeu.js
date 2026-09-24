@@ -710,6 +710,29 @@ rewardDoubled = true;
 socket.emit("double_reward");
 currentCoinsGained *= 2;
 document.getElementById("recap-coins-gained").innerText = `+${currentCoinsGained} (x2 ⚡)`;
+// ✅ Ligne Points (classé uniquement) — créée dynamiquement
+let ptsRow = document.getElementById("recap-points-row");
+if (!ptsRow) {
+  const coinsEl = document.getElementById("recap-coins-gained");
+  if (coinsEl && coinsEl.parentElement) {
+    ptsRow = document.createElement("div");
+    ptsRow.id = "recap-points-row";
+    ptsRow.className = coinsEl.parentElement.className;
+    ptsRow.innerHTML = `<span>${(i18n[currentLang].recap_points) || "🏅 Points : "}</span><b id="recap-points-gained">0</b>`;
+    coinsEl.parentElement.after(ptsRow);
+  }
+}
+if (ptsRow) {
+  const myRew = (data.rewards && data.rewards[socket.id]) ? data.rewards[socket.id] : null;
+  if (data.isRanked && myRew && myRew.pointsDelta) {
+    ptsRow.style.display = "";
+    const el = document.getElementById("recap-points-gained");
+    el.innerText = (myRew.pointsDelta > 0 ? "+" : "") + myRew.pointsDelta;
+    el.style.color = myRew.pointsDelta > 0 ? "#00ff88" : "#ff4b2b";
+  } else {
+    ptsRow.style.display = "none";
+  }
+}
 const doubleBtn = document.getElementById("btn-double-reward");
 doubleBtn.disabled = true;
 doubleBtn.style.opacity = "0.5";
