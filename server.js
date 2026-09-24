@@ -2447,11 +2447,12 @@ for (let sId of [id1, id2]) {
 const p = activePlayers[sId];
 if (p) {
 const isWinner = (winnerId === sId);
-let baseCoins = isWinner ? 30 : 10;
+// ✅ Option A : le classé rapporte x2 pièces vs non classé
+let baseCoins = isWinner ? (isRanked ? 60 : 30) : (isRanked ? 20 : 10);
 let rushBonus = globalEvents.coinRush ? baseCoins : 0;
 p.coins += baseCoins + rushBonus;
 lastMatchEarnings[sId] = baseCoins + rushBonus;
-matchRewards[sId] = { baseCoins, rushBonus, totalCoins: baseCoins + rushBonus };
+matchRewards[sId] = { baseCoins, rushBonus, totalCoins: baseCoins + rushBonus, pointsDelta: 0 };
 if (isWinner && globalEvents.jackpotEclair && Math.random() < 0.10) io.to(sId).emit('trigger_jackpot_wheel');
 const matchType = matchData.isRanked ? 'match_ranked' : (matchData.isTugOfWar ? 'match_tug' : (matchData.isCatch ? `match_catch_${matchData.catchTheme}` : 'match_1v1'));
 const oppId = (sId === id1) ? id2 : sId === id2 ? id1 : null;
@@ -2463,8 +2464,18 @@ if (isRanked && !matchData.isTugOfWar) {
 const p1 = activePlayers[id1];
 const p2 = activePlayers[id2];
 if (p1 && p2) {
-if (winnerId === id1) { p1.wins = (p1.wins || 0) + 1; p1.points = (p1.points || 0) + 25; p2.losses = (p2.losses || 0) + 1; if (!globalEvents.rankShield) p2.points = Math.max(0, (p2.points || 0) - 15); }
-else if (winnerId === id2) { p2.wins = (p2.wins || 0) + 1; p2.points = (p2.points || 0) + 25; p1.losses = (p1.losses || 0) + 1; if (!globalEvents.rankShield) p1.points = Math.max(0, (p1.points || 0) - 15); }
+const loss = globalEvents.rankShield ? 0 : 15;
+if (winnerId === id1) {
+p1.wins = (p1.wins || 0) + 1; p1.points = (p1.points || 0) + 25;
+p2.losses = (p2.losses || 0) + 1; p2.points = Math.max(0, (p2.points || 0) - loss);
+if (matchRewards[id1]) matchRewards[id1].pointsDelta = 25;
+if (matchRewards[id2]) matchRewards[id2].pointsDelta = -loss;
+} else if (winnerId === id2) {
+p2.wins = (p2.wins || 0) + 1; p2.points = (p2.points || 0) + 25;
+p1.losses = (p1.losses || 0) + 1; p1.points = Math.max(0, (p1.points || 0) - loss);
+if (matchRewards[id2]) matchRewards[id2].pointsDelta = 25;
+if (matchRewards[id1]) matchRewards[id1].pointsDelta = -loss;
+}
 }
 }
 if (matchData.isCatch && !matchData.isTugOfWar) {
