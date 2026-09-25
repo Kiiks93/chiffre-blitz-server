@@ -65,8 +65,8 @@ const WEB_DEV_CODE = process.env.WEB_DEV_CODE || '';
 const VERSION_GATE = {
   latest: "1.4.0",       // dernière version WEB publiée
   minWeb: "1.3.0",       // web mini acceptée (en dessous = blocage dur)
-  minShell: 9,           // versionCode mini accepté (en dessous = maj FORCÉE)
-  latestShell: 10,       // dernier versionCode publié (en dessous = bandeau doux)
+  minShell: 13,           // versionCode mini accepté (en dessous = maj FORCÉE)
+  latestShell: 14,       // dernier versionCode publié (en dessous = bandeau doux)
   urlAndroid: "https://play.google.com/store/apps/details?id=com.chiffreblitz.app",
   urlWeb: "https://chiffre-blitz.fr"
 };
