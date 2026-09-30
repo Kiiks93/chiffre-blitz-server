@@ -854,15 +854,23 @@ try { today = new Date().toLocaleDateString('sv-SE', { timeZone: playerTz }); }
 catch (e) { today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Paris' }); }
 const progress = playerData.season_progress[seasonNow.id] || { unlocked_tier: 0, last_login_date: null };
 if (isSeasonPassLive()) {
-if (progress.last_login_date !== today || playerData.timezone !== playerTz) {
-if (progress.last_login_date !== today) {
-progress.unlocked_tier = Math.min(30, (progress.unlocked_tier || 0) + 1);
-progress.last_login_date = today;
-}
-playerData.season_progress[seasonNow.id] = progress;
-playerData.timezone = playerTz;
-await supabase.from('players').update({ season_progress: playerData.season_progress, timezone: playerTz }).eq('id', playerData.id);
-}
+  if (progress.last_login_date !== today || playerData.timezone !== playerTz) {
+    if (progress.last_login_date !== today) {
+      // 🎁 S1 UNIQUEMENT : rattrapage automatique pour les retardataires
+      let bonusTiers = 0;
+      if (seasonNow.id === "s1") {
+        const seasonStartDate = new Date(seasonNow.start + "T00:00:00Z");
+        const todayDate = new Date(today + "T00:00:00Z");
+        const daysSinceStart = Math.floor((todayDate - seasonStartDate) / (1000 * 60 * 60 * 24));
+        bonusTiers = Math.min(29, Math.max(0, daysSinceStart));
+      }
+      progress.unlocked_tier = Math.min(30, (progress.unlocked_tier || 0) + 1 + bonusTiers);
+      progress.last_login_date = today;
+    }
+    playerData.season_progress[seasonNow.id] = progress;
+    playerData.timezone = playerTz;
+    await supabase.from('players').update({ season_progress: playerData.season_progress, timezone: playerTz }).eq('id', playerData.id);
+  }
 }
 const premNow = !!(claimedNorm[seasonNow.id] && claimedNorm[seasonNow.id].premium) || (seasonNow.id === "s1" && playerData.blitz_pass_premium);
 activePlayers[socket.id] = {
