@@ -68,6 +68,7 @@ let twNextLife = 0;
 let TW = null, TW_dom = null, TW_buttons = [], TW_lastFloor = 0;
 let TW_hudCache = "", TW_localTimer = null, TW_lastClick = 0, TW_pairsLock = false;
 let TW_lastState = 0;
+let TW_gateTimer = null;  // ✅ Timer du Gate Loader
 const SCENE_CACHE = {};
 let TW_musicWorld = 0;
 let TW_firstSync = true;
@@ -1250,6 +1251,7 @@ if (typeof showNotificationToast === "function") showNotificationToast(currentLa
 const s = document.getElementById("tw-shield-active"); if (s) s.remove();
 });
 socket.on("tower_no_lives", () => {
+if (TW_gateTimer) { clearTimeout(TW_gateTimer); TW_gateTimer = null; }
 if (typeof showNotificationToast === "function") showNotificationToast(currentLang === "fr" ? "❤️ Plus de vies ! Reviens plus tard ou achète-en." : "❤️ No lives left! Come back later or buy some.", "announcement");
 quitFloor();
 renderAdventure();
@@ -1260,7 +1262,9 @@ return { type:s.type, total:s.total, gridSize:s.gridSize, floor:s.floor, target:
 function startTowerFloor(def) {
     if (TW) return;
     
-    // ✅ Affiche le loader avant d'émettre
+    // ✅ Nettoie l'ancien timer s'il existe
+    if (TW_gateTimer) { clearTimeout(TW_gateTimer); TW_gateTimer = null; }
+    
     window.showGate('Chargement de l\'étage ' + def.floor + '…');
     
     const ov = ensureTowerOverlay();
@@ -1272,11 +1276,11 @@ function startTowerFloor(def) {
     document.getElementById("twg-title").innerText = i18n[currentLang].tw_floor + " " + def.floor;
     updateJokerButtons();
     
-    // ✅ Envoie avec retry
     socket.emit("tower_floor_start", { floor: def.floor });
     
-    // ✅ Timeout de sécurité : si pas de réponse en 10s, propose de réessayer
-    setTimeout(() => {
+    // ✅ Timeout de sécurité (stocké pour pouvoir l'annuler)
+    TW_gateTimer = setTimeout(() => {
+        TW_gateTimer = null;
         if (!TW && window.showGate) {
             window.showGate('️ Problème de connexion', () => {
                 startTowerFloor(def);
@@ -1428,6 +1432,8 @@ else if (sessionStorage.getItem("cb_last_screen") === "tower") openTower();
 });
 socket.on("tower_state", (st) => {
     if (!st || !st.display) return;
+    // ✅ Annule le timer de sécurité
+    if (TW_gateTimer) { clearTimeout(TW_gateTimer); TW_gateTimer = null; }
     TW_lastState = Date.now();
     const first = TW_buttons.length === 0;
     TW = st; TW_lastFloor = st.floor;
@@ -1440,6 +1446,8 @@ socket.on("tower_state", (st) => {
     if (window.hideGate) window.hideGate();
 });
 socket.on("tower_fail", (r) => {
+    // ✅ Annule le timer
+    if (TW_gateTimer) { clearTimeout(TW_gateTimer); TW_gateTimer = null; }
     TW = null; TW_dom = null; stopLocalTimer();
     if (r && r.lives !== undefined) twLives = r.lives;
     else twLives = Math.max(0, twLives - 1);
@@ -1451,7 +1459,9 @@ socket.on("tower_fail", (r) => {
     if (window.hideGate) window.hideGate();
 });
 socket.on("tower_result", (res) => {
-TW = null;
+    // ✅ Annule le timer pour éviter que le loader réapparaisse après victoire
+    if (TW_gateTimer) { clearTimeout(TW_gateTimer); TW_gateTimer = null; }
+    TW = null;
 const ov = document.getElementById("tower-game"); if (ov) ov.style.display = "none";
 const shield = document.getElementById("tw-shield-active"); if (shield) shield.remove();
 if (!res.ok) return;
@@ -1466,6 +1476,7 @@ else renderAdventure();
 /* ----- 12. WATCHDOG ----- */
 setInterval(() => {
 if (TW && TW_lastState && Date.now() - TW_lastState > 6000) {
+if (TW_gateTimer) { clearTimeout(TW_gateTimer); TW_gateTimer = null; }
 TW = null; TW_dom = null; stopLocalTimer();
 const ov = document.getElementById("tower-game"); if (ov) ov.style.display = "none";
 const shield = document.getElementById("tw-shield-active"); if (shield) shield.remove();
@@ -1473,6 +1484,7 @@ if (typeof showNotificationToast === "function") showNotificationToast(currentLa
 }
 }, 2000);
 socket.on("disconnect", () => {
+if (TW_gateTimer) { clearTimeout(TW_gateTimer); TW_gateTimer = null; }
 if (TW) {
 TW = null; TW_dom = null; stopLocalTimer();
 const ov = document.getElementById("tower-game"); if (ov) ov.style.display = "none";
