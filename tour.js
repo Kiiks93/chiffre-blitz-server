@@ -1025,9 +1025,10 @@ document.getElementById("tw-next").disabled = twViewFloor >= Math.min(towerProgr
 function advPrev() { if (twViewFloor > 1) { twViewFloor--; localStorage.setItem('cb_tw_world', String(TowerUtils.getTowerChapter(twViewFloor).id)); renderAdventure(); } }
 function advNext() { const cap=Math.min(towerProgress.floor + 1, maxVisibleWorld() * FPC); if (twViewFloor < cap) { twViewFloor++; localStorage.setItem('cb_tw_world', String(TowerUtils.getTowerChapter(twViewFloor).id)); renderAdventure(); } }
 function advPlay() {
-const def = TowerUtils.getFloorDef(twViewFloor);
-def.replay = twViewFloor <= towerProgress.floor;
-showBriefing(def);
+    const def = TowerUtils.getFloorDef(twViewFloor);
+    def.replay = twViewFloor <= towerProgress.floor;
+    // ✅ Pas de loader ici, c'est le briefing qui s'affiche d'abord
+    showBriefing(def);
 }
 /* ----- 7. SÉLECTION DE NIVEAU ----- */
 function openLevelSelect() {
@@ -1257,16 +1258,31 @@ function cloneState(s) {
 return { type:s.type, total:s.total, gridSize:s.gridSize, floor:s.floor, target:s.target, targetColor:s.targetColor, targetParity:s.targetParity, forbidden:s.forbidden, timeLeft:s.timeLeft, ai:s.ai, gone:Object.assign({},s.gone||{}), revealed:Object.assign({},s.revealed||{}), display:(s.display||[]).slice(), sel:(s.sel===undefined?null:s.sel), shield:s.shield||0, revealLeft:s.revealLeft||0 };
 }
 function startTowerFloor(def) {
-if (TW) return;
-const ov = ensureTowerOverlay();
-ov.style.display = "flex";
-TW_lastFloor = def.floor;
-TW = null; TW_dom = null; TW_buttons = []; TW_hudCache = "";
-stopLocalTimer();
-document.getElementById("tg-grid").innerHTML = "";
-document.getElementById("twg-title").innerText = i18n[currentLang].tw_floor + " " + def.floor;
-updateJokerButtons();
-socket.emit("tower_floor_start", { floor: def.floor });
+    if (TW) return;
+    
+    // ✅ Affiche le loader avant d'émettre
+    window.showGate('Chargement de l\'étage ' + def.floor + '…');
+    
+    const ov = ensureTowerOverlay();
+    ov.style.display = "flex";
+    TW_lastFloor = def.floor;
+    TW = null; TW_dom = null; TW_buttons = []; TW_hudCache = "";
+    stopLocalTimer();
+    document.getElementById("tg-grid").innerHTML = "";
+    document.getElementById("twg-title").innerText = i18n[currentLang].tw_floor + " " + def.floor;
+    updateJokerButtons();
+    
+    // ✅ Envoie avec retry
+    socket.emit("tower_floor_start", { floor: def.floor });
+    
+    // ✅ Timeout de sécurité : si pas de réponse en 10s, propose de réessayer
+    setTimeout(() => {
+        if (!TW && window.showGate) {
+            window.showGate('️ Problème de connexion', () => {
+                startTowerFloor(def);
+            });
+        }
+    }, 10000);
 }
 function buildGridFromState(st) {
 const g = document.getElementById("tg-grid");
@@ -1411,22 +1427,28 @@ if (open) socket.emit("get_tower");
 else if (sessionStorage.getItem("cb_last_screen") === "tower") openTower();
 });
 socket.on("tower_state", (st) => {
-if (!st || !st.display) return;
-TW_lastState = Date.now();
-const first = TW_buttons.length === 0;
-TW = st; TW_lastFloor = st.floor;
-if (first) { buildGridFromState(st); TW_dom = cloneState(st); }
-else { syncDomToState(st); TW_dom = cloneState(st); }
-renderHUDFromState();
-startLocalTimer(st.timeLeft);
+    if (!st || !st.display) return;
+    TW_lastState = Date.now();
+    const first = TW_buttons.length === 0;
+    TW = st; TW_lastFloor = st.floor;
+    if (first) { buildGridFromState(st); TW_dom = cloneState(st); }
+    else { syncDomToState(st); TW_dom = cloneState(st); }
+    renderHUDFromState();
+    startLocalTimer(st.timeLeft);
+    
+    // ✅ Cache le loader quand le jeu est prêt
+    if (window.hideGate) window.hideGate();
 });
 socket.on("tower_fail", (r) => {
-TW = null; TW_dom = null; stopLocalTimer();
-if (r && r.lives !== undefined) twLives = r.lives;
-else twLives = Math.max(0, twLives - 1);
-if (r && r.nextLifeIn !== undefined) twNextLife = r.nextLifeIn || 0;
-renderAdventure();
-showFailUI(r && r.reason);
+    TW = null; TW_dom = null; stopLocalTimer();
+    if (r && r.lives !== undefined) twLives = r.lives;
+    else twLives = Math.max(0, twLives - 1);
+    if (r && r.nextLifeIn !== undefined) twNextLife = r.nextLifeIn || 0;
+    renderAdventure();
+    showFailUI(r && r.reason);
+    
+    // ✅ Cache le loader en cas d'échec
+    if (window.hideGate) window.hideGate();
 });
 socket.on("tower_result", (res) => {
 TW = null;
