@@ -731,6 +731,57 @@ if ("serviceWorker" in navigator) {
   });
 </script>
 
+<!-- ===== GATE LOADER (Pour les chargements en cours de jeu) ===== -->
+<div id="gate-loader" style="display:none; position:fixed; inset:0; z-index:999998; background:radial-gradient(ellipse at 50% 35%, #12081f 0%, #05050f 70%); flex-direction:column; align-items:center; justify-content:center; gap:16px;">
+  <div style="font-size:48px; filter:drop-shadow(0 0 18px #00d2ff88); animation:cbPulse 1.6s ease-in-out infinite;">⚡</div>
+  <div style="color:#fff; font-weight:900; letter-spacing:4px; font-size:18px; text-shadow:0 0 16px #00d2ff;">CHARGEMENT…</div>
+  <div style="width:200px; height:6px; border-radius:6px; background:#ffffff14; overflow:hidden; border:1px solid #00d2ff44;">
+    <div id="gate-bar" style="height:100%; width:30%; border-radius:6px; background:linear-gradient(90deg,#00d2ff,#ff2bd6); animation:cbSlide 1.2s cubic-bezier(.4,0,.6,1) infinite;"></div>
+  </div>
+  <div id="gate-status" style="color:#9aa5bd; font-size:12px; font-weight:600;">Connexion au serveur…</div>
+  <div id="gate-retry" style="display:none; margin-top:8px;">
+    <button id="gate-retry-btn" style="background:#00d2ff; color:#05050f; border:none; padding:8px 20px; border-radius:20px; font-weight:700; cursor:pointer;">🔄 Réessayer</button>
+  </div>
+</div>
+<style>
+  @keyframes cbPulse { 50% { transform:scale(1.08); filter:drop-shadow(0 0 28px #00d2ffcc); } }
+  @keyframes cbSlide { 0% { margin-left:-30% } 100% { margin-left:100% } }
+</style>
+<script>
+  // ✅ API du Gate Loader (disponible partout dans le jeu)
+  window.showGate = function(statusText, onRetry) {
+    const g = document.getElementById('gate-loader');
+    const s = document.getElementById('gate-status');
+    const r = document.getElementById('gate-retry');
+    const btn = document.getElementById('gate-retry-btn');
+    if (s) s.innerText = statusText || 'Connexion au serveur…';
+    if (r) r.style.display = onRetry ? 'block' : 'none';
+    if (onRetry && btn) {
+      btn.onclick = onRetry;
+    }
+    if (g) { g.style.display = 'flex'; }
+  };
+
+  window.hideGate = function() {
+    const g = document.getElementById('gate-loader');
+    if (g) g.style.display = 'none';
+  };
+
+  // ✅ Fonction de retry générique (3 tentatives avec délai)
+  window.fetchWithRetry = async function(url, options = {}, maxRetries = 3) {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        const res = await fetch(url, options);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return await res.json();
+      } catch (err) {
+        if (i === maxRetries - 1) throw err;
+        await new Promise(r => setTimeout(r, 1500 * (i + 1))); // Délai progressif
+      }
+    }
+  };
+</script>
+
 </body>
 </body>
 </html>
