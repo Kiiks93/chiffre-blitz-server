@@ -686,7 +686,7 @@ function renderProfileCustomizationMenus() {
   const frameSelect = document.getElementById("frame-input");
   const equippedFrame = myProfile.inventory && myProfile.inventory.__equipped && myProfile.inventory.__equipped.frame;
   if (frameSelect) {
-    titleSelect.innerHTML = `<option value="">${i18n[currentLang].profile_no_title}</option>`;
+    frameSelect.innerHTML = `<option value="">${(i18n[currentLang].profile_no_frame) || (currentLang === "fr" ? "Aucun cadre (Défaut)" : "No frame (Default)")}</option>`;
     const frames = (myProfile.unlocked_items || []).filter(id => id.startsWith("frame_"));
     if (!frames.includes("frame_standard")) frames.unshift("frame_standard");
     frames.forEach(fId => {
