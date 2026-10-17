@@ -85,6 +85,11 @@ function openCatchChoice(theme) {
 function closeCatchChoice() {
   const o = document.getElementById('catch-choice-overlay');
   if (o) o.remove();
+  
+  // ✅ FORCER LE RETOUR AU MENU PRINCIPAL
+  if (typeof showMainMenu === 'function') {
+    showMainMenu();
+  }
 }
 
 function launchCatch(theme, is1v1) {
