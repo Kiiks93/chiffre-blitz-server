@@ -84,7 +84,6 @@ BARRE D'ÉCONOMIE (pièces, trophées, rang, compteur en ligne)
   .cb-marquee-text{padding-right:2.5em; flex-shrink:0;}
   @keyframes cbMarquee{ 0%{transform:translateX(0);} 100%{transform:translateX(-50%);} }
   @keyframes cbBannerFlow{ 0%{background-position:0 0;} 100%{background-position:200% 0;} }
-  @media (min-width:761px){ #cb-event-banner-mobile{ display:none !important; } }
 </style>
 
 <!-- ============================================================
@@ -640,12 +639,20 @@ HUB ÉVÉNEMENTS MOBILE (pastille stats + panneau adaptatif)
 </style>
 <script>
 (function(){
-  window.cbToggleEventPanel = function(force){
+  window.cbToggleEventPanel = function(force){ 
     var p = document.getElementById('cb-event-panel');
     if (!p) return;
     var show = (force === undefined) ? (p.style.display !== 'flex') : !!force;
     p.style.display = show ? 'flex' : 'none';
   };
+  window.cbSyncEventBanner = function(){
+    var b = document.getElementById('cb-event-banner-mobile');
+    var adm = document.getElementById('admire-btn');
+    var on = !!(b && b.__cbOn) && document.documentElement.classList.contains('cb-mm-on');
+    if (b) b.style.display = on ? 'block' : 'none';          // ✅ visible UNIQUEMENT sur le menu principal
+    if (adm) adm.style.marginTop = on ? '30px' : '';          // ✅ Admirer descend sous le bandeau
+  };
+
   function cbBindEvents(){
     if (typeof socket === 'undefined' || !socket || !socket.on) { setTimeout(cbBindEvents, 200); return; }
     socket.on('events_state_update', function(ev){
@@ -670,16 +677,8 @@ HUB ÉVÉNEMENTS MOBILE (pastille stats + panneau adaptatif)
         else { banner.style.display = 'none'; }
       }
       var bannerTop = document.getElementById('cb-event-banner-mobile');
-      if (bannerTop) {
-        if (list.length) {
-          bannerTop.style.display = 'block';
-          var adm = document.getElementById('admire-btn');
-          if (adm && adm.offsetWidth) bannerTop.style.marginRight = (adm.offsetWidth + 18) + 'px';
-        } else {
-          bannerTop.style.display = 'none';
-          bannerTop.style.marginRight = '0';
-        }
-      }
+      if (bannerTop) bannerTop.__cbOn = list.length > 0;
+      if (window.cbSyncEventBanner) window.cbSyncEventBanner();
       var t = document.getElementById('btn-tow-menu-m');
       var h = document.getElementById('btn-halloween-menu-m');
       var n = document.getElementById('btn-noel-menu-m');
