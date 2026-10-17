@@ -685,6 +685,12 @@ HUB ÉVÉNEMENTS MOBILE (pastille stats + panneau adaptatif)
       if (t) t.style.display = ev.tugOfWarMode ? 'block' : 'none';
       if (h) h.style.display = ev.halloweenMode ? 'block' : 'none';
       if (n) n.style.display = ev.noelMode ? 'block' : 'none';
+      
+      // ✅ FORCER LA RECONSTRUCTION DE LA ROUE EN TEMPS RÉEL
+      if (typeof window.refreshMobileWheel === 'function') {
+          window.refreshMobileWheel();
+      }
+
       var panel = document.getElementById('cb-event-panel');
       if (panel && !list.length) panel.style.display = 'none';
     });
