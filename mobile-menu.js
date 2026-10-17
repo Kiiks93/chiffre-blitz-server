@@ -21,6 +21,7 @@ function isMobileDevice(){ return window.matchMedia('(max-width: 760px), (pointe
 function showMobileMenu(show) {
   const m = document.getElementById('screen-menu-mobile');
   if (!m) return;
+  document.documentElement.classList.toggle('cb-mm-on', !!show);   // ✅ AJOUT
   m.style.display = show ? 'flex' : 'none';
   if (show) { syncMobileMenuButtons(); buildModeWheel(); }
   setTimeout(updateS1Neon, 60);
@@ -157,7 +158,7 @@ function ecranPleinVisible(){
 function updateS1Neon(){
   let sign=document.getElementById('s1-neon-sign');
   const season = (window.myProfile && (myProfile.currentSeasonId || myProfile.current_season)) || window.CURRENT_SEASON || 's1';
-  const visible=isMobileDevice()&&menuPrincipalVisible()&&!ecranPleinVisible();
+  const visible=menuPrincipalVisible()&&!ecranPleinVisible();   // ✅ néon partout, plus seulement mobile
   if(season==='s1'&&visible){
     if(!sign){ sign=document.createElement('div');sign.id='s1-neon-sign';sign.className='s1-neon-sign';
       sign.innerHTML='<div class="s1-neon-logo">⚡</div><div class="s1-neon-text">CHIFFRE BLITZ</div>';
