@@ -21,10 +21,17 @@ function isMobileDevice(){ return window.matchMedia('(max-width: 760px), (pointe
 function showMobileMenu(show) {
   const m = document.getElementById('screen-menu-mobile');
   if (!m) return;
-  document.documentElement.classList.toggle('cb-mm-on', !!show);   // ✅ AJOUT
+  document.documentElement.classList.toggle('cb-mm-on', !!show);
   m.style.display = show ? 'flex' : 'none';
-  if (show) { syncMobileMenuButtons(); buildModeWheel(); }
+  if (show) {
+    // ✅ Filet anti page vide : au retour au menu, aucun écran de jeu ne reste affiché par-dessus
+    ['screen-game','screen-catch','tower-game','tw-brief'].forEach(function(id){
+      var el = document.getElementById(id); if (el) el.style.display = 'none';
+    });
+    syncMobileMenuButtons(); buildModeWheel();
+  }
   setTimeout(updateS1Neon, 60);
+  if (window.cbSyncEventBanner) window.cbSyncEventBanner();   // ✅ bandeau + Admirer resynchronisés
 }
 
 function toggleAdmireMode() {
