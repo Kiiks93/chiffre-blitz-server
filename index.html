@@ -668,7 +668,16 @@ HUB ÉVÉNEMENTS MOBILE (pastille stats + panneau adaptatif)
         else { banner.style.display = 'none'; }
       }
       var bannerTop = document.getElementById('cb-event-banner-mobile');
-      if (bannerTop) bannerTop.style.display = list.length ? 'block' : 'none';
+      if (bannerTop) {
+        if (list.length) {
+          bannerTop.style.display = 'block';
+          var adm = document.getElementById('admire-btn');
+          if (adm && adm.offsetWidth) bannerTop.style.marginRight = (adm.offsetWidth + 18) + 'px';
+        } else {
+          bannerTop.style.display = 'none';
+          bannerTop.style.marginRight = '0';
+        }
+      }
       var t = document.getElementById('btn-tow-menu-m');
       var h = document.getElementById('btn-halloween-menu-m');
       var n = document.getElementById('btn-noel-menu-m');
