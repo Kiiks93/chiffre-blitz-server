@@ -94,9 +94,14 @@ function syncMobileMenuButtons(){
   [['btn-halloween-menu','mobile-btn-halloween'],['btn-noel-menu','mobile-btn-noel'],['btn-tow-menu','mobile-btn-tow']].forEach(function(p){
     const a=document.getElementById(p[0]),b=document.getElementById(p[1]); if(a&&b)b.style.display=a.style.display;
   });
-  renderWheel();
+  buildModeWheel();
 }
-
+function refreshMobileWheel() {
+    // ✅ Reconstruit complètement la roue pour inclure les nouveaux modes actifs
+    // On le fait même si le menu est caché, pour qu'il soit à jour au retour du joueur
+    buildModeWheel();
+    syncMobileMenuButtons();
+}
 /* ---------- SON néon : ONLY crachotements espacés (PAS de son blanc) ---------- */
 let NEON_HUM = null;
 let NEON_FLICK_TIMER = null;
