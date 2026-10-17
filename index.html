@@ -72,6 +72,19 @@ BARRE D'ÉCONOMIE (pièces, trophées, rang, compteur en ligne)
     <span class="online-stat">👤 <strong id="online-count-display">0</strong></span>
     <button id="cb-event-pill" onclick="cbToggleEventPanel()">⚡ <span id="cb-event-pill-n">0</span></button>
 </div>
+<!-- ✅ BANDEAU MARQUEE ÉVÉNEMENTS (défile de droite à gauche) -->
+<div id="cb-event-banner-mobile" style="display:none; position:relative; z-index:9980; background:linear-gradient(90deg,#ff8a00,#ff416c); color:#fff; border-bottom:2px solid #f8b500; overflow:hidden; height:26px;">
+  <div class="cb-marquee">
+    <span class="cb-marquee-text">⚡ Modes exclusifs en cours — Appuie sur ⚡ pour les voir !</span>
+    <span class="cb-marquee-text">⚡ Modes exclusifs en cours — Appuie sur ⚡ pour les voir !</span>
+  </div>
+</div>
+<style>
+  .cb-marquee{display:flex; white-space:nowrap; animation:cbMarquee 18s linear infinite; font-weight:900; font-size:12px; line-height:26px;}
+  .cb-marquee-text{padding-right:3em; flex-shrink:0;}
+  @keyframes cbMarquee{ 0%{transform:translateX(0);} 100%{transform:translateX(-50%);} }
+  @media (min-width:761px){ #cb-event-banner-mobile{ display:none !important; } }
+</style>
 
 <!-- ============================================================
 PUB DE LANCEMENT (fake, soutien créateur)
@@ -637,23 +650,25 @@ HUB ÉVÉNEMENTS MOBILE (pastille stats + panneau adaptatif)
       if (!ev) return;
       var fr = (typeof currentLang !== 'undefined' && currentLang === 'fr');
       var list = [];
-      if (ev.coinRush) list.push("🪙 <b>Coin Rush</b> (Pièces x2)");
-      if (ev.rankShield) list.push("🛡️ <b>Rank Shield</b> (Zéro perte de points en classé)");
-      if (ev.expressoMatch) list.push("⚡ <b>Expresso Match</b> (Parties rapides en 20s)");
-      if (ev.chaosMode) list.push("🌪️ <b>Chaos Mode</b> (Modificateurs aléatoires)");
-      if (ev.jackpotEclair) list.push("🎁 <b>Jackpot Éclair</b> (Coffres mystères)");
-      if (ev.tugOfWarMode) list.push("🪢 <b>Mode Exclusif : Corde Raide</b>");
-      if (ev.halloweenMode) list.push("🎃 <b>Mode Exclusif : Chasse Hantée</b>");
-      if (ev.noelMode) list.push("🎄 <b>Mode Exclusif : Course aux Cadeaux</b>");
+      if (ev.coinRush) list.push("🪙 Coin Rush (x2)");
+      if (ev.rankShield) list.push("🛡️ Rank Shield");
+      if (ev.expressoMatch) list.push("⚡ Expresso (20s)");
+      if (ev.chaosMode) list.push("🌪️ Chaos");
+      if (ev.jackpotEclair) list.push("🎁 Jackpot");
+      if (ev.tugOfWarMode) list.push("🪢 Corde Raide");
+      if (ev.halloweenMode) list.push("🎃 Halloween");
+      if (ev.noelMode) list.push("🎄 Noël");
       var pill = document.getElementById('cb-event-pill');
       var pillN = document.getElementById('cb-event-pill-n');
       if (pill) pill.style.display = list.length ? 'inline-flex' : 'none';
       if (pillN) pillN.innerText = list.length;
       var banner = document.getElementById('player-event-banner-mobile');
       if (banner) {
-        if (list.length) { banner.innerHTML = '⚡ <b>' + (fr ? 'ADMIN ABUSE EN COURS :' : 'ADMIN ABUSE ACTIVE:') + '</b><br>' + list.join('<br>'); banner.style.display = 'block'; }
+        if (list.length) { banner.innerHTML = '⚡ <b>' + (fr ? 'ADMIN ABUSE :' : 'ABUSE:') + '</b><br>' + list.join(' · '); banner.style.display = 'block'; }
         else { banner.style.display = 'none'; }
       }
+      var bannerTop = document.getElementById('cb-event-banner-mobile');
+      if (bannerTop) bannerTop.style.display = list.length ? 'block' : 'none';
       var t = document.getElementById('btn-tow-menu-m');
       var h = document.getElementById('btn-halloween-menu-m');
       var n = document.getElementById('btn-noel-menu-m');
