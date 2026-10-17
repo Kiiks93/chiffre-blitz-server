@@ -1669,12 +1669,10 @@ socket.on("global_announcement", (msg) => {
 
 socket.on("events_state_update", (events) => {
   latestGlobalEvents = events;
-  const banner = document.getElementById("player-event-banner");
+  const banners = document.querySelectorAll(".event-banner");   // ✅ PC + mobile
   const towBtn = document.getElementById("btn-tow-menu");
-  
   if (towBtn) towBtn.style.display = events.tugOfWarMode ? "flex" : "none";
-  if (!banner) return;
-  
+
   let activeList = [];
   if (events.coinRush) activeList.push("🪙 <b>Coin Rush</b> (Pièces x2)");
   if (events.rankShield) activeList.push("🛡️ <b>Rank Shield</b> (Zéro perte de points en classé)");
@@ -1685,12 +1683,14 @@ socket.on("events_state_update", (events) => {
   if (events.halloweenMode) activeList.push("🎃 <b>Mode Exclusif : Chasse Hantée</b>");
   if (events.noelMode) activeList.push("🎄 <b>Mode Exclusif : Course aux Cadeaux</b>");
   
-  if (activeList.length > 0) {
-    banner.innerHTML = `⚡ <b>${currentLang === "fr" ? "ADMIN ABUSE EN COURS :" : "ADMIN ABUSE ACTIVE:"}</b><br>` + activeList.join("<br>");
-    banner.style.display = "block";
-  } else {
-    banner.style.display = "none";
-  }
+    banners.forEach((banner) => {                                  // ✅ boucle au lieu d'un seul
+    if (activeList.length > 0) {
+      banner.innerHTML = `⚡ <b>${currentLang === "fr" ? "ADMIN ABUSE EN COURS :" : "ADMIN ABUSE ACTIVE:"}</b><br>` + activeList.join("<br>");
+      banner.style.display = "block";
+    } else {
+      banner.style.display = "none";
+    }
+  });
 });
 
 /* ============================================================
