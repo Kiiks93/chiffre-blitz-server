@@ -39,22 +39,20 @@
 </head>
 <body>
 
-<!-- ============================================================
-PORTEUR INTELLIGENT V2 : Détection iOS / Android / PC (Blindée)
-============================================================ -->
 <script>
 (function() {
+  // ✅ ÉTAPE 0 : Si c'est Capacitor (APK Android), on ne fait RIEN
+  if (window.Capacitor) {
+    return; // On sort immédiatement, le jeu se charge normalement
+  }
+  
   const ua = navigator.userAgent || navigator.vendor || window.opera;
   
   // 1. Détection iOS INFAILLIBLE (détecte iPhone/iPad même en mode "Ordinateur")
-  // Si c'est un Mac MAIS qu'il y a un écran tactile (maxTouchPoints > 1), c'est un iPad/iPhone déguisé.
   const isIOS = (/iPad|iPhone|iPod/.test(ua)) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
   
-  // 2. Détection Android
+  // 2. Détection Android (navigateur mobile, pas APK)
   const isAndroid = /Android/i.test(ua);
-
-  // 🧪 DEBUG (À supprimer une fois que ça marche) :
-  //alert("UA: " + ua + "\niOS: " + isIOS + "\nAndroid: " + isAndroid);
 
   if (isAndroid) {
     // 🤖 REDIRECTION ANDROID : On les envoie vers le Play Store
@@ -78,7 +76,7 @@ PORTEUR INTELLIGENT V2 : Détection iOS / Android / PC (Blindée)
       document.body.appendChild(overlay);
     });
   }
-  // ✅ Si c'est iOS, on ne fait RIEN : le jeu se charge normalement !
+  // ✅ Si c'est iOS (sans Capacitor), on ne fait RIEN : le jeu se charge normalement !
 })();
 </script>
 
