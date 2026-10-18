@@ -40,6 +40,45 @@
 <body>
 
 <!-- ============================================================
+PORTEUR INTELLIGENT : Détection iOS / Android / PC
+============================================================ -->
+<script>
+(function() {
+  const ua = navigator.userAgent || navigator.vendor || window.opera;
+  
+  // 1. Détection iOS (inclut les iPad récents qui se font passer pour des Mac)
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  
+  // 2. Détection Android
+  const isAndroid = /Android/i.test(ua);
+
+  if (isAndroid) {
+    // 🤖 REDIRECTION ANDROID : On les envoie gentiment vers le Play Store
+    window.location.replace('https://play.google.com/store/apps/details?id=com.chiffreblitz.app');
+  } 
+  else if (!isIOS) {
+    // 💻 BLOCAGE PC/MAC : On affiche un écran de courtoisie
+    document.documentElement.style.display = 'none'; // Cache tout le jeu instantanément
+    document.addEventListener('DOMContentLoaded', function() {
+      document.documentElement.style.display = 'block';
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:#0a0514;display:flex;align-items:center;justify-content:center;padding:20px;font-family:system-ui,sans-serif;';
+      overlay.innerHTML = 
+        '<div style="max-width:400px;width:100%;text-align:center;color:#fff;">' +
+        '<div style="font-size:56px;margin-bottom:16px;">💻🚫</div>' +
+        '<h2 style="color:#00d2ff;margin:0 0 12px;font-size:22px;">VERSION MOBILE UNIQUEMENT</h2>' +
+        '<p style="font-size:15px;line-height:1.5;color:#bbb;margin-bottom:24px;">Chiffre Blitz est optimisé pour les appareils mobiles.<br>La version PC n\'est pas encore disponible.</p>' +
+        '<a href="https://play.google.com/store/apps/details?id=com.chiffreblitz.app" style="display:block;background:linear-gradient(45deg,#00d2ff,#0072ff);color:#fff;font-weight:800;padding:14px;border-radius:12px;text-decoration:none;font-size:16px;box-shadow:0 4px 15px rgba(0,210,255,0.3);">▶ Télécharger sur Android</a>' +
+        '<p style="font-size:12px;color:#666;margin-top:20px;">Version iOS (iPhone/iPad) bientôt disponible sur ce site.</p>' +
+        '</div>';
+      document.body.appendChild(overlay);
+    });
+  }
+  // ✅ Si c'est iOS, on ne fait rien : le jeu se charge normalement !
+})();
+</script>
+
+<!-- ============================================================
 HEADER (logo + user-pill + boutons)
 ============================================================ -->
 <div class="header-bar">
