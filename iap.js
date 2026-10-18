@@ -51,6 +51,8 @@ const IAP = {
   async buy(sku) {
     const rc = this.rc();
     if (!rc) {
+        // ✅ iOS web → Stripe Checkout
+        if (this.isIOSWeb()) return await this.buyStripe(sku);
         this.notify('iap_app_only', 'Achats disponibles uniquement sur l\'application Android', 'Purchases available only on the Android app');
         return false;
     }
@@ -141,6 +143,37 @@ const IAP = {
 this.notify('iap_server_failed', 'Achat impossible (serveur)', 'Purchase failed (server)');
 return false;;
   },
+   
+  isIOSWeb() {
+    if (window.Capacitor) return false;
+    const ua = navigator.userAgent;
+    return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  },
+
+  async buyStripe(sku) {
+    const pseudo = (typeof myProfile !== 'undefined' && myProfile && myProfile.username) ? myProfile.username : null;
+    if (!pseudo) {
+      this.notify('iap_login_required', 'Connecte-toi avant d\'acheter', 'Log in before purchasing');
+      return false;
+    }
+    try {
+      const r = await fetch(this.serverBase() + '/api/create_stripe_session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pseudo: pseudo, sku: sku })
+      });
+      const j = await r.json();
+      if (j && j.ok && j.url) {
+        window.location.href = j.url;   // 🚀 départ vers Stripe Checkout
+        return true;
+      }
+      this.notify('iap_server_failed', 'Achat impossible (serveur)', 'Purchase failed (server)');
+      return false;
+    } catch (e) {
+      this.notify('iap_network_error', 'Erreur réseau pendant l\'achat', 'Network error during purchase');
+      return false;
+    }
+  },
 
   buyPassPremium() { return this.buy('blitz_pass_premium'); },
 
@@ -169,3 +202,21 @@ return false;;
 window.IAP = IAP;
 
 window.addEventListener('load', () => { setTimeout(() => IAP.init(), 800); });
+// ✅ Retour de paiement Stripe : petit message de confirmation
+(function(){
+  try {
+    const params = new URLSearchParams(location.search);
+    const p = params.get('payment');
+    if (p === 'success' || p === 'cancel') {
+      history.replaceState(null, '', location.pathname);
+      setTimeout(function(){
+        if (typeof showNotificationToast === 'function') {
+          showNotificationToast(
+            p === 'success' ? '✅ Paiement reçu ! Tes objets sont déjà dans ton inventaire ⚡' : 'Paiement annulé.',
+            p === 'success' ? 'gift' : 'announcement'
+          );
+        }
+      }, 1500);
+    }
+  } catch (e) {}
+})();
