@@ -182,8 +182,38 @@ if (typeof socket !== 'undefined') socket.on('player_registered', () => setTimeo
 (function(){
   const HIDE=['openTower','openSoloMenu','open1v1Hub','openRoomsScreen','openTournamentScreen','showTitleScreen','openAvalancheDifficulties','startHalloweenQueue','startNoelQueue','startTugOfWarQueue','startRandom1v1','startSoloTraining'];
   const SHOW=['showMainMenu','closeTower'];
-  HIDE.forEach(function(fn){ const w=setInterval(function(){ if(typeof window[fn]==='function'&&!window[fn].__h){ const o=window[fn]; window[fn]=function(){showMobileMenu(false);return o.apply(this,arguments);}; window[fn].__h=true; clearInterval(w);} },100); });
-  SHOW.forEach(function(fn){ const w=setInterval(function(){ if(typeof window[fn]==='function'&&!window[fn].__s){ const o=window[fn]; window[fn]=function(){const r=o.apply(this,arguments);showMobileMenu(true);return r;}; window[fn].__s=true; clearInterval(w);} },100); });
+  
+  HIDE.forEach(function(fn){ 
+    const w=setInterval(function(){ 
+      if(typeof window[fn]==='function'&&!window[fn].__h){ 
+        const o=window[fn]; 
+        window[fn]=function(){showMobileMenu(false);return o.apply(this,arguments);}; 
+        window[fn].__h=true; 
+        clearInterval(w);
+      } 
+    },100); 
+  });
+  
+  SHOW.forEach(function(fn){ 
+    const w=setInterval(function(){ 
+      if(typeof window[fn]==='function'&&!window[fn].__s){ 
+        const o=window[fn]; 
+        window[fn]=function(){
+          const r=o.apply(this,arguments);
+          showMobileMenu(true);
+          
+          // ✅ NOUVEAU : Vérifier s'il y a un message admin en attente quand le menu s'affiche
+          if (typeof window.showPendingAdminMessage === 'function') {
+            window.showPendingAdminMessage();
+          }
+          
+          return r;
+        }; 
+        window[fn].__s=true; 
+        clearInterval(w);
+      } 
+    },100); 
+  });
 })();
 
 document.addEventListener('DOMContentLoaded',function(){
