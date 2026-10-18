@@ -908,6 +908,15 @@ towerRegenLives(ap);
 if (wasCreated) await logPlayerAction(activePlayers[socket.id], 'account_created', `Username: ${rawUsername}`, null, null, null);
 socket.emit('register_result', { ok: true, created: wasCreated });
 socket.emit('player_registered', activePlayers[socket.id]);
+    socket.emit('player_registered', activePlayers[socket.id]);
+    broadcastOnlineCount();
+
+    // ✅ NOUVEAU : Envoi de message personnel admin
+    if (playerData.pending_message) {
+        socket.emit('admin_personal_message', playerData.pending_message);
+        // On efface le message en base pour ne pas le renvoyer à la prochaine connexion
+        supabase.from('players').update({ pending_message: null }).eq('id', playerData.id).then(() => {}).catch(() => {});
+    }
 broadcastOnlineCount();
 } catch (err) { console.error("Erreur enregistrement Supabase : ", err); socket.emit('register_result', { ok: false, reason: 'error' }); }
 });
