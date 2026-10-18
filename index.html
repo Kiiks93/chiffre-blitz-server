@@ -980,10 +980,13 @@ function closeIosInstallModal() {
       history.replaceState(null, '', location.pathname);
       setTimeout(function(){
         if (typeof showNotificationToast === 'function') {
-          showNotificationToast(
-            p === 'success' ? '✅ Paiement reçu ! Tes objets sont déjà dans ton inventaire ⚡' : 'Paiement annulé.',
-            p === 'success' ? 'gift' : 'announcement'
-          );
+          let msg = '✅ Paiement reçu ! Tes objets sont déjà dans ton inventaire ⚡';
+          try {
+            const sku = localStorage.getItem('cb_last_stripe_sku');
+            if (sku === 'blitz_pass_premium') msg = '✅ Passe Premium activé ! Ouvre le Passe et réclame tes récompenses ⭐';
+            localStorage.removeItem('cb_last_stripe_sku');
+          } catch (e) {}
+          showNotificationToast(p === 'success' ? msg : 'Paiement annulé.', p === 'success' ? 'gift' : 'announcement');
         }
       }, 1500);
     }
