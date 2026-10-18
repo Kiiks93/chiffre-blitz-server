@@ -2537,11 +2537,11 @@ try {
 
 // 💰 PRIX EN CENTIMES (à ajuster : 499 = 4,99 €)
 const STRIPE_PRODUCTS = {
-  blitz_pass_premium: { name: 'Passe de Saison Premium ⚡', amount: 499 },
-  pack_vies_1:        { name: 'Pack 10 Vies ❤️',            amount: 99  },
-  pack_jokers_2:      { name: 'Pack 2 Jokers 🃏',           amount: 149 },
-  pack_mixte_3:       { name: 'Pack Mixte 3 ⚡',            amount: 199 },
-  pack_blitz_5:       { name: 'Pack Blitz 5 💎',            amount: 399 }
+  blitz_pass_premium: { name: 'Passe de Saison Premium ⚡', amount: 300 },  // 3,00 €
+  pack_vies_1:        { name: 'Pack 10 Vies ❤️',            amount: 100  },  // 1€
+  pack_jokers_2:      { name: 'Pack 2 Jokers 🃏',           amount: 200 },  // 2,00 €
+  pack_mixte_3:       { name: 'Pack Mixte 3 ⚡',            amount: 300 },  // 3,00 €
+  pack_blitz_5:       { name: 'Pack Blitz 5 💎',            amount: 500 }   // 5,00 €
 };
 
 // ✅ Crédite un pack après paiement Stripe (même logique que iap_grant, sans vérif Google)
