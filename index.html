@@ -40,25 +40,29 @@
 <body>
 
 <!-- ============================================================
-PORTEUR INTELLIGENT : Détection iOS / Android / PC
+PORTEUR INTELLIGENT V2 : Détection iOS / Android / PC (Blindée)
 ============================================================ -->
 <script>
 (function() {
   const ua = navigator.userAgent || navigator.vendor || window.opera;
   
-  // 1. Détection iOS (inclut les iPad récents qui se font passer pour des Mac)
-  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  // 1. Détection iOS INFAILLIBLE (détecte iPhone/iPad même en mode "Ordinateur")
+  // Si c'est un Mac MAIS qu'il y a un écran tactile (maxTouchPoints > 1), c'est un iPad/iPhone déguisé.
+  const isIOS = (/iPad|iPhone|iPod/.test(ua)) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
   
   // 2. Détection Android
   const isAndroid = /Android/i.test(ua);
 
+  // 🧪 DEBUG (À supprimer une fois que ça marche) :
+  // alert("UA: " + ua + "\niOS: " + isIOS + "\nAndroid: " + isAndroid);
+
   if (isAndroid) {
-    // 🤖 REDIRECTION ANDROID : On les envoie gentiment vers le Play Store
+    // 🤖 REDIRECTION ANDROID : On les envoie vers le Play Store
     window.location.replace('https://play.google.com/store/apps/details?id=com.chiffreblitz.app');
   } 
   else if (!isIOS) {
-    // 💻 BLOCAGE PC/MAC : On affiche un écran de courtoisie
-    document.documentElement.style.display = 'none'; // Cache tout le jeu instantanément
+    // 💻 BLOCAGE PC/MAC : On affiche l'écran de courtoisie
+    document.documentElement.style.display = 'none'; 
     document.addEventListener('DOMContentLoaded', function() {
       document.documentElement.style.display = 'block';
       const overlay = document.createElement('div');
@@ -74,7 +78,7 @@ PORTEUR INTELLIGENT : Détection iOS / Android / PC
       document.body.appendChild(overlay);
     });
   }
-  // ✅ Si c'est iOS, on ne fait rien : le jeu se charge normalement !
+  // ✅ Si c'est iOS, on ne fait RIEN : le jeu se charge normalement !
 })();
 </script>
 
