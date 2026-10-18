@@ -973,16 +973,36 @@ function closeIosInstallModal() {
 }
 </script>
 <script>
-// ✅ Retour de paiement Stripe : message adapté au produit acheté
+// ✅ Retour de paiement Stripe : rechargement complet + toast
 (function(){
   try {
     const params = new URLSearchParams(location.search);
     const p = params.get('payment');
     if (p === 'success' || p === 'cancel') {
-      history.replaceState(null, '', location.pathname);
+      // Sauvegarde le type de paiement avant de recharger
+      try {
+        localStorage.setItem('cb_payment_return', p);
+      } catch (e) {}
+      
+      // Recharge la page SANS le paramètre payment
+      const cleanUrl = location.origin + location.pathname;
+      window.location.replace(cleanUrl);
+    }
+    
+    // Après rechargement, affiche le toast si on avait un paiement
+    const paymentType = localStorage.getItem('cb_payment_return');
+    if (paymentType) {
+      localStorage.removeItem('cb_payment_return');
+      
+      // Attend que le jeu soit complètement chargé
       setTimeout(function(){
         if (typeof showNotificationToast !== 'function') return;
-        if (p === 'cancel') { showNotificationToast('Paiement annulé.', 'announcement'); return; }
+        
+        if (paymentType === 'cancel') {
+          showNotificationToast('Paiement annulé.', 'announcement');
+          return;
+        }
+        
         let msg = '✅ Paiement reçu ! Tes objets sont déjà dans ton inventaire ⚡';
         try {
           const sku = localStorage.getItem('cb_last_stripe_sku');
@@ -990,7 +1010,7 @@ function closeIosInstallModal() {
           localStorage.removeItem('cb_last_stripe_sku');
         } catch (e) {}
         showNotificationToast(msg, 'gift');
-      }, 1500);
+      }, 3000); // 3 secondes pour laisser le temps au jeu de se charger
     }
   } catch (e) {}
 })();
