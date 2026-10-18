@@ -971,7 +971,7 @@ function closeIosInstallModal() {
 }
 </script>
 <script>
-// ✅ Retour de paiement Stripe : petit message de confirmation
+// ✅ Retour de paiement Stripe : message adapté au produit acheté
 (function(){
   try {
     const params = new URLSearchParams(location.search);
@@ -979,15 +979,15 @@ function closeIosInstallModal() {
     if (p === 'success' || p === 'cancel') {
       history.replaceState(null, '', location.pathname);
       setTimeout(function(){
-        if (typeof showNotificationToast === 'function') {
-          let msg = '✅ Paiement reçu ! Tes objets sont déjà dans ton inventaire ⚡';
-          try {
-            const sku = localStorage.getItem('cb_last_stripe_sku');
-            if (sku === 'blitz_pass_premium') msg = '✅ Passe Premium activé ! Ouvre le Passe et réclame tes récompenses ⭐';
-            localStorage.removeItem('cb_last_stripe_sku');
-          } catch (e) {}
-          showNotificationToast(p === 'success' ? msg : 'Paiement annulé.', p === 'success' ? 'gift' : 'announcement');
-        }
+        if (typeof showNotificationToast !== 'function') return;
+        if (p === 'cancel') { showNotificationToast('Paiement annulé.', 'announcement'); return; }
+        let msg = '✅ Paiement reçu ! Tes objets sont déjà dans ton inventaire ⚡';
+        try {
+          const sku = localStorage.getItem('cb_last_stripe_sku');
+          if (sku === 'blitz_pass_premium') msg = '✅ Passe Premium activé ! Ouvre le Passe et réclame tes récompenses ⭐';
+          localStorage.removeItem('cb_last_stripe_sku');
+        } catch (e) {}
+        showNotificationToast(msg, 'gift');
       }, 1500);
     }
   } catch (e) {}
