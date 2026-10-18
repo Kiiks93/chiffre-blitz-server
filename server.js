@@ -989,9 +989,10 @@ const key = tier + "_" + track;
 const unlockedTier = (player.seasonProgress && player.seasonProgress[seasonId] && player.seasonProgress[seasonId].unlocked_tier) || 0;
 if (tier > unlockedTier) { socket.emit('pass_claim_denied', { tier, track, reason: "tier_locked", unlocked: unlockedTier }); return; }
 if (seasonData[key]) { socket.emit('pass_claim_denied', { tier, track, reason: "already_claimed" }); return; }
-if (track === 'premium' && !seasonData.premium) { socket.emit('pass_claim_denied', { tier, track, reason: "premium_required" }); return; }
+if (track === 'premium' && !seasonData.premium && !player.blitzPassPremium) { socket.emit('pass_claim_denied', { tier, track, reason: "premium_required" }); return; }
+if (track === 'premium' && !seasonData.premium && player.blitzPassPremium) seasonData.premium = true; // 🔧 auto-réparation (achats Stripe déjà effectués)
 seasonData[key] = true;
-player.blitzPassPremium = !!seasonData.premium;
+if (seasonData.premium) player.blitzPassPremium = true; // ✅ ne rétrograde JAMAIS le statut VIP
 applyPassReward(player, tier, track, seasonId);
 const unlockedTrophies = evaluateTrophies(player);
 if (unlockedTrophies.length > 0) socket.emit('trophy_unlocked', unlockedTrophies.map(t => ({ id: Object.keys(TROPHY_CATALOG).find(k => TROPHY_CATALOG[k] === t), ...t })));
@@ -2561,11 +2562,18 @@ async function grantStripePack(pseudo, sku) {
   }
   const apply = (p, isOnline) => {
     if (pack.type === 'pass') {
-      p.claimedPassTiers = p.claimedPassTiers || {};
-      p.claimedPassTiers[seasonId] = p.claimedPassTiers[seasonId] || {};
-      p.claimedPassTiers[seasonId].premium = true;
-      if (isOnline) p.blitzPassPremium = true;
-      else if (row) row.blitz_pass_premium = true;
+      if (isOnline) {
+        p.claimedPassTiers = p.claimedPassTiers || {};
+        p.claimedPassTiers[seasonId] = p.claimedPassTiers[seasonId] || {};
+        p.claimedPassTiers[seasonId].premium = true;
+        p.blitzPassPremium = true;
+      } else if (row) {
+        // ✅ Joueur HORS-LIGNE (webhook Stripe) : la colonne Supabase est claimed_pass_tiers
+        row.claimed_pass_tiers = normalizeClaimedTiers(row.claimed_pass_tiers);
+        row.claimed_pass_tiers[seasonId] = row.claimed_pass_tiers[seasonId] || {};
+        row.claimed_pass_tiers[seasonId].premium = true;
+        row.blitz_pass_premium = true;
+      }
     } else if (pack.type === 'jokers') {
       const tgt = isOnline ? p : row;
       let j = isOnline ? normalizeJokers(p.jokers) : (typeof row.tower_jokers === 'string' ? JSON.parse(row.tower_jokers || '{}') : normalizeJokers(row.tower_jokers || {}));
