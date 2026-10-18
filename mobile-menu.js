@@ -189,3 +189,25 @@ if (typeof socket !== 'undefined') socket.on('player_registered', () => setTimeo
 document.addEventListener('DOMContentLoaded',function(){
   ['btn-halloween-menu','btn-noel-menu','btn-tow-menu'].forEach(function(id){ const el=document.getElementById(id); if(el)new MutationObserver(syncMobileMenuButtons).observe(el,{attributes:true,attributeFilter:['style']}); });
 });
+// ✅ Fix viewport après retour Stripe
+function fixViewportAfterPayment() {
+  // Force le recalcul du viewport
+  const viewport = document.querySelector('meta[name="viewport"]');
+  if (viewport) {
+    viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+  }
+  
+  // Reset zoom CSS
+  document.documentElement.style.zoom = '1';
+  document.body.style.transform = 'scale(1)';
+  
+  // Force reflow
+  void document.body.offsetHeight;
+}
+
+// Appelle cette fonction au chargement si on revient d'un paiement
+if (new URLSearchParams(location.search).has('payment')) {
+  window.addEventListener('load', function() {
+    setTimeout(fixViewportAfterPayment, 100);
+  });
+}
