@@ -641,58 +641,67 @@ revealLeft: (s.type==="memory" || s.type==="pairs") ? Math.max(0, Math.round(((s
 };
 }
 async function towerWin(player, s){
-s.done = true;
-const used = (Date.now() - s.start) / 1000;
-let stars = 1;
-if (s.type === "pairs" || s.type === "memory") {
-const e3 = Math.floor(s.total * 0.2), e2 = Math.floor(s.total * 0.45);
-if (s.mistakes <= e3) stars = 3;
-else if (s.mistakes <= e2) stars = 2;
-else stars = 1;
-} else if (s.type === "sprint") {
-if (used <= s.def.time * 0.6) stars = 3;
-else if (used <= s.def.time * 0.85) stars = 2;
-else stars = 1;
-}
-else if (s.type === "forbidden") {
-if (used <= s.def.time * 0.6) stars = 3;
-else if (used <= s.def.time * 0.85) stars = 2;
-else stars = 1;
-} else if (s.type === "memory") {
-if (s.mistakes === 0) stars = 3;
-else if (s.mistakes <= 2) stars = 2;
-else stars = 1;
-} else {
-if (s.mistakes === 0 && used <= s.def.time * 0.6) stars = 3;
-else if (s.mistakes <= 2) stars = 2;
-else stars = 1;
-}
-let coins, reward = null;
-const chap = Math.ceil(s.floor / TOWER_FPC);
-if (!s.replay) {
-player.towerFloor = s.floor;
-coins = 10 + s.floor * 2 + stars * 5 + (s.type === "boss" ? 0 : towerDiffTier(s.floor) * 3);
-if (s.floor % 20 === 0 && s.floor % TOWER_FPC !== 0) coins += 20 + chap * 5;
-if (s.floor % 50 === 0 && s.floor % TOWER_FPC !== 0) coins += 50 + chap * 10;
-if (s.floor % TOWER_FPC === 0) {
-const itemId = TOWER_CHAPTER_REWARDS[s.floor / TOWER_FPC];
-if (itemId) {
-player.unlocked_items = player.unlocked_items || [];
-if (!player.unlocked_items.includes(itemId)) { player.unlocked_items.push(itemId); reward = itemId; }
-}
-}
-player.jokers = normalizeJokers(player.jokers);
-if (s.floor % 50 === 0 && s.floor % TOWER_FPC !== 0) player.jokers.shield += 1;
-if (s.floor % TOWER_FPC === 0) { player.jokers.shield += 2; player.jokers.time += 2; }
-} else {
-coins = 5 + stars * 2;
-}
-player.towerStars = player.towerStars || {};
-player.towerStars[String(s.floor)] = Math.max(player.towerStars[String(s.floor)] || 0, stars);
-player.coins = (player.coins || 0) + coins;
-await logPlayerAction(player, s.replay ? 'tower_replay' : 'tower_win', `Étage ${s.floor} (${stars}⭐) en ${used.toFixed(1)}s, ${s.mistakes} faute(s)`, 'coins', coins, player.coins);
-await savePlayerToSupabase(player.socketId);
-return { ok: true, floor: s.floor, stars, coins, reward, replay: s.replay };
+  s.done = true;
+  const used = (Date.now() - s.start) / 1000;
+  let stars = 1;
+  
+  // Calcul des étoiles (inchangé)
+  if (s.type === "pairs" || s.type === "memory") {
+    const e3 = Math.floor(s.total * 0.2), e2 = Math.floor(s.total * 0.45);
+    if (s.mistakes <= e3) stars = 3;
+    else if (s.mistakes <= e2) stars = 2;
+  } else if (s.type === "sprint" || s.type === "forbidden") {
+    if (used <= s.def.time * 0.6) stars = 3;
+    else if (used <= s.def.time * 0.85) stars = 2;
+  } else if (s.type === "memory") {
+    if (s.mistakes === 0) stars = 3;
+    else if (s.mistakes <= 2) stars = 2;
+  } else {
+    if (s.mistakes === 0 && used <= s.def.time * 0.6) stars = 3;
+    else if (s.mistakes <= 2) stars = 2;
+  }
+
+  let coins, reward = null;
+  const chap = Math.ceil(s.floor / TOWER_FPC);
+  
+  if (!s.replay) {
+    player.towerFloor = s.floor;
+    
+    // 📉 FORMULE CORRIGÉE : Économie saine (fini le farm infini)
+    // Ex: Étage 200 = ~95 pièces (au lieu de ~450). Avec Coin Rush = ~190.
+    coins = 5 + Math.floor(s.floor * 0.4) + stars * 2 + (s.type === "boss" ? 0 : towerDiffTier(s.floor) * 1);
+    
+    // Bonus paliers ronds (réduits)
+    if (s.floor % 20 === 0 && s.floor % TOWER_FPC !== 0) coins += 10 + chap * 2;
+    if (s.floor % 50 === 0 && s.floor % TOWER_FPC !== 0) coins += 25 + chap * 5;
+    
+    // Récompense de fin de chapitre (inchangée)
+    if (s.floor % TOWER_FPC === 0) {
+      const itemId = TOWER_CHAPTER_REWARDS[s.floor / TOWER_FPC];
+      if (itemId) {
+        player.unlocked_items = player.unlocked_items || [];
+        if (!player.unlocked_items.includes(itemId)) { player.unlocked_items.push(itemId); reward = itemId; }
+      }
+    }
+    
+    // Jokers (inchangé)
+    player.jokers = normalizeJokers(player.jokers);
+    if (s.floor % 50 === 0 && s.floor % TOWER_FPC !== 0) player.jokers.shield += 1;
+    if (s.floor % TOWER_FPC === 0) { player.jokers.shield += 2; player.jokers.time += 2; }
+    
+  } else {
+    // 📉 Replay : récompense symbolique pour éviter l'abus
+    coins = 2 + stars; 
+  }
+
+  player.towerStars = player.towerStars || {};
+  player.towerStars[String(s.floor)] = Math.max(player.towerStars[String(s.floor)] || 0, stars);
+  player.coins = (player.coins || 0) + coins;
+  
+  await logPlayerAction(player, s.replay ? 'tower_replay' : 'tower_win', `Étage ${s.floor} (${stars}⭐) en ${used.toFixed(1)}s, ${s.mistakes} faute(s)`, 'coins', coins, player.coins);
+  await savePlayerToSupabase(player.socketId);
+  
+  return { ok: true, floor: s.floor, stars, coins, reward, replay: s.replay };
 }
 async function towerFail(player, s, reason){
 s.done = true;
