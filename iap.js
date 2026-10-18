@@ -164,7 +164,10 @@ return false;;
       });
       const j = await r.json();
       if (j && j.ok && j.url) {
-        try { localStorage.setItem('cb_last_stripe_sku', sku); } catch (e) {}
+        try {
+          localStorage.setItem('cb_last_stripe_sku', sku);
+          localStorage.setItem('cb_payment_pending', 'true');
+        } catch (e) {}
         window.location.href = j.url;
         return true;
       }
