@@ -973,32 +973,33 @@ function closeIosInstallModal() {
 }
 </script>
 <script>
-// ✅ Retour de paiement Stripe : rechargement COMPLET + toast
+// ✅ Retour de paiement Stripe : RECHARGEMENT COMPLET
 (function(){
   try {
     const params = new URLSearchParams(location.search);
     const p = params.get('payment');
     if (p === 'success' || p === 'cancel') {
-      // Sauvegarde le type de paiement
+      // Sauvegarde l'info avant de recharger
       try {
         localStorage.setItem('cb_payment_return', p);
         localStorage.setItem('cb_payment_sku', localStorage.getItem('cb_last_stripe_sku') || '');
+        localStorage.removeItem('cb_last_stripe_sku');
       } catch (e) {}
       
-      // Rechargement FORCÉ sans cache
-      const cleanUrl = location.origin + location.pathname;
+      // RECHARGEMENT COMPLET (pas juste history.replaceState)
+      const cleanUrl = window.location.origin + window.location.pathname;
       window.location.replace(cleanUrl);
-      return;
+      return; // On sort, le rechargement va tout réinitialiser
     }
     
-    // Après rechargement, affiche le toast
+    // APRÈS RECHARGEMENT : affiche le toast si on avait un paiement
     const paymentType = localStorage.getItem('cb_payment_return');
     const sku = localStorage.getItem('cb_payment_sku');
     if (paymentType) {
       localStorage.removeItem('cb_payment_return');
       localStorage.removeItem('cb_payment_sku');
-      localStorage.removeItem('cb_last_stripe_sku');
       
+      // Attend que le jeu soit complètement chargé
       setTimeout(function(){
         if (typeof showNotificationToast !== 'function') return;
         
@@ -1012,7 +1013,7 @@ function closeIosInstallModal() {
           msg = '✅ Passe Premium activé ! Ouvre le Passe et réclame tes récompenses ⭐';
         }
         showNotificationToast(msg, 'gift');
-      }, 3500);
+      }, 3000); // 3 secondes pour laisser le temps au jeu de se charger complètement
     }
   } catch (e) {
     console.error('Erreur retour Stripe:', e);
