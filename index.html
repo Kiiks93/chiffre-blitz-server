@@ -1020,5 +1020,23 @@ function closeIosInstallModal() {
   }
 })();
 </script>
+<script>
+// ✅ Réception d'un message personnel de l'admin
+if (typeof socket !== 'undefined') {
+  socket.on('admin_personal_message', function(msg) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;padding:20px;';
+    overlay.innerHTML = `
+      <div style="background:#0f051d;border:2px solid #00d2ff;border-radius:16px;padding:24px;max-width:360px;width:100%;text-align:center;box-shadow:0 0 40px rgba(0,210,255,0.6);animation:victoryScalePop 0.4s ease;">
+        <div style="font-size:48px;margin-bottom:10px;"></div>
+        <h3 style="color:#00d2ff;margin:0 0 12px 0;font-size:18px;">Message du Créateur</h3>
+        <p style="color:#fff;font-size:14px;line-height:1.6;margin-bottom:24px;">${msg.replace(/\n/g, '<br>')}</p>
+        <button onclick="this.parentElement.parentElement.remove()" style="background:linear-gradient(45deg,#00d2ff,#0072ff);color:#fff;border:none;padding:12px 24px;border-radius:10px;font-weight:bold;cursor:pointer;font-size:14px;box-shadow:0 4px 15px rgba(0,210,255,0.4);">Merci ! ⚡</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  });
+}
+</script>
 </body>
 </html>
