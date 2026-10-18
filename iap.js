@@ -164,7 +164,8 @@ return false;;
       });
       const j = await r.json();
       if (j && j.ok && j.url) {
-        window.location.href = j.url;   // 🚀 départ vers Stripe Checkout
+        try { localStorage.setItem('cb_last_stripe_sku', sku); } catch (e) {}
+        window.location.href = j.url;
         return true;
       }
       this.notify('iap_server_failed', 'Achat impossible (serveur)', 'Purchase failed (server)');
