@@ -2522,6 +2522,146 @@ socket.disconnect(true);
 io.to(id1).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents, rewards: matchRewards, isRanked, isCatch: !!matchData.isCatch });
 io.to(id2).emit('game_over_1v1', { winnerId, reason, players: matchData.players, globalEvents, rewards: matchRewards, isRanked, isCatch: !!matchData.isCatch });
 }
+/* ============================================================
+💳 STRIPE — Achats web iOS (packs + passe de saison)
+⚠️ Placé AVANT express.json() global : le webhook a besoin du corps BRUT
+============================================================ */
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
+let stripe = null;
+try {
+  const StripeLib = require('stripe');
+  if (STRIPE_SECRET_KEY) stripe = new StripeLib(STRIPE_SECRET_KEY);
+} catch (e) { console.warn('[stripe] package non installé : achats web désactivés'); }
+
+// 💰 PRIX EN CENTIMES (à ajuster : 499 = 4,99 €)
+const STRIPE_PRODUCTS = {
+  blitz_pass_premium: { name: 'Passe de Saison Premium ⚡', amount: 499 },
+  pack_vies_1:        { name: 'Pack 10 Vies ❤️',            amount: 99  },
+  pack_jokers_2:      { name: 'Pack 2 Jokers 🃏',           amount: 149 },
+  pack_mixte_3:       { name: 'Pack Mixte 3 ⚡',            amount: 199 },
+  pack_blitz_5:       { name: 'Pack Blitz 5 💎',            amount: 399 }
+};
+
+// ✅ Crédite un pack après paiement Stripe (même logique que iap_grant, sans vérif Google)
+async function grantStripePack(pseudo, sku) {
+  const pack = IAP_PACKS[sku];
+  if (!pack) return false;
+  const seasonId = getCurrentSeason().id;
+  let targetId = null;
+  for (const sId in activePlayers) {
+    if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === pseudo.toLowerCase()) { targetId = sId; break; }
+  }
+  const player = targetId ? activePlayers[targetId] : null;
+  let row = null;
+  if (!player) {
+    const { data, error } = await supabase.from('players').select('*').ilike('username', pseudo).limit(1);
+    if (error || !data || !data.length) return false;
+    row = data[0];
+  }
+  const apply = (p, isOnline) => {
+    if (pack.type === 'pass') {
+      p.claimedPassTiers = p.claimedPassTiers || {};
+      p.claimedPassTiers[seasonId] = p.claimedPassTiers[seasonId] || {};
+      p.claimedPassTiers[seasonId].premium = true;
+      if (isOnline) p.blitzPassPremium = true;
+      else if (row) row.blitz_pass_premium = true;
+    } else if (pack.type === 'jokers') {
+      const tgt = isOnline ? p : row;
+      let j = isOnline ? normalizeJokers(p.jokers) : (typeof row.tower_jokers === 'string' ? JSON.parse(row.tower_jokers || '{}') : normalizeJokers(row.tower_jokers || {}));
+      j.time += pack.jTime; j.shield += pack.jShield;
+      if (isOnline) p.jokers = j; else row.tower_jokers = j;
+    } else {
+      const cur = isOnline
+        ? (p.lives === undefined ? TOWER_MAX_LIVES : p.lives)
+        : (row.tower_lives !== undefined && row.tower_lives !== null ? row.tower_lives : TOWER_MAX_LIVES);
+      const newLives = Math.min(LIFE_RESERVE_MAX, cur + (pack.lives || 0));
+      if (isOnline) { p.lives = newLives; if (newLives >= TOWER_MAX_LIVES) p.lives_ts = Date.now(); }
+      else { row.tower_lives = newLives; if (newLives >= TOWER_MAX_LIVES) row.tower_lives_ts = Date.now(); }
+      if (pack.type === 'mixed') {
+        let j = isOnline ? normalizeJokers(p.jokers) : (typeof row.tower_jokers === 'string' ? JSON.parse(row.tower_jokers || '{}') : normalizeJokers(row.tower_jokers || {}));
+        j.time += pack.jTime; j.shield += pack.jShield;
+        if (isOnline) p.jokers = j; else row.tower_jokers = j;
+      }
+    }
+  };
+  if (player) apply(player, true);
+  else if (row) apply(row, false);
+  if (targetId) {
+    await savePlayerToSupabase(targetId);
+    io.to(targetId).emit('player_registered', player);
+  } else if (row) {
+    await supabase.from('players').update({
+      blitz_pass_premium: row.blitz_pass_premium,
+      claimed_pass_tiers: row.claimed_pass_tiers,
+      tower_lives: row.tower_lives,
+      tower_lives_ts: row.tower_lives_ts,
+      tower_jokers: row.tower_jokers
+    }).eq('id', row.id);
+  }
+  await logPlayerAction(player || { username: pseudo, socketId: null }, 'stripe_grant', `SKU: ${sku} (Stripe)`, null, null, null);
+  return true;
+}
+
+// 🔔 WEBHOOK Stripe (corps BRUT obligatoire pour la signature)
+app.post('/api/stripe_webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  if (!stripe || !STRIPE_WEBHOOK_SECRET) return res.status(500).end();
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, req.get('stripe-signature'), STRIPE_WEBHOOK_SECRET);
+  } catch (e) {
+    console.warn('[stripe] signature invalide :', e.message);
+    return res.status(400).end();
+  }
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const pseudo = (session.metadata && session.metadata.pseudo) || '';
+    const sku = (session.metadata && session.metadata.sku) || '';
+    if (pseudo && sku && IAP_PACKS[sku]) {
+      const receiptToken = 'stripe_' + session.id;
+      const { data: existing } = await supabase.from('iap_receipts').select('id').eq('token', receiptToken).maybeSingle();
+      if (!existing) {
+        const ins = await supabase.from('iap_receipts').insert([{ username: String(pseudo), sku, token: receiptToken }]);
+        if (!ins.error) {
+          console.log('[stripe] ✅ paiement confirmé →', pseudo, sku);
+          await grantStripePack(String(pseudo), sku);
+        }
+      }
+    }
+  }
+  res.json({ received: true });
+});
+
+// 🛒 Création d'une session de paiement (appelée par le jeu iOS)
+app.post('/api/create_stripe_session', express.json(), async (req, res) => {
+  if (!stripe) return res.json({ ok: false, reason: 'stripe_not_configured' });
+  const pseudo = String((req.body && req.body.pseudo) || '').trim();
+  const sku = String((req.body && req.body.sku) || '').trim();
+  const prod = STRIPE_PRODUCTS[sku];
+  if (!pseudo || !prod || !IAP_PACKS[sku]) return res.json({ ok: false, reason: 'params' });
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: 'eur',
+          product_data: { name: prod.name },
+          unit_amount: prod.amount
+        },
+        quantity: 1
+      }],
+      metadata: { pseudo, sku },
+      success_url: 'https://chiffre-blitz.fr/?payment=success',
+      cancel_url: 'https://chiffre-blitz.fr/?payment=cancel'
+    });
+    res.json({ ok: true, url: session.url });
+  } catch (e) {
+    console.error('[stripe] erreur session :', e.message);
+    res.json({ ok: false, reason: 'server_error' });
+  }
+});
+/* ================== FIN BLOC STRIPE ================== */
 const PORT = process.env.PORT || 3000;
 app.use(express.json({ limit: '1mb' }));
 const IAP_PACKS = {
