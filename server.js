@@ -2660,7 +2660,7 @@ app.post('/api/create_stripe_session', express.json(), async (req, res) => {
         quantity: 1
       }],
       metadata: { pseudo, sku },
-      success_url: 'https://chiffre-blitz.fr/?payment=success',
+      success_url: 'https://chiffre-blitz.fr/?payment=success&refresh=1',
       cancel_url: 'https://chiffre-blitz.fr/?payment=cancel'
     });
     res.json({ ok: true, url: session.url });
