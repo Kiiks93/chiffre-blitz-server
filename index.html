@@ -973,28 +973,32 @@ function closeIosInstallModal() {
 }
 </script>
 <script>
-// ✅ Retour de paiement Stripe : rechargement complet + toast
+// ✅ Retour de paiement Stripe : rechargement COMPLET + toast
 (function(){
   try {
     const params = new URLSearchParams(location.search);
     const p = params.get('payment');
     if (p === 'success' || p === 'cancel') {
-      // Sauvegarde le type de paiement avant de recharger
+      // Sauvegarde le type de paiement
       try {
         localStorage.setItem('cb_payment_return', p);
+        localStorage.setItem('cb_payment_sku', localStorage.getItem('cb_last_stripe_sku') || '');
       } catch (e) {}
       
-      // Recharge la page SANS le paramètre payment
+      // Rechargement FORCÉ sans cache
       const cleanUrl = location.origin + location.pathname;
       window.location.replace(cleanUrl);
+      return;
     }
     
-    // Après rechargement, affiche le toast si on avait un paiement
+    // Après rechargement, affiche le toast
     const paymentType = localStorage.getItem('cb_payment_return');
+    const sku = localStorage.getItem('cb_payment_sku');
     if (paymentType) {
       localStorage.removeItem('cb_payment_return');
+      localStorage.removeItem('cb_payment_sku');
+      localStorage.removeItem('cb_last_stripe_sku');
       
-      // Attend que le jeu soit complètement chargé
       setTimeout(function(){
         if (typeof showNotificationToast !== 'function') return;
         
@@ -1004,15 +1008,15 @@ function closeIosInstallModal() {
         }
         
         let msg = '✅ Paiement reçu ! Tes objets sont déjà dans ton inventaire ⚡';
-        try {
-          const sku = localStorage.getItem('cb_last_stripe_sku');
-          if (sku === 'blitz_pass_premium') msg = '✅ Passe Premium activé ! Ouvre le Passe et réclame tes récompenses ⭐';
-          localStorage.removeItem('cb_last_stripe_sku');
-        } catch (e) {}
+        if (sku === 'blitz_pass_premium') {
+          msg = '✅ Passe Premium activé ! Ouvre le Passe et réclame tes récompenses ⭐';
+        }
         showNotificationToast(msg, 'gift');
-      }, 3000); // 3 secondes pour laisser le temps au jeu de se charger
+      }, 3500);
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error('Erreur retour Stripe:', e);
+  }
 })();
 </script>
 </body>
