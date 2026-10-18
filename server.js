@@ -2662,8 +2662,6 @@ app.post('/api/create_stripe_session', express.json(), async (req, res) => {
   }
 });
 /* ================== FIN BLOC STRIPE ================== */
-const PORT = process.env.PORT || 3000;
-app.use(express.json({ limit: '1mb' }));
 const IAP_PACKS = {
 blitz_pass_premium: { type: 'pass' },
 pack_vies_1:        { type: 'lives',  lives: 10 },
@@ -2671,6 +2669,8 @@ pack_jokers_2:      { type: 'jokers', jTime: 2, jShield: 2 },
 pack_mixte_3:       { type: 'mixed',  lives: 5,  jTime: 2, jShield: 2 },
 pack_blitz_5:       { type: 'mixed',  lives: 10, jTime: 5, jShield: 5 }
 };
+const PORT = process.env.PORT || 3000;
+app.use(express.json({ limit: '1mb' }));
 const LIFE_RESERVE_MAX = 30;
 
 /* ============================================================
@@ -2842,6 +2842,36 @@ res.json({ ok: true });
 console.error('[iap_grant] erreur:', e);
 res.json({ ok: false, reason: 'server_error' });
 }
+});
+
+// 🛒 Création d'une session de paiement (appelée par le jeu iOS)
+app.post('/api/create_stripe_session', express.json(), async (req, res) => {
+  if (!stripe) return res.json({ ok: false, reason: 'stripe_not_configured' });
+  const pseudo = String((req.body && req.body.pseudo) || '').trim();
+  const sku = String((req.body && req.body.sku) || '').trim();
+  const prod = STRIPE_PRODUCTS[sku];
+  if (!pseudo || !prod || !IAP_PACKS[sku]) return res.json({ ok: false, reason: 'params' });
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: 'eur',
+          product_data: { name: prod.name },
+          unit_amount: prod.amount
+        },
+        quantity: 1
+      }],
+      metadata: { pseudo, sku },
+      success_url: 'https://chiffre-blitz.fr/?payment=success',
+      cancel_url: 'https://chiffre-blitz.fr/?payment=cancel'
+    });
+    res.json({ ok: true, url: session.url });
+  } catch (e) {
+    console.error('[stripe] erreur session :', e.message);
+    res.json({ ok: false, reason: 'server_error' });
+  }
 });
 server.listen(PORT, () => {
 loadMaintenance();
