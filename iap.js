@@ -203,21 +203,3 @@ return false;;
 window.IAP = IAP;
 
 window.addEventListener('load', () => { setTimeout(() => IAP.init(), 800); });
-// ✅ Retour de paiement Stripe : petit message de confirmation
-(function(){
-  try {
-    const params = new URLSearchParams(location.search);
-    const p = params.get('payment');
-    if (p === 'success' || p === 'cancel') {
-      history.replaceState(null, '', location.pathname);
-      setTimeout(function(){
-        if (typeof showNotificationToast === 'function') {
-          showNotificationToast(
-            p === 'success' ? '✅ Paiement reçu ! Tes objets sont déjà dans ton inventaire ⚡' : 'Paiement annulé.',
-            p === 'success' ? 'gift' : 'announcement'
-          );
-        }
-      }, 1500);
-    }
-  } catch (e) {}
-})();
