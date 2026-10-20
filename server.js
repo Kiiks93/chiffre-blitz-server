@@ -2030,33 +2030,51 @@ socket.emit('admin_force_refresh_result', { ok: false, message: 'Joueur hors-lig
 });
 
 /* ============================================================
-ADMIN : ENVOYER UN MESSAGE PERSONNEL
+ADMIN : ENVOYER UN MESSAGE PERSONNEL (OU GLOBAL)
 ============================================================ */
 socket.on('admin_send_message', async (data) => {
     if (!socket.isAdmin) return;
     const { targetUsername, message } = data || {};
-    const clean = (targetUsername || '').trim();
-    if (!clean || !message) return socket.emit('admin_message_result', { ok: false, message: 'Pseudo et message requis.' });
+    const clean = (targetUsername || '').trim().toUpperCase();
+    if (!clean || !message) return socket.emit('admin_message_result', { ok: false, message: 'Pseudo/TOUS et message requis.' });
 
+    // ✅ CAS 1 : ENVOI À TOUS LES JOUEURS
+    if (clean === 'TOUS' || clean === 'ALL') {
+        // 1. Mettre à jour la base de données pour TOUS les joueurs (même hors-ligne)
+        const { error: updateError } = await supabase.from('players').update({ pending_message: message });
+        if (updateError) return socket.emit('admin_message_result', { ok: false, message: 'Erreur BDD globale: ' + updateError.message });
+
+        // 2. Envoyer immédiatement aux joueurs actuellement en ligne
+        for (const sId in activePlayers) {
+            io.to(sId).emit('admin_personal_message', message);
+            // On efface immédiatement pour les joueurs en ligne (ils l'ont déjà vu)
+            supabase.from('players').update({ pending_message: null }).eq('id', activePlayers[sId].dbId).then().catch();
+        }
+        
+        return socket.emit('admin_message_result', { ok: true, message: `✅ Message envoyé à TOUS les joueurs !` });
+    }
+
+    // ✅ CAS 2 : ENVOI À UN JOUEUR SPÉCIFIQUE (code existant)
+    const cleanLower = (targetUsername || '').trim().toLowerCase();
+    
     // 1. Enregistrer en base (pour les joueurs hors-ligne)
-    const { error } = await supabase.from('players').update({ pending_message: message }).ilike('username', clean);
+    const { error } = await supabase.from('players').update({ pending_message: message }).ilike('username', cleanLower);
     if (error) return socket.emit('admin_message_result', { ok: false, message: 'Erreur BDD: ' + error.message });
 
     // 2. Si le joueur est en ligne, on lui envoie tout de suite
     let targetId = null;
     for (const sId in activePlayers) {
-        if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === clean.toLowerCase()) {
+        if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === cleanLower) {
             targetId = sId; break;
         }
     }
 
     if (targetId) {
         io.to(targetId).emit('admin_personal_message', message);
-        // On efface immédiatement pour le joueur en ligne
         supabase.from('players').update({ pending_message: null }).eq('id', activePlayers[targetId].dbId).then().catch();
         socket.emit('admin_message_result', { ok: true, message: `✅ Message envoyé à ${activePlayers[targetId].username} (en ligne) !` });
     } else {
-        socket.emit('admin_message_result', { ok: true, message: `✅ Message enregistré pour ${clean}. Il le verra à sa prochaine connexion.` });
+        socket.emit('admin_message_result', { ok: true, message: `✅ Message enregistré pour ${cleanLower}. Il le verra à sa prochaine connexion.` });
     }
 });
 /* ---------- 🗼 TOUR ---------- */
