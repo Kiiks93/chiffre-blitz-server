@@ -911,18 +911,19 @@ socket.emit('player_registered', activePlayers[socket.id]);
     socket.emit('player_registered', activePlayers[socket.id]);
     broadcastOnlineCount();
 
-    // ✅ NOUVEAU : Envoi de message personnel admin à la connexion (gère texte + image)
+    // ✅ NOUVEAU : Envoi de la file de messages admin à la connexion
     if (playerData.pending_message) {
-        let msgData = playerData.pending_message;
-        try { 
-            // On essaie de lire le format JSON (texte + image)
-            msgData = JSON.parse(playerData.pending_message); 
-        } catch(e) { 
-            // Fallback pour les anciens messages qui n'ont que du texte
-            msgData = { text: playerData.pending_message, image: null }; 
+        let queue = [];
+        try {
+            const parsed = JSON.parse(playerData.pending_message);
+            queue = Array.isArray(parsed) ? parsed : [{ text: playerData.pending_message, image: null }];
+        } catch(e) {
+            queue = [{ text: playerData.pending_message, image: null }];
         }
         
-        socket.emit('admin_personal_message', msgData);
+        // Envoie toute la file au client
+        socket.emit('admin_personal_message_queue', queue);
+        // On efface la file en base (le client gère l'ack)
         supabase.from('players').update({ pending_message: null }).eq('id', playerData.id).then(() => {}).catch(() => {});
     }
 broadcastOnlineCount();
@@ -2038,7 +2039,7 @@ socket.emit('admin_force_refresh_result', { ok: false, message: 'Joueur hors-lig
 });
 
 /* ============================================================
-ADMIN : ENVOYER UN MESSAGE PERSONNEL (OU GLOBAL) AVEC IMAGE
+ADMIN : ENVOYER UN MESSAGE (FILE D'ATTENTE)
 ============================================================ */
 socket.on('admin_send_message', async (data) => {
     if (!socket.isAdmin) return;
@@ -2046,26 +2047,75 @@ socket.on('admin_send_message', async (data) => {
     const clean = (targetUsername || '').trim().toUpperCase();
     if (!clean || !message) return socket.emit('admin_message_result', { ok: false, message: 'Pseudo/TOUS et message requis.' });
 
-    // ✅ On emballe le texte et l'image dans un objet JSON pour la BDD
-    const payload = JSON.stringify({ text: message, image: imageUrl || null });
+    // ✅ On emballe le message dans un objet JSON
+    const newMsg = JSON.stringify({ text: message, image: imageUrl || null });
 
-    // ✅ CAS 1 : ENVOI À TOUS LES JOUEURS
+    // ✅ CAS 1 : ENVOI À TOUS LES JOUEURS (ajoute à la file de chacun)
     if (clean === 'TOUS' || clean === 'ALL') {
-        const { error: updateError } = await supabase.from('players').update({ pending_message: payload }).neq('id', '00000000-0000-0000-0000-000000000000');
-        if (updateError) return socket.emit('admin_message_result', { ok: false, message: 'Erreur BDD globale: ' + updateError.message });
-
-        for (const sId in activePlayers) {
-            io.to(sId).emit('admin_personal_message', { text: message, image: imageUrl || null });
-            supabase.from('players').update({ pending_message: null }).eq('id', activePlayers[sId].dbId).then().catch();
+        // Requête SQL qui ajoute le message à la file JSON de chaque joueur
+        const { error: updateError } = await supabase.rpc('append_pending_message', {
+            p_new_message: newMsg
+        }).catch(() => null); // Fallback si la fonction RPC n'existe pas
+        
+        // Fallback avec requête brute si RPC indisponible
+        if (updateError) {
+            const { error } = await supabase
+                .from('players')
+                .update({ 
+                    pending_message: supabase.raw(`
+                        CASE 
+                            WHEN pending_message IS NULL THEN '[${newMsg}]'::text
+                            ELSE (pending_message::jsonb || '[${newMsg}]'::jsonb)::text
+                        END
+                    `)
+                })
+                .neq('id', '00000000-0000-0000-0000-000000000000');
+            if (error) return socket.emit('admin_message_result', { ok: false, message: 'Erreur BDD globale: ' + error.message });
         }
-        return socket.emit('admin_message_result', { ok: true, message: `✅ Message envoyé à TOUS les joueurs !` });
+
+        // Envoyer immédiatement aux joueurs en ligne (on ajoute à leur file locale)
+        for (const sId in activePlayers) {
+            const player = activePlayers[sId];
+            // On envoie juste le nouveau message, le client l'ajoutera à sa file
+            io.to(sId).emit('admin_new_message', { text: message, image: imageUrl || null });
+        }
+        
+        return socket.emit('admin_message_result', { ok: true, message: `✅ Message ajouté à la file de TOUS les joueurs !` });
     }
 
     // ✅ CAS 2 : ENVOI À UN JOUEUR SPÉCIFIQUE
     const cleanLower = (targetUsername || '').trim().toLowerCase();
-    const { error } = await supabase.from('players').update({ pending_message: payload }).ilike('username', cleanLower);
-    if (error) return socket.emit('admin_message_result', { ok: false, message: 'Erreur BDD: ' + error.message });
+    
+    // Lecture de la file actuelle
+    const { data: playerData, error: readError } = await supabase
+        .from('players')
+        .select('id, pending_message')
+        .ilike('username', cleanLower)
+        .single();
+    
+    if (readError || !playerData) {
+        return socket.emit('admin_message_result', { ok: false, message: 'Joueur introuvable.' });
+    }
 
+    // Ajout du message à la file existante
+    let currentQueue = [];
+    try {
+        if (playerData.pending_message) {
+            const parsed = JSON.parse(playerData.pending_message);
+            currentQueue = Array.isArray(parsed) ? parsed : [{ text: playerData.pending_message, image: null }];
+        }
+    } catch(e) {}
+    
+    currentQueue.push({ text: message, image: imageUrl || null });
+
+    const { error: updateError } = await supabase
+        .from('players')
+        .update({ pending_message: JSON.stringify(currentQueue) })
+        .eq('id', playerData.id);
+    
+    if (updateError) return socket.emit('admin_message_result', { ok: false, message: 'Erreur BDD: ' + updateError.message });
+
+    // Si le joueur est en ligne, on lui envoie directement
     let targetId = null;
     for (const sId in activePlayers) {
         if (activePlayers[sId].username && activePlayers[sId].username.toLowerCase() === cleanLower) {
@@ -2074,12 +2124,41 @@ socket.on('admin_send_message', async (data) => {
     }
 
     if (targetId) {
-        io.to(targetId).emit('admin_personal_message', { text: message, image: imageUrl || null });
-        supabase.from('players').update({ pending_message: null }).eq('id', activePlayers[targetId].dbId).then().catch();
-        socket.emit('admin_message_result', { ok: true, message: `✅ Message envoyé à ${activePlayers[targetId].username} (en ligne) !` });
+        io.to(targetId).emit('admin_new_message', { text: message, image: imageUrl || null });
+        socket.emit('admin_message_result', { ok: true, message: `✅ Message ajouté à la file de ${activePlayers[targetId].username} !` });
     } else {
-        socket.emit('admin_message_result', { ok: true, message: `✅ Message enregistré pour ${cleanLower}. Il le verra à sa prochaine connexion.` });
+        socket.emit('admin_message_result', { ok: true, message: `✅ Message en file d'attente pour ${cleanLower}.` });
     }
+});
+
+/* ============================================================
+ACK : JOUEUR A LU UN MESSAGE (on le retire de la file)
+============================================================ */
+socket.on('admin_message_ack', async () => {
+    if (!socket.id || !activePlayers[socket.id]) return;
+    const player = activePlayers[socket.id];
+    
+    const { data: playerData } = await supabase
+        .from('players')
+        .select('pending_message')
+        .eq('id', player.dbId)
+        .single();
+    
+    if (!playerData || !playerData.pending_message) return;
+    
+    let queue = [];
+    try {
+        const parsed = JSON.parse(playerData.pending_message);
+        queue = Array.isArray(parsed) ? parsed : [];
+    } catch(e) { return; }
+    
+    // Retire le premier message de la file
+    queue.shift();
+    
+    await supabase
+        .from('players')
+        .update({ pending_message: queue.length > 0 ? JSON.stringify(queue) : null })
+        .eq('id', player.dbId);
 });
 /* ---------- 🗼 TOUR ---------- */
 socket.on('get_tower', () => {
