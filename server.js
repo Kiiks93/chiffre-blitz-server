@@ -2041,7 +2041,13 @@ socket.on('admin_send_message', async (data) => {
     // ✅ CAS 1 : ENVOI À TOUS LES JOUEURS
     if (clean === 'TOUS' || clean === 'ALL') {
         // 1. Mettre à jour la base de données pour TOUS les joueurs (même hors-ligne)
-        const { error: updateError } = await supabase.from('players').update({ pending_message: message });
+        // L'astuce .neq('id', '00000000-0000-0000-0000-000000000000') contourne la sécurité 
+        // de Supabase qui exige une clause WHERE, tout en ciblant 100% des lignes existantes.
+        const { error: updateError } = await supabase
+            .from('players')
+            .update({ pending_message: message })
+            .neq('id', '00000000-0000-0000-0000-000000000000');
+            
         if (updateError) return socket.emit('admin_message_result', { ok: false, message: 'Erreur BDD globale: ' + updateError.message });
 
         // 2. Envoyer immédiatement aux joueurs actuellement en ligne
