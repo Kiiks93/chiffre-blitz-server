@@ -1021,24 +1021,39 @@ function closeIosInstallModal() {
 })();
 </script>
 <script>
-// ✅ Gestion intelligente du message Admin (attend que le menu soit prêt)
+// ✅ Gestion intelligente du message Admin (texte + image + zoom)
 window.isGameMenuReady = false;
 window.pendingAdminMessage = null;
 
-function showAdminMessageModal(msg) {
-    if (document.getElementById('admin-msg-overlay')) return; // Évite les doublons
+function showAdminMessageModal(data) {
+    if (document.getElementById('admin-msg-overlay')) return;
     
+    const text = data.text || data; // Fallback si c'est une vieille chaîne de caractères
+    const img = data.image;
+    
+    let imageHTML = '';
+    if (img) {
+        imageHTML = `
+            <div style="margin: 15px 0; text-align: center;">
+                <img src="${img}" alt="Illustration" 
+                     onclick="enlargeImage('${img}')"
+                     style="max-width: 100%; max-height: 200px; border-radius: 12px; border: 2px solid #00d2ff; cursor: zoom-in; box-shadow: 0 4px 15px rgba(0,210,255,0.3); transition: transform 0.2s;"
+                     onmouseover="this.style.transform='scale(1.03)'" 
+                     onmouseout="this.style.transform='scale(1)'">
+                <div style="color: #00d2ff; font-size: 11px; margin-top: 8px; font-weight: bold;">🔍 Clique sur l'image pour l'agrandir</div>
+            </div>
+        `;
+    }
+
     const overlay = document.createElement('div');
     overlay.id = 'admin-msg-overlay';
     overlay.style.cssText = 'position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);';
-    
-    // 💡 TU PEUX CHANGER LE TEXTE DU BOUTON ICI (ligne "C'est noté ! ⚡")
     overlay.innerHTML = `
-        <div style="background:#0f051d;border:2px solid #00d2ff;border-radius:16px;padding:28px;max-width:380px;width:100%;text-align:center;box-shadow:0 0 50px rgba(0,210,255,0.4);animation:victoryScalePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;">
-            <div style="font-size:56px;margin-bottom:12px;filter:drop-shadow(0 0 10px rgba(0,210,255,0.6));">📩</div>
+        <div style="background:#0f051d;border:2px solid #00d2ff;border-radius:16px;padding:28px;max-width:420px;width:100%;text-align:center;box-shadow:0 0 50px rgba(0,210,255,0.4);animation:victoryScalePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;">
+            <div style="font-size:48px;margin-bottom:12px;filter:drop-shadow(0 0 10px rgba(0,210,255,0.6));">📩</div>
             <h3 style="color:#00d2ff;margin:0 0 16px 0;font-size:20px;font-weight:900;text-transform:uppercase;letter-spacing:1px;">Message du Créateur</h3>
-            <p style="color:#e0e0e0;font-size:15px;line-height:1.6;margin-bottom:28px;white-space:pre-wrap;font-weight:500;">${msg}</p>
-            
+            ${imageHTML}
+            <p style="color:#e0e0e0;font-size:15px;line-height:1.6;margin-bottom:28px;white-space:pre-wrap;font-weight:500;">${text}</p>
             <button onclick="document.getElementById('admin-msg-overlay').remove()" 
                 onmousedown="this.style.transform='scale(0.95)'" 
                 onmouseup="this.style.transform='scale(1)'"
@@ -1051,12 +1066,22 @@ function showAdminMessageModal(msg) {
     document.body.appendChild(overlay);
 }
 
+// 🖼️ Fonction pour agrandir l'image en plein écran (Lightbox)
+window.enlargeImage = function(src) {
+    const lightbox = document.createElement('div');
+    lightbox.id = 'img-lightbox';
+    lightbox.style.cssText = 'position:fixed;inset:0;z-index:1000000;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out;';
+    lightbox.onclick = () => lightbox.remove(); // Clique n'importe où pour fermer
+    lightbox.innerHTML = `<img src="${src}" style="max-width:95vw;max-height:95vh;border-radius:12px;box-shadow:0 0 60px rgba(0,210,255,0.6);animation:victoryScalePop 0.3s ease;">`;
+    document.body.appendChild(lightbox);
+};
+
 if (typeof socket !== 'undefined') {
-    socket.on('admin_personal_message', function(msg) {
+    socket.on('admin_personal_message', function(data) {
         if (window.isGameMenuReady) {
-            showAdminMessageModal(msg);
+            showAdminMessageModal(data);
         } else {
-            window.pendingAdminMessage = msg;
+            window.pendingAdminMessage = data;
         }
     });
 }
