@@ -1021,14 +1021,15 @@ function closeIosInstallModal() {
 })();
 </script>
 <script>
-// ✅ Gestion intelligente du message Admin (texte + image + zoom)
+// ✅ Gestion de la FILE D'ATTENTE des messages Admin
 window.isGameMenuReady = false;
-window.pendingAdminMessage = null;
+window.adminMessageQueue = [];
+window.currentAdminMessageIndex = 0;
 
 function showAdminMessageModal(data) {
     if (document.getElementById('admin-msg-overlay')) return;
     
-    const text = data.text || data; // Fallback si c'est une vieille chaîne de caractères
+    const text = data.text || '';
     const img = data.image;
     
     let imageHTML = '';
@@ -1045,6 +1046,11 @@ function showAdminMessageModal(data) {
         `;
     }
 
+    // Compteur de messages
+    const counterHTML = window.adminMessageQueue.length > 1 
+        ? `<div style="color:#f8b500;font-size:12px;margin-bottom:12px;font-weight:bold;">📨 Message ${window.currentAdminMessageIndex + 1} sur ${window.adminMessageQueue.length}</div>` 
+        : '';
+
     const overlay = document.createElement('div');
     overlay.id = 'admin-msg-overlay';
     overlay.style.cssText = 'position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);';
@@ -1052,45 +1058,82 @@ function showAdminMessageModal(data) {
         <div style="background:#0f051d;border:2px solid #00d2ff;border-radius:16px;padding:28px;max-width:420px;width:100%;text-align:center;box-shadow:0 0 50px rgba(0,210,255,0.4);animation:victoryScalePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;">
             <div style="font-size:48px;margin-bottom:12px;filter:drop-shadow(0 0 10px rgba(0,210,255,0.6));">📩</div>
             <h3 style="color:#00d2ff;margin:0 0 16px 0;font-size:20px;font-weight:900;text-transform:uppercase;letter-spacing:1px;">Message du Créateur</h3>
+            ${counterHTML}
             ${imageHTML}
             <p style="color:#e0e0e0;font-size:15px;line-height:1.6;margin-bottom:28px;white-space:pre-wrap;font-weight:500;">${text}</p>
-            <button onclick="document.getElementById('admin-msg-overlay').remove()" 
+            <button onclick="closeAdminMessageModal()" 
                 onmousedown="this.style.transform='scale(0.95)'" 
                 onmouseup="this.style.transform='scale(1)'"
                 onmouseleave="this.style.transform='scale(1)'"
                 style="background:linear-gradient(45deg,#00d2ff,#0072ff);color:#fff;border:none;padding:14px 32px;border-radius:12px;font-weight:900;cursor:pointer;font-size:15px;box-shadow:0 6px 20px rgba(0,210,255,0.5);text-transform:uppercase;letter-spacing:1px;transition:transform 0.1s ease, box-shadow 0.2s ease;">
-                C'est noté ! ⚡
+                ${window.currentAdminMessageIndex < window.adminMessageQueue.length - 1 ? 'Message suivant ⚡' : 'C\'est noté ! ⚡'}
             </button>
         </div>
     `;
     document.body.appendChild(overlay);
 }
 
-// 🖼️ Fonction pour agrandir l'image en plein écran (Lightbox)
+function closeAdminMessageModal() {
+    const overlay = document.getElementById('admin-msg-overlay');
+    if (overlay) overlay.remove();
+    
+    // Signale au serveur que ce message est lu
+    if (typeof socket !== 'undefined' && socket.connected) {
+        socket.emit('admin_message_ack');
+    }
+    
+    // Passe au message suivant s'il y en a
+    window.currentAdminMessageIndex++;
+    if (window.currentAdminMessageIndex < window.adminMessageQueue.length) {
+        setTimeout(() => {
+            showAdminMessageModal(window.adminMessageQueue[window.currentAdminMessageIndex]);
+        }, 300); // Petit délai pour l'animation
+    } else {
+        // File terminée
+        window.adminMessageQueue = [];
+        window.currentAdminMessageIndex = 0;
+    }
+}
+
+// 🖼️ Lightbox pour agrandir les images
 window.enlargeImage = function(src) {
     const lightbox = document.createElement('div');
     lightbox.id = 'img-lightbox';
     lightbox.style.cssText = 'position:fixed;inset:0;z-index:1000000;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out;';
-    lightbox.onclick = () => lightbox.remove(); // Clique n'importe où pour fermer
+    lightbox.onclick = () => lightbox.remove();
     lightbox.innerHTML = `<img src="${src}" style="max-width:95vw;max-height:95vh;border-radius:12px;box-shadow:0 0 60px rgba(0,210,255,0.6);animation:victoryScalePop 0.3s ease;">`;
     document.body.appendChild(lightbox);
 };
 
 if (typeof socket !== 'undefined') {
-    socket.on('admin_personal_message', function(data) {
-        if (window.isGameMenuReady) {
-            showAdminMessageModal(data);
-        } else {
-            window.pendingAdminMessage = data;
+    // Réception de la file complète à la connexion
+    socket.on('admin_personal_message_queue', function(queue) {
+        if (Array.isArray(queue) && queue.length > 0) {
+            window.adminMessageQueue = queue;
+            window.currentAdminMessageIndex = 0;
+            if (window.isGameMenuReady) {
+                showAdminMessageModal(queue[0]);
+            }
+            // Sinon, c'est showPendingAdminMessage() qui s'en chargera
+        }
+    });
+    
+    // Réception d'un NOUVEAU message en temps réel (joueur en ligne)
+    socket.on('admin_new_message', function(msg) {
+        window.adminMessageQueue.push(msg);
+        // Si aucune modale n'est affichée, on commence à lire la file
+        if (window.isGameMenuReady && !document.getElementById('admin-msg-overlay')) {
+            if (window.currentAdminMessageIndex >= window.adminMessageQueue.length - 1) {
+                showAdminMessageModal(msg);
+            }
         }
     });
 }
 
 window.showPendingAdminMessage = function() {
     window.isGameMenuReady = true;
-    if (window.pendingAdminMessage) {
-        showAdminMessageModal(window.pendingAdminMessage);
-        window.pendingAdminMessage = null;
+    if (window.adminMessageQueue.length > 0 && !document.getElementById('admin-msg-overlay')) {
+        showAdminMessageModal(window.adminMessageQueue[window.currentAdminMessageIndex]);
     }
 };
 </script>
