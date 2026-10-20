@@ -335,12 +335,20 @@ DASHBOARD
     <button class="btn-green" onclick="adminGetLogs(this)" data-i18n="admin_logs_btn">Consulter 🔍</button>
     <div id="admin-logs" style="max-height:300px; overflow-y:auto; font-size:11px; margin-top:10px; background: #000; padding: 10px; border-radius: 8px;"></div>
   </div>
-  <!-- ===== ENVOYER UN MESSAGE PERSONNEL ===== -->
+  <!-- ===== ENVOYER UN MESSAGE (JOUEUR OU TOUS) ===== -->
   <div class="card" style="border-color: rgba(0, 210, 255, 0.55);">
-    <h2 style="color:#00d2ff;">📩 Envoyer un message personnel</h2>
-    <div class="card-desc">Le message s'affichera en plein écran au joueur (1 seule fois) à sa prochaine connexion.</div>
+    <h2 style="color:#00d2ff;">📩 Envoyer un message</h2>
+    <div class="card-desc">Le message s'affichera en plein écran (1 seule fois). Peut être envoyé à un joueur précis ou à TOUT LE MONDE.</div>
+    
+    <label style="display:flex; align-items:center; gap:8px; margin-bottom:10px; cursor:pointer;">
+      <input type="checkbox" id="admin-msg-all" style="width:auto; margin:0;" onchange="toggleMsgTarget()">
+      <span style="font-weight:bold; color:#f8b500;">📢 Envoyer à TOUS les joueurs</span>
+    </label>
+
     <input type="text" id="admin-msg-pseudo" placeholder="Pseudo exact du joueur...">
+    
     <textarea id="admin-msg-text" placeholder="Ton message..." rows="3" style="resize: vertical;"></textarea>
+    
     <button class="btn-blue" id="admin-msg-btn" onclick="sendAdminMessage(this)">Envoyer le message ⚡</button>
     <div id="admin-msg-result" class="small-result"></div>
   </div>
@@ -921,21 +929,37 @@ function adminResetPassword(btn) {
     setTimeout(() => { btn.disabled = false; applyTranslations(); }, 2000);
 }
 
+function toggleMsgTarget() {
+    const isAll = document.getElementById('admin-msg-all').checked;
+    const pseudoInput = document.getElementById('admin-msg-pseudo');
+    if (isAll) {
+        pseudoInput.style.display = 'none';
+        pseudoInput.value = 'TOUS'; // Valeur envoyée au serveur
+    } else {
+        pseudoInput.style.display = 'block';
+        pseudoInput.value = '';
+    }
+}
+
 function sendAdminMessage(btn) {
-    const pseudo = document.getElementById('admin-msg-pseudo').value.trim();
+    const isAll = document.getElementById('admin-msg-all').checked;
+    const pseudo = isAll ? 'TOUS' : document.getElementById('admin-msg-pseudo').value.trim();
     const message = document.getElementById('admin-msg-text').value.trim();
     const resultEl = document.getElementById('admin-msg-result');
     
     if (!pseudo || !message) { 
         resultEl.style.color = '#ff4b2b'; resultEl.style.background = 'rgba(255,75,43,0.1)';
-        resultEl.innerText = '❌ Pseudo et message requis.'; return; 
+        resultEl.innerText = '❌ Message requis.'; return; 
     }
     
     btn.disabled = true; btn.innerText = "Envoi en cours...";
     resultEl.style.color = '#aaa'; resultEl.innerText = "⏳ Envoi en cours...";
+    
     socket.emit('admin_send_message', { targetUsername: pseudo, message: message });
     
-    setTimeout(() => { btn.disabled = false; btn.innerText = "Envoyer le message ⚡"; }, 2000);
+    setTimeout(() => { 
+        btn.disabled = false; btn.innerText = "Envoyer le message ⚡"; 
+    }, 2000);
 }
 
 socket.on('admin_message_result', (d) => {
