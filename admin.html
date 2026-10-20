@@ -348,8 +348,13 @@ DASHBOARD
     <input type="text" id="admin-msg-pseudo" placeholder="Pseudo exact du joueur...">
     
     <textarea id="admin-msg-text" placeholder="Ton message..." rows="3" style="resize: vertical;"></textarea>
-    
-    <input type="text" id="admin-msg-image" placeholder="URL de l'image (optionnel, ex: https://monsite.com/image.png)" style="font-size:12px;">
+      
+        <!-- Zone de sélection d'image (remplace l'ancien input URL) -->
+    <div id="admin-msg-dropzone" style="margin: 10px 0; border: 2px dashed #444; padding: 15px; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;" onclick="document.getElementById('admin-msg-file').click()">
+        <span id="admin-msg-file-label" style="color: #aaa; font-size: 13px;">📎 Clique ici pour ajouter une image depuis ton PC</span>
+        <input type="file" id="admin-msg-file" accept="image/*" style="display: none;" onchange="handleAdminImageUpload(this)">
+    </div>
+    <img id="admin-msg-preview" style="max-width: 100%; max-height: 150px; border-radius: 8px; display: none; margin: 10px 0; border: 1px solid #00d2ff;">
     
     <button class="btn-blue" id="admin-msg-btn" onclick="sendAdminMessage(this)">Envoyer le message ⚡</button>
     <div id="admin-msg-result" class="small-result"></div>
@@ -943,11 +948,36 @@ function toggleMsgTarget() {
     }
 }
 
+let currentImageBase64 = null; // Stocke l'image convertie
+
+// Fonction pour lire l'image depuis le PC
+function handleAdminImageUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    // Limite à 500ko pour éviter de faire planter la connexion Socket.io
+    if (file.size > 500000) { 
+        alert("⚠️ Image trop lourde ! Merci de choisir une image de moins de 500 Ko."); 
+        input.value = ''; 
+        return; 
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        currentImageBase64 = e.target.result;
+        const preview = document.getElementById('admin-msg-preview');
+        preview.src = currentImageBase64;
+        preview.style.display = 'block';
+        document.getElementById('admin-msg-file-label').innerText = "✅ Image prête à être envoyée !";
+        document.getElementById('admin-msg-file-label').style.color = "#00ff88";
+    };
+    reader.readAsDataURL(file);
+}
+
 function sendAdminMessage(btn) {
     const isAll = document.getElementById('admin-msg-all').checked;
     const pseudo = isAll ? 'TOUS' : document.getElementById('admin-msg-pseudo').value.trim();
     const message = document.getElementById('admin-msg-text').value.trim();
-    const imageUrl = document.getElementById('admin-msg-image').value.trim(); // ✅ NOUVEAU
     const resultEl = document.getElementById('admin-msg-result');
     
     if (!pseudo || !message) { 
@@ -958,12 +988,19 @@ function sendAdminMessage(btn) {
     btn.disabled = true; btn.innerText = "Envoi en cours...";
     resultEl.style.color = '#aaa'; resultEl.innerText = "⏳ Envoi en cours...";
     
-    // ✅ On envoie maintenant l'objet complet { message, imageUrl }
-    socket.emit('admin_send_message', { targetUsername: pseudo, message: message, imageUrl: imageUrl });
+    // On envoie le Base64 à la place de l'URL
+    socket.emit('admin_send_message', { targetUsername: pseudo, message: message, imageUrl: currentImageBase64 });
     
     setTimeout(() => { 
-        btn.disabled = false; btn.innerText = "Envoyer le message ⚡"; 
-        document.getElementById('admin-msg-image').value = ''; // Vider le champ image après envoi
+        btn.disabled = false; btn.innerText = "Envoyer le message "; 
+        document.getElementById('admin-msg-image').value = ''; 
+        
+        // Reset de l'image après envoi
+        currentImageBase64 = null;
+        document.getElementById('admin-msg-preview').style.display = 'none';
+        document.getElementById('admin-msg-file').value = '';
+        document.getElementById('admin-msg-file-label').innerText = "📎 Clique ici pour ajouter une image depuis ton PC";
+        document.getElementById('admin-msg-file-label').style.color = "#aaa";
     }, 2000);
 }
 
