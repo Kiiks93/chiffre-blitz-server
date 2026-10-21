@@ -552,7 +552,7 @@ socket.on("pass_tier_claimed", (data) => {
   
   const col = document.getElementById("bp-card-" + tier);
   if (col) {
-    const card = col.querySelector(track === 'premium' ? '.bp-card-prem' : '.bp-card-free') || col;
+    // ✅ On garde UNIQUEMENT l'explosion de particules, on retire l'animation CSS de la carte qui lag
     spawnUnlockBurst(col, icon);
   }
   
@@ -561,8 +561,6 @@ socket.on("pass_tier_claimed", (data) => {
     lastRewardSoundTime = ns;
     SoundEngine.playVictory();
   }
-  
-  setTimeout(() => { ; }, 450);
 });
 
 socket.on("pass_claim_denied", (data) => {
