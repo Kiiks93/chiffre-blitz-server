@@ -1021,31 +1021,62 @@ function closeIosInstallModal() {
 })();
 </script>
 <script>
-// ✅ Gestion de la FILE D'ATTENTE des messages Admin
+// ✅ Gestion de la FILE D'ATTENTE + CARROUSEL D'IMAGES
 window.isGameMenuReady = false;
 window.adminMessageQueue = [];
 window.currentAdminMessageIndex = 0;
+
+// Variables pour le carrousel d'images
+window.currentAdminImages = [];
+window.currentAdminImageIndex = 0;
+
+// Fonction pour changer d'image dans le carrousel
+window.changeAdminImage = function(direction) {
+    const images = window.currentAdminImages;
+    if (images.length === 0) return;
+    
+    window.currentAdminImageIndex += direction;
+    // Boucle infinie (si on dépasse la fin, on revient au début, et inversement)
+    if (window.currentAdminImageIndex < 0) window.currentAdminImageIndex = images.length - 1;
+    if (window.currentAdminImageIndex >= images.length) window.currentAdminImageIndex = 0;
+    
+    const imgEl = document.getElementById('admin-modal-img');
+    const counterEl = document.getElementById('admin-img-counter');
+    
+    if (imgEl) {
+        imgEl.src = images[window.currentAdminImageIndex];
+        // Met à jour le clic pour zoomer sur la bonne image
+        imgEl.onclick = function() { enlargeImage(images[window.currentAdminImageIndex]); };
+    }
+    if (counterEl) {
+        counterEl.innerText = `${window.currentAdminImageIndex + 1} / ${images.length}`;
+    }
+};
 
 function showAdminMessageModal(data) {
     if (document.getElementById('admin-msg-overlay')) return;
     
     const text = data.text || '';
-    // Gestion rétrocompatible : si c'est l'ancien format 'image', on le met dans un tableau
     const images = data.images || (data.image ? [data.image] : []);
     
-    let imagesHTML = '';
+    // On stocke les images pour le carrousel
+    window.currentAdminImages = images;
+    window.currentAdminImageIndex = 0;
+
+    let carouselHTML = '';
     if (images.length > 0) {
-        imagesHTML = `<div style="margin: 15px 0; display: flex; flex-direction: column; gap: 12px; align-items: center;">`;
-        images.forEach((img, index) => {
-            imagesHTML += `
-                <img src="${img}" alt="Illustration ${index + 1}" 
-                     onclick="enlargeImage('${img}')"
-                     style="max-width: 100%; max-height: 180px; border-radius: 12px; border: 2px solid #00d2ff; cursor: zoom-in; box-shadow: 0 4px 15px rgba(0,210,255,0.3); transition: transform 0.2s;"
-                     onmouseover="this.style.transform='scale(1.03)'" 
-                     onmouseout="this.style.transform='scale(1)'">
-            `;
-        });
-        imagesHTML += `<div style="color: #00d2ff; font-size: 11px; font-weight: bold;">🔍 Clique sur une image pour l'agrandir</div></div>`;
+        carouselHTML = `
+            <div style="margin: 15px 0; display: flex; align-items: center; justify-content: center; gap: 12px;">
+                <button onclick="changeAdminImage(-1)" style="background:rgba(255,255,255,0.1); border:none; color:#fff; width:36px; height:36px; border-radius:50%; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: background 0.2s;" onmouseover="this.style.background='rgba(0,210,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">❮</button>
+                
+                <div style="flex:1; text-align:center;">
+                    <img id="admin-modal-img" src="${images[0]}" onclick="enlargeImage('${images[0]}')" style="max-width: 100%; max-height: 200px; border-radius: 12px; border: 2px solid #00d2ff; cursor: zoom-in; box-shadow: 0 4px 15px rgba(0,210,255,0.3); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                    <div id="admin-img-counter" style="color:#aaa; font-size:11px; margin-top:6px; font-weight:bold;">1 / ${images.length}</div>
+                </div>
+                
+                <button onclick="changeAdminImage(1)" style="background:rgba(255,255,255,0.1); border:none; color:#fff; width:36px; height:36px; border-radius:50%; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: background 0.2s;" onmouseover="this.style.background='rgba(0,210,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">❯</button>
+            </div>
+        `;
     }
 
     const counterHTML = window.adminMessageQueue.length > 1 
@@ -1055,45 +1086,28 @@ function showAdminMessageModal(data) {
     const overlay = document.createElement('div');
     overlay.id = 'admin-msg-overlay';
     overlay.style.cssText = 'position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);';
+    
+    // ⚠️ ORDRE : Titre -> Texte -> Carrousel -> Bouton
     overlay.innerHTML = `
         <div style="background:#0f051d;border:2px solid #00d2ff;border-radius:16px;padding:24px;max-width:420px;width:100%;text-align:center;box-shadow:0 0 50px rgba(0,210,255,0.4);animation:victoryScalePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; max-height: 90vh; overflow-y: auto;">
-            <div style="font-size:48px;margin-bottom:12px;filter:drop-shadow(0 0 10px rgba(0,210,255,0.6));">📩</div>
+            <div style="font-size:48px;margin-bottom:12px;filter:drop-shadow(0 0 10px rgba(0,210,255,0.6));"></div>
             <h3 style="color:#00d2ff;margin:0 0 16px 0;font-size:20px;font-weight:900;text-transform:uppercase;letter-spacing:1px;">Message du Créateur</h3>
             ${counterHTML}
-            ${imagesHTML}
-            <p style="color:#e0e0e0;font-size:15px;line-height:1.6;margin-bottom:28px;white-space:pre-wrap;font-weight:500;">${text}</p>
+            
+            <p style="color:#e0e0e0;font-size:15px;line-height:1.6;margin-bottom:20px;white-space:pre-wrap;font-weight:500;">${text}</p>
+            
+            ${carouselHTML}
+            
             <button onclick="closeAdminMessageModal()" 
                 onmousedown="this.style.transform='scale(0.95)'" 
                 onmouseup="this.style.transform='scale(1)'"
                 onmouseleave="this.style.transform='scale(1)'"
-                style="background:linear-gradient(45deg,#00d2ff,#0072ff);color:#fff;border:none;padding:14px 32px;border-radius:12px;font-weight:900;cursor:pointer;font-size:15px;box-shadow:0 6px 20px rgba(0,210,255,0.5);text-transform:uppercase;letter-spacing:1px;transition:transform 0.1s ease, box-shadow 0.2s ease;">
+                style="background:linear-gradient(45deg,#00d2ff,#0072ff);color:#fff;border:none;padding:14px 32px;border-radius:12px;font-weight:900;cursor:pointer;font-size:15px;box-shadow:0 6px 20px rgba(0,210,255,0.5);text-transform:uppercase;letter-spacing:1px;transition:transform 0.1s ease, box-shadow 0.2s ease; margin-top: 10px;">
                 ${window.currentAdminMessageIndex < window.adminMessageQueue.length - 1 ? 'Message suivant ⚡' : 'C\'est noté ! ⚡'}
             </button>
         </div>
     `;
     document.body.appendChild(overlay);
-}
-
-function closeAdminMessageModal() {
-    const overlay = document.getElementById('admin-msg-overlay');
-    if (overlay) overlay.remove();
-    
-    // Signale au serveur que ce message est lu
-    if (typeof socket !== 'undefined' && socket.connected) {
-        socket.emit('admin_message_ack');
-    }
-    
-    // Passe au message suivant s'il y en a
-    window.currentAdminMessageIndex++;
-    if (window.currentAdminMessageIndex < window.adminMessageQueue.length) {
-        setTimeout(() => {
-            showAdminMessageModal(window.adminMessageQueue[window.currentAdminMessageIndex]);
-        }, 300); // Petit délai pour l'animation
-    } else {
-        // File terminée
-        window.adminMessageQueue = [];
-        window.currentAdminMessageIndex = 0;
-    }
 }
 
 // 🖼️ Lightbox pour agrandir les images
@@ -1106,8 +1120,26 @@ window.enlargeImage = function(src) {
     document.body.appendChild(lightbox);
 };
 
+function closeAdminMessageModal() {
+    const overlay = document.getElementById('admin-msg-overlay');
+    if (overlay) overlay.remove();
+    
+    if (typeof socket !== 'undefined' && socket.connected) {
+        socket.emit('admin_message_ack');
+    }
+    
+    window.currentAdminMessageIndex++;
+    if (window.currentAdminMessageIndex < window.adminMessageQueue.length) {
+        setTimeout(() => {
+            showAdminMessageModal(window.adminMessageQueue[window.currentAdminMessageIndex]);
+        }, 300);
+    } else {
+        window.adminMessageQueue = [];
+        window.currentAdminMessageIndex = 0;
+    }
+}
+
 if (typeof socket !== 'undefined') {
-    // Réception de la file complète à la connexion
     socket.on('admin_personal_message_queue', function(queue) {
         if (Array.isArray(queue) && queue.length > 0) {
             window.adminMessageQueue = queue;
@@ -1115,14 +1147,11 @@ if (typeof socket !== 'undefined') {
             if (window.isGameMenuReady) {
                 showAdminMessageModal(queue[0]);
             }
-            // Sinon, c'est showPendingAdminMessage() qui s'en chargera
         }
     });
     
-    // Réception d'un NOUVEAU message en temps réel (joueur en ligne)
     socket.on('admin_new_message', function(msg) {
         window.adminMessageQueue.push(msg);
-        // Si aucune modale n'est affichée, on commence à lire la file
         if (window.isGameMenuReady && !document.getElementById('admin-msg-overlay')) {
             if (window.currentAdminMessageIndex >= window.adminMessageQueue.length - 1) {
                 showAdminMessageModal(msg);
