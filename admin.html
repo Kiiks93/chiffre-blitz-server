@@ -349,12 +349,13 @@ DASHBOARD
     
     <textarea id="admin-msg-text" placeholder="Ton message..." rows="3" style="resize: vertical;"></textarea>
       
-        <!-- Zone de sélection d'image (remplace l'ancien input URL) -->
+    <!-- Zone de sélection MULTI-IMAGES -->
     <div id="admin-msg-dropzone" style="margin: 10px 0; border: 2px dashed #444; padding: 15px; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;" onclick="document.getElementById('admin-msg-file').click()">
-        <span id="admin-msg-file-label" style="color: #aaa; font-size: 13px;">📎 Clique ici pour ajouter une image depuis ton PC</span>
-        <input type="file" id="admin-msg-file" accept="image/*" style="display: none;" onchange="handleAdminImageUpload(this)">
+      <span id="admin-msg-file-label" style="color: #aaa; font-size: 13px;">📎 Clique ici pour ajouter des images (Max 3)</span>
+      <input type="file" id="admin-msg-file" accept="image/*" multiple style="display: none;" onchange="handleAdminImagesUpload(this)">
     </div>
-    <img id="admin-msg-preview" style="max-width: 100%; max-height: 150px; border-radius: 8px; display: none; margin: 10px 0; border: 1px solid #00d2ff;">
+    <!-- Conteneur pour les aperçus -->
+    <div id="admin-msg-previews" style="display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0;"></div>
     
     <button class="btn-blue" id="admin-msg-btn" onclick="sendAdminMessage(this)">Envoyer le message ⚡</button>
     <div id="admin-msg-result" class="small-result"></div>
@@ -948,30 +949,41 @@ function toggleMsgTarget() {
     }
 }
 
-let currentImageBase64 = null; // Stocke l'image convertie
+let currentImagesBase64 = []; // Devient un tableau pour stocker plusieurs images
 
-// Fonction pour lire l'image depuis le PC
-function handleAdminImageUpload(input) {
-    const file = input.files[0];
-    if (!file) return;
-    
-    // Limite à 500ko pour éviter de faire planter la connexion Socket.io
-    if (file.size > 500000) { 
-        alert("⚠️ Image trop lourde ! Merci de choisir une image de moins de 500 Ko."); 
-        input.value = ''; 
-        return; 
+function handleAdminImagesUpload(input) {
+    const files = Array.from(input.files);
+    if (files.length === 0) return;
+    if (currentImagesBase64.length + files.length > 3) {
+        alert("⚠️ Maximum 3 images par message pour garder une bonne lisibilité !");
+        input.value = '';
+        return;
     }
+
+    const previewContainer = document.getElementById('admin-msg-previews');
     
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        currentImageBase64 = e.target.result;
-        const preview = document.getElementById('admin-msg-preview');
-        preview.src = currentImageBase64;
-        preview.style.display = 'block';
-        document.getElementById('admin-msg-file-label').innerText = "✅ Image prête à être envoyée !";
-        document.getElementById('admin-msg-file-label').style.color = "#00ff88";
-    };
-    reader.readAsDataURL(file);
+    files.forEach(file => {
+        if (file.size > 500000) { 
+            alert(`⚠️ L'image "${file.name}" est trop lourde ! Max 500 Ko.`); 
+            return; 
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            currentImagesBase64.push(e.target.result);
+            
+            // Créer l'aperçu visuel
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.style.cssText = 'width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #00d2ff;';
+            previewContainer.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+    });
+
+    document.getElementById('admin-msg-file-label').innerText = `✅ ${currentImagesBase64.length} image(s) prête(s)`;
+    document.getElementById('admin-msg-file-label').style.color = "#00ff88";
+    input.value = ''; // Reset pour permettre de rajouter d'autres images si besoin
 }
 
 function sendAdminMessage(btn) {
@@ -988,18 +1000,16 @@ function sendAdminMessage(btn) {
     btn.disabled = true; btn.innerText = "Envoi en cours...";
     resultEl.style.color = '#aaa'; resultEl.innerText = "⏳ Envoi en cours...";
     
-    // On envoie le Base64 à la place de l'URL
-    socket.emit('admin_send_message', { targetUsername: pseudo, message: message, imageUrl: currentImageBase64 });
+    // On envoie le tableau d'images
+    socket.emit('admin_send_message', { targetUsername: pseudo, message: message, imageUrls: currentImagesBase64 });
     
     setTimeout(() => { 
-        btn.disabled = false; btn.innerText = "Envoyer le message "; 
-        document.getElementById('admin-msg-image').value = ''; 
+        btn.disabled = false; btn.innerText = "Envoyer le message ⚡"; 
         
-        // Reset de l'image après envoi
-        currentImageBase64 = null;
-        document.getElementById('admin-msg-preview').style.display = 'none';
-        document.getElementById('admin-msg-file').value = '';
-        document.getElementById('admin-msg-file-label').innerText = "📎 Clique ici pour ajouter une image depuis ton PC";
+        // Reset complet après envoi
+        currentImagesBase64 = [];
+        document.getElementById('admin-msg-previews').innerHTML = '';
+        document.getElementById('admin-msg-file-label').innerText = "📎 Clique ici pour ajouter des images (Max 3)";
         document.getElementById('admin-msg-file-label').style.color = "#aaa";
     }, 2000);
 }
