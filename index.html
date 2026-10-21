@@ -1030,23 +1030,24 @@ function showAdminMessageModal(data) {
     if (document.getElementById('admin-msg-overlay')) return;
     
     const text = data.text || '';
-    const img = data.image;
+    // Gestion rétrocompatible : si c'est l'ancien format 'image', on le met dans un tableau
+    const images = data.images || (data.image ? [data.image] : []);
     
-    let imageHTML = '';
-    if (img) {
-        imageHTML = `
-            <div style="margin: 15px 0; text-align: center;">
-                <img src="${img}" alt="Illustration" 
+    let imagesHTML = '';
+    if (images.length > 0) {
+        imagesHTML = `<div style="margin: 15px 0; display: flex; flex-direction: column; gap: 12px; align-items: center;">`;
+        images.forEach((img, index) => {
+            imagesHTML += `
+                <img src="${img}" alt="Illustration ${index + 1}" 
                      onclick="enlargeImage('${img}')"
-                     style="max-width: 100%; max-height: 200px; border-radius: 12px; border: 2px solid #00d2ff; cursor: zoom-in; box-shadow: 0 4px 15px rgba(0,210,255,0.3); transition: transform 0.2s;"
+                     style="max-width: 100%; max-height: 180px; border-radius: 12px; border: 2px solid #00d2ff; cursor: zoom-in; box-shadow: 0 4px 15px rgba(0,210,255,0.3); transition: transform 0.2s;"
                      onmouseover="this.style.transform='scale(1.03)'" 
                      onmouseout="this.style.transform='scale(1)'">
-                <div style="color: #00d2ff; font-size: 11px; margin-top: 8px; font-weight: bold;">🔍 Clique sur l'image pour l'agrandir</div>
-            </div>
-        `;
+            `;
+        });
+        imagesHTML += `<div style="color: #00d2ff; font-size: 11px; font-weight: bold;">🔍 Clique sur une image pour l'agrandir</div></div>`;
     }
 
-    // Compteur de messages
     const counterHTML = window.adminMessageQueue.length > 1 
         ? `<div style="color:#f8b500;font-size:12px;margin-bottom:12px;font-weight:bold;">📨 Message ${window.currentAdminMessageIndex + 1} sur ${window.adminMessageQueue.length}</div>` 
         : '';
@@ -1055,11 +1056,11 @@ function showAdminMessageModal(data) {
     overlay.id = 'admin-msg-overlay';
     overlay.style.cssText = 'position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);';
     overlay.innerHTML = `
-        <div style="background:#0f051d;border:2px solid #00d2ff;border-radius:16px;padding:28px;max-width:420px;width:100%;text-align:center;box-shadow:0 0 50px rgba(0,210,255,0.4);animation:victoryScalePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;">
+        <div style="background:#0f051d;border:2px solid #00d2ff;border-radius:16px;padding:24px;max-width:420px;width:100%;text-align:center;box-shadow:0 0 50px rgba(0,210,255,0.4);animation:victoryScalePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; max-height: 90vh; overflow-y: auto;">
             <div style="font-size:48px;margin-bottom:12px;filter:drop-shadow(0 0 10px rgba(0,210,255,0.6));">📩</div>
             <h3 style="color:#00d2ff;margin:0 0 16px 0;font-size:20px;font-weight:900;text-transform:uppercase;letter-spacing:1px;">Message du Créateur</h3>
             ${counterHTML}
-            ${imageHTML}
+            ${imagesHTML}
             <p style="color:#e0e0e0;font-size:15px;line-height:1.6;margin-bottom:28px;white-space:pre-wrap;font-weight:500;">${text}</p>
             <button onclick="closeAdminMessageModal()" 
                 onmousedown="this.style.transform='scale(0.95)'" 
