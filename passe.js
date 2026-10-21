@@ -553,9 +553,6 @@ socket.on("pass_tier_claimed", (data) => {
   const col = document.getElementById("bp-card-" + tier);
   if (col) {
     const card = col.querySelector(track === 'premium' ? '.bp-card-prem' : '.bp-card-free') || col;
-    card.classList.remove("bp-unlock");
-    void card.offsetWidth;
-    card.classList.add("bp-unlock");
     spawnUnlockBurst(col, icon);
   }
   
