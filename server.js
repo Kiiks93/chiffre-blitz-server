@@ -1027,7 +1027,7 @@ await savePlayerToSupabase(socket.id);
 await logPlayerAction(player, 'claim_pass_tier', `Tier ${tier} (${track})`, null, null, null);
 socket.emit('player_registered', player);
 socket.emit('pass_tier_claimed', { tier, track });
-socket.emit('pass_reward_received', { message: "Recompense du Palier " + tier + " (" + track + ") recuperee !" });
+//socket.emit('pass_reward_received', { message: "Recompense du Palier " + tier + " (" + track + ") recuperee !" });
 });
 socket.on('use_power', async (powerId) => {
 const player = activePlayers[socket.id];
