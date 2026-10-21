@@ -2052,23 +2052,21 @@ socket.on('admin_send_message', async (data) => {
 
     // ✅ CAS 1 : ENVOI À TOUS LES JOUEURS
     if (clean === 'TOUS' || clean === 'ALL') {
-        const { error } = await supabase
-            .from('players')
-            .update({ 
-                pending_message: supabase.raw(`
-                    CASE 
-                        WHEN pending_message IS NULL THEN '[${newMsg}]'::text
-                        ELSE (pending_message::jsonb || '[${newMsg}]'::jsonb)::text
-                    END
-                `)
-            })
-            .neq('id', '00000000-0000-0000-0000-000000000000');
-            
-        if (error) return socket.emit('admin_message_result', { ok: false, message: 'Erreur BDD globale: ' + error.message });
+        // On appelle la fonction SQL qu'on vient de créer dans Supabase
+        const { error: rpcError } = await supabase.rpc('append_pending_message', { 
+            p_new_message: newMsg 
+        });
 
+        if (rpcError) {
+            console.error("Erreur RPC Supabase:", rpcError);
+            return socket.emit('admin_message_result', { ok: false, message: 'Erreur BDD globale: ' + rpcError.message });
+        }
+
+        // Envoyer immédiatement aux joueurs actuellement en ligne
         for (const sId in activePlayers) {
             io.to(sId).emit('admin_new_message', { text: message, images: Array.isArray(imageUrls) ? imageUrls : [] });
         }
+        
         return socket.emit('admin_message_result', { ok: true, message: `✅ Message ajouté à la file de TOUS les joueurs !` });
     }
 
