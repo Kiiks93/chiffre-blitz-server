@@ -653,8 +653,16 @@ async function towerWin(player, s){
   } else if (s.type === "sprint" || s.type === "forbidden") {
     if (used <= s.def.time * 0.6) stars = 3;
     else if (used <= s.def.time * 0.85) stars = 2;
-  } else if (s.type === "memory") {
+   } else if (s.type === "memory") {
     if (s.mistakes === 0) stars = 3;
+    else if (s.mistakes <= 2) stars = 2;
+  } else if (s.type === "nofail") {
+  // ✅ Mode Sans Faute : 1 erreur = Game Over. Les étoiles dépendent UNIQUEMENT du temps.
+    if (used <= s.def.time * 0.5) stars = 3;      // Fini en moins de 50% du temps
+    else if (used <= s.def.time * 0.75) stars = 2; // Fini en moins de 75% du temps
+    else stars = 1;
+  } else {
+    if (s.mistakes === 0 && used <= s.def.time * 0.6) stars = 3;
     else if (s.mistakes <= 2) stars = 2;
   } else {
     if (s.mistakes === 0 && used <= s.def.time * 0.6) stars = 3;
