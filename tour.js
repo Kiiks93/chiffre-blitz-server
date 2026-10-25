@@ -83,7 +83,7 @@ const MODE_DESCRIPTIONS = {
     forbidden: { fr: "Trouve les chiffres dans l'ordre, mais évite le chiffre interdit !", en: "Find numbers in order, but avoid the forbidden number!" },
     sprint: { fr: "Mode ultra-rapide ! La grille est petite mais le temps est très court.", en: "Ultra-fast mode! Small grid but very short time." },
     memory: { fr: "Mémorise la position des chiffres, puis retrouve-les dans l'ordre.", en: "Memorize tile positions, then find them in order." },
-    nofail: { fr: "Aucune erreur n'est comptée. Prends ton temps et vise la perfection !", en: "No mistakes counted. Take your time and aim for perfection!" },
+    nofail: { fr: "Aucune erreur n'est permise ! 1 faute = Game Over. Vise le meilleur temps !", en: "No mistakes allowed! 1 error = Game Over. Aim for the best time!" },
     boss: { fr: "Affronte le Gardien ! Bat-le avant qu'il ne termine sa propre grille.", en: "Face the Guardian! Beat him before he finishes his own grid." }
 };
 const TowerUtils = {
