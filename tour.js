@@ -1207,6 +1207,7 @@ const ST = "\u{2B50}";
 let starRule = fr ? `💡 ${ST} terminer · ${ST}${ST} ≤2 erreurs · ${ST}${ST}${ST} 0 erreur + < ${starTime}s` : `💡 ${ST} finish · ${ST}${ST} ≤2 mistakes · ${ST}${ST}${ST} 0 mistake + < ${starTime}s`;
 if (def.type === "pairs" || def.type === "sprint") starRule = fr ? `💡 ${ST} finir · ${ST} rapide · ${ST}${ST}${ST} très rapide` : `💡 ${ST} finish · ${ST} fast · ${ST}${ST}${ST} very fast`;
 if (def.type === "memory") starRule = fr ? `💡 ${ST} terminer · ${ST}${ST} ≤2 erreurs · ${ST}${ST}${ST} 0 erreur (tout à la mémoire !)` : `💡 ${ST} finish · ${ST}${ST} ≤2 mistakes · ${ST}${ST}${ST} 0 mistakes (pure memory!)`;
+if (def.type === "nofail") starRule = fr ? ` ${ST} 0 erreur (1 faute = perdu !) · ${ST}${ST}${ST} Temps le plus rapide` : `💡 ${ST} 0 mistakes (1 error = fail!) · ${ST}${ST}${ST} Fastest time`;
 const replayLine = def.replay ? `<div style="font-size:10px;color:#f8b500;margin-bottom:6px;">${fr?"Actuel : ":"Current: "}${ST.repeat(curStars)}</div>` : "";
 const b = document.createElement("div");
 b.id = "tw-brief"; b.className = "tw-brief";
@@ -1366,9 +1367,19 @@ else if (t === "forbidden") { let nx = (TW_dom.target || 0) + 1; if (nx === TW_d
 else if (["classic","sprint","fog","nofail"].includes(t)) TW_dom.target++;
 if (typeof SoundEngine !== "undefined" && SoundEngine.playClick) SoundEngine.playClick();
 } else if (success === false) {
-b.classList.add("err");
-setTimeout(() => { if (b) b.classList.remove("err"); }, 350);
-if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
+    b.classList.add("err");
+    setTimeout(() => { if (b) b.classList.remove("err"); }, 350);
+    if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
+
+    // ✅ MODE SANS FAUTE : 1 ERREUR = GAME OVER IMMÉDIAT
+    if (t === "nofail") {
+        // On bloque les clics le temps que l'animation rouge se joue
+        TW_pairsLock = true; 
+        setTimeout(() => {
+            showFailUI("nofail");
+            socket.emit("tower_quit"); // On quitte la partie côté serveur
+        }, 400); // 400ms de délai pour laisser le joueur voir sa faute
+    }
 }
 socket.emit("tower_click", { index: i });
 }
