@@ -67,6 +67,7 @@ let twJokers = { time: 0, shield: 0 };
 let twNextLife = 0;
 let TW = null, TW_dom = null, TW_buttons = [], TW_lastFloor = 0;
 let TW_hudCache = "", TW_localTimer = null, TW_lastClick = 0, TW_pairsLock = false;
+let TW_stroopColor = null; // ✅ Pour mémoriser la couleur de leurre de l'Effet Stroop
 let TW_lastState = 0;
 let TW_gateTimer = null;  // ✅ Timer du Gate Loader
 const SCENE_CACHE = {};
@@ -1347,7 +1348,16 @@ const v = TW_dom.display[i];
 let success = null;
 if (t === "color" && TW_dom.targetColor) success = (v && v.key === TW_dom.targetColor.key);
 else if (t === "parity") success = (TW_dom.targetParity === "even" ? (v % 2 === 0) : (v % 2 !== 0));
-else if (t === "forbidden") success = (TW_dom.target !== null && TW_dom.target !== undefined) ? (v === TW_dom.target) : (v !== TW_dom.forbidden);
+else if (t === "forbidden") {
+    if (v === TW_dom.forbidden) {
+        // Clic sur le chiffre interdit = Défaite immédiate du niveau
+        if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
+        showFailUI("forbidden");
+        socket.emit("tower_quit"); // On arrête la partie côté serveur pour éviter les bugs de timer
+        return;
+    }
+    success = (TW_dom.target !== null && TW_dom.target !== undefined) ? (v === TW_dom.target) : true;
+}
 else if (TW_dom.target !== null && TW_dom.target !== undefined) success = (v === TW_dom.target);
 if (success === true) {
 TW_dom.gone[i] = true; b.classList.add("gone");
@@ -1376,16 +1386,19 @@ function renderHUDFromState() {
     const dH = i18n[currentLang];
     const colorName = (TW.targetColor && dH["tw_color_" + TW.targetColor.key]) || (TW.targetColor ? TW.targetColor.name : "");
     let main = "";
-    if (TW.type === "color" && TW.targetColor) {
-    let textColor = TW.targetColor.hex;
-    //  EFFET STROOP : Si la difficulté est MAX (3), on écrit le mot dans une autre couleur
-    const currentDef = TowerUtils.getFloorDef(TW.floor);
-    if (currentDef && currentDef.diff === 3) {
+if (TW.type === "color" && TW.targetColor) {
+    // ✅ On ne génère une nouvelle couleur de leurre QUE si elle n'existe pas 
+    // ou si elle correspond à la cible (ce qui veut dire que la cible a changé)
+    if (!TW_stroopColor || TW_stroopColor.toLowerCase() === TW.targetColor.hex.toLowerCase()) {
         const allHex = ["#ff4b2b", "#00d2ff", "#7dff8a", "#f8b500", "#c28aff", "#ff6fa5"];
         const otherColors = allHex.filter(c => c.toLowerCase() !== TW.targetColor.hex.toLowerCase());
-        textColor = otherColors[Math.floor(Math.random() * otherColors.length)];
+        TW_stroopColor = otherColors[Math.floor(Math.random() * otherColors.length)];
     }
-    main = `${dH.tw_hud_color} <span style="color:${textColor};font-weight:900;text-shadow:0 0 8px ${textColor}88;">${colorName}</span>`;
+    
+    main = `${dH.tw_hud_color} <span style="color:${TW_stroopColor};font-weight:900;text-shadow:0 0 8px ${TW_stroopColor}88;">${colorName}</span>`;
+} else {
+    // ✅ On reset la couleur de leurre quand on n'est plus en mode couleur
+    TW_stroopColor = null; 
 }
     else if (TW.type === "pairs") main = (TW.revealLeft > 0) ? `${dH.tw_hud_memorize} ${TW.revealLeft}s` : dH.tw_hud_pairs;
     else if (TW.type === "parity") main = TW.targetParity === "even" ? dH.tw_hud_parity_even : dH.tw_hud_parity_odd;
