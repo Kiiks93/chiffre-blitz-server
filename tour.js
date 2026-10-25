@@ -73,6 +73,18 @@ const SCENE_CACHE = {};
 let TW_musicWorld = 0;
 let TW_firstSync = true;
 /* ----- 3. UTILITAIRES ----- */
+const MODE_DESCRIPTIONS = {
+    classic: { fr: "Trouve les chiffres dans l'ordre croissant (1, 2, 3...).", en: "Find numbers in ascending order (1, 2, 3...)." },
+    reverse: { fr: "Trouve les chiffres dans l'ordre décroissant (9, 8, 7...).", en: "Find numbers in descending order (9, 8, 7...)." },
+    color: { fr: "Clique uniquement sur les tuiles de la couleur demandée.", en: "Click only on tiles of the requested color." },
+    pairs: { fr: "Mémorise et retrouve les paires de chiffres identiques.", en: "Memorize and find pairs of identical numbers." },
+    parity: { fr: "Clique seulement sur les chiffres pairs ou impairs selon l'indication.", en: "Click only on even or odd numbers as indicated." },
+    forbidden: { fr: "Trouve les chiffres dans l'ordre, mais évite le chiffre interdit !", en: "Find numbers in order, but avoid the forbidden number!" },
+    sprint: { fr: "Mode ultra-rapide ! La grille est petite mais le temps est très court.", en: "Ultra-fast mode! Small grid but very short time." },
+    memory: { fr: "Mémorise la position des chiffres, puis retrouve-les dans l'ordre.", en: "Memorize tile positions, then find them in order." },
+    nofail: { fr: "Aucune erreur n'est comptée. Prends ton temps et vise la perfection !", en: "No mistakes counted. Take your time and aim for perfection!" },
+    boss: { fr: "Affronte le Gardien ! Bat-le avant qu'il ne termine sa propre grille.", en: "Face the Guardian! Beat him before he finishes his own grid." }
+};
 const TowerUtils = {
 starsInWorld(w) {
 let s = 0;
@@ -1197,8 +1209,12 @@ if (def.type === "memory") starRule = fr ? `💡 ${ST} terminer · ${ST}${ST} �
 const replayLine = def.replay ? `<div style="font-size:10px;color:#f8b500;margin-bottom:6px;">${fr?"Actuel : ":"Current: "}${ST.repeat(curStars)}</div>` : "";
 const b = document.createElement("div");
 b.id = "tw-brief"; b.className = "tw-brief";
+const modeDesc = MODE_DESCRIPTIONS[def.type] || { fr: "Mode classique.", en: "Classic mode." };
+const descText = fr ? modeDesc.fr : modeDesc.en;
+
 b.innerHTML = `<div class="tw-brief-card">
 <div style="font-size:13px;font-weight:900;color:#f8b500;margin-bottom:6px;">🏰 ${fr?"ÉTAGE":"FLOOR"} ${def.floor} — ${TowerUtils.typeLabel(def.type)}</div>
+<div style="font-size:11px;color:#00d2ff;margin-bottom:8px;font-style:italic;text-align:center;">${descText}</div>
 <div style="font-size:10px;font-weight:700;color:#aaa;margin-bottom:6px;">${diffLabel(Number.isFinite(def.diff) ? def.diff : 1)}${(def.diff||0) >= 2 ? " · bonus 🪙" : ""}</div>
 <div style="font-size:9px;color:#aaa;margin-bottom:8px;">${starRule}</div>
 ${replayLine}
@@ -1360,7 +1376,17 @@ function renderHUDFromState() {
     const dH = i18n[currentLang];
     const colorName = (TW.targetColor && dH["tw_color_" + TW.targetColor.key]) || (TW.targetColor ? TW.targetColor.name : "");
     let main = "";
-    if (TW.type === "color" && TW.targetColor) main = `${dH.tw_hud_color} <span style="color:${TW.targetColor.hex};">${colorName}</span>`;
+    if (TW.type === "color" && TW.targetColor) {
+    let textColor = TW.targetColor.hex;
+    //  EFFET STROOP : Si la difficulté est MAX (3), on écrit le mot dans une autre couleur
+    const currentDef = TowerUtils.getFloorDef(TW.floor);
+    if (currentDef && currentDef.diff === 3) {
+        const allHex = ["#ff4b2b", "#00d2ff", "#7dff8a", "#f8b500", "#c28aff", "#ff6fa5"];
+        const otherColors = allHex.filter(c => c.toLowerCase() !== TW.targetColor.hex.toLowerCase());
+        textColor = otherColors[Math.floor(Math.random() * otherColors.length)];
+    }
+    main = `${dH.tw_hud_color} <span style="color:${textColor};font-weight:900;text-shadow:0 0 8px ${textColor}88;">${colorName}</span>`;
+}
     else if (TW.type === "pairs") main = (TW.revealLeft > 0) ? `${dH.tw_hud_memorize} ${TW.revealLeft}s` : dH.tw_hud_pairs;
     else if (TW.type === "parity") main = TW.targetParity === "even" ? dH.tw_hud_parity_even : dH.tw_hud_parity_odd;
     else if (TW.type === "forbidden") main = `${dH.tw_hud_forbidden} <span style="color:#ff4b2b;">${TW.forbidden}</span> · ${dH.tw_hud_target} ${TW.target}`;
