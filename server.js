@@ -664,9 +664,6 @@ async function towerWin(player, s){
   } else {
     if (s.mistakes === 0 && used <= s.def.time * 0.6) stars = 3;
     else if (s.mistakes <= 2) stars = 2;
-  } else {
-    if (s.mistakes === 0 && used <= s.def.time * 0.6) stars = 3;
-    else if (s.mistakes <= 2) stars = 2;
   }
 
   let coins, reward = null;
