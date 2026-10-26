@@ -1398,36 +1398,36 @@ function renderHUDFromState() {
     const dH = i18n[currentLang];
     const colorName = (TW.targetColor && dH["tw_color_" + TW.targetColor.key]) || (TW.targetColor ? TW.targetColor.name : "");
     let main = "";
-if (TW.type === "color" && TW.targetColor) {
-    // ✅ On ne génère une nouvelle couleur de leurre QUE si elle n'existe pas 
-    // ou si elle correspond à la cible (ce qui veut dire que la cible a changé)
-    if (!TW_stroopColor || TW_stroopColor.toLowerCase() === TW.targetColor.hex.toLowerCase()) {
-        const allHex = ["#ff4b2b", "#00d2ff", "#7dff8a", "#f8b500", "#c28aff", "#ff6fa5"];
-        const otherColors = allHex.filter(c => c.toLowerCase() !== TW.targetColor.hex.toLowerCase());
-        TW_stroopColor = otherColors[Math.floor(Math.random() * otherColors.length)];
+    
+    if (TW.type === "color" && TW.targetColor) {
+        // ✅ EFFET STROOP : on ne génère une nouvelle couleur de leurre QUE si la cible a changé
+        if (!TW_stroopColor || TW_stroopColor.toLowerCase() === TW.targetColor.hex.toLowerCase()) {
+            const allHex = ["#ff4b2b", "#00d2ff", "#7dff8a", "#f8b500", "#c28aff", "#ff6fa5"];
+            const otherColors = allHex.filter(c => c.toLowerCase() !== TW.targetColor.hex.toLowerCase());
+            TW_stroopColor = otherColors[Math.floor(Math.random() * otherColors.length)];
+        }
+        main = `${dH.tw_hud_color} <span style="color:${TW_stroopColor};font-weight:900;text-shadow:0 0 8px ${TW_stroopColor}88;">${colorName}</span>`;
+    } else {
+        // ✅ On reset la couleur de leurre quand on n'est plus en mode couleur
+        TW_stroopColor = null;
+        if (TW.type === "pairs") main = (TW.revealLeft > 0) ? `${dH.tw_hud_memorize} ${TW.revealLeft}s` : dH.tw_hud_pairs;
+        else if (TW.type === "parity") main = TW.targetParity === "even" ? dH.tw_hud_parity_even : dH.tw_hud_parity_odd;
+        else if (TW.type === "forbidden") main = `${dH.tw_hud_forbidden} <span style="color:#ff4b2b;">${TW.forbidden}</span> · ${dH.tw_hud_target} ${TW.target}`;
+        else if (TW.type === "memory") main = (TW.revealLeft > 0) ? `${dH.tw_hud_memorize} ${TW.revealLeft}s` : dH.tw_hud_memory_order;
+        else if (TW.target !== null && TW.target !== undefined) main = `${dH.tw_hud_target} ${TW.target}`;
     }
     
-    main = `${dH.tw_hud_color} <span style="color:${TW_stroopColor};font-weight:900;text-shadow:0 0 8px ${TW_stroopColor}88;">${colorName}</span>`;
-} else {
-    // ✅ On reset la couleur de leurre quand on n'est plus en mode couleur
-    TW_stroopColor = null; 
-}
-    else if (TW.type === "pairs") main = (TW.revealLeft > 0) ? `${dH.tw_hud_memorize} ${TW.revealLeft}s` : dH.tw_hud_pairs;
-    else if (TW.type === "parity") main = TW.targetParity === "even" ? dH.tw_hud_parity_even : dH.tw_hud_parity_odd;
-    else if (TW.type === "forbidden") main = `${dH.tw_hud_forbidden} <span style="color:#ff4b2b;">${TW.forbidden}</span> · ${dH.tw_hud_target} ${TW.target}`;
-    else if (TW.type === "memory") main = (TW.revealLeft > 0) ? `${dH.tw_hud_memorize} ${TW.revealLeft}s` : dH.tw_hud_memory_order;
-    else if (TW.target !== null && TW.target !== undefined) main = `${dH.tw_hud_target} ${TW.target}`;
-if (main !== TW_hudCache) { h.innerHTML = main; TW_hudCache = main; }
-const bar = document.getElementById("tg-bar");
-if (bar) { if (TW.type === "boss") { bar.style.display = "block"; bar.innerHTML = `<div style="width:${Math.min(100,TW.ai/TW.total*100)}%;height:100%;background:linear-gradient(90deg,#ff4b2b,#f8b500);"></div>`; } else bar.style.display = "none"; }
-document.getElementById("twg-title").innerText = dH.tw_floor + " " + TW.floor + " — " + TowerUtils.typeLabel(TW.type);
-const errEl = document.getElementById("tg-err");
-if (errEl) errEl.innerText = "❌ " + (TW.mistakes || 0);
-const shEl = document.getElementById("tg-shield");
-if (shEl) shEl.style.display = (TW.shield > 0) ? "inline" : "none";
-updateJokerButtons();
-const grid = document.getElementById("tg-grid");
-if (grid) grid.classList.toggle("shielded", (TW.shield > 0));
+    if (main !== TW_hudCache) { h.innerHTML = main; TW_hudCache = main; }
+    const bar = document.getElementById("tg-bar");
+    if (bar) { if (TW.type === "boss") { bar.style.display = "block"; bar.innerHTML = `<div style="width:${Math.min(100,TW.ai/TW.total*100)}%;height:100%;background:linear-gradient(90deg,#ff4b2b,#f8b500);"></div>`; } else bar.style.display = "none"; }
+    document.getElementById("twg-title").innerText = dH.tw_floor + " " + TW.floor + " — " + TowerUtils.typeLabel(TW.type);
+    const errEl = document.getElementById("tg-err");
+    if (errEl) errEl.innerText = "❌ " + (TW.mistakes || 0);
+    const shEl = document.getElementById("tg-shield");
+    if (shEl) shEl.style.display = (TW.shield > 0) ? "inline" : "none";
+    updateJokerButtons();
+    const grid = document.getElementById("tg-grid");
+    if (grid) grid.classList.toggle("shielded", (TW.shield > 0));
 }
 function showFailUI(reason) {
 const ov = ensureTowerOverlay();
