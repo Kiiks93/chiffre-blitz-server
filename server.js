@@ -659,21 +659,22 @@ if (s.type==="memory") return s.nums.map((v,i)=> s.gone[i] ? "" : ((Date.now() <
 if (s.type==="color") return s.nums.map(c=>({key:c.key,hex:c.hex}));
 return s.nums.slice();
 }
-function towerStatePayload(s){
-return {
-floor:s.floor, type:s.type, total:s.total,
-timeLeft: Math.max(0, s.def.time - Math.floor((Date.now()-s.start)/1000)),
-mistakes:s.mistakes, gone:s.gone, display:towerDisplay(s),
-target:s.target||null, targetColor:s.targetColor||null, targetParity:s.targetParity||null, forbidden:s.forbidden||null,
-hunterOp:s.hunterOp||null, hunterVal:s.hunterVal||null,
-targetIndex:(s.targetIndex===undefined?null:s.targetIndex), revealUntil:s.revealUntil||null,
-revealed:s.revealed, sel:s.sel, ai:s.ai, defTime:s.def.time, gridSize:s.def.gridSize,
-serverNow: Date.now(), cascadeDuration: s.cascadeDuration || 0,
-score:s.score||0, moves:(s.moves===undefined?null:s.moves), targetScore:s.targetScore||null,
-lastSwap:s.lastSwap||null, lastSwapSeq:s.lastSwapSeq||0, lastChain:s.lastChain||0,
-replay:s.replay, shield:s.shield||0,
-revealLeft: (s.type==="memory" || s.type==="pairs") ? Math.max(0, Math.round(((s.revealUntil||0) - Date.now())/1000)) : 0
-};
+function towerStatePayload(s) {
+	return {
+		floor: s.floor, type: s.type, total: s.total,
+		timeLeft: Math.max(0, s.def.time - Math.floor((Date.now() - s.start) / 1000)),
+		mistakes: s.mistakes, gone: s.gone, display: towerDisplay(s),
+		target: s.target || null, targetColor: s.targetColor || null, targetParity: s.targetParity || null, forbidden: s.forbidden || null,
+		hunterOp: s.hunterOp || null, hunterVal: s.hunterVal || null,
+		targetIndex: (s.targetIndex === undefined ? null : s.targetIndex), revealUntil: s.revealUntil || null,
+		revealed: s.revealed, sel: s.sel, ai: s.ai, defTime: s.def.time, gridSize: s.def.gridSize,
+		serverNow: Date.now(), cascadeDuration: s.cascadeDuration || 0,
+		score: s.score || 0, moves: (s.moves === undefined ? null : s.moves), targetScore: s.targetScore || null,
+		lastSwap: s.lastSwap || null, lastSwapSeq: s.lastSwapSeq || 0, lastChain: s.lastChain || 0,
+		replay: s.replay, shield: s.shield || 0,
+		revealLeft: (s.type === "memory" || s.type === "pairs") ? Math.max(0, Math.round(((s.revealUntil || 0) - Date.now()) / 1000)) : 0, // ✅ Virgule ajoutée ici
+		hint: s.hint || null // ✅ L'indice visuel est maintenant transmis au client
+	};
 }
 async function towerWin(player, s){
   s.done = true;
@@ -752,25 +753,59 @@ await logPlayerAction(player, 'tower_fail', `Étage ${s.floor} : ${reason} (-1 v
 return { ok:false, floor:s.floor, reason, lives: player.lives, nextLifeIn: towerNextLifeIn(player) };
 }
 setInterval(async () => {
-for (const sid in towerSessions){
-const s = towerSessions[sid];
-const player = activePlayers[sid];
-if (!s || s.done){ delete towerSessions[sid]; continue; }
-if (!player){ delete towerSessions[sid]; continue; }
-const elapsed = (Date.now()-s.start)/1000;
-if (elapsed > s.def.time){ const r = await towerFail(player, s, 'timeout'); delete towerSessions[sid]; io.to(sid).emit('tower_fail', r); cbMaybeKickAfterMatch(io.sockets.sockets.get(sid)); continue; }
-if (s.type==="boss"){
-s.ai += 0.55 + Math.ceil(s.floor / TOWER_FPC) * 0.08;
-if (s.ai >= s.total){ const r = await towerFail(player, s, 'boss'); delete towerSessions[sid]; io.to(sid).emit('tower_fail', r); cbMaybeKickAfterMatch(io.sockets.sockets.get(sid)); continue; }
-}
-// ✅ Gestion du temps écoulé pour le mode Cascade (cible qui disparaît)
-if (s.type === "cascade" && !s.done && Date.now() > s.revealUntil && !s.gone[s.targetIndex]) {
-if (s.shield > 0) { s.shield--; io.to(sid).emit('tower_shield_used', { shield: s.shield }); }
-else s.mistakes++;
-s.revealUntil = Date.now() + (s.cascadeDuration || 1500);
-}
-io.to(sid).emit('tower_state', towerStatePayload(s));
-}
+	for (const sid in towerSessions) {
+		const s = towerSessions[sid];
+		const player = activePlayers[sid];
+		if (!s || s.done) { delete towerSessions[sid]; continue; }
+		if (!player) { delete towerSessions[sid]; continue; }
+		
+		const elapsed = (Date.now() - s.start) / 1000;
+		if (elapsed > s.def.time) { 
+			const r = await towerFail(player, s, 'timeout'); 
+			delete towerSessions[sid]; 
+			io.to(sid).emit('tower_fail', r); 
+			cbMaybeKickAfterMatch(io.sockets.sockets.get(sid)); 
+			continue; 
+		}
+		
+		if (s.type === "boss") {
+			s.ai += 0.55 + Math.ceil(s.floor / TOWER_FPC) * 0.08;
+			if (s.ai >= s.total) { 
+				const r = await towerFail(player, s, 'boss'); 
+				delete towerSessions[sid]; 
+				io.to(sid).emit('tower_fail', r); 
+				cbMaybeKickAfterMatch(io.sockets.sockets.get(sid)); 
+				continue; 
+			}
+		}
+		
+		// ✅ Gestion du temps écoulé pour le mode Cascade (cible qui disparaît)
+		if (s.type === "cascade" && !s.done && Date.now() > s.revealUntil && !s.gone[s.targetIndex]) {
+			if (s.shield > 0) { 
+				s.shield--; 
+				io.to(sid).emit('tower_shield_used', { shield: s.shield }); 
+			} else {
+				s.mistakes++;
+			}
+			s.revealUntil = Date.now() + (s.cascadeDuration || 1500);
+		}
+
+		// ✅ INDICE VISUEL FUSION : si le joueur n'a pas joué depuis 15s, on lui montre un coup possible
+		if (s.type === "fusion" && !s.done) {
+			const lastActionTime = s.lastActionTime || s.start;
+			const idleTime = Date.now() - lastActionTime;
+			
+			if (idleTime > 15000 && !s.hintShown) {
+				const hint = fusionFindHint(s.board);
+				if (hint) {
+					s.hint = hint;
+					s.hintShown = true;
+				}
+			}
+		}
+		
+		io.to(sid).emit('tower_state', towerStatePayload(s));
+	}
 }, 1000);
 /* ============================================================
 SOCKET
@@ -3147,15 +3182,18 @@ const FUSION_VALUES = 6; // chiffres 1 à 6
 function fusionFindMatches(board) {
     const hit = new Set();
     const C = 5, R = 5;
+    const idx = (r, c) => r * C + c;
+    const inBounds = (r, c) => r >= 0 && r < R && c >= 0 && c < C;
+    const same = (r, c, v) => inBounds(r, c) && board[idx(r, c)] === v;
     
     // 1. Alignements horizontaux (3, 4, 5)
     for (let r = 0; r < R; r++) {
         let run = 1;
         for (let c = 1; c <= C; c++) {
-            const same = c < C && board[r*C+c] != null && board[r*C+c] === board[r*C+c-1];
-            if (same) run++;
+            const s = c < C && board[idx(r, c)] != null && board[idx(r, c)] === board[idx(r, c - 1)];
+            if (s) run++;
             else {
-                if (run >= 3) for (let k = c-run; k < c; k++) hit.add(r*C+k);
+                if (run >= 3) for (let k = c - run; k < c; k++) hit.add(idx(r, k));
                 run = 1;
             }
         }
@@ -3165,66 +3203,81 @@ function fusionFindMatches(board) {
     for (let c = 0; c < C; c++) {
         let run = 1;
         for (let r = 1; r <= R; r++) {
-            const same = r < R && board[r*C+c] != null && board[r*C+c] === board[(r-1)*C+c];
-            if (same) run++;
+            const s = r < R && board[idx(r, c)] != null && board[idx(r, c)] === board[idx(r - 1, c)];
+            if (s) run++;
             else {
-                if (run >= 3) for (let k = r-run; k < r; k++) hit.add(k*C+c);
+                if (run >= 3) for (let k = r - run; k < r; k++) hit.add(idx(k, c));
                 run = 1;
             }
         }
     }
     
-    // 3. Formes en L (4 tuiles : 3 horizontales + 1 verticale, ou inversement)
+    // 3. Formes en L (8 orientations) — 4 tuiles
     for (let r = 0; r < R; r++) {
         for (let c = 0; c < C; c++) {
-            const v = board[r*C+c];
+            const v = board[idx(r, c)];
             if (v == null) continue;
             
-            // L horizontal (3 en ligne + 1 en bas à gauche/droite)
-            if (c+2 < C && board[r*C+c+1] === v && board[r*C+c+2] === v) {
-                if (r+1 < R && board[(r+1)*C+c] === v) {
-                    hit.add(r*C+c); hit.add(r*C+c+1); hit.add(r*C+c+2); hit.add((r+1)*C+c);
-                }
-                if (r+1 < R && board[(r+1)*C+c+2] === v) {
-                    hit.add(r*C+c); hit.add(r*C+c+1); hit.add(r*C+c+2); hit.add((r+1)*C+c+2);
-                }
+            // Pattern : 3 horizontaux + 1 en bas à gauche
+            if (same(r, c + 1, v) && same(r, c + 2, v) && same(r + 1, c, v)) {
+                hit.add(idx(r, c)); hit.add(idx(r, c + 1)); hit.add(idx(r, c + 2)); hit.add(idx(r + 1, c));
             }
-            
-            // L vertical (3 en colonne + 1 à gauche/droite en bas)
-            if (r+2 < R && board[(r+1)*C+c] === v && board[(r+2)*C+c] === v) {
-                if (c+1 < C && board[(r+2)*C+c+1] === v) {
-                    hit.add(r*C+c); hit.add((r+1)*C+c); hit.add((r+2)*C+c); hit.add((r+2)*C+c+1);
-                }
-                if (c-1 >= 0 && board[(r+2)*C+c-1] === v) {
-                    hit.add(r*C+c); hit.add((r+1)*C+c); hit.add((r+2)*C+c); hit.add((r+2)*C+c-1);
-                }
+            // Pattern : 3 horizontaux + 1 en bas à droite
+            if (same(r, c + 1, v) && same(r, c + 2, v) && same(r + 1, c + 2, v)) {
+                hit.add(idx(r, c)); hit.add(idx(r, c + 1)); hit.add(idx(r, c + 2)); hit.add(idx(r + 1, c + 2));
+            }
+            // Pattern : 3 horizontaux + 1 en haut à gauche
+            if (same(r, c + 1, v) && same(r, c + 2, v) && same(r - 1, c, v)) {
+                hit.add(idx(r, c)); hit.add(idx(r, c + 1)); hit.add(idx(r, c + 2)); hit.add(idx(r - 1, c));
+            }
+            // Pattern : 3 horizontaux + 1 en haut à droite
+            if (same(r, c + 1, v) && same(r, c + 2, v) && same(r - 1, c + 2, v)) {
+                hit.add(idx(r, c)); hit.add(idx(r, c + 1)); hit.add(idx(r, c + 2)); hit.add(idx(r - 1, c + 2));
+            }
+            // Pattern : 3 verticaux + 1 à gauche en bas
+            if (same(r + 1, c, v) && same(r + 2, c, v) && same(r + 2, c - 1, v)) {
+                hit.add(idx(r, c)); hit.add(idx(r + 1, c)); hit.add(idx(r + 2, c)); hit.add(idx(r + 2, c - 1));
+            }
+            // Pattern : 3 verticaux + 1 à droite en bas
+            if (same(r + 1, c, v) && same(r + 2, c, v) && same(r + 2, c + 1, v)) {
+                hit.add(idx(r, c)); hit.add(idx(r + 1, c)); hit.add(idx(r + 2, c)); hit.add(idx(r + 2, c + 1));
+            }
+            // Pattern : 3 verticaux + 1 à gauche en haut
+            if (same(r + 1, c, v) && same(r + 2, c, v) && same(r, c - 1, v)) {
+                hit.add(idx(r, c)); hit.add(idx(r + 1, c)); hit.add(idx(r + 2, c)); hit.add(idx(r, c - 1));
+            }
+            // Pattern : 3 verticaux + 1 à droite en haut
+            if (same(r + 1, c, v) && same(r + 2, c, v) && same(r, c + 1, v)) {
+                hit.add(idx(r, c)); hit.add(idx(r + 1, c)); hit.add(idx(r + 2, c)); hit.add(idx(r, c + 1));
             }
         }
     }
     
-    // 4. Formes en T (4 tuiles : 3 horizontales + 1 au milieu en bas, ou inversement)
+    // 4. Formes en T (4 orientations) — 4 tuiles
     for (let r = 0; r < R; r++) {
         for (let c = 0; c < C; c++) {
-            const v = board[r*C+c];
+            const v = board[idx(r, c)];
             if (v == null) continue;
             
-            // T horizontal (3 en ligne + 1 au milieu en bas)
-            if (c+2 < C && board[r*C+c+1] === v && board[r*C+c+2] === v) {
-                if (r+1 < R && board[(r+1)*C+c+1] === v) {
-                    hit.add(r*C+c); hit.add(r*C+c+1); hit.add(r*C+c+2); hit.add((r+1)*C+c+1);
-                }
-            } 
-            // T vertical (3 en colonne + 1 au milieu à droite/gauche)
-            if (r+2 < R && board[(r+1)*C+c] === v && board[(r+2)*C+c] === v) {
-                if (c+1 < C && board[(r+1)*C+c+1] === v) {
-                    hit.add(r*C+c); hit.add((r+1)*C+c); hit.add((r+2)*C+c); hit.add((r+1)*C+c+1);
-                }
-                if (c-1 >= 0 && board[(r+1)*C+c-1] === v) {
-                    hit.add(r*C+c); hit.add((r+1)*C+c); hit.add((r+2)*C+c); hit.add((r+1)*C+c-1);
-                }
+            // T horizontal (barre en haut, pied en bas au milieu)
+            if (same(r, c + 1, v) && same(r, c + 2, v) && same(r + 1, c + 1, v)) {
+                hit.add(idx(r, c)); hit.add(idx(r, c + 1)); hit.add(idx(r, c + 2)); hit.add(idx(r + 1, c + 1));
+            }
+            // T horizontal inversé (barre en bas, pied en haut au milieu)
+            if (same(r, c + 1, v) && same(r, c + 2, v) && same(r - 1, c + 1, v)) {
+                hit.add(idx(r, c)); hit.add(idx(r, c + 1)); hit.add(idx(r, c + 2)); hit.add(idx(r - 1, c + 1));
+            }
+            // T vertical (barre à gauche, pied à droite au milieu)
+            if (same(r + 1, c, v) && same(r + 2, c, v) && same(r + 1, c + 1, v)) {
+                hit.add(idx(r, c)); hit.add(idx(r + 1, c)); hit.add(idx(r + 2, c)); hit.add(idx(r + 1, c + 1));
+            }
+            // T vertical inversé (barre à droite, pied à gauche au milieu)
+            if (same(r + 1, c, v) && same(r + 2, c, v) && same(r + 1, c - 1, v)) {
+                hit.add(idx(r, c)); hit.add(idx(r + 1, c)); hit.add(idx(r + 2, c)); hit.add(idx(r + 1, c - 1));
             }
         }
-    }    
+    }
+    
     return hit;
 }
 function fusionGenBoard() {
@@ -3265,53 +3318,74 @@ if (ok) return true;
 }
 return false;
 }
+function fusionFindHint(board) {
+    const C = 5, R = 5;
+    for (let r = 0; r < R; r++) {
+        for (let c = 0; c < C; c++) {
+            const i = r * C + c;
+            const tries = [];
+            if (c + 1 < C) tries.push(i + 1);
+            if (r + 1 < R) tries.push(i + C);
+            for (const j of tries) {
+                [board[i], board[j]] = [board[j], board[i]];
+                const ok = fusionFindMatches(board).size > 0;
+                [board[i], board[j]] = [board[j], board[i]];
+                if (ok) return { a: i, b: j };
+            }
+        }
+    }
+    return null;
+}
 function fusionSoloPayload(s, lastSwap, chain) {
 s.seq = (s.seq || 0) + 1;
 return { board: s.board.slice(), moves: s.moves, score: s.score, bestChain: s.bestChain || 0, lastSwap: lastSwap || null, lastChain: chain || 0, lastSwapSeq: s.seq };
 }
 async function fusionClick(socket, player, s, data) {
-const a = parseInt(data && data.index), bI = parseInt(data && data.swapWith);
-if (!Number.isFinite(a) || !Number.isFinite(bI) || a === bI) return;
-if (a < 0 || a >= 25 || bI < 0 || bI >= 25) return;
-const ra = Math.floor(a/5), ca = a%5, rb = Math.floor(bI/5), cb = bI%5;
-if (Math.abs(ra-rb) + Math.abs(ca-cb) !== 1) { s.lastSwap = { a, b: bI, ok: false }; s.lastSwapSeq = (s.lastSwapSeq||0) + 1; socket.emit('tower_state', towerStatePayload(s)); return; }
-[s.board[a], s.board[bI]] = [s.board[bI], s.board[a]];
-let matches = fusionFindMatches(s.board);
-if (matches.size === 0) {
-[s.board[a], s.board[bI]] = [s.board[bI], s.board[a]]; // swap inversé, aucun coup perdu
-s.lastSwap = { a, b: bI, ok: false }; s.lastSwapSeq = (s.lastSwapSeq||0) + 1;
-socket.emit('tower_state', towerStatePayload(s)); return;
-}
-s.moves--;
-s.lastSwap = { a, b: bI, ok: true }; s.lastSwapSeq = (s.lastSwapSeq||0) + 1;
-let chain = 0;
-while (matches.size > 0) {
-    chain++;
+    const a = parseInt(data && data.index), bI = parseInt(data && data.swapWith);
+    if (!Number.isFinite(a) || !Number.isFinite(bI) || a === bI) return;
+    if (a < 0 || a >= 25 || bI < 0 || bI >= 25) return;
+    const ra = Math.floor(a/5), ca = a%5, rb = Math.floor(bI/5), cb = bI%5;
+    if (Math.abs(ra-rb) + Math.abs(ca-cb) !== 1) { s.lastSwap = { a, b: bI, ok: false }; s.lastSwapSeq = (s.lastSwapSeq||0) + 1; socket.emit('tower_state', towerStatePayload(s)); return; }
     
-    // 🔥 BONUS DE SCORE SELON LA TAILLE DU MATCH
-    let baseScore = matches.size * 10;
-    if (matches.size === 4) baseScore = 50;  // 4 tuiles = 50 pts
-    if (matches.size >= 5) baseScore = 100; // 5+ tuiles = 100 pts
+    // Reset hint au début de chaque action
+    s.lastActionTime = Date.now();
+    s.hintShown = false;
+    s.hint = null;
     
-    s.score += baseScore * chain; // multiplicateur de chaîne
-    
-    matches.forEach(i => { s.board[i] = null; });
-    fusionGravity(s.board);
-    matches = fusionFindMatches(s.board);
-}
-s.lastChain = chain;
-if (!fusionHasMove(s.board)) s.board = fusionGenBoard();
-if (s.score >= s.targetScore) {
-const totalMoves = s.def.moves || 30;
-s.forcedStars = (s.moves >= totalMoves * 0.25) ? 3 : (s.moves >= totalMoves * 0.10) ? 2 : 1;
-const r = await towerWin(player, s); delete towerSessions[socket.id];
-socket.emit('tower_result', r); socket.emit('player_registered', player); cbMaybeKickAfterMatch(socket); return;
-}
-if (s.moves <= 0) {
-const r = await towerFail(player, s, 'fusion_moves'); delete towerSessions[socket.id];
-socket.emit('tower_fail', r); cbMaybeKickAfterMatch(socket); return;
-}
-socket.emit('tower_state', towerStatePayload(s));
+    [s.board[a], s.board[bI]] = [s.board[bI], s.board[a]];
+    let matches = fusionFindMatches(s.board);
+    if (matches.size === 0) {
+        [s.board[a], s.board[bI]] = [s.board[bI], s.board[a]]; // swap inversé, aucun coup perdu
+        s.lastSwap = { a, b: bI, ok: false }; s.lastSwapSeq = (s.lastSwapSeq||0) + 1;
+        socket.emit('tower_state', towerStatePayload(s)); return;
+    }
+    s.moves--;
+    s.lastSwap = { a, b: bI, ok: true }; s.lastSwapSeq = (s.lastSwapSeq||0) + 1;
+    let chain = 0;
+    while (matches.size > 0) {
+        chain++;
+        // 🔥 BONUS DE SCORE SELON LA TAILLE DU MATCH
+        let baseScore = matches.size * 10;
+        if (matches.size === 4) baseScore = 50;  // 4 tuiles = 50 pts
+        if (matches.size >= 5) baseScore = 100; // 5+ tuiles = 100 pts
+        s.score += baseScore * chain; // multiplicateur de chaîne
+        matches.forEach(i => { s.board[i] = null; });
+        fusionGravity(s.board);
+        matches = fusionFindMatches(s.board);
+    }
+    s.lastChain = chain;
+    if (!fusionHasMove(s.board)) s.board = fusionGenBoard();
+    if (s.score >= s.targetScore) {
+        const totalMoves = s.def.moves || 30;
+        s.forcedStars = (s.moves >= totalMoves * 0.30) ? 3 : (s.moves >= totalMoves * 0.15) ? 2 : 1;
+        const r = await towerWin(player, s); delete towerSessions[socket.id];
+        socket.emit('tower_result', r); socket.emit('player_registered', player); cbMaybeKickAfterMatch(socket); return;
+    }
+    if (s.moves <= 0) {
+        const r = await towerFail(player, s, 'fusion_moves'); delete towerSessions[socket.id];
+        socket.emit('tower_fail', r); cbMaybeKickAfterMatch(socket); return;
+    }
+    socket.emit('tower_state', towerStatePayload(s));
 }
 server.listen(PORT, () => {
 loadMaintenance();
