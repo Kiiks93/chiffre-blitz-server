@@ -652,6 +652,7 @@ target:s.target||null, targetColor:s.targetColor||null, targetParity:s.targetPar
 hunterOp:s.hunterOp||null, hunterVal:s.hunterVal||null,
 targetIndex:(s.targetIndex===undefined?null:s.targetIndex), revealUntil:s.revealUntil||null,
 revealed:s.revealed, sel:s.sel, ai:s.ai, defTime:s.def.time, gridSize:s.def.gridSize,
+serverNow: Date.now(), cascadeDuration: s.cascadeDuration || 0,
 replay:s.replay, shield:s.shield||0,
 revealLeft: (s.type==="memory" || s.type==="pairs") ? Math.max(0, Math.round(((s.revealUntil||0) - Date.now())/1000)) : 0
 };
