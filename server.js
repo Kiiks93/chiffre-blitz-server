@@ -664,7 +664,7 @@ targetIndex:(s.targetIndex===undefined?null:s.targetIndex), revealUntil:s.reveal
 revealed:s.revealed, sel:s.sel, ai:s.ai, defTime:s.def.time, gridSize:s.def.gridSize,
 serverNow: Date.now(), cascadeDuration: s.cascadeDuration || 0,
 score:s.score||0, moves:(s.moves===undefined?null:s.moves), targetScore:s.targetScore||null,
-lastSwap:s.lastSwap||null, lastSwapSeq:s.lastSwapSeq||0,
+lastSwap:s.lastSwap||null, lastSwapSeq:s.lastSwapSeq||0, lastChain:s.lastChain||0,
 replay:s.replay, shield:s.shield||0,
 revealLeft: (s.type==="memory" || s.type==="pairs") ? Math.max(0, Math.round(((s.revealUntil||0) - Date.now())/1000)) : 0
 };
@@ -3158,7 +3158,8 @@ matches.forEach(i => { s.board[i] = null; });
 fusionGravity(s.board);
 matches = fusionFindMatches(s.board);
 }
-if (!fusionHasMove(s.board)) s.board = fusionGenBoard(); // anti-blocage
+s.lastChain = chain;
+if (!fusionHasMove(s.board)) s.board = fusionGenBoard();
 if (s.score >= s.targetScore) {
 s.forcedStars = (s.moves >= 4) ? 3 : (s.moves >= 2) ? 2 : 1;
 const r = await towerWin(player, s); delete towerSessions[socket.id];
