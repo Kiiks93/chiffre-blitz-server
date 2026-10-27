@@ -1333,6 +1333,11 @@ b.className = "tg-tile";
 if (st.gone[i]) b.classList.add("gone");
 if (st.type === "color" && v) { b.style.background = `linear-gradient(180deg,${v.hex},#111827 85%)`; b.textContent = ""; }
 else if (st.type === "pairs" || st.type === "memory") { b.textContent = st.gone[i] ? "" : (v === null ? "?" : v); if ((st.revealed && st.revealed[i]) || st.sel === i) b.classList.add("sel"); }
+else if (st.type === "cascade") {
+    const isTargetRevealed = Date.now() < st.revealUntil;
+    b.textContent = st.gone[i] ? "" : (i === st.targetIndex && isTargetRevealed ? v : "?");
+    if (i === st.targetIndex && isTargetRevealed) b.classList.add("sel");
+}
 else b.textContent = v;
 b.onclick = () => handleTowerClick(i, b);
 g.appendChild(b); TW_buttons[i] = b;
@@ -1367,13 +1372,38 @@ if (t === "color" && TW_dom.targetColor) success = (v && v.key === TW_dom.target
 else if (t === "parity") success = (TW_dom.targetParity === "even" ? (v % 2 === 0) : (v % 2 !== 0));
 else if (t === "forbidden") {
     if (v === TW_dom.forbidden) {
-        // Clic sur le chiffre interdit = Défaite immédiate du niveau
         if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
         showFailUI("forbidden");
-        socket.emit("tower_quit"); // On arrête la partie côté serveur pour éviter les bugs de timer
+        socket.emit("tower_quit");
         return;
     }
     success = (TW_dom.target !== null && TW_dom.target !== undefined) ? (v === TW_dom.target) : true;
+}
+else if (t === "hunter") {
+    const match = TW_dom.hunterOp === '>' ? v > TW_dom.hunterVal : v < TW_dom.hunterVal;
+    if (match) {
+        TW_dom.gone[i] = true; b.classList.add("gone");
+        if (typeof SoundEngine !== "undefined" && SoundEngine.playClick) SoundEngine.playClick();
+    } else {
+        b.classList.add("err");
+        setTimeout(() => { if (b) b.classList.remove("err"); }, 350);
+        if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
+    }
+    socket.emit("tower_click", { index: i });
+    return;
+}
+else if (t === "cascade") {
+    const isTargetRevealed = Date.now() < TW_dom.revealUntil;
+    if (i === TW_dom.targetIndex && isTargetRevealed) {
+        TW_dom.gone[i] = true; b.classList.add("gone");
+        if (typeof SoundEngine !== "undefined" && SoundEngine.playClick) SoundEngine.playClick();
+    } else {
+        b.classList.add("err");
+        setTimeout(() => { if (b) b.classList.remove("err"); }, 350);
+        if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
+    }
+    socket.emit("tower_click", { index: i });
+    return;
 }
 else if (TW_dom.target !== null && TW_dom.target !== undefined) success = (v === TW_dom.target);
 if (success === true) {
@@ -1413,7 +1443,6 @@ function renderHUDFromState() {
     const dH = i18n[currentLang];
     const colorName = (TW.targetColor && dH["tw_color_" + TW.targetColor.key]) || (TW.targetColor ? TW.targetColor.name : "");
     let main = "";
-    
     if (TW.type === "color" && TW.targetColor) {
         // ✅ EFFET STROOP : on ne génère une nouvelle couleur de leurre QUE si la cible a changé
         if (!TW_stroopColor || TW_stroopColor.toLowerCase() === TW.targetColor.hex.toLowerCase()) {
