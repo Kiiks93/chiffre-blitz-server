@@ -569,7 +569,7 @@ const PACE = [1.45,1.30,1.20,1.15];
 const tier = PATTERN[(inChap - 1) % 10];
 gridSize = Math.max(8, gridSize + GRIDMOD[tier]);
 const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail","hunter","cascade","fusion"];
-const t = seq[(inChap - 1) % 12]; // ✅ 12 modes maintenant
+const t = seq[(inChap - 1) % 12];
 let g = gridSize, time, moves = null, targetScore = null;
 if (t === "sprint") { g = Math.min(gridSize, 24); time = Math.max(10, Math.round(g * 1.0)); }
 else if (t === "pairs") { g = (tier <= 1) ? 10 : 12; time = [22,19,17,15][tier]; }
@@ -672,30 +672,27 @@ revealLeft: (s.type==="memory" || s.type==="pairs") ? Math.max(0, Math.round(((s
 async function towerWin(player, s){
   s.done = true;
   const used = (Date.now() - s.start) / 1000;
-  let stars = 1;
-  
-  // Calcul des étoiles (inchangé)
-  if (s.type === "pairs" || s.type === "memory") {
-    const e3 = Math.floor(s.total * 0.2), e2 = Math.floor(s.total * 0.45);
-    if (s.mistakes <= e3) stars = 3;
-    else if (s.mistakes <= e2) stars = 2;
-  } else if (s.type === "sprint" || s.type === "forbidden") {
-    if (used <= s.def.time * 0.6) stars = 3;
-    else if (used <= s.def.time * 0.85) stars = 2;
-   } else if (s.type === "memory") {
-    if (s.mistakes === 0) stars = 3;
-    else if (s.mistakes <= 2) stars = 2;
-  } else if (s.type === "nofail") {
-  // ✅ Mode Sans Faute : 1 erreur = Game Over. Les étoiles dépendent UNIQUEMENT du temps.
-    if (used <= s.def.time * 0.5) stars = 3;      // Fini en moins de 50% du temps
-    else if (used <= s.def.time * 0.75) stars = 2; // Fini en moins de 75% du temps
-    else stars = 1;
-  } else if (s.type === "fusion") {
-    stars = s.forcedStars || 1;
-  } else {
-    if (s.mistakes === 0 && used <= s.def.time * 0.6) stars = 3;
-    else if (s.mistakes <= 2) stars = 2;
-  }
+let stars = 1;
+if (s.type === "pairs" || s.type === "memory") {
+const e3 = Math.floor(s.total * 0.2), e2 = Math.floor(s.total * 0.45);
+if (s.mistakes <= e3) stars = 3;
+else if (s.mistakes <= e2) stars = 2;
+} else if (s.type === "sprint" || s.type === "forbidden") {
+if (used <= s.def.time * 0.6) stars = 3;
+else if (used <= s.def.time * 0.85) stars = 2;
+} else if (s.type === "memory") {
+if (s.mistakes === 0) stars = 3;
+else if (s.mistakes <= 2) stars = 2;
+} else if (s.type === "nofail") {
+if (used <= s.def.time * 0.5) stars = 3;
+else if (used <= s.def.time * 0.75) stars = 2;
+else stars = 1;
+} else if (s.type === "fusion") {
+stars = s.forcedStars || 1;
+} else {
+if (s.mistakes === 0 && used <= s.def.time * 0.6) stars = 3;
+else if (s.mistakes <= 2) stars = 2;
+}
 
   let coins, reward = null;
   const chap = Math.ceil(s.floor / TOWER_FPC);
@@ -2216,8 +2213,8 @@ socket.emit('tower_state', towerStatePayload(s));
 socket.on('tower_click', async (data) => {
     const player = activePlayers[socket.id];
     const s = towerSessions[socket.id];
-    if (s.type === "fusion") { await fusionClick(socket, player, s, data); return; }
     if (!player || !s || s.done || s.lock) return;
+    if (s.type === "fusion") { await fusionClick(socket, player, s, data); return; }
     if ((s.type === "pairs" || s.type === "memory") && s.revealUntil && Date.now() < s.revealUntil) return;
     const idx = parseInt(data && data.index);
     if (!Number.isFinite(idx) || idx < 0 || idx >= s.total || s.gone[idx]) return;
@@ -3089,117 +3086,67 @@ app.post('/api/create_stripe_session', express.json(), async (req, res) => {
   }
 });
 /* ============================================================
-🧨 MODE FUSION (match-3 calculatoire) — server-authoritative
+🧨 MODE FUSION (match-3 calculatoire) — serveur autoritaire
 ============================================================ */
-const FUSION_MOVES = [15, 13, 11, 9];       // coups selon difficulté 🟢🟡🟠🔴
-const FUSION_TARGET = [250, 350, 450, 500]; // score à atteindre
-
-function fusionGenBoard() {
-  for (let attempt = 0; attempt < 60; attempt++) {
-    const b = new Array(25).fill(0);
-    for (let i = 0; i < 25; i++) {
-      const r = Math.floor(i / 5), c = i % 5;
-      let v, guard = 0, bad;
-      do {
-        v = 1 + Math.floor(Math.random() * 9); guard++;
-        bad = false;
-        if (c > 0 && b[i-1] + v === 10) bad = true;
-        if (r > 0 && b[i-5] + v === 10) bad = true;
-        if (c >= 2 && b[i-1] === v && b[i-2] === v) bad = true;
-        if (r >= 2 && b[i-5] === v && b[i-10] === v) bad = true;
-      } while (bad && guard < 40);
-      b[i] = v;
-    }
-    if (fusionFindMatches(b).size === 0) return b;
-  }
-  return Array.from({ length: 25 }, () => 1 + Math.floor(Math.random() * 9));
-}
-
+const FUSION_MOVES = [15, 13, 11, 9];
+const FUSION_TARGET = [250, 350, 450, 500];
 function fusionFindMatches(board) {
-  const hit = new Set();
-  const C = 5, R = 5;
-  // Règle 1 : paire adjacente dont la somme = 10
-  for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
-    const i = r * C + c;
-    if (board[i] == null) continue;
-    if (c + 1 < C && board[i+1] != null && board[i] + board[i+1] === 10) { hit.add(i); hit.add(i+1); }
-    if (r + 1 < R && board[i+C] != null && board[i] + board[i+C] === 10) { hit.add(i); hit.add(i+C); }
-  }
-  // Règle 2 : triplé identique aligné
-  for (let r = 0; r < R; r++) {
-    let run = 1;
-    for (let c = 1; c <= C; c++) {
-      const same = c < C && board[r*C+c] != null && board[r*C+c] === board[r*C+c-1];
-      if (same) run++;
-      else { if (run >= 3) for (let k = c-run; k < c; k++) hit.add(r*C+k); run = 1; }
-    }
-  }
-  for (let c = 0; c < C; c++) {
-    let run = 1;
-    for (let r = 1; r <= R; r++) {
-      const same = r < R && board[r*C+c] != null && board[r*C+c] === board[(r-1)*C+c];
-      if (same) run++;
-      else { if (run >= 3) for (let k = r-run; k < r; k++) hit.add(k*C+c); run = 1; }
-    }
-  }
-  return hit;
+const hit = new Set(); const C = 5, R = 5;
+for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
+const i = r * C + c;
+if (board[i] == null) continue;
+if (c + 1 < C && board[i+1] != null && board[i] + board[i+1] === 10) { hit.add(i); hit.add(i+1); }
+if (r + 1 < R && board[i+C] != null && board[i] + board[i+C] === 10) { hit.add(i); hit.add(i+C); }
 }
-
+for (let r = 0; r < R; r++) { let run = 1; for (let c = 1; c <= C; c++) { const same = c < C && board[r*C+c] != null && board[r*C+c] === board[r*C+c-1]; if (same) run++; else { if (run >= 3) for (let k = c-run; k < c; k++) hit.add(r*C+k); run = 1; } } }
+for (let c = 0; c < C; c++) { let run = 1; for (let r = 1; r <= R; r++) { const same = r < R && board[r*C+c] != null && board[r*C+c] === board[(r-1)*C+c]; if (same) run++; else { if (run >= 3) for (let k = r-run; k < r; k++) hit.add(k*C+c); run = 1; } } }
+return hit;
+}
+function fusionGenBoard() {
+for (let attempt = 0; attempt < 60; attempt++) {
+const b = new Array(25).fill(0);
+for (let i = 0; i < 25; i++) {
+const r = Math.floor(i / 5), c = i % 5;
+let v, guard = 0, bad;
+do { v = 1 + Math.floor(Math.random() * 9); guard++; bad = false;
+if (c > 0 && b[i-1] + v === 10) bad = true;
+if (r > 0 && b[i-5] + v === 10) bad = true;
+if (c >= 2 && b[i-1] === v && b[i-2] === v) bad = true;
+if (r >= 2 && b[i-5] === v && b[i-10] === v) bad = true;
+} while (bad && guard < 40);
+b[i] = v;
+}
+if (fusionFindMatches(b).size === 0) return b;
+}
+return Array.from({ length: 25 }, () => 1 + Math.floor(Math.random() * 9));
+}
 function fusionGravity(board) {
-  for (let c = 0; c < 5; c++) {
-    const col = [];
-    for (let r = 4; r >= 0; r--) if (board[r*5+c] != null) col.push(board[r*5+c]);
-    for (let r = 4; r >= 0; r--) board[r*5+c] = (col[4-r] !== undefined) ? col[4-r] : (1 + Math.floor(Math.random() * 9));
-  }
+for (let c = 0; c < 5; c++) {
+const col = [];
+for (let r = 4; r >= 0; r--) if (board[r*5+c] != null) col.push(board[r*5+c]);
+for (let r = 4; r >= 0; r--) board[r*5+c] = (col[4-r] !== undefined) ? col[4-r] : (1 + Math.floor(Math.random() * 9));
 }
-
+}
 async function fusionClick(socket, player, s, data) {
-  const a = parseInt(data && data.index), bI = parseInt(data && data.swapWith);
-  if (!Number.isFinite(a) || !Number.isFinite(bI) || a === bI) return;
-  if (a < 0 || a >= 25 || bI < 0 || bI >= 25) return;
-  const ra = Math.floor(a/5), ca = a%5, rb = Math.floor(bI/5), cb = bI%5;
-  // Swap non adjacent = ignoré
-  if (Math.abs(ra-rb) + Math.abs(ca-cb) !== 1) {
-    s.lastSwap = { a, b: bI, ok: false }; s.lastSwapSeq = (s.lastSwapSeq||0) + 1;
-    socket.emit('tower_state', towerStatePayload(s));
-    return;
-  }
-  [s.board[a], s.board[bI]] = [s.board[bI], s.board[a]];
-  let matches = fusionFindMatches(s.board);
-  if (matches.size === 0) {
-    // Aucun match : on inverse le swap, AUCUN coup perdu
-    [s.board[a], s.board[bI]] = [s.board[bI], s.board[a]];
-    s.lastSwap = { a, b: bI, ok: false }; s.lastSwapSeq = (s.lastSwapSeq||0) + 1;
-    socket.emit('tower_state', towerStatePayload(s));
-    return;
-  }
-  s.moves--;
-  s.lastSwap = { a, b: bI, ok: true }; s.lastSwapSeq = (s.lastSwapSeq||0) + 1;
-  let chain = 0;
-  while (matches.size > 0) {
-    chain++;
-    s.score += matches.size * 10 * chain; // 💥 multiplicateur de cascade
-    matches.forEach(i => { s.board[i] = null; });
-    fusionGravity(s.board);
-    matches = fusionFindMatches(s.board);
-  }
-  if (s.score >= s.targetScore) {
-    s.forcedStars = (s.moves >= 4) ? 3 : (s.moves >= 2) ? 2 : 1;
-    const r = await towerWin(player, s);
-    delete towerSessions[socket.id];
-    socket.emit('tower_result', r);
-    socket.emit('player_registered', player);
-    cbMaybeKickAfterMatch(socket);
-    return;
-  }
-  if (s.moves <= 0) {
-    const r = await towerFail(player, s, 'fusion_moves');
-    delete towerSessions[socket.id];
-    socket.emit('tower_fail', r);
-    cbMaybeKickAfterMatch(socket);
-    return;
-  }
-  socket.emit('tower_state', towerStatePayload(s));
+const a = parseInt(data && data.index), bI = parseInt(data && data.swapWith);
+if (!Number.isFinite(a) || !Number.isFinite(bI) || a === bI) return;
+if (a < 0 || a >= 25 || bI < 0 || bI >= 25) return;
+const ra = Math.floor(a/5), ca = a%5, rb = Math.floor(bI/5), cb = bI%5;
+if (Math.abs(ra-rb) + Math.abs(ca-cb) !== 1) { s.lastSwap = { a, b: bI, ok: false }; s.lastSwapSeq = (s.lastSwapSeq||0) + 1; socket.emit('tower_state', towerStatePayload(s)); return; }
+[s.board[a], s.board[bI]] = [s.board[bI], s.board[a]];
+let matches = fusionFindMatches(s.board);
+if (matches.size === 0) { [s.board[a], s.board[bI]] = [s.board[bI], s.board[a]]; s.lastSwap = { a, b: bI, ok: false }; s.lastSwapSeq = (s.lastSwapSeq||0) + 1; socket.emit('tower_state', towerStatePayload(s)); return; }
+s.moves--;
+s.lastSwap = { a, b: bI, ok: true }; s.lastSwapSeq = (s.lastSwapSeq||0) + 1;
+let chain = 0;
+while (matches.size > 0) { chain++; s.score += matches.size * 10 * chain; matches.forEach(i => { s.board[i] = null; }); fusionGravity(s.board); matches = fusionFindMatches(s.board); }
+if (s.score >= s.targetScore) {
+s.forcedStars = (s.moves >= 4) ? 3 : (s.moves >= 2) ? 2 : 1;
+const r = await towerWin(player, s); delete towerSessions[socket.id];
+socket.emit('tower_result', r); socket.emit('player_registered', player); cbMaybeKickAfterMatch(socket); return;
+}
+if (s.moves <= 0) { const r = await towerFail(player, s, 'fusion_moves'); delete towerSessions[socket.id]; socket.emit('tower_fail', r); cbMaybeKickAfterMatch(socket); return; }
+socket.emit('tower_state', towerStatePayload(s));
 }
 server.listen(PORT, () => {
 loadMaintenance();
