@@ -1295,13 +1295,14 @@ function cloneState(s) {
         type:s.type, total:s.total, gridSize:s.gridSize, floor:s.floor, 
         target:s.target, targetIndex:s.targetIndex, // ✅ AJOUT targetIndex
         targetColor:s.targetColor, targetParity:s.targetParity, forbidden:s.forbidden, 
+        hunterOp:s.hunterOp, hunterVal:s.hunterVal, // ✅ AJOUT hunterOp et hunterVal
+        revealUntil:s.revealUntil, // ✅ AJOUT revealUntil
         timeLeft:s.timeLeft, ai:s.ai, 
         gone:Object.assign({},s.gone||{}), 
         revealed:Object.assign({},s.revealed||{}), 
         display:(s.display||[]).slice(), 
         sel:(s.sel===undefined?null:s.sel), 
         shield:s.shield||0, 
-        revealUntil:s.revealUntil, // ✅ AJOUT revealUntil
         revealLeft:s.revealLeft||0 
     };
 }
@@ -1357,7 +1358,18 @@ else if (st.type === "cascade") {
         b.textContent = "?";
     }
 }
-        else b.textContent = v;
+        else if (st.type === "cascade") {
+    const isTargetRevealed = Date.now() < (st.revealUntil || 0);
+    if (st.gone[i]) {
+        b.textContent = "";
+    } else if (i === st.targetIndex && isTargetRevealed) {
+        b.textContent = v;
+        b.classList.add("sel");
+    } else {
+        b.textContent = "?";
+    }
+}
+else b.textContent = v;
         b.onclick = () => handleTowerClick(i, b);
         g.appendChild(b); TW_buttons[i] = b;
         // ✅ Synchronisation immédiate avec l'état du serveur
@@ -1392,44 +1404,48 @@ function handleTowerClick(i, b) {
     
     if (t === "color" && TW_dom.targetColor) success = (v && v.key === TW_dom.targetColor.key);
     else if (t === "parity") success = (TW_dom.targetParity === "even" ? (v % 2 === 0) : (v % 2 !== 0));
-    else if (t === "forbidden") {
-        if (v === TW_dom.forbidden) {
-            if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
-            showFailUI("forbidden");
-            socket.emit("tower_quit");
-            return;
-        }
-        success = (TW_dom.target !== null && TW_dom.target !== undefined) ? (v === TW_dom.target) : true;
-    }
-    // ✅ GESTION DU MODE CHASSEUR
-    else if (t === "hunter") {
-        const match = TW_dom.hunterOp === '>' ? v > TW_dom.hunterVal : v < TW_dom.hunterVal;
-        if (match) {
-            TW_dom.gone[i] = true; b.classList.add("gone");
-            if (typeof SoundEngine !== "undefined" && SoundEngine.playClick) SoundEngine.playClick();
-        } else {
-            b.classList.add("err");
-            setTimeout(() => { if (b) b.classList.remove("err"); }, 350);
-            if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
-        }
-        socket.emit("tower_click", { index: i });
+else if (t === "forbidden") {
+    if (v === TW_dom.forbidden) {
+        // Clic sur le chiffre interdit = Défaite immédiate du niveau
+        if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
+        showFailUI("forbidden");
+        socket.emit("tower_quit"); // On arrête la partie côté serveur pour éviter les bugs de timer
         return;
     }
-    // ✅ GESTION DU MODE CASCADE
-    else if (t === "cascade") {
-        const isTargetRevealed = Date.now() < TW_dom.revealUntil;
-        if (i === TW_dom.targetIndex && isTargetRevealed) {
-            TW_dom.gone[i] = true; b.classList.add("gone");
-            if (typeof SoundEngine !== "undefined" && SoundEngine.playClick) SoundEngine.playClick();
-        } else {
-            b.classList.add("err");
-            setTimeout(() => { if (b) b.classList.remove("err"); }, 350);
-            if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
-        }
-        socket.emit("tower_click", { index: i });
-        return;
+    success = (TW_dom.target !== null && TW_dom.target !== undefined) ? (v === TW_dom.target) : true;
+}
+else if (t === "hunter") {
+    const match = TW_dom.hunterOp === '>' ? v > TW_dom.hunterVal : v < TW_dom.hunterVal;
+    if (match) { 
+        TW_dom.gone[i] = true; 
+        b.classList.add("gone"); 
+        if (typeof SoundEngine !== "undefined" && SoundEngine.playClick) SoundEngine.playClick(); 
     }
-    else if (TW_dom.target !== null && TW_dom.target !== undefined) success = (v === TW_dom.target);
+    else { 
+        b.classList.add("err"); 
+        setTimeout(() => { if (b) b.classList.remove("err"); }, 350); 
+        if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError(); 
+    }
+    socket.emit("tower_click", { index: i });
+    return;
+}
+else if (t === "cascade") {
+    const isTargetRevealed = Date.now() < (TW_dom.revealUntil || 0);
+    if (i === TW_dom.targetIndex && isTargetRevealed) { 
+        TW_dom.gone[i] = true; 
+        b.classList.add("gone"); 
+        b.textContent = ""; 
+        if (typeof SoundEngine !== "undefined" && SoundEngine.playClick) SoundEngine.playClick(); 
+    }
+    else { 
+        b.classList.add("err"); 
+        setTimeout(() => { if (b) b.classList.remove("err"); }, 350); 
+        if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError(); 
+    }
+    socket.emit("tower_click", { index: i });
+    return;
+}
+else if (TW_dom.target !== null && TW_dom.target !== undefined) success = (v === TW_dom.target);
     
     if (success === true) {
         TW_dom.gone[i] = true; b.classList.add("gone");
@@ -1452,13 +1468,25 @@ function handleTowerClick(i, b) {
     socket.emit("tower_click", { index: i });
 }
 function stopLocalTimer() { if (TW_localTimer) { clearInterval(TW_localTimer); TW_localTimer = null; } }
+function refreshCascadeTiles() {
+    if (!TW || TW.type !== "cascade" || !TW_buttons.length) return;
+    const revealed = Date.now() < (TW.revealUntil || 0);
+    for (let i = 0; i < TW_buttons.length; i++) {
+        const b = TW_buttons[i]; 
+        if (!b || TW.gone[i]) continue;
+        const show = (i === TW.targetIndex) && revealed;
+        const want = show ? String(TW.display[i]) : "?";
+        if (b.textContent !== want) b.textContent = want;
+        b.classList.toggle("sel", show);
+    }
+}
 function startLocalTimer(tl) {
 stopLocalTimer();
 let left = (typeof tl === "number" ? tl : 0);
 const el = document.getElementById("twg-timer");
 const paint = () => { if (el) { el.innerText = "⏱️ " + Math.max(0, Math.ceil(left)) + "s"; el.style.color = left <= 5 ? "#ff4b2b" : "#fff"; } };
 paint();
-TW_localTimer = setInterval(() => { left -= 0.25; paint(); }, 250);
+TW_localTimer = setInterval(() => { left -= 0.25; paint(); refreshCascadeTiles(); }, 250);
 }
 function renderHUDFromState() {
     const h = document.getElementById("tg-hud"); if (!h || !TW) return;
@@ -1492,8 +1520,17 @@ function renderHUDFromState() {
         if (TW.type === "pairs") main = (TW.revealLeft > 0) ? `${dH.tw_hud_memorize} ${TW.revealLeft}s` : dH.tw_hud_pairs;
         else if (TW.type === "parity") main = TW.targetParity === "even" ? dH.tw_hud_parity_even : dH.tw_hud_parity_odd;
         else if (TW.type === "forbidden") main = `${dH.tw_hud_forbidden} <span style="color:#ff4b2b;">${TW.forbidden}</span> · ${dH.tw_hud_target} ${TW.target}`;
-        else if (TW.type === "memory") main = (TW.revealLeft > 0) ? `${dH.tw_hud_memorize} ${TW.revealLeft}s` : dH.tw_hud_memory_order;
-        else if (TW.target !== null && TW.target !== undefined) main = `${dH.tw_hud_target} ${TW.target}`;
+else if (TW.type === "memory") main = (TW.revealLeft > 0) ? `${dH.tw_hud_memorize} ${TW.revealLeft}s` : dH.tw_hud_memory_order;
+else if (TW.type === "hunter") {
+    const op = TW.hunterOp === '>' ? 'supérieurs à' : 'inférieurs à';
+    const remaining = TW.display.filter((_, i) => TW.gone[i] === false && ((TW.hunterOp === '>' ? TW.display[i] > TW.hunterVal : TW.display[i] < TW.hunterVal))).length;
+    main = `Cible : <span style="color:#f8b500;">${op} ${TW.hunterVal}</span> <span style="font-size:0.8em;opacity:0.8;">(Reste: ${remaining})</span>`;
+}
+else if (TW.type === "cascade") {
+    const timeLeft = Math.max(0, ((TW.revealUntil || 0) - Date.now()) / 1000).toFixed(1);
+    main = `Cible : <span style="color:#ff4b2b;font-weight:900;">${TW.target}</span> <span style="font-size:0.8em;opacity:0.8;">(${timeLeft}s)</span>`;
+}
+else if (TW.target !== null && TW.target !== undefined) main = `${dH.tw_hud_target} ${TW.target}`;
     }
     
     if (main !== TW_hudCache) { h.innerHTML = main; TW_hudCache = main; }
