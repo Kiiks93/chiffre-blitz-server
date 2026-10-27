@@ -600,7 +600,7 @@ s.targetColor = pickColorTarget(s);
 const half = N/2;
 s.nums = towerShuffle([...TW_PAIR_SYMBOLS.slice(0,half), ...TW_PAIR_SYMBOLS.slice(0,half)]);
 s.remaining = new Set([...Array(N)].map((_,i)=>i));
-s.revealUntil = Date.now() + [3000,3000,2500,2000][def.diff|| 0];
+s.revealUntil = Date.now() + [3000,3000,2500,2000][def.diff||0];
 } else if (def.type === "parity") {
 s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
 s.targetParity = Math.random()<.5?"even":"odd";
@@ -611,29 +611,26 @@ s.forbidden = 1+Math.floor(Math.random()*N);
 s.remaining = new Set(s.nums);
 s.target = (s.forbidden === 1) ? 2 : 1;
 } else if (def.type === "memory") {
-    s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
-    s.remaining = new Set(s.nums);
-    s.target = 1;
-    s.revealUntil = Date.now() + 2500 + N * 600;
+s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
+s.remaining = new Set(s.nums);
+s.target = 1;
+s.revealUntil = Date.now() + 2500 + N * 600;
 } else if (def.type === "hunter") {
-    //  CHASSEUR DE NOMBRES : le joueur doit cliquer sur tous les chiffres qui respectent une consigne (> ou <)
-    s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
-    s.hunterOp = Math.random() < 0.5 ? '>' : '<';
-    s.hunterVal = 4 + Math.floor(Math.random() * 3); // Valeur cible entre 4 et 6
-    s.remaining = new Set();
-    s.nums.forEach((v, i) => {
-        const match = s.hunterOp === '>' ? v > s.hunterVal : v < s.hunterVal;
-        if (match) s.remaining.add(i);
-    });
+s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
+s.hunterOp = Math.random() < 0.5 ? '>' : '<';
+s.hunterVal = 4 + Math.floor(Math.random() * 3);
+s.remaining = new Set();
+s.nums.forEach((v, i) => { if (s.hunterOp === '>' ? v > s.hunterVal : v < s.hunterVal) s.remaining.add(i); });
 } else if (def.type === "cascade") {
-    // ⏱️ CASCADE CHRONO : les chiffres sont cachés, un seul apparaît à la fois pendant 1.5s
-    s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
-    s.remaining = new Set(s.nums);
-    s.target = 1;
-    s.targetIndex = s.nums.indexOf(s.target);
-    s.revealUntil = Date.now() + 1500; // 1.5 seconde pour cliquer sur la cible
+s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
+s.remaining = new Set(s.nums);
+s.target = 1;
+s.targetIndex = s.nums.indexOf(1);
+const cascadeDurations = [2000, 1500, 1000, 750];
+s.cascadeDuration = cascadeDurations[def.diff] || 1500;
+s.revealUntil = Date.now() + s.cascadeDuration;
 } else {
-    s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
+s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
 s.remaining = new Set(s.nums);
 s.target = def.type==="reverse"?N:1;
 if (def.type==="random") s.target = s.nums[Math.floor(Math.random()*s.nums.length)];
@@ -648,15 +645,15 @@ return s.nums.slice();
 }
 function towerStatePayload(s){
 return {
-    floor:s.floor, type:s.type, total:s.total,
-    timeLeft: Math.max(0, s.def.time - Math.floor((Date.now()-s.start)/1000)),
-    mistakes:s.mistakes, gone:s.gone, display:towerDisplay(s),
-    target:s.target||null, targetIndex:s.targetIndex||null, // ✅ AJOUT targetIndex
-    targetColor:s.targetColor||null, targetParity:s.targetParity||null, forbidden:s.forbidden||null,
-    revealUntil:s.revealUntil||null, // ✅ AJOUT revealUntil
-    revealed:s.revealed, sel:s.sel, ai:s.ai, defTime:s.def.time, gridSize:s.def.gridSize,
-    replay:s.replay, shield:s.shield||0,
-    revealLeft: (s.type==="memory" || s.type==="pairs") ? Math.max(0, Math.round(((s.revealUntil||0) - Date.now())/1000)) : 0
+floor:s.floor, type:s.type, total:s.total,
+timeLeft: Math.max(0, s.def.time - Math.floor((Date.now()-s.start)/1000)),
+mistakes:s.mistakes, gone:s.gone, display:towerDisplay(s),
+target:s.target||null, targetColor:s.targetColor||null, targetParity:s.targetParity||null, forbidden:s.forbidden||null,
+hunterOp:s.hunterOp||null, hunterVal:s.hunterVal||null,
+targetIndex:(s.targetIndex===undefined?null:s.targetIndex), revealUntil:s.revealUntil||null,
+revealed:s.revealed, sel:s.sel, ai:s.ai, defTime:s.def.time, gridSize:s.def.gridSize,
+replay:s.replay, shield:s.shield||0,
+revealLeft: (s.type==="memory" || s.type==="pairs") ? Math.max(0, Math.round(((s.revealUntil||0) - Date.now())/1000)) : 0
 };
 }
 async function towerWin(player, s){
@@ -749,9 +746,9 @@ s.ai += 0.55 + Math.ceil(s.floor / TOWER_FPC) * 0.08;
 if (s.ai >= s.total){ const r = await towerFail(player, s, 'boss'); delete towerSessions[sid]; io.to(sid).emit('tower_fail', r); cbMaybeKickAfterMatch(io.sockets.sockets.get(sid)); continue; }
 }
 // ✅ Gestion du temps écoulé pour le mode Cascade (cible qui disparaît)
-if (s.type === "cascade" && Date.now() > s.revealUntil && !s.gone[s.targetIndex]) {
-    s.mistakes++; // Le joueur a laissé passer la cible !
-    s.revealUntil = Date.now() + 1500; // On lui redonne une chance
+if (s.type === "cascade" && !s.done && Date.now() > s.revealUntil && !s.gone[s.targetIndex]) {
+s.mistakes++;
+s.revealUntil = Date.now() + (s.cascadeDuration || 1500);
 }
 io.to(sid).emit('tower_state', towerStatePayload(s));
 }
@@ -2254,7 +2251,7 @@ socket.on('tower_click', async (data) => {
                 s.target = nx;
                 if (s.remaining.size === 1 && s.remaining.has(s.forbidden)) win = true;
             } else mistake = true;
-        } // ✅ C'ÉTAIT CETTE ACCOLADE QUI MANQUAIT ICI !
+        } 
     } 
     else if (s.type === "hunter") {
         // 🎯 Clic sur un chiffre qui correspond à la consigne (> ou <)
@@ -2276,12 +2273,12 @@ socket.on('tower_click', async (data) => {
             } else {
                 s.target++;
                 s.targetIndex = s.nums.indexOf(s.target);
-                s.revealUntil = Date.now() + 1500; // Nouveau délai pour la prochaine cible
+                s.revealUntil = Date.now() + (s.cascadeDuration || 1500); // ✅ Utilise la durée adaptée à la difficulté
             }
         } else {
             mistake = true;
         }
-    } 
+    }
     else {
         if (v === s.target) {
             s.gone[idx] = true; s.remaining.delete(v);
