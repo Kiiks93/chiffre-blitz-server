@@ -2201,109 +2201,119 @@ towerSessions[socket.id] = s;
 socket.emit('tower_state', towerStatePayload(s));
 });
 socket.on('tower_click', async (data) => {
-const player = activePlayers[socket.id];
-const s = towerSessions[socket.id];
-if (!player || !s || s.done || s.lock) return;
-if ((s.type === "pairs" || s.type === "memory") && s.revealUntil && Date.now() < s.revealUntil) return;
-const idx = parseInt(data && data.index);
-if (!Number.isFinite(idx) || idx < 0 || idx >= s.total || s.gone[idx]) return;
-const elapsed = (Date.now() - s.start) / 1000;
-if (elapsed > s.def.time) { const r = await towerFail(player, s, 'timeout'); delete towerSessions[socket.id]; socket.emit('tower_fail', r); cbMaybeKickAfterMatch(socket); return; }
-const v = s.nums[idx];
-let win = false, mistake = false;
-if (s.type === "color") {
-if (v.key === s.targetColor.key) {
-s.gone[idx] = true; s.remaining.delete(idx);
-if (s.remaining.size === 0) win = true;
-else if (![...s.remaining].some(i => s.nums[i].key === s.targetColor.key)) s.targetColor = pickColorTarget(s);
-} else mistake = true;
-} else if (s.type === "pairs") {
-if (s.sel === null) { s.sel = idx; s.revealed[idx] = true; }
-else if (s.sel === idx) { /* re-clic même case : ignoré */ }
-else {
-const first = s.sel; s.revealed[idx] = true;
-if (s.nums[first] === s.nums[idx]) {
-s.gone[first] = true; s.gone[idx] = true; s.remaining.delete(first); s.remaining.delete(idx); s.sel = null;
-if (s.remaining.size === 0) win = true;
-} else {
-mistake = true; s.lock = true;
-setTimeout(() => {
-if (s.done) return;
-s.revealed[first] = false; s.revealed[idx] = false; s.sel = null; s.lock = false;
-socket.emit('tower_state', towerStatePayload(s));
-}, 280);
-}
-}
-} else if (s.type === "parity") {
-const ok = s.targetParity === "even" ? v % 2 === 0 : v % 2 !== 0;
-if (ok) { s.gone[idx] = true; s.remaining.delete(v); if (s.remaining.size === 0) win = true; }
-else mistake = true;
-} else if (s.type === "forbidden") {
-if (v === s.forbidden) {
-mistake = true;
-} else {
-if (s.target === undefined || s.target === null) { s.target = 1; if (s.target === s.forbidden) s.target++; }
-if (v === s.target) {
-s.gone[idx] = true;
-s.remaining.delete(v);
-let nx = v + 1; if (nx === s.forbidden) nx++;
-s.target = nx;
-if (s.remaining.size === 1 && s.remaining.has(s.forbidden)) win = true;
-} else mistake = true;
-} else if (s.type === "hunter") {
-    // 🎯 Clic sur un chiffre qui correspond à la consigne (> ou <)
-    if (s.remaining.has(idx)) {
-        s.gone[idx] = true;
-        s.remaining.delete(idx);
-        if (s.remaining.size === 0) win = true;
-    } else {
-        mistake = true;
-    }
-} else if (s.type === "cascade") {
-    // ⏱️ Clic sur la cible révélée
-    if (idx === s.targetIndex) {
-        s.gone[idx] = true;
-        s.remaining.delete(s.target);
-        if (s.remaining.size === 0) {
-            win = true;
-        } else {
-            s.target++;
-            s.targetIndex = s.nums.indexOf(s.target);
-            s.revealUntil = Date.now() + 1500; // Nouveau délai pour la prochaine cible
-        }
-    } else {
-        mistake = true;
-    }
-} else {
-    if (v === s.target) {
-        s.gone[idx] = true; s.remaining.delete(v);
-        if (s.remaining.size === 0) win = true;
+    const player = activePlayers[socket.id];
+    const s = towerSessions[socket.id];
+    if (!player || !s || s.done || s.lock) return;
+    if ((s.type === "pairs" || s.type === "memory") && s.revealUntil && Date.now() < s.revealUntil) return;
+    const idx = parseInt(data && data.index);
+    if (!Number.isFinite(idx) || idx < 0 || idx >= s.total || s.gone[idx]) return;
+    const elapsed = (Date.now() - s.start) / 1000;
+    if (elapsed > s.def.time) { const r = await towerFail(player, s, 'timeout'); delete towerSessions[socket.id]; socket.emit('tower_fail', r); cbMaybeKickAfterMatch(socket); return; }
+    const v = s.nums[idx];
+    let win = false, mistake = false;
+
+    if (s.type === "color") {
+        if (v.key === s.targetColor.key) {
+            s.gone[idx] = true; s.remaining.delete(idx);
+            if (s.remaining.size === 0) win = true;
+            else if (![...s.remaining].some(i => s.nums[i].key === s.targetColor.key)) s.targetColor = pickColorTarget(s);
+        } else mistake = true;
+    } 
+    else if (s.type === "pairs") {
+        if (s.sel === null) { s.sel = idx; s.revealed[idx] = true; }
+        else if (s.sel === idx) { /* re-clic même case : ignoré */ }
         else {
-            if (s.type === "reverse") s.target--;
-            else if (s.type === "random") s.target = [...s.remaining][Math.floor(Math.random() * s.remaining.size)];
-            else s.target++;
+            const first = s.sel; s.revealed[idx] = true;
+            if (s.nums[first] === s.nums[idx]) {
+                s.gone[first] = true; s.gone[idx] = true; s.remaining.delete(first); s.remaining.delete(idx); s.sel = null;
+                if (s.remaining.size === 0) win = true;
+            } else {
+                mistake = true; s.lock = true;
+                setTimeout(() => {
+                    if (s.done) return;
+                    s.revealed[first] = false; s.revealed[idx] = false; s.sel = null; s.lock = false;
+                    socket.emit('tower_state', towerStatePayload(s));
+                }, 280);
+            }
         }
-    } else mistake = true;
-}
-if (mistake) {
-if (s.shield > 0) {
-s.shield--;
-socket.emit('tower_shield_used', { shield: s.shield });
-} else {
-s.mistakes++;
-if (s.type === "memory") { s.revealed[idx] = true; setTimeout(() => { if (!s.done) { s.revealed[idx] = false; socket.emit('tower_state', towerStatePayload(s)); } }, 450); }
-if (s.type === "nofail") { const r = await towerFail(player, s, 'nofail'); delete towerSessions[socket.id]; socket.emit('tower_fail', r); cbMaybeKickAfterMatch(socket); return; }
-}
-}
-if (win) {
-const r = await towerWin(player, s);
-delete towerSessions[socket.id];
-socket.emit('tower_result', r);
-socket.emit('player_registered', player);
-cbMaybeKickAfterMatch(socket);
-return;
-}
-socket.emit('tower_state', towerStatePayload(s));
+    } 
+    else if (s.type === "parity") {
+        const ok = s.targetParity === "even" ? v % 2 === 0 : v % 2 !== 0;
+        if (ok) { s.gone[idx] = true; s.remaining.delete(v); if (s.remaining.size === 0) win = true; }
+        else mistake = true;
+    } 
+    else if (s.type === "forbidden") {
+        if (v === s.forbidden) {
+            mistake = true;
+        } else {
+            if (s.target === undefined || s.target === null) { s.target = 1; if (s.target === s.forbidden) s.target++; }
+            if (v === s.target) {
+                s.gone[idx] = true;
+                s.remaining.delete(v);
+                let nx = v + 1; if (nx === s.forbidden) nx++;
+                s.target = nx;
+                if (s.remaining.size === 1 && s.remaining.has(s.forbidden)) win = true;
+            } else mistake = true;
+        } // ✅ C'ÉTAIT CETTE ACCOLADE QUI MANQUAIT ICI !
+    } 
+    else if (s.type === "hunter") {
+        // 🎯 Clic sur un chiffre qui correspond à la consigne (> ou <)
+        if (s.remaining.has(idx)) {
+            s.gone[idx] = true;
+            s.remaining.delete(idx);
+            if (s.remaining.size === 0) win = true;
+        } else {
+            mistake = true;
+        }
+    } 
+    else if (s.type === "cascade") {
+        // ⏱️ Clic sur la cible révélée
+        if (idx === s.targetIndex) {
+            s.gone[idx] = true;
+            s.remaining.delete(s.target);
+            if (s.remaining.size === 0) {
+                win = true;
+            } else {
+                s.target++;
+                s.targetIndex = s.nums.indexOf(s.target);
+                s.revealUntil = Date.now() + 1500; // Nouveau délai pour la prochaine cible
+            }
+        } else {
+            mistake = true;
+        }
+    } 
+    else {
+        if (v === s.target) {
+            s.gone[idx] = true; s.remaining.delete(v);
+            if (s.remaining.size === 0) win = true;
+            else {
+                if (s.type === "reverse") s.target--;
+                else if (s.type === "random") s.target = [...s.remaining][Math.floor(Math.random() * s.remaining.size)];
+                else s.target++;
+            }
+        } else mistake = true;
+    }
+
+    if (mistake) {
+        if (s.shield > 0) {
+            s.shield--;
+            socket.emit('tower_shield_used', { shield: s.shield });
+        } else {
+            s.mistakes++;
+            if (s.type === "memory") { s.revealed[idx] = true; setTimeout(() => { if (!s.done) { s.revealed[idx] = false; socket.emit('tower_state', towerStatePayload(s)); } }, 450); }
+            if (s.type === "nofail") { const r = await towerFail(player, s, 'nofail'); delete towerSessions[socket.id]; socket.emit('tower_fail', r); cbMaybeKickAfterMatch(socket); return; }
+        }
+    }
+
+    if (win) {
+        const r = await towerWin(player, s);
+        delete towerSessions[socket.id];
+        socket.emit('tower_result', r);
+        socket.emit('player_registered', player);
+        cbMaybeKickAfterMatch(socket);
+        return;
+    }
+    socket.emit('tower_state', towerStatePayload(s));
 });
 socket.on('tower_quit', () => {
 const s = towerSessions[socket.id];
