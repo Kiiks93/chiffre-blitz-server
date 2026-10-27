@@ -117,8 +117,10 @@ nofail: { fr: "Aucune erreur n'est permise ! 1 faute = Game Over. Vise le meille
 boss: { fr: "Affronte le Gardien ! Bat-le avant qu'il ne termine sa propre grille.", en: "Face the Guardian! Beat him before he finishes his own grid." },
 hunter: { fr: "Clique sur TOUS les chiffres qui respectent la consigne (ex: > 5). Attention aux pièges !", en: "Click ALL numbers matching the condition (e.g., > 5). Watch out for traps!" },
 cascade: { fr: "Le chiffre cible apparaît brièvement (1.5s). Clique dessus avant qu'il ne disparaisse, dans l'ordre !", en: "The target number appears briefly (1.5s). Click it before it vanishes, in order!" },
-fusion: { fr: "Échange 2 tuiles ADJACENTES pour aligner 3 chiffres IDENTIQUES ou plus (ligne ou colonne). Ils fusionnent dans une explosion ! Atteins le score cible avant la fin des coups.", en: "Swap 2 ADJACENT tiles to line up 3+ IDENTICAL numbers (row or column). They merge in an explosion! Reach the target score before running out of moves." }
-};
+fusion: { 
+    fr: "Échange 2 tuiles ADJACENTES pour aligner 3+ chiffres IDENTIQUES (ligne, colonne, L ou T). Les alignements de 4+ rapportent PLUS de points ! Atteins le score cible avant la fin des coups.", 
+    en: "Swap 2 ADJACENT tiles to line up 3+ IDENTICAL numbers (row, column, L or T). Alignments of 4+ score MORE points! Reach the target score before running out of moves." 
+}
 const TowerUtils = {
 starsInWorld(w) {
 let s = 0;
