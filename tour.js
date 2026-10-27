@@ -121,6 +121,7 @@ fusion: {
     fr: "Échange 2 tuiles ADJACENTES pour aligner 3+ chiffres IDENTIQUES (ligne, colonne, L ou T). Les alignements de 4+ rapportent PLUS de points ! Atteins le score cible avant la fin des coups.", 
     en: "Swap 2 ADJACENT tiles to line up 3+ IDENTICAL numbers (row, column, L or T). Alignments of 4+ score MORE points! Reach the target score before running out of moves." 
 }
+}
 const TowerUtils = {
 starsInWorld(w) {
 let s = 0;
@@ -165,7 +166,7 @@ else if (t === "nofail") { time = Math.max(14, Math.round(gridSize * PACE * 1.2)
 else if (t === "reverse") { time = Math.max(12, Math.round(gridSize * PACE * 1.10)); }
 else if (t === "color") { time = Math.max(12, Math.round(gridSize * PACE * 0.85)); }
 else if (t === "forbidden") { time = Math.max(12, Math.round((gridSize - 1) * PACE * 1.05)); }
-else if (t === "fusion") { g = 25; moves = [30,26,22,18][tier]; targetScore = [600,700,800,900][tier]; time = moves * 5 + 20; }
+else if (t === "fusion") { g = 25; moves = [45, 38, 32, 26][tier]; targetScore = [400, 500, 600, 750][tier]; time = moves * 5 + 20; }
 else { time = Math.max(12, Math.round(gridSize * PACE)); }
 return { floor, gridSize: g, time, type: t, diff: tier, moves, targetScore };
 },
@@ -1271,7 +1272,7 @@ let starRule = fr ? `💡 ${ST} terminer · ${ST}${ST} ≤2 erreurs · ${ST}${ST
 if (def.type === "pairs" || def.type === "sprint") starRule = fr ? `💡 ${ST} finir · ${ST} rapide · ${ST}${ST}${ST} très rapide` : `💡 ${ST} finish · ${ST} fast · ${ST}${ST}${ST} very fast`;
 if (def.type === "memory") starRule = fr ? `💡 ${ST} terminer · ${ST}${ST} ≤2 erreurs · ${ST}${ST}${ST} 0 erreur (tout à la mémoire !)` : `💡 ${ST} finish · ${ST}${ST} ≤2 mistakes · ${ST}${ST}${ST} 0 mistakes (pure memory!)`;
 if (def.type === "nofail") starRule = fr ? `💡 ${ST} 0 erreur (1 faute = perdu !) · ${ST}${ST}${ST} Temps le plus rapide` : `💡 ${ST} 0 mistakes (1 error = fail!) · ${ST}${ST}${ST} Fastest time`;
-if (def.type === "fusion") starRule = fr ? `💡 ${ST} score ${def.targetScore} · ${ST}${ST} ≥${Math.round(def.moves*0.10)} coups restants · ${ST}${ST}${ST} ≥${Math.round(def.moves*0.25)} coups restants` : `💡 ${ST} reach ${def.targetScore} · ${ST}${ST} ≥${Math.round(def.moves*0.10)} moves left · ${ST}${ST}${ST} ≥${Math.round(def.moves*0.25)} moves left`;
+if (def.type === "fusion") starRule = fr ? `💡 ${ST} score ${def.targetScore} · ${ST}${ST} ≥${Math.round(def.moves*0.15)} coups restants · ${ST}${ST}${ST} ≥${Math.round(def.moves*0.30)} coups restants` : `💡 ${ST} reach ${def.targetScore} · ${ST}${ST} ≥${Math.round(def.moves*0.15)} moves left · ${ST}${ST}${ST} ≥${Math.round(def.moves*0.30)} moves left`;
 const replayLine = def.replay ? `<div style="font-size:10px;color:#f8b500;margin-bottom:6px;">${fr?"Actuel : ":"Current: "}${ST.repeat(curStars)}</div>` : "";
 const fusionLine = def.type === "fusion" ? `<div style="font-size:10px;color:#f8b500;font-weight:700;margin-bottom:6px;">🎯 ${fr?"Coups":"Moves"}: ${def.moves} · 🧨 ${fr?"Score cible":"Target"}: ${def.targetScore}</div>` : "";
 const b = document.createElement("div");
