@@ -85,7 +85,9 @@ const MODE_DESCRIPTIONS = {
     sprint: { fr: "Mode ultra-rapide ! La grille est petite mais le temps est très court.", en: "Ultra-fast mode! Small grid but very short time." },
     memory: { fr: "Mémorise la position des chiffres, puis retrouve-les dans l'ordre.", en: "Memorize tile positions, then find them in order." },
     nofail: { fr: "Aucune erreur n'est permise ! 1 faute = Game Over. Vise le meilleur temps !", en: "No mistakes allowed! 1 error = Game Over. Aim for the best time!" },
-    boss: { fr: "Affronte le Gardien ! Bat-le avant qu'il ne termine sa propre grille.", en: "Face the Guardian! Beat him before he finishes his own grid." }
+    boss: { fr: "Affronte le Gardien ! Bat-le avant qu'il ne termine sa propre grille.", en: "Face the Guardian! Beat him before he finishes his own grid." },
+    hunter: { fr: "Clique sur TOUS les chiffres qui respectent la consigne (ex: > 5). Attention aux pièges !", en: "Click ALL numbers matching the condition (e.g., > 5). Watch out for traps!" },
+    cascade: { fr: "Le chiffre cible apparaît brièvement (1.5s). Clique dessus avant qu'il ne disparaisse, dans l'ordre !", en: "The target number appears briefly (1.5s). Click it before it vanishes, in order!" }
 };
 const TowerUtils = {
 starsInWorld(w) {
@@ -120,8 +122,8 @@ if (inChap === FPC || inChap % 50 === 0) return { floor, gridSize, time: Math.ma
 const tier = TOWER_DIFF_PATTERN[(inChap - 1) % 10];
 gridSize = Math.max(8, gridSize + TOWER_TIER_GRID[tier]);
 const PACE = [1.45, 1.30, 1.20, 1.15][tier];
-const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail"];
-const t = seq[(inChap - 1) % 9];
+const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail","hunter","cascade"];
+const t = seq[(inChap - 1) % 11]; // ✅ 11 modes au total maintenant
 let g = gridSize, time;
 if (t === "sprint") { g = Math.min(gridSize, 24); time = Math.max(10, Math.round(g * 1.0)); }
 else if (t === "pairs") { g = (tier <= 1) ? 10 : 12; time = [22,19,17,15][tier]; }
@@ -135,8 +137,21 @@ else { time = Math.max(12, Math.round(gridSize * PACE)); }
 return { floor, gridSize: g, time, type: t, diff: tier };
 },
 typeLabel(t) {
-const fr = currentLang === "fr";
-return ({classic:fr?"⚡ Croissant":"⚡ Ascending",reverse:fr?"🔽 Décroissant":"🔽 Descending",color:fr?"🎨 Couleurs":"🎨 Colors",pairs:fr?"🧩 Paires":"🧩 Pairs",parity:fr?"🔢 Pair/Impair":"🔢 Even/Odd",forbidden:fr?"🚫 Interdit":"🚫 Forbidden",sprint:fr?"⏱️ Sprint":"⏱️ Sprint",memory:fr?"🧠 Mémoire":"🧠 Memory",nofail:fr?"💎 Sans faute":"💎 No mistake",boss:fr?"⚔️ GARDIEN":"⚔️ GUARDIAN"})[t] || t;
+    const fr = currentLang === "fr";
+    return ({
+        classic: fr ? "⚡ Croissant" : "⚡ Ascending",
+        reverse: fr ? "🔽 Décroissant" : "🔽 Descending",
+        color: fr ? "🎨 Couleurs" : "🎨 Colors",
+        pairs: fr ? "🧩 Paires" : "🧩 Pairs",
+        parity: fr ? "🔢 Pair/Impair" : "🔢 Even/Odd",
+        forbidden: fr ? "🚫 Interdit" : "🚫 Forbidden",
+        sprint: fr ? "⏱️ Sprint" : "⏱️ Sprint",
+        memory: fr ? "🧠 Mémoire" : "🧠 Memory",
+        nofail: fr ? "💎 Sans faute" : "💎 No mistake",
+        boss: fr ? "⚔️ GARDIEN" : "⚔️ GUARDIAN",
+        hunter: fr ? "🎯 Chasseur" : "🎯 Hunter",
+        cascade: fr ? "⏱️ Cascade" : "⏱️ Cascade"
+    })[t] || t;
 }
 };
 /* ----- 3a. ANTI-SPOIL : visibilité des mondes ----- */
