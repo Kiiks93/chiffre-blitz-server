@@ -1323,25 +1323,28 @@ function startTowerFloor(def) {
     }, 10000);
 }
 function buildGridFromState(st) {
-const g = document.getElementById("tg-grid");
-const cols = st.gridSize <= 16 ? 4 : (st.gridSize <= 20 ? 5 : 6);
-g.style.gridTemplateColumns = `repeat(${cols},1fr)`;
-g.innerHTML = ""; TW_buttons = [];
-st.display.forEach((v, i) => {
-const b = document.createElement("button");
-b.className = "tg-tile";
-if (st.gone[i]) b.classList.add("gone");
-if (st.type === "color" && v) { b.style.background = `linear-gradient(180deg,${v.hex},#111827 85%)`; b.textContent = ""; }
-else if (st.type === "pairs" || st.type === "memory") { b.textContent = st.gone[i] ? "" : (v === null ? "?" : v); if ((st.revealed && st.revealed[i]) || st.sel === i) b.classList.add("sel"); }
-else if (st.type === "cascade") {
-    const isTargetRevealed = Date.now() < st.revealUntil;
-    b.textContent = st.gone[i] ? "" : (i === st.targetIndex && isTargetRevealed ? v : "?");
-    if (i === st.targetIndex && isTargetRevealed) b.classList.add("sel");
-}
-else b.textContent = v;
-b.onclick = () => handleTowerClick(i, b);
-g.appendChild(b); TW_buttons[i] = b;
-});
+    const g = document.getElementById("tg-grid");
+    const cols = st.gridSize <= 16 ? 4 : (st.gridSize <= 20 ? 5 : 6);
+    g.style.gridTemplateColumns = `repeat(${cols},1fr)`;
+    g.innerHTML = ""; TW_buttons = [];
+    st.display.forEach((v, i) => {
+        const b = document.createElement("button");
+        b.className = "tg-tile";
+        if (st.gone[i]) b.classList.add("gone");
+        if (st.type === "color" && v) { b.style.background = `linear-gradient(180deg,${v.hex},#111827 85%)`; b.textContent = ""; }
+        else if (st.type === "pairs" || st.type === "memory") { b.textContent = st.gone[i] ? "" : (v === null ? "?" : v); if ((st.revealed && st.revealed[i]) || st.sel === i) b.classList.add("sel"); }
+        else if (st.type === "cascade") {
+            // ✅ En mode Cascade, on affiche "?" sauf si c'est la cible et que le temps est actif
+            const isTargetRevealed = Date.now() < st.revealUntil;
+            b.textContent = st.gone[i] ? "" : (i === st.targetIndex && isTargetRevealed ? v : "?");
+            if (i === st.targetIndex && isTargetRevealed) b.classList.add("sel");
+        }
+        else b.textContent = v;
+        b.onclick = () => handleTowerClick(i, b);
+        g.appendChild(b); TW_buttons[i] = b;
+        // ✅ Synchronisation immédiate avec l'état du serveur
+        if (st.gone[i]) b.classList.add("gone");
+    });
 }
 function syncDomToState(st) {
 for (let i = 0; i < st.display.length; i++) {
@@ -1358,76 +1361,77 @@ if (rev !== orev) b.classList.toggle("sel", rev);
 }
 }
 function handleTowerClick(i, b) {
-const now = Date.now();
-if (now - TW_lastClick < 100) return;
-TW_lastClick = now;
-if (!TW_dom || TW_dom.gone[i] || TW_pairsLock) return;
-b.style.transform = "scale(0.9)";
-setTimeout(() => { if (b) b.style.transform = ""; }, 120);
-const t = TW_dom.type;
-if (t === "pairs" || t === "memory") { socket.emit("tower_click", { index: i }); return; }
-const v = TW_dom.display[i];
-let success = null;
-if (t === "color" && TW_dom.targetColor) success = (v && v.key === TW_dom.targetColor.key);
-else if (t === "parity") success = (TW_dom.targetParity === "even" ? (v % 2 === 0) : (v % 2 !== 0));
-else if (t === "forbidden") {
-    if (v === TW_dom.forbidden) {
-        if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
-        showFailUI("forbidden");
-        socket.emit("tower_quit");
+    const now = Date.now();
+    if (now - TW_lastClick < 100) return;
+    TW_lastClick = now;
+    if (!TW_dom || TW_dom.gone[i] || TW_pairsLock) return;
+    b.style.transform = "scale(0.9)";
+    setTimeout(() => { if (b) b.style.transform = ""; }, 120);
+    const t = TW_dom.type;
+    if (t === "pairs" || t === "memory") { socket.emit("tower_click", { index: i }); return; }
+    const v = TW_dom.display[i];
+    let success = null;
+    
+    if (t === "color" && TW_dom.targetColor) success = (v && v.key === TW_dom.targetColor.key);
+    else if (t === "parity") success = (TW_dom.targetParity === "even" ? (v % 2 === 0) : (v % 2 !== 0));
+    else if (t === "forbidden") {
+        if (v === TW_dom.forbidden) {
+            if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
+            showFailUI("forbidden");
+            socket.emit("tower_quit");
+            return;
+        }
+        success = (TW_dom.target !== null && TW_dom.target !== undefined) ? (v === TW_dom.target) : true;
+    }
+    // ✅ GESTION DU MODE CHASSEUR
+    else if (t === "hunter") {
+        const match = TW_dom.hunterOp === '>' ? v > TW_dom.hunterVal : v < TW_dom.hunterVal;
+        if (match) {
+            TW_dom.gone[i] = true; b.classList.add("gone");
+            if (typeof SoundEngine !== "undefined" && SoundEngine.playClick) SoundEngine.playClick();
+        } else {
+            b.classList.add("err");
+            setTimeout(() => { if (b) b.classList.remove("err"); }, 350);
+            if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
+        }
+        socket.emit("tower_click", { index: i });
         return;
     }
-    success = (TW_dom.target !== null && TW_dom.target !== undefined) ? (v === TW_dom.target) : true;
-}
-else if (t === "hunter") {
-    const match = TW_dom.hunterOp === '>' ? v > TW_dom.hunterVal : v < TW_dom.hunterVal;
-    if (match) {
+    // ✅ GESTION DU MODE CASCADE
+    else if (t === "cascade") {
+        const isTargetRevealed = Date.now() < TW_dom.revealUntil;
+        if (i === TW_dom.targetIndex && isTargetRevealed) {
+            TW_dom.gone[i] = true; b.classList.add("gone");
+            if (typeof SoundEngine !== "undefined" && SoundEngine.playClick) SoundEngine.playClick();
+        } else {
+            b.classList.add("err");
+            setTimeout(() => { if (b) b.classList.remove("err"); }, 350);
+            if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
+        }
+        socket.emit("tower_click", { index: i });
+        return;
+    }
+    else if (TW_dom.target !== null && TW_dom.target !== undefined) success = (v === TW_dom.target);
+    
+    if (success === true) {
         TW_dom.gone[i] = true; b.classList.add("gone");
+        if (t === "reverse") TW_dom.target--;
+        else if (t === "forbidden") { let nx = (TW_dom.target || 0) + 1; if (nx === TW_dom.forbidden) nx++; TW_dom.target = nx; }
+        else if (["classic","sprint","fog","nofail"].includes(t)) TW_dom.target++;
         if (typeof SoundEngine !== "undefined" && SoundEngine.playClick) SoundEngine.playClick();
-    } else {
+    } else if (success === false) {
         b.classList.add("err");
         setTimeout(() => { if (b) b.classList.remove("err"); }, 350);
         if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
+        if (t === "nofail") {
+            TW_pairsLock = true;
+            setTimeout(() => {
+                showFailUI("nofail");
+                socket.emit("tower_quit");
+            }, 400);
+        }
     }
     socket.emit("tower_click", { index: i });
-    return;
-}
-else if (t === "cascade") {
-    const isTargetRevealed = Date.now() < TW_dom.revealUntil;
-    if (i === TW_dom.targetIndex && isTargetRevealed) {
-        TW_dom.gone[i] = true; b.classList.add("gone");
-        if (typeof SoundEngine !== "undefined" && SoundEngine.playClick) SoundEngine.playClick();
-    } else {
-        b.classList.add("err");
-        setTimeout(() => { if (b) b.classList.remove("err"); }, 350);
-        if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
-    }
-    socket.emit("tower_click", { index: i });
-    return;
-}
-else if (TW_dom.target !== null && TW_dom.target !== undefined) success = (v === TW_dom.target);
-if (success === true) {
-TW_dom.gone[i] = true; b.classList.add("gone");
-if (t === "reverse") TW_dom.target--;
-else if (t === "forbidden") { let nx = (TW_dom.target || 0) + 1; if (nx === TW_dom.forbidden) nx++; TW_dom.target = nx; }
-else if (["classic","sprint","fog","nofail"].includes(t)) TW_dom.target++;
-if (typeof SoundEngine !== "undefined" && SoundEngine.playClick) SoundEngine.playClick();
-} else if (success === false) {
-    b.classList.add("err");
-    setTimeout(() => { if (b) b.classList.remove("err"); }, 350);
-    if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
-
-    // ✅ MODE SANS FAUTE : 1 ERREUR = GAME OVER IMMÉDIAT
-    if (t === "nofail") {
-        // On bloque les clics le temps que l'animation rouge se joue
-        TW_pairsLock = true; 
-        setTimeout(() => {
-            showFailUI("nofail");
-            socket.emit("tower_quit"); // On quitte la partie côté serveur
-        }, 400); // 400ms de délai pour laisser le joueur voir sa faute
-    }
-}
-socket.emit("tower_click", { index: i });
 }
 function stopLocalTimer() { if (TW_localTimer) { clearInterval(TW_localTimer); TW_localTimer = null; } }
 function startLocalTimer(tl) {
