@@ -91,7 +91,7 @@ nofail: { fr: "Aucune erreur n'est permise ! 1 faute = Game Over. Vise le meille
 boss: { fr: "Affronte le Gardien ! Bat-le avant qu'il ne termine sa propre grille.", en: "Face the Guardian! Beat him before he finishes his own grid." },
 hunter: { fr: "Clique sur TOUS les chiffres qui respectent la consigne (ex: > 5). Attention aux pièges !", en: "Click ALL numbers matching the condition (e.g., > 5). Watch out for traps!" },
 cascade: { fr: "Le chiffre cible apparaît brièvement (1.5s). Clique dessus avant qu'il ne disparaisse, dans l'ordre !", en: "The target number appears briefly (1.5s). Click it before it vanishes, in order!" },
-fusion: { fr: "Échange 2 tuiles ADJACENTES pour créer des paires somme 10 (3+7, 4+6, 5+5...) ou des triplés identiques alignés. Atteins le score avant la fin des coups !", en: "Swap 2 ADJACENT tiles to create pairs summing to 10 (3+7, 4+6, 5+5...) or aligned identical triples. Reach the target score before running out of moves!" }
+fusion: { fr: "Comme Candy Crush : échange 2 tuiles ADJACENTES pour aligner 3 chiffres IDENTIQUES (ligne ou colonne). Ils fusionnent et explosent ! Atteins le score avant la fin des coups.", en: "Like Candy Crush: swap 2 ADJACENT tiles to line up 3 IDENTICAL numbers (row or column). They merge and explode! Reach the target score before running out of moves." }
 };
 const TowerUtils = {
 starsInWorld(w) {
@@ -137,7 +137,7 @@ else if (t === "nofail") { time = Math.max(14, Math.round(gridSize * PACE * 1.2)
 else if (t === "reverse") { time = Math.max(12, Math.round(gridSize * PACE * 1.10)); }
 else if (t === "color") { time = Math.max(12, Math.round(gridSize * PACE * 0.85)); }
 else if (t === "forbidden") { time = Math.max(12, Math.round((gridSize - 1) * PACE * 1.05)); }
-else if (t === "fusion") { g = 25; moves = [15,13,11,9][tier]; targetScore = [250,350,450,500][tier]; time = moves * 5 + 10; }
+else if (t === "fusion") { g = 25; moves = [15,13,11,9][tier]; targetScore = [300,380,450,520][tier]; time = moves * 5 + 10; }
 else { time = Math.max(12, Math.round(gridSize * PACE)); }
 return { floor, gridSize: g, time, type: t, diff: tier, moves, targetScore };
 },
