@@ -72,6 +72,32 @@ let TW_stroopColor = null; // ✅ Pour mémoriser la couleur de leurre de l'Effe
 let TW_skew = 0; // ✅ Décalage horloge serveur ↔ téléphone
 function twNow(){ return Date.now() + TW_skew; }
 let TW_fusionSel = null, TW_lastSwapSeq = 0;
+/* 🧨 FUSION : couleurs par chiffre (fini le ton sur ton !) */
+const FUSION_COLORS = {
+1: { bg: "linear-gradient(180deg,#ff8a7a,#d02a1a 70%,#8a1005)", bd: "#ff6b5e" },
+2: { bg: "linear-gradient(180deg,#7ae9ff,#0090c0 70%,#005a80)", bd: "#4de3ff" },
+3: { bg: "linear-gradient(180deg,#8affa8,#1a9a4a 70%,#0a5a28)", bd: "#6bff8f" },
+4: { bg: "linear-gradient(180deg,#ffe38a,#d09000 70%,#8a5a00)", bd: "#ffd75e" },
+5: { bg: "linear-gradient(180deg,#e0aaff,#8a2ad0 70%,#4a1070)", bd: "#d18aff" },
+6: { bg: "linear-gradient(180deg,#ffb8d4,#d02a6a 70%,#8a0a3a)", bd: "#ff9ec4" }
+};
+function fusePaintTile(b, v) {
+const c = FUSION_COLORS[v];
+if (!c) return;
+b.style.background = c.bg;
+b.style.borderColor = c.bd;
+b.style.boxShadow = "0 0 14px " + c.bd + "66, inset 0 -8px 14px rgba(0,0,0,.4), inset 0 4px 10px rgba(255,255,255,.28)";
+b.style.textShadow = "0 2px 3px rgba(0,0,0,.7)";
+}
+function fuseShowCombo(chain) {
+const wrap = document.querySelector(".twg-gridwrap");
+if (!wrap) return;
+const el = document.createElement("div");
+el.className = "fuse-combo";
+el.textContent = "💥 COMBO x" + chain + " !";
+wrap.appendChild(el);
+setTimeout(() => el.remove(), 1000);
+}
 let TW_lastState = 0;
 let TW_gateTimer = null;  // ✅ Timer du Gate Loader
 const SCENE_CACHE = {};
@@ -91,7 +117,7 @@ nofail: { fr: "Aucune erreur n'est permise ! 1 faute = Game Over. Vise le meille
 boss: { fr: "Affronte le Gardien ! Bat-le avant qu'il ne termine sa propre grille.", en: "Face the Guardian! Beat him before he finishes his own grid." },
 hunter: { fr: "Clique sur TOUS les chiffres qui respectent la consigne (ex: > 5). Attention aux pièges !", en: "Click ALL numbers matching the condition (e.g., > 5). Watch out for traps!" },
 cascade: { fr: "Le chiffre cible apparaît brièvement (1.5s). Clique dessus avant qu'il ne disparaisse, dans l'ordre !", en: "The target number appears briefly (1.5s). Click it before it vanishes, in order!" },
-fusion: { fr: "Comme Candy Crush : échange 2 tuiles ADJACENTES pour aligner 3 chiffres IDENTIQUES (ligne ou colonne). Ils fusionnent et explosent ! Atteins le score avant la fin des coups.", en: "Like Candy Crush: swap 2 ADJACENT tiles to line up 3 IDENTICAL numbers (row or column). They merge and explode! Reach the target score before running out of moves." }
+fusion: { fr: "Échange 2 tuiles ADJACENTES pour aligner 3 chiffres IDENTIQUES ou plus (ligne ou colonne). Ils fusionnent dans une explosion ! Atteins le score cible avant la fin des coups.", en: "Swap 2 ADJACENT tiles to line up 3+ IDENTICAL numbers (row or column). They merge in an explosion! Reach the target score before running out of moves." }
 };
 const TowerUtils = {
 starsInWorld(w) {
@@ -656,6 +682,19 @@ radial-gradient(ellipse at 60% 35%,#2a221c 0 55px,transparent 56px);}
 .tg-tile.foggy{animation:twFog 2s infinite;}
 .tg-tile.err{border-color:#ff4b2b !important;box-shadow:0 0 14px #ff4b2b;background:linear-gradient(180deg,#3a0a0a,#200505) !important;animation:twShake .3s;}
 @keyframes twShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+/* === FUSION : bonbons colorés + animations juice === */
+.twg-gridwrap{position:relative;}
+.tg-tile.fuse{border-radius:16px;}
+.tg-tile.fuse.sel{animation:fusePulse .7s ease-in-out infinite;}
+@keyframes fusePulse{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.1);filter:brightness(1.4)}}
+@keyframes fuseSwap{0%{transform:scale(1)}40%{transform:scale(1.18) rotate(4deg)}100%{transform:scale(1)}}
+.tg-tile.fuse-swap{animation:fuseSwap .26s ease;}
+@keyframes fuseBoom{0%{transform:scale(1);filter:brightness(1)}45%{transform:scale(1.3);filter:brightness(2.4)}100%{transform:scale(0);filter:brightness(3);opacity:0}}
+.tg-tile.fuse-boom{animation:fuseBoom .2s ease-in forwards;}
+@keyframes fuseDrop{0%{transform:translateY(-150%) scale(.7);opacity:0}55%{transform:translateY(6%) scale(1.06);opacity:1}75%{transform:translateY(-3%) scale(.98)}100%{transform:translateY(0) scale(1)}}
+.tg-tile.fuse-drop{animation:fuseDrop .4s cubic-bezier(.25,.9,.3,1.15);}
+.fuse-combo{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);font-size:clamp(26px,7vw,40px);font-weight:900;color:#ffd75e;text-shadow:0 0 18px #ff8a00,0 0 40px #ff4b2b88,0 3px 0 #000;pointer-events:none;z-index:60;animation:fuseCombo .95s ease-out forwards;}
+@keyframes fuseCombo{0%{transform:translate(-50%,-50%) scale(.3);opacity:0}20%{transform:translate(-50%,-50%) scale(1.3);opacity:1}60%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(-50%,-140%) scale(1.05);opacity:0}}
 .twg-msg{text-align:center;font-size:11px;color:#aaa;padding:6px 10px 12px;}
 @keyframes twFlickP{50%{opacity:.15}}
 @keyframes twCloud{from{left:-30%}to{left:110%}}
@@ -1362,7 +1401,7 @@ if (st.gone[i]) { b.textContent = ""; }
 else if (i === st.targetIndex && isTargetRevealed) { b.textContent = v; b.classList.add("sel"); }
 else { b.textContent = "?"; }
 }
-else b.textContent = v;
+else { b.textContent = v; if (st.type === "fusion") { b.classList.add("fuse"); fusePaintTile(b, v); } }
 b.onclick = () => handleTowerClick(i, b);
 g.appendChild(b); TW_buttons[i] = b;
 if (st.gone[i]) b.classList.add("gone");
@@ -1382,7 +1421,17 @@ if (rev !== orev) b.classList.toggle("sel", rev);
 }
 if (st.type === "fusion") {
 const dv = st.display[i], ov = TW_dom.display[i];
-if (dv !== ov) { b.textContent = dv; b.style.transform = "scale(0.7)"; setTimeout(() => { if (b) b.style.transform = ""; }, 130); }
+if (dv !== ov) {
+b.classList.remove("fuse-drop");
+b.classList.add("fuse-boom");
+setTimeout(() => {
+b.classList.remove("fuse-boom");
+b.textContent = dv;
+fusePaintTile(b, dv);
+b.classList.add("fuse-drop");
+setTimeout(() => { if (b) b.classList.remove("fuse-drop"); }, 450);
+}, 190);
+}
 }
 }
 }
@@ -1402,6 +1451,8 @@ const prev = TW_buttons[a]; if (prev) prev.classList.remove("sel");
 TW_fusionSel = null;
 const ra = Math.floor(a/5), ca = a%5, ri = Math.floor(i/5), ci = i%5;
 if (Math.abs(ra-ri) + Math.abs(ca-ci) !== 1) { TW_fusionSel = i; b.classList.add("sel"); return; }
+const ba = TW_buttons[a];
+if (ba && b) { ba.classList.add("fuse-swap"); b.classList.add("fuse-swap"); setTimeout(() => { if (ba) ba.classList.remove("fuse-swap"); if (b) b.classList.remove("fuse-swap"); }, 280); }
 socket.emit("tower_click", { index: a, swapWith: i });
 return;
 }
@@ -1591,13 +1642,17 @@ TW = st; TW_lastFloor = st.floor;
 if (typeof st.serverNow === "number") TW_skew = st.serverNow - Date.now();
 if (first) { TW_fusionSel = null; TW_lastSwapSeq = 0; buildGridFromState(st); TW_dom = cloneState(st); }
 else { syncDomToState(st); TW_dom = cloneState(st); }
-if (st.type === "fusion" && st.lastSwap && st.lastSwap.ok === false && (st.lastSwapSeq || 0) !== TW_lastSwapSeq) {
+if (st.type === "fusion" && (st.lastSwapSeq || 0) !== TW_lastSwapSeq) {
+TW_lastSwapSeq = st.lastSwapSeq || 0;
+if (st.lastSwap && st.lastSwap.ok === false) {
 [st.lastSwap.a, st.lastSwap.b].forEach(ix => {
 const bb = TW_buttons[ix];
 if (bb) { bb.classList.add("err"); setTimeout(() => { if (bb) bb.classList.remove("err"); }, 350); }
 });
+} else if ((st.lastChain || 0) >= 2) {
+fuseShowCombo(st.lastChain);
 }
-TW_lastSwapSeq = st.lastSwapSeq || 0;
+}
 renderHUDFromState();
 startLocalTimer(st.timeLeft);
 if (window.hideGate) window.hideGate();
