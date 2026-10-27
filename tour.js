@@ -1,5 +1,5 @@
 /* ============================================================
-TOUR.JS — AVENTURE « MATCH FACTORY » (écran fixe par monde)
+TOUR.JS — AVENTURE  (écran fixe par monde)
 ============================================================ */
 
 /* ----- 1. CONFIGURATION ----- */
@@ -163,7 +163,7 @@ else if (t === "nofail") { time = Math.max(14, Math.round(gridSize * PACE * 1.2)
 else if (t === "reverse") { time = Math.max(12, Math.round(gridSize * PACE * 1.10)); }
 else if (t === "color") { time = Math.max(12, Math.round(gridSize * PACE * 0.85)); }
 else if (t === "forbidden") { time = Math.max(12, Math.round((gridSize - 1) * PACE * 1.05)); }
-else if (t === "fusion") { g = 25; moves = [15,13,11,9][tier]; targetScore = [300,380,450,520][tier]; time = moves * 5 + 10; }
+else if (t === "fusion") { g = 25; moves = [30,26,22,18][tier]; targetScore = [600,700,800,900][tier]; time = moves * 5 + 20; }
 else { time = Math.max(12, Math.round(gridSize * PACE)); }
 return { floor, gridSize: g, time, type: t, diff: tier, moves, targetScore };
 },
@@ -1269,7 +1269,7 @@ let starRule = fr ? `💡 ${ST} terminer · ${ST}${ST} ≤2 erreurs · ${ST}${ST
 if (def.type === "pairs" || def.type === "sprint") starRule = fr ? `💡 ${ST} finir · ${ST} rapide · ${ST}${ST}${ST} très rapide` : `💡 ${ST} finish · ${ST} fast · ${ST}${ST}${ST} very fast`;
 if (def.type === "memory") starRule = fr ? `💡 ${ST} terminer · ${ST}${ST} ≤2 erreurs · ${ST}${ST}${ST} 0 erreur (tout à la mémoire !)` : `💡 ${ST} finish · ${ST}${ST} ≤2 mistakes · ${ST}${ST}${ST} 0 mistakes (pure memory!)`;
 if (def.type === "nofail") starRule = fr ? `💡 ${ST} 0 erreur (1 faute = perdu !) · ${ST}${ST}${ST} Temps le plus rapide` : `💡 ${ST} 0 mistakes (1 error = fail!) · ${ST}${ST}${ST} Fastest time`;
-if (def.type === "fusion") starRule = fr ? `💡 ${ST} score ${def.targetScore} · ${ST}${ST} ≥2 coups restants · ${ST}${ST}${ST} ≥4 coups restants` : `💡 ${ST} reach ${def.targetScore} · ${ST}${ST} ≥2 moves left · ${ST}${ST}${ST} ≥4 moves left`;
+if (def.type === "fusion") starRule = fr ? `💡 ${ST} score ${def.targetScore} · ${ST}${ST} ≥${Math.round(def.moves*0.10)} coups restants · ${ST}${ST}${ST} ≥${Math.round(def.moves*0.25)} coups restants` : `💡 ${ST} reach ${def.targetScore} · ${ST}${ST} ≥${Math.round(def.moves*0.10)} moves left · ${ST}${ST}${ST} ≥${Math.round(def.moves*0.25)} moves left`;
 const replayLine = def.replay ? `<div style="font-size:10px;color:#f8b500;margin-bottom:6px;">${fr?"Actuel : ":"Current: "}${ST.repeat(curStars)}</div>` : "";
 const fusionLine = def.type === "fusion" ? `<div style="font-size:10px;color:#f8b500;font-weight:700;margin-bottom:6px;">🎯 ${fr?"Coups":"Moves"}: ${def.moves} · 🧨 ${fr?"Score cible":"Target"}: ${def.targetScore}</div>` : "";
 const b = document.createElement("div");
@@ -1912,3 +1912,84 @@ setTimeout(()=>{ if(typeof SoundEngine.startMusicSeasonal==='function') SoundEng
 }
 }catch(e){}
 }
+/* ============================================================
+🧨 FUSION SOLO (mode événementiel activable depuis l'admin)
+============================================================ */
+let FUS_solo = null, FUS_sel = null, FUS_buttons = [], FUS_prev = null, FUS_lastSeq = 0;
+function fuseSoloOpen() {
+fuseSoloClose();
+const ov = document.createElement("div");
+ov.id = "fusion-solo"; ov.className = "twg-screen";
+ov.style.display = "flex";
+ov.innerHTML = `<div class="twg-header"><button class="tw-back" onclick="fuseSoloQuit()">⬅️</button><b>🧨 FUSION SOLO</b><span id="fus-moves" style="color:#ffd75e;font-weight:900;">🎯 30</span></div>
+<div id="fus-hud" class="twg-hud">Score : 0</div>
+<div class="twg-gridwrap"><div id="fus-grid" class="tg-grid" style="grid-template-columns:repeat(5,1fr);"></div></div>
+<div class="twg-msg">${currentLang === "fr" ? "Échange 2 tuiles adjacentes pour aligner 3 chiffres identiques ! Les chutes en chaîne = COMBOS !" : "Swap 2 adjacent tiles to line up 3 identical numbers! Chain falls = COMBOS!"}</div>`;
+document.body.appendChild(ov);
+socket.emit("fusion_solo_start");
+}
+function fuseSoloClose() { const ov = document.getElementById("fusion-solo"); if (ov) ov.remove(); FUS_solo = null; FUS_sel = null; FUS_buttons = []; FUS_prev = null; }
+function fuseSoloQuit() { socket.emit("fusion_solo_quit"); fuseSoloClose(); }
+function fuseSoloRender(st) {
+FUS_solo = st;
+const grid = document.getElementById("fus-grid");
+if (!grid) return;
+if (FUS_buttons.length === 0) {
+grid.innerHTML = ""; FUS_buttons = [];
+st.board.forEach((v, i) => {
+const b = document.createElement("button");
+b.className = "tg-tile fuse";
+b.onclick = () => fuseSoloTap(i, b);
+grid.appendChild(b); FUS_buttons[i] = b;
+});
+}
+st.board.forEach((v, i) => {
+const b = FUS_buttons[i]; if (!b) return;
+if (!FUS_prev || FUS_prev[i] !== v) {
+b.textContent = v; fusePaintTile(b, v);
+b.classList.remove("fuse-drop"); void b.offsetWidth; b.classList.add("fuse-drop");
+setTimeout(() => { if (b) b.classList.remove("fuse-drop"); }, 450);
+}
+});
+FUS_prev = st.board.slice();
+const mv = document.getElementById("fus-moves"); if (mv) mv.innerText = "🎯 " + st.moves;
+const hud = document.getElementById("fus-hud"); if (hud) hud.innerHTML = `Score : <span style="color:#ffd75e;font-weight:900;">${st.score}</span>`;
+if (st.lastSwap && (st.lastSwapSeq || 0) !== FUS_lastSeq) {
+if (st.lastSwap.ok === false) {
+[st.lastSwap.a, st.lastSwap.b].forEach(ix => { const bb = FUS_buttons[ix]; if (bb) { bb.classList.add("err"); setTimeout(() => { if (bb) bb.classList.remove("err"); }, 350); } });
+} else if ((st.lastChain || 0) >= 2) fuseShowCombo(st.lastChain);
+}
+FUS_lastSeq = st.lastSwapSeq || 0;
+}
+function fuseSoloTap(i, b) {
+if (!FUS_solo) return;
+if (FUS_sel === null) { FUS_sel = i; b.classList.add("sel"); return; }
+if (FUS_sel === i) { FUS_sel = null; b.classList.remove("sel"); return; }
+const a = FUS_sel;
+const prev = FUS_buttons[a]; if (prev) prev.classList.remove("sel");
+FUS_sel = null;
+const ra = Math.floor(a/5), ca = a%5, ri = Math.floor(i/5), ci = i%5;
+if (Math.abs(ra-ri) + Math.abs(ca-ci) !== 1) { FUS_sel = i; b.classList.add("sel"); return; }
+socket.emit("fusion_solo_swap", { index: a, swapWith: i });
+}
+socket.on("fusion_solo_state", (st) => { if (st && st.board) fuseSoloRender(st); });
+socket.on("fusion_solo_result", (r) => {
+fuseSoloClose();
+if (!r || !r.ok) return;
+const fr = currentLang === "fr";
+const d = document.createElement("div");
+d.className = "modal-overlay"; d.style.display = "flex";
+d.innerHTML = `<div class="modal-card" style="max-width:300px;text-align:center;">
+<h3 style="color:#00ff88;margin:0 0 6px 0;">🧨 ${fr?"PARTIE TERMINÉE":"GAME OVER"} !</h3>
+<div style="font-size:22px;font-weight:900;color:#ffd75e;margin:6px 0;">${r.score} pts</div>
+<div style="font-size:12px;color:#aaa;margin-bottom:6px;">${fr?"Meilleure chaîne":"Best chain"} : x${r.bestChain}</div>
+<div style="font-size:13px;color:#f8b500;font-weight:bold;margin-bottom:10px;">+${r.coins} 🪙</div>
+<button class="btn-main btn-blue" onclick="this.closest('.modal-overlay').remove();fuseSoloOpen()">🔄 ${fr?"Rejouer":"Replay"}</button>
+<button class="btn-secondary" onclick="this.closest('.modal-overlay').remove()">❌ ${fr?"Fermer":"Close"}</button>
+</div>`;
+document.body.appendChild(d);
+});
+socket.on("fusion_solo_denied", () => {
+if (typeof showNotificationToast === "function") showNotificationToast(currentLang === "fr" ? "🧨 Mode Fusion désactivé pour le moment !" : "🧨 Fusion mode currently disabled!", "announcement");
+fuseSoloClose();
+});
