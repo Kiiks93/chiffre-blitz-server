@@ -168,8 +168,8 @@ else if (t === "color") { time = Math.max(12, Math.round(gridSize * PACE * 0.85)
 else if (t === "forbidden") { time = Math.max(12, Math.round((gridSize - 1) * PACE * 1.05)); }
 else if (t === "fusion") { 
     g = 25; 
-    moves = [40, 32, 26, 20][tier];             // ✅ Synchronisé avec le serveur
-    targetScore = [1200, 2000, 3000, 4500][tier]; // ✅ Synchronisé avec le serveur
+    moves = [40, 32, 26, 20][tier];             // ✅ NOUVELLES VALEURS
+    targetScore = [1200, 2000, 3000, 4500][tier]; // ✅ NOUVELLES VALEURS
     time = moves * 5 + 20; 
 }
 else { time = Math.max(12, Math.round(gridSize * PACE)); }
