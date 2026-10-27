@@ -568,8 +568,8 @@ const GRIDMOD = [-6,0,2,4];
 const PACE = [1.45,1.30,1.20,1.15];
 const tier = PATTERN[(inChap - 1) % 10];
 gridSize = Math.max(8, gridSize + GRIDMOD[tier]);
-const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail"];
-const t = seq[(inChap - 1) % 9];
+const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail","hunter","cascade"];
+const t = seq[(inChap - 1) % 11]; // ✅ 11 modes au total maintenant
 let g = gridSize, time;
 if (t === "sprint") { g = Math.min(gridSize, 24); time = Math.max(10, Math.round(g * 1.0)); }
 else if (t === "pairs") { g = (tier <= 1) ? 10 : 12; time = [22,19,17,15][tier]; }
@@ -611,12 +611,29 @@ s.forbidden = 1+Math.floor(Math.random()*N);
 s.remaining = new Set(s.nums);
 s.target = (s.forbidden === 1) ? 2 : 1;
 } else if (def.type === "memory") {
-s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
-s.remaining = new Set(s.nums);
-s.target = 1;
-s.revealUntil = Date.now() + 2500 + N * 600;
+    s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
+    s.remaining = new Set(s.nums);
+    s.target = 1;
+    s.revealUntil = Date.now() + 2500 + N * 600;
+} else if (def.type === "hunter") {
+    //  CHASSEUR DE NOMBRES : le joueur doit cliquer sur tous les chiffres qui respectent une consigne (> ou <)
+    s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
+    s.hunterOp = Math.random() < 0.5 ? '>' : '<';
+    s.hunterVal = 4 + Math.floor(Math.random() * 3); // Valeur cible entre 4 et 6
+    s.remaining = new Set();
+    s.nums.forEach((v, i) => {
+        const match = s.hunterOp === '>' ? v > s.hunterVal : v < s.hunterVal;
+        if (match) s.remaining.add(i);
+    });
+} else if (def.type === "cascade") {
+    // ⏱️ CASCADE CHRONO : les chiffres sont cachés, un seul apparaît à la fois pendant 1.5s
+    s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
+    s.remaining = new Set(s.nums);
+    s.target = 1;
+    s.targetIndex = s.nums.indexOf(s.target);
+    s.revealUntil = Date.now() + 1500; // 1.5 seconde pour cliquer sur la cible
 } else {
-s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
+    s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
 s.remaining = new Set(s.nums);
 s.target = def.type==="reverse"?N:1;
 if (def.type==="random") s.target = s.nums[Math.floor(Math.random()*s.nums.length)];
@@ -631,13 +648,15 @@ return s.nums.slice();
 }
 function towerStatePayload(s){
 return {
-floor:s.floor, type:s.type, total:s.total,
-timeLeft: Math.max(0, s.def.time - Math.floor((Date.now()-s.start)/1000)),
-mistakes:s.mistakes, gone:s.gone, display:towerDisplay(s),
-target:s.target||null, targetColor:s.targetColor||null, targetParity:s.targetParity||null, forbidden:s.forbidden||null,
-revealed:s.revealed, sel:s.sel, ai:s.ai, defTime:s.def.time, gridSize:s.def.gridSize,
-replay:s.replay, shield:s.shield||0,
-revealLeft: (s.type==="memory" || s.type==="pairs") ? Math.max(0, Math.round(((s.revealUntil||0) - Date.now())/1000)) : 0
+    floor:s.floor, type:s.type, total:s.total,
+    timeLeft: Math.max(0, s.def.time - Math.floor((Date.now()-s.start)/1000)),
+    mistakes:s.mistakes, gone:s.gone, display:towerDisplay(s),
+    target:s.target||null, targetColor:s.targetColor||null, targetParity:s.targetParity||null, forbidden:s.forbidden||null,
+    hunterOp:s.hunterOp||null, hunterVal:s.hunterVal||null, // ✅ NOUVEAUX CHAMPS
+    revealUntil:s.revealUntil||null, targetIndex:s.targetIndex||null, // ✅ NOUVEAUX CHAMPS
+    revealed:s.revealed, sel:s.sel, ai:s.ai, defTime:s.def.time, gridSize:s.def.gridSize,
+    replay:s.replay, shield:s.shield||0,
+    revealLeft: (s.type==="memory" || s.type==="pairs") ? Math.max(0, Math.round(((s.revealUntil||0) - Date.now())/1000)) : 0
 };
 }
 async function towerWin(player, s){
@@ -728,6 +747,11 @@ if (elapsed > s.def.time){ const r = await towerFail(player, s, 'timeout'); dele
 if (s.type==="boss"){
 s.ai += 0.55 + Math.ceil(s.floor / TOWER_FPC) * 0.08;
 if (s.ai >= s.total){ const r = await towerFail(player, s, 'boss'); delete towerSessions[sid]; io.to(sid).emit('tower_fail', r); cbMaybeKickAfterMatch(io.sockets.sockets.get(sid)); continue; }
+}
+// ✅ Gestion du temps écoulé pour le mode Cascade (cible qui disparaît)
+if (s.type === "cascade" && Date.now() > s.revealUntil && !s.gone[s.targetIndex]) {
+    s.mistakes++; // Le joueur a laissé passer la cible !
+    s.revealUntil = Date.now() + 1500; // On lui redonne une chance
 }
 io.to(sid).emit('tower_state', towerStatePayload(s));
 }
@@ -2226,17 +2250,40 @@ let nx = v + 1; if (nx === s.forbidden) nx++;
 s.target = nx;
 if (s.remaining.size === 1 && s.remaining.has(s.forbidden)) win = true;
 } else mistake = true;
-}
+} else if (s.type === "hunter") {
+    // 🎯 Clic sur un chiffre qui correspond à la consigne (> ou <)
+    if (s.remaining.has(idx)) {
+        s.gone[idx] = true;
+        s.remaining.delete(idx);
+        if (s.remaining.size === 0) win = true;
+    } else {
+        mistake = true;
+    }
+} else if (s.type === "cascade") {
+    // ⏱️ Clic sur la cible révélée
+    if (idx === s.targetIndex) {
+        s.gone[idx] = true;
+        s.remaining.delete(s.target);
+        if (s.remaining.size === 0) {
+            win = true;
+        } else {
+            s.target++;
+            s.targetIndex = s.nums.indexOf(s.target);
+            s.revealUntil = Date.now() + 1500; // Nouveau délai pour la prochaine cible
+        }
+    } else {
+        mistake = true;
+    }
 } else {
-if (v === s.target) {
-s.gone[idx] = true; s.remaining.delete(v);
-if (s.remaining.size === 0) win = true;
-else {
-if (s.type === "reverse") s.target--;
-else if (s.type === "random") s.target = [...s.remaining][Math.floor(Math.random() * s.remaining.size)];
-else s.target++;
-}
-} else mistake = true;
+    if (v === s.target) {
+        s.gone[idx] = true; s.remaining.delete(v);
+        if (s.remaining.size === 0) win = true;
+        else {
+            if (s.type === "reverse") s.target--;
+            else if (s.type === "random") s.target = [...s.remaining][Math.floor(Math.random() * s.remaining.size)];
+            else s.target++;
+        }
+    } else mistake = true;
 }
 if (mistake) {
 if (s.shield > 0) {
