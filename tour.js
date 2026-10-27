@@ -1349,8 +1349,7 @@ function buildGridFromState(st) {
         if (st.type === "color" && v) { b.style.background = `linear-gradient(180deg,${v.hex},#111827 85%)`; b.textContent = ""; }
         else if (st.type === "pairs" || st.type === "memory") { b.textContent = st.gone[i] ? "" : (v === null ? "?" : v); if ((st.revealed && st.revealed[i]) || st.sel === i) b.classList.add("sel"); }
 else if (st.type === "cascade") {
-    const isTargetRevealed = Date.now() < st.revealUntil;
-    // ✅ On affiche le chiffre cible seulement s'il est révélé ET qu'il correspond à l'index
+    const isTargetRevealed = twNow() < (st.revealUntil || 0);
     if (st.gone[i]) {
         b.textContent = "";
     } else if (i === st.targetIndex && isTargetRevealed) {
@@ -1525,15 +1524,6 @@ function renderHUDFromState() {
         else if (TW.type === "parity") main = TW.targetParity === "even" ? dH.tw_hud_parity_even : dH.tw_hud_parity_odd;
         else if (TW.type === "forbidden") main = `${dH.tw_hud_forbidden} <span style="color:#ff4b2b;">${TW.forbidden}</span> · ${dH.tw_hud_target} ${TW.target}`;
 else if (TW.type === "memory") main = (TW.revealLeft > 0) ? `${dH.tw_hud_memorize} ${TW.revealLeft}s` : dH.tw_hud_memory_order;
-else if (TW.type === "hunter") {
-    const op = TW.hunterOp === '>' ? 'supérieurs à' : 'inférieurs à';
-    const remaining = TW.display.filter((_, i) => TW.gone[i] === false && ((TW.hunterOp === '>' ? TW.display[i] > TW.hunterVal : TW.display[i] < TW.hunterVal))).length;
-    main = `Cible : <span style="color:#f8b500;">${op} ${TW.hunterVal}</span> <span style="font-size:0.8em;opacity:0.8;">(Reste: ${remaining})</span>`;
-}
-else if (TW.type === "cascade") {
-    const timeLeft = Math.max(0, ((TW.revealUntil || 0) - Date.now()) / 1000).toFixed(1);
-    main = `Cible : <span style="color:#ff4b2b;font-weight:900;">${TW.target}</span> <span style="font-size:0.8em;opacity:0.8;">(${timeLeft}s)</span>`;
-}
 else if (TW.target !== null && TW.target !== undefined) main = `${dH.tw_hud_target} ${TW.target}`;
     }
     
