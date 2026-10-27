@@ -1437,6 +1437,19 @@ setTimeout(() => { if (b) b.classList.remove("fuse-drop"); }, 450);
 }
 }
 }
+// ✅ AFFICHAGE DE L'INDICE VISUEL (tuiles qui clignotent)
+if (st.type === "fusion" && st.hint) {
+    const ha = TW_buttons[st.hint.a];
+    const hb = TW_buttons[st.hint.b];
+    if (ha && hb) {
+        ha.style.animation = "fusePulse 0.7s ease-in-out infinite";
+        hb.style.animation = "fusePulse 0.7s ease-in-out infinite";
+        setTimeout(() => {
+            if (ha) ha.style.animation = "";
+            if (hb) hb.style.animation = "";
+        }, 3000);
+    }
+}
 }
 function handleTowerClick(i, b) {
 const now = Date.now();
