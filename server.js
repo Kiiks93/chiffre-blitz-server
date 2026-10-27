@@ -3229,39 +3229,14 @@ function fusionFindMatches(board) {
         for (let c = 0; c < C; c++) {
             const v = board[idx(r, c)];
             if (v == null) continue;
-            
-            // Pattern : 3 horizontaux + 1 en bas à gauche
-            if (same(r, c + 1, v) && same(r, c + 2, v) && same(r + 1, c, v)) {
-                hit.add(idx(r, c)); hit.add(idx(r, c + 1)); hit.add(idx(r, c + 2)); hit.add(idx(r + 1, c));
-            }
-            // Pattern : 3 horizontaux + 1 en bas à droite
-            if (same(r, c + 1, v) && same(r, c + 2, v) && same(r + 1, c + 2, v)) {
-                hit.add(idx(r, c)); hit.add(idx(r, c + 1)); hit.add(idx(r, c + 2)); hit.add(idx(r + 1, c + 2));
-            }
-            // Pattern : 3 horizontaux + 1 en haut à gauche
-            if (same(r, c + 1, v) && same(r, c + 2, v) && same(r - 1, c, v)) {
-                hit.add(idx(r, c)); hit.add(idx(r, c + 1)); hit.add(idx(r, c + 2)); hit.add(idx(r - 1, c));
-            }
-            // Pattern : 3 horizontaux + 1 en haut à droite
-            if (same(r, c + 1, v) && same(r, c + 2, v) && same(r - 1, c + 2, v)) {
-                hit.add(idx(r, c)); hit.add(idx(r, c + 1)); hit.add(idx(r, c + 2)); hit.add(idx(r - 1, c + 2));
-            }
-            // Pattern : 3 verticaux + 1 à gauche en bas
-            if (same(r + 1, c, v) && same(r + 2, c, v) && same(r + 2, c - 1, v)) {
-                hit.add(idx(r, c)); hit.add(idx(r + 1, c)); hit.add(idx(r + 2, c)); hit.add(idx(r + 2, c - 1));
-            }
-            // Pattern : 3 verticaux + 1 à droite en bas
-            if (same(r + 1, c, v) && same(r + 2, c, v) && same(r + 2, c + 1, v)) {
-                hit.add(idx(r, c)); hit.add(idx(r + 1, c)); hit.add(idx(r + 2, c)); hit.add(idx(r + 2, c + 1));
-            }
-            // Pattern : 3 verticaux + 1 à gauche en haut
-            if (same(r + 1, c, v) && same(r + 2, c, v) && same(r, c - 1, v)) {
-                hit.add(idx(r, c)); hit.add(idx(r + 1, c)); hit.add(idx(r + 2, c)); hit.add(idx(r, c - 1));
-            }
-            // Pattern : 3 verticaux + 1 à droite en haut
-            if (same(r + 1, c, v) && same(r + 2, c, v) && same(r, c + 1, v)) {
-                hit.add(idx(r, c)); hit.add(idx(r + 1, c)); hit.add(idx(r + 2, c)); hit.add(idx(r, c + 1));
-            }
+            if (same(r, c + 1, v) && same(r, c + 2, v) && same(r + 1, c, v)) { hit.add(idx(r, c)); hit.add(idx(r, c + 1)); hit.add(idx(r, c + 2)); hit.add(idx(r + 1, c)); }
+            if (same(r, c + 1, v) && same(r, c + 2, v) && same(r + 1, c + 2, v)) { hit.add(idx(r, c)); hit.add(idx(r, c + 1)); hit.add(idx(r, c + 2)); hit.add(idx(r + 1, c + 2)); }
+            if (same(r, c + 1, v) && same(r, c + 2, v) && same(r - 1, c, v)) { hit.add(idx(r, c)); hit.add(idx(r, c + 1)); hit.add(idx(r, c + 2)); hit.add(idx(r - 1, c)); }
+            if (same(r, c + 1, v) && same(r, c + 2, v) && same(r - 1, c + 2, v)) { hit.add(idx(r, c)); hit.add(idx(r, c + 1)); hit.add(idx(r, c + 2)); hit.add(idx(r - 1, c + 2)); }
+            if (same(r + 1, c, v) && same(r + 2, c, v) && same(r + 2, c - 1, v)) { hit.add(idx(r, c)); hit.add(idx(r + 1, c)); hit.add(idx(r + 2, c)); hit.add(idx(r + 2, c - 1)); }
+            if (same(r + 1, c, v) && same(r + 2, c, v) && same(r + 2, c + 1, v)) { hit.add(idx(r, c)); hit.add(idx(r + 1, c)); hit.add(idx(r + 2, c)); hit.add(idx(r + 2, c + 1)); }
+            if (same(r + 1, c, v) && same(r + 2, c, v) && same(r, c - 1, v)) { hit.add(idx(r, c)); hit.add(idx(r + 1, c)); hit.add(idx(r + 2, c)); hit.add(idx(r, c - 1)); }
+            if (same(r + 1, c, v) && same(r + 2, c, v) && same(r, c + 1, v)) { hit.add(idx(r, c)); hit.add(idx(r + 1, c)); hit.add(idx(r + 2, c)); hit.add(idx(r, c + 1)); }
         }
     }
     
@@ -3270,26 +3245,12 @@ function fusionFindMatches(board) {
         for (let c = 0; c < C; c++) {
             const v = board[idx(r, c)];
             if (v == null) continue;
-            
-            // T horizontal (barre en haut, pied en bas au milieu)
-            if (same(r, c + 1, v) && same(r, c + 2, v) && same(r + 1, c + 1, v)) {
-                hit.add(idx(r, c)); hit.add(idx(r, c + 1)); hit.add(idx(r, c + 2)); hit.add(idx(r + 1, c + 1));
-            }
-            // T horizontal inversé (barre en bas, pied en haut au milieu)
-            if (same(r, c + 1, v) && same(r, c + 2, v) && same(r - 1, c + 1, v)) {
-                hit.add(idx(r, c)); hit.add(idx(r, c + 1)); hit.add(idx(r, c + 2)); hit.add(idx(r - 1, c + 1));
-            }
-            // T vertical (barre à gauche, pied à droite au milieu)
-            if (same(r + 1, c, v) && same(r + 2, c, v) && same(r + 1, c + 1, v)) {
-                hit.add(idx(r, c)); hit.add(idx(r + 1, c)); hit.add(idx(r + 2, c)); hit.add(idx(r + 1, c + 1));
-            }
-            // T vertical inversé (barre à droite, pied à gauche au milieu)
-            if (same(r + 1, c, v) && same(r + 2, c, v) && same(r + 1, c - 1, v)) {
-                hit.add(idx(r, c)); hit.add(idx(r + 1, c)); hit.add(idx(r + 2, c)); hit.add(idx(r + 1, c - 1));
-            }
+            if (same(r, c + 1, v) && same(r, c + 2, v) && same(r + 1, c + 1, v)) { hit.add(idx(r, c)); hit.add(idx(r, c + 1)); hit.add(idx(r, c + 2)); hit.add(idx(r + 1, c + 1)); }
+            if (same(r, c + 1, v) && same(r, c + 2, v) && same(r - 1, c + 1, v)) { hit.add(idx(r, c)); hit.add(idx(r, c + 1)); hit.add(idx(r, c + 2)); hit.add(idx(r - 1, c + 1)); }
+            if (same(r + 1, c, v) && same(r + 2, c, v) && same(r + 1, c + 1, v)) { hit.add(idx(r, c)); hit.add(idx(r + 1, c)); hit.add(idx(r + 2, c)); hit.add(idx(r + 1, c + 1)); }
+            if (same(r + 1, c, v) && same(r + 2, c, v) && same(r + 1, c - 1, v)) { hit.add(idx(r, c)); hit.add(idx(r + 1, c)); hit.add(idx(r + 2, c)); hit.add(idx(r + 1, c - 1)); }
         }
     }
-    
     return hit;
 }
 function fusionGenBoard() {
