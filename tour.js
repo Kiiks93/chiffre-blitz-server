@@ -1509,11 +1509,11 @@ function renderHUDFromState() {
     // ✅ AJOUT DES DEUX NOUVEAUX MODES ICI :
     else if (TW.type === "hunter") {
         const op = TW.hunterOp === '>' ? 'supérieurs à' : 'inférieurs à';
-        const remaining = TW.display.filter((_, i) => TW.gone[i] === false && ((TW.hunterOp === '>' ? TW.display[i] > TW.hunterVal : TW.display[i] < TW.hunterVal))).length;
-        main = `${dH.tw_hud_target || 'Cible'} : <span style="color:#f8b500;">${op} ${TW.hunterVal}</span> <span style="font-size:0.8em;opacity:0.8;">(Reste: ${remaining})</span>`;
+        const remaining = TW.display.filter((_, i) => !TW.gone[i] && ((TW.hunterOp === '>' ? TW.display[i] > TW.hunterVal : TW.display[i] < TW.hunterVal))).length;
+        main = `🎯 ${op} <span style="color:#f8b500;font-weight:900;">${TW.hunterVal}</span> <span style="font-size:0.8em;opacity:0.8;">(Reste: ${remaining})</span>`;
     }
     else if (TW.type === "cascade") {
-        const timeLeft = Math.max(0, ((TW.revealUntil || 0) - Date.now()) / 1000).toFixed(1);
+        const timeLeft = Math.max(0, ((TW.revealUntil || 0) - twNow()) / 1000).toFixed(1);
         main = `Cible : <span style="color:#ff4b2b;font-weight:900;">${TW.target}</span> <span style="font-size:0.8em;opacity:0.8;">(${timeLeft}s)</span>`;
     }
     // ✅ FIN DES AJOUTS
