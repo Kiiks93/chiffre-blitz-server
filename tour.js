@@ -69,6 +69,8 @@ let twNextLife = 0;
 let TW = null, TW_dom = null, TW_buttons = [], TW_lastFloor = 0;
 let TW_hudCache = "", TW_localTimer = null, TW_lastClick = 0, TW_pairsLock = false;
 let TW_stroopColor = null; // ✅ Pour mémoriser la couleur de leurre de l'Effet Stroop
+let TW_skew = 0; // ✅ Décalage horloge serveur ↔ téléphone
+function twNow(){ return Date.now() + TW_skew; }
 let TW_lastState = 0;
 let TW_gateTimer = null;  // ✅ Timer du Gate Loader
 const SCENE_CACHE = {};
@@ -1358,17 +1360,6 @@ else if (st.type === "cascade") {
         b.textContent = "?";
     }
 }
-        else if (st.type === "cascade") {
-    const isTargetRevealed = Date.now() < (st.revealUntil || 0);
-    if (st.gone[i]) {
-        b.textContent = "";
-    } else if (i === st.targetIndex && isTargetRevealed) {
-        b.textContent = v;
-        b.classList.add("sel");
-    } else {
-        b.textContent = "?";
-    }
-}
 else b.textContent = v;
         b.onclick = () => handleTowerClick(i, b);
         g.appendChild(b); TW_buttons[i] = b;
@@ -1430,7 +1421,7 @@ else if (t === "hunter") {
     return;
 }
 else if (t === "cascade") {
-    const isTargetRevealed = Date.now() < (TW_dom.revealUntil || 0);
+    const isTargetRevealed = twNow() < (TW_dom.revealUntil || 0);
     if (i === TW_dom.targetIndex && isTargetRevealed) { 
         TW_dom.gone[i] = true; 
         b.classList.add("gone"); 
@@ -1470,14 +1461,27 @@ else if (TW_dom.target !== null && TW_dom.target !== undefined) success = (v ===
 function stopLocalTimer() { if (TW_localTimer) { clearInterval(TW_localTimer); TW_localTimer = null; } }
 function refreshCascadeTiles() {
     if (!TW || TW.type !== "cascade" || !TW_buttons.length) return;
-    const revealed = Date.now() < (TW.revealUntil || 0);
+    const now = twNow();
+    const revealed = now < (TW.revealUntil || 0);
     for (let i = 0; i < TW_buttons.length; i++) {
-        const b = TW_buttons[i]; 
+        const b = TW_buttons[i];
         if (!b || TW.gone[i]) continue;
         const show = (i === TW.targetIndex) && revealed;
         const want = show ? String(TW.display[i]) : "?";
         if (b.textContent !== want) b.textContent = want;
         b.classList.toggle("sel", show);
+    }
+    // ✅ Countdown fluide mis à jour toutes les 250ms directement dans le HUD
+    const h = document.getElementById("tg-hud");
+    if (h) {
+        let txt;
+        if (revealed) {
+            const timeLeft = Math.max(0, ((TW.revealUntil || 0) - now) / 1000).toFixed(1);
+            txt = `Cible : <span style="color:#ff4b2b;font-weight:900;">${TW.target}</span> <span style="font-size:0.8em;opacity:0.8;">(${timeLeft}s)</span>`;
+        } else {
+            txt = `💥 Trop tard ! La cible réapparaît... (+1 faute)`;
+        }
+        if (txt !== TW_hudCache) { h.innerHTML = txt; TW_hudCache = txt; }
     }
 }
 function startLocalTimer(tl) {
@@ -1604,6 +1608,7 @@ socket.on("tower_state", (st) => {
     TW_lastState = Date.now();
     const first = TW_buttons.length === 0;
     TW = st; TW_lastFloor = st.floor;
+    if (typeof st.serverNow === "number") TW_skew = st.serverNow - Date.now();
     if (first) { buildGridFromState(st); TW_dom = cloneState(st); }
     else { syncDomToState(st); TW_dom = cloneState(st); }
     renderHUDFromState();
