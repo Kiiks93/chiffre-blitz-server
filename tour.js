@@ -1291,7 +1291,19 @@ quitFloor();
 renderAdventure();
 });
 function cloneState(s) {
-return { type:s.type, total:s.total, gridSize:s.gridSize, floor:s.floor, target:s.target, targetColor:s.targetColor, targetParity:s.targetParity, forbidden:s.forbidden, timeLeft:s.timeLeft, ai:s.ai, gone:Object.assign({},s.gone||{}), revealed:Object.assign({},s.revealed||{}), display:(s.display||[]).slice(), sel:(s.sel===undefined?null:s.sel), shield:s.shield||0, revealLeft:s.revealLeft||0 };
+    return { 
+        type:s.type, total:s.total, gridSize:s.gridSize, floor:s.floor, 
+        target:s.target, targetIndex:s.targetIndex, // ✅ AJOUT targetIndex
+        targetColor:s.targetColor, targetParity:s.targetParity, forbidden:s.forbidden, 
+        timeLeft:s.timeLeft, ai:s.ai, 
+        gone:Object.assign({},s.gone||{}), 
+        revealed:Object.assign({},s.revealed||{}), 
+        display:(s.display||[]).slice(), 
+        sel:(s.sel===undefined?null:s.sel), 
+        shield:s.shield||0, 
+        revealUntil:s.revealUntil, // ✅ AJOUT revealUntil
+        revealLeft:s.revealLeft||0 
+    };
 }
 function startTowerFloor(def) {
     if (TW) return;
@@ -1333,12 +1345,18 @@ function buildGridFromState(st) {
         if (st.gone[i]) b.classList.add("gone");
         if (st.type === "color" && v) { b.style.background = `linear-gradient(180deg,${v.hex},#111827 85%)`; b.textContent = ""; }
         else if (st.type === "pairs" || st.type === "memory") { b.textContent = st.gone[i] ? "" : (v === null ? "?" : v); if ((st.revealed && st.revealed[i]) || st.sel === i) b.classList.add("sel"); }
-        else if (st.type === "cascade") {
-            // ✅ En mode Cascade, on affiche "?" sauf si c'est la cible et que le temps est actif
-            const isTargetRevealed = Date.now() < st.revealUntil;
-            b.textContent = st.gone[i] ? "" : (i === st.targetIndex && isTargetRevealed ? v : "?");
-            if (i === st.targetIndex && isTargetRevealed) b.classList.add("sel");
-        }
+else if (st.type === "cascade") {
+    const isTargetRevealed = Date.now() < st.revealUntil;
+    // ✅ On affiche le chiffre cible seulement s'il est révélé ET qu'il correspond à l'index
+    if (st.gone[i]) {
+        b.textContent = "";
+    } else if (i === st.targetIndex && isTargetRevealed) {
+        b.textContent = v;
+        b.classList.add("sel");
+    } else {
+        b.textContent = "?";
+    }
+}
         else b.textContent = v;
         b.onclick = () => handleTowerClick(i, b);
         g.appendChild(b); TW_buttons[i] = b;
