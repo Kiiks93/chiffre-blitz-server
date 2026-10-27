@@ -580,7 +580,12 @@ else if (t === "nofail") { time = Math.max(14, Math.round(gridSize * PACE[tier] 
 else if (t === "reverse") { time = Math.max(12, Math.round(gridSize * PACE[tier] * 1.1 * wf)); }
 else if (t === "color") { time = Math.max(12, Math.round(gridSize * PACE[tier] * 0.85 * wf)); }
 else if (t === "forbidden") { time = Math.max(12, Math.round((gridSize - 1) * PACE[tier] * 1.05 * wf)); }
-else if (t === "fusion") { g = 25; moves = FUSION_MOVES[tier]; targetScore = FUSION_TARGET[tier]; time = moves * 5 + 20; }
+else if (t === "fusion") { 
+    g = 25; 
+    moves = [45, 38, 32, 26][tier];        // ✅ Plus de coups
+    targetScore = [400, 500, 600, 750][tier]; // ✅ Scores réduits
+    time = moves * 5 + 20; 
+}
 else { time = Math.max(12, Math.round(gridSize * PACE[tier] * wf)); }
 return { floor, gridSize: g, time, type: t, diff: tier, moves, targetScore };
 }
@@ -3135,14 +3140,92 @@ app.post('/api/create_stripe_session', express.json(), async (req, res) => {
 /* ============================================================
 🧨 MODE FUSION (match-3 chiffres identiques) — serveur autoritaire
 ============================================================ */
-const FUSION_MOVES = [30, 26, 22, 18];
-const FUSION_TARGET = [600, 700, 800, 900];
+const FUSION_MOVES = [45, 38, 32, 26];
+const FUSION_TARGET = [400, 500, 600, 750];
 const FUSION_VALUES = 6; // chiffres 1 à 6
+// 🔥 NOUVELLE VERSION : Détecte 3, 4, 5, L et T
 function fusionFindMatches(board) {
-const hit = new Set(); const C = 5, R = 5;
-for (let r = 0; r < R; r++) { let run = 1; for (let c = 1; c <= C; c++) { const same = c < C && board[r*C+c] != null && board[r*C+c] === board[r*C+c-1]; if (same) run++; else { if (run >= 3) for (let k = c-run; k < c; k++) hit.add(r*C+k); run = 1; } } }
-for (let c = 0; c < C; c++) { let run = 1; for (let r = 1; r <= R; r++) { const same = r < R && board[r*C+c] != null && board[r*C+c] === board[(r-1)*C+c]; if (same) run++; else { if (run >= 3) for (let k = r-run; k < r; k++) hit.add(k*C+c); run = 1; } } }
-return hit;
+    const hit = new Set();
+    const C = 5, R = 5;
+    
+    // 1. Alignements horizontaux (3, 4, 5)
+    for (let r = 0; r < R; r++) {
+        let run = 1;
+        for (let c = 1; c <= C; c++) {
+            const same = c < C && board[r*C+c] != null && board[r*C+c] === board[r*C+c-1];
+            if (same) run++;
+            else {
+                if (run >= 3) for (let k = c-run; k < c; k++) hit.add(r*C+k);
+                run = 1;
+            }
+        }
+    }
+    
+    // 2. Alignements verticaux (3, 4, 5)
+    for (let c = 0; c < C; c++) {
+        let run = 1;
+        for (let r = 1; r <= R; r++) {
+            const same = r < R && board[r*C+c] != null && board[r*C+c] === board[(r-1)*C+c];
+            if (same) run++;
+            else {
+                if (run >= 3) for (let k = r-run; k < r; k++) hit.add(k*C+c);
+                run = 1;
+            }
+        }
+    }
+    
+    // 3. Formes en L (4 tuiles : 3 horizontales + 1 verticale, ou inversement)
+    for (let r = 0; r < R; r++) {
+        for (let c = 0; c < C; c++) {
+            const v = board[r*C+c];
+            if (v == null) continue;
+            
+            // L horizontal (3 en ligne + 1 en bas à gauche/droite)
+            if (c+2 < C && board[r*C+c+1] === v && board[r*C+c+2] === v) {
+                if (r+1 < R && board[(r+1)*C+c] === v) {
+                    hit.add(r*C+c); hit.add(r*C+c+1); hit.add(r*C+c+2); hit.add((r+1)*C+c);
+                }
+                if (r+1 < R && board[(r+1)*C+c+2] === v) {
+                    hit.add(r*C+c); hit.add(r*C+c+1); hit.add(r*C+c+2); hit.add((r+1)*C+c+2);
+                }
+            }
+            
+            // L vertical (3 en colonne + 1 à gauche/droite en bas)
+            if (r+2 < R && board[(r+1)*C+c] === v && board[(r+2)*C+c] === v) {
+                if (c+1 < C && board[(r+2)*C+c+1] === v) {
+                    hit.add(r*C+c); hit.add((r+1)*C+c); hit.add((r+2)*C+c); hit.add((r+2)*C+c+1);
+                }
+                if (c-1 >= 0 && board[(r+2)*C+c-1] === v) {
+                    hit.add(r*C+c); hit.add((r+1)*C+c); hit.add((r+2)*C+c); hit.add((r+2)*C+c-1);
+                }
+            }
+        }
+    }
+    
+    // 4. Formes en T (4 tuiles : 3 horizontales + 1 au milieu en bas, ou inversement)
+    for (let r = 0; r < R; r++) {
+        for (let c = 0; c < C; c++) {
+            const v = board[r*C+c];
+            if (v == null) continue;
+            
+            // T horizontal (3 en ligne + 1 au milieu en bas)
+            if (c+2 < C && board[r*C+c+1] === v && board[r*C+c+2] === v) {
+                if (r+1 < R && board[(r+1)*C+c+1] === v) {
+                    hit.add(r*C+c); hit.add(r*C+c+1); hit.add(r*C+c+2); hit.add((r+1)*C+c+1);
+                }
+            } 
+            // T vertical (3 en colonne + 1 au milieu à droite/gauche)
+            if (r+2 < R && board[(r+1)*C+c] === v && board[(r+2)*C+c] === v) {
+                if (c+1 < C && board[(r+1)*C+c+1] === v) {
+                    hit.add(r*C+c); hit.add((r+1)*C+c); hit.add((r+2)*C+c); hit.add((r+1)*C+c+1);
+                }
+                if (c-1 >= 0 && board[(r+1)*C+c-1] === v) {
+                    hit.add(r*C+c); hit.add((r+1)*C+c); hit.add((r+2)*C+c); hit.add((r+1)*C+c-1);
+                }
+            }
+        }
+    }    
+    return hit;
 }
 function fusionGenBoard() {
 for (let attempt = 0; attempt < 80; attempt++) {
@@ -3203,11 +3286,18 @@ s.moves--;
 s.lastSwap = { a, b: bI, ok: true }; s.lastSwapSeq = (s.lastSwapSeq||0) + 1;
 let chain = 0;
 while (matches.size > 0) {
-chain++;
-s.score += matches.size * 10 * chain; // 💥 multiplicateur de chaîne
-matches.forEach(i => { s.board[i] = null; });
-fusionGravity(s.board);
-matches = fusionFindMatches(s.board);
+    chain++;
+    
+    // 🔥 BONUS DE SCORE SELON LA TAILLE DU MATCH
+    let baseScore = matches.size * 10;
+    if (matches.size === 4) baseScore = 50;  // 4 tuiles = 50 pts
+    if (matches.size >= 5) baseScore = 100; // 5+ tuiles = 100 pts
+    
+    s.score += baseScore * chain; // multiplicateur de chaîne
+    
+    matches.forEach(i => { s.board[i] = null; });
+    fusionGravity(s.board);
+    matches = fusionFindMatches(s.board);
 }
 s.lastChain = chain;
 if (!fusionHasMove(s.board)) s.board = fusionGenBoard();
