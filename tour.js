@@ -71,6 +71,7 @@ let TW_hudCache = "", TW_localTimer = null, TW_lastClick = 0, TW_pairsLock = fal
 let TW_stroopColor = null; // ✅ Pour mémoriser la couleur de leurre de l'Effet Stroop
 let TW_skew = 0; // ✅ Décalage horloge serveur ↔ téléphone
 function twNow(){ return Date.now() + TW_skew; }
+let TW_fusionSel = null, TW_lastSwapSeq = 0;
 let TW_lastState = 0;
 let TW_gateTimer = null;  // ✅ Timer du Gate Loader
 const SCENE_CACHE = {};
@@ -78,18 +79,19 @@ let TW_musicWorld = 0;
 let TW_firstSync = true;
 /* ----- 3. UTILITAIRES ----- */
 const MODE_DESCRIPTIONS = {
-    classic: { fr: "Trouve les chiffres dans l'ordre croissant (1, 2, 3...).", en: "Find numbers in ascending order (1, 2, 3...)." },
-    reverse: { fr: "Trouve les chiffres dans l'ordre décroissant (9, 8, 7...).", en: "Find numbers in descending order (9, 8, 7...)." },
-    color: { fr: "Clique uniquement sur les tuiles de la couleur demandée.", en: "Click only on tiles of the requested color." },
-    pairs: { fr: "Mémorise et retrouve les paires de chiffres identiques.", en: "Memorize and find pairs of identical numbers." },
-    parity: { fr: "Clique seulement sur les chiffres pairs ou impairs selon l'indication.", en: "Click only on even or odd numbers as indicated." },
-    forbidden: { fr: "Trouve les chiffres dans l'ordre, mais évite le chiffre interdit !", en: "Find numbers in order, but avoid the forbidden number!" },
-    sprint: { fr: "Mode ultra-rapide ! La grille est petite mais le temps est très court.", en: "Ultra-fast mode! Small grid but very short time." },
-    memory: { fr: "Mémorise la position des chiffres, puis retrouve-les dans l'ordre.", en: "Memorize tile positions, then find them in order." },
-    nofail: { fr: "Aucune erreur n'est permise ! 1 faute = Game Over. Vise le meilleur temps !", en: "No mistakes allowed! 1 error = Game Over. Aim for the best time!" },
-    boss: { fr: "Affronte le Gardien ! Bat-le avant qu'il ne termine sa propre grille.", en: "Face the Guardian! Beat him before he finishes his own grid." },
-    hunter: { fr: "Clique sur TOUS les chiffres qui respectent la consigne (ex: > 5). Attention aux pièges !", en: "Click ALL numbers matching the condition (e.g., > 5). Watch out for traps!" },
-    cascade: { fr: "Le chiffre cible apparaît brièvement (1.5s). Clique dessus avant qu'il ne disparaisse, dans l'ordre !", en: "The target number appears briefly (1.5s). Click it before it vanishes, in order!" }
+classic: { fr: "Trouve les chiffres dans l'ordre croissant (1, 2, 3...).", en: "Find numbers in ascending order (1, 2, 3...)." },
+reverse: { fr: "Trouve les chiffres dans l'ordre décroissant (9, 8, 7...).", en: "Find numbers in descending order (9, 8, 7...)." },
+color: { fr: "Clique uniquement sur les tuiles de la couleur demandée.", en: "Click only on tiles of the requested color." },
+pairs: { fr: "Mémorise et retrouve les paires de chiffres identiques.", en: "Memorize and find pairs of identical numbers." },
+parity: { fr: "Clique seulement sur les chiffres pairs ou impairs selon l'indication.", en: "Click only on even or odd numbers as indicated." },
+forbidden: { fr: "Trouve les chiffres dans l'ordre, mais évite le chiffre interdit !", en: "Find numbers in order, but avoid the forbidden number!" },
+sprint: { fr: "Mode ultra-rapide ! La grille est petite mais le temps est très court.", en: "Ultra-fast mode! Small grid but very short time." },
+memory: { fr: "Mémorise la position des chiffres, puis retrouve-les dans l'ordre.", en: "Memorize tile positions, then find them in order." },
+nofail: { fr: "Aucune erreur n'est permise ! 1 faute = Game Over. Vise le meilleur temps !", en: "No mistakes allowed! 1 error = Game Over. Aim for the best time!" },
+boss: { fr: "Affronte le Gardien ! Bat-le avant qu'il ne termine sa propre grille.", en: "Face the Guardian! Beat him before he finishes his own grid." },
+hunter: { fr: "Clique sur TOUS les chiffres qui respectent la consigne (ex: > 5). Attention aux pièges !", en: "Click ALL numbers matching the condition (e.g., > 5). Watch out for traps!" },
+cascade: { fr: "Le chiffre cible apparaît brièvement (1.5s). Clique dessus avant qu'il ne disparaisse, dans l'ordre !", en: "The target number appears briefly (1.5s). Click it before it vanishes, in order!" },
+fusion: { fr: "Échange 2 tuiles ADJACENTES pour créer des paires somme 10 (3+7, 4+6, 5+5...) ou des triplés identiques alignés. Atteins le score avant la fin des coups !", en: "Swap 2 ADJACENT tiles to create pairs summing to 10 (3+7, 4+6, 5+5...) or aligned identical triples. Reach the target score before running out of moves!" }
 };
 const TowerUtils = {
 starsInWorld(w) {
@@ -124,9 +126,9 @@ if (inChap === FPC || inChap % 50 === 0) return { floor, gridSize, time: Math.ma
 const tier = TOWER_DIFF_PATTERN[(inChap - 1) % 10];
 gridSize = Math.max(8, gridSize + TOWER_TIER_GRID[tier]);
 const PACE = [1.45, 1.30, 1.20, 1.15][tier];
-const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail","hunter","cascade"];
-const t = seq[(inChap - 1) % 11]; // ✅ 11 modes au total maintenant
-let g = gridSize, time;
+const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail","hunter","cascade","fusion"];
+const t = seq[(inChap - 1) % 12];
+let g = gridSize, time, moves = null, targetScore = null;
 if (t === "sprint") { g = Math.min(gridSize, 24); time = Math.max(10, Math.round(g * 1.0)); }
 else if (t === "pairs") { g = (tier <= 1) ? 10 : 12; time = [22,19,17,15][tier]; }
 else if (t === "memory") { g = (tier <= 1) ? 10 : 12; const reveal = (2500 + g * 600) / 1000; time = Math.max(18, Math.round(reveal + g * [1.6,1.4,1.25,1.1][tier])); }
@@ -135,25 +137,27 @@ else if (t === "nofail") { time = Math.max(14, Math.round(gridSize * PACE * 1.2)
 else if (t === "reverse") { time = Math.max(12, Math.round(gridSize * PACE * 1.10)); }
 else if (t === "color") { time = Math.max(12, Math.round(gridSize * PACE * 0.85)); }
 else if (t === "forbidden") { time = Math.max(12, Math.round((gridSize - 1) * PACE * 1.05)); }
+else if (t === "fusion") { g = 25; moves = [15,13,11,9][tier]; targetScore = [250,350,450,500][tier]; time = moves * 5 + 10; }
 else { time = Math.max(12, Math.round(gridSize * PACE)); }
-return { floor, gridSize: g, time, type: t, diff: tier };
+return { floor, gridSize: g, time, type: t, diff: tier, moves, targetScore };
 },
 typeLabel(t) {
-    const fr = currentLang === "fr";
-    return ({
-        classic: fr ? "⚡ Croissant" : "⚡ Ascending",
-        reverse: fr ? "🔽 Décroissant" : "🔽 Descending",
-        color: fr ? "🎨 Couleurs" : "🎨 Colors",
-        pairs: fr ? "🧩 Paires" : "🧩 Pairs",
-        parity: fr ? "🔢 Pair/Impair" : "🔢 Even/Odd",
-        forbidden: fr ? "🚫 Interdit" : "🚫 Forbidden",
-        sprint: fr ? "⏱️ Sprint" : "⏱️ Sprint",
-        memory: fr ? "🧠 Mémoire" : "🧠 Memory",
-        nofail: fr ? "💎 Sans faute" : "💎 No mistake",
-        boss: fr ? "⚔️ GARDIEN" : "⚔️ GUARDIAN",
-        hunter: fr ? "🎯 Chasseur" : "🎯 Hunter",
-        cascade: fr ? "⏱️ Cascade" : "⏱️ Cascade"
-    })[t] || t;
+const fr = currentLang === "fr";
+return ({
+classic: fr ? "⚡ Croissant" : "⚡ Ascending",
+reverse: fr ? "🔽 Décroissant" : "🔽 Descending",
+color: fr ? "🎨 Couleurs" : "🎨 Colors",
+pairs: fr ? "🧩 Paires" : "🧩 Pairs",
+parity: fr ? "🔢 Pair/Impair" : "🔢 Even/Odd",
+forbidden: fr ? "🚫 Interdit" : "🚫 Forbidden",
+sprint: fr ? "⏱️ Sprint" : "⏱️ Sprint",
+memory: fr ? "🧠 Mémoire" : "🧠 Memory",
+nofail: fr ? "💎 Sans faute" : "💎 No mistake",
+boss: fr ? "⚔️ GARDIEN" : "⚔️ GUARDIAN",
+hunter: fr ? "🎯 Chasseur" : "🎯 Hunter",
+cascade: fr ? "⏱️ Cascade" : "⏱️ Cascade",
+fusion: fr ? "🧨 Fusion" : "🧨 Fusion"
+})[t] || t;
 }
 };
 /* ----- 3a. ANTI-SPOIL : visibilité des mondes ----- */
@@ -1225,16 +1229,18 @@ const ST = "\u{2B50}";
 let starRule = fr ? `💡 ${ST} terminer · ${ST}${ST} ≤2 erreurs · ${ST}${ST}${ST} 0 erreur + < ${starTime}s` : `💡 ${ST} finish · ${ST}${ST} ≤2 mistakes · ${ST}${ST}${ST} 0 mistake + < ${starTime}s`;
 if (def.type === "pairs" || def.type === "sprint") starRule = fr ? `💡 ${ST} finir · ${ST} rapide · ${ST}${ST}${ST} très rapide` : `💡 ${ST} finish · ${ST} fast · ${ST}${ST}${ST} very fast`;
 if (def.type === "memory") starRule = fr ? `💡 ${ST} terminer · ${ST}${ST} ≤2 erreurs · ${ST}${ST}${ST} 0 erreur (tout à la mémoire !)` : `💡 ${ST} finish · ${ST}${ST} ≤2 mistakes · ${ST}${ST}${ST} 0 mistakes (pure memory!)`;
-if (def.type === "nofail") starRule = fr ? ` ${ST} 0 erreur (1 faute = perdu !) · ${ST}${ST}${ST} Temps le plus rapide` : `💡 ${ST} 0 mistakes (1 error = fail!) · ${ST}${ST}${ST} Fastest time`;
+if (def.type === "nofail") starRule = fr ? `💡 ${ST} 0 erreur (1 faute = perdu !) · ${ST}${ST}${ST} Temps le plus rapide` : `💡 ${ST} 0 mistakes (1 error = fail!) · ${ST}${ST}${ST} Fastest time`;
+if (def.type === "fusion") starRule = fr ? `💡 ${ST} score ${def.targetScore} · ${ST}${ST} ≥2 coups restants · ${ST}${ST}${ST} ≥4 coups restants` : `💡 ${ST} reach ${def.targetScore} · ${ST}${ST} ≥2 moves left · ${ST}${ST}${ST} ≥4 moves left`;
 const replayLine = def.replay ? `<div style="font-size:10px;color:#f8b500;margin-bottom:6px;">${fr?"Actuel : ":"Current: "}${ST.repeat(curStars)}</div>` : "";
+const fusionLine = def.type === "fusion" ? `<div style="font-size:10px;color:#f8b500;font-weight:700;margin-bottom:6px;">🎯 ${fr?"Coups":"Moves"}: ${def.moves} · 🧨 ${fr?"Score cible":"Target"}: ${def.targetScore}</div>` : "";
 const b = document.createElement("div");
 b.id = "tw-brief"; b.className = "tw-brief";
 const modeDesc = MODE_DESCRIPTIONS[def.type] || { fr: "Mode classique.", en: "Classic mode." };
 const descText = fr ? modeDesc.fr : modeDesc.en;
-
 b.innerHTML = `<div class="tw-brief-card">
 <div style="font-size:13px;font-weight:900;color:#f8b500;margin-bottom:6px;">🏰 ${fr?"ÉTAGE":"FLOOR"} ${def.floor} — ${TowerUtils.typeLabel(def.type)}</div>
 <div style="font-size:11px;color:#00d2ff;margin-bottom:8px;font-style:italic;text-align:center;">${descText}</div>
+${fusionLine}
 <div style="font-size:10px;font-weight:700;color:#aaa;margin-bottom:6px;">${diffLabel(Number.isFinite(def.diff) ? def.diff : 1)}${(def.diff||0) >= 2 ? " · bonus 🪙" : ""}</div>
 <div style="font-size:9px;color:#aaa;margin-bottom:8px;">${starRule}</div>
 ${replayLine}
@@ -1293,20 +1299,22 @@ quitFloor();
 renderAdventure();
 });
 function cloneState(s) {
-    return { 
-        type:s.type, total:s.total, gridSize:s.gridSize, floor:s.floor, 
-        target:s.target, targetIndex:s.targetIndex, // ✅ AJOUT targetIndex
-        targetColor:s.targetColor, targetParity:s.targetParity, forbidden:s.forbidden, 
-        hunterOp:s.hunterOp, hunterVal:s.hunterVal, // ✅ AJOUT hunterOp et hunterVal
-        revealUntil:s.revealUntil, // ✅ AJOUT revealUntil
-        timeLeft:s.timeLeft, ai:s.ai, 
-        gone:Object.assign({},s.gone||{}), 
-        revealed:Object.assign({},s.revealed||{}), 
-        display:(s.display||[]).slice(), 
-        sel:(s.sel===undefined?null:s.sel), 
-        shield:s.shield||0, 
-        revealLeft:s.revealLeft||0 
-    };
+return {
+type:s.type, total:s.total, gridSize:s.gridSize, floor:s.floor,
+target:s.target, targetIndex:s.targetIndex,
+targetColor:s.targetColor, targetParity:s.targetParity, forbidden:s.forbidden,
+hunterOp:s.hunterOp, hunterVal:s.hunterVal,
+revealUntil:s.revealUntil,
+score:s.score||0, moves:(s.moves===undefined?null:s.moves), targetScore:s.targetScore||null,
+lastSwap:s.lastSwap||null, lastSwapSeq:s.lastSwapSeq||0,
+timeLeft:s.timeLeft, ai:s.ai,
+gone:Object.assign({},s.gone||{}),
+revealed:Object.assign({},s.revealed||{}),
+display:(s.display||[]).slice(),
+sel:(s.sel===undefined?null:s.sel),
+shield:s.shield||0,
+revealLeft:s.revealLeft||0
+};
 }
 function startTowerFloor(def) {
     if (TW) return;
@@ -1338,33 +1346,27 @@ function startTowerFloor(def) {
     }, 10000);
 }
 function buildGridFromState(st) {
-    const g = document.getElementById("tg-grid");
-    const cols = st.gridSize <= 16 ? 4 : (st.gridSize <= 20 ? 5 : 6);
-    g.style.gridTemplateColumns = `repeat(${cols},1fr)`;
-    g.innerHTML = ""; TW_buttons = [];
-    st.display.forEach((v, i) => {
-        const b = document.createElement("button");
-        b.className = "tg-tile";
-        if (st.gone[i]) b.classList.add("gone");
-        if (st.type === "color" && v) { b.style.background = `linear-gradient(180deg,${v.hex},#111827 85%)`; b.textContent = ""; }
-        else if (st.type === "pairs" || st.type === "memory") { b.textContent = st.gone[i] ? "" : (v === null ? "?" : v); if ((st.revealed && st.revealed[i]) || st.sel === i) b.classList.add("sel"); }
+const g = document.getElementById("tg-grid");
+const cols = st.type === "fusion" ? 5 : (st.gridSize <= 16 ? 4 : (st.gridSize <= 20 ? 5 : 6));
+g.style.gridTemplateColumns = `repeat(${cols},1fr)`;
+g.innerHTML = ""; TW_buttons = [];
+st.display.forEach((v, i) => {
+const b = document.createElement("button");
+b.className = "tg-tile";
+if (st.gone[i]) b.classList.add("gone");
+if (st.type === "color" && v) { b.style.background = `linear-gradient(180deg,${v.hex},#111827 85%)`; b.textContent = ""; }
+else if (st.type === "pairs" || st.type === "memory") { b.textContent = st.gone[i] ? "" : (v === null ? "?" : v); if ((st.revealed && st.revealed[i]) || st.sel === i) b.classList.add("sel"); }
 else if (st.type === "cascade") {
-    const isTargetRevealed = twNow() < (st.revealUntil || 0);
-    if (st.gone[i]) {
-        b.textContent = "";
-    } else if (i === st.targetIndex && isTargetRevealed) {
-        b.textContent = v;
-        b.classList.add("sel");
-    } else {
-        b.textContent = "?";
-    }
+const isTargetRevealed = twNow() < (st.revealUntil || 0);
+if (st.gone[i]) { b.textContent = ""; }
+else if (i === st.targetIndex && isTargetRevealed) { b.textContent = v; b.classList.add("sel"); }
+else { b.textContent = "?"; }
 }
 else b.textContent = v;
-        b.onclick = () => handleTowerClick(i, b);
-        g.appendChild(b); TW_buttons[i] = b;
-        // ✅ Synchronisation immédiate avec l'état du serveur
-        if (st.gone[i]) b.classList.add("gone");
-    });
+b.onclick = () => handleTowerClick(i, b);
+g.appendChild(b); TW_buttons[i] = b;
+if (st.gone[i]) b.classList.add("gone");
+});
 }
 function syncDomToState(st) {
 for (let i = 0; i < st.display.length; i++) {
@@ -1378,84 +1380,76 @@ const rev = !!(st.revealed && st.revealed[i]) || st.sel === i;
 const orev = !!(TW_dom.revealed && TW_dom.revealed[i]) || TW_dom.sel === i;
 if (rev !== orev) b.classList.toggle("sel", rev);
 }
+if (st.type === "fusion") {
+const dv = st.display[i], ov = TW_dom.display[i];
+if (dv !== ov) { b.textContent = dv; b.style.transform = "scale(0.7)"; setTimeout(() => { if (b) b.style.transform = ""; }, 130); }
+}
 }
 }
 function handleTowerClick(i, b) {
-    const now = Date.now();
-    if (now - TW_lastClick < 100) return;
-    TW_lastClick = now;
-    if (!TW_dom || TW_dom.gone[i] || TW_pairsLock) return;
-    b.style.transform = "scale(0.9)";
-    setTimeout(() => { if (b) b.style.transform = ""; }, 120);
-    const t = TW_dom.type;
-    if (t === "pairs" || t === "memory") { socket.emit("tower_click", { index: i }); return; }
-    const v = TW_dom.display[i];
-    let success = null;
-    
-    if (t === "color" && TW_dom.targetColor) success = (v && v.key === TW_dom.targetColor.key);
-    else if (t === "parity") success = (TW_dom.targetParity === "even" ? (v % 2 === 0) : (v % 2 !== 0));
+const now = Date.now();
+if (now - TW_lastClick < 100) return;
+TW_lastClick = now;
+if (!TW_dom || TW_dom.gone[i] || TW_pairsLock) return;
+b.style.transform = "scale(0.9)";
+setTimeout(() => { if (b) b.style.transform = ""; }, 120);
+const t = TW_dom.type;
+if (t === "fusion") {
+if (TW_fusionSel === null) { TW_fusionSel = i; b.classList.add("sel"); return; }
+if (TW_fusionSel === i) { TW_fusionSel = null; b.classList.remove("sel"); return; }
+const a = TW_fusionSel;
+const prev = TW_buttons[a]; if (prev) prev.classList.remove("sel");
+TW_fusionSel = null;
+const ra = Math.floor(a/5), ca = a%5, ri = Math.floor(i/5), ci = i%5;
+if (Math.abs(ra-ri) + Math.abs(ca-ci) !== 1) { TW_fusionSel = i; b.classList.add("sel"); return; }
+socket.emit("tower_click", { index: a, swapWith: i });
+return;
+}
+if (t === "pairs" || t === "memory") { socket.emit("tower_click", { index: i }); return; }
+const v = TW_dom.display[i];
+let success = null;
+if (t === "color" && TW_dom.targetColor) success = (v && v.key === TW_dom.targetColor.key);
+else if (t === "parity") success = (TW_dom.targetParity === "even" ? (v % 2 === 0) : (v % 2 !== 0));
 else if (t === "forbidden") {
-    if (v === TW_dom.forbidden) {
-        // Clic sur le chiffre interdit = Défaite immédiate du niveau
-        if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
-        showFailUI("forbidden");
-        socket.emit("tower_quit"); // On arrête la partie côté serveur pour éviter les bugs de timer
-        return;
-    }
-    success = (TW_dom.target !== null && TW_dom.target !== undefined) ? (v === TW_dom.target) : true;
+if (v === TW_dom.forbidden) {
+if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
+showFailUI("forbidden");
+socket.emit("tower_quit");
+return;
+}
+success = (TW_dom.target !== null && TW_dom.target !== undefined) ? (v === TW_dom.target) : true;
 }
 else if (t === "hunter") {
-    const match = TW_dom.hunterOp === '>' ? v > TW_dom.hunterVal : v < TW_dom.hunterVal;
-    if (match) { 
-        TW_dom.gone[i] = true; 
-        b.classList.add("gone"); 
-        if (typeof SoundEngine !== "undefined" && SoundEngine.playClick) SoundEngine.playClick(); 
-    }
-    else { 
-        b.classList.add("err"); 
-        setTimeout(() => { if (b) b.classList.remove("err"); }, 350); 
-        if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError(); 
-    }
-    socket.emit("tower_click", { index: i });
-    return;
+const match = TW_dom.hunterOp === '>' ? v > TW_dom.hunterVal : v < TW_dom.hunterVal;
+if (match) { TW_dom.gone[i] = true; b.classList.add("gone"); if (typeof SoundEngine !== "undefined" && SoundEngine.playClick) SoundEngine.playClick(); }
+else { b.classList.add("err"); setTimeout(() => { if (b) b.classList.remove("err"); }, 350); if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError(); }
+socket.emit("tower_click", { index: i });
+return;
 }
 else if (t === "cascade") {
-    const isTargetRevealed = twNow() < (TW_dom.revealUntil || 0);
-    if (i === TW_dom.targetIndex && isTargetRevealed) { 
-        TW_dom.gone[i] = true; 
-        b.classList.add("gone"); 
-        b.textContent = ""; 
-        if (typeof SoundEngine !== "undefined" && SoundEngine.playClick) SoundEngine.playClick(); 
-    }
-    else { 
-        b.classList.add("err"); 
-        setTimeout(() => { if (b) b.classList.remove("err"); }, 350); 
-        if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError(); 
-    }
-    socket.emit("tower_click", { index: i });
-    return;
+const isTargetRevealed = twNow() < (TW_dom.revealUntil || 0);
+if (i === TW_dom.targetIndex && isTargetRevealed) { TW_dom.gone[i] = true; b.classList.add("gone"); b.textContent = ""; if (typeof SoundEngine !== "undefined" && SoundEngine.playClick) SoundEngine.playClick(); }
+else { b.classList.add("err"); setTimeout(() => { if (b) b.classList.remove("err"); }, 350); if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError(); }
+socket.emit("tower_click", { index: i });
+return;
 }
 else if (TW_dom.target !== null && TW_dom.target !== undefined) success = (v === TW_dom.target);
-    
-    if (success === true) {
-        TW_dom.gone[i] = true; b.classList.add("gone");
-        if (t === "reverse") TW_dom.target--;
-        else if (t === "forbidden") { let nx = (TW_dom.target || 0) + 1; if (nx === TW_dom.forbidden) nx++; TW_dom.target = nx; }
-        else if (["classic","sprint","fog","nofail"].includes(t)) TW_dom.target++;
-        if (typeof SoundEngine !== "undefined" && SoundEngine.playClick) SoundEngine.playClick();
-    } else if (success === false) {
-        b.classList.add("err");
-        setTimeout(() => { if (b) b.classList.remove("err"); }, 350);
-        if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
-        if (t === "nofail") {
-            TW_pairsLock = true;
-            setTimeout(() => {
-                showFailUI("nofail");
-                socket.emit("tower_quit");
-            }, 400);
-        }
-    }
-    socket.emit("tower_click", { index: i });
+if (success === true) {
+TW_dom.gone[i] = true; b.classList.add("gone");
+if (t === "reverse") TW_dom.target--;
+else if (t === "forbidden") { let nx = (TW_dom.target || 0) + 1; if (nx === TW_dom.forbidden) nx++; TW_dom.target = nx; }
+else if (["classic","sprint","fog","nofail"].includes(t)) TW_dom.target++;
+if (typeof SoundEngine !== "undefined" && SoundEngine.playClick) SoundEngine.playClick();
+} else if (success === false) {
+b.classList.add("err");
+setTimeout(() => { if (b) b.classList.remove("err"); }, 350);
+if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
+if (t === "nofail") {
+TW_pairsLock = true;
+setTimeout(() => { showFailUI("nofail"); socket.emit("tower_quit"); }, 400);
+}
+}
+socket.emit("tower_click", { index: i });
 }
 function stopLocalTimer() { if (TW_localTimer) { clearInterval(TW_localTimer); TW_localTimer = null; } }
 function refreshCascadeTiles() {
@@ -1492,52 +1486,49 @@ paint();
 TW_localTimer = setInterval(() => { left -= 0.25; paint(); refreshCascadeTiles(); }, 250);
 }
 function renderHUDFromState() {
-    const h = document.getElementById("tg-hud"); if (!h || !TW) return;
-    const dH = i18n[currentLang];
-    const colorName = (TW.targetColor && dH["tw_color_" + TW.targetColor.key]) || (TW.targetColor ? TW.targetColor.name : "");
-    let main = "";
-    
-    if (TW.type === "color" && TW.targetColor) {
-        // ✅ EFFET STROOP : on ne génère une nouvelle couleur de leurre QUE si la cible a changé
-        if (!TW_stroopColor || TW_stroopColor.toLowerCase() === TW.targetColor.hex.toLowerCase()) {
-            const allHex = ["#ff4b2b", "#00d2ff", "#7dff8a", "#f8b500", "#c28aff", "#ff6fa5"];
-            const otherColors = allHex.filter(c => c.toLowerCase() !== TW.targetColor.hex.toLowerCase());
-            TW_stroopColor = otherColors[Math.floor(Math.random() * otherColors.length)];
-        }
-        main = `${dH.tw_hud_color} <span style="color:${TW_stroopColor};font-weight:900;text-shadow:0 0 8px ${TW_stroopColor}88;">${colorName}</span>`;
-    } 
-    // ✅ AJOUT DES DEUX NOUVEAUX MODES ICI :
-    else if (TW.type === "hunter") {
-        const op = TW.hunterOp === '>' ? 'supérieurs à' : 'inférieurs à';
-        const remaining = TW.display.filter((_, i) => !TW.gone[i] && ((TW.hunterOp === '>' ? TW.display[i] > TW.hunterVal : TW.display[i] < TW.hunterVal))).length;
-        main = `🎯 ${op} <span style="color:#f8b500;font-weight:900;">${TW.hunterVal}</span> <span style="font-size:0.8em;opacity:0.8;">(Reste: ${remaining})</span>`;
-    }
-    else if (TW.type === "cascade") {
-        const timeLeft = Math.max(0, ((TW.revealUntil || 0) - twNow()) / 1000).toFixed(1);
-        main = `Cible : <span style="color:#ff4b2b;font-weight:900;">${TW.target}</span> <span style="font-size:0.8em;opacity:0.8;">(${timeLeft}s)</span>`;
-    }
-    // ✅ FIN DES AJOUTS
-    else {
-        // ✅ On reset la couleur de leurre quand on n'est plus en mode couleur
-        TW_stroopColor = null;
-        if (TW.type === "pairs") main = (TW.revealLeft > 0) ? `${dH.tw_hud_memorize} ${TW.revealLeft}s` : dH.tw_hud_pairs;
-        else if (TW.type === "parity") main = TW.targetParity === "even" ? dH.tw_hud_parity_even : dH.tw_hud_parity_odd;
-        else if (TW.type === "forbidden") main = `${dH.tw_hud_forbidden} <span style="color:#ff4b2b;">${TW.forbidden}</span> · ${dH.tw_hud_target} ${TW.target}`;
+const h = document.getElementById("tg-hud"); if (!h || !TW) return;
+const dH = i18n[currentLang];
+const colorName = (TW.targetColor && dH["tw_color_" + TW.targetColor.key]) || (TW.targetColor ? TW.targetColor.name : "");
+let main = "";
+if (TW.type === "color" && TW.targetColor) {
+if (!TW_stroopColor || TW_stroopColor.toLowerCase() === TW.targetColor.hex.toLowerCase()) {
+const allHex = ["#ff4b2b", "#00d2ff", "#7dff8a", "#f8b500", "#c28aff", "#ff6fa5"];
+const otherColors = allHex.filter(c => c.toLowerCase() !== TW.targetColor.hex.toLowerCase());
+TW_stroopColor = otherColors[Math.floor(Math.random() * otherColors.length)];
+}
+main = `${dH.tw_hud_color} <span style="color:${TW_stroopColor};font-weight:900;text-shadow:0 0 8px ${TW_stroopColor}88;">${colorName}</span>`;
+}
+else if (TW.type === "hunter") {
+const op = TW.hunterOp === '>' ? 'supérieurs à' : 'inférieurs à';
+const remaining = TW.display.filter((_, i) => !TW.gone[i] && ((TW.hunterOp === '>' ? TW.display[i] > TW.hunterVal : TW.display[i] < TW.hunterVal))).length;
+main = `🎯 ${op} <span style="color:#f8b500;font-weight:900;">${TW.hunterVal}</span> <span style="font-size:0.8em;opacity:0.8;">(Reste: ${remaining})</span>`;
+}
+else if (TW.type === "cascade") {
+const timeLeft = Math.max(0, ((TW.revealUntil || 0) - twNow()) / 1000).toFixed(1);
+main = `Cible : <span style="color:#ff4b2b;font-weight:900;">${TW.target}</span> <span style="font-size:0.8em;opacity:0.8;">(${timeLeft}s)</span>`;
+}
+else if (TW.type === "fusion") {
+main = `🧨 ${TW.score || 0} / ${TW.targetScore} · 🎯 ${currentLang === "fr" ? "Coups" : "Moves"}: ${TW.moves}`;
+}
+else {
+TW_stroopColor = null;
+if (TW.type === "pairs") main = (TW.revealLeft > 0) ? `${dH.tw_hud_memorize} ${TW.revealLeft}s` : dH.tw_hud_pairs;
+else if (TW.type === "parity") main = TW.targetParity === "even" ? dH.tw_hud_parity_even : dH.tw_hud_parity_odd;
+else if (TW.type === "forbidden") main = `${dH.tw_hud_forbidden} <span style="color:#ff4b2b;">${TW.forbidden}</span> · ${dH.tw_hud_target} ${TW.target}`;
 else if (TW.type === "memory") main = (TW.revealLeft > 0) ? `${dH.tw_hud_memorize} ${TW.revealLeft}s` : dH.tw_hud_memory_order;
 else if (TW.target !== null && TW.target !== undefined) main = `${dH.tw_hud_target} ${TW.target}`;
-    }
-    
-    if (main !== TW_hudCache) { h.innerHTML = main; TW_hudCache = main; }
-    const bar = document.getElementById("tg-bar");
-    if (bar) { if (TW.type === "boss") { bar.style.display = "block"; bar.innerHTML = `<div style="width:${Math.min(100,TW.ai/TW.total*100)}%;height:100%;background:linear-gradient(90deg,#ff4b2b,#f8b500);"></div>`; } else bar.style.display = "none"; }
-    document.getElementById("twg-title").innerText = dH.tw_floor + " " + TW.floor + " — " + TowerUtils.typeLabel(TW.type);
-    const errEl = document.getElementById("tg-err");
-    if (errEl) errEl.innerText = "❌ " + (TW.mistakes || 0);
-    const shEl = document.getElementById("tg-shield");
-    if (shEl) shEl.style.display = (TW.shield > 0) ? "inline" : "none";
-    updateJokerButtons();
-    const grid = document.getElementById("tg-grid");
-    if (grid) grid.classList.toggle("shielded", (TW.shield > 0));
+}
+if (main !== TW_hudCache) { h.innerHTML = main; TW_hudCache = main; }
+const bar = document.getElementById("tg-bar");
+if (bar) { if (TW.type === "boss") { bar.style.display = "block"; bar.innerHTML = `<div style="width:${Math.min(100,TW.ai/TW.total*100)}%;height:100%;background:linear-gradient(90deg,#ff4b2b,#f8b500);"></div>`; } else bar.style.display = "none"; }
+document.getElementById("twg-title").innerText = dH.tw_floor + " " + TW.floor + " — " + TowerUtils.typeLabel(TW.type);
+const errEl = document.getElementById("tg-err");
+if (errEl) errEl.innerText = "❌ " + (TW.mistakes || 0);
+const shEl = document.getElementById("tg-shield");
+if (shEl) shEl.style.display = (TW.shield > 0) ? "inline" : "none";
+updateJokerButtons();
+const grid = document.getElementById("tg-grid");
+if (grid) grid.classList.toggle("shielded", (TW.shield > 0));
 }
 function showFailUI(reason) {
 const ov = ensureTowerOverlay();
@@ -1592,20 +1583,24 @@ if (open) socket.emit("get_tower");
 else if (sessionStorage.getItem("cb_last_screen") === "tower") openTower();
 });
 socket.on("tower_state", (st) => {
-    if (!st || !st.display) return;
-    // ✅ Annule le timer de sécurité
-    if (TW_gateTimer) { clearTimeout(TW_gateTimer); TW_gateTimer = null; }
-    TW_lastState = Date.now();
-    const first = TW_buttons.length === 0;
-    TW = st; TW_lastFloor = st.floor;
-    if (typeof st.serverNow === "number") TW_skew = st.serverNow - Date.now();
-    if (first) { buildGridFromState(st); TW_dom = cloneState(st); }
-    else { syncDomToState(st); TW_dom = cloneState(st); }
-    renderHUDFromState();
-    startLocalTimer(st.timeLeft);
-    
-    // ✅ Cache le loader quand le jeu est prêt
-    if (window.hideGate) window.hideGate();
+if (!st || !st.display) return;
+if (TW_gateTimer) { clearTimeout(TW_gateTimer); TW_gateTimer = null; }
+TW_lastState = Date.now();
+const first = TW_buttons.length === 0;
+TW = st; TW_lastFloor = st.floor;
+if (typeof st.serverNow === "number") TW_skew = st.serverNow - Date.now();
+if (first) { TW_fusionSel = null; TW_lastSwapSeq = 0; buildGridFromState(st); TW_dom = cloneState(st); }
+else { syncDomToState(st); TW_dom = cloneState(st); }
+if (st.type === "fusion" && st.lastSwap && st.lastSwap.ok === false && (st.lastSwapSeq || 0) !== TW_lastSwapSeq) {
+[st.lastSwap.a, st.lastSwap.b].forEach(ix => {
+const bb = TW_buttons[ix];
+if (bb) { bb.classList.add("err"); setTimeout(() => { if (bb) bb.classList.remove("err"); }, 350); }
+});
+}
+TW_lastSwapSeq = st.lastSwapSeq || 0;
+renderHUDFromState();
+startLocalTimer(st.timeLeft);
+if (window.hideGate) window.hideGate();
 });
 socket.on("tower_fail", (r) => {
     // ✅ Annule le timer
