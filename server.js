@@ -676,30 +676,28 @@ function towerStatePayload(s) {
 		hint: s.hint || null // ✅ L'indice visuel est maintenant transmis au client
 	};
 }
-async function towerWin(player, s){
+async function towerWin(player, s) {
   s.done = true;
   const used = (Date.now() - s.start) / 1000;
-let stars = 1;
-if (s.type === "pairs" || s.type === "memory") {
-const e3 = Math.floor(s.total * 0.2), e2 = Math.floor(s.total * 0.45);
-if (s.mistakes <= e3) stars = 3;
-else if (s.mistakes <= e2) stars = 2;
-} else if (s.type === "sprint" || s.type === "forbidden") {
-if (used <= s.def.time * 0.6) stars = 3;
-else if (used <= s.def.time * 0.85) stars = 2;
-} else if (s.type === "memory") {
-if (s.mistakes === 0) stars = 3;
-else if (s.mistakes <= 2) stars = 2;
-} else if (s.type === "nofail") {
-if (used <= s.def.time * 0.5) stars = 3;
-else if (used <= s.def.time * 0.75) stars = 2;
-else stars = 1;
-} else if (s.type === "fusion") {
-stars = s.forcedStars || 1;
-} else {
-if (s.mistakes === 0 && used <= s.def.time * 0.6) stars = 3;
-else if (s.mistakes <= 2) stars = 2;
-}
+  let stars = 1;
+
+  if (s.type === "pairs" || s.type === "memory") {
+    const e3 = Math.floor(s.total * 0.2), e2 = Math.floor(s.total * 0.45);
+    if (s.mistakes <= e3) stars = 3;
+    else if (s.mistakes <= e2) stars = 2;
+  } else if (s.type === "sprint" || s.type === "forbidden") {
+    if (used <= s.def.time * 0.6) stars = 3;
+    else if (used <= s.def.time * 0.85) stars = 2;
+  } else if (s.type === "nofail") {
+    if (used <= s.def.time * 0.5) stars = 3;
+    else if (used <= s.def.time * 0.75) stars = 2;
+    else stars = 1;
+  } else if (s.type === "fusion") {
+    stars = s.forcedStars || 1;
+  } else {
+    if (s.mistakes === 0 && used <= s.def.time * 0.6) stars = 3;
+    else if (s.mistakes <= 2) stars = 2;
+  }
 
   let coins, reward = null;
   const chap = Math.ceil(s.floor / TOWER_FPC);
@@ -707,9 +705,20 @@ else if (s.mistakes <= 2) stars = 2;
   if (!s.replay) {
     player.towerFloor = s.floor;
     
-    // 📉 FORMULE CORRIGÉE : Économie saine (fini le farm infini)
-    // Ex: Étage 200 = ~95 pièces (au lieu de ~450). Avec Coin Rush = ~190.
-    coins = 5 + Math.floor(s.floor * 0.4) + stars * 2 + (s.type === "boss" ? 0 : towerDiffTier(s.floor) * 1);
+    // 🪙 FORMULE DE RÉCOMPENSE AMÉLIORÉE POUR LA FUSION
+    let baseCoins = 5 + Math.floor(s.floor * 0.4) + stars * 2 + (s.type === "boss" ? 0 : towerDiffTier(s.floor) * 1);
+    let fusionBonus = 0;
+
+    if (s.type === "fusion") {
+        // Bonus basé sur la performance : plus le score est haut, plus on gagne de pièces !
+        // Ex: 3000 points = 30 pièces de bonus + 30 pièces pour les 3 étoiles = 60 pièces de bonus
+        fusionBonus = Math.floor(s.score / 100) + (stars * 10);
+        
+        // Minimum garanti pour la Fusion pour ne jamais finir à 5 pièces
+        baseCoins = Math.max(15, baseCoins);
+    }
+
+    coins = baseCoins + fusionBonus;
     
     // Bonus paliers ronds (réduits)
     if (s.floor % 20 === 0 && s.floor % TOWER_FPC !== 0) coins += 10 + chap * 2;
@@ -720,7 +729,10 @@ else if (s.mistakes <= 2) stars = 2;
       const itemId = TOWER_CHAPTER_REWARDS[s.floor / TOWER_FPC];
       if (itemId) {
         player.unlocked_items = player.unlocked_items || [];
-        if (!player.unlocked_items.includes(itemId)) { player.unlocked_items.push(itemId); reward = itemId; }
+        if (!player.unlocked_items.includes(itemId)) { 
+          player.unlocked_items.push(itemId); 
+          reward = itemId; 
+        }
       }
     }
     
@@ -3175,8 +3187,8 @@ app.post('/api/create_stripe_session', express.json(), async (req, res) => {
 /* ============================================================
 🧨 MODE FUSION (match-3 chiffres identiques) — serveur autoritaire
 ============================================================ */
-const FUSION_MOVES = [45, 38, 32, 26];
-const FUSION_TARGET = [400, 500, 600, 750];
+const FUSION_MOVES = [40, 32, 26, 20];       // Facile, Moyen, Difficile, Très Difficile
+const FUSION_TARGET = [1200, 2000, 3000, 4500]; // Scores cibles progressifs
 const FUSION_VALUES = 6; // chiffres 1 à 6
 // 🔥 NOUVELLE VERSION : Détecte 3, 4, 5, L et T
 function fusionFindMatches(board) {
