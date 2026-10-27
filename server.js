@@ -568,9 +568,9 @@ const GRIDMOD = [-6,0,2,4];
 const PACE = [1.45,1.30,1.20,1.15];
 const tier = PATTERN[(inChap - 1) % 10];
 gridSize = Math.max(8, gridSize + GRIDMOD[tier]);
-const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail","hunter","cascade"];
-const t = seq[(inChap - 1) % 11]; // ✅ 11 modes au total maintenant
-let g = gridSize, time;
+const seq = ["classic","reverse","color","pairs","sprint","parity","forbidden","memory","nofail","hunter","cascade","fusion"];
+const t = seq[(inChap - 1) % 12]; // ✅ 12 modes maintenant
+let g = gridSize, time, moves = null, targetScore = null;
 if (t === "sprint") { g = Math.min(gridSize, 24); time = Math.max(10, Math.round(g * 1.0)); }
 else if (t === "pairs") { g = (tier <= 1) ? 10 : 12; time = [22,19,17,15][tier]; }
 else if (t === "memory") { g = (tier <= 1) ? 10 : 12; const reveal = (2500 + g * 600) / 1000; time = Math.max(18, Math.round(reveal + g * [1.6,1.4,1.25,1.1][tier] * wf)); }
@@ -579,8 +579,9 @@ else if (t === "nofail") { time = Math.max(14, Math.round(gridSize * PACE[tier] 
 else if (t === "reverse") { time = Math.max(12, Math.round(gridSize * PACE[tier] * 1.1 * wf)); }
 else if (t === "color") { time = Math.max(12, Math.round(gridSize * PACE[tier] * 0.85 * wf)); }
 else if (t === "forbidden") { time = Math.max(12, Math.round((gridSize - 1) * PACE[tier] * 1.05 * wf)); }
+else if (t === "fusion") { g = 25; moves = FUSION_MOVES[tier]; targetScore = FUSION_TARGET[tier]; time = moves * 5 + 10; }
 else { time = Math.max(12, Math.round(gridSize * PACE[tier] * wf)); }
-return { floor, gridSize: g, time, type: t, diff: tier };
+return { floor, gridSize: g, time, type: t, diff: tier, moves, targetScore };
 }
 function pickColorTarget(s){
 const keys=[...new Set([...s.remaining].map(i=>s.nums[i].key))];
@@ -629,6 +630,14 @@ s.targetIndex = s.nums.indexOf(1);
 const cascadeDurations = [2000, 1500, 1000, 750];
 s.cascadeDuration = cascadeDurations[def.diff] || 1500;
 s.revealUntil = Date.now() + s.cascadeDuration;
+} else if (def.type === "fusion") {
+s.board = fusionGenBoard();
+s.nums = s.board;
+s.remaining = new Set();
+s.target = null;
+s.moves = def.moves;
+s.score = 0;
+s.targetScore = def.targetScore;
 } else {
 s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
 s.remaining = new Set(s.nums);
@@ -638,6 +647,7 @@ if (def.type==="random") s.target = s.nums[Math.floor(Math.random()*s.nums.lengt
 return s;
 }
 function towerDisplay(s){
+if (s.type==="fusion") return s.board.slice();
 if (s.type==="pairs") return s.nums.map((v,i)=> s.gone[i] ? "" : ((Date.now() < (s.revealUntil||0) || s.revealed[i]) ? v : null));
 if (s.type==="memory") return s.nums.map((v,i)=> s.gone[i] ? "" : ((Date.now() < (s.revealUntil||0) || s.revealed[i]) ? v : null));
 if (s.type==="color") return s.nums.map(c=>({key:c.key,hex:c.hex}));
@@ -653,6 +663,8 @@ hunterOp:s.hunterOp||null, hunterVal:s.hunterVal||null,
 targetIndex:(s.targetIndex===undefined?null:s.targetIndex), revealUntil:s.revealUntil||null,
 revealed:s.revealed, sel:s.sel, ai:s.ai, defTime:s.def.time, gridSize:s.def.gridSize,
 serverNow: Date.now(), cascadeDuration: s.cascadeDuration || 0,
+score:s.score||0, moves:(s.moves===undefined?null:s.moves), targetScore:s.targetScore||null,
+lastSwap:s.lastSwap||null, lastSwapSeq:s.lastSwapSeq||0,
 replay:s.replay, shield:s.shield||0,
 revealLeft: (s.type==="memory" || s.type==="pairs") ? Math.max(0, Math.round(((s.revealUntil||0) - Date.now())/1000)) : 0
 };
@@ -678,6 +690,8 @@ async function towerWin(player, s){
     if (used <= s.def.time * 0.5) stars = 3;      // Fini en moins de 50% du temps
     else if (used <= s.def.time * 0.75) stars = 2; // Fini en moins de 75% du temps
     else stars = 1;
+  } else if (s.type === "fusion") {
+    stars = s.forcedStars || 1;
   } else {
     if (s.mistakes === 0 && used <= s.def.time * 0.6) stars = 3;
     else if (s.mistakes <= 2) stars = 2;
@@ -2202,6 +2216,7 @@ socket.emit('tower_state', towerStatePayload(s));
 socket.on('tower_click', async (data) => {
     const player = activePlayers[socket.id];
     const s = towerSessions[socket.id];
+    if (s.type === "fusion") { await fusionClick(socket, player, s, data); return; }
     if (!player || !s || s.done || s.lock) return;
     if ((s.type === "pairs" || s.type === "memory") && s.revealUntil && Date.now() < s.revealUntil) return;
     const idx = parseInt(data && data.index);
@@ -3073,6 +3088,119 @@ app.post('/api/create_stripe_session', express.json(), async (req, res) => {
     res.json({ ok: false, reason: 'server_error' });
   }
 });
+/* ============================================================
+🧨 MODE FUSION (match-3 calculatoire) — server-authoritative
+============================================================ */
+const FUSION_MOVES = [15, 13, 11, 9];       // coups selon difficulté 🟢🟡🟠🔴
+const FUSION_TARGET = [250, 350, 450, 500]; // score à atteindre
+
+function fusionGenBoard() {
+  for (let attempt = 0; attempt < 60; attempt++) {
+    const b = new Array(25).fill(0);
+    for (let i = 0; i < 25; i++) {
+      const r = Math.floor(i / 5), c = i % 5;
+      let v, guard = 0, bad;
+      do {
+        v = 1 + Math.floor(Math.random() * 9); guard++;
+        bad = false;
+        if (c > 0 && b[i-1] + v === 10) bad = true;
+        if (r > 0 && b[i-5] + v === 10) bad = true;
+        if (c >= 2 && b[i-1] === v && b[i-2] === v) bad = true;
+        if (r >= 2 && b[i-5] === v && b[i-10] === v) bad = true;
+      } while (bad && guard < 40);
+      b[i] = v;
+    }
+    if (fusionFindMatches(b).size === 0) return b;
+  }
+  return Array.from({ length: 25 }, () => 1 + Math.floor(Math.random() * 9));
+}
+
+function fusionFindMatches(board) {
+  const hit = new Set();
+  const C = 5, R = 5;
+  // Règle 1 : paire adjacente dont la somme = 10
+  for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
+    const i = r * C + c;
+    if (board[i] == null) continue;
+    if (c + 1 < C && board[i+1] != null && board[i] + board[i+1] === 10) { hit.add(i); hit.add(i+1); }
+    if (r + 1 < R && board[i+C] != null && board[i] + board[i+C] === 10) { hit.add(i); hit.add(i+C); }
+  }
+  // Règle 2 : triplé identique aligné
+  for (let r = 0; r < R; r++) {
+    let run = 1;
+    for (let c = 1; c <= C; c++) {
+      const same = c < C && board[r*C+c] != null && board[r*C+c] === board[r*C+c-1];
+      if (same) run++;
+      else { if (run >= 3) for (let k = c-run; k < c; k++) hit.add(r*C+k); run = 1; }
+    }
+  }
+  for (let c = 0; c < C; c++) {
+    let run = 1;
+    for (let r = 1; r <= R; r++) {
+      const same = r < R && board[r*C+c] != null && board[r*C+c] === board[(r-1)*C+c];
+      if (same) run++;
+      else { if (run >= 3) for (let k = r-run; k < r; k++) hit.add(k*C+c); run = 1; }
+    }
+  }
+  return hit;
+}
+
+function fusionGravity(board) {
+  for (let c = 0; c < 5; c++) {
+    const col = [];
+    for (let r = 4; r >= 0; r--) if (board[r*5+c] != null) col.push(board[r*5+c]);
+    for (let r = 4; r >= 0; r--) board[r*5+c] = (col[4-r] !== undefined) ? col[4-r] : (1 + Math.floor(Math.random() * 9));
+  }
+}
+
+async function fusionClick(socket, player, s, data) {
+  const a = parseInt(data && data.index), bI = parseInt(data && data.swapWith);
+  if (!Number.isFinite(a) || !Number.isFinite(bI) || a === bI) return;
+  if (a < 0 || a >= 25 || bI < 0 || bI >= 25) return;
+  const ra = Math.floor(a/5), ca = a%5, rb = Math.floor(bI/5), cb = bI%5;
+  // Swap non adjacent = ignoré
+  if (Math.abs(ra-rb) + Math.abs(ca-cb) !== 1) {
+    s.lastSwap = { a, b: bI, ok: false }; s.lastSwapSeq = (s.lastSwapSeq||0) + 1;
+    socket.emit('tower_state', towerStatePayload(s));
+    return;
+  }
+  [s.board[a], s.board[bI]] = [s.board[bI], s.board[a]];
+  let matches = fusionFindMatches(s.board);
+  if (matches.size === 0) {
+    // Aucun match : on inverse le swap, AUCUN coup perdu
+    [s.board[a], s.board[bI]] = [s.board[bI], s.board[a]];
+    s.lastSwap = { a, b: bI, ok: false }; s.lastSwapSeq = (s.lastSwapSeq||0) + 1;
+    socket.emit('tower_state', towerStatePayload(s));
+    return;
+  }
+  s.moves--;
+  s.lastSwap = { a, b: bI, ok: true }; s.lastSwapSeq = (s.lastSwapSeq||0) + 1;
+  let chain = 0;
+  while (matches.size > 0) {
+    chain++;
+    s.score += matches.size * 10 * chain; // 💥 multiplicateur de cascade
+    matches.forEach(i => { s.board[i] = null; });
+    fusionGravity(s.board);
+    matches = fusionFindMatches(s.board);
+  }
+  if (s.score >= s.targetScore) {
+    s.forcedStars = (s.moves >= 4) ? 3 : (s.moves >= 2) ? 2 : 1;
+    const r = await towerWin(player, s);
+    delete towerSessions[socket.id];
+    socket.emit('tower_result', r);
+    socket.emit('player_registered', player);
+    cbMaybeKickAfterMatch(socket);
+    return;
+  }
+  if (s.moves <= 0) {
+    const r = await towerFail(player, s, 'fusion_moves');
+    delete towerSessions[socket.id];
+    socket.emit('tower_fail', r);
+    cbMaybeKickAfterMatch(socket);
+    return;
+  }
+  socket.emit('tower_state', towerStatePayload(s));
+}
 server.listen(PORT, () => {
 loadMaintenance();
 console.log('Serveur Chiffre Blitz demarre sur le port ' + PORT);
