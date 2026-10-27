@@ -1443,6 +1443,7 @@ function renderHUDFromState() {
     const dH = i18n[currentLang];
     const colorName = (TW.targetColor && dH["tw_color_" + TW.targetColor.key]) || (TW.targetColor ? TW.targetColor.name : "");
     let main = "";
+    
     if (TW.type === "color" && TW.targetColor) {
         // ✅ EFFET STROOP : on ne génère une nouvelle couleur de leurre QUE si la cible a changé
         if (!TW_stroopColor || TW_stroopColor.toLowerCase() === TW.targetColor.hex.toLowerCase()) {
@@ -1451,7 +1452,19 @@ function renderHUDFromState() {
             TW_stroopColor = otherColors[Math.floor(Math.random() * otherColors.length)];
         }
         main = `${dH.tw_hud_color} <span style="color:${TW_stroopColor};font-weight:900;text-shadow:0 0 8px ${TW_stroopColor}88;">${colorName}</span>`;
-    } else {
+    } 
+    // ✅ AJOUT DES DEUX NOUVEAUX MODES ICI :
+    else if (TW.type === "hunter") {
+        const op = TW.hunterOp === '>' ? 'supérieurs à' : 'inférieurs à';
+        const remaining = TW.display.filter((_, i) => TW.gone[i] === false && ((TW.hunterOp === '>' ? TW.display[i] > TW.hunterVal : TW.display[i] < TW.hunterVal))).length;
+        main = `${dH.tw_hud_target || 'Cible'} : <span style="color:#f8b500;">${op} ${TW.hunterVal}</span> <span style="font-size:0.8em;opacity:0.8;">(Reste: ${remaining})</span>`;
+    }
+    else if (TW.type === "cascade") {
+        const timeLeft = Math.max(0, ((TW.revealUntil || 0) - Date.now()) / 1000).toFixed(1);
+        main = `Cible : <span style="color:#ff4b2b;font-weight:900;">${TW.target}</span> <span style="font-size:0.8em;opacity:0.8;">(${timeLeft}s)</span>`;
+    }
+    // ✅ FIN DES AJOUTS
+    else {
         // ✅ On reset la couleur de leurre quand on n'est plus en mode couleur
         TW_stroopColor = null;
         if (TW.type === "pairs") main = (TW.revealLeft > 0) ? `${dH.tw_hud_memorize} ${TW.revealLeft}s` : dH.tw_hud_pairs;
