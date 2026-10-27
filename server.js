@@ -748,7 +748,8 @@ if (s.ai >= s.total){ const r = await towerFail(player, s, 'boss'); delete tower
 }
 // ✅ Gestion du temps écoulé pour le mode Cascade (cible qui disparaît)
 if (s.type === "cascade" && !s.done && Date.now() > s.revealUntil && !s.gone[s.targetIndex]) {
-s.mistakes++;
+if (s.shield > 0) { s.shield--; io.to(sid).emit('tower_shield_used', { shield: s.shield }); }
+else s.mistakes++;
 s.revealUntil = Date.now() + (s.cascadeDuration || 1500);
 }
 io.to(sid).emit('tower_state', towerStatePayload(s));
