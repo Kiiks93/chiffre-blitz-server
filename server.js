@@ -651,9 +651,9 @@ return {
     floor:s.floor, type:s.type, total:s.total,
     timeLeft: Math.max(0, s.def.time - Math.floor((Date.now()-s.start)/1000)),
     mistakes:s.mistakes, gone:s.gone, display:towerDisplay(s),
-    target:s.target||null, targetColor:s.targetColor||null, targetParity:s.targetParity||null, forbidden:s.forbidden||null,
-    hunterOp:s.hunterOp||null, hunterVal:s.hunterVal||null, // ✅ NOUVEAUX CHAMPS
-    revealUntil:s.revealUntil||null, targetIndex:s.targetIndex||null, // ✅ NOUVEAUX CHAMPS
+    target:s.target||null, targetIndex:s.targetIndex||null, // ✅ AJOUT targetIndex
+    targetColor:s.targetColor||null, targetParity:s.targetParity||null, forbidden:s.forbidden||null,
+    revealUntil:s.revealUntil||null, // ✅ AJOUT revealUntil
     revealed:s.revealed, sel:s.sel, ai:s.ai, defTime:s.def.time, gridSize:s.def.gridSize,
     replay:s.replay, shield:s.shield||0,
     revealLeft: (s.type==="memory" || s.type==="pairs") ? Math.max(0, Math.round(((s.revealUntil||0) - Date.now())/1000)) : 0
