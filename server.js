@@ -301,12 +301,13 @@ const catchSoloStarts = {}; // Horodatage Catch Solo par pseudo (anti-cheat)
 const soloStarts = {}; // Horodatage Solo/Avalanche par pseudo (anti-cheat)
 const lastMatchEarnings = {};
 const towerSessions = {};
-let globalEvents = { coinRush: false, rankShield: false, expressoMatch: false, chaosMode: false, jackpotEclair: false, tugOfWarMode: false, halloweenMode: false, noelMode: false };
+const fusionSoloSessions = {};
+let globalEvents = { coinRush: false, rankShield: false, expressoMatch: false, chaosMode: false, jackpotEclair: false, tugOfWarMode: false, halloweenMode: false, noelMode: false, fusionMode: false };
 let eventSchedules = {
 coinRush: { manual: false, start: null, end: null }, rankShield: { manual: false, start: null, end: null },
 expressoMatch: { manual: false, start: null, end: null }, chaosMode: { manual: false, start: null, end: null },
 jackpotEclair: { manual: false, start: null, end: null }, tugOfWarMode: { manual: false, start: null, end: null },
-halloweenMode: { manual: false, start: null, end: null }, noelMode: { manual: false, start: null, end: null }
+halloweenMode: { manual: false, start: null, end: null }, noelMode: { manual: false, start: null, end: null }, fusionMode: { manual: false, start: null, end: null }
 };
 setInterval(() => {
 const now = Date.now();
@@ -579,7 +580,7 @@ else if (t === "nofail") { time = Math.max(14, Math.round(gridSize * PACE[tier] 
 else if (t === "reverse") { time = Math.max(12, Math.round(gridSize * PACE[tier] * 1.1 * wf)); }
 else if (t === "color") { time = Math.max(12, Math.round(gridSize * PACE[tier] * 0.85 * wf)); }
 else if (t === "forbidden") { time = Math.max(12, Math.round((gridSize - 1) * PACE[tier] * 1.05 * wf)); }
-else if (t === "fusion") { g = 25; moves = FUSION_MOVES[tier]; targetScore = FUSION_TARGET[tier]; time = moves * 5 + 10; }
+else if (t === "fusion") { g = 25; moves = FUSION_MOVES[tier]; targetScore = FUSION_TARGET[tier]; time = moves * 5 + 20; }
 else { time = Math.max(12, Math.round(gridSize * PACE[tier] * wf)); }
 return { floor, gridSize: g, time, type: t, diff: tier, moves, targetScore };
 }
@@ -2332,6 +2333,52 @@ if (s && !s.done) { s.done = true; }
 delete towerSessions[socket.id];
 cbMaybeKickAfterMatch(socket);
 });
+/* ---------- 🧨 FUSION SOLO (événement activable admin) ---------- */
+socket.on('fusion_solo_start', () => {
+if (maintBlocked(socket)) { socket.emit('maintenance_kick', { message: maintenanceState.message }); return; }
+if (!globalEvents.fusionMode) { socket.emit('fusion_solo_denied'); return; }
+const player = activePlayers[socket.id];
+if (!player) return;
+if (fusionSoloSessions[socket.id]) { socket.emit('fusion_solo_state', fusionSoloPayload(fusionSoloSessions[socket.id])); return; }
+fusionSoloSessions[socket.id] = { board: fusionGenBoard(), moves: 30, score: 0, bestChain: 0, start: Date.now() };
+socket.emit('fusion_solo_state', fusionSoloPayload(fusionSoloSessions[socket.id]));
+});
+socket.on('fusion_solo_swap', async (data) => {
+const player = activePlayers[socket.id];
+const s = fusionSoloSessions[socket.id];
+if (!player || !s) return;
+const a = parseInt(data && data.index), bI = parseInt(data && data.swapWith);
+if (!Number.isFinite(a) || !Number.isFinite(bI) || a === bI || a < 0 || a >= 25 || bI < 0 || bI >= 25) return;
+const ra = Math.floor(a/5), ca = a%5, rb = Math.floor(bI/5), cb = bI%5;
+if (Math.abs(ra-rb) + Math.abs(ca-cb) !== 1) { socket.emit('fusion_solo_state', fusionSoloPayload(s, { a, b: bI, ok: false })); return; }
+[s.board[a], s.board[bI]] = [s.board[bI], s.board[a]];
+let matches = fusionFindMatches(s.board);
+if (matches.size === 0) {
+[s.board[a], s.board[bI]] = [s.board[bI], s.board[a]];
+socket.emit('fusion_solo_state', fusionSoloPayload(s, { a, b: bI, ok: false }));
+return;
+}
+s.moves--;
+let chain = 0;
+while (matches.size > 0) { chain++; s.score += matches.size * 10 * chain; matches.forEach(i => { s.board[i] = null; }); fusionGravity(s.board); matches = fusionFindMatches(s.board); }
+s.bestChain = Math.max(s.bestChain || 0, chain);
+if (!fusionHasMove(s.board)) s.board = fusionGenBoard();
+if (s.moves <= 0) {
+const coins = Math.min(120, Math.floor(s.score / 8));
+player.coins = (player.coins || 0) + coins;
+player.solo_games = (player.solo_games || 0) + 1;
+player.total_coins_earned = (player.total_coins_earned || 0) + coins;
+const finalScore = s.score, finalChain = s.bestChain;
+delete fusionSoloSessions[socket.id];
+await savePlayerToSupabase(socket.id);
+await logPlayerAction(player, 'fusion_solo', `Score ${finalScore}, meilleure chaîne x${finalChain}`, 'coins', coins, player.coins);
+socket.emit('fusion_solo_result', { ok: true, score: finalScore, bestChain: finalChain, coins });
+socket.emit('player_registered', player);
+return;
+}
+socket.emit('fusion_solo_state', fusionSoloPayload(s, { a, b: bI, ok: true }, chain));
+});
+socket.on('fusion_solo_quit', () => { delete fusionSoloSessions[socket.id]; });
 /* ---------- 🛒 BOUTIQUE AVENTURE (pièces = vies seulement) ---------- */
 socket.on('shop_buy', async (data) => {
 const player = activePlayers[socket.id];
@@ -3088,8 +3135,8 @@ app.post('/api/create_stripe_session', express.json(), async (req, res) => {
 /* ============================================================
 🧨 MODE FUSION (match-3 chiffres identiques) — serveur autoritaire
 ============================================================ */
-const FUSION_MOVES = [15, 13, 11, 9];
-const FUSION_TARGET = [300, 380, 450, 520];
+const FUSION_MOVES = [30, 26, 22, 18];
+const FUSION_TARGET = [600, 700, 800, 900];
 const FUSION_VALUES = 6; // chiffres 1 à 6
 function fusionFindMatches(board) {
 const hit = new Set(); const C = 5, R = 5;
@@ -3135,6 +3182,10 @@ if (ok) return true;
 }
 return false;
 }
+function fusionSoloPayload(s, lastSwap, chain) {
+s.seq = (s.seq || 0) + 1;
+return { board: s.board.slice(), moves: s.moves, score: s.score, bestChain: s.bestChain || 0, lastSwap: lastSwap || null, lastChain: chain || 0, lastSwapSeq: s.seq };
+}
 async function fusionClick(socket, player, s, data) {
 const a = parseInt(data && data.index), bI = parseInt(data && data.swapWith);
 if (!Number.isFinite(a) || !Number.isFinite(bI) || a === bI) return;
@@ -3161,7 +3212,8 @@ matches = fusionFindMatches(s.board);
 s.lastChain = chain;
 if (!fusionHasMove(s.board)) s.board = fusionGenBoard();
 if (s.score >= s.targetScore) {
-s.forcedStars = (s.moves >= 4) ? 3 : (s.moves >= 2) ? 2 : 1;
+const totalMoves = s.def.moves || 30;
+s.forcedStars = (s.moves >= totalMoves * 0.25) ? 3 : (s.moves >= totalMoves * 0.10) ? 2 : 1;
 const r = await towerWin(player, s); delete towerSessions[socket.id];
 socket.emit('tower_result', r); socket.emit('player_registered', player); cbMaybeKickAfterMatch(socket); return;
 }
