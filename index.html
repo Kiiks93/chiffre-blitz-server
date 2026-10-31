@@ -688,13 +688,30 @@ HUB ÉVÉNEMENTS MOBILE (pastille stats + panneau adaptatif)
     var show = (force === undefined) ? (p.style.display !== 'flex') : !!force;
     p.style.display = show ? 'flex' : 'none';
   };
-  window.cbSyncEventBanner = function(){
+window.cbSyncEventBanner = function(){
     var b = document.getElementById('cb-event-banner-mobile');
     var adm = document.getElementById('admire-btn');
-    var on = !!(b && b.__cbOn) && document.documentElement.classList.contains('cb-mm-on');
-    if (b) b.style.display = on ? 'block' : 'none';          // ✅ visible UNIQUEMENT sur le menu principal
-    if (adm) adm.style.marginTop = on ? '30px' : '';          // ✅ Admirer descend sous le bandeau
-  };
+    
+    // ✅ VÉRIFICATION : On est sur le menu principal ? (pas en jeu)
+    var screenMenu = document.getElementById('screen-menu');
+    var screenMenuMobile = document.getElementById('screen-menu-mobile');
+    var screenGame = document.getElementById('screen-game');
+    var screenTower = document.getElementById('tower-game');
+    
+    var onMainMenu = (screenMenu && screenMenu.style.display !== 'none') || 
+                     (screenMenuMobile && screenMenuMobile.style.display !== 'none');
+    var inGame = (screenGame && screenGame.style.display !== 'none') || 
+                 (screenTower && screenTower.style.display !== 'none');
+    
+    // ✅ Le bandeau s'affiche UNIQUEMENT si :
+    // 1. Des événements sont actifs (b.__cbOn)
+    // 2. On est sur mobile/tablette (cb-mm-on)
+    // 3. On est SUR LE MENU PRINCIPAL (pas en jeu)
+    var shouldShow = !!(b && b.__cbOn) && document.documentElement.classList.contains('cb-mm-on') && onMainMenu && !inGame;
+    
+    if (b) b.style.display = shouldShow ? 'block' : 'none';
+    if (adm) adm.style.marginTop = shouldShow ? '30px' : '';
+};
 
   function cbBindEvents(){
     if (typeof socket === 'undefined' || !socket || !socket.on) { setTimeout(cbBindEvents, 200); return; }
