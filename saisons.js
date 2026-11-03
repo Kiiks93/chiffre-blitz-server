@@ -291,9 +291,7 @@ function setupHalloweenDecor(seasonId) {
 
   halloweenAmbienceTimer = setInterval(() => {
     // ✅ OPTIMISATION : Stoppe le calcul si l'onglet est en arrière-plan
-    if (document.hidden) return; 
-    const inGame = document.getElementById("screen-game") && document.getElementById("screen-game").style.display === "block";
-    if (inGame) return;
+    if (document.hidden || document.body.classList.contains('cb-ingame')) return;
     const roll = Math.random();
     if (roll < 0.25) spawnSceneGhost();
     else if (roll < 0.6) spawnSceneBat();
@@ -851,14 +849,12 @@ function setupNoelDecor(seasonId) {
   setTimeout(() => spawnNoelSleigh(), SEASON_CONFIG.NOEL_SLEIGH_INITIAL_DELAY);
   
   noelSleighTimer = setInterval(() => {
-    if (document.hidden) return; // ✅ Stop en arrière-plan
-    const inGame = document.getElementById("screen-game") && document.getElementById("screen-game").style.display === "block";
-    if (inGame) return;
+    if (document.hidden || document.body.classList.contains('cb-ingame')) return;
     spawnNoelSleigh();
   }, SEASON_CONFIG.NOEL_SLEIGH_INTERVAL);
   
   noelStarTimer = setInterval(() => {
-    if (document.hidden) return; // ✅ Stop en arrière-plan
+    if (document.hidden || document.body.classList.contains('cb-ingame')) return;
     if (Math.random() < 0.6) spawnShootingStar();
   }, SEASON_CONFIG.NOEL_STAR_INTERVAL);
 }
@@ -940,3 +936,30 @@ if (typeof socket !== "undefined") {
     }, 50);
   });
 }
+/* ============================================================
+17. WATCHER ÉCRANS DE JEU — gèle les fonds pendant les parties
+(chaque écran n'affiche QUE son contenu, zéro animation fantôme)
+============================================================ */
+const CB_GAME_SCREENS = ["tower-game", "fusion-solo", "screen-game", "catch-arena"];
+function cbAnyGameVisible() {
+  for (const id of CB_GAME_SCREENS) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    const cs = getComputedStyle(el);
+    if (cs.display !== "none" && cs.visibility !== "hidden") return true;
+  }
+  return false;
+}
+function cbSetSeasonPause(on) {
+  const anims = [..._hlPumpkins, ...Object.values(_hlActive).flat(), ..._nxAnims];
+  anims.forEach(o => { if (o && o.anim) { try { on ? o.anim.pause() : o.anim.play(); } catch (e) {} } });
+}
+let _cbIngame = false;
+setInterval(() => {
+  const on = cbAnyGameVisible();
+  if (on !== _cbIngame) {
+    _cbIngame = on;
+    document.body.classList.toggle('cb-ingame', on);
+    cbSetSeasonPause(on); // ✅ pause/reprend les Lottie (citrouilles, traîneau...)
+  }
+}, 350);
