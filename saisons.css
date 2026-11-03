@@ -1238,3 +1238,46 @@ body.cb-ingame .halloween-web,
 body.cb-ingame .s1-neon-sign {
   display: none !important;
 }
+/* ============================================================
+20. HALO DU MENU PRINCIPAL AUX COULEURS DE SAISON
+============================================================ */
+
+/* ----- 🎃 HALLOWEEN (S2) : orange & violet ----- */
+body.season-s2 #mode-wheel-halo {
+  background: radial-gradient(ellipse at 50% 100%, rgba(255,138,0,.30), rgba(123,47,247,.18) 55%, transparent 78%) !important;
+  border-color: #ff8a00 !important;
+  box-shadow: 0 0 26px rgba(255,138,0,.45), inset 0 0 34px rgba(123,47,247,.28) !important;
+}
+body.season-s2 #mode-wheel-frame {
+  border-color: #ff8a00 !important;
+  background: rgba(26,0,51,.88) !important;
+  box-shadow: 0 0 18px rgba(255,138,0,.65), inset 0 0 12px rgba(255,138,0,.25) !important;
+}
+body.season-s2 #mode-wheel-name {
+  color: #ff8a00 !important;
+  text-shadow: 0 0 10px rgba(255,138,0,.6);
+}
+body.season-s2 .wheel-item.center {
+  border-color: #ff8a00 !important;
+  box-shadow: 0 0 16px rgba(255,138,0,.7) !important;
+}
+
+/* ----- 🎄 NOËL (S3) : rouge & blanc ----- */
+body.season-s3 #mode-wheel-halo {
+  background: radial-gradient(ellipse at 50% 100%, rgba(255,75,43,.28), rgba(255,255,255,.14) 55%, transparent 78%) !important;
+  border-color: #ff4b2b !important;
+  box-shadow: 0 0 26px rgba(255,75,43,.42), inset 0 0 34px rgba(255,255,255,.16) !important;
+}
+body.season-s3 #mode-wheel-frame {
+  border-color: #ffffff !important;
+  background: rgba(90,10,20,.88) !important;
+  box-shadow: 0 0 18px rgba(255,75,43,.55), inset 0 0 12px rgba(255,255,255,.22) !important;
+}
+body.season-s3 #mode-wheel-name {
+  color: #ffffff !important;
+  text-shadow: 0 0 10px rgba(255,75,43,.7);
+}
+body.season-s3 .wheel-item.center {
+  border-color: #ff4b2b !important;
+  box-shadow: 0 0 16px rgba(255,75,43,.65), 0 0 4px rgba(255,255,255,.5) !important;
+}
