@@ -607,7 +607,7 @@ s.targetColor = pickColorTarget(s);
 const half = N/2;
 s.nums = towerShuffle([...TW_PAIR_SYMBOLS.slice(0,half), ...TW_PAIR_SYMBOLS.slice(0,half)]);
 s.remaining = new Set([...Array(N)].map((_,i)=>i));
-s.revealUntil = Date.now() + [3000,3000,2500,2000][def.diff||0];
+s.revealUntil = Date.now() + [3000,3000,2500,2000][def.diff||0] + 800; // ✅ +0.8s : laisse le temps à la grille de s'afficher
 } else if (def.type === "parity") {
 s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
 s.targetParity = Math.random()<.5?"even":"odd";
@@ -621,7 +621,7 @@ s.target = (s.forbidden === 1) ? 2 : 1;
 s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
 s.remaining = new Set(s.nums);
 s.target = 1;
-s.revealUntil = Date.now() + 2500 + N * 600;
+s.revealUntil = Date.now() + 2500 + N * 600 + 800; // ✅ même grâce pour le mode Mémoire
 } else if (def.type === "hunter") {
 s.nums = towerShuffle([...Array(N)].map((_,i)=>i+1));
 s.hunterOp = Math.random() < 0.5 ? '>' : '<';
@@ -3253,21 +3253,35 @@ function fusionFindMatches(board) {
     }
     return hit;
 }
+function fusionFallbackBoard() {
+  // Grille déterministe : aucun match au départ, mais TOUJOURS au moins 1 coup gagnant
+  const base = [
+    1,1,2,3,4,
+    2,2,1,4,5,
+    3,3,4,5,6,
+    4,4,5,6,1,
+    5,5,6,1,2
+  ];
+  const perm = [1,2,3,4,5,6];
+  for (let i = 5; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [perm[i], perm[j]] = [perm[j], perm[i]]; }
+  return base.map(v => perm[v - 1]);
+}
 function fusionGenBoard() {
-for (let attempt = 0; attempt < 80; attempt++) {
-const b = new Array(25).fill(0);
-for (let i = 0; i < 25; i++) {
-const r = Math.floor(i / 5), c = i % 5;
-let v, guard = 0, bad;
-do { v = 1 + Math.floor(Math.random() * FUSION_VALUES); guard++; bad = false;
-if (c >= 2 && b[i-1] === v && b[i-2] === v) bad = true;
-if (r >= 2 && b[i-5] === v && b[i-10] === v) bad = true;
-} while (bad && guard < 40);
-b[i] = v;
-}
-if (fusionFindMatches(b).size === 0) return b;
-}
-return Array.from({ length: 25 }, () => 1 + Math.floor(Math.random() * FUSION_VALUES));
+  for (let attempt = 0; attempt < 120; attempt++) {
+    const b = new Array(25).fill(0);
+    for (let i = 0; i < 25; i++) {
+      const r = Math.floor(i / 5), c = i % 5;
+      let v, guard = 0, bad;
+      do { v = 1 + Math.floor(Math.random() * FUSION_VALUES); guard++; bad = false;
+        if (c >= 2 && b[i-1] === v && b[i-2] === v) bad = true;
+        if (r >= 2 && b[i-5] === v && b[i-10] === v) bad = true;
+      } while (bad && guard < 40);
+      b[i] = v;
+    }
+    // ✅ DOUBLE CONTRÔLE : aucun match ET au moins un coup possible
+    if (fusionFindMatches(b).size === 0 && fusionHasMove(b)) return b;
+  }
+  return fusionFallbackBoard(); // ✅ Filet de sécurité : jamais de grille morte
 }
 function fusionGravity(board) {
 for (let c = 0; c < 5; c++) {
