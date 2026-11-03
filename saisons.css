@@ -1,10 +1,12 @@
 /* ============================================================
 SAISONS.CSS — DA SAISONNIÈRE HALLOWEEN 🎃 & NOËL 🎄
-(chargé APRÈS style.css pour override)
+[OPTIMISÉ GPU / ANTI-LATENCE]
 ============================================================ */
 
 :root {
   color-scheme: dark;
+  /* [OPTIMISATION] Variables pour les futures saisons afin d'éviter les repaints */
+  --gpu-accelerate: translate3d(0,0,0);
 }
 
 /* ============================================================
@@ -16,16 +18,17 @@ body.season-s2 {
 
 body.season-s2 h1 {
   color: #ff8a00;
-  text-shadow: 0 0 15px rgba(255, 138, 0, 0.5);
+  text-shadow: 0 0 10px rgba(255, 138, 0, 0.4); /* Réduit de 15px à 10px */
 }
 
 body.season-s2 #bg-glow {
   background: radial-gradient(circle, rgba(255, 138, 0, 0.12) 0%, rgba(123, 47, 247, 0.06) 40%, transparent 70%);
+  transform: var(--gpu-accelerate); /* Isolation GPU */
 }
 
 body.season-s2 .btn-main {
   background: linear-gradient(45deg, #ff8a00, #7b2ff7);
-  box-shadow: 0 4px 15px rgba(255, 138, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 138, 0, 0.25);
 }
 
 body.season-s2 .btn-blue {
@@ -63,9 +66,10 @@ body.season-s2 .tab-btn.active {
   z-index: -2;
   overflow: hidden;
   opacity: 0;
-  transition: opacity 1.2s ease;
+  transition: opacity 0.8s ease; /* Transition plus rapide */
   pointer-events: none;
   background: #000;
+  transform: var(--gpu-accelerate);
 }
 
 body.season-s2 #season-bg {
@@ -94,13 +98,16 @@ body.season-s2 #season-bg {
   height: 90px;
   border-radius: 50%;
   background: radial-gradient(circle at 40% 35%, #fff6f0 0%, #ffd9e8 45%, #ff9ec7 75%, rgba(255,158,199,0) 100%);
-  box-shadow: 0 0 40px 18px rgba(255,190,220,0.45), 0 0 90px 40px rgba(255,120,180,0.25);
+  /* [OPTIMISATION] Ombres réduites pour éviter le sur-rendu */
+  box-shadow: 0 0 30px 10px rgba(255,190,220,0.4), 0 0 60px 20px rgba(255,120,180,0.2);
   animation: hwMoon 6s ease-in-out infinite alternate;
+  will-change: transform;
+  transform: var(--gpu-accelerate);
 }
 
 @keyframes hwMoon {
-  from { transform: scale(1); }
-  to { transform: scale(1.06); }
+  from { transform: scale(1) translateZ(0); }
+  to { transform: scale(1.04) translateZ(0); }
 }
 
 .hw-cloud {
@@ -108,77 +115,45 @@ body.season-s2 #season-bg {
   height: 60px;
   border-radius: 50%;
   background: rgba(30,10,60,0.85);
-  filter: blur(18px);
+  /* [OPTIMISATION] blur(18px) sur un élément en mouvement = tueur de FPS. Réduit à 8px */
+  filter: blur(8px); 
   animation: hwDrift linear infinite;
+  will-change: transform;
+  transform: var(--gpu-accelerate);
 }
 
-.hw-c1 {
-  top: 13%;
-  width: 45%;
-  left: -50%;
-  animation-duration: 60s;
-}
-
-.hw-c2 {
-  top: 26%;
-  width: 55%;
-  left: -60%;
-  animation-duration: 85s;
-  animation-delay: 20s;
-  background: rgba(60,15,90,0.8);
-}
-
-.hw-c3 {
-  top: 5%;
-  width: 35%;
-  left: -40%;
-  animation-duration: 50s;
-  animation-delay: 35s;
-}
+.hw-c1 { top: 13%; width: 45%; left: -50%; animation-duration: 60s; }
+.hw-c2 { top: 26%; width: 55%; left: -60%; animation-duration: 85s; animation-delay: 20s; background: rgba(60,15,90,0.8); }
+.hw-c3 { top: 5%; width: 35%; left: -40%; animation-duration: 50s; animation-delay: 35s; }
 
 @keyframes hwDrift {
-  from { transform: translateX(0); }
-  to { transform: translateX(220vw); }
+  from { transform: translateX(0) translateZ(0); }
+  to { transform: translateX(220vw) translateZ(0); }
 }
 
 .hw-castle {
   position: absolute;
   bottom: 24%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateZ(0);
   width: min(920px, 94%);
   height: 380px;
 }
 
-.hw-castle svg {
-  width: 100%;
-  height: 100%;
-}
-
-.hw-castle .win {
-  animation: hwWindow 3s infinite;
-}
+.hw-castle svg { width: 100%; height: 100%; }
+.hw-castle .win { animation: hwWindow 3s infinite; }
 
 .hw-tree {
   position: absolute;
   bottom: 16%;
   width: 280px;
   height: 470px;
+  transform: var(--gpu-accelerate);
 }
 
-.hw-tree svg {
-  width: 100%;
-  height: 100%;
-}
-
-.hw-tree-left {
-  left: -40px;
-}
-
-.hw-tree-right {
-  right: -40px;
-  transform: scaleX(-1);
-}
+.hw-tree svg { width: 100%; height: 100%; }
+.hw-tree-left { left: -40px; }
+.hw-tree-right { right: -40px; transform: scaleX(-1) translateZ(0); }
 
 @keyframes hwWindow {
   0%, 100% { opacity: 0.85; }
@@ -189,8 +164,7 @@ body.season-s2 #season-bg {
 .hw-fence {
   position: absolute;
   bottom: 21%;
-  left: 0;
-  right: 0;
+  left: 0; right: 0;
   height: 46px;
   opacity: 0.9;
   background: repeating-linear-gradient(90deg, #0d0016 0 10px, transparent 10px 26px), linear-gradient(#0d0016, #0d0016) center / 100% 6px no-repeat;
@@ -198,9 +172,7 @@ body.season-s2 #season-bg {
 
 .hw-ground {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 0; left: 0; right: 0;
   height: 30%;
   background: linear-gradient(180deg, rgba(13,0,22,0.2) 0%, #0d0016 40%, #050008 100%);
 }
@@ -208,17 +180,18 @@ body.season-s2 #season-bg {
 .hw-mist {
   position: absolute;
   bottom: 16%;
-  left: 0;
-  right: 0;
+  left: 0; right: 0;
   height: 24%;
-  filter: blur(6px);
+  filter: blur(4px); /* Réduit */
   background: radial-gradient(ellipse 60% 60% at 30% 60%, rgba(180,120,255,0.16), transparent 70%), radial-gradient(ellipse 50% 60% at 70% 50%, rgba(255,140,80,0.10), transparent 70%);
   animation: hwMist 12s ease-in-out infinite alternate;
+  will-change: transform;
+  transform: var(--gpu-accelerate);
 }
 
 @keyframes hwMist {
-  from { transform: translateX(-3%); }
-  to { transform: translateX(3%); }
+  from { transform: translateX(-3%) translateZ(0); }
+  to { transform: translateX(3%) translateZ(0); }
 }
 
 /* ============================================================
@@ -231,14 +204,18 @@ body.season-s2 #season-bg {
   position: absolute;
   pointer-events: none;
   background: transparent !important;
+  will-change: transform, opacity;
+  transform: var(--gpu-accelerate);
 }
 
 .hw-pumpkin-lottie {
   z-index: 2;
-  filter: drop-shadow(0 0 12px rgba(255, 138, 0, 0.55));
-  animation: hwFlicker 1.8s steps(2, jump-none) infinite;
+  /* [OPTIMISATION] drop-shadow statique, on n'anime PLUS le filtre */
+  filter: drop-shadow(0 0 8px rgba(255, 138, 0, 0.5)); 
+  animation: hwFlicker 1.8s infinite;
 }
 
+/* [OPTIMISATION] Animation par opacity uniquement (géré par le GPU) */
 @keyframes hwFlicker {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.82; }
@@ -251,10 +228,10 @@ body.season-s2 #season-bg {
 }
 
 @keyframes hwBatFly {
-  0% { transform: translateX(0) scale(0.3); opacity: 0; }
+  0% { transform: translateX(0) scale(0.3) translateZ(0); opacity: 0; }
   10% { opacity: 1; }
   90% { opacity: 1; }
-  100% { transform: translateX(118vw) scale(1.7); opacity: 0; }
+  100% { transform: translateX(118vw) scale(1.7) translateZ(0); opacity: 0; }
 }
 
 .hw-ghost-lottie {
@@ -263,10 +240,10 @@ body.season-s2 #season-bg {
 }
 
 @keyframes hwGhostApproach {
-  0% { transform: scale(0.35); opacity: 0; }
+  0% { transform: scale(0.35) translateZ(0); opacity: 0; }
   20% { opacity: 0.95; }
   80% { opacity: 0.95; }
-  100% { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(1.6) translateZ(0); opacity: 0; }
 }
 
 .hw-spider-lottie {
@@ -287,11 +264,12 @@ body.season-s2 #season-bg {
 .hw-ghost-lottie canvas,
 .hw-spider-lottie canvas {
   background: transparent !important;
-  filter: drop-shadow(0 0 14px rgba(255, 138, 0, 0.5)) drop-shadow(0 0 28px rgba(176, 107, 255, 0.3));
+  transform: var(--gpu-accelerate);
 }
 
+/* [OPTIMISATION] Suppression du mix-blend-mode très gourmand, remplacé par opacity */
 .hw-ghost-lottie canvas {
-  mix-blend-mode: screen;
+  opacity: 0.9; 
 }
 
 /* ---------- Toiles d'araignée des coins ---------- */
@@ -303,25 +281,19 @@ body.season-s2 #season-bg {
   z-index: 1;
   pointer-events: none;
   filter: grayscale(1) brightness(2.2);
+  transform: var(--gpu-accelerate);
 }
 
-.halloween-web.tl {
-  top: -14px;
-  left: -14px;
-}
-
-.halloween-web.tr {
-  top: -14px;
-  right: -14px;
-  transform: scaleX(-1);
-}
+.halloween-web.tl { top: -14px; left: -14px; }
+.halloween-web.tr { top: -14px; right: -14px; transform: scaleX(-1) translateZ(0); }
 
 /* ---------- Fantôme CSS (sans fond noir) ---------- */
 .scene-ghost {
   position: relative;
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 0 18px rgba(176, 107, 255, 0.55));
+  filter: drop-shadow(0 0 12px rgba(176, 107, 255, 0.5));
+  transform: var(--gpu-accelerate);
 }
 
 .sg-body {
@@ -333,9 +305,7 @@ body.season-s2 #season-bg {
 
 .sg-fringe {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -11%;
+  left: 0; right: 0; bottom: -11%;
   height: 14%;
   background: radial-gradient(circle at 50% 0, #dfe7f0 0 68%, transparent 72%);
   background-size: 20% 100%;
@@ -344,32 +314,22 @@ body.season-s2 #season-bg {
 
 .sg-eye {
   position: absolute;
-  width: 13%;
-  height: 24%;
+  width: 13%; height: 24%;
   border-radius: 50%;
   background: #05050f;
-  box-shadow: 0 0 8px rgba(255, 0, 60, 0.55), inset 0 0 4px rgba(255, 0, 60, 0.4);
+  box-shadow: 0 0 6px rgba(255, 0, 60, 0.5), inset 0 0 4px rgba(255, 0, 60, 0.4);
   top: 30%;
   transform: rotate(-12deg);
 }
-
-.sg-eye.l {
-  left: 28%;
-}
-
-.sg-eye.r {
-  left: 58%;
-  transform: rotate(12deg);
-}
+.sg-eye.l { left: 28%; }
+.sg-eye.r { left: 58%; transform: rotate(12deg); }
 
 .sg-mouth {
   position: absolute;
-  width: 9%;
-  height: 13%;
+  width: 9%; height: 13%;
   border-radius: 50%;
   background: #262636;
-  top: 54%;
-  left: 45.5%;
+  top: 54%; left: 45.5%;
 }
 
 /* ============================================================
@@ -381,19 +341,21 @@ body.season-s2 #season-bg {
   animation: lanternFall linear forwards;
   z-index: 1;
   pointer-events: none;
+  will-change: transform, opacity;
 }
 
 .lantern {
-  width: 85px;
-  height: 75px;
+  width: 85px; height: 75px;
   background: radial-gradient(circle at 45% 35%, #ff8800 0%, #b33600 50%, #3d0c00 85%, #0f0200 100%);
   border-radius: 50% 50% 46% 46%;
-  box-shadow: 0 15px 35px rgba(0,0,0,0.9), 0 0 35px rgba(204,51,0,0.6), inset 0 0 25px rgba(0,0,0,0.95), inset 0 0 8px #ffaa00;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.8), 0 0 20px rgba(204,51,0,0.5), inset 0 0 15px rgba(0,0,0,0.9);
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
-  animation: lanternFlicker 0.25s infinite alternate;
+  /* [OPTIMISATION] Suppression de filter:brightness dans l'animation */
+  animation: lanternFlicker 0.4s infinite alternate;
+  transform: var(--gpu-accelerate);
 }
 
 .lantern::after {
@@ -401,84 +363,64 @@ body.season-s2 #season-bg {
   position: absolute;
   inset: 0;
   border-radius: 50% 50% 46% 46%;
-  background: linear-gradient(90deg, transparent 15%, rgba(0,0,0,0.5) 22%, transparent 30%, transparent 70%, rgba(0,0,0,0.5) 78%, transparent 85%);
+  background: linear-gradient(90deg, transparent 15%, rgba(0,0,0,0.4) 22%, transparent 30%, transparent 70%, rgba(0,0,0,0.4) 78%, transparent 85%);
   pointer-events: none;
 }
 
+/* [OPTIMISATION] Scale + Opacity uniquement (0 coût CPU) */
 @keyframes lanternFlicker {
-  0% { filter: brightness(0.85); transform: scale(1); }
-  100% { filter: brightness(1.1); transform: scale(1.02); }
+  0% { opacity: 0.85; transform: scale(1) translateZ(0); }
+  100% { opacity: 1; transform: scale(1.02) translateZ(0); }
 }
 
 .lantern::before {
   content: '';
   position: absolute;
-  top: -14px;
-  left: 52%;
+  top: -14px; left: 52%;
   transform: translateX(-50%) rotate(15deg);
-  width: 12px;
-  height: 18px;
+  width: 12px; height: 18px;
   background: linear-gradient(135deg, #2b3b18, #0d1208);
   border-radius: 4px 8px 0 0;
-  box-shadow: -2px 2px 4px rgba(0,0,0,0.8);
 }
 
-.lantern .face {
-  position: relative;
-  width: 60%;
-  height: 50%;
-  z-index: 2;
-}
+.lantern .face { position: relative; width: 60%; height: 50%; z-index: 2; }
 
 .lantern .eye-left,
 .lantern .eye-right {
   position: absolute;
-  width: 0;
-  height: 0;
+  width: 0; height: 0;
   border-left: 7px solid transparent;
   border-right: 7px solid transparent;
   border-bottom: 15px solid #020101;
-  filter: drop-shadow(0 0 4px #ffcc00);
 }
-
-.lantern .eye-left {
-  top: 3px;
-  left: 0px;
-  transform: rotate(15deg);
-}
-
-.lantern .eye-right {
-  top: 3px;
-  right: 0px;
-  transform: rotate(-15deg);
-}
+.lantern .eye-left { top: 3px; left: 0px; transform: rotate(15deg); }
+.lantern .eye-right { top: 3px; right: 0px; transform: rotate(-15deg); }
 
 .lantern .mouth {
   position: absolute;
-  bottom: 2px;
-  left: 50%;
+  bottom: 2px; left: 50%;
   transform: translateX(-50%);
-  width: 30px;
-  height: 12px;
+  width: 30px; height: 12px;
   background: #020101;
   clip-path: polygon(0 0, 100% 0, 88% 100%, 12% 100%, 25% 30%, 50% 55%, 75% 30%);
-  box-shadow: 0 0 4px #ffcc00;
 }
 
 .lantern.possessed {
-  animation: possessedFlicker 0.18s infinite alternate;
+  /* [OPTIMISATION] hue-rotate est FIGÉ (statique), il n'est plus recalculé à chaque frame */
+  filter: hue-rotate(95deg) saturate(1.5); 
+  animation: possessedFlicker 0.25s infinite alternate;
 }
 
 @keyframes possessedFlicker {
-  0% { filter: hue-rotate(95deg) brightness(0.8); transform: scale(1); }
-  100% { filter: hue-rotate(95deg) brightness(1.25); transform: scale(1.03); }
+  0% { opacity: 0.8; transform: scale(1) translateZ(0); }
+  100% { opacity: 1; transform: scale(1.03) translateZ(0); }
 }
 
 @keyframes lanternFall {
-  0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
+  0% { transform: translateY(0) translateX(0) rotate(0deg) translateZ(0); opacity: 0; }
   15% { opacity: 1; }
   85% { opacity: 1; }
-  100% { transform: translateY(calc(100vh + 180px)) translateX(var(--drift)) rotate(var(--rot)); opacity: 0; }
+  100% { transform: translateY(calc(100vh + 180px)) translateX(var(--drift)) rotate(var(--rot)) translateZ(0); opacity: 0; }
 }
 
 /* ============================================================
@@ -495,58 +437,47 @@ body.season-s2 #season-bg {
 
 .ghost-orb-body {
   position: relative;
-  width: 100%;
-  height: 100%;
+  width: 100%; height: 100%;
   border-radius: 50%;
   background: radial-gradient(circle at 40% 35%, #e0b3ff 0%, #b06bff 30%, #7b2ff7 60%, #3a0a6b 100%);
-  box-shadow: 0 0 25px rgba(176, 107, 255, 0.8);
+  box-shadow: 0 0 20px rgba(176, 107, 255, 0.7);
+  transform: var(--gpu-accelerate);
 }
 
 .ghost-orb-face {
   position: absolute;
-  top: 50%;
-  left: 50%;
+  top: 50%; left: 50%;
   transform: translate(-50%, -50%);
-  width: 55%;
-  height: 55%;
+  width: 55%; height: 55%;
   border-radius: 50%;
   background: radial-gradient(circle at 50% 40%, #1a0033 0%, #0a001a 100%);
 }
 
 .ghost-orb-eye {
   position: absolute;
-  width: 15%;
-  height: 15%;
+  width: 15%; height: 15%;
   border-radius: 50%;
   background: #e0b3ff;
-  box-shadow: 0 0 6px #e0b3ff;
+  box-shadow: 0 0 4px #e0b3ff;
   top: 38%;
 }
-
-.ghost-orb-eye.left {
-  left: 22%;
-}
-
-.ghost-orb-eye.right {
-  right: 22%;
-}
+.ghost-orb-eye.left { left: 22%; }
+.ghost-orb-eye.right { right: 22%; }
 
 .ghost-orb-mouth {
   position: absolute;
-  width: 25%;
-  height: 10%;
+  width: 25%; height: 10%;
   border-radius: 50%;
   background: #1a0033;
-  bottom: 28%;
-  left: 50%;
+  bottom: 28%; left: 50%;
   transform: translateX(-50%);
 }
 
 @keyframes ghostOrbApproach {
-  0% { transform: scale(0.15) rotate(-5deg); opacity: 0; }
+  0% { transform: scale(0.15) rotate(-5deg) translateZ(0); opacity: 0; }
   20% { opacity: 1; }
   80% { opacity: 1; }
-  100% { transform: scale(2.6) rotate(5deg); opacity: 0; }
+  100% { transform: scale(2.6) rotate(5deg) translateZ(0); opacity: 0; }
 }
 
 /* ============================================================
@@ -555,65 +486,65 @@ body.season-s2 #season-bg {
 .user-pill.osseux-frame,
 .user-pill:has(.tft-avatar-container.osseux-frame) {
   border-color: #ff8a00 !important;
-  box-shadow: 0 0 14px rgba(255,138,0,0.8), inset 0 0 6px rgba(255,138,0,0.4) !important;
+  box-shadow: 0 0 10px rgba(255,138,0,0.7), inset 0 0 4px rgba(255,138,0,0.3) !important;
   background: linear-gradient(135deg, rgba(26,13,0,0.9), rgba(255,138,0,0.9)) !important;
 }
 
 .tft-avatar-container.osseux-frame {
   border-color: #ff8a00 !important;
-  box-shadow: 0 0 14px rgba(255,138,0,0.9) !important;
+  box-shadow: 0 0 10px rgba(255,138,0,0.8) !important;
   background: linear-gradient(135deg, #1a0d00, #ff8a00);
 }
 
 .tft-avatar-large.osseux-frame {
   border-color: #ff8a00 !important;
-  box-shadow: 0 0 22px rgba(255,138,0,0.9) !important;
+  box-shadow: 0 0 16px rgba(255,138,0,0.8) !important;
   background: linear-gradient(135deg, #1a0d00, #ff8a00);
 }
 
 .victory-badge-large.osseux-frame {
   background: linear-gradient(135deg, #1a0d00, #ff8a00);
   border-color: #ff8a00;
-  box-shadow: 0 0 30px rgba(255,138,0,0.8);
+  box-shadow: 0 0 20px rgba(255,138,0,0.7);
 }
 
 .user-pill.fantome-frame,
 .user-pill:has(.tft-avatar-container.fantome-frame) {
   border-color: #b06bff !important;
-  box-shadow: 0 0 14px rgba(157,47,255,0.8), inset 0 0 6px rgba(157,47,255,0.4) !important;
+  box-shadow: 0 0 10px rgba(157,47,255,0.7), inset 0 0 4px rgba(157,47,255,0.3) !important;
   background: linear-gradient(135deg, rgba(26,0,51,0.9), rgba(123,47,247,0.9)) !important;
 }
 
 .tft-avatar-container.fantome-frame {
   border-color: #b06bff !important;
-  box-shadow: 0 0 14px rgba(157,47,255,0.9) !important;
+  box-shadow: 0 0 10px rgba(157,47,255,0.8) !important;
   background: linear-gradient(135deg, #1a0033, #7b2ff7);
 }
 
 .tft-avatar-large.fantome-frame {
   border-color: #b06bff !important;
-  box-shadow: 0 0 22px rgba(157,47,255,0.9) !important;
+  box-shadow: 0 0 16px rgba(157,47,255,0.8) !important;
   background: linear-gradient(135deg, #1a0033, #7b2ff7);
 }
 
 .victory-badge-large.fantome-frame {
   background: linear-gradient(135deg, #1a0033, #7b2ff7);
   border-color: #b06bff;
-  box-shadow: 0 0 30px rgba(157,47,255,0.8);
+  box-shadow: 0 0 20px rgba(157,47,255,0.7);
 }
 
 .tile.citrouille-theme {
   background: linear-gradient(135deg, #1a0d00, #ff8a00) !important;
   border-color: #ff8a00 !important;
   color: #fff !important;
-  box-shadow: 0 0 12px rgba(255,138,0,0.6);
+  box-shadow: 0 0 8px rgba(255,138,0,0.5);
 }
 
 .tile.fantome-theme {
   background: linear-gradient(135deg, #1a0033, #7b2ff7) !important;
   border-color: #b06bff !important;
   color: #fff !important;
-  box-shadow: 0 0 12px rgba(157,47,255,0.6);
+  box-shadow: 0 0 8px rgba(157,47,255,0.5);
 }
 
 /* ============================================================
@@ -625,16 +556,17 @@ body.season-s3 {
 
 body.season-s3 h1 {
   color: #7be8ff;
-  text-shadow: 0 0 15px rgba(123, 232, 255, 0.5);
+  text-shadow: 0 0 10px rgba(123, 232, 255, 0.4);
 }
 
 body.season-s3 #bg-glow {
   background: radial-gradient(circle, rgba(123, 232, 255, 0.12) 0%, rgba(255, 75, 43, 0.05) 40%, transparent 70%);
+  transform: var(--gpu-accelerate);
 }
 
 body.season-s3 .btn-main {
   background: linear-gradient(45deg, #ff4b2b, #38ef7d);
-  box-shadow: 0 4px 15px rgba(56, 239, 125, 0.3);
+  box-shadow: 0 4px 12px rgba(56, 239, 125, 0.25);
 }
 
 body.season-s3 .btn-blue {
@@ -666,9 +598,7 @@ body.season-s3 .tab-btn.active {
 /* ============================================================
 8. SCÈNE NOËL ANIMÉE ❄️
 ============================================================ */
-body.season-s3 #season-bg {
-  opacity: 1;
-}
+body.season-s3 #season-bg { opacity: 1; }
 
 body.season-s3 #season-bg::after {
   background: linear-gradient(rgba(0,0,0,0) 55%, rgba(2,10,25,0.35) 100%);
@@ -676,32 +606,30 @@ body.season-s3 #season-bg::after {
 
 .nx-shoot {
   position: absolute;
-  width: 140px;
-  height: 2px;
+  width: 140px; height: 2px;
   border-radius: 2px;
   background: linear-gradient(90deg, #ffffff, rgba(255,255,255,0));
   pointer-events: none;
   opacity: 0;
   animation: nxShoot linear forwards;
-  filter: drop-shadow(0 0 6px rgba(255,255,255,0.7));
+  will-change: transform, opacity;
+  transform: var(--gpu-accelerate);
 }
 
 .nx-shoot::before {
   content: '';
   position: absolute;
-  left: -3px;
-  top: -2px;
-  width: 6px;
-  height: 6px;
+  left: -3px; top: -2px;
+  width: 6px; height: 6px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 0 12px 4px rgba(255,255,255,0.85);
+  box-shadow: 0 0 8px 2px rgba(255,255,255,0.8);
 }
 
 @keyframes nxShoot {
-  0% { transform: rotate(18deg) translateX(0); opacity: 0; }
+  0% { transform: rotate(18deg) translateX(0) translateZ(0); opacity: 0; }
   8% { opacity: 1; }
-  100% { transform: rotate(18deg) translateX(-60vw); opacity: 0; }
+  100% { transform: rotate(18deg) translateX(-60vw) translateZ(0); opacity: 0; }
 }
 
 .nx-sky {
@@ -712,11 +640,11 @@ body.season-s3 #season-bg::after {
 
 .nx-star {
   position: absolute;
-  width: 2px;
-  height: 2px;
+  width: 2px; height: 2px;
   border-radius: 50%;
   background: #fff;
   animation: nxTwinkle 2s ease-in-out infinite alternate;
+  will-change: opacity;
 }
 
 @keyframes nxTwinkle {
@@ -726,35 +654,27 @@ body.season-s3 #season-bg::after {
 
 .nx-moon {
   position: absolute;
-  top: 8%;
-  left: 15%;
-  width: 80px;
-  height: 80px;
+  top: 8%; left: 15%;
+  width: 80px; height: 80px;
   border-radius: 50%;
   background: radial-gradient(circle at 40% 35%, #eaf6ff 0%, #bcd9f2 50%, #8fb8dd 100%);
-  box-shadow: 0 0 40px 15px rgba(180,220,255,0.4);
+  box-shadow: 0 0 30px 10px rgba(180,220,255,0.3);
+  transform: var(--gpu-accelerate);
 }
 
 .nx-village {
   position: absolute;
-  bottom: 16%;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 16%; left: 50%;
+  transform: translateX(-50%) translateZ(0);
   width: min(640px, 94%);
   height: 200px;
-  filter: drop-shadow(0 0 18px rgba(255,200,120,0.25));
 }
 
-.nx-village svg {
-  width: 100%;
-  height: 100%;
-}
+.nx-village svg { width: 100%; height: 100%; }
 
 .nx-ground {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 0; left: 0; right: 0;
   height: 22%;
   background: linear-gradient(180deg, rgba(255,255,255,0.95), #dceaf7 40%, #b8cfe6 100%);
   border-radius: 50% 50% 0 0 / 16% 16% 0 0;
@@ -763,43 +683,31 @@ body.season-s3 #season-bg::after {
 .nx-guirlande {
   position: absolute;
   top: -12px;
-  width: 440px;
-  height: 280px;
+  width: 440px; height: 280px;
   pointer-events: none;
+  transform: var(--gpu-accelerate);
 }
 
-.nx-guirlande-tl {
-  left: -24px;
-}
-
-.nx-guirlande-tr {
-  right: -24px;
-  transform: scaleX(-1);
-}
+.nx-guirlande-tl { left: -24px; }
+.nx-guirlande-tr { right: -24px; transform: scaleX(-1) translateZ(0); }
 
 .nx-sapin {
   position: absolute;
   bottom: 2%;
-  width: 400px;
-  height: 560px;
+  width: 400px; height: 560px;
   pointer-events: none;
+  transform: var(--gpu-accelerate);
 }
 
-.nx-sapin-left {
-  left: -70px;
-}
-
-.nx-sapin-right {
-  right: -70px;
-}
+.nx-sapin-left { left: -70px; }
+.nx-sapin-right { right: -70px; }
 
 .nx-bonhomme {
   position: absolute;
-  bottom: 9%;
-  left: 24%;
-  width: 220px;
-  height: 260px;
+  bottom: 9%; left: 24%;
+  width: 220px; height: 260px;
   pointer-events: none;
+  transform: var(--gpu-accelerate);
 }
 
 .nx-flocons {
@@ -812,39 +720,24 @@ body.season-s3 #season-bg::after {
 .nx-sleigh {
   position: absolute;
   left: -340px;
-  width: 320px;
-  height: 175px;
+  width: 320px; height: 175px;
   pointer-events: none;
   animation: nxFlyLR linear forwards;
+  will-change: transform;
+  transform: var(--gpu-accelerate);
 }
 
 @keyframes nxFlyLR {
-  from { transform: translateX(0); }
-  to { transform: translateX(calc(100vw + 360px)); }
+  from { transform: translateX(0) translateZ(0); }
+  to { transform: translateX(calc(100vw + 360px)) translateZ(0); }
 }
 
 @media (max-width: 600px) {
-  .nx-sapin {
-    width: 200px;
-    height: 300px;
-    bottom: 1%;
-  }
-  .nx-bonhomme {
-    left: 30%;
-    width: 120px;
-    height: 145px;
-  }
-  .nx-sleigh {
-    width: 180px;
-    height: 100px;
-  }
-  .nx-guirlande {
-    width: 240px;
-    height: 160px;
-  }
-  .nx-village {
-    height: 150px;
-  }
+  .nx-sapin { width: 200px; height: 300px; bottom: 1%; }
+  .nx-bonhomme { left: 30%; width: 120px; height: 145px; }
+  .nx-sleigh { width: 180px; height: 100px; }
+  .nx-guirlande { width: 240px; height: 160px; }
+  .nx-village { height: 150px; }
 }
 
 /* ============================================================
@@ -855,25 +748,25 @@ body.season-s3 #season-bg::after {
 .user-pill:has(.tft-avatar-container.bonbon-frame) {
   border: 3px solid transparent !important;
   background: linear-gradient(135deg, rgba(50,0,10,0.97), rgba(110,0,25,0.97)) padding-box, repeating-linear-gradient(45deg, #ff1e3c 0 7px, #ffffff 7px 14px) border-box !important;
-  box-shadow: 0 0 16px rgba(255,30,60,0.7) !important;
+  box-shadow: 0 0 12px rgba(255,30,60,0.6) !important;
 }
 
 .tft-avatar-container.bonbon-frame {
   border: 3px solid transparent;
   background: linear-gradient(135deg,#3a000a,#7a0018) padding-box, repeating-linear-gradient(45deg,#ff1e3c 0 6px,#fff 6px 12px) border-box;
-  box-shadow: 0 0 14px rgba(255,30,60,0.9);
+  box-shadow: 0 0 10px rgba(255,30,60,0.8);
 }
 
 .tft-avatar-large.bonbon-frame {
   border: 3px solid transparent;
   background: linear-gradient(135deg,#3a000a,#7a0018) padding-box, repeating-linear-gradient(45deg,#ff1e3c 0 6px,#fff 6px 12px) border-box;
-  box-shadow: 0 0 22px rgba(255,30,60,0.9);
+  box-shadow: 0 0 16px rgba(255,30,60,0.8);
 }
 
 .victory-badge-large.bonbon-frame {
   border: 3px solid transparent;
   background: linear-gradient(135deg,#3a000a,#7a0018) padding-box, repeating-linear-gradient(45deg,#ff1e3c 0 6px,#fff 6px 12px) border-box;
-  box-shadow: 0 0 30px rgba(255,30,60,0.8);
+  box-shadow: 0 0 20px rgba(255,30,60,0.7);
 }
 
 /* --- Cadre Guirlande --- */
@@ -881,38 +774,36 @@ body.season-s3 #season-bg::after {
 .user-pill:has(.tft-avatar-container.guirlande-frame) {
   border-color: #38ef7d !important;
   background: radial-gradient(circle at 15% 30%, #ff4b4b 3px, transparent 4px), radial-gradient(circle at 55% 20%, #ffd700 3px, transparent 4px), radial-gradient(circle at 85% 40%, #4bb3ff 3px, transparent 4px), radial-gradient(circle at 35% 75%, #ff8ae2 3px, transparent 4px), linear-gradient(135deg, rgba(11,61,31,0.95), rgba(20,90,44,0.95)) !important;
-  box-shadow: 0 0 16px rgba(56,239,125,0.8) !important;
+  box-shadow: 0 0 12px rgba(56,239,125,0.7) !important;
 }
 
 .tft-avatar-container.guirlande-frame {
   border-color: #38ef7d;
   background: radial-gradient(circle at 20% 25%, #ff4b4b 3px, transparent 4px), radial-gradient(circle at 70% 20%, #ffd700 3px, transparent 4px), radial-gradient(circle at 45% 70%, #4bb3ff 3px, transparent 4px), radial-gradient(circle at 85% 60%, #ff8ae2 3px, transparent 4px), linear-gradient(135deg, #0b3d1f, #145a2c);
-  box-shadow: 0 0 14px rgba(56,239,125,0.9);
+  box-shadow: 0 0 10px rgba(56,239,125,0.8);
 }
 
 .tft-avatar-large.guirlande-frame {
   border-color: #38ef7d;
   background: radial-gradient(circle at 20% 25%, #ff4b4b 4px, transparent 5px), radial-gradient(circle at 70% 20%, #ffd700 4px, transparent 5px), radial-gradient(circle at 45% 70%, #4bb3ff 4px, transparent 5px), radial-gradient(circle at 85% 60%, #ff8ae2 4px, transparent 5px), linear-gradient(135deg, #0b3d1f, #145a2c);
-  box-shadow: 0 0 22px rgba(56,239,125,0.9);
+  box-shadow: 0 0 16px rgba(56,239,125,0.8);
 }
 
 .victory-badge-large.guirlande-frame {
   background: radial-gradient(circle at 20% 25%, #ff4b4b 4px, transparent 5px), radial-gradient(circle at 70% 20%, #ffd700 4px, transparent 5px), radial-gradient(circle at 45% 70%, #4bb3ff 4px, transparent 5px), linear-gradient(135deg, #0b3d1f, #145a2c);
   border-color: #38ef7d;
-  box-shadow: 0 0 30px rgba(56,239,125,0.8);
+  box-shadow: 0 0 20px rgba(56,239,125,0.7);
 }
 
 /* --- Nœud décoratif (cadre Guirlande) --- */
 .victory-badge-large.guirlande-frame::before {
   content: '';
   position: absolute;
-  top: -13px;
-  right: -7px;
-  width: 20px;
-  height: 12px;
+  top: -13px; right: -7px;
+  width: 20px; height: 12px;
   background: linear-gradient(200deg, #fff 0 3px, #dc2626 3px);
   clip-path: polygon(0 100%, 100% 100%, 85% 0);
-  transform: rotate(15deg);
+  transform: rotate(15deg) translateZ(0);
   z-index: 4;
   pointer-events: none;
 }
@@ -924,41 +815,35 @@ body.season-s3 #season-bg::after {
   background: repeating-linear-gradient(45deg, #ff043c 0 12px, #ffffff 12px 24px) !important;
   border-color: #ff043c !important;
   color: #fff !important;
-  text-shadow: 0 0 3px #d90429, 0 0 6px #d90429, 1px 1px 0 #d90429, -1px -1px 0 #d90429, 1px -1px 0 #d90429, -1px 1px 0 #d90429, 0 2px 4px rgba(0,0,0,0.6);
-  box-shadow: 0 0 14px rgba(255,4,60,0.7);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  box-shadow: 0 0 10px rgba(255,4,60,0.6);
 }
 
 .tile.sapin-theme {
   background: radial-gradient(circle at 25% 30%, #ff4b4b 3px, transparent 4px), radial-gradient(circle at 70% 25%, #ffd700 3px, transparent 4px), radial-gradient(circle at 40% 70%, #4bb3ff 3px, transparent 4px), radial-gradient(circle at 80% 65%, #ff8ae2 3px, transparent 4px), linear-gradient(135deg, #0b3d1f, #1a6b35) !important;
   border-color: #38ef7d !important;
   color: #fff !important;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-  box-shadow: 0 0 12px rgba(56,239,125,0.5);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  box-shadow: 0 0 8px rgba(56,239,125,0.4);
 }
 
 .tile.lutin-theme {
   background: radial-gradient(circle at 25% 25%, rgba(255,255,255,0.85) 3px, transparent 4px), radial-gradient(circle at 75% 72%, rgba(56,239,125,0.7) 3px, transparent 4px), linear-gradient(180deg, transparent 44%, rgba(251,191,36,0.85) 44% 56%, transparent 56%), linear-gradient(160deg, #b91c1c, #7f1d1d) !important;
   border-color: #fbbf24 !important;
   color: #fff !important;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.85);
-  box-shadow: 0 0 12px rgba(185,28,28,0.6);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  box-shadow: 0 0 8px rgba(185,28,28,0.5);
 }
 
 /* ============================================================
 11. DÉCORS DE CONTOUR DE GRILLE
 ============================================================ */
-/* --- Sapin : guirlande d'ampoules --- */
-#grid:has(.sapin-theme) {
-  position: relative;
-}
+#grid:has(.sapin-theme) { position: relative; }
 
 #grid:has(.sapin-theme)::before {
   content: '';
   position: absolute;
-  left: -6px;
-  right: -6px;
-  top: -16px;
-  bottom: -6px;
+  left: -6px; right: -6px; top: -16px; bottom: -6px;
   border: 2px solid rgba(25,25,25,0.95);
   border-radius: 14px;
   z-index: -1;
@@ -968,9 +853,7 @@ body.season-s3 #season-bg::after {
 #grid:has(.sapin-theme)::after {
   content: '';
   position: absolute;
-  left: -4px;
-  right: -4px;
-  top: -15px;
+  left: -4px; right: -4px; top: -15px;
   height: 28px;
   pointer-events: none;
   z-index: 2;
@@ -978,10 +861,12 @@ body.season-s3 #season-bg::after {
   background-size: 132px 28px;
   background-repeat: repeat-x;
   animation: garlandTwinkle 1.4s ease-in-out infinite alternate;
+  will-change: opacity;
+  transform: var(--gpu-accelerate);
 }
 
 @keyframes garlandTwinkle {
-  from { opacity: 0.7; }
+  from { opacity: 0.75; }
   to { opacity: 1; }
 }
 
@@ -990,28 +875,17 @@ body.season-s3 #season-bg::after {
 ============================================================ */
 :root {
   --svg-hat-lutin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 80'%3E%3Cpath d='M25 60 C28 28 52 10 70 13 C94 17 102 36 107 50 L107 60 Z' fill='%231a7a3c'/%3E%3Cpath d='M30 58 C34 32 52 16 68 16 C80 18 90 26 96 36 C80 30 60 34 50 44 C42 50 36 56 34 60 Z' fill='%2322994c' opacity='0.6'/%3E%3Cpath d='M107 50 C110 56 110 60 108 64' stroke='%231a7a3c' stroke-width='7' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='108' cy='66' r='7' fill='%23f5f0e6'/%3E%3Ccircle cx='108' cy='77' r='5' fill='%23cc2222'/%3E%3Crect x='105' y='59' width='6' height='4' fill='%23e6a71e'/%3E%3Crect x='16' y='56' width='84' height='13' rx='6' fill='%23f5f0e6'/%3E%3Cpath d='M32 62 C22 54 12 56 12 62 C12 68 22 70 32 62 Z' fill='%23cc2222'/%3E%3Cpath d='M32 62 C42 54 52 56 52 62 C52 68 42 70 32 62 Z' fill='%23cc2222'/%3E%3Ccircle cx='32' cy='62' r='4' fill='%23a01818'/%3E%3C/svg%3E");
-  
   --svg-chauss-lutin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 60'%3E%3Cg%3E%3Cpath d='M15 55 C6 40 10 22 22 18 C28 16 30 26 40 30 L62 30 L62 55 Z' fill='%2322aa44'/%3E%3Ccircle cx='20' cy='14' r='7' fill='%23cc2222'/%3E%3Cpath d='M44 10 L66 10 L66 30 L60 23 L55 31 L50 23 L45 29 Z' fill='%23cc2222'/%3E%3Ccircle cx='55' cy='29' r='3' fill='%23e6c71e'/%3E%3Ccircle cx='63' cy='27' r='3' fill='%23e6c71e'/%3E%3C/g%3E%3Cg transform='translate(200,0) scale(-1,1)'%3E%3Cpath d='M15 55 C6 40 10 22 22 18 C28 16 30 26 40 30 L62 30 L62 55 Z' fill='%2322aa44'/%3E%3Ccircle cx='20' cy='14' r='7' fill='%23cc2222'/%3E%3Cpath d='M44 10 L66 10 L66 30 L60 23 L55 31 L50 23 L45 29 Z' fill='%23cc2222'/%3E%3Ccircle cx='55' cy='29' r='3' fill='%23e6c71e'/%3E%3Ccircle cx='63' cy='27' r='3' fill='%23e6c71e'/%3E%3C/g%3E%3C/svg%3E");
-  
-  /* --- Lutin GRIMACE --- */
   --svg-lutin-grimace: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 80'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%232ecc71'/%3E%3Cstop offset='1' stop-color='%23145a2c'/%3E%3C/linearGradient%3E%3CradialGradient id='b' cx='0.4' cy='0.35' r='0.9'%3E%3Cstop offset='0' stop-color='%23ffe9c9'/%3E%3Cstop offset='1' stop-color='%23e0a878'/%3E%3C/radialGradient%3E%3ClinearGradient id='c' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23e74c3c'/%3E%3Cstop offset='1' stop-color='%238e2618'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M18 18 C16 6 40 4 44 14 C46 20 42 22 40 20 C38 24 24 24 20 22 Z' fill='url(%23a)'/%3E%3Ccircle cx='45' cy='13' r='3.5' fill='%23f1c40f'/%3E%3Ccircle cx='44' cy='12' r='1' fill='%23fff'/%3E%3Crect x='16' y='18' width='28' height='5' rx='2.5' fill='%23fff'/%3E%3Cpath d='M19 30 L15 32 L19 35 Z' fill='url(%23b)'/%3E%3Cpath d='M41 30 L45 32 L41 35 Z' fill='url(%23b)'/%3E%3Ccircle cx='30' cy='30' r='10' fill='url(%23b)'/%3E%3Ccircle cx='26' cy='29' r='1.8' fill='%23222'/%3E%3Cpath d='M32 28 L37 29' stroke='%23222' stroke-width='1.5'/%3E%3Cpath d='M25 34 Q30 39 35 34' stroke='%23222' stroke-width='1.5' fill='none'/%3E%3Cpath d='M28 36 Q30 40 32 36 Z' fill='%23e74c3c'/%3E%3Cpath d='M24 40 L36 40 L34 44 L26 44 Z' fill='%23fff'/%3E%3Cpath d='M22 42 L38 42 L40 58 L20 58 Z' fill='url(%23a)'/%3E%3Crect x='20' y='50' width='20' height='4' fill='%23222'/%3E%3Crect x='27' y='50.5' width='6' height='3' fill='%23f1c40f'/%3E%3Cpath d='M22 44 L14 52 L16 55 L23 49 Z' fill='url(%23c)'/%3E%3Cpath d='M38 44 L46 52 L44 55 L37 49 Z' fill='url(%23c)'/%3E%3Ccircle cx='14' cy='53' r='3' fill='url(%23b)'/%3E%3Ccircle cx='46' cy='53' r='3' fill='url(%23b)'/%3E%3Crect x='25' y='58' width='4' height='12' fill='url(%23c)'/%3E%3Crect x='31' y='58' width='4' height='12' fill='url(%23c)'/%3E%3Cpath d='M25 70 L16 73 L16 77 L29 77 L29 70 Z' fill='url(%23a)'/%3E%3Cpath d='M35 70 L44 73 L44 77 L31 77 L31 70 Z' fill='url(%23a)'/%3E%3Ccircle cx='15' cy='72' r='1.5' fill='%23f1c40f'/%3E%3Ccircle cx='45' cy='72' r='1.5' fill='%23f1c40f'/%3E%3C/svg%3E");
-  
-  /* --- Lutin VOLEUR DE CADEAU --- */
   --svg-lutin-kdo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 80'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%232ecc71'/%3E%3Cstop offset='1' stop-color='%23145a2c'/%3E%3C/linearGradient%3E%3CradialGradient id='b' cx='0.4' cy='0.35' r='0.9'%3E%3Cstop offset='0' stop-color='%23ffe9c9'/%3E%3Cstop offset='1' stop-color='%23e0a878'/%3E%3C/radialGradient%3E%3ClinearGradient id='c' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23e74c3c'/%3E%3Cstop offset='1' stop-color='%238e2618'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M18 18 C16 6 40 4 44 14 C46 20 42 22 40 20 C38 24 24 24 20 22 Z' fill='url(%23a)'/%3E%3Ccircle cx='45' cy='13' r='3.5' fill='%23f1c40f'/%3E%3Ccircle cx='44' cy='12' r='1' fill='%23fff'/%3E%3Crect x='16' y='18' width='28' height='5' rx='2.5' fill='%23fff'/%3E%3Cpath d='M19 30 L15 32 L19 35 Z' fill='url(%23b)'/%3E%3Cpath d='M41 30 L45 32 L41 35 Z' fill='url(%23b)'/%3E%3Ccircle cx='30' cy='30' r='10' fill='url(%23b)'/%3E%3Ccircle cx='26' cy='29' r='1.8' fill='%23222'/%3E%3Ccircle cx='34' cy='29' r='1.8' fill='%23222'/%3E%3Cpath d='M26 35 Q30 38 34 35' stroke='%23222' stroke-width='1.5' fill='none'/%3E%3Cpath d='M24 40 L36 40 L34 44 L26 44 Z' fill='%23fff'/%3E%3Cpath d='M22 42 L38 42 L40 58 L20 58 Z' fill='url(%23a)'/%3E%3Crect x='20' y='50' width='20' height='4' fill='%23222'/%3E%3Crect x='27' y='50.5' width='6' height='3' fill='%23f1c40f'/%3E%3Crect x='22' y='45' width='16' height='13' fill='%232980b9'/%3E%3Crect x='29' y='45' width='2' height='13' fill='%23f1c40f'/%3E%3Crect x='22' y='50' width='16' height='2' fill='%23f1c40f'/%3E%3Cpath d='M22 44 L24 50 M38 44 L36 50' stroke='url(%23c)' stroke-width='4'/%3E%3Crect x='25' y='58' width='4' height='12' fill='url(%23c)'/%3E%3Crect x='31' y='58' width='4' height='12' fill='url(%23c)'/%3E%3Cpath d='M25 70 L16 73 L16 77 L29 77 L29 70 Z' fill='url(%23a)'/%3E%3Cpath d='M35 70 L44 73 L44 77 L31 77 L31 70 Z' fill='url(%23a)'/%3E%3Ccircle cx='15' cy='72' r='1.5' fill='%23f1c40f'/%3E%3Ccircle cx='45' cy='72' r='1.5' fill='%23f1c40f'/%3E%3C/svg%3E");
-  
-  /* --- Lutin BONNET PÈRE NOËL --- */
   --svg-lutin-bonnet: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 80'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%232ecc71'/%3E%3Cstop offset='1' stop-color='%23145a2c'/%3E%3C/linearGradient%3E%3CradialGradient id='b' cx='0.4' cy='0.35' r='0.9'%3E%3Cstop offset='0' stop-color='%23ffe9c9'/%3E%3Cstop offset='1' stop-color='%23e0a878'/%3E%3C/radialGradient%3E%3ClinearGradient id='c' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23e74c3c'/%3E%3Cstop offset='1' stop-color='%238e2618'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M18 18 C16 6 40 4 44 14 C46 20 42 22 40 20 C38 24 24 24 20 22 Z' fill='url(%23c)'/%3E%3Ccircle cx='45' cy='13' r='4.5' fill='%23fff'/%3E%3Crect x='16' y='18' width='28' height='6' rx='3' fill='%23fff'/%3E%3Cpath d='M19 30 L15 32 L19 35 Z' fill='url(%23b)'/%3E%3Cpath d='M41 30 L45 32 L41 35 Z' fill='url(%23b)'/%3E%3Ccircle cx='30' cy='30' r='10' fill='url(%23b)'/%3E%3Ccircle cx='26' cy='29' r='1.8' fill='%23222'/%3E%3Ccircle cx='34' cy='29' r='1.8' fill='%23222'/%3E%3Cpath d='M25 35 Q30 38 35 35' stroke='%23222' stroke-width='1.5' fill='none'/%3E%3Cpath d='M24 40 L36 40 L34 44 L26 44 Z' fill='%23fff'/%3E%3Cpath d='M22 42 L38 42 L40 58 L20 58 Z' fill='url(%23a)'/%3E%3Crect x='20' y='50' width='20' height='4' fill='%23222'/%3E%3Crect x='27' y='50.5' width='6' height='3' fill='%23f1c40f'/%3E%3Cpath d='M22 44 L14 52 L16 55 L23 49 Z' fill='url(%23c)'/%3E%3Cpath d='M38 44 L46 52 L44 55 L37 49 Z' fill='url(%23c)'/%3E%3Ccircle cx='14' cy='53' r='3' fill='url(%23b)'/%3E%3Ccircle cx='46' cy='53' r='3' fill='url(%23b)'/%3E%3Crect x='25' y='58' width='4' height='12' fill='url(%23c)'/%3E%3Crect x='31' y='58' width='4' height='12' fill='url(%23c)'/%3E%3Cpath d='M25 70 L16 73 L16 77 L29 77 L29 70 Z' fill='url(%23a)'/%3E%3Cpath d='M35 70 L44 73 L44 77 L31 77 L31 70 Z' fill='url(%23a)'/%3E%3Ccircle cx='15' cy='72' r='1.5' fill='%23f1c40f'/%3E%3Ccircle cx='45' cy='72' r='1.5' fill='%23f1c40f'/%3E%3C/svg%3E");
-  
-  /* --- Lutin SUR UN CERF --- */
   --svg-lutin-cerf: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 80'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%232ecc71'/%3E%3Cstop offset='1' stop-color='%23145a2c'/%3E%3C/linearGradient%3E%3CradialGradient id='b' cx='0.4' cy='0.35' r='0.9'%3E%3Cstop offset='0' stop-color='%23ffe9c9'/%3E%3Cstop offset='1' stop-color='%23e0a878'/%3E%3C/radialGradient%3E%3ClinearGradient id='d' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23a05c2c'/%3E%3Cstop offset='1' stop-color='%236b3410'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cellipse cx='55' cy='55' rx='25' ry='14' fill='url(%23d)'/%3E%3Crect x='35' y='62' width='5' height='14' fill='%236b3410'/%3E%3Crect x='48' y='64' width='5' height='14' fill='%236b3410'/%3E%3Crect x='62' y='64' width='5' height='14' fill='%236b3410'/%3E%3Crect x='72' y='62' width='5' height='14' fill='%236b3410'/%3E%3Ccircle cx='80' cy='42' r='9' fill='url(%23d)'/%3E%3Cpath d='M76 34 L72 26 M76 34 L78 26 M84 34 L82 26 M84 34 L88 26' stroke='%236b3410' stroke-width='2'/%3E%3Ccircle cx='83' cy='41' r='1.5' fill='%23222'/%3E%3Cpath d='M30 18 C28 8 48 6 51 14 L34 20 Z' fill='url(%23a)'/%3E%3Ccircle cx='51' cy='13' r='3' fill='%23f1c40f'/%3E%3Ccircle cx='40' cy='25' r='8' fill='url(%23b)'/%3E%3Ccircle cx='37' cy='24' r='1.4' fill='%23222'/%3E%3Ccircle cx='43' cy='24' r='1.4' fill='%23222'/%3E%3Cpath d='M37 29 Q40 31 43 29' stroke='%23222' stroke-width='1.3' fill='none'/%3E%3Cpath d='M32 32 L48 32 L50 46 L30 46 Z' fill='url(%23a)'/%3E%3Crect x='31' y='38' width='18' height='3' fill='%23222'/%3E%3C/svg%3E");
 }
 
 /* ============================================================
 13. DÉCOR LUTIN (grille)
 ============================================================ */
-#grid:has(.lutin-theme) {
-  position: relative;
-}
+#grid:has(.lutin-theme) { position: relative; }
 
 #grid:has(.lutin-theme)::before {
   content: '';
@@ -1020,7 +894,7 @@ body.season-s3 #season-bg::after {
   margin-bottom: -14px;
   background: var(--svg-hat-lutin) center / contain no-repeat;
   pointer-events: none;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.45));
+  transform: var(--gpu-accelerate);
 }
 
 #grid:has(.lutin-theme)::after {
@@ -1030,7 +904,7 @@ body.season-s3 #season-bg::after {
   margin-top: -14px;
   background: var(--svg-chauss-lutin) center / contain no-repeat;
   pointer-events: none;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.45));
+  transform: var(--gpu-accelerate);
 }
 
 /* ============================================================
@@ -1040,7 +914,7 @@ body.season-s3 #season-bg::after {
 .user-pill:has(.tft-avatar-container.lutin-frame) {
   border-color: #fbbf24 !important;
   background: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.7) 2.5px, transparent 3.5px), radial-gradient(circle at 80% 70%, rgba(56,239,125,0.6) 2.5px, transparent 3.5px), linear-gradient(135deg, rgba(185,28,28,0.95), rgba(127,29,29,0.95)) !important;
-  box-shadow: 0 0 16px rgba(185,28,28,0.8) !important;
+  box-shadow: 0 0 12px rgba(185,28,28,0.7) !important;
 }
 
 .tft-avatar-container.lutin-frame,
@@ -1052,11 +926,9 @@ body.season-s3 #season-bg::after {
 .tft-avatar-container.lutin-frame::before {
   content: '';
   position: absolute;
-  left: 50%;
-  top: -15px;
-  transform: translateX(-50%);
-  width: 36px;
-  height: 24px;
+  left: 50%; top: -15px;
+  transform: translateX(-50%) translateZ(0);
+  width: 36px; height: 24px;
   background: var(--svg-hat-lutin) center / contain no-repeat;
   z-index: 4;
   pointer-events: none;
@@ -1065,11 +937,9 @@ body.season-s3 #season-bg::after {
 .tft-avatar-container.lutin-frame::after {
   content: '';
   position: absolute;
-  left: 50%;
-  bottom: -9px;
-  transform: translateX(-50%);
-  width: 42px;
-  height: 14px;
+  left: 50%; bottom: -9px;
+  transform: translateX(-50%) translateZ(0);
+  width: 42px; height: 14px;
   background: var(--svg-chauss-lutin) center / contain no-repeat;
   z-index: 4;
   pointer-events: none;
@@ -1078,11 +948,9 @@ body.season-s3 #season-bg::after {
 .tft-avatar-large.lutin-frame::before {
   content: '';
   position: absolute;
-  left: 50%;
-  top: -20px;
-  transform: translateX(-50%);
-  width: 48px;
-  height: 32px;
+  left: 50%; top: -20px;
+  transform: translateX(-50%) translateZ(0);
+  width: 48px; height: 32px;
   background: var(--svg-hat-lutin) center / contain no-repeat;
   z-index: 4;
   pointer-events: none;
@@ -1091,11 +959,9 @@ body.season-s3 #season-bg::after {
 .tft-avatar-large.lutin-frame::after {
   content: '';
   position: absolute;
-  left: 50%;
-  bottom: -12px;
-  transform: translateX(-50%);
-  width: 56px;
-  height: 18px;
+  left: 50%; bottom: -12px;
+  transform: translateX(-50%) translateZ(0);
+  width: 56px; height: 18px;
   background: var(--svg-chauss-lutin) center / contain no-repeat;
   z-index: 4;
   pointer-events: none;
@@ -1104,104 +970,92 @@ body.season-s3 #season-bg::after {
 /* ============================================================
 15. ANIMATIONS COMBO NOËL 🎄
 ============================================================ */
-/* --- Bonbon : sucres rayés qui tombent en tournant --- */
 .bonbon-wrapper {
   position: fixed;
   top: -60px;
   animation: bonbonFall linear forwards;
   z-index: 1;
   pointer-events: none;
+  will-change: transform, opacity;
 }
 
 .bonbon {
-  width: 42px;
-  height: 42px;
+  width: 42px; height: 42px;
   border-radius: 50%;
   background: repeating-linear-gradient(45deg, #ff043c 0 6px, #ffffff 6px 12px);
-  box-shadow: 0 0 14px rgba(255,4,60,0.7), inset 0 0 8px rgba(255,255,255,0.6);
+  box-shadow: 0 0 10px rgba(255,4,60,0.6), inset 0 0 6px rgba(255,255,255,0.5);
   animation: bonbonSpin 0.9s linear infinite;
+  transform: var(--gpu-accelerate);
 }
 
 @keyframes bonbonSpin {
-  from { transform: rotate(0); }
-  to { transform: rotate(360deg); }
+  from { transform: rotate(0) translateZ(0); }
+  to { transform: rotate(360deg) translateZ(0); }
 }
 
 @keyframes bonbonFall {
-  0% { transform: translateY(0) translateX(0) rotate(0); opacity: 0; }
+  0% { transform: translateY(0) translateX(0) rotate(0) translateZ(0); opacity: 0; }
   15% { opacity: 1; }
   85% { opacity: 1; }
-  100% { transform: translateY(calc(100vh + 120px)) translateX(var(--drift)) rotate(var(--rot)); opacity: 0; }
+  100% { transform: translateY(calc(100vh + 120px)) translateX(var(--drift)) rotate(var(--rot)) translateZ(0); opacity: 0; }
 }
 
-/* --- Sapin : boules colorées qui scintillent en tombant --- */
 .sapin-sparkle {
   position: fixed;
   top: -50px;
   animation: sapinFall ease-in forwards;
   z-index: 1;
   pointer-events: none;
+  will-change: transform, opacity;
 }
 
 .sapin-boule {
-  width: 32px;
-  height: 32px;
+  width: 32px; height: 32px;
   border-radius: 50%;
   position: relative;
   background: radial-gradient(circle at 35% 30%, #fff 0 15%, var(--c) 45%);
-  box-shadow: 0 0 12px var(--c);
-  animation: sapinTwinkle 0.5s ease-in-out infinite alternate;
+  box-shadow: 0 0 8px var(--c);
+  /* [OPTIMISATION] Scale + Opacity au lieu de filter:brightness */
+  animation: sapinTwinkle 0.6s ease-in-out infinite alternate;
+  transform: var(--gpu-accelerate);
 }
 
 .sapin-boule::before {
   content: '';
   position: absolute;
-  top: -7px;
-  left: 50%;
+  top: -7px; left: 50%;
   transform: translateX(-50%);
-  width: 9px;
-  height: 7px;
+  width: 9px; height: 7px;
   background: #ffd700;
   border-radius: 2px;
 }
 
 @keyframes sapinTwinkle {
-  from { filter: brightness(0.9); }
-  to { filter: brightness(1.4); }
+  from { opacity: 0.85; transform: scale(0.95) translateZ(0); }
+  to { opacity: 1; transform: scale(1.05) translateZ(0); }
 }
 
 @keyframes sapinFall {
-  0% { transform: translateY(0); opacity: 0; }
+  0% { transform: translateY(0) translateZ(0); opacity: 0; }
   15% { opacity: 1; }
   90% { opacity: 1; }
-  100% { transform: translateY(calc(100vh + 100px)); opacity: 0; }
+  100% { transform: translateY(calc(100vh + 100px)) translateZ(0); opacity: 0; }
 }
 
 /* ============================================================
 16. LUTINS COMBO 🧝 (4 variantes 3D)
 ============================================================ */
 .lutin-body {
-  width: 100%;
-  height: 100%;
+  width: 100%; height: 100%;
   animation: lutinBob 0.35s ease-in-out infinite alternate;
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+  will-change: transform;
+  transform: var(--gpu-accelerate);
 }
 
-.lutin-body.v-grimace {
-  background: var(--svg-lutin-grimace) center / contain no-repeat;
-}
-
-.lutin-body.v-kdo {
-  background: var(--svg-lutin-kdo) center / contain no-repeat;
-}
-
-.lutin-body.v-bonnet {
-  background: var(--svg-lutin-bonnet) center / contain no-repeat;
-}
-
-.lutin-body.v-cerf {
-  background: var(--svg-lutin-cerf) center / contain no-repeat;
-}
+.lutin-body.v-grimace { background: var(--svg-lutin-grimace) center / contain no-repeat; }
+.lutin-body.v-kdo { background: var(--svg-lutin-kdo) center / contain no-repeat; }
+.lutin-body.v-bonnet { background: var(--svg-lutin-bonnet) center / contain no-repeat; }
+.lutin-body.v-cerf { background: var(--svg-lutin-cerf) center / contain no-repeat; }
 
 #screen-game {
   position: relative;
@@ -1213,38 +1067,28 @@ body.season-s3 #season-bg::after {
   left: 0;
   pointer-events: none;
   z-index: 1;
+  will-change: transform;
 }
 
-.lutin-runner.lr {
-  animation: lutinRunLR linear forwards;
-}
+.lutin-runner.lr { animation: lutinRunLR linear forwards; }
+.lutin-runner.rl { animation: lutinRunRL linear forwards; }
 
-.lutin-runner.rl {
-  animation: lutinRunRL linear forwards;
-}
-
-.lutin-flip {
-  width: 100%;
-  height: 100%;
-}
-
-.lutin-flip.flip {
-  transform: scaleX(-1);
-}
+.lutin-flip { width: 100%; height: 100%; }
+.lutin-flip.flip { transform: scaleX(-1) translateZ(0); }
 
 @keyframes lutinRunLR {
-  from { transform: translateX(-180px); }
-  to { transform: translateX(105vw); }
+  from { transform: translateX(-180px) translateZ(0); }
+  to { transform: translateX(105vw) translateZ(0); }
 }
 
 @keyframes lutinRunRL {
-  from { transform: translateX(105vw); }
-  to { transform: translateX(-180px); }
+  from { transform: translateX(105vw) translateZ(0); }
+  to { transform: translateX(-180px) translateZ(0); }
 }
 
 @keyframes lutinBob {
-  from { transform: translateY(0) rotate(-5deg); }
-  to { transform: translateY(-12px) rotate(5deg); }
+  from { transform: translateY(0) rotate(-5deg) translateZ(0); }
+  to { transform: translateY(-12px) rotate(5deg) translateZ(0); }
 }
 
 .lutin-peek {
@@ -1253,14 +1097,15 @@ body.season-s3 #season-bg::after {
   pointer-events: none;
   z-index: 1;
   animation: lutinPeek 3s ease-in-out forwards;
+  will-change: transform;
 }
 
 @keyframes lutinPeek {
-  0% { transform: translateY(-110%); }
-  35% { transform: translateY(-8%) rotate(8deg); }
-  55% { transform: translateY(-8%) rotate(-8deg); }
-  70% { transform: translateY(-8%); }
-  100% { transform: translateY(-110%); }
+  0% { transform: translateY(-110%) translateZ(0); }
+  35% { transform: translateY(-8%) rotate(8deg) translateZ(0); }
+  55% { transform: translateY(-8%) rotate(-8deg) translateZ(0); }
+  70% { transform: translateY(-8%) translateZ(0); }
+  100% { transform: translateY(-110%) translateZ(0); }
 }
 
 /* ============================================================
@@ -1285,9 +1130,8 @@ body.season-s3 #season-bg::after {
 
 #catch-backdrop {
   position: absolute;
-  bottom: 2%;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 2%; left: 50%;
+  transform: translateX(-50%) translateZ(0);
   font-size: 110px;
   opacity: .5;
 }
@@ -1295,12 +1139,10 @@ body.season-s3 #season-bg::after {
 #catch-santa {
   position: absolute;
   bottom: 12px;
-  width: 96px;
-  height: 115px;
-  transform: translateX(-50%);
+  width: 96px; height: 115px;
+  transform: translateX(-50%) translateZ(0);
   z-index: 3;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Cellipse cx='72' cy='30' rx='20' ry='24' fill='%238b5a2b'/%3E%3Cellipse cx='72' cy='12' rx='12' ry='6' fill='%235a3a1b'/%3E%3Crect x='64' y='6' width='7' height='7' fill='%23ff4b4b'/%3E%3Crect x='73' y='4' width='7' height='8' fill='%234bb3ff'/%3E%3Cpath d='M55 60 Q60 45 68 38' stroke='%23c62828' stroke-width='9' fill='none' stroke-linecap='round'/%3E%3Crect x='30' y='52' width='40' height='44' rx='14' fill='%23c62828'/%3E%3Crect x='30' y='70' width='40' height='8' fill='%23222'/%3E%3Crect x='28' y='92' width='44' height='10' rx='5' fill='%23fff'/%3E%3Ccircle cx='50' cy='44' r='12' fill='%23c62828'/%3E%3Crect x='38' y='50' width='24' height='6' rx='3' fill='%23fff'/%3E%3Ccircle cx='60' cy='36' r='4' fill='%23fff'/%3E%3Crect x='34' y='100' width='12' height='12' rx='3' fill='%23222'/%3E%3Crect x='54' y='100' width='12' height='12' rx='3' fill='%23222'/%3E%3C/svg%3E") center / contain no-repeat;
-  filter: drop-shadow(0 0 15px rgba(255,200,120,.6));
 }
 
 #catch-hud {
@@ -1325,9 +1167,10 @@ body.season-s3 #season-bg::after {
   cursor: pointer;
   user-select: none;
   z-index: 2;
-  will-change: transform;
   padding: 12px;
   touch-action: manipulation;
+  will-change: transform, opacity;
+  transform: var(--gpu-accelerate);
 }
 
 .catch-item.fall {
@@ -1335,9 +1178,9 @@ body.season-s3 #season-bg::after {
 }
 
 @keyframes catchFall {
-  0% { transform: translateY(0); opacity: 0; }
+  0% { transform: translateY(0) translateZ(0); opacity: 0; }
   8% { opacity: 1; }
-  100% { transform: translateY(115vh); opacity: 1; }
+  100% { transform: translateY(115vh) translateZ(0); opacity: 1; }
 }
 
 .catch-float {
@@ -1347,12 +1190,13 @@ body.season-s3 #season-bg::after {
   pointer-events: none;
   animation: catchFloat .9s ease forwards;
   z-index: 4;
+  will-change: transform, opacity;
 }
 
 @keyframes catchFloat {
-  0% { opacity: 0; transform: translateY(0); }
+  0% { opacity: 0; transform: translateY(0) translateZ(0); }
   20% { opacity: 1; }
-  100% { opacity: 0; transform: translateY(-40px); }
+  100% { opacity: 0; transform: translateY(-40px) translateZ(0); }
 }
 
 .ci-pump-happy,
@@ -1360,71 +1204,27 @@ body.season-s3 #season-bg::after {
 .ci-elf-happy,
 .ci-elf-mean {
   background: center / contain no-repeat;
+  transform: var(--gpu-accelerate);
 }
 
-.ci-pump-happy,
-.ci-pump-mean {
-  width: 70px;
-  height: 70px;
-}
+.ci-pump-happy, .ci-pump-mean { width: 70px; height: 70px; }
+.ci-elf-happy, .ci-elf-mean { width: 70px; height: 80px; }
 
-.ci-elf-happy,
-.ci-elf-mean {
-  width: 70px;
-  height: 80px;
-}
-
-.ci-pump-happy {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Cpath d='M30 3q6 1 5 8l-1 4h-8l-1-4q-1-7 5-8z' fill='%233e7a2a'/%3E%3Cellipse cx='30' cy='36' rx='27' ry='22' fill='%23ff8a00'/%3E%3Cpath d='M30 15v42' stroke='%23e06a00' stroke-width='3' opacity='.55'/%3E%3Cpath d='M17 18c-6 11-6 25 0 36' stroke='%23e06a00' stroke-width='3' fill='none' opacity='.5'/%3E%3Cpath d='M43 18c6 11 6 25 0 36' stroke='%23e06a00' stroke-width='3' fill='none' opacity='.5'/%3E%3Ccircle cx='20' cy='30' r='4.5' fill='%23ffd23b'/%3E%3Ccircle cx='40' cy='30' r='4.5' fill='%23ffd23b'/%3E%3Cpath d='M30 33l-3 5h6z' fill='%23ffd23b'/%3E%3Cpath d='M15 42q15 12 30 0l-4 6q-11 7-22 0z' fill='%23ffd23b'/%3E%3C/svg%3E");
-}
-
-.ci-pump-mean {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Cpath d='M30 3q6 1 5 8l-1 4h-8l-1-4q-1-7 5-8z' fill='%233e7a2a'/%3E%3Cellipse cx='30' cy='36' rx='27' ry='22' fill='%23ff8a00'/%3E%3Cpath d='M30 15v42' stroke='%23e06a00' stroke-width='3' opacity='.55'/%3E%3Cpath d='M17 18c-6 11-6 25 0 36' stroke='%23e06a00' stroke-width='3' fill='none' opacity='.5'/%3E%3Cpath d='M43 18c6 11 6 25 0 36' stroke='%23e06a00' stroke-width='3' fill='none' opacity='.5'/%3E%3Cpath d='M13 26l14 6-14 3z' fill='%23ffd23b'/%3E%3Cpath d='M47 26l-14 6 14 3z' fill='%23ffd23b'/%3E%3Cpath d='M15 48l6-4 5 4 4-4 5 4 6-4' stroke='%23ffd23b' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-}
-
-.ci-elf-happy {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 70'%3E%3Cpath d='M30 0 L44 20 L16 20 Z' fill='%231a7a3c'/%3E%3Ccircle cx='30' cy='2' r='4' fill='%23fff'/%3E%3Crect x='14' y='18' width='32' height='6' rx='3' fill='%23fff'/%3E%3Cpath d='M8 44l-7-3 7-4z' fill='%23ffe9c9'/%3E%3Cpath d='M52 44l7-3-7-4z' fill='%23ffe9c9'/%3E%3Ccircle cx='30' cy='44' r='22' fill='%23ffe9c9'/%3E%3Ccircle cx='22' cy='40' r='4' fill='%23222'/%3E%3Ccircle cx='38' cy='40' r='4' fill='%23222'/%3E%3Cpath d='M20 52q10 9 20 0' stroke='%23222' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-}
-
-.ci-elf-mean {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 70'%3E%3Cpath d='M30 0 L44 20 L16 20 Z' fill='%231a7a3c'/%3E%3Ccircle cx='30' cy='2' r='4' fill='%23fff'/%3E%3Crect x='14' y='18' width='32' height='6' rx='3' fill='%23fff'/%3E%3Cpath d='M8 44l-7-3 7-4z' fill='%23ffe9c9'/%3E%3Cpath d='M52 44l7-3-7-4z' fill='%23ffe9c9'/%3E%3Ccircle cx='30' cy='44' r='22' fill='%23ffe9c9'/%3E%3Cpath d='M15 32l10 4' stroke='%23222' stroke-width='4'/%3E%3Cpath d='M45 32l-10 4' stroke='%23222' stroke-width='4'/%3E%3Ccircle cx='22' cy='42' r='4' fill='%23222'/%3E%3Ccircle cx='38' cy='42' r='4' fill='%23222'/%3E%3Cpath d='M20 56q10-9 20 0' stroke='%23222' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-}
+.ci-pump-happy { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Cpath d='M30 3q6 1 5 8l-1 4h-8l-1-4q-1-7 5-8z' fill='%233e7a2a'/%3E%3Cellipse cx='30' cy='36' rx='27' ry='22' fill='%23ff8a00'/%3E%3Cpath d='M30 15v42' stroke='%23e06a00' stroke-width='3' opacity='.55'/%3E%3Cpath d='M17 18c-6 11-6 25 0 36' stroke='%23e06a00' stroke-width='3' fill='none' opacity='.5'/%3E%3Cpath d='M43 18c6 11 6 25 0 36' stroke='%23e06a00' stroke-width='3' fill='none' opacity='.5'/%3E%3Ccircle cx='20' cy='30' r='4.5' fill='%23ffd23b'/%3E%3Ccircle cx='40' cy='30' r='4.5' fill='%23ffd23b'/%3E%3Cpath d='M30 33l-3 5h6z' fill='%23ffd23b'/%3E%3Cpath d='M15 42q15 12 30 0l-4 6q-11 7-22 0z' fill='%23ffd23b'/%3E%3C/svg%3E"); }
+.ci-pump-mean { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Cpath d='M30 3q6 1 5 8l-1 4h-8l-1-4q-1-7 5-8z' fill='%233e7a2a'/%3E%3Cellipse cx='30' cy='36' rx='27' ry='22' fill='%23ff8a00'/%3E%3Cpath d='M30 15v42' stroke='%23e06a00' stroke-width='3' opacity='.55'/%3E%3Cpath d='M17 18c-6 11-6 25 0 36' stroke='%23e06a00' stroke-width='3' fill='none' opacity='.5'/%3E%3Cpath d='M43 18c6 11 6 25 0 36' stroke='%23e06a00' stroke-width='3' fill='none' opacity='.5'/%3E%3Cpath d='M13 26l14 6-14 3z' fill='%23ffd23b'/%3E%3Cpath d='M47 26l-14 6 14 3z' fill='%23ffd23b'/%3E%3Cpath d='M15 48l6-4 5 4 4-4 5 4 6-4' stroke='%23ffd23b' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); }
+.ci-elf-happy { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 70'%3E%3Cpath d='M30 0 L44 20 L16 20 Z' fill='%231a7a3c'/%3E%3Ccircle cx='30' cy='2' r='4' fill='%23fff'/%3E%3Crect x='14' y='18' width='32' height='6' rx='3' fill='%23fff'/%3E%3Cpath d='M8 44l-7-3 7-4z' fill='%23ffe9c9'/%3E%3Cpath d='M52 44l7-3-7-4z' fill='%23ffe9c9'/%3E%3Ccircle cx='30' cy='44' r='22' fill='%23ffe9c9'/%3E%3Ccircle cx='22' cy='40' r='4' fill='%23222'/%3E%3Ccircle cx='38' cy='40' r='4' fill='%23222'/%3E%3Cpath d='M20 52q10 9 20 0' stroke='%23222' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); }
+.ci-elf-mean { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 70'%3E%3Cpath d='M30 0 L44 20 L16 20 Z' fill='%231a7a3c'/%3E%3Ccircle cx='30' cy='2' r='4' fill='%23fff'/%3E%3Crect x='14' y='18' width='32' height='6' rx='3' fill='%23fff'/%3E%3Cpath d='M8 44l-7-3 7-4z' fill='%23ffe9c9'/%3E%3Cpath d='M52 44l7-3-7-4z' fill='%23ffe9c9'/%3E%3Ccircle cx='30' cy='44' r='22' fill='%23ffe9c9'/%3E%3Cpath d='M15 32l10 4' stroke='%23222' stroke-width='4'/%3E%3Cpath d='M45 32l-10 4' stroke='%23222' stroke-width='4'/%3E%3Ccircle cx='22' cy='42' r='4' fill='%23222'/%3E%3Ccircle cx='38' cy='42' r='4' fill='%23222'/%3E%3Cpath d='M20 56q10-9 20 0' stroke='%23222' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); }
 
 /* ============================================================
 18. MOBILE : SCÈNE ALLÉGÉE
 ============================================================ */
 @media (max-width: 600px) {
-  .hw-tree {
-    width: 120px;
-    height: 220px;
-    bottom: 18%;
-  }
-  .hw-tree-left {
-    left: -55px;
-  }
-  .hw-tree-right {
-    right: -55px;
-  }
-  .hw-castle {
-    width: 100%;
-    height: 190px;
-    bottom: 22%;
-  }
-  .hw-moon {
-    width: 60px;
-    height: 60px;
-    top: 6%;
-    left: 12%;
-  }
-  .halloween-web {
-    font-size: 70px;
-  }
-  #grid:has(.lutin-theme)::before {
-    height: 40px;
-    margin-bottom: -10px;
-  }
-  #grid:has(.lutin-theme)::after {
-    height: 26px;
-    margin-top: -10px;
-  }
+  .hw-tree { width: 120px; height: 220px; bottom: 18%; }
+  .hw-tree-left { left: -55px; }
+  .hw-tree-right { right: -55px; }
+  .hw-castle { width: 100%; height: 190px; bottom: 22%; }
+  .hw-moon { width: 60px; height: 60px; top: 6%; left: 12%; }
+  .halloween-web { font-size: 70px; }
+  #grid:has(.lutin-theme)::before { height: 40px; margin-bottom: -10px; }
+  #grid:has(.lutin-theme)::after { height: 26px; margin-top: -10px; }
 }
