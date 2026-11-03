@@ -917,27 +917,3 @@ NÉON CHIFFRE BLITZ (Saison 1)
   #screen-title h2{ font-size:17px; }
   #screen-title .btn-main{ padding:9px; font-size:13px; margin-top:6px; }
 }
-/* ============================================================
-   FIX PLEIN ÉCRAN — téléphones longs (le jeu occupe tout l'écran)
-   ============================================================ */
-body {
-  min-height: 100vh;
-  min-height: 100dvh;   /* = hauteur réelle visible du téléphone */
-}
-
-/* Quand le jeu est affiché : colonne flexible centrée verticalement */
-#screen-game:not([style*="none"]) {
-  display: flex !important;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 100vh;
-  min-height: 100dvh;
-  max-width: 480px !important;  /* plus large = tuiles plus grandes = remplit la hauteur */
-  margin: 0 auto;
-}
-
-/* La grille prend la place disponible et reste centrée */
-#screen-game .grid {
-  width: 100%;
-  margin: 0 auto;
-}
