@@ -283,7 +283,9 @@ function scheduleSpawn() {
 function spawnCatchItem() {
   const field = document.getElementById('catch-field');
   if (!field || !catchState) return;
-  const cfg = getCatchConfig()[catchType.theme];
+  
+  // ✅ FIX CRITIQUE : catchType n'existe pas, c'est catchState !
+  const cfg = getCatchConfig()[catchState.theme]; 
   const r = Math.random();
   let type;
   if (r < 0.62) type = 'good';
@@ -298,7 +300,6 @@ function spawnCatchItem() {
   el.style.alignItems = 'center';
   el.style.justifyContent = 'center';
   
-  // ✅ FIX : 'absolute' pour que les coordonnées top/left et l'animation .fall fonctionnent !
   el.style.position = 'absolute'; 
   el.style.touchAction = 'none';
   el.style.pointerEvents = 'auto';
@@ -319,7 +320,7 @@ function spawnCatchItem() {
       el.innerText = cfg[type];
   }
 
-  // ✅ ZONE DE CLIC ÉLARGIE (Fonctionne toujours car 'el' est maintenant le repère absolu)
+  // ✅ ZONE DE CLIC ÉLARGIE
   const hitbox = document.createElement('div');
   hitbox.style.cssText = 'position:absolute; inset:-45px; pointer-events:auto;';
   el.appendChild(hitbox);
@@ -544,8 +545,12 @@ function refreshCatchButtons() {
   const season = (typeof getCurrentSeasonId === "function") ? getCurrentSeasonId() : (window.CURRENT_SEASON || "s1");
   const hb = document.getElementById('btn-halloween-menu');
   const nb = document.getElementById('btn-noel-menu');
-  if (hb) hb.style.display = (latestGlobalEvents.halloweenMode || season === 's2') ? 'flex' : 'none';
-  if (nb) nb.style.display = (latestGlobalEvents.noelMode || season === 's3') ? 'flex' : 'none';
+  
+  // ✅ FIX : Sécurise l'accès aux événements globaux pour éviter un crash au démarrage
+  const events = window.latestGlobalEvents || window.globalEvents || {};
+  
+  if (hb) hb.style.display = (events.halloweenMode || season === 's2') ? 'flex' : 'none';
+  if (nb) nb.style.display = (events.noelMode || season === 's3') ? 'flex' : 'none';
 }
 
 socket.on('events_state_update', refreshCatchButtons);
