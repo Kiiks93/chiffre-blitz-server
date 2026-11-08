@@ -22,8 +22,7 @@ const CATCH_CONFIG = {
   SPEED_BASE_HALLOWEEN: 2.1,
   SPEED_BASE_NOEL: 3.2,
   HARD_MULTIPLIER: 1.3,
-  HITBOX_MOBILE_BASE: 65,
-  HITBOX_PC_BASE: 65,
+  HITBOX_BASE: 65,
   HITBOX_BAD_BASE: 45
 };
 
@@ -77,23 +76,23 @@ function openCatchChoice(theme) {
       </div>
       <button class="btn-main btn-blue" onclick="launchCatch('${theme}',false)">${d.catch_solo_btn}</button>
       <button class="btn-main btn-gold" onclick="launchCatch('${theme}',true)">${d.catch_1v1_btn}</button>
-      <button class="btn-secondary" onclick="closeCatchChoice()">⬅️ ${d.back}</button>
+      <button class="btn-secondary" onclick="closeCatchChoice(true)">⬅️ ${d.back}</button>
     </div>`;
   document.body.appendChild(ov);
 }
 
-function closeCatchChoice() {
+function closeCatchChoice(isCanceling = false) {
   const o = document.getElementById('catch-choice-overlay');
   if (o) o.remove();
   
-  // ✅ FORCER LE RETOUR AU MENU PRINCIPAL
-  if (typeof showMainMenu === 'function') {
+  // ✅ FIX : On ne retourne au menu principal QUE si on annule (pas si on lance la partie)
+  if (isCanceling && typeof showMainMenu === 'function') {
     showMainMenu();
   }
 }
 
 function launchCatch(theme, is1v1) {
-  closeCatchChoice();
+  closeCatchChoice(false);
   if (is1v1) {
     hideAllScreens();
     document.getElementById('screen-1v1-lobby').style.display = 'flex';
@@ -138,7 +137,10 @@ socket.on('catch_opp_score', (d) => {
 });
 
 socket.on('game_over_1v1', (data) => {
-  if (data.isCatch) catchState = null;
+  // ✅ FIX CRITIQUE : Nettoyage de l'arène à la fin du match 1v1 pour éviter le freeze de l'écran
+  if (data.isCatch) {
+    clearCatchArena();
+  }
 });
 
 /* ============================================================
@@ -146,12 +148,16 @@ socket.on('game_over_1v1', (data) => {
 ============================================================ */
 function beginCatch(theme, is1v1, opponent) {
   if (!is1v1 && (typeof socket === 'undefined' || !socket.connected)) {
-  if (typeof showNotificationToast === 'function') showNotificationToast(i18n[currentLang].error_server_lost, 'announcement');
-  return;
-}
+    if (typeof showNotificationToast === 'function') showNotificationToast(i18n[currentLang].error_server_lost, 'announcement');
+    return;
+  }
   clearCatchArena();
-  // ✅ ANTI-TRICHE : annonce le début de la partie catch SOLO au serveur (timestamp de référence)
-  if (!is1v1 && typeof socket !== "undefined" && socket.connected) socket.emit("catch_solo_start");
+  
+  // ✅ ANTI-TRICHE : annonce le début de la partie catch SOLO au serveur
+  if (!is1v1 && typeof socket !== "undefined" && socket.connected) {
+      socket.emit("catch_solo_start");
+  }
+  
   catchState = {
     theme,
     is1v1,
@@ -202,11 +208,16 @@ function beginCatch(theme, is1v1, opponent) {
       catchState.hutX = Math.max(50, Math.min(innerWidth - 50, x));
       hut.style.left = catchState.hutX + 'px';
     };
-    arena.addEventListener('pointermove', (e) => move(e.clientX));
-    arena.addEventListener('touchmove', (e) => {
+    
+    // ✅ FIX : Stockage des handlers pour pouvoir les retirer plus lors du nettoyage
+    catchState.pointerMoveHandler = (e) => move(e.clientX);
+    catchState.touchMoveHandler = (e) => {
       if (e.touches[0]) move(e.touches[0].clientX);
       e.preventDefault();
-    }, { passive: false });
+    };
+    
+    arena.addEventListener('pointermove', catchState.pointerMoveHandler);
+    arena.addEventListener('touchmove', catchState.touchMoveHandler, { passive: false });
     move(innerWidth / 2);
     catchState.raf = requestAnimationFrame(noelLoop);
   }
@@ -272,14 +283,22 @@ function spawnCatchItem() {
     el.style.left = (10 + Math.random() * Math.max(60, innerWidth - 100)) + 'px';
     el.style.top = '-80px';
     el.style.animationDuration = catchState.speed + 's';
+    
     el.addEventListener('pointerdown', (e) => {
       e.preventDefault();
-      applyCatch(type, e.clientX, e.clientY);
-      el.remove();
+      // ✅ FIX : Vérifier que l'élément est encore dans le DOM avant d'appliquer le catch
+      if (el.parentNode) {
+        applyCatch(type, e.clientX, e.clientY);
+        el.remove();
+      }
     }, { once: true });
+    
     el.addEventListener('animationend', () => {
-      if (type === 'good') penaltyMiss(el);
-      el.remove();
+      // ✅ FIX : Pénalité de miss uniquement si l'item n'a pas été cliqué (toujours dans le DOM)
+      if (el.parentNode) {
+        if (type === 'good') penaltyMiss(el);
+        el.remove();
+      }
     });
     field.appendChild(el);
   } else {
@@ -312,8 +331,9 @@ function noelLoop() {
     it.x = Math.max(20, Math.min(innerWidth - 20, it.bx + Math.sin(it.y * 0.02 + it.ph) * 28 * (catchState.hard || 1)));
     it.el.style.transform = 'translate3d(' + it.x + 'px,' + it.y + 'px,0)';
     
-    const base = (it.type === 'good' || it.type === 'happy') ? CATCH_CONFIG.HITBOX_MOBILE_BASE : CATCH_CONFIG.HITBOX_BAD_BASE;
-    const w = isCatchMobile() ? base / (catchState.hard || 1) : base;
+    // ✅ FIX : La hitbox ne doit pas être divisée par la difficulté, sinon c'est injouable sur mobile
+    const base = (it.type === 'good' || it.type === 'happy') ? CATCH_CONFIG.HITBOX_BASE : CATCH_CONFIG.HITBOX_BAD_BASE;
+    const w = base; 
     
     if (it.y >= hutTop - 45 && it.y <= hutTop + 50 && Math.abs(it.x - catchState.hutX) < w) {
       applyCatch(it.type, it.x, it.y);
@@ -350,8 +370,8 @@ function applyCatch(type, fx, fy) {
   
   updateCatchHUD();
   if (fx !== undefined) floatCatch(delta, fx, fy);
-  if (delta >= 0) SoundEngine.playClick();
-  else SoundEngine.playError();
+  if (delta >= 0 && typeof SoundEngine !== "undefined" && SoundEngine.playClick) SoundEngine.playClick();
+  else if (typeof SoundEngine !== "undefined" && SoundEngine.playError) SoundEngine.playError();
   
   if (catchState.is1v1) socket.emit('catch_click', { delta });
 }
@@ -360,26 +380,31 @@ function penaltyMiss(el) {
   if (!catchState || !catchState.active) return;
   catchState.score = Math.max(0, catchState.score + CATCH_CONFIG.MISS_PENALTY);
   updateCatchHUD();
-  const r = el.getBoundingClientRect();
-  floatCatch(CATCH_CONFIG.MISS_PENALTY, r.left, r.top);
+  
+  // ✅ FIX : Vérifier que l'élément existe pour obtenir ses coordonnées
+  if (el && el.getBoundingClientRect) {
+    const r = el.getBoundingClientRect();
+    floatCatch(CATCH_CONFIG.MISS_PENALTY, r.left, r.top);
+  }
+  
   if (catchState.is1v1) socket.emit('catch_click', { delta: CATCH_CONFIG.MISS_PENALTY });
 }
 
 function floatCatch(delta, x, y) {
+  const arena = document.getElementById('catch-arena');
+  if (!arena) return; // ✅ Sécurité si l'arène a été détruite entre-temps
+  
   const f = document.createElement('div');
   f.className = 'catch-float';
   
-  // 🎨 Orange vif pour le positif, Violet/Mauve sombre pour le négatif
   f.style.color = delta >= 0 ? '#ff8a00' : '#5e2b97';
-  
-  // Ajout d'une ombre portée pour garantir la lisibilité sur tous les fonds
   f.style.textShadow = '0 2px 4px rgba(0,0,0,0.6)';
   
   f.innerText = (delta > 0 ? '+' : '') + delta;
   f.style.left = x + 'px';
   f.style.top = y + 'px';
-  document.getElementById('catch-arena').appendChild(f);
-  setTimeout(() => f.remove(), 900);
+  arena.appendChild(f);
+  setTimeout(() => { if (f.parentNode) f.remove(); }, 900);
 }
 
 /* ============================================================
@@ -397,7 +422,7 @@ function updateCatchHUD() {
 }
 
 function stopCatchSpawning() {
-  if (catchState) clearTimeout(catchState.spawnTimeout);
+  if (catchState && catchState.spawnTimeout) clearTimeout(catchState.spawnTimeout);
 }
 
 function clearCatchArena() {
@@ -405,13 +430,23 @@ function clearCatchArena() {
     clearTimeout(catchState.spawnTimeout);
     clearInterval(catchState.timerInterval);
     if (catchState.raf) cancelAnimationFrame(catchState.raf);
+    
+    // ✅ FIX : Nettoyage des event listeners pour éviter les fuites mémoire
+    const arena = document.getElementById('catch-arena');
+    if (arena) {
+      if (catchState.pointerMoveHandler) arena.removeEventListener('pointermove', catchState.pointerMoveHandler);
+      if (catchState.touchMoveHandler) arena.removeEventListener('touchmove', catchState.touchMoveHandler);
+      arena.remove();
+    }
     catchState.items = [];
   }
-  const a = document.getElementById('catch-arena');
-  if (a) a.remove();
+  
   document.body.style.overflow = '';
   if (catchState && catchState.prevSeason) window.CURRENT_SEASON = catchState.prevSeason;
   if (typeof restartSeasonMusic === "function") restartSeasonMusic();
+  
+  // ✅ FIX CRITIQUE : On détruit l'état pour éviter les ghost states et crashs asynchrones
+  catchState = null;
 }
 
 /* ============================================================
@@ -428,29 +463,29 @@ function endCatchSolo() {
 
 socket.on('catch_solo_result', (data) => {
   const d = i18n[currentLang];
-  // 🛡️ Si le serveur refuse (partie non enregistrée / cooldown), message clair au lieu d'un récap à 0
+  
+  // 🛡️ Si le serveur refuse (partie non enregistrée / cooldown)
   if (data && data.error) {
     clearCatchArena();
-    catchState = null;
     hideAllScreens();
     if (typeof showMainMenu === "function") showMainMenu();
-      showNotificationToast(i18n[currentLang].error_catch_unregistered, 'announcement');
+    if (typeof showNotificationToast === 'function') {
+        showNotificationToast(i18n[currentLang].error_catch_unregistered || 'Erreur', 'announcement');
+    }
     return;
   }
   
-  // ✅ CORRECTION : Récupérer le score ET le bonus avant de détruire catchState
+  // ✅ Récupérer le score ET le bonus avant le nettoyage complet (catchState passe à null dans clearCatchArena)
   const score = catchState ? catchState.score : 0;
   const bonus = catchState ? catchState.bonus : 0; 
   
   clearCatchArena();
-  catchState = null;
   hideAllScreens();
   
   document.getElementById('recap-1v1-rows').style.display = 'none';
   document.getElementById('recap-banner').innerText = d.catch_season_done;
   document.getElementById('recap-banner').style.color = '#00d2ff';
   
-  // ✅ La variable 'bonus' est maintenant définie
   document.getElementById('recap-reason').innerText = `${d.catch_score_label} ${score} • ${d.catch_bonus_label} ${bonus}`;
   document.getElementById('recap-my-score').innerText = score;
   
