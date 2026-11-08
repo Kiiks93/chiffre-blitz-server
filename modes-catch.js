@@ -368,7 +368,13 @@ function penaltyMiss(el) {
 function floatCatch(delta, x, y) {
   const f = document.createElement('div');
   f.className = 'catch-float';
-  f.style.color = delta >= 0 ? '#00ff88' : '#ff4b2b';
+  
+  // 🎨 Orange vif pour le positif, Violet/Mauve sombre pour le négatif
+  f.style.color = delta >= 0 ? '#ff8a00' : '#5e2b97';
+  
+  // Ajout d'une ombre portée pour garantir la lisibilité sur tous les fonds
+  f.style.textShadow = '0 2px 4px rgba(0,0,0,0.6)';
+  
   f.innerText = (delta > 0 ? '+' : '') + delta;
   f.style.left = x + 'px';
   f.style.top = y + 'px';
