@@ -281,85 +281,83 @@ function scheduleSpawn() {
 }
 
 function spawnCatchItem() {
-const field = document.getElementById('catch-field');
-if (!field || !catchState) return;
-const cfg = getCatchConfig()[catchState.theme];
-const r = Math.random();
-let type;
-if (r < 0.62) type = 'good';
-else if (r < 0.84) type = 'bad';
-else if (r < 0.92) type = 'happy';
-else type = 'mean';
+  const field = document.getElementById('catch-field');
+  if (!field || !catchState) return;
+  const cfg = getCatchConfig()[catchType.theme];
+  const r = Math.random();
+  let type;
+  if (r < 0.62) type = 'good';
+  else if (r < 0.84) type = 'bad';
+  else if (r < 0.92) type = 'happy';
+  else type = 'mean';
 
-const el = document.createElement('div');
-el.className = 'catch-item';
-el.dataset.type = type; // ✅ Stocke le type pour la délégation d'événement
-el.style.display = 'flex';
-el.style.alignItems = 'center';
-el.style.justifyContent = 'center';
-el.style.position = 'relative';
-el.style.touchAction = 'none';
-el.style.pointerEvents = 'auto';
-el.style.willChange = 'transform, top'; // ✅ Optimise le rendu GPU pour le mouvement rapide
+  const el = document.createElement('div');
+  el.className = 'catch-item';
+  el.dataset.type = type; 
+  el.style.display = 'flex';
+  el.style.alignItems = 'center';
+  el.style.justifyContent = 'center';
+  
+  // ✅ FIX : 'absolute' pour que les coordonnées top/left et l'animation .fall fonctionnent !
+  el.style.position = 'absolute'; 
+  el.style.touchAction = 'none';
+  el.style.pointerEvents = 'auto';
+  el.style.willChange = 'transform, top'; 
 
-// 🎨 FIX HALO : Le drop-shadow épouse la forme de l'emoji sans faire de cercle opaque
-if (type === 'happy' || type === 'mean') {
-    el.classList.add((catchState.theme === 'halloween' ? 'ci-pump-' : 'ci-elf-') + (type === 'happy' ? 'happy' : 'mean'));
-    
-    if (catchState.theme === 'halloween') {
-      if (type === 'happy') {
-        // Halo VERT qui suit les contours de la citrouille
-        el.style.filter = 'drop-shadow(0 0 12px #2ecc71) drop-shadow(0 0 25px #2ecc71aa)';
-      } else {
-        // Halo ROUGE qui suit les contours de la citrouille
-        el.style.filter = 'drop-shadow(0 0 12px #ff4b2b) drop-shadow(0 0 25px #ff4b2baa)';
+  // 🎨 FIX HALO
+  if (type === 'happy' || type === 'mean') {
+      el.classList.add((catchState.theme === 'halloween' ? 'ci-pump-' : 'ci-elf-') + (type === 'happy' ? 'happy' : 'mean'));
+      
+      if (catchState.theme === 'halloween') {
+        if (type === 'happy') {
+          el.style.filter = 'drop-shadow(0 0 12px #2ecc71) drop-shadow(0 0 25px #2ecc71aa)';
+        } else {
+          el.style.filter = 'drop-shadow(0 0 12px #ff4b2b) drop-shadow(0 0 25px #ff4b2baa)';
+        }
       }
-    }
-} else {
-    el.innerText = cfg[type];
-}
+  } else {
+      el.innerText = cfg[type];
+  }
 
-// ✅ ZONE DE CLIC ÉLARGIE (Hitbox invisible de 45px autour de l'emoji)
-const hitbox = document.createElement('div');
-hitbox.style.cssText = 'position:absolute; inset:-45px; pointer-events:auto;';
-el.appendChild(hitbox);
+  // ✅ ZONE DE CLIC ÉLARGIE (Fonctionne toujours car 'el' est maintenant le repère absolu)
+  const hitbox = document.createElement('div');
+  hitbox.style.cssText = 'position:absolute; inset:-45px; pointer-events:auto;';
+  el.appendChild(hitbox);
 
-if (catchState.theme === 'halloween') {
-    if (field.childElementCount > CATCH_CONFIG.MAX_ITEMS_HALLOWEEN) return;
-    el.classList.add('fall');
-    el.style.fontSize = (52 + Math.random() * 26) + 'px';
-    el.style.left = (10 + Math.random() * Math.max(60, innerWidth - 100)) + 'px';
-    el.style.top = '-80px';
-    el.style.animationDuration = catchState.speed + 's';
-    
-    // L'animationend gère toujours les items ratés (qui tombent sans être cliqués)
-    el.addEventListener('animationend', () => {
-      if (el.parentNode) {
-        if (type === 'good') penaltyMiss(el);
-        el.remove();
-      }
-    });
-    
-    field.appendChild(el);
-} else {
-    if (catchState.items.length > CATCH_CONFIG.MAX_ITEMS_NOEL) return;
-    el.style.fontSize = (40 + Math.random() * 16) + 'px';
-    el.style.left = '0px';
-    el.style.top = '0px';
-    field.appendChild(el);
-    const bx = 30 + Math.random() * Math.max(60, innerWidth - 70);
-    catchState.items.push({
-      el,
-      type,
-      bx,
-      x: bx,
-      y: -60,
-      ph: Math.random() * 6.28,
-      vy: (2.4 + Math.random() * 1.4 + (CATCH_CONFIG.GAME_DURATION - catchState.timeLeft) * 0.05) * (catchState.hard || 1)
-    });
+  if (catchState.theme === 'halloween') {
+      if (field.childElementCount > CATCH_CONFIG.MAX_ITEMS_HALLOWEEN) return;
+      el.classList.add('fall');
+      el.style.fontSize = (52 + Math.random() * 26) + 'px';
+      el.style.left = (10 + Math.random() * Math.max(60, innerWidth - 100)) + 'px';
+      el.style.top = '-80px';
+      el.style.animationDuration = catchState.speed + 's';
+      
+      el.addEventListener('animationend', () => {
+        if (el.parentNode) {
+          if (type === 'good') penaltyMiss(el);
+          el.remove();
+        }
+      });
+      
+      field.appendChild(el);
+  } else {
+      if (catchState.items.length > CATCH_CONFIG.MAX_ITEMS_NOEL) return;
+      el.style.fontSize = (40 + Math.random() * 16) + 'px';
+      el.style.left = '0px';
+      el.style.top = '0px';
+      field.appendChild(el);
+      const bx = 30 + Math.random() * Math.max(60, innerWidth - 70);
+      catchState.items.push({
+        el,
+        type,
+        bx,
+        x: bx,
+        y: -60,
+        ph: Math.random() * 6.28,
+        vy: (2.4 + Math.random() * 1.4 + (CATCH_CONFIG.GAME_DURATION - catchState.timeLeft) * 0.05) * (catchState.hard || 1)
+      });
+  }
 }
-}
-
 function noelLoop() {
   if (!catchState || !catchState.active || catchState.theme !== 'noel') return;
   
