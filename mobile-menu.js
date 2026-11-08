@@ -1,5 +1,6 @@
 /* ============================================================
 MENU MOBILE — Halo demi-cercle + projection + Néon S1 (mobile only)
+✅ OPTIMISÉ : Moins gourmand en ressources (CPU/GPU/Batterie)
 ============================================================ */
 function getWheelModes() {
     const d = (typeof i18n !== 'undefined') ? i18n[currentLang] : {};
@@ -43,9 +44,12 @@ function toggleAdmireMode() {
   const active = m.classList.toggle('admire-active');
   btn.classList.toggle('active', active);
   const d = (typeof i18n !== 'undefined') ? i18n[currentLang] : {};
-if (active) { icon.textContent='🎮'; text.textContent = d.btn_play_short || 'Jouer';
+  if (active) { 
+    icon.textContent='🎮'; text.textContent = d.btn_play_short || 'Jouer';
     setTimeout(function(){ if(m.classList.contains('admire-active')) toggleAdmireMode(); },8000);
-} else { icon.textContent='👁️'; text.textContent = d.btn_admire || 'Admirer'; }
+  } else { 
+    icon.textContent='👁️'; text.textContent = d.btn_admire || 'Admirer'; 
+  }
 }
 
 function visibleWheelModes(){ return WHEEL_MODES.filter(function(m){ return !m.cond || (document.getElementById(m.cond)&&document.getElementById(m.cond).style.display!=='none'); }); }
@@ -57,6 +61,8 @@ function buildModeWheel(){
   visibleWheelModes().forEach(function(m){
     const b=document.createElement('button');
     b.className='wheel-item'; b.id='wheel-item-'+m.id; b.textContent=m.icon;
+    // ✅ OPTIMISATION : will-change pour promouvoir l'élément sur le GPU
+    b.style.willChange = 'transform, opacity';
     b.onclick=function(){ const i=visibleWheelModes().indexOf(m);
       if(i===Math.round(wheelCurrent)) launchMode(m); else { wheelCurrent=i; renderWheel(); } };
     wrap.appendChild(b);
@@ -72,7 +78,8 @@ function renderWheel(){
     const th=((i-wheelCurrent)*WHEEL_STEP)*Math.PI/180;
     const x=WHEEL_R*Math.sin(th), y=-WHEEL_R*Math.cos(th);
     const d=Math.abs(i-wheelCurrent);
-    el.style.transform='translate('+x+'px,'+y+'px) scale('+Math.max(.6,1-.2*d)+')';
+    // ✅ OPTIMISATION : translate3d force l'accélération matérielle (GPU) plutôt que le CPU
+    el.style.transform='translate3d('+x+'px,'+y+'px,0) scale('+Math.max(.6,1-.2*d)+')';
     el.style.opacity=Math.max(.3,1-.3*d);
     el.classList.toggle('center',i===c);
   });
@@ -83,10 +90,23 @@ function renderWheel(){
 function launchMode(m){ if(m&&typeof window[m.fn]==='function') window[m.fn](); }
 function launchCenterMode(){ launchMode(visibleWheelModes()[Math.round(wheelCurrent)]); }
 
+// ✅ OPTIMISATION : Throttle du touchmove avec requestAnimationFrame (évite le spam DOM)
 (function(){
-  let sx=0,sc=0,drag=false;
+  let sx=0,sc=0,drag=false, rafId=null;
   document.addEventListener('touchstart',function(e){ const z=e.target.closest&&e.target.closest('#mode-wheel'); if(!z)return; drag=true; sx=e.touches[0].clientX; sc=wheelCurrent; },{passive:true});
-  document.addEventListener('touchmove',function(e){ if(!drag)return; const dx=e.touches[0].clientX-sx; wheelCurrent=sc-dx/70; const n=visibleWheelModes().length-1; wheelCurrent=Math.max(0,Math.min(n,wheelCurrent)); renderWheel(); },{passive:true});
+  document.addEventListener('touchmove',function(e){ 
+    if(!drag)return; 
+    const dx=e.touches[0].clientX-sx; 
+    wheelCurrent=sc-dx/70; 
+    const n=visibleWheelModes().length-1; 
+    wheelCurrent=Math.max(0,Math.min(n,wheelCurrent)); 
+    if(!rafId){
+        rafId = requestAnimationFrame(function(){
+            renderWheel();
+            rafId = null;
+        });
+    }
+  },{passive:true});
   document.addEventListener('touchend',function(){ if(!drag)return; drag=false; wheelCurrent=Math.round(wheelCurrent); renderWheel(); try{if(window.SoundEngine&&SoundEngine.playClick)SoundEngine.playClick();}catch(e){} });
 })();
 
@@ -97,11 +117,10 @@ function syncMobileMenuButtons(){
   buildModeWheel();
 }
 function refreshMobileWheel() {
-    // ✅ Reconstruit complètement la roue pour inclure les nouveaux modes actifs
-    // On le fait même si le menu est caché, pour qu'il soit à jour au retour du joueur
     buildModeWheel();
     syncMobileMenuButtons();
 }
+
 /* ---------- SON néon : ONLY crachotements espacés (PAS de son blanc) ---------- */
 let NEON_HUM = null;
 let NEON_FLICK_TIMER = null;
@@ -122,11 +141,25 @@ function makeBuzz(ctx,dest,startT,dur,vol){
   o.stop(startT+dur+.05); o2.stop(startT+dur+.05); lfo.stop(startT+dur+.05);
 }
 
+// ✅ OPTIMISATION : Mise en cache du buffer audio Whoosh (évite ~17000 calculs Math à chaque ouverture)
+let WHOOSH_BUFFER = null;
+function getWhooshBuffer(ctx) {
+    if (WHOOSH_BUFFER) return WHOOSH_BUFFER;
+    const len = Math.floor(ctx.sampleRate * 0.4);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for(let i=0; i<len; i++){
+        const p = i / len;
+        d[i] = (Math.random() * 2 - 1) * Math.sin(p * Math.PI);
+    }
+    WHOOSH_BUFFER = buf;
+    return buf;
+}
+
 function playWhoosh(){
   try{ SoundEngine.init(); const ctx=SoundEngine.ctx,t=ctx.currentTime;
-    const len=Math.floor(ctx.sampleRate*0.4),buf=ctx.createBuffer(1,len,ctx.sampleRate),d=buf.getChannelData(0);
-    for(let i=0;i<len;i++){const p=i/len;d[i]=(Math.random()*2-1)*Math.sin(p*Math.PI);}
-    const src=ctx.createBufferSource();src.buffer=buf;
+    const src=ctx.createBufferSource();
+    src.buffer = getWhooshBuffer(ctx); // Utilise le buffer en cache
     const f=ctx.createBiquadFilter();f.type='bandpass';f.Q.value=1;
     f.frequency.setValueAtTime(300,t);f.frequency.exponentialRampToValueAtTime(2500,t+0.4);
     const g=ctx.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.1,t+0.2);g.gain.exponentialRampToValueAtTime(0.0001,t+0.45);
@@ -141,7 +174,6 @@ function startNeonHum(){
     NEON_HUM={active:true};
     const offsets=[0.30,1.95,3.65];
     const cycle=function(){
-      // UN SEUL crachotement par cycle de 5s, et parfois AUCUN -> très espacé
       if(Math.random()<0.7){
         const off=offsets[Math.floor(Math.random()*offsets.length)];
         setTimeout(function(){
@@ -159,18 +191,22 @@ function stopNeonHum(){
 }
 
 /* ---------- Néon S1 : MOBILE uniquement, menu principal uniquement ---------- */
+// ✅ OPTIMISATION : Suppression de getComputedStyle (qui force le recalcul complet du layout / reflow)
 function menuPrincipalVisible(){
   const pc=document.getElementById('screen-menu'),mob=document.getElementById('screen-menu-mobile');
-  return (pc&&getComputedStyle(pc).display!=='none')||(mob&&getComputedStyle(mob).display!=='none');
+  return (pc && pc.style.display !== 'none') || (mob && mob.style.display !== 'none');
 }
 function ecranPleinVisible(){
   const ids=['screen-title','screen-solo-menu','screen-avalanche-menu','screen-1v1-hub','screen-1v1-lobby','screen-rooms','screen-join-custom','screen-room-waiting','screen-tournament','screen-game','screen-tower'];
-  return ids.some(function(id){const el=document.getElementById(id);return el&&getComputedStyle(el).display!=='none';});
+  return ids.some(function(id){
+      const el=document.getElementById(id);
+      return el && el.style.display !== 'none';
+  });
 }
 function updateS1Neon(){
   let sign=document.getElementById('s1-neon-sign');
   const season = (window.myProfile && (myProfile.currentSeasonId || myProfile.current_season)) || window.CURRENT_SEASON || 's1';
-  const visible=menuPrincipalVisible()&&!ecranPleinVisible();   // ✅ néon partout, plus seulement mobile
+  const visible=menuPrincipalVisible()&&!ecranPleinVisible();   
   if(season==='s1'&&visible){
     if(!sign){ sign=document.createElement('div');sign.id='s1-neon-sign';sign.className='s1-neon-sign';
       sign.innerHTML='<div class="s1-neon-logo">⚡</div><div class="s1-neon-text">CHIFFRE BLITZ</div>';
@@ -178,64 +214,77 @@ function updateS1Neon(){
   } else { if(sign)sign.remove(); stopNeonHum(); }
 }
 if (typeof socket !== 'undefined') socket.on('player_registered', () => setTimeout(updateS1Neon, 100));
+
 /* ---------- Hooks ---------- */
+// ✅ OPTIMISATION : Remplacement de 12 setInterval permanents par une seule boucle requestAnimationFrame qui s'arrête toute seule
 (function(){
   const HIDE=['openTower','openSoloMenu','open1v1Hub','openRoomsScreen','openTournamentScreen','showTitleScreen','openAvalancheDifficulties','startHalloweenQueue','startNoelQueue','startTugOfWarQueue','startRandom1v1','startSoloTraining'];
   const SHOW=['showMainMenu','closeTower'];
   
-  HIDE.forEach(function(fn){ 
-    const w=setInterval(function(){ 
-      if(typeof window[fn]==='function'&&!window[fn].__h){ 
-        const o=window[fn]; 
-        window[fn]=function(){showMobileMenu(false);return o.apply(this,arguments);}; 
-        window[fn].__h=true; 
-        clearInterval(w);
-      } 
-    },100); 
-  });
+  let pendingHooks = new Set([...HIDE, ...SHOW]);
+
+  function tryHook() {
+      HIDE.forEach(function(fn){ 
+        if(pendingHooks.has(fn) && typeof window[fn]==='function' && !window[fn].__h){ 
+          const o=window[fn]; 
+          window[fn]=function(){showMobileMenu(false);return o.apply(this,arguments);}; 
+          window[fn].__h=true; 
+          pendingHooks.delete(fn);
+        } 
+      });
+      
+      SHOW.forEach(function(fn){ 
+        if(pendingHooks.has(fn) && typeof window[fn]==='function' && !window[fn].__s){ 
+          const o=window[fn]; 
+          window[fn]=function(){
+            const r=o.apply(this,arguments);
+            showMobileMenu(true);
+            if (typeof window.showPendingAdminMessage === 'function') window.showPendingAdminMessage();
+            return r;
+          }; 
+          window[fn].__s=true; 
+          pendingHooks.delete(fn);
+        } 
+      });
+
+      // On continue seulement s'il reste des fonctions à hooker
+      if (pendingHooks.size > 0) {
+          requestAnimationFrame(tryHook);
+      }
+  }
   
-  SHOW.forEach(function(fn){ 
-    const w=setInterval(function(){ 
-      if(typeof window[fn]==='function'&&!window[fn].__s){ 
-        const o=window[fn]; 
-        window[fn]=function(){
-          const r=o.apply(this,arguments);
-          showMobileMenu(true);
-          
-          // ✅ NOUVEAU : Vérifier s'il y a un message admin en attente quand le menu s'affiche
-          if (typeof window.showPendingAdminMessage === 'function') {
-            window.showPendingAdminMessage();
-          }
-          
-          return r;
-        }; 
-        window[fn].__s=true; 
-        clearInterval(w);
-      } 
-    },100); 
-  });
+  // Lancement initial
+  requestAnimationFrame(tryHook);
 })();
 
+// ✅ OPTIMISATION : Throttle du MutationObserver pour éviter de rebuild la roue en boucle
 document.addEventListener('DOMContentLoaded',function(){
-  ['btn-halloween-menu','btn-noel-menu','btn-tow-menu'].forEach(function(id){ const el=document.getElementById(id); if(el)new MutationObserver(syncMobileMenuButtons).observe(el,{attributes:true,attributeFilter:['style']}); });
+  let syncTimeout = null;
+  function throttledSync() {
+      if (syncTimeout) clearTimeout(syncTimeout);
+      syncTimeout = setTimeout(function() {
+          syncMobileMenuButtons();
+          syncTimeout = null;
+      }, 150);
+  }
+
+  ['btn-halloween-menu','btn-noel-menu','btn-tow-menu'].forEach(function(id){ 
+      const el=document.getElementById(id); 
+      if(el) new MutationObserver(throttledSync).observe(el,{attributes:true,attributeFilter:['style']}); 
+  });
 });
+
 // ✅ Fix viewport après retour Stripe
 function fixViewportAfterPayment() {
-  // Force le recalcul du viewport
   const viewport = document.querySelector('meta[name="viewport"]');
   if (viewport) {
     viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
   }
-  
-  // Reset zoom CSS
   document.documentElement.style.zoom = '1';
   document.body.style.transform = 'scale(1)';
-  
-  // Force reflow
   void document.body.offsetHeight;
 }
 
-// Appelle cette fonction au chargement si on revient d'un paiement
 if (new URLSearchParams(location.search).has('payment')) {
   window.addEventListener('load', function() {
     setTimeout(fixViewportAfterPayment, 100);
