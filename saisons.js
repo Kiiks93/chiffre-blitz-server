@@ -11,12 +11,12 @@ const IS_MOBILE_DEVICE = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userA
 ============================================================ */
 const SEASON_CONFIG = {
   MUSIC_RESTART_DELAY: 150,
-  HALLOWEEN_AMBIENCE_INTERVAL: 1500,
+  HALLOWEEN_AMBIENCE_INTERVAL: IS_MOBILE_DEVICE ? 2500 : 1500, // Moins de spawns sur mobile
   LOTTIE_RETRY_INTERVAL: 1000,
   LOTTIE_RETRY_TIMEOUT: 15000,
-  NOEL_SLEIGH_INTERVAL: 7000,
+  NOEL_SLEIGH_INTERVAL: IS_MOBILE_DEVICE ? 12000 : 7000,
   NOEL_SLEIGH_INITIAL_DELAY: 1500,
-  NOEL_STAR_INTERVAL: 4000,
+  NOEL_STAR_INTERVAL: IS_MOBILE_DEVICE ? 6000 : 4000,
   NOEL_SLEIGH_LIFETIME: 19000,
   GHOST_LIFETIME: 5500,
   BAT_LIFETIME: 8000,
@@ -84,8 +84,6 @@ function isLowPerf() {
 }
 
 // ✅ OPTIMISATION MOBILE : Limiter le Device Pixel Ratio pour les Canvas
-// Sur un iPhone (DPR 3), un canvas de 100px devient 300x300px et saccade le GPU.
-// On le bride à 1.5 max sur mobile.
 function getCanvasDPR() {
   if (isLowPerf()) return 1;
   return Math.min(window.devicePixelRatio || 1, IS_MOBILE_DEVICE ? 1.5 : 2);
@@ -96,10 +94,8 @@ function isMutedGlobal() {
   return false;
 }
 
-function cloneLottieData(data) {
-  if (!data) return null;
-  return (typeof structuredClone === "function") ? structuredClone(data) : JSON.parse(JSON.stringify(data));
-}
+// ⚠️ SUPPRIMÉ : Le clonage de JSON Lottie à chaque spawn tuait les performances mobiles (GC jitter).
+// Lottie Web gère nativement les instances multiples depuis la même référence JSON.
 
 /* ============================================================
 4. MUSIQUE SAISONNIÈRE
@@ -112,7 +108,8 @@ function restartSeasonMusic() {
     try {
       const seasonId = window.CURRENT_SEASON || getCurrentSeasonId();
       const gameScreen = document.getElementById("screen-game");
-      const inGame = gameScreen && gameScreen.style.display === "block";
+      // Lecture directe de style.display pour éviter un reflow coûteux
+      const inGame = gameScreen && gameScreen.style.display !== "none" && gameScreen.style.display !== "";
       const mode = inGame ? "game" : "menu";
 
       if (typeof SoundEngine.stopMusic === "function") SoundEngine.stopMusic(false);
@@ -130,6 +127,9 @@ function applySeasonDA() {
 
   document.body.classList.remove("season-s1", "season-s2", "season-s3");
   document.body.classList.add("season-" + seasonId);
+  
+  // ✅ Ajout d'une classe globale pour désactiver les filtres CSS lourds (blur/shadow) sur mobile
+  document.body.classList.toggle("cb-low-perf", IS_MOBILE_DEVICE || isLowPerf());
 
   if (lastAppliedSeason !== seasonId) {
     lastAppliedSeason = seasonId;
@@ -149,8 +149,7 @@ function applySeasonDA() {
   if (seasonId === "s2") return;
 
   const config = SEASON_SHAPES[seasonId] || SEASON_SHAPES.s1;
-  // ✅ Réduction des shapes sur mobile
-  const shapeCount = IS_MOBILE_DEVICE ? 6 : 12; 
+  const shapeCount = IS_MOBILE_DEVICE ? 4 : 12; 
 
   for (let i = 0; i < shapeCount; i++) {
     const s = document.createElement("div");
@@ -290,7 +289,6 @@ function setupHalloweenDecor(seasonId) {
   document.body.appendChild(webTR);
 
   halloweenAmbienceTimer = setInterval(() => {
-    // ✅ OPTIMISATION : Stoppe le calcul si l'onglet est en arrière-plan
     if (document.hidden || document.body.classList.contains('cb-ingame')) return;
     const roll = Math.random();
     if (roll < 0.25) spawnSceneGhost();
@@ -303,7 +301,6 @@ function setupHalloweenDecor(seasonId) {
 8. LOTTIE HALLOWEEN
 ============================================================ */
 function hlMax(type) {
-  // ✅ OPTIMISATION MOBILE : Réduit le nombre max d'entités simultanées
   const low = isLowPerf() || IS_MOBILE_DEVICE;
   if (type === "araignee") return low ? 1 : 3;
   return low ? 2 : 4; 
@@ -341,7 +338,8 @@ function hlRegister(type, obj, lifetime) {
   _hlActive[type].push(obj);
   setTimeout(() => {
     if (obj.anim) obj.anim.destroy();
-    if (obj.el && obj.el.parentNode) old.el.remove();
+    // 🚨 CORRECTION CRITIQUE : old.el.remove() -> obj.el.remove() (Fuite de mémoire corrigée)
+    if (obj.el && obj.el.parentNode) obj.el.remove(); 
     const idx = _hlActive[type].indexOf(obj);
     if (idx !== -1) _hlActive[type].splice(idx, 1);
   }, lifetime);
@@ -379,7 +377,7 @@ function addScenePumpkins(bg) {
       bg.appendChild(el);
 
       let anim = null;
-      const data = cloneLottieData(_hlData.citrouille);
+      const data = _hlData.citrouille; // ✅ Plus de clonage JSON
       if (data) {
         anim = lottie.loadAnimation({
           container: el,
@@ -453,7 +451,7 @@ function spawnSceneBat(retry) {
   el.style.animationDuration = (4 + Math.random() * 3) + "s";
   (document.getElementById("season-bg") || document.body).appendChild(el);
 
-  const data = cloneLottieData(_hlData.chauve);
+  const data = _hlData.chauve; // ✅ Plus de clonage JSON
   let anim = null;
   if (data) {
     anim = lottie.loadAnimation({
@@ -462,7 +460,6 @@ function spawnSceneBat(retry) {
       loop: true,
       autoplay: true,
       animationData: data,
-      // ✅ FIX CRITIQUE : Limitation du DPR pour éviter l'explosion du GPU mobile
       rendererSettings: { dpr: getCanvasDPR(), clearCanvas: true }
     });
   } else {
@@ -505,7 +502,7 @@ function spawnSceneSpider(retry) {
   el.style.left = (8 + Math.random() * 84) + "%";
   (document.getElementById("season-bg") || document.body).appendChild(el);
 
-  const data = cloneLottieData(_hlData.araignee);
+  const data = _hlData.araignee; // ✅ Plus de clonage JSON
   let anim = null;
   if (data) {
     anim = lottie.loadAnimation({
@@ -515,7 +512,7 @@ function spawnSceneSpider(retry) {
       autoplay: true,
       animationData: data,
       rendererSettings: {
-        dpr: getCanvasDPR(), // ✅ FIX DPR
+        dpr: getCanvasDPR(),
         clearCanvas: true,
         preserveAspectRatio: "xMidYMin meet"
       }
@@ -556,7 +553,6 @@ function playLanternSound() {
 }
 
 function spawnLanterns(big) {
-  // ✅ OPTIMISATION : Moins de lanternes sur mobile
   const isMob = isLowPerf() || IS_MOBILE_DEVICE;
   const count = big ? (isMob ? 5 : 14) : (isMob ? 2 : 3 + Math.floor(Math.random() * 3));
   for (let i = 0; i < count; i++) {
@@ -583,7 +579,6 @@ function createLantern() {
   const particlesContainer = document.createElement("div");
   particlesContainer.className = "lantern-particles";
   
-  // ✅ OPTIMISATION : Suppression des particules sur mobile (très gourmand en repaint)
   const particleCount = (isLowPerf() || IS_MOBILE_DEVICE) ? 0 : 3;
   for (let p = 0; p < particleCount; p++) {
     const particle = document.createElement("div");
@@ -617,7 +612,6 @@ function spawnGhostLotties(big) {
 }
 
 function createGhostOrb() {
-  // ✅ OPTIMISATION : Mode lite forcé sur mobile
   const lite = isLowPerf() || IS_MOBILE_DEVICE;
   const orb = document.createElement("div");
   orb.className = "ghost-orb";
@@ -780,9 +774,39 @@ function spawnShootingStar() {
   setTimeout(() => s.remove(), dur * 1000 + SEASON_CONFIG.SHOOTING_STAR_LIFETIME_OFFSET);
 }
 
-function preloadNoelLotties() { /* ... inchangé ... */ }
-function clearNoelLotties() { /* ... inchangé ... */ }
-function clearNoelScene() { /* ... inchangé ... */ }
+function preloadNoelLotties() { 
+  if (_nxPreloaded || typeof lottie === "undefined") return;
+  _nxPreloaded = true;
+  Object.keys(NOEL_LOTTIE_FILES).forEach(key => {
+    const tryLoad = (attempt) => {
+      fetch(NOEL_LOTTIE_FILES[key])
+        .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(data => { _nxData[key] = data; })
+        .catch(() => {
+          if (attempt < 3) setTimeout(() => tryLoad(attempt + 1), 800);
+          else { _nxData[key] = null; }
+        });
+    };
+    tryLoad(0);
+  });
+}
+
+function clearNoelLotties() { 
+  _nxAnims.forEach(o => {
+    if (o.anim) o.anim.destroy();
+    if (o.el && o.el.parentNode) o.el.remove();
+  });
+  _nxAnims = [];
+}
+
+function clearNoelScene() { 
+  const bg = document.getElementById("season-bg");
+  if (bg) {
+    bg.innerHTML = "";
+    bg.dataset.built = "";
+  }
+  clearNoelLotties();
+}
 
 function buildNoelScene() {
   let bg = document.getElementById("season-bg");
@@ -795,7 +819,6 @@ function buildNoelScene() {
   clearHalloweenLotties();
   bg.dataset.built = "s3";
   
-  // ✅ OPTIMISATION : Moins d'étoiles fixes sur mobile
   const starCount = IS_MOBILE_DEVICE ? 15 : 40;
   let stars = "";
   for (let i = 0; i < starCount; i++) {
@@ -840,10 +863,44 @@ function buildNoelScene() {
   attachNoelLotties(bg);
 }
 
-function attachNoelLotties(bg) { /* ... inchangé ... */ }
+function attachNoelLotties(bg) { 
+  const targets = [
+    { sel: ".nx-flocons", key: "flocon" },
+    { sel: ".nx-guirlande-tl", key: "guirlandes" },
+    { sel: ".nx-guirlande-tr", key: "guirlandes" },
+    { sel: ".nx-sapin-left", key: "sapin" },
+    { sel: ".nx-sapin-right", key: "sapin" },
+    { sel: ".nx-bonhomme", key: "bonhomme" }
+  ];
+  
+  targets.forEach(t => {
+    const el = bg.querySelector(t.sel);
+    if (!el) return;
+    
+    const tryAttach = (retry) => {
+      if (_nxData[t.key] === undefined && retry < 10) {
+        setTimeout(() => tryAttach(retry + 1), 400);
+        return;
+      }
+      const data = _nxData[t.key]; // ✅ Plus de clonage
+      if (data) {
+        const anim = lottie.loadAnimation({
+          container: el,
+          renderer: "svg",
+          loop: true,
+          autoplay: true,
+          animationData: data
+        });
+        _nxAnims.push({ el, anim });
+      }
+    };
+    tryAttach(0);
+  });
+}
 
 function setupNoelDecor(seasonId) {
   if (noelSleighTimer) clearInterval(noelSleighTimer);
+  if (noelStarTimer) clearInterval(noelStarTimer);
   if (seasonId !== "s3") return;
   
   setTimeout(() => spawnNoelSleigh(), SEASON_CONFIG.NOEL_SLEIGH_INITIAL_DELAY);
@@ -866,7 +923,7 @@ function spawnNoelSleigh() {
   el.style.animationDuration = (13 + Math.random() * 5) + "s";
   (document.getElementById("season-bg") || document.body).appendChild(el);
   
-  const data = cloneLottieData(_nxData.perenoel);
+  const data = _nxData.perenoel; // ✅ Plus de clonage
   let anim = null;
   if (data) {
     anim = lottie.loadAnimation({
@@ -891,7 +948,6 @@ function spawnNoelSleigh() {
 16. INITIALISATION & GESTIONS BATTERIE/CPU
 ============================================================ */
 
-// ✅ OPTIMISATION BATTERIE/CPU : Met en pause Lottie quand l'application est en arrière-plan
 document.addEventListener("visibilitychange", () => {
   const allAnims = [
     ..._hlPumpkins, 
@@ -936,30 +992,33 @@ if (typeof socket !== "undefined") {
     }, 50);
   });
 }
+
 /* ============================================================
 17. WATCHER ÉCRANS DE JEU — gèle les fonds pendant les parties
-(chaque écran n'affiche QUE son contenu, zéro animation fantôme)
 ============================================================ */
 const CB_GAME_SCREENS = ["tower-game", "fusion-solo", "screen-game", "catch-arena"];
+
+// ✅ OPTIMISATION : Plus de getComputedStyle (reflow), on lit juste style.display
 function cbAnyGameVisible() {
   for (const id of CB_GAME_SCREENS) {
     const el = document.getElementById(id);
-    if (!el) continue;
-    const cs = getComputedStyle(el);
-    if (cs.display !== "none" && cs.visibility !== "hidden") return true;
+    if (el && el.style.display !== "none" && el.style.display !== "") return true;
   }
   return false;
 }
+
 function cbSetSeasonPause(on) {
   const anims = [..._hlPumpkins, ...Object.values(_hlActive).flat(), ..._nxAnims];
   anims.forEach(o => { if (o && o.anim) { try { on ? o.anim.pause() : o.anim.play(); } catch (e) {} } });
 }
+
 let _cbIngame = false;
+// ✅ OPTIMISATION : Intervalle passé de 350ms à 1000ms (largeur suffisante pour détecter un changement d'écran)
 setInterval(() => {
   const on = cbAnyGameVisible();
   if (on !== _cbIngame) {
     _cbIngame = on;
     document.body.classList.toggle('cb-ingame', on);
-    cbSetSeasonPause(on); // ✅ pause/reprend les Lottie (citrouilles, traîneau...)
+    cbSetSeasonPause(on); 
   }
-}, 350);
+}, 1000);
