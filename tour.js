@@ -41,40 +41,6 @@ const fr = (typeof currentLang !== "undefined" && currentLang === "fr");
 return ["🟢 " + (fr?"FACILE":"EASY"), "🟡 " + (fr?"MOYEN":"MEDIUM"), "🟠 " + (fr?"DIFFICILE":"HARD"), "🔴 " + (fr?"TRÈS DIFFICILE":"VERY HARD")][tier] || "";
 }
 const IS_MOBILE = /Android|iPhone|iPad|iPod|Tablet|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 2 && Math.min(screen.width, screen.height) < 900);
-/* ===== PERF CORE : mode éco auto + manuel (anti-lag mobiles faibles) ===== */
-const PERF = {
-  eco: false,
-  init() {
-    const saved = localStorage.getItem('cb_perf_mode');
-    if (saved === 'eco') this.eco = true;
-    else if (saved === 'full') this.eco = false;
-    else {
-      const cores = navigator.hardwareConcurrency || 4;
-      const mem = navigator.deviceMemory || 4;
-      this.eco = (cores <= 4 || mem <= 3);
-    }
-    this.apply();
-  },
-  apply() { document.body.classList.toggle('cb-eco', this.eco); },
-  set(on) { this.eco = on; localStorage.setItem('cb_perf_mode', on ? 'eco' : 'full'); this.apply(); }
-};
-PERF.init();
-/* Watchdog FPS : moins de 28 FPS pendant 4 s => bascule éco automatique */
-(function(){
-  if (localStorage.getItem('cb_perf_mode')) return; // choix manuel prioritaire
-  let frames = 0, t0 = performance.now(), bad = 0;
-  function loop(t){
-    frames++;
-    if (t - t0 >= 2000) {
-      const fps = frames / ((t - t0) / 1000);
-      frames = 0; t0 = t;
-      if (fps < 28) { bad++; if (bad >= 2) PERF.set(true); }
-      else bad = 0;
-    }
-    requestAnimationFrame(loop);
-  }
-  requestAnimationFrame(loop);
-})();
 const TOWER_COLORS = {1:{acc:"#00d2ff"},2:{acc:"#74ebf5"},3:{acc:"#f8b500"},4:{acc:"#ff8a00"},5:{acc:"#8a9bb0"},6:{acc:"#ff4b2b"},7:{acc:"#ff6fa5"},8:{acc:"#2ecc71"},9:{acc:"#ff416c"}};
 const TOWER_WORLDS = {
 1:{bg:"linear-gradient(180deg,#050514,#0a0a2a 55%,#1a1030)",scene:"city",part:"neon"},
@@ -797,48 +763,6 @@ radial-gradient(ellipse at 60% 35%,#2a221c 0 55px,transparent 56px);}
 .tw-playbtn{padding:8px 40px !important;font-size:17px !important;background:rgba(26,154,58,.7) !important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
 .tw-arrow{width:34px !important;height:34px !important;font-size:14px !important;background:rgba(26,26,46,.6) !important;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
 }
-/* ===== PERF : fonds coupés pendant les mini-jeux (overlay opaque dessus) ===== */
-body.cb-ingame #tw-bg, body.cb-ingame #season-bg { display:none !important; }
-/* ===== MODE ÉCO : on coupe tout le décoratif ===== */
-body.cb-eco #tw-bg * { animation:none !important; }
-body.cb-eco .tw-star2, body.cb-eco .tw-part, body.cb-eco .tw-wl, body.cb-eco .tw-cloud,
-body.cb-eco .tw-ha-cloud, body.cb-eco .tw-gr-veil, body.cb-eco .tw-reflect,
-body.cb-eco .tw-signalbeam, body.cb-eco .tw-goldpart, body.cb-eco .tw-firefly,
-body.cb-eco .tw-cv-drip, body.cb-eco .tw-cv-eyes, body.cb-eco .tw-bokeh,
-body.cb-eco .tw-sparkle, body.cb-eco .tw-cd-snowflake, body.cb-eco .tw-snowsoft,
-body.cb-eco .tw-sh-snow-out, body.cb-eco .tw-sh-bulb, body.cb-eco .tw-pf-bulb,
-body.cb-eco .tw-cd-fairy-light, body.cb-eco .tw-car, body.cb-eco .tw-blimp,
-body.cb-eco .tw-plane, body.cb-eco .tw-bat, body.cb-eco .tw-cv-bat,
-body.cb-eco .tw-sh-elf, body.cb-eco .tw-gr-wisp { display:none !important; }
-body.cb-eco .tw-aurora, body.cb-eco .tw-cv-mist, body.cb-eco .tw-pf-mist,
-body.cb-eco .tw-gr-fog, body.cb-eco .tw-cryscl, body.cb-eco .tw-stalac,
-body.cb-eco .tw-stalag, body.cb-eco .tw-pf2, body.cb-eco .tw-sh-tree,
-body.cb-eco .tw-sh-sparkle, body.cb-eco .tw-cv-shaft, body.cb-eco .tw-ha-win { filter:none !important; }
-body.cb-eco .tg-tile, body.cb-eco .tg-tile.fuse { box-shadow:none !important; }
-/* ===== MOBILE : suppression des gros flous coûteux ===== */
-@media (pointer:coarse){
-  .tw-aurora{filter:none;opacity:.45;}
-  .tw-cv-mist,.tw-pf-mist,.tw-gr-fog,.tw-ha-cloud,.tw-gr-veil{filter:none;}
-  .tw-cryscl,.tw-stalac,.tw-stalag,.tw-pf2,.tw-sh-tree,.tw-bokeh{filter:none;}
-  .tw-cv-drip{display:none;}
-  @keyframes twGlowC{50%{opacity:.75;}}
-}
-/* ===== Animations layout (left/top) remplacées par transform (GPU) ===== */
-.tw-car{left:0 !important;will-change:transform;}
-.tw-car.r{--f:-1;} .tw-car.s{--s:.8;} .tw-car.s.r{--s:.8;--f:-1;}
-@keyframes twDrive{from{transform:translateX(-20vw) scale(var(--s,1)) scaleX(var(--f,1));}to{transform:translateX(115vw) scale(var(--s,1)) scaleX(var(--f,1));}}
-@keyframes twDriveR{from{transform:translateX(115vw) scale(var(--s,1)) scaleX(var(--f,1));}to{transform:translateX(-20vw) scale(var(--s,1)) scaleX(var(--f,1));}}
-.tw-blimp{left:0 !important;will-change:transform;}
-@keyframes twBlimp{from{transform:translateX(-20vw);}to{transform:translateX(110vw);}}
-.tw-cloud,.tw-ha-cloud,.tw-gr-veil{will-change:transform;}
-@keyframes twCloud{from{transform:translateX(-60vw);}to{transform:translateX(110vw);}}
-.tw-part.snow,.tw-snowsoft,.tw-sh-snow-out{top:0 !important;}
-@keyframes twFall{0%{transform:translateY(-6vh);}100%{transform:translateY(106vh);}}
-.tw-part.spark{top:auto !important;bottom:0 !important;}
-@keyframes twRise{0%{transform:translateY(0);}100%{transform:translateY(-110vh);}}
-.tw-sh-elf{left:0 !important;will-change:transform;}
-@keyframes twElfWalk{0%{transform:translateX(-15vw)}46%{transform:translateX(80vw)}50%{transform:translateX(80vw)}96%{transform:translateX(-15vw)}100%{transform:translateX(-15vw)}}
-@keyframes twElfWalkFlip{0%{transform:translateX(80vw) scaleX(-1)}46%{transform:translateX(-15vw) scaleX(-1)}50%{transform:translateX(-15vw) scaleX(-1)}96%{transform:translateX(80vw) scaleX(-1)}100%{transform:translateX(80vw) scaleX(-1)}}
 `;
 document.head.appendChild(style);
 })();
@@ -1449,10 +1373,9 @@ function startTowerFloor(def) {
     
     window.showGate('Chargement de l\'étage ' + def.floor + '…');
     
-const ov = ensureTowerOverlay();
-ov.style.display = "flex";
-document.body.classList.add('cb-ingame'); // ✅ fonds décoratifs coupés pendant le jeu
-TW_lastFloor = def.floor;
+    const ov = ensureTowerOverlay();
+    ov.style.display = "flex";
+    TW_lastFloor = def.floor;
     TW = null; TW_dom = null; TW_buttons = []; TW_hudCache = "";
     stopLocalTimer();
     document.getElementById("tg-grid").innerHTML = "";
@@ -1698,7 +1621,6 @@ TW = null; TW_dom = null; stopLocalTimer();
 socket.emit("tower_quit");
 const ov = document.getElementById("tower-game"); if (ov) ov.style.display = "none";
 const shield = document.getElementById("tw-shield-active"); if (shield) shield.remove();
-document.body.classList.remove('cb-ingame'); // ✅ fonds restaurés
 updateJokerButtons();
 }
 function showTowerWinPopup(res) {
@@ -1774,10 +1696,9 @@ socket.on("tower_fail", (r) => {
 socket.on("tower_result", (res) => {
     // ✅ Annule le timer pour éviter que le loader réapparaisse après victoire
     if (TW_gateTimer) { clearTimeout(TW_gateTimer); TW_gateTimer = null; }
-TW = null;
+    TW = null;
 const ov = document.getElementById("tower-game"); if (ov) ov.style.display = "none";
 const shield = document.getElementById("tw-shield-active"); if (shield) shield.remove();
-document.body.classList.remove('cb-ingame');
 if (!res.ok) return;
 const oldWorld = TowerUtils.getTowerChapter(Math.min(towerProgress.floor + 1, TOTAL_FLOORS)).id;
 towerProgress.floor = Math.max(towerProgress.floor, res.floor);
@@ -1794,7 +1715,6 @@ if (TW_gateTimer) { clearTimeout(TW_gateTimer); TW_gateTimer = null; }
 TW = null; TW_dom = null; stopLocalTimer();
 const ov = document.getElementById("tower-game"); if (ov) ov.style.display = "none";
 const shield = document.getElementById("tw-shield-active"); if (shield) shield.remove();
-document.body.classList.remove('cb-ingame');
 if (typeof showNotificationToast === "function") showNotificationToast(currentLang === "fr" ? "🔌 Serveur injoignable — partie annulée." : "🔌 Server unreachable — match cancelled.", "announcement");
 }
 }, 2000);
@@ -1804,7 +1724,6 @@ if (TW) {
 TW = null; TW_dom = null; stopLocalTimer();
 const ov = document.getElementById("tower-game"); if (ov) ov.style.display = "none";
 const shield = document.getElementById("tw-shield-active"); if (shield) shield.remove();
-document.body.classList.remove('cb-ingame');
 if (typeof showNotificationToast === "function") showNotificationToast(currentLang === "fr" ? "🔌 Connexion perdue — partie annulée." : "🔌 Connection lost — match cancelled.", "announcement");
 }
 });
@@ -2007,8 +1926,6 @@ wmStop();
 if(typeof SoundEngine!=='undefined' && typeof SoundEngine.stopMusic==='function'){
 SoundEngine.stopMusic(false);
 }
-// ✅ Mode éco : on garde uniquement les mp3 (mondes 1 et 3), on skip les synthés WebAudio
-if (typeof PERF !== 'undefined' && PERF.eco && (world === 2 || world >= 4)) return;
 if(world===1) return wmStartNeon();
 if(world===2) return wmStartGlacier();
 if(world===3) return wmStartVault();
@@ -2032,10 +1949,9 @@ ov.innerHTML = `<div class="twg-header"><button class="tw-back" onclick="fuseSol
 <div class="twg-gridwrap"><div id="fus-grid" class="tg-grid" style="grid-template-columns:repeat(5,1fr);"></div></div>
 <div class="twg-msg">${currentLang === "fr" ? "Échange 2 tuiles adjacentes pour aligner 3 chiffres identiques ! Les chutes en chaîne = COMBOS !" : "Swap 2 adjacent tiles to line up 3 identical numbers! Chain falls = COMBOS!"}</div>`;
 document.body.appendChild(ov);
-document.body.classList.add('cb-ingame');
 socket.emit("fusion_solo_start");
 }
-function fuseSoloClose() { const ov = document.getElementById("fusion-solo"); if (ov) ov.remove(); FUS_solo = null; FUS_sel = null; FUS_buttons = []; FUS_prev = null; document.body.classList.remove('cb-ingame'); }
+function fuseSoloClose() { const ov = document.getElementById("fusion-solo"); if (ov) ov.remove(); FUS_solo = null; FUS_sel = null; FUS_buttons = []; FUS_prev = null; }
 function fuseSoloQuit() { socket.emit("fusion_solo_quit"); fuseSoloClose(); }
 function fuseSoloRender(st) {
 FUS_solo = st;
