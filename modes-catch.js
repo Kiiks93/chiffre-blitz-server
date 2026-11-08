@@ -272,6 +272,21 @@ function spawnCatchItem() {
   
   if (type === 'happy' || type === 'mean') {
     el.classList.add((catchState.theme === 'halloween' ? 'ci-pump-' : 'ci-elf-') + (type === 'happy' ? 'happy' : 'mean'));
+    
+    // 🎨 FIX COULEURS : Ajout d'un halo lumineux pour distinguer les citrouilles
+    if (catchState.theme === 'halloween') {
+      if (type === 'happy') {
+        // Citrouille souriante (Bonus) : Halo VERT
+        el.style.background = 'radial-gradient(circle, rgba(46, 204, 113, 0.6) 0%, transparent 70%)';
+        el.style.boxShadow = '0 0 15px #2ecc71, 0 0 30px #2ecc71aa';
+        el.style.borderRadius = '50%';
+      } else {
+        // Citrouille méchante (Malus) : Halo ROUGE
+        el.style.background = 'radial-gradient(circle, rgba(255, 75, 43, 0.6) 0%, transparent 70%)';
+        el.style.boxShadow = '0 0 15px #ff4b2b, 0 0 30px #ff4b2baa';
+        el.style.borderRadius = '50%';
+      }
+    }
   } else {
     el.innerText = cfg[type];
   }
@@ -284,18 +299,32 @@ function spawnCatchItem() {
     el.style.top = '-80px';
     el.style.animationDuration = catchState.speed + 's';
     
-    el.addEventListener('pointerdown', (e) => {
+    // ✅ FIX LATENCE : Zone de clic élargie (padding invisible) pour capter les clics de justesse en bas
+    el.style.padding = '25px';
+    el.style.margin = '-25px';
+    el.style.touchAction = 'none'; // Empêche le scroll ou le zoom accidentel sur mobile
+
+    let isCaught = false;
+    const catchHandler = (e) => {
+      if (isCaught) return;
+      isCaught = true;
       e.preventDefault();
-      // ✅ FIX : Vérifier que l'élément est encore dans le DOM avant d'appliquer le catch
-      if (el.parentNode) {
-        applyCatch(type, e.clientX, e.clientY);
+      e.stopPropagation();
+      if (el.parentNode && catchState && catchState.active) {
+        // Support tactile natif (plus rapide que pointerdown sur mobile)
+        const pt = e.touches ? e.touches[0] : e;
+        applyCatch(type, pt.clientX, pt.clientY);
         el.remove();
       }
-    }, { once: true });
+    };
+
+    // 🚀 touchstart se déclenche AVANT pointerdown, éliminant le délai de 300ms sur mobile
+    el.addEventListener('touchstart', catchHandler, { passive: false });
+    el.addEventListener('pointerdown', catchHandler);
     
     el.addEventListener('animationend', () => {
-      // ✅ FIX : Pénalité de miss uniquement si l'item n'a pas été cliqué (toujours dans le DOM)
-      if (el.parentNode) {
+      // Si l'animation se termine mais que le joueur n'a pas cliqué
+      if (!isCaught && el.parentNode) {
         if (type === 'good') penaltyMiss(el);
         el.remove();
       }
