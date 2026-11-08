@@ -231,7 +231,33 @@ function beginCatch(theme, is1v1, opponent) {
     }, 1000);
   }
   
-  scheduleSpawn();
+// ✅ FIX CLICs RAPIDES : Délégation d'événement sur le conteneur global
+const field = document.getElementById('catch-field');
+const handleCatchInteraction = (e) => {
+    if (!catchState || !catchState.active) return;
+    const pt = e.touches ? e.touches[0] : e;
+    
+    // Détecte l'élément exact sous le doigt au moment précis du touch
+    const target = document.elementFromPoint(pt.clientX, pt.clientY);
+    if (target) {
+        const item = target.closest('.catch-item');
+        if (item && item.parentNode === field) {
+            e.preventDefault();
+            e.stopPropagation();
+            const type = item.dataset.type;
+            if (type) {
+                applyCatch(type, pt.clientX, pt.clientY);
+                item.remove();
+            }
+        }
+    }
+};
+
+// On attache les listeners au conteneur (beaucoup plus fiable pour les objets rapides)
+field.addEventListener('touchstart', handleCatchInteraction, { passive: false });
+field.addEventListener('pointerdown', handleCatchInteraction);
+
+scheduleSpawn();
 }
 
 /* ============================================================
@@ -255,43 +281,50 @@ function scheduleSpawn() {
 }
 
 function spawnCatchItem() {
-  const field = document.getElementById('catch-field');
-  if (!field || !catchState) return;
-  
-  const cfg = getCatchConfig()[catchState.theme];
-  const r = Math.random();
-  let type;
-  
-  if (r < 0.62) type = 'good';
-  else if (r < 0.84) type = 'bad';
-  else if (r < 0.92) type = 'happy';
-  else type = 'mean';
-  
-  const el = document.createElement('div');
-  el.className = 'catch-item';
-  
-  if (type === 'happy' || type === 'mean') {
+const field = document.getElementById('catch-field');
+if (!field || !catchState) return;
+const cfg = getCatchConfig()[catchState.theme];
+const r = Math.random();
+let type;
+if (r < 0.62) type = 'good';
+else if (r < 0.84) type = 'bad';
+else if (r < 0.92) type = 'happy';
+else type = 'mean';
+
+const el = document.createElement('div');
+el.className = 'catch-item';
+el.dataset.type = type; // ✅ Stocke le type pour la délégation d'événement
+el.style.display = 'flex';
+el.style.alignItems = 'center';
+el.style.justifyContent = 'center';
+el.style.position = 'relative';
+el.style.touchAction = 'none';
+el.style.pointerEvents = 'auto';
+el.style.willChange = 'transform, top'; // ✅ Optimise le rendu GPU pour le mouvement rapide
+
+// 🎨 FIX HALO : Le drop-shadow épouse la forme de l'emoji sans faire de cercle opaque
+if (type === 'happy' || type === 'mean') {
     el.classList.add((catchState.theme === 'halloween' ? 'ci-pump-' : 'ci-elf-') + (type === 'happy' ? 'happy' : 'mean'));
     
-    // 🎨 FIX COULEURS : Ajout d'un halo lumineux pour distinguer les citrouilles
     if (catchState.theme === 'halloween') {
       if (type === 'happy') {
-        // Citrouille souriante (Bonus) : Halo VERT
-        el.style.background = 'radial-gradient(circle, rgba(46, 204, 113, 0.6) 0%, transparent 70%)';
-        el.style.boxShadow = '0 0 15px #2ecc71, 0 0 30px #2ecc71aa';
-        el.style.borderRadius = '50%';
+        // Halo VERT qui suit les contours de la citrouille
+        el.style.filter = 'drop-shadow(0 0 12px #2ecc71) drop-shadow(0 0 25px #2ecc71aa)';
       } else {
-        // Citrouille méchante (Malus) : Halo ROUGE
-        el.style.background = 'radial-gradient(circle, rgba(255, 75, 43, 0.6) 0%, transparent 70%)';
-        el.style.boxShadow = '0 0 15px #ff4b2b, 0 0 30px #ff4b2baa';
-        el.style.borderRadius = '50%';
+        // Halo ROUGE qui suit les contours de la citrouille
+        el.style.filter = 'drop-shadow(0 0 12px #ff4b2b) drop-shadow(0 0 25px #ff4b2baa)';
       }
     }
-  } else {
+} else {
     el.innerText = cfg[type];
-  }
-  
-  if (catchState.theme === 'halloween') {
+}
+
+// ✅ ZONE DE CLIC ÉLARGIE (Hitbox invisible de 45px autour de l'emoji)
+const hitbox = document.createElement('div');
+hitbox.style.cssText = 'position:absolute; inset:-45px; pointer-events:auto;';
+el.appendChild(hitbox);
+
+if (catchState.theme === 'halloween') {
     if (field.childElementCount > CATCH_CONFIG.MAX_ITEMS_HALLOWEEN) return;
     el.classList.add('fall');
     el.style.fontSize = (52 + Math.random() * 26) + 'px';
@@ -299,38 +332,16 @@ function spawnCatchItem() {
     el.style.top = '-80px';
     el.style.animationDuration = catchState.speed + 's';
     
-    // ✅ FIX LATENCE : Zone de clic élargie (padding invisible) pour capter les clics de justesse en bas
-    el.style.padding = '25px';
-    el.style.margin = '-25px';
-    el.style.touchAction = 'none'; // Empêche le scroll ou le zoom accidentel sur mobile
-
-    let isCaught = false;
-    const catchHandler = (e) => {
-      if (isCaught) return;
-      isCaught = true;
-      e.preventDefault();
-      e.stopPropagation();
-      if (el.parentNode && catchState && catchState.active) {
-        // Support tactile natif (plus rapide que pointerdown sur mobile)
-        const pt = e.touches ? e.touches[0] : e;
-        applyCatch(type, pt.clientX, pt.clientY);
-        el.remove();
-      }
-    };
-
-    // 🚀 touchstart se déclenche AVANT pointerdown, éliminant le délai de 300ms sur mobile
-    el.addEventListener('touchstart', catchHandler, { passive: false });
-    el.addEventListener('pointerdown', catchHandler);
-    
+    // L'animationend gère toujours les items ratés (qui tombent sans être cliqués)
     el.addEventListener('animationend', () => {
-      // Si l'animation se termine mais que le joueur n'a pas cliqué
-      if (!isCaught && el.parentNode) {
+      if (el.parentNode) {
         if (type === 'good') penaltyMiss(el);
         el.remove();
       }
     });
+    
     field.appendChild(el);
-  } else {
+} else {
     if (catchState.items.length > CATCH_CONFIG.MAX_ITEMS_NOEL) return;
     el.style.fontSize = (40 + Math.random() * 16) + 'px';
     el.style.left = '0px';
@@ -346,7 +357,7 @@ function spawnCatchItem() {
       ph: Math.random() * 6.28,
       vy: (2.4 + Math.random() * 1.4 + (CATCH_CONFIG.GAME_DURATION - catchState.timeLeft) * 0.05) * (catchState.hard || 1)
     });
-  }
+}
 }
 
 function noelLoop() {
